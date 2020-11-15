@@ -12,19 +12,20 @@ WS  [ \t\v\n\f]
 	extern char mytext[];
 %}
 
+
 /* Define Section */
 
 %%
  /* Keywords */
 
-"int" {/*printf("Type: %s", yytext);*/ strcpy(mytext, yytext); return T_INT;}
-"long" {/*printf("Type: %s", yytext);*/ strcpy(mytext, yytext); return T_LONG;}
-"float" {/*printf("Type: %s", yytext);*/ strcpy(mytext, yytext); return T_FLOAT;}
-"double" {/*printf("Type: %s", yytext);*/ strcpy(mytext, yytext); return T_DOUBLE;}
-"bool"  {/*printf("Type: %s", yytext);*/strcpy(mytext, yytext); return T_BOOL;}
-"forall" {printf("Keyword-forall: %s", yytext);strcpy(mytext, yytext); return T_FORALL;}
+"int" 	  {printf("Type: %s", yytext); strcpy(mytext, yytext); return T_INT;}
+"long" 	  {printf("Type: %s", yytext); strcpy(mytext, yytext); return T_LONG;}
+"float"   {printf("Type: %s", yytext); strcpy(mytext, yytext); return T_FLOAT;}
+"double"  {printf("Type: %s", yytext); strcpy(mytext, yytext); return T_DOUBLE;}
+"bool"    {printf("Type: %s", yytext); strcpy(mytext, yytext); return T_BOOL;}
+"forall"  {printf("Keyword-forall: %s", yytext);strcpy(mytext, yytext); return T_FORALL;}
 "for"     {printf("For: %s", yytext);strcpy(mytext, yytext); return T_FOR;}
-"+INF"     {printf("+Infinity: %s", yytext);strcpy(mytext, yytext); return T_P_INF;}
+"+INF"    {printf("+Infinity: %s", yytext);strcpy(mytext, yytext); return T_P_INF;}
 "INF"     {printf("+Infinity: %s", yytext);strcpy(mytext, yytext); return T_INF;}
 "-INF"    {printf("-Infinity: %s", yytext);strcpy(mytext, yytext); return T_N_INF;}
 
@@ -37,6 +38,7 @@ WS  [ \t\v\n\f]
 "Do"      {printf("Keyword do: %s", yytext); strcpy(mytext, yytext); return T_DO;}
 "in"      {printf("Keyword in "); strcpy(mytext, yytext); return T_IN;}
 "fixedPoint" {printf("Keyword fixedPoint"); strcpy(mytext, yytext); return T_FIXEDPOINT;}
+"until"      {printf("Keyword until"); strcpy(mytext, yytext); return T_UNTIL;}
 
 "+="					{ printf ("ADD_ASSIGN "); strcpy(mytext, yytext); return T_ADD_ASSIGN;}
 "-="					{ printf ("SUB_ASSIGN"); strcpy(mytext, yytext); return T_SUB_ASSIGN;}
@@ -57,38 +59,38 @@ WS  [ \t\v\n\f]
 ">="					{ printf ( "GE_OP"); strcpy(mytext, yytext); return T_GE_OP;}
 "=="					{ printf ( "EQ_OP"); strcpy(mytext, yytext); return T_EQ_OP;}
 "!="					{ printf ( "NE_OP"); strcpy(mytext, yytext); return T_NE_OP;}
- /*
+ 
 ";"					{ printf ( "';'"); strcpy(mytext, yytext); return ';' ;}
 ("{"|"<%")				{ printf ( "'{'") ; strcpy(mytext, yytext); return '{' ;}
 ("}"|"%>")				{ printf ( "'}'");strcpy(mytext, yytext); return '}';}
 ","					{ printf ( "','"); strcpy(mytext, yytext); return ',';}
 ":"					{ printf ( "':'"); strcpy(mytext, yytext); return ':';}
 "="					{ printf ( "'='"); strcpy(mytext, yytext); return '=';}
-"("					{ printf ( "'('"); strcpy(mytext, yytext); return ';}
-")"					{ printf ( "')'"); }
-("["|"<:")				{ printf ( "'['"); }
-("]"|":>")				{ printf ( "']'"); }
-"."					{ printf ( "'.'"); }
-"&"					{ printf ( "'&'"); }
-"!"					{ printf ( "'!'"); }
-"~"					{ printf ( "'~'"); }
-"-"					{ printf ( "'-'"); }
-"+"					{ printf ( "'+'"); }
-"*"					{ printf ( "'*'"); }
-"/"					{ printf ( "'/'"); }
-"%"					{ printf ( "'%'"); }
-"<"					{ printf ( "'<'"); }
-">"					{ printf ( "'>'"); }
-"^"					{ printf ( "'^'"); }
-"|"					{ printf ( "'|'"); }
-"?"					{ printf ( "'?'"); } 
- */
+"("					{ printf ( "'('"); strcpy(mytext, yytext); return '(';}
+")"					{ printf ( "')'"); strcpy(mytext, yytext); return ')';}
+("["|"<:")				{ printf ( "'['"); strcpy(mytext, yytext); return '[';}
+("]"|":>")				{ printf ( "']'"); strcpy(mytext, yytext); return ']';}
+"."					{ printf ( "'.'"); strcpy(mytext, yytext); return '.';}
+"&"					{ printf ( "'&'"); strcpy(mytext, yytext); return '&';}
+"!"					{ printf ( "'!'"); strcpy(mytext, yytext); return '!';}
+"~"					{ printf ( "'~'"); strcpy(mytext, yytext); return '~';}
+"-"					{ printf ( "'-'"); strcpy(mytext, yytext); return '-';}
+"+"					{ printf ( "'+'"); strcpy(mytext, yytext); return '+';}
+"*"					{ printf ( "'*'"); strcpy(mytext, yytext); return '*';}
+"/"					{ printf ( "'/'"); strcpy(mytext, yytext); return '/';}
+"%"					{ printf ( "'%'"); strcpy(mytext, yytext); return '%';}
+"<"					{ printf ( "'<'"); strcpy(mytext, yytext); return '<';}
+">"					{ printf ( "'>'"); strcpy(mytext, yytext); return '>';}
+"^"					{ printf ( "'^'"); strcpy(mytext, yytext); return '^';}
+"|"					{ printf ( "'|'"); strcpy(mytext, yytext); return '|';}
+"?"					{ printf ( "'?'"); strcpy(mytext, yytext); return '?';} 
+ 
 
 "And"     { printf ( "And"); strcpy(mytext, yytext); return T_AND;}
-"Or"     { printf ( "Or"); strcpy(mytext, yytext); return T_OR;}
+"Or"      { printf ( "Or"); strcpy(mytext, yytext); return T_OR;}
 
 "Sum"     { printf ( "Sum"); strcpy(mytext, yytext); return T_SUM;}
-"Avg"     { printf ( "Average"); strcpy(mytext, yytext); return T_AVE;}
+"Avg"     { printf ( "Average"); strcpy(mytext, yytext); return T_AVG;}
 "Count"   { printf ( "Count"); strcpy(mytext, yytext); return T_COUNT;}
 "Product" { printf ( "Product"); strcpy(mytext, yytext); return T_PRODUCT;}
 "Max"     { printf ( "Max"); strcpy(mytext, yytext); return T_MAX;}
@@ -96,11 +98,12 @@ WS  [ \t\v\n\f]
 
 
  /* Graph Types */
-"Graph" {printf("Graph Type"); strcpy(mytext, yytext); return T_GRAPH;}
-"dirGraph" {printf("Directed Graph Type"); strcpy(mytext, yytext); return T_DIR_GRAPH;}
-"node" {printf("Node Type"); strcpy(mytext, yytext); return T_NODE;}
-"edge" {printf("Edge Type"); strcpy(mytext, yytext); return T_EDGE;}
+"Graph" 	{printf("Graph Type"); strcpy(mytext, yytext); return T_GRAPH;}
+"dirGraph" 	{printf("Directed Graph Type"); strcpy(mytext, yytext); return T_DIR_GRAPH;}
+"node" 		{printf("Node Type"); strcpy(mytext, yytext); return T_NODE;}
+"edge" 		{printf("Edge Type"); strcpy(mytext, yytext); return T_EDGE;}
 
+ /*
 "numNodes" {printf("Number of Nodes"); strcpy(mytext, yytext); return T_NUM_NODES;}
 "numEdges" {printf("Number of Edges"); strcpy(mytext, yytext); return T_NUM_EDGES;}
 "makeUndirected" {printf("Make Undirected\n"); strcpy(mytext, yytext); return T_MUND;}
@@ -124,23 +127,26 @@ WS  [ \t\v\n\f]
 
 "nodes" {printf("Nodes"); strcpy(mytext, yytext); return T_NODES;}
 "edges" {printf("Edges"); strcpy(mytext, yytext); return T_EDGES;}
+*/
+
 "propNode" {printf("Node Property"); strcpy(mytext, yytext); return T_NP;}
 "propEdge" {printf("Edge Property"); strcpy(mytext, yytext); return T_EP;}
+ /*
 "attachNodeProperty" {printf("Attach Node Property"); strcpy(mytext, yytext); return T_ATTACH_NP;}
 "attachEdgeProperty" {printf("Attach Edge Property"); strcpy(mytext, yytext); return T_ATTACH_EP;}
-
+*/
  /* Collection Type */
-"SetN" {printf("Set of Nodes"); strcpy(mytext, yytext); return T_SET_NODES;}
-"SetE" {printf("Set of Edges");strcpy(mytext, yytext); return T_SET_EDGES;}
+"SetN" 	{printf("Set of Nodes"); strcpy(mytext, yytext); return T_SET_NODES;}
+"SetE" 	{printf("Set of Edges");strcpy(mytext, yytext); return T_SET_EDGES;}
 "elements" {printf("elements"); strcpy(mytext, yytext); return T_ELEMENTS;}
 
 
  /* Numbers and Identifies */
-{ALPHANUM}          {printf("Identifier"); strcpy(mytext, yytext); return ID;}
+{ALPHANUM}          {printf("Identifier \n"); strcpy(mytext, yytext); return ID;}
 {DIGIT}+"."{DIGIT}* {printf("Float Number"); strcpy(mytext, yytext); return FLOAT_NUM;}
 {DIGIT}{DIGIT}*     {printf("Int Number"); strcpy(mytext, yytext); return INT_NUM;}
 
-[ \n\t]	{ printf("\n");} 
+[ \n\t]	{ printf("\n");}  
 {WS}+					{ /* whitespace separates tokens */ } 
 
 .    {printf("invalid\n");}
@@ -186,4 +192,3 @@ int yywrap(void) {
 }
 
 */
-
