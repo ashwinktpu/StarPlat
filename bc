@@ -1,35 +1,34 @@
-Compute_BC (Graph g)
+function Compute_BC (Graph g)
 {
-    propNode <float> BC;
-    g.attachNodeProperty (BC = 0);
-    forall (src in  g.node() ) {
+	propNode <float> BC;
+	g.attachNodeProperty (BC =0);
+   forall (src in  g.node() ) {
                     
-             propNode <list> p;
-             propNode <int> sigma;
-             propNode <int> d;
-             g.attachNodeProperty(sigma = 0, d = -1);
-             src.sigma = 1
-             src.d=0;
- iterateInBFS(v:from s(G))
+	         propNode <list> p;
+	         propNode <int> sigma;
+	         propNode <int> d;
+                    g.attachNodeProperty(sigma =0, d= -1);
+                    src.sigma = 1
+	         src.d=0;
+ iterateInBFS(v:from s)(v!=s)
 {
       
   forall(w in g.neighbours(v))(w.d=v.d+1)
    {
       w.sigma=w.sigma+v.sigma;
-      w.p.append(v);
+	  w.p.append(v);
        
    }
  }
 propNode<float> delta;
-g.attachNodeProperty(delta = 0);
+g.attachNodeProperty(delta=0);
 
- iterateInRBFS(G)
-      {
-    for(v in w.p)
-       v.delta = v.delta + (v.sigma / w.sigma) * ( 1 + w.delta);
-               if (w != src) 
-            w.BC = w.BC + w.delta;
+ iterateInReverse(v!=s)
+     {
+     for(w in v.p)
+       w.delta = v.delta + (v.sigma / w.sigma) * ( 1 + v.delta);
+     if (v != src) 
+	   v.BC = v.BC + v.delta;
      }
   }
 }
-
