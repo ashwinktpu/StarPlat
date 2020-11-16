@@ -63,7 +63,7 @@ function_data: T_FUNC ID '(' paramList ')' { };
 
 paramList: param { }| paramList ',' param { };
 
-argdecl: type1 ID | type2 ID '(' ID ')' {};
+param : type1 ID | type2 ID '(' ID ')' {};
 
 type1: primitive {};
 	| graph {}| collections { };
