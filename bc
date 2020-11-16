@@ -1,13 +1,13 @@
 Compute_BC (Graph g)
 {
     propNode <float> BC;
-    g.attachNodeProperty (BC =0);
+    g.attachNodeProperty (BC = 0);
     forall (src in  g.node() ) {
                     
              propNode <list> p;
              propNode <int> sigma;
              propNode <int> d;
-             g.attachNodeProperty(sigma =0, d= -1);
+             g.attachNodeProperty(sigma = 0, d = -1);
              src.sigma = 1
              src.d=0;
  iterateInBFS(v:from s(G))
@@ -21,7 +21,7 @@ Compute_BC (Graph g)
    }
  }
 propNode<float> delta;
-g.attachNodeProperty(delta =0);
+g.attachNodeProperty(delta = 0);
 
  iterateInRBFS(G)
       {
