@@ -18,6 +18,7 @@ WS  [ \t\v\n\f]
 %%
  /* Keywords */
 
+"function" {printf("Type: %s", yytext); strcpy(mytext, yytext); return T_FUNC;}
 "int" 	  {printf("Type: %s", yytext); strcpy(mytext, yytext); return T_INT;}
 "long" 	  {printf("Type: %s", yytext); strcpy(mytext, yytext); return T_LONG;}
 "float"   {printf("Type: %s", yytext); strcpy(mytext, yytext); return T_FLOAT;}
@@ -31,14 +32,17 @@ WS  [ \t\v\n\f]
 
 "True"    {printf("Type Bool: %s", yytext); strcpy(mytext, yytext); return BOOL_VAL;}
 "False"   {printf("Type Bool: %s", yytext); strcpy(mytext, yytext); return BOOL_VAL;}
-"If"      {printf("Keyword if: %s", yytext); strcpy(mytext, yytext); return T_IF;}
-"Else"    {printf("Keyword else: %s", yytext); strcpy(mytext, yytext); return T_ELSE;}
-"While"   {printf("Keyword while: %s", yytext); strcpy(mytext, yytext); return T_WHILE;}
+"if"      {printf("Keyword if: %s", yytext); strcpy(mytext, yytext); return T_IF;}
+"else"    {printf("Keyword else: %s", yytext); strcpy(mytext, yytext); return T_ELSE;}
+"while"   {printf("Keyword while: %s", yytext); strcpy(mytext, yytext); return T_WHILE;}
 "Return"  {printf("Keyword return: %s", yytext); strcpy(mytext, yytext); return T_RETURN;}
-"Do"      {printf("Keyword do: %s", yytext); strcpy(mytext, yytext); return T_DO;}
+"do"      {printf("Keyword do: %s", yytext); strcpy(mytext, yytext); return T_DO;}
 "in"      {printf("Keyword in "); strcpy(mytext, yytext); return T_IN;}
 "fixedPoint" {printf("Keyword fixedPoint"); strcpy(mytext, yytext); return T_FIXEDPOINT;}
 "until"      {printf("Keyword until"); strcpy(mytext, yytext); return T_UNTIL;}
+"iterateInBFS"  {printf("iterateInBFS"); strcpy(mytext, yytext); return T_BFS;}
+"iterateInReverse" {printf("iterateInBFS"); strcpy(mytext, yytext); return T_REVERSE;} 
+"from"          {printf("from"); strcpy(mytext, yytext); return T_FROM;}   
 
 "+="					{ printf ("ADD_ASSIGN "); strcpy(mytext, yytext); return T_ADD_ASSIGN;}
 "-="					{ printf ("SUB_ASSIGN"); strcpy(mytext, yytext); return T_SUB_ASSIGN;}
