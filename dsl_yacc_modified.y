@@ -46,10 +46,10 @@
   */
 %left '?'
 %left ':'
-%left T_OR
-%left T_AND 
-%left T_EQ T_NEQ
-%left '<' '>'  T_LE T_GE
+%left T_OR_OP
+%left T_AND_OP 
+%left T_EQ_OP  T_NE_OP
+%left '<' '>'  T_LE_OP T_GE_OP
 %left '+' '-'
 %left '*' '/' '%'
 
@@ -124,11 +124,10 @@ expression :  proc_call { };
 			 | expression T_EQ_OP expression{};
              | expression T_NE_OP expression{};			 
 	         | val {};
-			 | ID { };
-			 | oid { };
+			 | leftSide { };
 			 
 proc_call : leftSide '.' ID '(' arg_list ')' { };
-           | leftSide '(' arg_list ')' '.' proc_call {};
+           | leftSide '(' arg_list ')' '.' proc_call {}; 
 
 			 
 val : INT_NUM {};
@@ -176,8 +175,8 @@ leftSide : ID { };
          | oid { };
 
 arg_list : 
-           | ID ',' arg_list {};
-	       | oid ',' arg_list{}; 
+           | leftSide ',' arg_list {};
+	        
            | assignment ',' arg_list {};
 	       | expression ',' arg_list {};
 	       | declaration {};
