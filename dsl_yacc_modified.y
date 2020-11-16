@@ -57,9 +57,9 @@
 %%
 program: function_def {printf("program.\n");};
 
-function_def: function_data '{' function_body '}' { };
+function_def: function_data  function_body  { };
 
-function_data: T_FUNC ID '{' paramList '}' { };
+function_data: T_FUNC ID '(' paramList ')' { };
 
 paramList: param { }| paramList ',' param { };
 
@@ -127,7 +127,7 @@ expression :  proc_call { };
 			 | ID { };
 			 | oid { };
 			 
-proc_call : leftSide '.' id '(' arg_list ')' { };
+proc_call : leftSide '.' ID '(' arg_list ')' { };
            | leftSide '(' arg_list ')' '.' proc_call {};
 
 			 
@@ -139,7 +139,7 @@ val : INT_NUM {};
 	| T_N_INF {};
 	
 control_flow : selection_cf { };
-              | iteration cf { };
+              | iteration_cf { };
 
 iteration_cf :  T_FORALL '(' ID T_IN proc_call ')' filterExpr  statements {};
 	       | T_FIXEDPOINT T_UNTIL '(' arg_list ')' statements {};
@@ -180,19 +180,20 @@ arg_list :
 	       | oid ',' arg_list{}; 
            | assignment ',' arg_list {};
 	       | expression ',' arg_list {};
-           | ID {};
 	       | declaration {};
 	       | expression {};
 	       | assignment {};
-	       | oid {};
+	
 		   
-bfs_abstraction	: T_BFS '(' id ':' T_FROM id ')'  blockstatements reverse_abstraction {};
-                 | T_BFS '(' id ':' T_FROM id ')' filterExpr blockstatements reverse_abstraction { };
+bfs_abstraction	: T_BFS '(' ID ':' T_FROM ID ')'  blockstatements reverse_abstraction {};
+                 | T_BFS '(' ID ':' T_FROM ID ')' filterExpr blockstatements reverse_abstraction { };
 
  
 
 reverse_abstraction : T_REVERSE blockstatements {};
                     | T_REVERSE filterExpr blockstatements {};
+
+oid : ID '.' ID {printf("oid\n");};
  
 %%
 
