@@ -41,7 +41,7 @@ WS  [ \t\v\n\f]
 "fixedPoint" {printf("Keyword fixedPoint"); strcpy(mytext, yytext); return T_FIXEDPOINT;}
 "until"      {printf("Keyword until"); strcpy(mytext, yytext); return T_UNTIL;}
 "iterateInBFS"  {printf("iterateInBFS"); strcpy(mytext, yytext); return T_BFS;}
-"iterateInReverse" {printf("iterateInBFS"); strcpy(mytext, yytext); return T_REVERSE;} 
+"iterateInReverse" {printf("iterateInReverse"); strcpy(mytext, yytext); return T_REVERSE;} 
 "from"          {printf("from"); strcpy(mytext, yytext); return T_FROM;}   
 
 "+="					{ printf ("ADD_ASSIGN "); strcpy(mytext, yytext); return T_ADD_ASSIGN;}
@@ -143,6 +143,7 @@ WS  [ \t\v\n\f]
 "SetN" 	{printf("Set of Nodes"); strcpy(mytext, yytext); return T_SET_NODES;}
 "SetE" 	{printf("Set of Edges");strcpy(mytext, yytext); return T_SET_EDGES;}
 "elements" {printf("elements"); strcpy(mytext, yytext); return T_ELEMENTS;}
+"list" {printf("list type"); strcpy(mytext, yytext); return T_LIST;}
 
 
  /* Numbers and Identifies */
