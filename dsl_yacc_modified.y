@@ -32,8 +32,8 @@
 %token T_OR_ASSIGN T_RIGHT_OP T_LEFT_OP T_INC_OP T_DEC_OP T_PTR_OP T_AND_OP T_OR_OP T_LE_OP T_GE_OP T_EQ_OP T_NE_OP
 %token T_AND T_OR T_SUM T_AVG T_COUNT T_PRODUCT T_MAX T_MIN
 %token T_GRAPH T_DIR_GRAPH  T_NODE T_EDGE
-%token T_NP  T_EP
-%token T_SET_NODES T_SET_EDGES T_ELEMENTS T_FROM
+%token T_NP  T_EP 
+%token T_SET_NODES T_SET_EDGES T_ELEMENTS T_LIST T_FROM 
 %token T_BFS T_REVERSE
 
 %token <text> ID
@@ -59,11 +59,11 @@ program: function_def {printf("program.\n");};
 
 function_def: function_data  function_body  { };
 
-function_data: T_FUNC ID '(' paramList ')' { };
+function_data: T_FUNC ID '(' arg_list ')' { };
 
-paramList: param { }| paramList ',' param { };
+//paramList: param { }| paramList ',' param { };
 
-param : type1 ID | type2 ID '(' ID ')' {};
+//param : type1 ID | type2 ID '(' ID ')' {};
 
 type1: primitive {};
 	| graph {}| collections { };
@@ -77,14 +77,15 @@ primitive: T_INT {};
 graph : T_GRAPH {};
 	|T_DIR_GRAPH {};
 	
-collections : T_SET_NODES '<' ID '>' { };
+collections : T_LIST {};
+		|T_SET_NODES '<' ID '>' { };
                 | T_SET_EDGES '<' ID '>' { };
 	
 type2 : T_NODE { };
        | T_EDGE { };
 	   | property { };
 
-property : T_NP '<' primitive '>' { };
+property : T_NP '<' primitive '>' { printf("node property\n");};
               | T_EP '<' primitive '>' { };
 			  | T_NP '<' collections '>'{ };
 			  | T_EP '<' collections '>' { };
@@ -92,20 +93,24 @@ property : T_NP '<' primitive '>' { };
 function_body : blockstatements {printf("program.\n");};
 
 
-statements : declaration ';'{printf("declaration\n");};
+statements : statement {printf("statement\n");};
+		| statement statements {printf("Statement\n");};
+
+statement: declaration ';'{printf("declaration\n");};
 	|assignment ';'{printf("assignment\n");};
 	|proc_call ';' {printf("proc call \n");};
 	|control_flow {printf("control flow\n");};
 	|reduction ';'{printf ("Reduction\n");};
-	|blockstatements { };
 	|bfs_abstraction { };
+	| reverse_abstraction {};
 	
 	
-blockstatements :'{' statements '}' { };
+blockstatements :'{' statements '}' { printf("block of statements\n");};
+		| statement {};
 	
-declaration : type1 ID  {printf("declaration\n");};
+declaration : type1 ID  {};
 	| type1 ID '=' rhs {};
-	| type2 ID  {printf("declaration\n");};
+	| type2 ID  {};
 	| type2 ID '=' rhs {};
 	
 assignment :  leftSide '=' rhs  {};
@@ -115,19 +120,21 @@ rhs : expression { };
 expression :  proc_call { };
              | expression '+' expression {};
 	         | expression '-' expression {};
-	         | expression '*' ID {};
+	         | expression '*' expression {};
 	         | expression'/' expression{};
 			 | expression T_AND_OP expression {};
 	         | expression T_OR_OP  expression {};
 	         | expression T_LE_OP ID {};
 	         | expression T_GE_OP expression{};
 			 | expression T_EQ_OP expression{};
-             | expression T_NE_OP expression{};			 
+             | expression T_NE_OP expression{};	
+		| '(' expression ')' {};		 
 	         | val {};
 			 | leftSide { };
 			 
-proc_call : leftSide '.' ID '(' arg_list ')' { };
-           | leftSide '(' arg_list ')' '.' proc_call {}; 
+proc_call : leftSide '(' arg_list ')' { };
+           |leftSide '(' arg_list ')' '.' proc_call {}; 
+		| oid '.' ID '(' arg_list ')' {};
 
 			 
 val : INT_NUM {};
@@ -140,13 +147,15 @@ val : INT_NUM {};
 control_flow : selection_cf { };
               | iteration_cf { };
 
-iteration_cf :  T_FORALL '(' ID T_IN proc_call ')' filterExpr  statements {};
-	       | T_FIXEDPOINT T_UNTIL '(' arg_list ')' statements {};
-		   | T_WHILE '(' boolean_expr')' statements { };
+iteration_cf : T_FIXEDPOINT T_UNTIL '(' arg_list ')' blockstatements {};
+		   | T_WHILE '(' boolean_expr')' blockstatements { };
 		   | T_DO blockstatements T_WHILE '(' boolean_expr ')' { };
-		   | T_FORALL '(' ID T_IN proc_call ')' statements {};
+		   | T_FORALL '(' ID T_IN proc_call ')' blockstatements {};
+		| T_FORALL '(' ID T_IN proc_call ')' filterExpr blockstatements {};
+		| T_FOR '(' ID T_IN oid ')' blockstatements {};
+		| T_FOR '(' ID T_IN proc_call ')' blockstatements
 		   
-filterExpr  : '(' boolean_expr ')' { };
+filterExpr  : '.' proc_call { };
 
 boolean_expr : expression { };
 
@@ -179,17 +188,18 @@ arg_list :
 	        
            | assignment ',' arg_list {};
 	       | expression ',' arg_list {};
+		| declaration ',' arg_list {};
 	       | declaration {};
 	       | expression {};
 	       | assignment {};
 	
 		   
-bfs_abstraction	: T_BFS '(' ID ':' T_FROM ID ')'  blockstatements reverse_abstraction {};
-                 | T_BFS '(' ID ':' T_FROM ID ')' filterExpr blockstatements reverse_abstraction { };
+bfs_abstraction	: T_BFS '(' ID ':' T_FROM ID ')'  blockstatements {};
+                 | T_BFS '(' ID ':' T_FROM ID ')' filterExpr blockstatements { };
 
  
 
-reverse_abstraction : T_REVERSE blockstatements {};
+reverse_abstraction : T_REVERSE '(' arg_list ')' blockstatements {};
                     | T_REVERSE filterExpr blockstatements {};
 
 oid : ID '.' ID {printf("oid\n");};
