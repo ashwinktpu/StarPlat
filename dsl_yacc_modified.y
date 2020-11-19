@@ -65,8 +65,33 @@ function_data: T_FUNC ID '(' arg_list ')' { };
 
 //param : type1 ID | type2 ID '(' ID ')' {};
 
+
+function_body : blockstatements {printf("program.\n");};
+
+
+statements : statement statements {printf("Statement\n");};
+	| statement {printf("statement\n");};
+
+statement: declaration ';'{printf("declaration\n");};
+	|assignment ';'{printf("assignment\n");};
+	|proc_call ';' {printf("proc call \n");};
+	|control_flow {printf("control flow\n");};
+	|reduction ';'{printf ("Reduction\n");};
+	|bfs_abstraction { };
+	| reverse_abstraction {};
+	
+	
+blockstatements :'{' statements '}' { printf("block of statements\n");};
+		| statement {};
+	
+declaration : type1 ID  {};
+	| type1 ID '=' rhs {};
+	| type2 ID  {};
+	| type2 ID '=' rhs {};
+
 type1: primitive {};
-	| graph {}| collections { };
+	| graph {};
+	| collections { };
 	
 primitive: T_INT {};
 	| T_FLOAT {};
@@ -89,29 +114,6 @@ property : T_NP '<' primitive '>' { printf("node property\n");};
               | T_EP '<' primitive '>' { };
 			  | T_NP '<' collections '>'{ };
 			  | T_EP '<' collections '>' { };
-
-function_body : blockstatements {printf("program.\n");};
-
-
-statements : statement {printf("statement\n");};
-		| statement statements {printf("Statement\n");};
-
-statement: declaration ';'{printf("declaration\n");};
-	|assignment ';'{printf("assignment\n");};
-	|proc_call ';' {printf("proc call \n");};
-	|control_flow {printf("control flow\n");};
-	|reduction ';'{printf ("Reduction\n");};
-	|bfs_abstraction { };
-	| reverse_abstraction {};
-	
-	
-blockstatements :'{' statements '}' { printf("block of statements\n");};
-		| statement {};
-	
-declaration : type1 ID  {};
-	| type1 ID '=' rhs {};
-	| type2 ID  {};
-	| type2 ID '=' rhs {};
 	
 assignment :  leftSide '=' rhs  {};
 
@@ -152,8 +154,8 @@ iteration_cf : T_FIXEDPOINT T_UNTIL '(' arg_list ')' blockstatements {};
 		   | T_DO blockstatements T_WHILE '(' boolean_expr ')' { };
 		   | T_FORALL '(' ID T_IN proc_call ')' blockstatements {};
 		| T_FORALL '(' ID T_IN proc_call ')' filterExpr blockstatements {};
-		| T_FOR '(' ID T_IN oid ')' blockstatements {};
-		| T_FOR '(' ID T_IN proc_call ')' blockstatements
+		| T_FOR '(' ID T_IN leftSide ')' blockstatements {};
+		| T_FOR '(' ID T_IN proc_call ')' blockstatements {};
 		   
 filterExpr  : '.' proc_call { };
 
