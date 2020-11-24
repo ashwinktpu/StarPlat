@@ -5,12 +5,17 @@
 	#include <string.h>
 	#include <stdlib.h>
 	#include <stdbool.h>
+	#include <SymbolTable.h>
+	#include <list>
+
 	void yyerror(char *);
 	int yylex(void);
 	char mytext[100];
 	char var[100];
 	int num = 0;
 	extern char *yytext;
+	List<SymbolTable*> symbolTableList;
+	symbolTableList.push_back(new SymbolTable());
 %}
 
 %union {
