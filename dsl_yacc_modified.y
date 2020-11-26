@@ -6,6 +6,7 @@
 	#include <stdlib.h>
 	#include <stdbool.h>
 	#include <SymbolTable.h>
+	#include<Context.cpp>
 	#include <list>
 
 	void yyerror(char *);
@@ -89,36 +90,155 @@ statement: declaration ';'{printf("declaration\n");};
 blockstatements :'{' statements '}' { printf("block of statements\n");};
 		| statement {};
 	
-declaration : type1 ID  {};
+declaration : type1 ID  { SymbolTable* symTab=symbolTableList.front(); /* the type of declaration need to be made Context in header of yacc file
+                                                                          same goes for other nonterminals  */
+                            string s1($2);
+                            symTab->addSymbol(s1);
+                           if(symTab->getSymbol(s1)->type!="None")
+						    {
+						      cerr<<"Error:Symbol"<<s1<<"is already declared";
+							  exit(1);
+							}
+							symTab->getSymbol(s1)->type=$1->type;
+							symTab->getSymbol(s1)->enclosedType=$1->enclosedType;
+						     $$=new genContent();
+							 $$->type=$1->type;
+							 $$->place=s1; 
+                          
+
+                         };
 	| type1 ID '=' rhs {};
-	| type2 ID  {};
+	| type2 ID  {          SymbolTable* symTab=symbolTableList.front();
+                            string s1($2);
+                            symTab->addSymbol(s1);
+                           if(symTab->getSymbol(s1)->type!="None")
+						    {
+						      cerr<<"Error:Symbol"<<s1<<"is already declared";
+							  exit(1);
+							}
+							symTab->getSymbol(s1)->type=$1->type;
+							symTab->getSymbol(s1)->enclosedType=$1->enclosedType;
+						     $$=new genContent();
+							 $$->type=$1->type;
+							 $$->place=s1;
+							 $$->enclosedType=$1->enclosedType;
+							 };
 	| type2 ID '=' rhs {};
 
-type1: primitive {};
-	| graph {};
-	| collections { };
+type1: primitive {$$=$1};
+	| graph {$$=$1};
+	| collections { $$=$1};
 	
-primitive: T_INT {};
-	| T_FLOAT {};
-	| T_BOOL {};
-	| T_DOUBLE {};
-	| T_LONG {};
+primitive: T_INT { genContext* context=new genContext();
+                    context->place="int";
+					context->type="int";
+					$$=context;
+                      }; 
+	| T_FLOAT { genContext* context=new genContext();
+                    context->place="float";
+					context->type="float";
+					$$=context;
+				};
+	| T_BOOL {
+		          genContext* context=new genContext();
+                    context->place="bool";
+					context->type="bool";
+					$$=context;};
+		  
+	           };
+	| T_DOUBLE { genContext* context=new genContext();
+                    context->place="double";
+					context->type="double";
+					$$=context;};
 
-graph : T_GRAPH {};
-	|T_DIR_GRAPH {};
-	
-collections : T_LIST {};
-		|T_SET_NODES '<' ID '>' { };
-                | T_SET_EDGES '<' ID '>' { };
-	
-type2 : T_NODE { };
-       | T_EDGE { };
-	   | property { };
+	| T_LONG {genContext* context=new genContext();
+                    context->place="long";
+					context->type="long";
+					$$=context;};
 
-property : T_NP '<' primitive '>' { printf("node property\n");};
-              | T_EP '<' primitive '>' { };
-			  | T_NP '<' collections '>'{ };
-			  | T_EP '<' collections '>' { };
+graph : T_GRAPH {genContext* context=new genContext();
+                    context->place="Graph";
+					context->type="Graph";
+					$$=context;};
+	|T_DIR_GRAPH {genContext* context=new genContext();
+                    context->place="dirGraph";
+					context->type="dirGraph";
+					$$=context;};
+	
+collections : T_LIST {genContext* context=new genContext();
+                    context->place="list";
+					context->type="list";
+					$$=context;};
+		|T_SET_NODES '<' ID '>' { 
+			        SymbolTable* symTab=symbolTableList.front();
+                    string s1($3);
+					Symbol* symbol=symTab->getSymbol(s1);
+					if(symbol==NULL)
+					{
+						cerr<<"Symbol "<<s1<<"not declared";
+						exit(1);
+					}
+					if(symbol->type!="Graph")
+					{
+						cerr<<"Type "<<symbol->type<<"not allowed!";
+						exit(1);
+					}
+			       genContext* context=new genContext();
+                    context->place="SetN";
+					context->type="SetN";
+					$$=context;};
+                | T_SET_EDGES '<' ID '>' {
+
+					 SymbolTable* symTab=symbolTableList.front();
+                    string s1($3);
+					Symbol* symbol=symTab->getSymbol(s1);
+					if(symbol==NULL)
+					{
+						cerr<<"Symbol "<<s1<<"not declared";
+						exit(1);
+					}
+					if(symbol->type!="Graph")
+					{
+						cerr<<"Type "<<symbol->type<<"not allowed!";
+						exit(1);
+					}
+					genContext* context=new genContext();
+                    context->place="SetE";
+					context->type="SetE";
+					$$=context;
+				 };
+	
+type2 : T_NODE { genContext* context=new genContext();
+                    context->place="node";
+					context->type="node";
+					$$=context;};
+       | T_EDGE { genContext* context=new genContext();
+                    context->place="edge";
+					context->type="edge";
+					$$=context;};
+	   | property {$$=$1;};
+
+property : T_NP '<' primitive '>' { genContext* context=new genContext();
+                                    context->place="nodeProperty";
+					                context->type="nodeProperty";
+									context->enclosedType=$3->type;
+	                                $$=context;
+};
+              | T_EP '<' primitive '>' {genContext* context=new genContext();
+                                    context->place="edgeProperty";
+					                context->type="edgeProperty";
+									context->enclosedType=$3->type;
+	                                $$=context; };
+			  | T_NP '<' collections '>'{ genContext* context=new genContext();
+                                    context->place="nodeProperty";
+					                context->type="nodeProperty";
+									context->enclosedType=$3->type;
+	                                $$=context;};
+			  | T_EP '<' collections '>' {genContext* context=new genContext();
+                                    context->place="edgeProperty";
+					                context->type="edgeProperty";
+									context->enclosedType=$3->type;
+	                                $$=context; };
 	
 assignment :  leftSide '=' rhs  {};
 
