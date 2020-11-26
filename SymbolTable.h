@@ -1,7 +1,7 @@
 #include <string>
 #include<stdio.h>
 #include <map>
-#include<Symbol.cpp>
+#include<Symbol.h>
 
 using namespace std;
 
