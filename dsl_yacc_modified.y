@@ -7,6 +7,7 @@
 	#include <stdbool.h>
 	#include <SymbolTable.h>
 	#include<Context.cpp>
+	#include<FrontEndContext.h>
 	#include <list>
 
 	void yyerror(char *);
@@ -15,8 +16,10 @@
 	char var[100];
 	int num = 0;
 	extern char *yytext;
-	List<SymbolTable*> symbolTableList;
-	symbolTableList.push_back(new SymbolTable());
+	extern SymbolTable* symbTab;
+	
+	symbTab=new SymbolTable();
+	//symbolTableList.push_back(new SymbolTable());
 %}
 
 %union {
@@ -85,44 +88,48 @@ statement: declaration ';'{printf("declaration\n");};
 	|reduction ';'{printf ("Reduction\n");};
 	|bfs_abstraction { };
 	| reverse_abstraction {};
+	| blockstatements {};
 	
 	
-blockstatements :'{' statements '}' { printf("block of statements\n");};
-		| statement {};
+blockstatements : block_begin statements block_end { printf("block of statements\n");};
+
+block_begin:'{' { }
+
+block_end:'}'
 	
-declaration : type1 ID  { SymbolTable* symTab=symbolTableList.front(); /* the type of declaration need to be made Context in header of yacc file
-                                                                          same goes for other nonterminals  */
-                            string s1($2);
-                            symTab->addSymbol(s1);
-                           if(symTab->getSymbol(s1)->type!="None")
-						    {
-						      cerr<<"Error:Symbol"<<s1<<"is already declared";
-							  exit(1);
-							}
-							symTab->getSymbol(s1)->type=$1->type;
-							symTab->getSymbol(s1)->enclosedType=$1->enclosedType;
-						     $$=new genContent();
-							 $$->type=$1->type;
-							 $$->place=s1; 
+	
+declaration : type1 ID  { 
+	                       Symbol* symbol=symbTab->LookUp($2);
+						   if(symbol!=NULL)
+						     {
+								 cerr<<"Error:Symbol"<<$2<<"is already declared";
+								 exit(1);
+							 }
+	                         symbTab->insertSymbol($2,$1);
+	                  
+						//	symTab->getSymbol(s1)->type=$1->type;
+						//	symTab->getSymbol(s1)->enclosedType=$1->enclosedType;
+						 //    $$=new genContent();
+						//	 $$->type=$1->type;
+						//	 $$->place=s1; 
                           
 
                          };
 	| type1 ID '=' rhs {};
-	| type2 ID  {          SymbolTable* symTab=symbolTableList.front();
-                            string s1($2);
-                            symTab->addSymbol(s1);
-                           if(symTab->getSymbol(s1)->type!="None")
-						    {
-						      cerr<<"Error:Symbol"<<s1<<"is already declared";
-							  exit(1);
-							}
-							symTab->getSymbol(s1)->type=$1->type;
-							symTab->getSymbol(s1)->enclosedType=$1->enclosedType;
-						     $$=new genContent();
-							 $$->type=$1->type;
-							 $$->place=s1;
-							 $$->enclosedType=$1->enclosedType;
-							 };
+	| type2 ID  {         Symbol* symbol=symbTab->LookUp($2);
+						   if(symbol!=NULL)
+						     {
+								 cerr<<"Error:Symbol"<<$2<<"is already declared";
+								 exit(1);
+							 }
+	                         symbTab->insertSymbol($2,$1);
+							//symTab->getSymbol(s1)->type=$1->type;
+						   //	symTab->getSymbol(s1)->enclosedType=$1->enclosedType;
+						  //   $$=new genContent();
+							// $$->type=$1->type;
+							// $$->place=s1;
+							// $$->enclosedType=$1->enclosedType;
+							// };
 	| type2 ID '=' rhs {};
 
 type1: primitive {$$=$1};
@@ -170,33 +177,28 @@ collections : T_LIST {genContext* context=new genContext();
 					context->type="list";
 					$$=context;};
 		|T_SET_NODES '<' ID '>' { 
-			        SymbolTable* symTab=symbolTableList.front();
-                    string s1($3);
-					Symbol* symbol=symTab->getSymbol(s1);
-					if(symbol==NULL)
-					{
-						cerr<<"Symbol "<<s1<<"not declared";
-						exit(1);
-					}
+			         Symbol* symbol=symbTab->LookUp($3);
+						   if(symbol!=NULL)
+						     {
+								 cerr<<"Error:Symbol"<<$3<<"is already declared";
+								 exit(1);
+							 }
 					if(symbol->type!="Graph")
 					{
 						cerr<<"Type "<<symbol->type<<"not allowed!";
 						exit(1);
 					}
-			       genContext* context=new genContext();
-                    context->place="SetN";
-					context->type="SetN";
-					$$=context;};
+			      // genContext* context=new genContext();
+                   // context->place="SetN";
+					//context->type="SetN";
+				//	$$=context;};
                 | T_SET_EDGES '<' ID '>' {
-
-					 SymbolTable* symTab=symbolTableList.front();
-                    string s1($3);
-					Symbol* symbol=symTab->getSymbol(s1);
-					if(symbol==NULL)
-					{
-						cerr<<"Symbol "<<s1<<"not declared";
-						exit(1);
-					}
+ Symbol* symbol=symbTab->LookUp($3);
+						   if(symbol!=NULL)
+						     {
+								 cerr<<"Error:Symbol"<<$3<<"is already declared";
+								 exit(1);
+							 }
 					if(symbol->type!="Graph")
 					{
 						cerr<<"Type "<<symbol->type<<"not allowed!";

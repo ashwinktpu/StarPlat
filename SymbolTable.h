@@ -5,12 +5,38 @@
 
 using namespace std;
 
+
+
+
+class Scope
+{ 
+  protected:
+  map<string,Symbol*> HashInfo;
+  
+  public:
+  Scope();
+  void buildInfo();
+ // map<string,Symbol*> getHashInfo();
+  bool hasHashInfo();
+  void insertInScope(Symbol* symbol);
+  Symbol* LookUpinScope(Identifier* id);
+
+};
+
 class SymbolTable
 {
-  SymbolTable();
-  map<string,Symbol*> symbMap;
+  vector<Scope*> scopeVector;
+  vector<int> activeScope;
+  int current_Scope;
+  int scope_count;
 
-  Symbol* addSymbol(string symName,string Type,string enclosedType);
-  Symbol* getSymbol(string symName);
+  SymbolTable();
+
+  void createNewScope();
+  void exitScope();
+  
+  void insertSymbol(string symName,string Type,string enclosedType);
+   Symbol* LookUp(Identifier* id);
+
 
 };
