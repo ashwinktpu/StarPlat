@@ -14,6 +14,6 @@ public:
    string type;
    string enclosedType;
 
-Symbol(string name,string type,string enclosedType);
+Symbol(string symName,string symType,string symEnclosedType);
 
 };
