@@ -280,11 +280,11 @@ iteration_cf : T_FIXEDPOINT T_UNTIL '(' arg_list ')' blockstatements {};
 		   | T_WHILE '(' boolean_expr')' blockstatements { };
 		   | T_DO blockstatements T_WHILE '(' boolean_expr ')' { };
 		   | T_FORALL '(' ID T_IN proc_call ')' blockstatements {};
-		| T_FORALL '(' ID T_IN proc_call ')' filterExpr blockstatements {};
+		| T_FORALL '(' ID T_IN proc_call filterExpr')'  blockstatements {};
 		| T_FOR '(' ID T_IN leftSide ')' blockstatements {};
 		| T_FOR '(' ID T_IN proc_call ')' blockstatements {};
 		   
-filterExpr  : '.' proc_call { };
+filterExpr  : '.filter('boolean_expr ')'{ };
 
 boolean_expr : expression { };
 
