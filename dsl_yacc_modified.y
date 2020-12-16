@@ -7,7 +7,7 @@
 	#include <stdbool.h>
 	#include <SymbolTable.h>
 	#include<Context.cpp>
-	#include<FrontEndContext.h>
+	#include<MainContext.h>
 	#include <list>
 
 	void yyerror(char *);
@@ -21,6 +21,8 @@
 	symbTab=new SymbolTable();
 	//symbolTableList.push_back(new SymbolTable());
 %}
+
+/* This is the yacc file in use for the DSL. The action part needs to be modified completely*/
 
 %union {
     int  info;
@@ -68,11 +70,13 @@ program: function_def {printf("program.\n");};
 
 function_def: function_data  function_body  { };
 
-function_data: T_FUNC ID '(' arg_list ')' { };
+function_data: T_FUNC ID '(' paramList ')' { };
 
-//paramList: param { }| paramList ',' param { };
+paramList: param { };
+               | paramList ',' param { };
 
-//param : type1 ID | type2 ID '(' ID ')' {};
+param : type1 ID { } ;
+               | type2 ID '(' ID ')' {};
 
 
 function_body : blockstatements {printf("program.\n");};
@@ -86,8 +90,7 @@ statement: declaration ';'{printf("declaration\n");};
 	|proc_call ';' {printf("proc call \n");};
 	|control_flow {printf("control flow\n");};
 	|reduction ';'{printf ("Reduction\n");};
-	|bfs_abstraction { };
-	| reverse_abstraction {};
+	| bfs_abstraction { };
 	| blockstatements {};
 	
 	
@@ -246,7 +249,7 @@ assignment :  leftSide '=' rhs  {};
 
 rhs : expression { };
 
-expression :  proc_call { };
+expression : proc_call { };
              | expression '+' expression {};
 	         | expression '-' expression {};
 	         | expression '*' expression {};
@@ -262,8 +265,7 @@ expression :  proc_call { };
 			 | leftSide { };
 			 
 proc_call : leftSide '(' arg_list ')' { };
-           |leftSide '(' arg_list ')' '.' proc_call {}; 
-		| oid '.' ID '(' arg_list ')' {};
+	
 
 			 
 val : INT_NUM {};
@@ -276,11 +278,11 @@ val : INT_NUM {};
 control_flow : selection_cf { };
               | iteration_cf { };
 
-iteration_cf : T_FIXEDPOINT T_UNTIL '(' arg_list ')' blockstatements {};
+iteration_cf : T_FIXEDPOINT T_UNTIL '(' boolean_expr ')' blockstatements {};
 		   | T_WHILE '(' boolean_expr')' blockstatements { };
 		   | T_DO blockstatements T_WHILE '(' boolean_expr ')' { };
-		   | T_FORALL '(' ID T_IN proc_call ')' blockstatements {};
-		| T_FORALL '(' ID T_IN proc_call filterExpr')'  blockstatements {};
+		   | T_FORALL '(' ID T_IN ID '.' proc_call ')' blockstatements {};
+		| T_FORALL '(' ID T_IN ID '.' proc_call filterExpr')'  blockstatements {};
 		| T_FOR '(' ID T_IN leftSide ')' blockstatements {};
 		| T_FOR '(' ID T_IN proc_call ')' blockstatements {};
 		   
@@ -295,7 +297,7 @@ selection_cf : T_IF '(' boolean_expr ')' statements { };
 reduction : leftSide '=' reductionCall { } 
 		   |'<' leftList '>' '=' '<' rightList '>'  {}; 
 
-leftList : leftSide ',' leftList { };
+leftList :  leftList ',' leftSide { };
 		 | leftSide { };
 
 rightList : reductionCall ',' val { };
@@ -312,23 +314,18 @@ reduction_op : T_SUM {};
 leftSide : ID { };
          | oid { };
 
-arg_list : 
-           | leftSide ',' arg_list {};
-	        
-           | assignment ',' arg_list {};
+arg_list :  assignment ',' arg_list {};
 	       | expression ',' arg_list {};
-		| declaration ',' arg_list {};
-	       | declaration {};
 	       | expression {};
 	       | assignment {};
 	
 		   
-bfs_abstraction	: T_BFS '(' ID ':' T_FROM ID ')'  blockstatements {};
-                 | T_BFS '(' ID ':' T_FROM ID ')' filterExpr blockstatements { };
+bfs_abstraction	: T_BFS '(' ID ':' T_FROM ID ')'  blockstatements reverse_abstraction{};
+                 | T_BFS '(' ID ':' T_FROM ID ')' filterExpr blockstatements reverse_abstraction{ };
 
  
 
-reverse_abstraction : T_REVERSE '(' arg_list ')' blockstatements {};
+reverse_abstraction : T_REVERSE '(' boolean_expr ')' blockstatements {};
                     | T_REVERSE filterExpr blockstatements {};
 
 oid : ID '.' ID {printf("oid\n");};
