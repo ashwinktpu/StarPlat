@@ -208,10 +208,10 @@ selection_cf : T_IF '(' boolean_expr ')' statements { $$=createNodeForIfStmt($3,
 			  
 
 reduction : leftSide '=' reductionCall { $$=createNodeForReductionStmt($1,$3) } 
-		   |'<' leftList '>' '=' '<' rightList '>'  {}; 
+		   |'<' leftList '>' '=' '<' rightList '>'  {$$=createNodeForReductionStmtList($2,$6.reducCall,$6.exprVal);}; 
 
-leftList :  leftList ',' leftSide { $$.add($1) };
-		 | leftSide { $$.add($1)};
+leftList :  leftList ',' leftSide { $$.push_back($1) };
+		 | leftSide { $$.push_back($1)};
 
 rightList : reductionCall ',' val { $$.reducCall=$1;
                                     $$.exprVal=$3; };
@@ -231,19 +231,19 @@ leftSide : ID { $$=createIdentifierNode($1);};
 arg_list :   arg_list ',' assignment {argument a1;
 		                 a1.expression=$1;
 						 a1.expressionflag=true;
-						 $$.add(a1);};
+						 $$.push_back(a1);};
 	       |  arg_list ',' expression  {argument a1;
 		                                a1.assignExpr=$1;
 						                a1.assign=true;
-						                $$.add(a1);};
+						                $$.push_back(a1);};
 	       | expression {argument a1;
 		                 a1.expression=$1;
 						 a1.expressionflag=true;
-						 $$.add(a1); };
+						 $$.push_back(a1); };
 	       | assignment { argument a1;
 		                  a1.assignExpr=$1;
 						  a1.assign=true;
-						  $$.add(a1);  };
+						  $$.push_back(a1);  };
 	
 		   
 bfs_abstraction	: T_BFS '(' ID ':' T_FROM ID ')' filterExpr blockstatements reverse_abstraction{$$=createIterateInBFSNode($3,$6,$8,$9,$10) ;};
