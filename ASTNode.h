@@ -6,6 +6,7 @@ class ASTNode
 {
   protected:
   ASTNode* parent;
+  string typeofNode;
 
   public:
   ASTNode()
@@ -15,6 +16,14 @@ class ASTNode
   void setParent(ASTNode* node)
   {
       parent=node;
+  }
+  void setTypeofNode(string type)
+  {
+    typeofNode=type;
+  }
+  string getTypeofNode()
+  {
+    return typeofNode;
   }
   ASTNode* getParent()
   {

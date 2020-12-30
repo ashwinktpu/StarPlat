@@ -1,15 +1,19 @@
 #include<stdio.h>
-#include"FrontendContext.h"
+#include"MainContext.h"
 #include"SymbolTable.h"
 
 using namespace std;
 
+FrontEndContext::FrontEndContext()
+{
+   blockList=new vector<blockStatement*>();
+}
 
-void FrontendContext::startBlock()
+void FrontendContext::startBlock(blockStatement* blockStmtSent)
 { 
    symbTab->createNewScope();
-   Block* newBlock=new Block();
-   blockList.push_back(newBlock);
+  // Block* newBlock=new Block();
+   blockList.push_back(blockStmtSent);
 
 }
 
@@ -20,8 +24,8 @@ void FrontendContext::endBlock()
 
 }
 
-Block* FrontendContext::getCurrentBlock()
+blockStatement* FrontendContext::getCurrentBlock()
 {
-   Block* b=blockList.back();
+   blockStatement* b=blockList.back();
    return b;
 }
