@@ -1,17 +1,19 @@
 #include<stdio.h>
+#include<ASTNodeTypes.h>
+#include<vector>
 
 using namespace std;
 
 class FrontEndContext
 {
   private:
-  vector<Block*> blockList();
+  vector<blockStatement*> *blockList;
 
   public:
   FrontEndContext();
-  void startBlock();
+  void startBlock(blockStatement* blockStmtSent);
   void endBlock();
-  Block* getCurrentBlock();
+  blockStatement* getCurrentBlock();
 
 
 };

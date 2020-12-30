@@ -11,12 +11,11 @@ using namespace std;
 class Scope
 { 
   protected:
-  map<string,Symbol*> HashInfo;
+  map<string,Symbol*> *HashInfo;
   
   public:
   Scope();
   void buildInfo();
- // map<string,Symbol*> getHashInfo();
   bool hasHashInfo();
   void insertInScope(Symbol* symbol);
   Symbol* LookUpinScope(Identifier* id);
@@ -25,8 +24,8 @@ class Scope
 
 class SymbolTable
 {
-  vector<Scope*> scopeVector;
-  vector<int> activeScope;
+  vector<Scope*> *scopeVector;
+  vector<int> *activeScope;
   int current_Scope;
   int scope_count;
 
