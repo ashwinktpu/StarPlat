@@ -30,7 +30,7 @@
     double fval;
     char* text;
 	ASTNode* node;
-	list<formalParam*> paramList;
+	list<formalParam*> paramlist;
 	list<argument> argumentList;
 	list<ASTNode*> nodeList;
     //bool bval;
@@ -56,15 +56,16 @@
 %token <fval> FLOAT_NUM
 %token <bval> BOOL_VAL
 
-%type <ptr> function_def function_data function_body paramList 
-%type <ptr> statement blockstatements  assignment declaration proc_call control_flow reduction 
-%type <ptr> type type1 type2
-%type <ptr> primitive graph collections property
-%type <ptr> id leftSide rhs expression oid val boolean_expr
-%type <ptr> bfs_abstraction filterExpr reverse_abstraction
+%type <node> function_def function_data function_body param
+%type <paramlist> paramList
+%type <node> statement blockstatements assignment declaration proc_call control_flow reduction 
+%type <node> type type1 type2
+%type <node> primitive graph collections property
+%type <node> id leftSide rhs expression oid val boolean_expr
+%type <node> bfs_abstraction filterExpr reverse_abstraction
 %type <nodeList> leftList
-%type <ptr> iteration_cf selection_cf
-%type <ptr> proc_call
+%type <node> iteration_cf selection_cf
+%type <node> proc_call
 %type <argumentList> arg_list
 %type <ival> reduction_op
 %type <temporary>  rightList
@@ -93,8 +94,8 @@ function_def: function_data  function_body  { };
 function_data: T_FUNC ID '(' paramList ')' {Identifier* funcId=createIdentifierNode($1);
                                            $$=createFuncNode(funcId,$3); };
 
-paramList: param {$$.add($1); };
-               | paramList ',' param {$$.add($2); };
+paramList: param {$$.push_back($1); };
+               | paramList ',' param {$$.push_back($2); };
 
 param : type1 ID { Identifier* id=createIdentifierNode($2);
                            $$=createParamNode($1,id); } ;
@@ -104,8 +105,8 @@ param : type1 ID { Identifier* id=createIdentifierNode($2);
 function_body : blockstatements {$$=$1;};
 
 
-statements : statement statements {printf("Statement\n");};
-	| statement {printf("statement\n");};
+statements :
+           | statements statement { addToBlock($2); };
 
 statement: declaration ';'{$$=$1};
 	|assignment ';'{$$=$1;};
@@ -116,9 +117,9 @@ statement: declaration ';'{$$=$1};
 	| blockstatements {$$=$1;};
 	
 	
-blockstatements : block_begin statements block_end { printf("block of statements\n");};
+blockstatements : block_begin statements block_end { $$=finishBlock();};
 
-block_begin:'{' { }
+block_begin:'{' { createNewBlock(); }
 
 block_end:'}'
 	
@@ -136,43 +137,45 @@ type1: primitive {$$=$1};
 	| graph {$$=$1};
 	| collections { $$=$1};
 	
-primitive: T_INT { $$=createPrimitiveTypeNode("INT");}; 
-	| T_FLOAT { $$=createPrimitiveTypeNode("FLOAT");};
-	| T_BOOL { $$=createPrimitiveTypeNode("BOOL");};
-	| T_DOUBLE { $$=createPrimitiveTypeNode("DOUBLE"); };
-    | T_LONG {$$=$$=createPrimitiveTypeNode("LONG");};
+primitive: T_INT { $$=createPrimitiveTypeNode(TYPE_INT);}; 
+	| T_FLOAT { $$=createPrimitiveTypeNode(TYPE_FLOAT);};
+	| T_BOOL { $$=createPrimitiveTypeNode(TYPE_BOOL);};
+	| T_DOUBLE { $$=createPrimitiveTypeNode(TYPE_DOUBLE); };
+    | T_LONG {$$=$$=createPrimitiveTypeNode(TYPE_LONG);};
 
-graph : T_GRAPH { $$=createGraphTypeNode("Graph",NULL);};
-	|T_DIR_GRAPH {$$=createGraphTypeNode("DirGraph",NULL);};
+graph : T_GRAPH { $$=createGraphTypeNode(TYPE_GRAPH,NULL);};
+	|T_DIR_GRAPH {$$=createGraphTypeNode(TYPE_DIRGRAPH,NULL);};
 	
-collections : T_LIST { $$=createCollectionTypeNode("list",NULL);};
-		|T_SET_NODES '<' ID '>' { $$=createCollectionTypeNode("SetN",$3);};
-                | T_SET_EDGES '<' ID '>' { $$=createCollectionTypeNode("SetE",$3);};
+collections : T_LIST { $$=createCollectionTypeNode(TYPE_LIST,NULL);};
+		|T_SET_NODES '<' ID '>' { $$=createCollectionTypeNode(TYPE_SETN,$3);};
+                | T_SET_EDGES '<' ID '>' { $$=createCollectionTypeNode(TYPE_SETE,$3);};
 	
 type2 : T_NODE { };
        | T_EDGE {};
 	   | property {$$=$1;};
 
-property : T_NP '<' primitive '>' { $$=createPropertyTypeNode("NodeProperty",$3); };
-              | T_EP '<' primitive '>' { $$=createPropertyTypeNode("EdgeProperty",$3); };
-			  | T_NP '<' collections '>'{  $$=createPropertyTypeNode("NodeProperty",$3); };
-			  | T_EP '<' collections '>' {$$=createPropertyTypeNode("EdgeProperty",$3);};
+property : T_NP '<' primitive '>' { $$=createPropertyTypeNode(PROP_NODE,$3); };
+              | T_EP '<' primitive '>' { $$=createPropertyTypeNode(PROP_EDGE,$3); };
+			  | T_NP '<' collections '>'{  $$=createPropertyTypeNode(PROP_NODE,$3); };
+			  | T_EP '<' collections '>' {$$=createPropertyTypeNode(PROP_EDGE,$3);};
 	
 assignment :  leftSide '=' rhs  { $$=createAssignmentNode($1,$3);};
 
 rhs : expression { $$=$1;};
 
 expression : proc_call { $$=$1};
-             | expression '+' expression { $$=createNodeForArithmeticExpr($1,$3,1);};
-	         | expression '-' expression { $$=createNodeForArithmeticExpr($1,$3,2);};
-	         | expression '*' expression {$$=createNodeForArithmeticExpr($1,$3,3);};
-	         | expression'/' expression{$$=createNodeForArithmeticExpr($1,$3,4);};
-			 | expression T_AND_OP expression {$$=createNodeForLogicalExpr($1,$3,1);};
-	         | expression T_OR_OP  expression {$$=createNodeForLogicalExpr($1,$3,2);};
-	         | expression T_LE_OP ID {$$=createNodeForRelationalExpr($1,$3,1);};
-	         | expression T_GE_OP expression{$$=createNodeForRelationalExpr($1,$3,2);};
-			 | expression T_EQ_OP expression{$$=createNodeForRelationalExpr($1,$3,3);};
-             | expression T_NE_OP expression{$$=$$=createNodeForRelationalExpr($1,$3,4);};	
+             | expression '+' expression { $$=createNodeForArithmeticExpr($1,$3,OPERATOR_ADD);};
+	         | expression '-' expression { $$=createNodeForArithmeticExpr($1,$3,OPERATOR_SUB);};
+	         | expression '*' expression {$$=createNodeForArithmeticExpr($1,$3,OPERATOR_MUL);};
+	         | expression'/' expression{$$=createNodeForArithmeticExpr($1,$3,OPERATOR_DIV);};
+             | expression T_AND_OP expression {$$=createNodeForLogicalExpr($1,$3,OPERATOR_AND);};
+	         | expression T_OR_OP  expression {$$=createNodeForLogicalExpr($1,$3,OPERATOR_OR);};
+	         | expression T_LE_OP expression {$$=createNodeForRelationalExpr($1,$3,OPERATOR_LE);};
+	         | expression T_GE_OP expression{$$=createNodeForRelationalExpr($1,$3,OPERATOR_GE);};
+			 | expression '<' expression{$$=createNodeForRelationalExpr($1,$3,OPERATOR_LT);};
+			 | expression '>' expression{$$=createNodeForRelationalExpr($1,$3,OPERATOR_GT);};
+			 | expression T_EQ_OP expression{$$=createNodeForRelationalExpr($1,$3,OPERATOR_EQ);};
+             | expression T_NE_OP expression{$$=$$=createNodeForRelationalExpr($1,$3,OPERATOR_NE);};	
 		| '(' expression ')' {$$=$2;};		 
 	         | val {$$=$1;};
 			 | leftSide { $$=$1 ;};
@@ -219,11 +222,11 @@ rightList : reductionCall ',' val { $$.reducCall=$1;
 		  
 reductionCall : reduction_op '(' arg_list ')' {$$=createNodeforReductionCall($1,$3);} ;
 
-reduction_op : T_SUM { $$=1;};
-	         | T_COUNT {$$=2;};
-	         | T_PRODUCT {$$=3;};
-	         | T_MAX {$$=4;};
-	         | T_MIN {$$=5;};
+reduction_op : T_SUM { $$=REDUCE_SUM;};
+	         | T_COUNT {$$=REDUCE_COUNT;};
+	         | T_PRODUCT {$$=REDUCE_PRODUCT;};
+	         | T_MAX {$$=REDUCE_MAX;};
+	         | T_MIN {$$=REDUCE_MIN;};
 			 
 leftSide : ID { $$=createIdentifierNode($1);};
          | oid { $$=$1; };

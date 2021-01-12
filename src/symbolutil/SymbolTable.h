@@ -3,8 +3,6 @@
 #include <map>
 #include<Symbol.h>
 
-using namespace std;
-
 
 
 

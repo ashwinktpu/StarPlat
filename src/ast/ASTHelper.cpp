@@ -1,8 +1,8 @@
-#include<stdio.h>
 #include<MainContext.h>
 #include<ASTNode.h>
+#include<enum_def.h>
 
-using namespace std;
+extern FrontEndContext FrontEndC;
 
 /*TO be implemented. It will contain functions that will be called by action part of Parser
                                                       for building the nodes of AST*/
@@ -13,6 +13,27 @@ ASTNode* createFuncNode(Identifier* id,list<formalParam*> formalParamList)
 
 }
 
+void createNewBlock()
+{
+    blockStatement* blockStatementNode=blockStatement::createnewBlock();
+    FrontEndC.startBlock(blockStatementNode);
+}
+
+ASTNode* finishBlock()
+{   
+    blockStatement* blockStatementNode=FrontEndC.getCurrentBlock();
+    FrontEndC.endBlock();
+    retun blockStatementNode;
+}
+void addToBlock(ASTNode* statementNode)
+{
+    if(statement!=NULL)
+    {
+        statement* statementNode=(statement*)statementNode;
+        blockStatement* currentBlock=FrontEndC.getCurrentBlock();
+        currentBlock->addStmtToBlock(statementNode);
+    }
+}
 ASTNode* createParamNode(Identifier* id,Type* type)
 {
    formalParam* formalParamNode=formalParam::formalParam(id,type);

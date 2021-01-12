@@ -78,13 +78,13 @@ WS  [ \t\v\n\f]
 "&"					{ printf ( "'&'"); strcpy(mytext, yytext); return '&';}
 "!"					{ printf ( "'!'"); strcpy(mytext, yytext); return '!';}
 "~"					{ printf ( "'~'"); strcpy(mytext, yytext); return '~';}
-"-"					{ printf ( "'-'"); strcpy(mytext, yytext); return '-';}
-"+"					{ printf ( "'+'"); strcpy(mytext, yytext); return '+';}
-"*"					{ printf ( "'*'"); strcpy(mytext, yytext); return '*';}
-"/"					{ printf ( "'/'"); strcpy(mytext, yytext); return '/';}
-"%"					{ printf ( "'%'"); strcpy(mytext, yytext); return '%';}
-"<"					{ printf ( "'<'"); strcpy(mytext, yytext); return '<';}
-">"					{ printf ( "'>'"); strcpy(mytext, yytext); return '>';}
+//"-"					{ printf ( "'-'"); strcpy(mytext, yytext); return '-';}
+//"+"					{ printf ( "'+'"); strcpy(mytext, yytext); return '+';}
+//"*"					{ printf ( "'*'"); strcpy(mytext, yytext); return '*';}
+//"/"					{ printf ( "'/'"); strcpy(mytext, yytext); return '/';}
+//"%"					{ printf ( "'%'"); strcpy(mytext, yytext); return '%';}
+//"<"					{ printf ( "'<'"); strcpy(mytext, yytext); return '<';}
+//">"					{ printf ( "'>'"); strcpy(mytext, yytext); return '>';}
 "^"					{ printf ( "'^'"); strcpy(mytext, yytext); return '^';}
 "|"					{ printf ( "'|'"); strcpy(mytext, yytext); return '|';}
 "?"					{ printf ( "'?'"); strcpy(mytext, yytext); return '?';} 
@@ -94,7 +94,6 @@ WS  [ \t\v\n\f]
 "Or"      { printf ( "Or"); strcpy(mytext, yytext); return T_OR;}
 
 "Sum"     { printf ( "Sum"); strcpy(mytext, yytext); return T_SUM;}
-"Avg"     { printf ( "Average"); strcpy(mytext, yytext); return T_AVG;}
 "Count"   { printf ( "Count"); strcpy(mytext, yytext); return T_COUNT;}
 "Product" { printf ( "Product"); strcpy(mytext, yytext); return T_PRODUCT;}
 "Max"     { printf ( "Max"); strcpy(mytext, yytext); return T_MAX;}
