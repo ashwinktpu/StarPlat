@@ -78,13 +78,6 @@ WS  [ \t\v\n\f]
 "&"					{ printf ( "'&'"); strcpy(mytext, yytext); return '&';}
 "!"					{ printf ( "'!'"); strcpy(mytext, yytext); return '!';}
 "~"					{ printf ( "'~'"); strcpy(mytext, yytext); return '~';}
-//"-"					{ printf ( "'-'"); strcpy(mytext, yytext); return '-';}
-//"+"					{ printf ( "'+'"); strcpy(mytext, yytext); return '+';}
-//"*"					{ printf ( "'*'"); strcpy(mytext, yytext); return '*';}
-//"/"					{ printf ( "'/'"); strcpy(mytext, yytext); return '/';}
-//"%"					{ printf ( "'%'"); strcpy(mytext, yytext); return '%';}
-//"<"					{ printf ( "'<'"); strcpy(mytext, yytext); return '<';}
-//">"					{ printf ( "'>'"); strcpy(mytext, yytext); return '>';}
 "^"					{ printf ( "'^'"); strcpy(mytext, yytext); return '^';}
 "|"					{ printf ( "'|'"); strcpy(mytext, yytext); return '|';}
 "?"					{ printf ( "'?'"); strcpy(mytext, yytext); return '?';} 
@@ -113,7 +106,7 @@ WS  [ \t\v\n\f]
 "SetE" 	{printf("Set of Edges");strcpy(mytext, yytext); return T_SET_EDGES;}
 "elements" {printf("elements"); strcpy(mytext, yytext); return T_ELEMENTS;}
 "list" {printf("list type"); strcpy(mytext, yytext); return T_LIST;}
-
+"filter" {printf("list type"); strcpy(mytext, yytext); return T_FLTR;}
 
  /* Numbers and Identifies */
 {ALPHANUM}          {printf("Identifier \n"); strcpy(mytext, yytext); return ID;}
