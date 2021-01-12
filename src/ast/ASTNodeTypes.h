@@ -2,7 +2,7 @@
 #include<string>
 #include <list>
 
-using namespace std;
+
 /*class declaration for each node type. Incomplete at the moment.*/
 
 

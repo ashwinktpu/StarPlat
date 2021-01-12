@@ -1,8 +1,7 @@
-#include<stdio.h>
 #include"MainContext.h"
 #include"SymbolTable.h"
 
-using namespace std;
+
 
 FrontEndContext::FrontEndContext()
 {

@@ -1,9 +1,6 @@
 #include<SymbolTable.h>
 #include<ASTNodeTypes.h>
 
-using namespace std;
-
-
 
 
 Scope::Scope()
