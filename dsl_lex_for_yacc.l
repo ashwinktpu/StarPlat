@@ -106,39 +106,9 @@ WS  [ \t\v\n\f]
 "dirGraph" 	{printf("Directed Graph Type"); strcpy(mytext, yytext); return T_DIR_GRAPH;}
 "node" 		{printf("Node Type"); strcpy(mytext, yytext); return T_NODE;}
 "edge" 		{printf("Edge Type"); strcpy(mytext, yytext); return T_EDGE;}
-
- /*
-"numNodes" {printf("Number of Nodes"); strcpy(mytext, yytext); return T_NUM_NODES;}
-"numEdges" {printf("Number of Edges"); strcpy(mytext, yytext); return T_NUM_EDGES;}
-"makeUndirected" {printf("Make Undirected\n"); strcpy(mytext, yytext); return T_MUND;}
-
-"contains" {printf("Keyword-Contains"); strcpy(mytext, yytext); return T_CONTAINS;}
-
-"neighbors"  {printf("Neighbors"); strcpy(mytext, yytext); return T_NBR;}
-"nodes_from" {printf("Nodes From"); strcpy(mytext, yytext); return T_OUT_NBR;}
-"nodes_to" {printf("Nodes To"); strcpy(mytext, yytext); return T_IN_NBR;}
-"edges_from" {printf("Edges From"); strcpy(mytext, yytext); return T_EDGES_FROM;}
-"edges_to" {printf("Edges tO"); strcpy(mytext, yytext); return T_EDGES_TO;}
-"out_degree" {printf("Out degree"); strcpy(mytext, yytext); return T_OUT_DEGREE;}
-"in_degree" {printf("In Degree"); strcpy(mytext, yytext); return T_IN_DEGREE;}
-"count_outNbrs" {printf("Count OutNbr"); strcpy(mytext, yytext); return T_C_ONBR;}
-"count_inNbrs" {printf("Count InNbr"); strcpy(mytext, yytext); return T_C_INBR;}
-
-"get_source" {printf("Get Source"); strcpy(mytext, yytext); return T_GET_SRC;}
-"get_destination" {printf("Get Destination"); strcpy(mytext, yytext); return T_GET_DST;}
-"get_edge" {printf("Get Edge"); strcpy(mytext, yytext); return T_GET_EDGE;}
-"get_neighbor" {printf("Get Nbr"); strcpy(mytext, yytext); return T_GET_NBR;}
-
-"nodes" {printf("Nodes"); strcpy(mytext, yytext); return T_NODES;}
-"edges" {printf("Edges"); strcpy(mytext, yytext); return T_EDGES;}
-*/
-
 "propNode" {printf("Node Property"); strcpy(mytext, yytext); return T_NP;}
 "propEdge" {printf("Edge Property"); strcpy(mytext, yytext); return T_EP;}
- /*
-"attachNodeProperty" {printf("Attach Node Property"); strcpy(mytext, yytext); return T_ATTACH_NP;}
-"attachEdgeProperty" {printf("Attach Edge Property"); strcpy(mytext, yytext); return T_ATTACH_EP;}
-*/
+ 
  /* Collection Type */
 "SetN" 	{printf("Set of Nodes"); strcpy(mytext, yytext); return T_SET_NODES;}
 "SetE" 	{printf("Set of Edges");strcpy(mytext, yytext); return T_SET_EDGES;}
