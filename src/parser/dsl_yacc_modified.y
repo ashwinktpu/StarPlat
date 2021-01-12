@@ -33,6 +33,7 @@
 	list<formalParam*> paramlist;
 	list<argument> argumentList;
 	list<ASTNode*> nodeList;
+	list<statement*> statements;
     //bool bval;
     //ast_node* ptr;
     //expr_list* e_list;  // list of expressions
@@ -65,7 +66,9 @@
 %type <node> bfs_abstraction filterExpr reverse_abstraction
 %type <nodeList> leftList
 %type <node> iteration_cf selection_cf
-%type <node> proc_call
+%type <statements> statements
+%type <node> reductionCall
+// %type <node> proc_call
 %type <argumentList> arg_list
 %type <ival> reduction_op
 %type <temporary>  rightList
@@ -91,11 +94,11 @@ program: function_def {printf("program.\n");};
 
 function_def: function_data  function_body  { };
 
-function_data: T_FUNC ID '(' paramList ')' {Identifier* funcId=createIdentifierNode($1);
-                                           $$=createFuncNode(funcId,$3); };
+function_data: T_FUNC ID '(' paramList ')' {Identifier* funcId=createIdentifierNode($2);
+                                           $$=createFunctionNode(funcId,$4); };
 
 paramList: param {$$.push_back($1); };
-               | paramList ',' param {$$.push_back($2); };
+               | paramList ',' param {$$.push_back($3); };
 
 param : type1 ID { Identifier* id=createIdentifierNode($2);
                            $$=createParamNode($1,id); } ;
@@ -105,8 +108,8 @@ param : type1 ID { Identifier* id=createIdentifierNode($2);
 function_body : blockstatements {$$=$1;};
 
 
-statements :
-           | statements statement { addToBlock($2); };
+statements :  
+	| statements statement { addToBlock($2); };
 
 statement: declaration ';'{$$=$1};
 	|assignment ';'{$$=$1;};
@@ -194,7 +197,7 @@ val : INT_NUM { $$=createNodeForIval($1); };
 control_flow : selection_cf { $$=$1; };
               | iteration_cf { $$=$1; };
 
-iteration_cf : T_FIXEDPOINT T_UNTIL '(' boolean_expr ')' blockstatements { $$=createNodeForFixedPointStmt($3,$5);};
+iteration_cf : T_FIXEDPOINT T_UNTIL '(' boolean_expr ')' blockstatements { $$=createNodeForFixedPointStmt($4,$6);};
 		   | T_WHILE '(' boolean_expr')' blockstatements {$$=createNodeForWhileStmt($3,$5); };
 		   | T_DO blockstatements T_WHILE '(' boolean_expr ')' {$$=createNodeForDoWhileStmt($5,$2);  };
 		| T_FORALL '(' ID T_IN ID '.' proc_call filterExpr')'  blockstatements {$$=createNodeForForAllStmt($3,$5,$7,$8,$10,true);};

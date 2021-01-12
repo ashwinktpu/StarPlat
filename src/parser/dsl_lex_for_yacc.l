@@ -78,13 +78,14 @@ WS  [ \t\v\n\f]
 "&"					{ printf ( "'&'"); strcpy(mytext, yytext); return '&';}
 "!"					{ printf ( "'!'"); strcpy(mytext, yytext); return '!';}
 "~"					{ printf ( "'~'"); strcpy(mytext, yytext); return '~';}
-//"-"					{ printf ( "'-'"); strcpy(mytext, yytext); return '-';}
+ /* "-"					{ printf ( "'-'"); strcpy(mytext, yytext); return '-';}
 //"+"					{ printf ( "'+'"); strcpy(mytext, yytext); return '+';}
-//"*"					{ printf ( "'*'"); strcpy(mytext, yytext); return '*';}
+//"*"					{ printf ( "'*'"); strcpy(mytext, yytext); return '*';} 
 //"/"					{ printf ( "'/'"); strcpy(mytext, yytext); return '/';}
 //"%"					{ printf ( "'%'"); strcpy(mytext, yytext); return '%';}
 //"<"					{ printf ( "'<'"); strcpy(mytext, yytext); return '<';}
 //">"					{ printf ( "'>'"); strcpy(mytext, yytext); return '>';}
+*/
 "^"					{ printf ( "'^'"); strcpy(mytext, yytext); return '^';}
 "|"					{ printf ( "'|'"); strcpy(mytext, yytext); return '|';}
 "?"					{ printf ( "'?'"); strcpy(mytext, yytext); return '?';} 
