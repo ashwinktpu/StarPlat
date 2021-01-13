@@ -42,7 +42,8 @@ WS  [ \t\v\n\f]
 "until"      {printf("Keyword until"); strcpy(mytext, yytext); return T_UNTIL;}
 "iterateInBFS"  {printf("iterateInBFS"); strcpy(mytext, yytext); return T_BFS;}
 "iterateInReverse" {printf("iterateInReverse"); strcpy(mytext, yytext); return T_REVERSE;} 
-"from"          {printf("from"); strcpy(mytext, yytext); return T_FROM;}   
+"from"          {printf("from"); strcpy(mytext, yytext); return T_FROM;} 
+"filter"        {printf("from"); strcpy(mytext, yytext); return T_FILTER;} 
 
 "+="					{ printf ("ADD_ASSIGN "); strcpy(mytext, yytext); return T_ADD_ASSIGN;}
 "-="					{ printf ("SUB_ASSIGN"); strcpy(mytext, yytext); return T_SUB_ASSIGN;}
@@ -78,13 +79,14 @@ WS  [ \t\v\n\f]
 "&"					{ printf ( "'&'"); strcpy(mytext, yytext); return '&';}
 "!"					{ printf ( "'!'"); strcpy(mytext, yytext); return '!';}
 "~"					{ printf ( "'~'"); strcpy(mytext, yytext); return '~';}
-//"-"					{ printf ( "'-'"); strcpy(mytext, yytext); return '-';}
+ /* "-"					{ printf ( "'-'"); strcpy(mytext, yytext); return '-';}
 //"+"					{ printf ( "'+'"); strcpy(mytext, yytext); return '+';}
-//"*"					{ printf ( "'*'"); strcpy(mytext, yytext); return '*';}
+//"*"					{ printf ( "'*'"); strcpy(mytext, yytext); return '*';} 
 //"/"					{ printf ( "'/'"); strcpy(mytext, yytext); return '/';}
 //"%"					{ printf ( "'%'"); strcpy(mytext, yytext); return '%';}
 //"<"					{ printf ( "'<'"); strcpy(mytext, yytext); return '<';}
 //">"					{ printf ( "'>'"); strcpy(mytext, yytext); return '>';}
+*/
 "^"					{ printf ( "'^'"); strcpy(mytext, yytext); return '^';}
 "|"					{ printf ( "'|'"); strcpy(mytext, yytext); return '|';}
 "?"					{ printf ( "'?'"); strcpy(mytext, yytext); return '?';} 
