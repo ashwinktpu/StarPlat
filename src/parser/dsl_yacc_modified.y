@@ -35,8 +35,17 @@
     
     struct tempNode temporary;
 }
-%token T_SET_NODES T_SET_EDGES T_ELEMENTS T_LIST T_FROM T_FILTER
+%token T_INT T_FLOAT T_BOOL T_DOUBLE  T_LONG
+%token T_FORALL T_FOR  T_P_INF  T_INF T_N_INF
+%token T_IF T_ELSE T_WHILE T_RETURN T_DO T_IN T_FIXEDPOINT T_UNTIL
+%token T_ADD_ASSIGN T_SUB_ASSIGN T_MUL_ASSIGN T_DIV_ASSIGN T_MOD_ASSIGN T_AND_ASSIGN T_XOR_ASSIGN
+%token T_OR_ASSIGN T_RIGHT_OP T_LEFT_OP T_INC_OP T_DEC_OP T_PTR_OP T_AND_OP T_OR_OP T_LE_OP T_GE_OP T_EQ_OP T_NE_OP
+%token T_AND T_OR T_SUM T_AVG T_COUNT T_PRODUCT T_MAX T_MIN
+%token T_GRAPH T_DIR_GRAPH  T_NODE T_EDGE
+%token T_NP  T_EP
+%token T_SET_NODES T_SET_EDGES T_ELEMENTS T_FROM
 %token T_BFS T_REVERSE
+
 
 %token <text> ID
 %token <ival> INT_NUM
@@ -81,7 +90,7 @@ function_def: function_data  function_body  { };
 function_data: T_FUNC ID '(' paramList ')' {Identifier* funcId=createIdentifierNode($2);
                                            $$=createFunctionNode(funcId,$4); };
 
-paramList: param {$$=addToPList($$,$3);};
+paramList: param {$$=addToPList($$,$1);};
                | paramList ',' param {$$=addToPList($$,$3); };
 
 param : type1 ID { Identifier* id=createIdentifierNode($2);
@@ -231,7 +240,9 @@ arg_list :   arg_list ',' assignment {argument a1;
 		                 a1.expression=$1;
 						 a1.expressionflag=true;
 						 $$=addToAList($$,a1);
-						
+                                 };
+
+
 	       |  arg_list ',' expression  {argument a1;
 		                                a1.assignExpr=$1;
 						                a1.assign=true;
