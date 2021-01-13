@@ -8,6 +8,9 @@
 	#include "SymbolTable.h"
 	#include "MainContext.h"
 	#include "ASTNode.h"
+    #include "enum_def.h"
+    #include "ASTNodeTypes.h"
+    
 	//#include <list>
 
 	void yyerror(char *);
