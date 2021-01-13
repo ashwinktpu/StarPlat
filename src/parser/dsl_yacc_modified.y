@@ -6,8 +6,10 @@
 	#include <stdlib.h>
 	#include <stdbool.h>
 	#include <SymbolTable.h>
+	#include <ASTNodeTypes.h>
 	#include<Context.cpp>
 	#include<MainContext.h>
+	#include<ASTNode.h>
 	#include <list>
 
 	void yyerror(char *);
@@ -49,7 +51,7 @@
 %token T_AND T_OR T_SUM T_AVG T_COUNT T_PRODUCT T_MAX T_MIN
 %token T_GRAPH T_DIR_GRAPH  T_NODE T_EDGE
 %token T_NP  T_EP 
-%token T_SET_NODES T_SET_EDGES T_ELEMENTS T_LIST T_FROM 
+%token T_SET_NODES T_SET_EDGES T_ELEMENTS T_LIST T_FROM T_FILTER
 %token T_BFS T_REVERSE
 
 %token <text> ID
@@ -60,7 +62,7 @@
 %type <node> function_def function_data function_body param
 %type <paramlist> paramList
 %type <node> statement blockstatements assignment declaration proc_call control_flow reduction 
-%type <node> type type1 type2
+%type <node> type1 type2
 %type <node> primitive graph collections property
 %type <node> id leftSide rhs expression oid val boolean_expr
 %type <node> bfs_abstraction filterExpr reverse_abstraction
@@ -103,12 +105,14 @@ paramList: param {$$.push_back($1); };
 param : type1 ID { Identifier* id=createIdentifierNode($2);
                            $$=createParamNode($1,id); } ;
                | type2 ID '(' ID ')' {};
+			   | type2 ID {Identifier* id=createIdentifierNode($2);
+                           $$=createParamNode($1,id); };
 
 
 function_body : blockstatements {$$=$1;};
 
 
-statements :  
+statements :  {};
 	| statements statement { addToBlock($2); };
 
 statement: declaration ';'{$$=$1};
@@ -205,12 +209,12 @@ iteration_cf : T_FIXEDPOINT T_UNTIL '(' boolean_expr ')' blockstatements { $$=cr
 		| T_FOR '(' ID T_IN ID '.' proc_call  filterExpr')' blockstatements {$$=createNodeForForAllStmt($3,$5,$7,$8,$10,false);};
 		   
 filterExpr  :         { $$=NULL;};
-            |'.filter('boolean_expr ')'{ $$=$2;};
+            |'.' T_FILTER '(' boolean_expr ')'{ $$=$4;};
 
 boolean_expr : expression { $$=$1 ;};
 
-selection_cf : T_IF '(' boolean_expr ')' statements { $$=createNodeForIfStmt($3,$5,NULL); };
-              | T_IF '(' boolean_expr ')' statements T_ELSE statements  {$$=createNodeForIfStmt($3,$5,$7); };
+selection_cf : T_IF '(' boolean_expr ')' blockstatements { $$=createNodeForIfStmt($3,$5,NULL); };
+              | T_IF '(' boolean_expr ')' blockstatements T_ELSE blockstatements  {$$=createNodeForIfStmt($3,$5,$7); };
 			  
 
 reduction : leftSide '=' reductionCall { $$=createNodeForReductionStmt($1,$3) } 
