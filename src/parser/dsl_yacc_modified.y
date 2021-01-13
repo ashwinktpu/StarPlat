@@ -6,7 +6,6 @@
 	#include <stdlib.h>
 	#include <stdbool.h>
 	#include <SymbolTable.h>
-	#include<Context.cpp>
 	#include<MainContext.h>
 	#include <list>
 
@@ -30,13 +29,10 @@
     double fval;
     char* text;
 	ASTNode* node;
-	list<formalParam*> paramlist;
-	list<argument> argumentList;
-	list<ASTNode*> nodeList;
-    //bool bval;
-    //ast_node* ptr;
-    //expr_list* e_list;  // list of expressions
-    //lhs_list* l_list;   // list of lhs
+	paramList* pList;
+	argList* aList;
+	ASTNodeList* nodeList;
+    
     struct tempNode temporary;
 }
 
@@ -57,7 +53,7 @@
 %token <bval> BOOL_VAL
 
 %type <node> function_def function_data function_body param
-%type <paramlist> paramList
+%type <pList> paramList
 %type <node> statement blockstatements assignment declaration proc_call control_flow reduction 
 %type <node> type type1 type2
 %type <node> primitive graph collections property
@@ -66,7 +62,7 @@
 %type <nodeList> leftList
 %type <node> iteration_cf selection_cf
 %type <node> proc_call
-%type <argumentList> arg_list
+%type <aList> arg_list
 %type <ival> reduction_op
 %type <temporary>  rightList
 
@@ -94,12 +90,20 @@ function_def: function_data  function_body  { };
 function_data: T_FUNC ID '(' paramList ')' {Identifier* funcId=createIdentifierNode($1);
                                            $$=createFuncNode(funcId,$3); };
 
-paramList: param {$$.push_back($1); };
-               | paramList ',' param {$$.push_back($2); };
+paramList: param {$$=addToPList($$,$3);};
+               | paramList ',' param {$$=addToPList($$,$3); };
 
 param : type1 ID { Identifier* id=createIdentifierNode($2);
                            $$=createParamNode($1,id); } ;
-               | type2 ID '(' ID ')' {};
+               | type2 ID {  Identifier* id=createIdentifierNode($2);
+                             $$=createParamNode($1,id);};
+			   | type2 ID '(' ID ')' {  Identifier* id1=createIdentifierNode($4);
+			                            Identifier* id=createIdentifierNode($2);
+				                        Type* tempType=(Type*)$1;
+			                            if(tempType->isNodeEdgeType())
+										   (Type*)$1->addSourceGraph(id1);
+				                         $$=createParamNode($1,id);
+									 }; 
 
 
 function_body : blockstatements {$$=$1;};
@@ -124,18 +128,19 @@ block_begin:'{' { createNewBlock(); }
 block_end:'}'
 	
 	
-declaration : type1 ID  {Identifier* id=$$=createIdentifierNode($2);
+declaration : type1 ID  {Identifier* id=createIdentifierNode($2);
                          $$=createNormalDeclNode($1,id);};
-	| type1 ID '=' rhs {Identifier* id=$$=createIdentifierNode($2);
+	| type1 ID '=' rhs {Identifier* id=createIdentifierNode($2);
 	                    $$=createAssignedDeclNode($1,id,$4);};
-	| type2 ID  {Identifier* id=$$=createIdentifierNode($2);
+	| type2 ID  {Identifier* id=createIdentifierNode($2);
                          $$=createNormalDeclNode($1,id); };
-	| type2 ID '=' rhs {Identifier* id=$$=createIdentifierNode($2);
+	| type2 ID '=' rhs {Identifier* id=createIdentifierNode($2);
 	                    $$=createAssignedDeclNode($1,id,$4);};
 
 type1: primitive {$$=$1}; 
 	| graph {$$=$1};
 	| collections { $$=$1};
+
 	
 primitive: T_INT { $$=createPrimitiveTypeNode(TYPE_INT);}; 
 	| T_FLOAT { $$=createPrimitiveTypeNode(TYPE_FLOAT);};
@@ -150,8 +155,8 @@ collections : T_LIST { $$=createCollectionTypeNode(TYPE_LIST,NULL);};
 		|T_SET_NODES '<' ID '>' { $$=createCollectionTypeNode(TYPE_SETN,$3);};
                 | T_SET_EDGES '<' ID '>' { $$=createCollectionTypeNode(TYPE_SETE,$3);};
 	
-type2 : T_NODE { };
-       | T_EDGE {};
+type2 : T_NODE {$$=createNodeEdgeTypeNode(TYPE_NODE) };
+       | T_EDGE {$$=createNodeEdgeTypeNode(TYPE_EDGE)};
 	   | property {$$=$1;};
 
 property : T_NP '<' primitive '>' { $$=createPropertyTypeNode(PROP_NODE,$3); };
@@ -213,8 +218,8 @@ selection_cf : T_IF '(' boolean_expr ')' statements { $$=createNodeForIfStmt($3,
 reduction : leftSide '=' reductionCall { $$=createNodeForReductionStmt($1,$3) } 
 		   |'<' leftList '>' '=' '<' rightList '>'  {$$=createNodeForReductionStmtList($2,$6.reducCall,$6.exprVal);}; 
 
-leftList :  leftList ',' leftSide { $$.push_back($1) };
-		 | leftSide { $$.push_back($1)};
+leftList :  leftList ',' leftSide { $$=addToNList($$,$3);};
+		 | leftSide { $$=addToNList($$,$1);};
 
 rightList : reductionCall ',' val { $$.reducCall=$1;
                                     $$.exprVal=$3; };
@@ -234,19 +239,21 @@ leftSide : ID { $$=createIdentifierNode($1);};
 arg_list :   arg_list ',' assignment {argument a1;
 		                 a1.expression=$1;
 						 a1.expressionflag=true;
-						 $$.push_back(a1);};
+						 $$=addToAList($$,a1);
+						
 	       |  arg_list ',' expression  {argument a1;
 		                                a1.assignExpr=$1;
 						                a1.assign=true;
-						                $$.push_back(a1);};
+										 $$=addToAList($$,a1);
+						                };
 	       | expression {argument a1;
 		                 a1.expression=$1;
 						 a1.expressionflag=true;
-						 $$.push_back(a1); };
+						  $$=addToAList($$,a1); };
 	       | assignment { argument a1;
 		                  a1.assignExpr=$1;
 						  a1.assign=true;
-						  $$.push_back(a1);  };
+						   $$=addToAList($$,a1);};
 	
 		   
 bfs_abstraction	: T_BFS '(' ID ':' T_FROM ID ')' filterExpr blockstatements reverse_abstraction{$$=createIterateInBFSNode($3,$6,$8,$9,$10) ;};

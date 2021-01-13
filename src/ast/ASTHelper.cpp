@@ -34,9 +34,27 @@ void addToBlock(ASTNode* statementNode)
         currentBlock->addStmtToBlock(statementNode);
     }
 }
-ASTNode* createParamNode(Identifier* id,Type* type)
+
+paramList* addToPList(paramList* pList,formalParam* fParam)
 {
-   formalParam* formalParamNode=formalParam::formalParam(id,type);
+     pList->PList.push_back(fParam);
+     return paramList;
+} 
+
+argList* addToAList(argList* aList,argument arg)
+{
+    aList->AList.push_back(arg);
+    return aList;
+}
+
+ASTNodeList* addToList(ASTNodeList* nodeList,ASTNode* node)
+{
+    nodeList->ASTNList.push_back(node);
+    return nodeList;
+}
+ASTNode* createParamNode(Type* type,Identifier* id)
+{
+   formalParam* formalParamNode=formalParam::formalParam(type,id);
    return formalParamNode;
 
 }
@@ -52,30 +70,37 @@ ASTNode* createAssignedDeclNode(Type* type,Identifier* id,Expression* exprAssign
     declaration* declNode=declaration::assign_Declaration(type,id,exprAssigned)
     return declaration;
 }
-ASTNode* createPrimitiveTypeNode(string typeName)
+ASTNode* createPrimitiveTypeNode(int typeId)
 {
-    Type* typeNode=Type::createForPrimitive(type,1);
+    Type* typeNode=Type::createForPrimitive(typeId,1);
     return typeNode;
 
 }
-ASTNode* createGraphTypeNode(string typeName,Identifier* targetGraph)
+ASTNode* createGraphTypeNode(int typeId,Identifier* targetGraph)
 {
-    Type* typeNode=Type::createForGraphType(typeName,2,targetGraph);
+    Type* typeNode=Type::createForGraphType(typeId,2,targetGraph);
     return typeNode;
 
 }
-ASTNode* createCollectionTypeNode(string typeName,Identifier* targetGraph)
+ASTNode* createCollectionTypeNode(int typeId,Identifier* targetGraph)
 {
-    Type* typeNode=Type::createForCollectionType(typeName,3,targetGraph);
+    Type* typeNode=Type::createForCollectionType(typeId,3,targetGraph);
     return typeNode;
 
 }
-ASTNode* createPropertyTypeNode(string typeName,Type* innerTargetType)
+ASTNode* createPropertyTypeNode(int typeId,Type* innerTargetType)
 {
-    Type* typeNode=Type::createForPropertyType(typeName,4,innerTargetType);
+    Type* typeNode=Type::createForPropertyType(typeId,4,innerTargetType);
     return typeNode;
 
 }
+ASTNode* createNodeEdgeTypeNode(int typeId)
+{   
+    Type* typeNode=Type::createForNodeEdgeType(typeId,5);
+    return typeNode;
+
+}
+
 ASTNode* createAssignmentNode(ASTNode* leftSide,Expression* rhs)
 {   assignment* assignmentNode;
     if(leftSide->getTypeofNode=="ID")
