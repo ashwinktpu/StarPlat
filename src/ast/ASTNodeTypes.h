@@ -18,7 +18,26 @@ struct tempNode
    reductionCall* reducCall=NULL;
    Expression* exprVal=NULL;
 
-}
+};
+
+class paramList
+{
+  public:
+  list<formalParam*> PList;
+};
+
+class argList
+{
+  public:
+  list<argument> AList;
+};
+
+class ASTNodeList
+{
+  public:
+  list<ASTNode*> ASTNList;
+};
+
 
 class Identifier:public ASTNode
 
@@ -134,11 +153,13 @@ class formalParam:public ASTNode
   Type* type;
   Identifier* identifier;
 
+
   public:
   formalParam()
   {
       type=NULL;
       identifier=NULL;
+      
   }
 
   formalParam(Type* typeSent,Identifier* identifierSent)
@@ -146,7 +167,7 @@ class formalParam:public ASTNode
       type=typeSent;
       identifier=identifierSent;
       type->setParent(this);
-      identifier->setParent(this);
+   
   }
   
   Type* getType()
@@ -159,23 +180,27 @@ class formalParam:public ASTNode
       return identifier;
   }
 
+
+
 };
 class Type:public ASTNode
 {
-  string typeName;
+  int typeId;
   int rootType;
   Identifier* TargetGraph;
   Type* innerTargetType;
+  Identifier* sourceGraph;
   
 
  Type()
  {
-     typeName=" ";
+     typeId=-1;
      TargetGraph=NULL;
      innerTargetType=NULL;
+     sourceGraph=NULL;
  }
    
-  static Type* createForPrimitive(string typeNameSent,int rootTypeSent)
+  static Type* createForPrimitive(int typeIdSent,int rootTypeSent)
   {
      Type* type=new Type();
      type->typeName=typeNameSent;
@@ -184,41 +209,61 @@ class Type:public ASTNode
 
   }
 
-  static Type* createForGraphType(string typeNameSent,int rootTypeSent, Identifier* TargetGraphSent)
+  static Type* createForGraphType(int typeIdSent,int rootTypeSent, Identifier* TargetGraphSent)
   {
        Type* type=new Type();
-       type->typeName=typeNameSent;
+       type->typeId=typeIdSent;
        type->rootType=rootTypeSent;
        type->TargetGraph=TargetGraphSent;
        return type;  
   }
 
   
-  static Type* createForCollectionType(string typeNameSent,int rootTypeSent, Identifier* TargetGraphSent)
+  static Type* createForCollectionType(int typeIdSent,int rootTypeSent, Identifier* TargetGraphSent)
   {
        Type* type=new Type();
-       type->typeName=typeNameSent;
+       type->typeId=typeIdSent;
        type->rootType=rootTypeSent;
        type->TargetGraph=TargetGraphSent;
        return type;  
   }
-  static Type* createForPropertyType(string typeNameSent,int rootTypeSent, Type* innerTargetTypeSent)
+  static Type* createForPropertyType(int typeIdSent,int rootTypeSent, Type* innerTargetTypeSent)
   {
        Type* type=new Type();
-       type->typeName=typeNameSent;
+       type->typeId=typeIdSent;
        type->rootType=rootTypeSent;
        type->innerTargetType=innerTargetTypeSent;
        return type;  
+  }
+  static Type* createForNodeEdgeType(int typeIdSent,int rootTypeSent)
+  {
+    Type* type=new Type()
+    type->typeId=typeIdSent;
+    type->rootType=rootTypeSent;
+    return type;
   }
   int getRootType()
   {
     return rootType;
   }
 
-  string gettypeName()
+  int gettypeId()
   {
-    return typeName;
+    return typeId;
   }
+  bool isNodeEdgeType()
+    {
+         if(rootType==5)
+           return true;
+         else
+           return false;
+         
+    }
+
+  void addSourceGraph(Identifier* id)
+  {
+    sourceGraph=id;
+  }  
   Type* getInnerTargetType()
   {
     return innerTargetType;
@@ -226,6 +271,10 @@ class Type:public ASTNode
   Identifier* getTargetGraph()
   {
     return TargetGraph;
+  }
+  Identifier* getSourceGraph()
+  {
+    return sourceGraph;
   }
 
 };
