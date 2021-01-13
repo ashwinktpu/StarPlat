@@ -7,6 +7,7 @@
 	#include <stdbool.h>
 	#include <SymbolTable.h>
 	#include<MainContext.h>
+	#include<ASTNode.h>
 	#include <list>
 
 	void yyerror(char *);
@@ -29,22 +30,12 @@
     double fval;
     char* text;
 	ASTNode* node;
-	paramList* pList;
 	argList* aList;
 	ASTNodeList* nodeList;
     
     struct tempNode temporary;
 }
-
-%token T_INT T_FLOAT T_BOOL T_DOUBLE  T_LONG
-%token T_FORALL T_FOR  T_P_INF  T_INF T_N_INF
-%token T_IF T_ELSE T_WHILE T_RETURN T_DO T_IN T_FIXEDPOINT T_UNTIL T_FUNC
-%token T_ADD_ASSIGN T_SUB_ASSIGN T_MUL_ASSIGN T_DIV_ASSIGN T_MOD_ASSIGN T_AND_ASSIGN T_XOR_ASSIGN
-%token T_OR_ASSIGN T_RIGHT_OP T_LEFT_OP T_INC_OP T_DEC_OP T_PTR_OP T_AND_OP T_OR_OP T_LE_OP T_GE_OP T_EQ_OP T_NE_OP
-%token T_AND T_OR T_SUM T_AVG T_COUNT T_PRODUCT T_MAX T_MIN
-%token T_GRAPH T_DIR_GRAPH  T_NODE T_EDGE
-%token T_NP  T_EP 
-%token T_SET_NODES T_SET_EDGES T_ELEMENTS T_LIST T_FROM 
+%token T_SET_NODES T_SET_EDGES T_ELEMENTS T_LIST T_FROM T_FILTER
 %token T_BFS T_REVERSE
 
 %token <text> ID
@@ -55,13 +46,13 @@
 %type <node> function_def function_data function_body param
 %type <pList> paramList
 %type <node> statement blockstatements assignment declaration proc_call control_flow reduction 
-%type <node> type type1 type2
+%type <node> type1 type2
 %type <node> primitive graph collections property
 %type <node> id leftSide rhs expression oid val boolean_expr
 %type <node> bfs_abstraction filterExpr reverse_abstraction
 %type <nodeList> leftList
 %type <node> iteration_cf selection_cf
-%type <node> proc_call
+%type <node> reductionCall
 %type <aList> arg_list
 %type <ival> reduction_op
 %type <temporary>  rightList
@@ -87,8 +78,8 @@ program: function_def {printf("program.\n");};
 
 function_def: function_data  function_body  { };
 
-function_data: T_FUNC ID '(' paramList ')' {Identifier* funcId=createIdentifierNode($1);
-                                           $$=createFuncNode(funcId,$3); };
+function_data: T_FUNC ID '(' paramList ')' {Identifier* funcId=createIdentifierNode($2);
+                                           $$=createFunctionNode(funcId,$4); };
 
 paramList: param {$$=addToPList($$,$3);};
                | paramList ',' param {$$=addToPList($$,$3); };
@@ -109,8 +100,8 @@ param : type1 ID { Identifier* id=createIdentifierNode($2);
 function_body : blockstatements {$$=$1;};
 
 
-statements :
-           | statements statement { addToBlock($2); };
+statements :  {};
+	| statements statement { addToBlock($2); };
 
 statement: declaration ';'{$$=$1};
 	|assignment ';'{$$=$1;};
@@ -199,7 +190,7 @@ val : INT_NUM { $$=createNodeForIval($1); };
 control_flow : selection_cf { $$=$1; };
               | iteration_cf { $$=$1; };
 
-iteration_cf : T_FIXEDPOINT T_UNTIL '(' boolean_expr ')' blockstatements { $$=createNodeForFixedPointStmt($3,$5);};
+iteration_cf : T_FIXEDPOINT T_UNTIL '(' boolean_expr ')' blockstatements { $$=createNodeForFixedPointStmt($4,$6);};
 		   | T_WHILE '(' boolean_expr')' blockstatements {$$=createNodeForWhileStmt($3,$5); };
 		   | T_DO blockstatements T_WHILE '(' boolean_expr ')' {$$=createNodeForDoWhileStmt($5,$2);  };
 		| T_FORALL '(' ID T_IN ID '.' proc_call filterExpr')'  blockstatements {$$=createNodeForForAllStmt($3,$5,$7,$8,$10,true);};
@@ -207,12 +198,12 @@ iteration_cf : T_FIXEDPOINT T_UNTIL '(' boolean_expr ')' blockstatements { $$=cr
 		| T_FOR '(' ID T_IN ID '.' proc_call  filterExpr')' blockstatements {$$=createNodeForForAllStmt($3,$5,$7,$8,$10,false);};
 		   
 filterExpr  :         { $$=NULL;};
-            |'.filter('boolean_expr ')'{ $$=$2;};
+            |'.' T_FILTER '(' boolean_expr ')'{ $$=$4;};
 
 boolean_expr : expression { $$=$1 ;};
 
-selection_cf : T_IF '(' boolean_expr ')' statements { $$=createNodeForIfStmt($3,$5,NULL); };
-              | T_IF '(' boolean_expr ')' statements T_ELSE statements  {$$=createNodeForIfStmt($3,$5,$7); };
+selection_cf : T_IF '(' boolean_expr ')' blockstatements { $$=createNodeForIfStmt($3,$5,NULL); };
+              | T_IF '(' boolean_expr ')' blockstatements T_ELSE blockstatements  {$$=createNodeForIfStmt($3,$5,$7); };
 			  
 
 reduction : leftSide '=' reductionCall { $$=createNodeForReductionStmt($1,$3) } 
