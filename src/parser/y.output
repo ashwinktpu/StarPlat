@@ -1,0 +1,2959 @@
+Nonterminals useless in grammar
+
+    id
+
+
+Terminals unused in grammar
+
+    T_RETURN
+    T_ADD_ASSIGN
+    T_SUB_ASSIGN
+    T_MUL_ASSIGN
+    T_DIV_ASSIGN
+    T_MOD_ASSIGN
+    T_AND_ASSIGN
+    T_XOR_ASSIGN
+    T_OR_ASSIGN
+    T_RIGHT_OP
+    T_LEFT_OP
+    T_INC_OP
+    T_DEC_OP
+    T_PTR_OP
+    T_AND
+    T_OR
+    T_AVG
+    T_ELEMENTS
+    '?'
+    '%'
+
+
+Grammar
+
+    0 $accept: program $end
+
+    1 program: function_def
+
+    2 function_def: function_data function_body
+
+    3 function_data: T_FUNC ID '(' paramList ')'
+
+    4 paramList: param
+    5          | paramList ',' param
+
+    6 param: type1 ID
+    7      | type2 ID
+    8      | type2 ID '(' ID ')'
+
+    9 function_body: blockstatements
+
+   10 statements: %empty
+   11           | statements statement
+
+   12 statement: declaration ';'
+   13          | assignment ';'
+   14          | proc_call ';'
+   15          | control_flow
+   16          | reduction ';'
+   17          | bfs_abstraction
+   18          | blockstatements
+
+   19 blockstatements: block_begin statements block_end
+
+   20 block_begin: '{'
+
+   21 block_end: '}'
+
+   22 declaration: type1 ID
+   23            | type1 ID '=' rhs
+   24            | type2 ID
+   25            | type2 ID '=' rhs
+
+   26 type1: primitive
+   27      | graph
+   28      | collections
+
+   29 primitive: T_INT
+   30          | T_FLOAT
+   31          | T_BOOL
+   32          | T_DOUBLE
+   33          | T_LONG
+
+   34 graph: T_GRAPH
+   35      | T_DIR_GRAPH
+
+   36 collections: T_LIST
+   37            | T_SET_NODES '<' ID '>'
+   38            | T_SET_EDGES '<' ID '>'
+
+   39 type2: T_NODE
+   40      | T_EDGE
+   41      | property
+
+   42 property: T_NP '<' primitive '>'
+   43         | T_EP '<' primitive '>'
+   44         | T_NP '<' collections '>'
+   45         | T_EP '<' collections '>'
+
+   46 assignment: leftSide '=' rhs
+
+   47 rhs: expression
+
+   48 expression: proc_call
+   49           | expression '+' expression
+   50           | expression '-' expression
+   51           | expression '*' expression
+   52           | expression '/' expression
+   53           | expression T_AND_OP expression
+   54           | expression T_OR_OP expression
+   55           | expression T_LE_OP expression
+   56           | expression T_GE_OP expression
+   57           | expression '<' expression
+   58           | expression '>' expression
+   59           | expression T_EQ_OP expression
+   60           | expression T_NE_OP expression
+   61           | '(' expression ')'
+   62           | val
+   63           | leftSide
+
+   64 proc_call: leftSide '(' arg_list ')'
+
+   65 val: INT_NUM
+   66    | FLOAT_NUM
+   67    | BOOL_VAL
+   68    | T_INF
+   69    | T_P_INF
+   70    | T_N_INF
+
+   71 control_flow: selection_cf
+   72             | iteration_cf
+
+   73 iteration_cf: T_FIXEDPOINT T_UNTIL '(' boolean_expr ')' blockstatements
+   74             | T_WHILE '(' boolean_expr ')' blockstatements
+   75             | T_DO blockstatements T_WHILE '(' boolean_expr ')'
+   76             | T_FORALL '(' ID T_IN ID '.' proc_call filterExpr ')' blockstatements
+   77             | T_FOR '(' ID T_IN leftSide ')' blockstatements
+   78             | T_FOR '(' ID T_IN ID '.' proc_call filterExpr ')' blockstatements
+
+   79 filterExpr: %empty
+   80           | '.' T_FILTER '(' boolean_expr ')'
+
+   81 boolean_expr: expression
+
+   82 selection_cf: T_IF '(' boolean_expr ')' blockstatements
+   83             | T_IF '(' boolean_expr ')' blockstatements T_ELSE blockstatements
+
+   84 reduction: leftSide '=' reductionCall
+   85          | '<' leftList '>' '=' '<' rightList '>'
+
+   86 leftList: leftList ',' leftSide
+   87         | leftSide
+
+   88 rightList: reductionCall ',' val
+   89          | reductionCall
+
+   90 reductionCall: reduction_op '(' arg_list ')'
+
+   91 reduction_op: T_SUM
+   92             | T_COUNT
+   93             | T_PRODUCT
+   94             | T_MAX
+   95             | T_MIN
+
+   96 leftSide: ID
+   97         | oid
+
+   98 arg_list: arg_list ',' assignment
+   99         | arg_list ',' expression
+  100         | expression
+  101         | assignment
+
+  102 bfs_abstraction: T_BFS '(' ID ':' T_FROM ID ')' filterExpr blockstatements reverse_abstraction
+
+  103 reverse_abstraction: T_REVERSE '(' boolean_expr ')' filterExpr blockstatements
+
+  104 oid: ID '.' ID
+
+
+Terminals, with rules where they appear
+
+    $end (0) 0
+    '%' (37)
+    '(' (40) 3 8 61 64 73 74 75 76 77 78 80 82 83 90 102 103
+    ')' (41) 3 8 61 64 73 74 75 76 77 78 80 82 83 90 102 103
+    '*' (42) 51
+    '+' (43) 49
+    ',' (44) 5 86 88 98 99
+    '-' (45) 50
+    '.' (46) 76 78 80 104
+    '/' (47) 52
+    ':' (58) 102
+    ';' (59) 12 13 14 16
+    '<' (60) 37 38 42 43 44 45 57 85
+    '=' (61) 23 25 46 84 85
+    '>' (62) 37 38 42 43 44 45 58 85
+    '?' (63)
+    '{' (123) 20
+    '}' (125) 21
+    error (256)
+    T_INT (258) 29
+    T_FLOAT (259) 30
+    T_BOOL (260) 31
+    T_DOUBLE (261) 32
+    T_LONG (262) 33
+    T_FORALL (263) 76
+    T_FOR (264) 77 78
+    T_P_INF (265) 69
+    T_INF (266) 68
+    T_N_INF (267) 70
+    T_FUNC (268) 3
+    T_IF (269) 82 83
+    T_ELSE (270) 83
+    T_WHILE (271) 74 75
+    T_RETURN (272)
+    T_DO (273) 75
+    T_IN (274) 76 77 78
+    T_FIXEDPOINT (275) 73
+    T_UNTIL (276) 73
+    T_FILTER (277) 80
+    T_ADD_ASSIGN (278)
+    T_SUB_ASSIGN (279)
+    T_MUL_ASSIGN (280)
+    T_DIV_ASSIGN (281)
+    T_MOD_ASSIGN (282)
+    T_AND_ASSIGN (283)
+    T_XOR_ASSIGN (284)
+    T_OR_ASSIGN (285)
+    T_RIGHT_OP (286)
+    T_LEFT_OP (287)
+    T_INC_OP (288)
+    T_DEC_OP (289)
+    T_PTR_OP (290)
+    T_AND_OP (291) 53
+    T_OR_OP (292) 54
+    T_LE_OP (293) 55
+    T_GE_OP (294) 56
+    T_EQ_OP (295) 59
+    T_NE_OP (296) 60
+    T_AND (297)
+    T_OR (298)
+    T_SUM (299) 91
+    T_AVG (300)
+    T_COUNT (301) 92
+    T_PRODUCT (302) 93
+    T_MAX (303) 94
+    T_MIN (304) 95
+    T_GRAPH (305) 34
+    T_DIR_GRAPH (306) 35
+    T_NODE (307) 39
+    T_EDGE (308) 40
+    T_NP (309) 42 44
+    T_EP (310) 43 45
+    T_LIST (311) 36
+    T_SET_NODES (312) 37
+    T_SET_EDGES (313) 38
+    T_ELEMENTS (314)
+    T_FROM (315) 102
+    T_BFS (316) 102
+    T_REVERSE (317) 103
+    ID <text> (318) 3 6 7 8 22 23 24 25 37 38 76 77 78 96 102 104
+    INT_NUM <ival> (319) 65
+    FLOAT_NUM <fval> (320) 66
+    BOOL_VAL <bval> (321) 67
+
+
+Nonterminals, with rules where they appear
+
+    $accept (84)
+        on left: 0
+    program (85)
+        on left: 1
+        on right: 0
+    function_def <node> (86)
+        on left: 2
+        on right: 1
+    function_data <node> (87)
+        on left: 3
+        on right: 2
+    paramList <pList> (88)
+        on left: 4 5
+        on right: 3 5
+    param <node> (89)
+        on left: 6 7 8
+        on right: 4 5
+    function_body <node> (90)
+        on left: 9
+        on right: 2
+    statements (91)
+        on left: 10 11
+        on right: 11 19
+    statement <node> (92)
+        on left: 12 13 14 15 16 17 18
+        on right: 11
+    blockstatements <node> (93)
+        on left: 19
+        on right: 9 18 73 74 75 76 77 78 82 83 102 103
+    block_begin (94)
+        on left: 20
+        on right: 19
+    block_end (95)
+        on left: 21
+        on right: 19
+    declaration <node> (96)
+        on left: 22 23 24 25
+        on right: 12
+    type1 <node> (97)
+        on left: 26 27 28
+        on right: 6 22 23
+    primitive <node> (98)
+        on left: 29 30 31 32 33
+        on right: 26 42 43
+    graph <node> (99)
+        on left: 34 35
+        on right: 27
+    collections <node> (100)
+        on left: 36 37 38
+        on right: 28 44 45
+    type2 <node> (101)
+        on left: 39 40 41
+        on right: 7 8 24 25
+    property <node> (102)
+        on left: 42 43 44 45
+        on right: 41
+    assignment <node> (103)
+        on left: 46
+        on right: 13 98 101
+    rhs <node> (104)
+        on left: 47
+        on right: 23 25 46
+    expression <node> (105)
+        on left: 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63
+        on right: 47 49 50 51 52 53 54 55 56 57 58 59 60 61 81 99 100
+    proc_call <node> (106)
+        on left: 64
+        on right: 14 48 76 78
+    val <node> (107)
+        on left: 65 66 67 68 69 70
+        on right: 62 88
+    control_flow <node> (108)
+        on left: 71 72
+        on right: 15
+    iteration_cf <node> (109)
+        on left: 73 74 75 76 77 78
+        on right: 72
+    filterExpr <node> (110)
+        on left: 79 80
+        on right: 76 78 102 103
+    boolean_expr <node> (111)
+        on left: 81
+        on right: 73 74 75 80 82 83 103
+    selection_cf <node> (112)
+        on left: 82 83
+        on right: 71
+    reduction <node> (113)
+        on left: 84 85
+        on right: 16
+    leftList <nodeList> (114)
+        on left: 86 87
+        on right: 85 86
+    rightList <temporary> (115)
+        on left: 88 89
+        on right: 85
+    reductionCall <node> (116)
+        on left: 90
+        on right: 84 88 89
+    reduction_op <ival> (117)
+        on left: 91 92 93 94 95
+        on right: 90
+    leftSide <node> (118)
+        on left: 96 97
+        on right: 46 63 64 77 84 86 87
+    arg_list <aList> (119)
+        on left: 98 99 100 101
+        on right: 64 90 98 99
+    bfs_abstraction <node> (120)
+        on left: 102
+        on right: 17
+    reverse_abstraction <node> (121)
+        on left: 103
+        on right: 102
+    oid <node> (122)
+        on left: 104
+        on right: 97
+
+
+State 0
+
+    0 $accept: . program $end
+
+    T_FUNC  shift, and go to state 1
+
+    program        go to state 2
+    function_def   go to state 3
+    function_data  go to state 4
+
+
+State 1
+
+    3 function_data: T_FUNC . ID '(' paramList ')'
+
+    ID  shift, and go to state 5
+
+
+State 2
+
+    0 $accept: program . $end
+
+    $end  shift, and go to state 6
+
+
+State 3
+
+    1 program: function_def .
+
+    $default  reduce using rule 1 (program)
+
+
+State 4
+
+    2 function_def: function_data . function_body
+
+    '{'  shift, and go to state 7
+
+    function_body    go to state 8
+    blockstatements  go to state 9
+    block_begin      go to state 10
+
+
+State 5
+
+    3 function_data: T_FUNC ID . '(' paramList ')'
+
+    '('  shift, and go to state 11
+
+
+State 6
+
+    0 $accept: program $end .
+
+    $default  accept
+
+
+State 7
+
+   20 block_begin: '{' .
+
+    $default  reduce using rule 20 (block_begin)
+
+
+State 8
+
+    2 function_def: function_data function_body .
+
+    $default  reduce using rule 2 (function_def)
+
+
+State 9
+
+    9 function_body: blockstatements .
+
+    $default  reduce using rule 9 (function_body)
+
+
+State 10
+
+   19 blockstatements: block_begin . statements block_end
+
+    $default  reduce using rule 10 (statements)
+
+    statements  go to state 12
+
+
+State 11
+
+    3 function_data: T_FUNC ID '(' . paramList ')'
+
+    T_INT        shift, and go to state 13
+    T_FLOAT      shift, and go to state 14
+    T_BOOL       shift, and go to state 15
+    T_DOUBLE     shift, and go to state 16
+    T_LONG       shift, and go to state 17
+    T_GRAPH      shift, and go to state 18
+    T_DIR_GRAPH  shift, and go to state 19
+    T_NODE       shift, and go to state 20
+    T_EDGE       shift, and go to state 21
+    T_NP         shift, and go to state 22
+    T_EP         shift, and go to state 23
+    T_LIST       shift, and go to state 24
+    T_SET_NODES  shift, and go to state 25
+    T_SET_EDGES  shift, and go to state 26
+
+    paramList    go to state 27
+    param        go to state 28
+    type1        go to state 29
+    primitive    go to state 30
+    graph        go to state 31
+    collections  go to state 32
+    type2        go to state 33
+    property     go to state 34
+
+
+State 12
+
+   11 statements: statements . statement
+   19 blockstatements: block_begin statements . block_end
+
+    T_INT         shift, and go to state 13
+    T_FLOAT       shift, and go to state 14
+    T_BOOL        shift, and go to state 15
+    T_DOUBLE      shift, and go to state 16
+    T_LONG        shift, and go to state 17
+    T_FORALL      shift, and go to state 35
+    T_FOR         shift, and go to state 36
+    T_IF          shift, and go to state 37
+    T_WHILE       shift, and go to state 38
+    T_DO          shift, and go to state 39
+    T_FIXEDPOINT  shift, and go to state 40
+    T_GRAPH       shift, and go to state 18
+    T_DIR_GRAPH   shift, and go to state 19
+    T_NODE        shift, and go to state 20
+    T_EDGE        shift, and go to state 21
+    T_NP          shift, and go to state 22
+    T_EP          shift, and go to state 23
+    T_LIST        shift, and go to state 24
+    T_SET_NODES   shift, and go to state 25
+    T_SET_EDGES   shift, and go to state 26
+    T_BFS         shift, and go to state 41
+    ID            shift, and go to state 42
+    '<'           shift, and go to state 43
+    '{'           shift, and go to state 7
+    '}'           shift, and go to state 44
+
+    statement        go to state 45
+    blockstatements  go to state 46
+    block_begin      go to state 10
+    block_end        go to state 47
+    declaration      go to state 48
+    type1            go to state 49
+    primitive        go to state 30
+    graph            go to state 31
+    collections      go to state 32
+    type2            go to state 50
+    property         go to state 34
+    assignment       go to state 51
+    proc_call        go to state 52
+    control_flow     go to state 53
+    iteration_cf     go to state 54
+    selection_cf     go to state 55
+    reduction        go to state 56
+    leftSide         go to state 57
+    bfs_abstraction  go to state 58
+    oid              go to state 59
+
+
+State 13
+
+   29 primitive: T_INT .
+
+    $default  reduce using rule 29 (primitive)
+
+
+State 14
+
+   30 primitive: T_FLOAT .
+
+    $default  reduce using rule 30 (primitive)
+
+
+State 15
+
+   31 primitive: T_BOOL .
+
+    $default  reduce using rule 31 (primitive)
+
+
+State 16
+
+   32 primitive: T_DOUBLE .
+
+    $default  reduce using rule 32 (primitive)
+
+
+State 17
+
+   33 primitive: T_LONG .
+
+    $default  reduce using rule 33 (primitive)
+
+
+State 18
+
+   34 graph: T_GRAPH .
+
+    $default  reduce using rule 34 (graph)
+
+
+State 19
+
+   35 graph: T_DIR_GRAPH .
+
+    $default  reduce using rule 35 (graph)
+
+
+State 20
+
+   39 type2: T_NODE .
+
+    $default  reduce using rule 39 (type2)
+
+
+State 21
+
+   40 type2: T_EDGE .
+
+    $default  reduce using rule 40 (type2)
+
+
+State 22
+
+   42 property: T_NP . '<' primitive '>'
+   44         | T_NP . '<' collections '>'
+
+    '<'  shift, and go to state 60
+
+
+State 23
+
+   43 property: T_EP . '<' primitive '>'
+   45         | T_EP . '<' collections '>'
+
+    '<'  shift, and go to state 61
+
+
+State 24
+
+   36 collections: T_LIST .
+
+    $default  reduce using rule 36 (collections)
+
+
+State 25
+
+   37 collections: T_SET_NODES . '<' ID '>'
+
+    '<'  shift, and go to state 62
+
+
+State 26
+
+   38 collections: T_SET_EDGES . '<' ID '>'
+
+    '<'  shift, and go to state 63
+
+
+State 27
+
+    3 function_data: T_FUNC ID '(' paramList . ')'
+    5 paramList: paramList . ',' param
+
+    ')'  shift, and go to state 64
+    ','  shift, and go to state 65
+
+
+State 28
+
+    4 paramList: param .
+
+    $default  reduce using rule 4 (paramList)
+
+
+State 29
+
+    6 param: type1 . ID
+
+    ID  shift, and go to state 66
+
+
+State 30
+
+   26 type1: primitive .
+
+    $default  reduce using rule 26 (type1)
+
+
+State 31
+
+   27 type1: graph .
+
+    $default  reduce using rule 27 (type1)
+
+
+State 32
+
+   28 type1: collections .
+
+    $default  reduce using rule 28 (type1)
+
+
+State 33
+
+    7 param: type2 . ID
+    8      | type2 . ID '(' ID ')'
+
+    ID  shift, and go to state 67
+
+
+State 34
+
+   41 type2: property .
+
+    $default  reduce using rule 41 (type2)
+
+
+State 35
+
+   76 iteration_cf: T_FORALL . '(' ID T_IN ID '.' proc_call filterExpr ')' blockstatements
+
+    '('  shift, and go to state 68
+
+
+State 36
+
+   77 iteration_cf: T_FOR . '(' ID T_IN leftSide ')' blockstatements
+   78             | T_FOR . '(' ID T_IN ID '.' proc_call filterExpr ')' blockstatements
+
+    '('  shift, and go to state 69
+
+
+State 37
+
+   82 selection_cf: T_IF . '(' boolean_expr ')' blockstatements
+   83             | T_IF . '(' boolean_expr ')' blockstatements T_ELSE blockstatements
+
+    '('  shift, and go to state 70
+
+
+State 38
+
+   74 iteration_cf: T_WHILE . '(' boolean_expr ')' blockstatements
+
+    '('  shift, and go to state 71
+
+
+State 39
+
+   75 iteration_cf: T_DO . blockstatements T_WHILE '(' boolean_expr ')'
+
+    '{'  shift, and go to state 7
+
+    blockstatements  go to state 72
+    block_begin      go to state 10
+
+
+State 40
+
+   73 iteration_cf: T_FIXEDPOINT . T_UNTIL '(' boolean_expr ')' blockstatements
+
+    T_UNTIL  shift, and go to state 73
+
+
+State 41
+
+  102 bfs_abstraction: T_BFS . '(' ID ':' T_FROM ID ')' filterExpr blockstatements reverse_abstraction
+
+    '('  shift, and go to state 74
+
+
+State 42
+
+   96 leftSide: ID .
+  104 oid: ID . '.' ID
+
+    '.'  shift, and go to state 75
+
+    $default  reduce using rule 96 (leftSide)
+
+
+State 43
+
+   85 reduction: '<' . leftList '>' '=' '<' rightList '>'
+
+    ID  shift, and go to state 42
+
+    leftList  go to state 76
+    leftSide  go to state 77
+    oid       go to state 59
+
+
+State 44
+
+   21 block_end: '}' .
+
+    $default  reduce using rule 21 (block_end)
+
+
+State 45
+
+   11 statements: statements statement .
+
+    $default  reduce using rule 11 (statements)
+
+
+State 46
+
+   18 statement: blockstatements .
+
+    $default  reduce using rule 18 (statement)
+
+
+State 47
+
+   19 blockstatements: block_begin statements block_end .
+
+    $default  reduce using rule 19 (blockstatements)
+
+
+State 48
+
+   12 statement: declaration . ';'
+
+    ';'  shift, and go to state 78
+
+
+State 49
+
+   22 declaration: type1 . ID
+   23            | type1 . ID '=' rhs
+
+    ID  shift, and go to state 79
+
+
+State 50
+
+   24 declaration: type2 . ID
+   25            | type2 . ID '=' rhs
+
+    ID  shift, and go to state 80
+
+
+State 51
+
+   13 statement: assignment . ';'
+
+    ';'  shift, and go to state 81
+
+
+State 52
+
+   14 statement: proc_call . ';'
+
+    ';'  shift, and go to state 82
+
+
+State 53
+
+   15 statement: control_flow .
+
+    $default  reduce using rule 15 (statement)
+
+
+State 54
+
+   72 control_flow: iteration_cf .
+
+    $default  reduce using rule 72 (control_flow)
+
+
+State 55
+
+   71 control_flow: selection_cf .
+
+    $default  reduce using rule 71 (control_flow)
+
+
+State 56
+
+   16 statement: reduction . ';'
+
+    ';'  shift, and go to state 83
+
+
+State 57
+
+   46 assignment: leftSide . '=' rhs
+   64 proc_call: leftSide . '(' arg_list ')'
+   84 reduction: leftSide . '=' reductionCall
+
+    '('  shift, and go to state 84
+    '='  shift, and go to state 85
+
+
+State 58
+
+   17 statement: bfs_abstraction .
+
+    $default  reduce using rule 17 (statement)
+
+
+State 59
+
+   97 leftSide: oid .
+
+    $default  reduce using rule 97 (leftSide)
+
+
+State 60
+
+   42 property: T_NP '<' . primitive '>'
+   44         | T_NP '<' . collections '>'
+
+    T_INT        shift, and go to state 13
+    T_FLOAT      shift, and go to state 14
+    T_BOOL       shift, and go to state 15
+    T_DOUBLE     shift, and go to state 16
+    T_LONG       shift, and go to state 17
+    T_LIST       shift, and go to state 24
+    T_SET_NODES  shift, and go to state 25
+    T_SET_EDGES  shift, and go to state 26
+
+    primitive    go to state 86
+    collections  go to state 87
+
+
+State 61
+
+   43 property: T_EP '<' . primitive '>'
+   45         | T_EP '<' . collections '>'
+
+    T_INT        shift, and go to state 13
+    T_FLOAT      shift, and go to state 14
+    T_BOOL       shift, and go to state 15
+    T_DOUBLE     shift, and go to state 16
+    T_LONG       shift, and go to state 17
+    T_LIST       shift, and go to state 24
+    T_SET_NODES  shift, and go to state 25
+    T_SET_EDGES  shift, and go to state 26
+
+    primitive    go to state 88
+    collections  go to state 89
+
+
+State 62
+
+   37 collections: T_SET_NODES '<' . ID '>'
+
+    ID  shift, and go to state 90
+
+
+State 63
+
+   38 collections: T_SET_EDGES '<' . ID '>'
+
+    ID  shift, and go to state 91
+
+
+State 64
+
+    3 function_data: T_FUNC ID '(' paramList ')' .
+
+    $default  reduce using rule 3 (function_data)
+
+
+State 65
+
+    5 paramList: paramList ',' . param
+
+    T_INT        shift, and go to state 13
+    T_FLOAT      shift, and go to state 14
+    T_BOOL       shift, and go to state 15
+    T_DOUBLE     shift, and go to state 16
+    T_LONG       shift, and go to state 17
+    T_GRAPH      shift, and go to state 18
+    T_DIR_GRAPH  shift, and go to state 19
+    T_NODE       shift, and go to state 20
+    T_EDGE       shift, and go to state 21
+    T_NP         shift, and go to state 22
+    T_EP         shift, and go to state 23
+    T_LIST       shift, and go to state 24
+    T_SET_NODES  shift, and go to state 25
+    T_SET_EDGES  shift, and go to state 26
+
+    param        go to state 92
+    type1        go to state 29
+    primitive    go to state 30
+    graph        go to state 31
+    collections  go to state 32
+    type2        go to state 33
+    property     go to state 34
+
+
+State 66
+
+    6 param: type1 ID .
+
+    $default  reduce using rule 6 (param)
+
+
+State 67
+
+    7 param: type2 ID .
+    8      | type2 ID . '(' ID ')'
+
+    '('  shift, and go to state 93
+
+    $default  reduce using rule 7 (param)
+
+
+State 68
+
+   76 iteration_cf: T_FORALL '(' . ID T_IN ID '.' proc_call filterExpr ')' blockstatements
+
+    ID  shift, and go to state 94
+
+
+State 69
+
+   77 iteration_cf: T_FOR '(' . ID T_IN leftSide ')' blockstatements
+   78             | T_FOR '(' . ID T_IN ID '.' proc_call filterExpr ')' blockstatements
+
+    ID  shift, and go to state 95
+
+
+State 70
+
+   82 selection_cf: T_IF '(' . boolean_expr ')' blockstatements
+   83             | T_IF '(' . boolean_expr ')' blockstatements T_ELSE blockstatements
+
+    T_P_INF    shift, and go to state 96
+    T_INF      shift, and go to state 97
+    T_N_INF    shift, and go to state 98
+    ID         shift, and go to state 42
+    INT_NUM    shift, and go to state 99
+    FLOAT_NUM  shift, and go to state 100
+    BOOL_VAL   shift, and go to state 101
+    '('        shift, and go to state 102
+
+    expression    go to state 103
+    proc_call     go to state 104
+    val           go to state 105
+    boolean_expr  go to state 106
+    leftSide      go to state 107
+    oid           go to state 59
+
+
+State 71
+
+   74 iteration_cf: T_WHILE '(' . boolean_expr ')' blockstatements
+
+    T_P_INF    shift, and go to state 96
+    T_INF      shift, and go to state 97
+    T_N_INF    shift, and go to state 98
+    ID         shift, and go to state 42
+    INT_NUM    shift, and go to state 99
+    FLOAT_NUM  shift, and go to state 100
+    BOOL_VAL   shift, and go to state 101
+    '('        shift, and go to state 102
+
+    expression    go to state 103
+    proc_call     go to state 104
+    val           go to state 105
+    boolean_expr  go to state 108
+    leftSide      go to state 107
+    oid           go to state 59
+
+
+State 72
+
+   75 iteration_cf: T_DO blockstatements . T_WHILE '(' boolean_expr ')'
+
+    T_WHILE  shift, and go to state 109
+
+
+State 73
+
+   73 iteration_cf: T_FIXEDPOINT T_UNTIL . '(' boolean_expr ')' blockstatements
+
+    '('  shift, and go to state 110
+
+
+State 74
+
+  102 bfs_abstraction: T_BFS '(' . ID ':' T_FROM ID ')' filterExpr blockstatements reverse_abstraction
+
+    ID  shift, and go to state 111
+
+
+State 75
+
+  104 oid: ID '.' . ID
+
+    ID  shift, and go to state 112
+
+
+State 76
+
+   85 reduction: '<' leftList . '>' '=' '<' rightList '>'
+   86 leftList: leftList . ',' leftSide
+
+    '>'  shift, and go to state 113
+    ','  shift, and go to state 114
+
+
+State 77
+
+   87 leftList: leftSide .
+
+    $default  reduce using rule 87 (leftList)
+
+
+State 78
+
+   12 statement: declaration ';' .
+
+    $default  reduce using rule 12 (statement)
+
+
+State 79
+
+   22 declaration: type1 ID .
+   23            | type1 ID . '=' rhs
+
+    '='  shift, and go to state 115
+
+    $default  reduce using rule 22 (declaration)
+
+
+State 80
+
+   24 declaration: type2 ID .
+   25            | type2 ID . '=' rhs
+
+    '='  shift, and go to state 116
+
+    $default  reduce using rule 24 (declaration)
+
+
+State 81
+
+   13 statement: assignment ';' .
+
+    $default  reduce using rule 13 (statement)
+
+
+State 82
+
+   14 statement: proc_call ';' .
+
+    $default  reduce using rule 14 (statement)
+
+
+State 83
+
+   16 statement: reduction ';' .
+
+    $default  reduce using rule 16 (statement)
+
+
+State 84
+
+   64 proc_call: leftSide '(' . arg_list ')'
+
+    T_P_INF    shift, and go to state 96
+    T_INF      shift, and go to state 97
+    T_N_INF    shift, and go to state 98
+    ID         shift, and go to state 42
+    INT_NUM    shift, and go to state 99
+    FLOAT_NUM  shift, and go to state 100
+    BOOL_VAL   shift, and go to state 101
+    '('        shift, and go to state 102
+
+    assignment  go to state 117
+    expression  go to state 118
+    proc_call   go to state 104
+    val         go to state 105
+    leftSide    go to state 119
+    arg_list    go to state 120
+    oid         go to state 59
+
+
+State 85
+
+   46 assignment: leftSide '=' . rhs
+   84 reduction: leftSide '=' . reductionCall
+
+    T_P_INF    shift, and go to state 96
+    T_INF      shift, and go to state 97
+    T_N_INF    shift, and go to state 98
+    T_SUM      shift, and go to state 121
+    T_COUNT    shift, and go to state 122
+    T_PRODUCT  shift, and go to state 123
+    T_MAX      shift, and go to state 124
+    T_MIN      shift, and go to state 125
+    ID         shift, and go to state 42
+    INT_NUM    shift, and go to state 99
+    FLOAT_NUM  shift, and go to state 100
+    BOOL_VAL   shift, and go to state 101
+    '('        shift, and go to state 102
+
+    rhs            go to state 126
+    expression     go to state 127
+    proc_call      go to state 104
+    val            go to state 105
+    reductionCall  go to state 128
+    reduction_op   go to state 129
+    leftSide       go to state 107
+    oid            go to state 59
+
+
+State 86
+
+   42 property: T_NP '<' primitive . '>'
+
+    '>'  shift, and go to state 130
+
+
+State 87
+
+   44 property: T_NP '<' collections . '>'
+
+    '>'  shift, and go to state 131
+
+
+State 88
+
+   43 property: T_EP '<' primitive . '>'
+
+    '>'  shift, and go to state 132
+
+
+State 89
+
+   45 property: T_EP '<' collections . '>'
+
+    '>'  shift, and go to state 133
+
+
+State 90
+
+   37 collections: T_SET_NODES '<' ID . '>'
+
+    '>'  shift, and go to state 134
+
+
+State 91
+
+   38 collections: T_SET_EDGES '<' ID . '>'
+
+    '>'  shift, and go to state 135
+
+
+State 92
+
+    5 paramList: paramList ',' param .
+
+    $default  reduce using rule 5 (paramList)
+
+
+State 93
+
+    8 param: type2 ID '(' . ID ')'
+
+    ID  shift, and go to state 136
+
+
+State 94
+
+   76 iteration_cf: T_FORALL '(' ID . T_IN ID '.' proc_call filterExpr ')' blockstatements
+
+    T_IN  shift, and go to state 137
+
+
+State 95
+
+   77 iteration_cf: T_FOR '(' ID . T_IN leftSide ')' blockstatements
+   78             | T_FOR '(' ID . T_IN ID '.' proc_call filterExpr ')' blockstatements
+
+    T_IN  shift, and go to state 138
+
+
+State 96
+
+   69 val: T_P_INF .
+
+    $default  reduce using rule 69 (val)
+
+
+State 97
+
+   68 val: T_INF .
+
+    $default  reduce using rule 68 (val)
+
+
+State 98
+
+   70 val: T_N_INF .
+
+    $default  reduce using rule 70 (val)
+
+
+State 99
+
+   65 val: INT_NUM .
+
+    $default  reduce using rule 65 (val)
+
+
+State 100
+
+   66 val: FLOAT_NUM .
+
+    $default  reduce using rule 66 (val)
+
+
+State 101
+
+   67 val: BOOL_VAL .
+
+    $default  reduce using rule 67 (val)
+
+
+State 102
+
+   61 expression: '(' . expression ')'
+
+    T_P_INF    shift, and go to state 96
+    T_INF      shift, and go to state 97
+    T_N_INF    shift, and go to state 98
+    ID         shift, and go to state 42
+    INT_NUM    shift, and go to state 99
+    FLOAT_NUM  shift, and go to state 100
+    BOOL_VAL   shift, and go to state 101
+    '('        shift, and go to state 102
+
+    expression  go to state 139
+    proc_call   go to state 104
+    val         go to state 105
+    leftSide    go to state 107
+    oid         go to state 59
+
+
+State 103
+
+   49 expression: expression . '+' expression
+   50           | expression . '-' expression
+   51           | expression . '*' expression
+   52           | expression . '/' expression
+   53           | expression . T_AND_OP expression
+   54           | expression . T_OR_OP expression
+   55           | expression . T_LE_OP expression
+   56           | expression . T_GE_OP expression
+   57           | expression . '<' expression
+   58           | expression . '>' expression
+   59           | expression . T_EQ_OP expression
+   60           | expression . T_NE_OP expression
+   81 boolean_expr: expression .
+
+    T_AND_OP  shift, and go to state 140
+    T_OR_OP   shift, and go to state 141
+    T_LE_OP   shift, and go to state 142
+    T_GE_OP   shift, and go to state 143
+    T_EQ_OP   shift, and go to state 144
+    T_NE_OP   shift, and go to state 145
+    '<'       shift, and go to state 146
+    '>'       shift, and go to state 147
+    '+'       shift, and go to state 148
+    '-'       shift, and go to state 149
+    '*'       shift, and go to state 150
+    '/'       shift, and go to state 151
+
+    $default  reduce using rule 81 (boolean_expr)
+
+
+State 104
+
+   48 expression: proc_call .
+
+    $default  reduce using rule 48 (expression)
+
+
+State 105
+
+   62 expression: val .
+
+    $default  reduce using rule 62 (expression)
+
+
+State 106
+
+   82 selection_cf: T_IF '(' boolean_expr . ')' blockstatements
+   83             | T_IF '(' boolean_expr . ')' blockstatements T_ELSE blockstatements
+
+    ')'  shift, and go to state 152
+
+
+State 107
+
+   63 expression: leftSide .
+   64 proc_call: leftSide . '(' arg_list ')'
+
+    '('  shift, and go to state 84
+
+    $default  reduce using rule 63 (expression)
+
+
+State 108
+
+   74 iteration_cf: T_WHILE '(' boolean_expr . ')' blockstatements
+
+    ')'  shift, and go to state 153
+
+
+State 109
+
+   75 iteration_cf: T_DO blockstatements T_WHILE . '(' boolean_expr ')'
+
+    '('  shift, and go to state 154
+
+
+State 110
+
+   73 iteration_cf: T_FIXEDPOINT T_UNTIL '(' . boolean_expr ')' blockstatements
+
+    T_P_INF    shift, and go to state 96
+    T_INF      shift, and go to state 97
+    T_N_INF    shift, and go to state 98
+    ID         shift, and go to state 42
+    INT_NUM    shift, and go to state 99
+    FLOAT_NUM  shift, and go to state 100
+    BOOL_VAL   shift, and go to state 101
+    '('        shift, and go to state 102
+
+    expression    go to state 103
+    proc_call     go to state 104
+    val           go to state 105
+    boolean_expr  go to state 155
+    leftSide      go to state 107
+    oid           go to state 59
+
+
+State 111
+
+  102 bfs_abstraction: T_BFS '(' ID . ':' T_FROM ID ')' filterExpr blockstatements reverse_abstraction
+
+    ':'  shift, and go to state 156
+
+
+State 112
+
+  104 oid: ID '.' ID .
+
+    $default  reduce using rule 104 (oid)
+
+
+State 113
+
+   85 reduction: '<' leftList '>' . '=' '<' rightList '>'
+
+    '='  shift, and go to state 157
+
+
+State 114
+
+   86 leftList: leftList ',' . leftSide
+
+    ID  shift, and go to state 42
+
+    leftSide  go to state 158
+    oid       go to state 59
+
+
+State 115
+
+   23 declaration: type1 ID '=' . rhs
+
+    T_P_INF    shift, and go to state 96
+    T_INF      shift, and go to state 97
+    T_N_INF    shift, and go to state 98
+    ID         shift, and go to state 42
+    INT_NUM    shift, and go to state 99
+    FLOAT_NUM  shift, and go to state 100
+    BOOL_VAL   shift, and go to state 101
+    '('        shift, and go to state 102
+
+    rhs         go to state 159
+    expression  go to state 127
+    proc_call   go to state 104
+    val         go to state 105
+    leftSide    go to state 107
+    oid         go to state 59
+
+
+State 116
+
+   25 declaration: type2 ID '=' . rhs
+
+    T_P_INF    shift, and go to state 96
+    T_INF      shift, and go to state 97
+    T_N_INF    shift, and go to state 98
+    ID         shift, and go to state 42
+    INT_NUM    shift, and go to state 99
+    FLOAT_NUM  shift, and go to state 100
+    BOOL_VAL   shift, and go to state 101
+    '('        shift, and go to state 102
+
+    rhs         go to state 160
+    expression  go to state 127
+    proc_call   go to state 104
+    val         go to state 105
+    leftSide    go to state 107
+    oid         go to state 59
+
+
+State 117
+
+  101 arg_list: assignment .
+
+    $default  reduce using rule 101 (arg_list)
+
+
+State 118
+
+   49 expression: expression . '+' expression
+   50           | expression . '-' expression
+   51           | expression . '*' expression
+   52           | expression . '/' expression
+   53           | expression . T_AND_OP expression
+   54           | expression . T_OR_OP expression
+   55           | expression . T_LE_OP expression
+   56           | expression . T_GE_OP expression
+   57           | expression . '<' expression
+   58           | expression . '>' expression
+   59           | expression . T_EQ_OP expression
+   60           | expression . T_NE_OP expression
+  100 arg_list: expression .
+
+    T_AND_OP  shift, and go to state 140
+    T_OR_OP   shift, and go to state 141
+    T_LE_OP   shift, and go to state 142
+    T_GE_OP   shift, and go to state 143
+    T_EQ_OP   shift, and go to state 144
+    T_NE_OP   shift, and go to state 145
+    '<'       shift, and go to state 146
+    '>'       shift, and go to state 147
+    '+'       shift, and go to state 148
+    '-'       shift, and go to state 149
+    '*'       shift, and go to state 150
+    '/'       shift, and go to state 151
+
+    $default  reduce using rule 100 (arg_list)
+
+
+State 119
+
+   46 assignment: leftSide . '=' rhs
+   63 expression: leftSide .
+   64 proc_call: leftSide . '(' arg_list ')'
+
+    '('  shift, and go to state 84
+    '='  shift, and go to state 161
+
+    $default  reduce using rule 63 (expression)
+
+
+State 120
+
+   64 proc_call: leftSide '(' arg_list . ')'
+   98 arg_list: arg_list . ',' assignment
+   99         | arg_list . ',' expression
+
+    ')'  shift, and go to state 162
+    ','  shift, and go to state 163
+
+
+State 121
+
+   91 reduction_op: T_SUM .
+
+    $default  reduce using rule 91 (reduction_op)
+
+
+State 122
+
+   92 reduction_op: T_COUNT .
+
+    $default  reduce using rule 92 (reduction_op)
+
+
+State 123
+
+   93 reduction_op: T_PRODUCT .
+
+    $default  reduce using rule 93 (reduction_op)
+
+
+State 124
+
+   94 reduction_op: T_MAX .
+
+    $default  reduce using rule 94 (reduction_op)
+
+
+State 125
+
+   95 reduction_op: T_MIN .
+
+    $default  reduce using rule 95 (reduction_op)
+
+
+State 126
+
+   46 assignment: leftSide '=' rhs .
+
+    $default  reduce using rule 46 (assignment)
+
+
+State 127
+
+   47 rhs: expression .
+   49 expression: expression . '+' expression
+   50           | expression . '-' expression
+   51           | expression . '*' expression
+   52           | expression . '/' expression
+   53           | expression . T_AND_OP expression
+   54           | expression . T_OR_OP expression
+   55           | expression . T_LE_OP expression
+   56           | expression . T_GE_OP expression
+   57           | expression . '<' expression
+   58           | expression . '>' expression
+   59           | expression . T_EQ_OP expression
+   60           | expression . T_NE_OP expression
+
+    T_AND_OP  shift, and go to state 140
+    T_OR_OP   shift, and go to state 141
+    T_LE_OP   shift, and go to state 142
+    T_GE_OP   shift, and go to state 143
+    T_EQ_OP   shift, and go to state 144
+    T_NE_OP   shift, and go to state 145
+    '<'       shift, and go to state 146
+    '>'       shift, and go to state 147
+    '+'       shift, and go to state 148
+    '-'       shift, and go to state 149
+    '*'       shift, and go to state 150
+    '/'       shift, and go to state 151
+
+    $default  reduce using rule 47 (rhs)
+
+
+State 128
+
+   84 reduction: leftSide '=' reductionCall .
+
+    $default  reduce using rule 84 (reduction)
+
+
+State 129
+
+   90 reductionCall: reduction_op . '(' arg_list ')'
+
+    '('  shift, and go to state 164
+
+
+State 130
+
+   42 property: T_NP '<' primitive '>' .
+
+    $default  reduce using rule 42 (property)
+
+
+State 131
+
+   44 property: T_NP '<' collections '>' .
+
+    $default  reduce using rule 44 (property)
+
+
+State 132
+
+   43 property: T_EP '<' primitive '>' .
+
+    $default  reduce using rule 43 (property)
+
+
+State 133
+
+   45 property: T_EP '<' collections '>' .
+
+    $default  reduce using rule 45 (property)
+
+
+State 134
+
+   37 collections: T_SET_NODES '<' ID '>' .
+
+    $default  reduce using rule 37 (collections)
+
+
+State 135
+
+   38 collections: T_SET_EDGES '<' ID '>' .
+
+    $default  reduce using rule 38 (collections)
+
+
+State 136
+
+    8 param: type2 ID '(' ID . ')'
+
+    ')'  shift, and go to state 165
+
+
+State 137
+
+   76 iteration_cf: T_FORALL '(' ID T_IN . ID '.' proc_call filterExpr ')' blockstatements
+
+    ID  shift, and go to state 166
+
+
+State 138
+
+   77 iteration_cf: T_FOR '(' ID T_IN . leftSide ')' blockstatements
+   78             | T_FOR '(' ID T_IN . ID '.' proc_call filterExpr ')' blockstatements
+
+    ID  shift, and go to state 167
+
+    leftSide  go to state 168
+    oid       go to state 59
+
+
+State 139
+
+   49 expression: expression . '+' expression
+   50           | expression . '-' expression
+   51           | expression . '*' expression
+   52           | expression . '/' expression
+   53           | expression . T_AND_OP expression
+   54           | expression . T_OR_OP expression
+   55           | expression . T_LE_OP expression
+   56           | expression . T_GE_OP expression
+   57           | expression . '<' expression
+   58           | expression . '>' expression
+   59           | expression . T_EQ_OP expression
+   60           | expression . T_NE_OP expression
+   61           | '(' expression . ')'
+
+    T_AND_OP  shift, and go to state 140
+    T_OR_OP   shift, and go to state 141
+    T_LE_OP   shift, and go to state 142
+    T_GE_OP   shift, and go to state 143
+    T_EQ_OP   shift, and go to state 144
+    T_NE_OP   shift, and go to state 145
+    '<'       shift, and go to state 146
+    '>'       shift, and go to state 147
+    '+'       shift, and go to state 148
+    '-'       shift, and go to state 149
+    '*'       shift, and go to state 150
+    '/'       shift, and go to state 151
+    ')'       shift, and go to state 169
+
+
+State 140
+
+   53 expression: expression T_AND_OP . expression
+
+    T_P_INF    shift, and go to state 96
+    T_INF      shift, and go to state 97
+    T_N_INF    shift, and go to state 98
+    ID         shift, and go to state 42
+    INT_NUM    shift, and go to state 99
+    FLOAT_NUM  shift, and go to state 100
+    BOOL_VAL   shift, and go to state 101
+    '('        shift, and go to state 102
+
+    expression  go to state 170
+    proc_call   go to state 104
+    val         go to state 105
+    leftSide    go to state 107
+    oid         go to state 59
+
+
+State 141
+
+   54 expression: expression T_OR_OP . expression
+
+    T_P_INF    shift, and go to state 96
+    T_INF      shift, and go to state 97
+    T_N_INF    shift, and go to state 98
+    ID         shift, and go to state 42
+    INT_NUM    shift, and go to state 99
+    FLOAT_NUM  shift, and go to state 100
+    BOOL_VAL   shift, and go to state 101
+    '('        shift, and go to state 102
+
+    expression  go to state 171
+    proc_call   go to state 104
+    val         go to state 105
+    leftSide    go to state 107
+    oid         go to state 59
+
+
+State 142
+
+   55 expression: expression T_LE_OP . expression
+
+    T_P_INF    shift, and go to state 96
+    T_INF      shift, and go to state 97
+    T_N_INF    shift, and go to state 98
+    ID         shift, and go to state 42
+    INT_NUM    shift, and go to state 99
+    FLOAT_NUM  shift, and go to state 100
+    BOOL_VAL   shift, and go to state 101
+    '('        shift, and go to state 102
+
+    expression  go to state 172
+    proc_call   go to state 104
+    val         go to state 105
+    leftSide    go to state 107
+    oid         go to state 59
+
+
+State 143
+
+   56 expression: expression T_GE_OP . expression
+
+    T_P_INF    shift, and go to state 96
+    T_INF      shift, and go to state 97
+    T_N_INF    shift, and go to state 98
+    ID         shift, and go to state 42
+    INT_NUM    shift, and go to state 99
+    FLOAT_NUM  shift, and go to state 100
+    BOOL_VAL   shift, and go to state 101
+    '('        shift, and go to state 102
+
+    expression  go to state 173
+    proc_call   go to state 104
+    val         go to state 105
+    leftSide    go to state 107
+    oid         go to state 59
+
+
+State 144
+
+   59 expression: expression T_EQ_OP . expression
+
+    T_P_INF    shift, and go to state 96
+    T_INF      shift, and go to state 97
+    T_N_INF    shift, and go to state 98
+    ID         shift, and go to state 42
+    INT_NUM    shift, and go to state 99
+    FLOAT_NUM  shift, and go to state 100
+    BOOL_VAL   shift, and go to state 101
+    '('        shift, and go to state 102
+
+    expression  go to state 174
+    proc_call   go to state 104
+    val         go to state 105
+    leftSide    go to state 107
+    oid         go to state 59
+
+
+State 145
+
+   60 expression: expression T_NE_OP . expression
+
+    T_P_INF    shift, and go to state 96
+    T_INF      shift, and go to state 97
+    T_N_INF    shift, and go to state 98
+    ID         shift, and go to state 42
+    INT_NUM    shift, and go to state 99
+    FLOAT_NUM  shift, and go to state 100
+    BOOL_VAL   shift, and go to state 101
+    '('        shift, and go to state 102
+
+    expression  go to state 175
+    proc_call   go to state 104
+    val         go to state 105
+    leftSide    go to state 107
+    oid         go to state 59
+
+
+State 146
+
+   57 expression: expression '<' . expression
+
+    T_P_INF    shift, and go to state 96
+    T_INF      shift, and go to state 97
+    T_N_INF    shift, and go to state 98
+    ID         shift, and go to state 42
+    INT_NUM    shift, and go to state 99
+    FLOAT_NUM  shift, and go to state 100
+    BOOL_VAL   shift, and go to state 101
+    '('        shift, and go to state 102
+
+    expression  go to state 176
+    proc_call   go to state 104
+    val         go to state 105
+    leftSide    go to state 107
+    oid         go to state 59
+
+
+State 147
+
+   58 expression: expression '>' . expression
+
+    T_P_INF    shift, and go to state 96
+    T_INF      shift, and go to state 97
+    T_N_INF    shift, and go to state 98
+    ID         shift, and go to state 42
+    INT_NUM    shift, and go to state 99
+    FLOAT_NUM  shift, and go to state 100
+    BOOL_VAL   shift, and go to state 101
+    '('        shift, and go to state 102
+
+    expression  go to state 177
+    proc_call   go to state 104
+    val         go to state 105
+    leftSide    go to state 107
+    oid         go to state 59
+
+
+State 148
+
+   49 expression: expression '+' . expression
+
+    T_P_INF    shift, and go to state 96
+    T_INF      shift, and go to state 97
+    T_N_INF    shift, and go to state 98
+    ID         shift, and go to state 42
+    INT_NUM    shift, and go to state 99
+    FLOAT_NUM  shift, and go to state 100
+    BOOL_VAL   shift, and go to state 101
+    '('        shift, and go to state 102
+
+    expression  go to state 178
+    proc_call   go to state 104
+    val         go to state 105
+    leftSide    go to state 107
+    oid         go to state 59
+
+
+State 149
+
+   50 expression: expression '-' . expression
+
+    T_P_INF    shift, and go to state 96
+    T_INF      shift, and go to state 97
+    T_N_INF    shift, and go to state 98
+    ID         shift, and go to state 42
+    INT_NUM    shift, and go to state 99
+    FLOAT_NUM  shift, and go to state 100
+    BOOL_VAL   shift, and go to state 101
+    '('        shift, and go to state 102
+
+    expression  go to state 179
+    proc_call   go to state 104
+    val         go to state 105
+    leftSide    go to state 107
+    oid         go to state 59
+
+
+State 150
+
+   51 expression: expression '*' . expression
+
+    T_P_INF    shift, and go to state 96
+    T_INF      shift, and go to state 97
+    T_N_INF    shift, and go to state 98
+    ID         shift, and go to state 42
+    INT_NUM    shift, and go to state 99
+    FLOAT_NUM  shift, and go to state 100
+    BOOL_VAL   shift, and go to state 101
+    '('        shift, and go to state 102
+
+    expression  go to state 180
+    proc_call   go to state 104
+    val         go to state 105
+    leftSide    go to state 107
+    oid         go to state 59
+
+
+State 151
+
+   52 expression: expression '/' . expression
+
+    T_P_INF    shift, and go to state 96
+    T_INF      shift, and go to state 97
+    T_N_INF    shift, and go to state 98
+    ID         shift, and go to state 42
+    INT_NUM    shift, and go to state 99
+    FLOAT_NUM  shift, and go to state 100
+    BOOL_VAL   shift, and go to state 101
+    '('        shift, and go to state 102
+
+    expression  go to state 181
+    proc_call   go to state 104
+    val         go to state 105
+    leftSide    go to state 107
+    oid         go to state 59
+
+
+State 152
+
+   82 selection_cf: T_IF '(' boolean_expr ')' . blockstatements
+   83             | T_IF '(' boolean_expr ')' . blockstatements T_ELSE blockstatements
+
+    '{'  shift, and go to state 7
+
+    blockstatements  go to state 182
+    block_begin      go to state 10
+
+
+State 153
+
+   74 iteration_cf: T_WHILE '(' boolean_expr ')' . blockstatements
+
+    '{'  shift, and go to state 7
+
+    blockstatements  go to state 183
+    block_begin      go to state 10
+
+
+State 154
+
+   75 iteration_cf: T_DO blockstatements T_WHILE '(' . boolean_expr ')'
+
+    T_P_INF    shift, and go to state 96
+    T_INF      shift, and go to state 97
+    T_N_INF    shift, and go to state 98
+    ID         shift, and go to state 42
+    INT_NUM    shift, and go to state 99
+    FLOAT_NUM  shift, and go to state 100
+    BOOL_VAL   shift, and go to state 101
+    '('        shift, and go to state 102
+
+    expression    go to state 103
+    proc_call     go to state 104
+    val           go to state 105
+    boolean_expr  go to state 184
+    leftSide      go to state 107
+    oid           go to state 59
+
+
+State 155
+
+   73 iteration_cf: T_FIXEDPOINT T_UNTIL '(' boolean_expr . ')' blockstatements
+
+    ')'  shift, and go to state 185
+
+
+State 156
+
+  102 bfs_abstraction: T_BFS '(' ID ':' . T_FROM ID ')' filterExpr blockstatements reverse_abstraction
+
+    T_FROM  shift, and go to state 186
+
+
+State 157
+
+   85 reduction: '<' leftList '>' '=' . '<' rightList '>'
+
+    '<'  shift, and go to state 187
+
+
+State 158
+
+   86 leftList: leftList ',' leftSide .
+
+    $default  reduce using rule 86 (leftList)
+
+
+State 159
+
+   23 declaration: type1 ID '=' rhs .
+
+    $default  reduce using rule 23 (declaration)
+
+
+State 160
+
+   25 declaration: type2 ID '=' rhs .
+
+    $default  reduce using rule 25 (declaration)
+
+
+State 161
+
+   46 assignment: leftSide '=' . rhs
+
+    T_P_INF    shift, and go to state 96
+    T_INF      shift, and go to state 97
+    T_N_INF    shift, and go to state 98
+    ID         shift, and go to state 42
+    INT_NUM    shift, and go to state 99
+    FLOAT_NUM  shift, and go to state 100
+    BOOL_VAL   shift, and go to state 101
+    '('        shift, and go to state 102
+
+    rhs         go to state 126
+    expression  go to state 127
+    proc_call   go to state 104
+    val         go to state 105
+    leftSide    go to state 107
+    oid         go to state 59
+
+
+State 162
+
+   64 proc_call: leftSide '(' arg_list ')' .
+
+    $default  reduce using rule 64 (proc_call)
+
+
+State 163
+
+   98 arg_list: arg_list ',' . assignment
+   99         | arg_list ',' . expression
+
+    T_P_INF    shift, and go to state 96
+    T_INF      shift, and go to state 97
+    T_N_INF    shift, and go to state 98
+    ID         shift, and go to state 42
+    INT_NUM    shift, and go to state 99
+    FLOAT_NUM  shift, and go to state 100
+    BOOL_VAL   shift, and go to state 101
+    '('        shift, and go to state 102
+
+    assignment  go to state 188
+    expression  go to state 189
+    proc_call   go to state 104
+    val         go to state 105
+    leftSide    go to state 119
+    oid         go to state 59
+
+
+State 164
+
+   90 reductionCall: reduction_op '(' . arg_list ')'
+
+    T_P_INF    shift, and go to state 96
+    T_INF      shift, and go to state 97
+    T_N_INF    shift, and go to state 98
+    ID         shift, and go to state 42
+    INT_NUM    shift, and go to state 99
+    FLOAT_NUM  shift, and go to state 100
+    BOOL_VAL   shift, and go to state 101
+    '('        shift, and go to state 102
+
+    assignment  go to state 117
+    expression  go to state 118
+    proc_call   go to state 104
+    val         go to state 105
+    leftSide    go to state 119
+    arg_list    go to state 190
+    oid         go to state 59
+
+
+State 165
+
+    8 param: type2 ID '(' ID ')' .
+
+    $default  reduce using rule 8 (param)
+
+
+State 166
+
+   76 iteration_cf: T_FORALL '(' ID T_IN ID . '.' proc_call filterExpr ')' blockstatements
+
+    '.'  shift, and go to state 191
+
+
+State 167
+
+   78 iteration_cf: T_FOR '(' ID T_IN ID . '.' proc_call filterExpr ')' blockstatements
+   96 leftSide: ID .
+  104 oid: ID . '.' ID
+
+    '.'  shift, and go to state 192
+
+    $default  reduce using rule 96 (leftSide)
+
+
+State 168
+
+   77 iteration_cf: T_FOR '(' ID T_IN leftSide . ')' blockstatements
+
+    ')'  shift, and go to state 193
+
+
+State 169
+
+   61 expression: '(' expression ')' .
+
+    $default  reduce using rule 61 (expression)
+
+
+State 170
+
+   49 expression: expression . '+' expression
+   50           | expression . '-' expression
+   51           | expression . '*' expression
+   52           | expression . '/' expression
+   53           | expression . T_AND_OP expression
+   53           | expression T_AND_OP expression .
+   54           | expression . T_OR_OP expression
+   55           | expression . T_LE_OP expression
+   56           | expression . T_GE_OP expression
+   57           | expression . '<' expression
+   58           | expression . '>' expression
+   59           | expression . T_EQ_OP expression
+   60           | expression . T_NE_OP expression
+
+    T_LE_OP  shift, and go to state 142
+    T_GE_OP  shift, and go to state 143
+    T_EQ_OP  shift, and go to state 144
+    T_NE_OP  shift, and go to state 145
+    '<'      shift, and go to state 146
+    '>'      shift, and go to state 147
+    '+'      shift, and go to state 148
+    '-'      shift, and go to state 149
+    '*'      shift, and go to state 150
+    '/'      shift, and go to state 151
+
+    $default  reduce using rule 53 (expression)
+
+
+State 171
+
+   49 expression: expression . '+' expression
+   50           | expression . '-' expression
+   51           | expression . '*' expression
+   52           | expression . '/' expression
+   53           | expression . T_AND_OP expression
+   54           | expression . T_OR_OP expression
+   54           | expression T_OR_OP expression .
+   55           | expression . T_LE_OP expression
+   56           | expression . T_GE_OP expression
+   57           | expression . '<' expression
+   58           | expression . '>' expression
+   59           | expression . T_EQ_OP expression
+   60           | expression . T_NE_OP expression
+
+    T_AND_OP  shift, and go to state 140
+    T_LE_OP   shift, and go to state 142
+    T_GE_OP   shift, and go to state 143
+    T_EQ_OP   shift, and go to state 144
+    T_NE_OP   shift, and go to state 145
+    '<'       shift, and go to state 146
+    '>'       shift, and go to state 147
+    '+'       shift, and go to state 148
+    '-'       shift, and go to state 149
+    '*'       shift, and go to state 150
+    '/'       shift, and go to state 151
+
+    $default  reduce using rule 54 (expression)
+
+
+State 172
+
+   49 expression: expression . '+' expression
+   50           | expression . '-' expression
+   51           | expression . '*' expression
+   52           | expression . '/' expression
+   53           | expression . T_AND_OP expression
+   54           | expression . T_OR_OP expression
+   55           | expression . T_LE_OP expression
+   55           | expression T_LE_OP expression .
+   56           | expression . T_GE_OP expression
+   57           | expression . '<' expression
+   58           | expression . '>' expression
+   59           | expression . T_EQ_OP expression
+   60           | expression . T_NE_OP expression
+
+    '+'  shift, and go to state 148
+    '-'  shift, and go to state 149
+    '*'  shift, and go to state 150
+    '/'  shift, and go to state 151
+
+    $default  reduce using rule 55 (expression)
+
+
+State 173
+
+   49 expression: expression . '+' expression
+   50           | expression . '-' expression
+   51           | expression . '*' expression
+   52           | expression . '/' expression
+   53           | expression . T_AND_OP expression
+   54           | expression . T_OR_OP expression
+   55           | expression . T_LE_OP expression
+   56           | expression . T_GE_OP expression
+   56           | expression T_GE_OP expression .
+   57           | expression . '<' expression
+   58           | expression . '>' expression
+   59           | expression . T_EQ_OP expression
+   60           | expression . T_NE_OP expression
+
+    '+'  shift, and go to state 148
+    '-'  shift, and go to state 149
+    '*'  shift, and go to state 150
+    '/'  shift, and go to state 151
+
+    $default  reduce using rule 56 (expression)
+
+
+State 174
+
+   49 expression: expression . '+' expression
+   50           | expression . '-' expression
+   51           | expression . '*' expression
+   52           | expression . '/' expression
+   53           | expression . T_AND_OP expression
+   54           | expression . T_OR_OP expression
+   55           | expression . T_LE_OP expression
+   56           | expression . T_GE_OP expression
+   57           | expression . '<' expression
+   58           | expression . '>' expression
+   59           | expression . T_EQ_OP expression
+   59           | expression T_EQ_OP expression .
+   60           | expression . T_NE_OP expression
+
+    T_LE_OP  shift, and go to state 142
+    T_GE_OP  shift, and go to state 143
+    '<'      shift, and go to state 146
+    '>'      shift, and go to state 147
+    '+'      shift, and go to state 148
+    '-'      shift, and go to state 149
+    '*'      shift, and go to state 150
+    '/'      shift, and go to state 151
+
+    $default  reduce using rule 59 (expression)
+
+
+State 175
+
+   49 expression: expression . '+' expression
+   50           | expression . '-' expression
+   51           | expression . '*' expression
+   52           | expression . '/' expression
+   53           | expression . T_AND_OP expression
+   54           | expression . T_OR_OP expression
+   55           | expression . T_LE_OP expression
+   56           | expression . T_GE_OP expression
+   57           | expression . '<' expression
+   58           | expression . '>' expression
+   59           | expression . T_EQ_OP expression
+   60           | expression . T_NE_OP expression
+   60           | expression T_NE_OP expression .
+
+    T_LE_OP  shift, and go to state 142
+    T_GE_OP  shift, and go to state 143
+    '<'      shift, and go to state 146
+    '>'      shift, and go to state 147
+    '+'      shift, and go to state 148
+    '-'      shift, and go to state 149
+    '*'      shift, and go to state 150
+    '/'      shift, and go to state 151
+
+    $default  reduce using rule 60 (expression)
+
+
+State 176
+
+   49 expression: expression . '+' expression
+   50           | expression . '-' expression
+   51           | expression . '*' expression
+   52           | expression . '/' expression
+   53           | expression . T_AND_OP expression
+   54           | expression . T_OR_OP expression
+   55           | expression . T_LE_OP expression
+   56           | expression . T_GE_OP expression
+   57           | expression . '<' expression
+   57           | expression '<' expression .
+   58           | expression . '>' expression
+   59           | expression . T_EQ_OP expression
+   60           | expression . T_NE_OP expression
+
+    '+'  shift, and go to state 148
+    '-'  shift, and go to state 149
+    '*'  shift, and go to state 150
+    '/'  shift, and go to state 151
+
+    $default  reduce using rule 57 (expression)
+
+
+State 177
+
+   49 expression: expression . '+' expression
+   50           | expression . '-' expression
+   51           | expression . '*' expression
+   52           | expression . '/' expression
+   53           | expression . T_AND_OP expression
+   54           | expression . T_OR_OP expression
+   55           | expression . T_LE_OP expression
+   56           | expression . T_GE_OP expression
+   57           | expression . '<' expression
+   58           | expression . '>' expression
+   58           | expression '>' expression .
+   59           | expression . T_EQ_OP expression
+   60           | expression . T_NE_OP expression
+
+    '+'  shift, and go to state 148
+    '-'  shift, and go to state 149
+    '*'  shift, and go to state 150
+    '/'  shift, and go to state 151
+
+    $default  reduce using rule 58 (expression)
+
+
+State 178
+
+   49 expression: expression . '+' expression
+   49           | expression '+' expression .
+   50           | expression . '-' expression
+   51           | expression . '*' expression
+   52           | expression . '/' expression
+   53           | expression . T_AND_OP expression
+   54           | expression . T_OR_OP expression
+   55           | expression . T_LE_OP expression
+   56           | expression . T_GE_OP expression
+   57           | expression . '<' expression
+   58           | expression . '>' expression
+   59           | expression . T_EQ_OP expression
+   60           | expression . T_NE_OP expression
+
+    '*'  shift, and go to state 150
+    '/'  shift, and go to state 151
+
+    $default  reduce using rule 49 (expression)
+
+
+State 179
+
+   49 expression: expression . '+' expression
+   50           | expression . '-' expression
+   50           | expression '-' expression .
+   51           | expression . '*' expression
+   52           | expression . '/' expression
+   53           | expression . T_AND_OP expression
+   54           | expression . T_OR_OP expression
+   55           | expression . T_LE_OP expression
+   56           | expression . T_GE_OP expression
+   57           | expression . '<' expression
+   58           | expression . '>' expression
+   59           | expression . T_EQ_OP expression
+   60           | expression . T_NE_OP expression
+
+    '*'  shift, and go to state 150
+    '/'  shift, and go to state 151
+
+    $default  reduce using rule 50 (expression)
+
+
+State 180
+
+   49 expression: expression . '+' expression
+   50           | expression . '-' expression
+   51           | expression . '*' expression
+   51           | expression '*' expression .
+   52           | expression . '/' expression
+   53           | expression . T_AND_OP expression
+   54           | expression . T_OR_OP expression
+   55           | expression . T_LE_OP expression
+   56           | expression . T_GE_OP expression
+   57           | expression . '<' expression
+   58           | expression . '>' expression
+   59           | expression . T_EQ_OP expression
+   60           | expression . T_NE_OP expression
+
+    $default  reduce using rule 51 (expression)
+
+
+State 181
+
+   49 expression: expression . '+' expression
+   50           | expression . '-' expression
+   51           | expression . '*' expression
+   52           | expression . '/' expression
+   52           | expression '/' expression .
+   53           | expression . T_AND_OP expression
+   54           | expression . T_OR_OP expression
+   55           | expression . T_LE_OP expression
+   56           | expression . T_GE_OP expression
+   57           | expression . '<' expression
+   58           | expression . '>' expression
+   59           | expression . T_EQ_OP expression
+   60           | expression . T_NE_OP expression
+
+    $default  reduce using rule 52 (expression)
+
+
+State 182
+
+   82 selection_cf: T_IF '(' boolean_expr ')' blockstatements .
+   83             | T_IF '(' boolean_expr ')' blockstatements . T_ELSE blockstatements
+
+    T_ELSE  shift, and go to state 194
+
+    $default  reduce using rule 82 (selection_cf)
+
+
+State 183
+
+   74 iteration_cf: T_WHILE '(' boolean_expr ')' blockstatements .
+
+    $default  reduce using rule 74 (iteration_cf)
+
+
+State 184
+
+   75 iteration_cf: T_DO blockstatements T_WHILE '(' boolean_expr . ')'
+
+    ')'  shift, and go to state 195
+
+
+State 185
+
+   73 iteration_cf: T_FIXEDPOINT T_UNTIL '(' boolean_expr ')' . blockstatements
+
+    '{'  shift, and go to state 7
+
+    blockstatements  go to state 196
+    block_begin      go to state 10
+
+
+State 186
+
+  102 bfs_abstraction: T_BFS '(' ID ':' T_FROM . ID ')' filterExpr blockstatements reverse_abstraction
+
+    ID  shift, and go to state 197
+
+
+State 187
+
+   85 reduction: '<' leftList '>' '=' '<' . rightList '>'
+
+    T_SUM      shift, and go to state 121
+    T_COUNT    shift, and go to state 122
+    T_PRODUCT  shift, and go to state 123
+    T_MAX      shift, and go to state 124
+    T_MIN      shift, and go to state 125
+
+    rightList      go to state 198
+    reductionCall  go to state 199
+    reduction_op   go to state 129
+
+
+State 188
+
+   98 arg_list: arg_list ',' assignment .
+
+    $default  reduce using rule 98 (arg_list)
+
+
+State 189
+
+   49 expression: expression . '+' expression
+   50           | expression . '-' expression
+   51           | expression . '*' expression
+   52           | expression . '/' expression
+   53           | expression . T_AND_OP expression
+   54           | expression . T_OR_OP expression
+   55           | expression . T_LE_OP expression
+   56           | expression . T_GE_OP expression
+   57           | expression . '<' expression
+   58           | expression . '>' expression
+   59           | expression . T_EQ_OP expression
+   60           | expression . T_NE_OP expression
+   99 arg_list: arg_list ',' expression .
+
+    T_AND_OP  shift, and go to state 140
+    T_OR_OP   shift, and go to state 141
+    T_LE_OP   shift, and go to state 142
+    T_GE_OP   shift, and go to state 143
+    T_EQ_OP   shift, and go to state 144
+    T_NE_OP   shift, and go to state 145
+    '<'       shift, and go to state 146
+    '>'       shift, and go to state 147
+    '+'       shift, and go to state 148
+    '-'       shift, and go to state 149
+    '*'       shift, and go to state 150
+    '/'       shift, and go to state 151
+
+    $default  reduce using rule 99 (arg_list)
+
+
+State 190
+
+   90 reductionCall: reduction_op '(' arg_list . ')'
+   98 arg_list: arg_list . ',' assignment
+   99         | arg_list . ',' expression
+
+    ')'  shift, and go to state 200
+    ','  shift, and go to state 163
+
+
+State 191
+
+   76 iteration_cf: T_FORALL '(' ID T_IN ID '.' . proc_call filterExpr ')' blockstatements
+
+    ID  shift, and go to state 42
+
+    proc_call  go to state 201
+    leftSide   go to state 202
+    oid        go to state 59
+
+
+State 192
+
+   78 iteration_cf: T_FOR '(' ID T_IN ID '.' . proc_call filterExpr ')' blockstatements
+  104 oid: ID '.' . ID
+
+    ID  shift, and go to state 203
+
+    proc_call  go to state 204
+    leftSide   go to state 202
+    oid        go to state 59
+
+
+State 193
+
+   77 iteration_cf: T_FOR '(' ID T_IN leftSide ')' . blockstatements
+
+    '{'  shift, and go to state 7
+
+    blockstatements  go to state 205
+    block_begin      go to state 10
+
+
+State 194
+
+   83 selection_cf: T_IF '(' boolean_expr ')' blockstatements T_ELSE . blockstatements
+
+    '{'  shift, and go to state 7
+
+    blockstatements  go to state 206
+    block_begin      go to state 10
+
+
+State 195
+
+   75 iteration_cf: T_DO blockstatements T_WHILE '(' boolean_expr ')' .
+
+    $default  reduce using rule 75 (iteration_cf)
+
+
+State 196
+
+   73 iteration_cf: T_FIXEDPOINT T_UNTIL '(' boolean_expr ')' blockstatements .
+
+    $default  reduce using rule 73 (iteration_cf)
+
+
+State 197
+
+  102 bfs_abstraction: T_BFS '(' ID ':' T_FROM ID . ')' filterExpr blockstatements reverse_abstraction
+
+    ')'  shift, and go to state 207
+
+
+State 198
+
+   85 reduction: '<' leftList '>' '=' '<' rightList . '>'
+
+    '>'  shift, and go to state 208
+
+
+State 199
+
+   88 rightList: reductionCall . ',' val
+   89          | reductionCall .
+
+    ','  shift, and go to state 209
+
+    $default  reduce using rule 89 (rightList)
+
+
+State 200
+
+   90 reductionCall: reduction_op '(' arg_list ')' .
+
+    $default  reduce using rule 90 (reductionCall)
+
+
+State 201
+
+   76 iteration_cf: T_FORALL '(' ID T_IN ID '.' proc_call . filterExpr ')' blockstatements
+
+    '.'  shift, and go to state 210
+
+    $default  reduce using rule 79 (filterExpr)
+
+    filterExpr  go to state 211
+
+
+State 202
+
+   64 proc_call: leftSide . '(' arg_list ')'
+
+    '('  shift, and go to state 84
+
+
+State 203
+
+   96 leftSide: ID .
+  104 oid: ID . '.' ID
+  104    | ID '.' ID .
+
+    '.'  shift, and go to state 75
+
+    ')'       reduce using rule 104 (oid)
+    $default  reduce using rule 96 (leftSide)
+
+
+State 204
+
+   78 iteration_cf: T_FOR '(' ID T_IN ID '.' proc_call . filterExpr ')' blockstatements
+
+    '.'  shift, and go to state 210
+
+    $default  reduce using rule 79 (filterExpr)
+
+    filterExpr  go to state 212
+
+
+State 205
+
+   77 iteration_cf: T_FOR '(' ID T_IN leftSide ')' blockstatements .
+
+    $default  reduce using rule 77 (iteration_cf)
+
+
+State 206
+
+   83 selection_cf: T_IF '(' boolean_expr ')' blockstatements T_ELSE blockstatements .
+
+    $default  reduce using rule 83 (selection_cf)
+
+
+State 207
+
+  102 bfs_abstraction: T_BFS '(' ID ':' T_FROM ID ')' . filterExpr blockstatements reverse_abstraction
+
+    '.'  shift, and go to state 210
+
+    $default  reduce using rule 79 (filterExpr)
+
+    filterExpr  go to state 213
+
+
+State 208
+
+   85 reduction: '<' leftList '>' '=' '<' rightList '>' .
+
+    $default  reduce using rule 85 (reduction)
+
+
+State 209
+
+   88 rightList: reductionCall ',' . val
+
+    T_P_INF    shift, and go to state 96
+    T_INF      shift, and go to state 97
+    T_N_INF    shift, and go to state 98
+    INT_NUM    shift, and go to state 99
+    FLOAT_NUM  shift, and go to state 100
+    BOOL_VAL   shift, and go to state 101
+
+    val  go to state 214
+
+
+State 210
+
+   80 filterExpr: '.' . T_FILTER '(' boolean_expr ')'
+
+    T_FILTER  shift, and go to state 215
+
+
+State 211
+
+   76 iteration_cf: T_FORALL '(' ID T_IN ID '.' proc_call filterExpr . ')' blockstatements
+
+    ')'  shift, and go to state 216
+
+
+State 212
+
+   78 iteration_cf: T_FOR '(' ID T_IN ID '.' proc_call filterExpr . ')' blockstatements
+
+    ')'  shift, and go to state 217
+
+
+State 213
+
+  102 bfs_abstraction: T_BFS '(' ID ':' T_FROM ID ')' filterExpr . blockstatements reverse_abstraction
+
+    '{'  shift, and go to state 7
+
+    blockstatements  go to state 218
+    block_begin      go to state 10
+
+
+State 214
+
+   88 rightList: reductionCall ',' val .
+
+    $default  reduce using rule 88 (rightList)
+
+
+State 215
+
+   80 filterExpr: '.' T_FILTER . '(' boolean_expr ')'
+
+    '('  shift, and go to state 219
+
+
+State 216
+
+   76 iteration_cf: T_FORALL '(' ID T_IN ID '.' proc_call filterExpr ')' . blockstatements
+
+    '{'  shift, and go to state 7
+
+    blockstatements  go to state 220
+    block_begin      go to state 10
+
+
+State 217
+
+   78 iteration_cf: T_FOR '(' ID T_IN ID '.' proc_call filterExpr ')' . blockstatements
+
+    '{'  shift, and go to state 7
+
+    blockstatements  go to state 221
+    block_begin      go to state 10
+
+
+State 218
+
+  102 bfs_abstraction: T_BFS '(' ID ':' T_FROM ID ')' filterExpr blockstatements . reverse_abstraction
+
+    T_REVERSE  shift, and go to state 222
+
+    reverse_abstraction  go to state 223
+
+
+State 219
+
+   80 filterExpr: '.' T_FILTER '(' . boolean_expr ')'
+
+    T_P_INF    shift, and go to state 96
+    T_INF      shift, and go to state 97
+    T_N_INF    shift, and go to state 98
+    ID         shift, and go to state 42
+    INT_NUM    shift, and go to state 99
+    FLOAT_NUM  shift, and go to state 100
+    BOOL_VAL   shift, and go to state 101
+    '('        shift, and go to state 102
+
+    expression    go to state 103
+    proc_call     go to state 104
+    val           go to state 105
+    boolean_expr  go to state 224
+    leftSide      go to state 107
+    oid           go to state 59
+
+
+State 220
+
+   76 iteration_cf: T_FORALL '(' ID T_IN ID '.' proc_call filterExpr ')' blockstatements .
+
+    $default  reduce using rule 76 (iteration_cf)
+
+
+State 221
+
+   78 iteration_cf: T_FOR '(' ID T_IN ID '.' proc_call filterExpr ')' blockstatements .
+
+    $default  reduce using rule 78 (iteration_cf)
+
+
+State 222
+
+  103 reverse_abstraction: T_REVERSE . '(' boolean_expr ')' filterExpr blockstatements
+
+    '('  shift, and go to state 225
+
+
+State 223
+
+  102 bfs_abstraction: T_BFS '(' ID ':' T_FROM ID ')' filterExpr blockstatements reverse_abstraction .
+
+    $default  reduce using rule 102 (bfs_abstraction)
+
+
+State 224
+
+   80 filterExpr: '.' T_FILTER '(' boolean_expr . ')'
+
+    ')'  shift, and go to state 226
+
+
+State 225
+
+  103 reverse_abstraction: T_REVERSE '(' . boolean_expr ')' filterExpr blockstatements
+
+    T_P_INF    shift, and go to state 96
+    T_INF      shift, and go to state 97
+    T_N_INF    shift, and go to state 98
+    ID         shift, and go to state 42
+    INT_NUM    shift, and go to state 99
+    FLOAT_NUM  shift, and go to state 100
+    BOOL_VAL   shift, and go to state 101
+    '('        shift, and go to state 102
+
+    expression    go to state 103
+    proc_call     go to state 104
+    val           go to state 105
+    boolean_expr  go to state 227
+    leftSide      go to state 107
+    oid           go to state 59
+
+
+State 226
+
+   80 filterExpr: '.' T_FILTER '(' boolean_expr ')' .
+
+    $default  reduce using rule 80 (filterExpr)
+
+
+State 227
+
+  103 reverse_abstraction: T_REVERSE '(' boolean_expr . ')' filterExpr blockstatements
+
+    ')'  shift, and go to state 228
+
+
+State 228
+
+  103 reverse_abstraction: T_REVERSE '(' boolean_expr ')' . filterExpr blockstatements
+
+    '.'  shift, and go to state 210
+
+    $default  reduce using rule 79 (filterExpr)
+
+    filterExpr  go to state 229
+
+
+State 229
+
+  103 reverse_abstraction: T_REVERSE '(' boolean_expr ')' filterExpr . blockstatements
+
+    '{'  shift, and go to state 7
+
+    blockstatements  go to state 230
+    block_begin      go to state 10
+
+
+State 230
+
+  103 reverse_abstraction: T_REVERSE '(' boolean_expr ')' filterExpr blockstatements .
+
+    $default  reduce using rule 103 (reverse_abstraction)

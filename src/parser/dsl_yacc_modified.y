@@ -5,10 +5,10 @@
 	#include <string.h>
 	#include <stdlib.h>
 	#include <stdbool.h>
-	#include <SymbolTable.h>
-	#include<MainContext.h>
-	#include<ASTNode.h>
-	#include <list>
+	#include "SymbolTable.h"
+	#include "MainContext.h"
+	#include "ASTNode.h"
+	//#include <list>
 
 	void yyerror(char *);
 	int yylex(void);
