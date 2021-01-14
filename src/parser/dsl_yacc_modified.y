@@ -4,11 +4,12 @@
 	#include <string.h>
 	#include <stdlib.h>
 	#include <stdbool.h>
+	#include "ASTNodeTypes.h"
 	#include "SymbolTable.h"
 	#include "MainContext.h"
 	#include "ASTNode.h"
     #include "enum_def.h"
-    #include "ASTNodeTypes.h"
+    
     
 	//#include <list>
 

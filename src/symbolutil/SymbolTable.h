@@ -1,7 +1,7 @@
 #include <string>
-#include<stdio.h>
+#include <stdio.h>
 #include <map>
-#include<Symbol.h>
+#include "Symbol.h"
 
 
 
