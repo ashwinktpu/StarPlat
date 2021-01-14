@@ -3,7 +3,7 @@
 
 class ASTNode
 {
-  protected:
+  public:
   ASTNode* parent;
   string typeofNode;
 
