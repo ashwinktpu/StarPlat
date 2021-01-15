@@ -5,7 +5,7 @@
 #include <string>
 #include<stdio.h>
 
-
+using namespace std;
 class Symbol{
 public:
    string name;

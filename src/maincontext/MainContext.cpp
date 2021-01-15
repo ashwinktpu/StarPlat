@@ -1,5 +1,5 @@
 #include"MainContext.h"
-#include"SymbolTable.h"
+#include"../symbolutil/SymbolTable.h"
 
 
 
