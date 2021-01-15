@@ -4,7 +4,7 @@
 using namespace std;
 class ASTNode
 {
-  protected:
+  public:
   ASTNode* parent;
   string typeofNode;
 

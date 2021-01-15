@@ -1,5 +1,9 @@
 #include "ASTNode.h"
+<<<<<<< HEAD
 #include<string>
+=======
+#include <string>
+>>>>>>> 43c2a08e026f040d5049c3bf784dfbb42fa84e08
 #include <list>
 
 using namespace std;
