@@ -183,7 +183,7 @@ class formalParam:public ASTNode
 
 
 };
-class Type:public ASTNode
+class Type : public ASTNode
 {
   int typeId;
   int rootType;
@@ -191,6 +191,7 @@ class Type:public ASTNode
   Type* innerTargetType;
   Identifier* sourceGraph;
   
+ public:
 
  Type()
  {

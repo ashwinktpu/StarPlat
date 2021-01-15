@@ -1,5 +1,5 @@
 #include "../maincontext/MainContext.h"
-#include "ASTNode.h"
+//#include "ASTNode.h"
 #include "../maincontext/enum_def.h"
 
 extern FrontEndContext FrontEndC;
@@ -23,11 +23,11 @@ ASTNode* finishBlock()
 {   
     blockStatement* blockStatementNode=FrontEndC.getCurrentBlock();
     FrontEndC.endBlock();
-    retun blockStatementNode;
+    return blockStatementNode;
 }
 void addToBlock(ASTNode* statementNode)
 {
-    if(statement!=NULL)
+    if(statementNode!= NULL)
     {
         statement* statementNode=(statement*)statementNode;
         blockStatement* currentBlock=FrontEndC.getCurrentBlock();
@@ -38,7 +38,7 @@ void addToBlock(ASTNode* statementNode)
 paramList* addToPList(paramList* pList,formalParam* fParam)
 {
      pList->PList.push_back(fParam);
-     return paramList;
+     return pList;
 } 
 
 argList* addToAList(argList* aList,argument arg)
@@ -54,7 +54,7 @@ ASTNodeList* addToList(ASTNodeList* nodeList,ASTNode* node)
 }
 ASTNode* createParamNode(Type* type,Identifier* id)
 {
-   formalParam* formalParamNode=formalParam::formalParam(type,id);
+   formalParam* formalParamNode=formalParam(type,id);
    return formalParamNode;
 
 }
@@ -67,8 +67,8 @@ ASTNode* createNormalDeclNode(Type* type,Identifier* id)
 
 ASTNode* createAssignedDeclNode(Type* type,Identifier* id,Expression* exprAssigned)
 {
-    declaration* declNode=declaration::assign_Declaration(type,id,exprAssigned)
-    return declaration;
+    declaration* declNode=declaration::assign_Declaration(type,id,exprAssigned);
+    return declNode;
 }
 ASTNode* createPrimitiveTypeNode(int typeId)
 {
@@ -103,11 +103,11 @@ ASTNode* createNodeEdgeTypeNode(int typeId)
 
 ASTNode* createAssignmentNode(ASTNode* leftSide,Expression* rhs)
 {   assignment* assignmentNode;
-    if(leftSide->getTypeofNode=="ID")
+    if(leftSide->getTypeofNode()=="ID")
     {
       assignmentNode=assignment::id_assignExpr((Identifier*)leftSide,rhs);
     }
-    if(leftSide->getTypeofNode=="PROPACCESS")
+    if(leftSide->getTypeofNode()=="PROPACCESS")
     {
         assignmentNode=assignment::prop_assignExpr((PropAccess*)leftSide,rhs));
     }
@@ -124,11 +124,11 @@ ASTNode* createNodeForProcCallStmt(ASTNode* procCall)
 ASTNode* createNodeForProcCall(ASTNode* proc_callId,list<argument> argList)
 {    
     proc_callExpr* proc_callExprNode;
-    if(proc_callId->getTypeofNode=="ID")
+    if(proc_callId->getTypeofNode()=="ID")
     {
       proc_callExprNode=proc_callExpr::nodeForProc_Call((Identifier*)proc_callId,$,argList);
     }
-    if(proc_callId->getTypeofNode=="PROPACCESS")
+    if(proc_callId->getTypeofNode()=="PROPACCESS")
     {
       PropAccess* propAccessId=(PropAccess*)proc_callId;
       
@@ -175,12 +175,12 @@ ASTNode* createNodeForINF(bool infinityFlag)
 }
 ASTNode* createNodeForId(ASTNode* node)
 {  Expression* exprForId;
-   if(node->getTypeofNode=="ID")
+   if(node->getTypeofNode()=="ID")
       {
          exprForId=Expression::nodeForIdentifier((Identifier*)node);
 
       }
-    if(node->getTypeofNode=="PROPACESS")
+    if(node->getTypeofNode()=="PROPACESS")
      {
          exprForId=Expression::nodeForPropAccess((PropAccess*)node);
      }
@@ -220,9 +220,9 @@ ASTNode* createNodeForForAllStmt(ASTNode* iterator,ASTNode* sourceGraph,ASTNode*
 ASTNode* createNodeForForStmt(ASTNode* iterator,ASTNode* source,ASTNode* body,bool isforall)
 {
     statement* forallStmtNode;
-    if(source->getTypeofNode=="ID")
+    if(source->getTypeofNode()=="ID")
     forallStmtNode=forallStmt::id_createforForStmt((Identifier* )iterator,(Identifier*)sourceGraph,(statement*)body,isforall);
-    if(source->getTypeofNode=="PROPACCESS")
+    if(source->getTypeofNode()=="PROPACCESS")
     forallStmtNode=forallStmt::propId_createforForStmt((Identifier* )iterator,(PropAccess*)sourceGraph,(statement*)body,isforall);
     return forallStmtNode;
 }
@@ -234,11 +234,11 @@ ASTNode* createNodeforReductionCall(int reductionOperationType,list<argument> ar
 ASTNode* createNodeForReductionStmt(ASTNode* leftSide,ASTNode* reductionCallNode)
 {
     reductionCallStmt* reductionStmtNode;
-    if(leftSide->getTypeofNode=="ID")
+    if(leftSide->getTypeofNode()=="ID")
     {
         reductionStmtNode=reductionCallStmt::id_reducCallStmt((Identifier*)leftSide,(reductionCall*)reductionStmtNode);
     }
-    if(leftSide->getTypeofNode=="PROPACCESS")
+    if(leftSide->getTypeofNode()=="PROPACCESS")
      {
          reductionStmtNode=reductionCallStmt::propId_reducCallStmt((PropAccess*)leftSide,(reductionCall*)reductionStmtNode);
      }
