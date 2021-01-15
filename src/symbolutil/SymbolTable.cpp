@@ -1,6 +1,6 @@
-#include<SymbolTable.h>
-#include<ASTNodeTypes.h>
-
+#include "SymbolTable.h"
+#include "../ast/ASTNodeTypes.h"
+using namespace std;
 
 
 Scope::Scope()

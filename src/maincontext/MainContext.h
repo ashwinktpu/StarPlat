@@ -1,8 +1,8 @@
 #include<stdio.h>
-#include<ASTNodeTypes.h>
+#include "../ast/ASTNodeTypes.h"
 #include<vector>
 
-
+using namespace std;
 
 class FrontEndContext
 {
