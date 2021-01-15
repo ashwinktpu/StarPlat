@@ -1,12 +1,7 @@
 #include <string>
 #include <stdio.h>
 #include <map>
-<<<<<<< HEAD
 #include"Symbol.h"
-=======
-#include "Symbol.h"
-
->>>>>>> 43c2a08e026f040d5049c3bf784dfbb42fa84e08
 
 using namespace std;
 

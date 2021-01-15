@@ -185,7 +185,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 30 "dsl_yacc_modified.y"
+#line 38 "dsl_yacc_modified.y"
 
     int  info;
     long ival;

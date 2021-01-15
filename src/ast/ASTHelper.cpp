@@ -1,12 +1,6 @@
-<<<<<<< HEAD
-#include<../maincontext/MainContext.h>
-#include<ASTNode.h>
-#include<enum_def.h>
-=======
-#include <MainContext.h>
+#include "../maincontext/MainContext.h"
 #include "ASTNode.h"
-#include "enum_def.h"
->>>>>>> 43c2a08e026f040d5049c3bf784dfbb42fa84e08
+#include "../maincontext/enum_def.h"
 
 extern FrontEndContext FrontEndC;
 
