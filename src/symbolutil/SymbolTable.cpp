@@ -1,8 +1,8 @@
-#include "SymbolTable.h"
-#include "../ast/ASTNodeTypes.h"
-using namespace std;
+#include "SymbolTable.hpp"
+#include "../ast/ASTNodeTypes.hpp"
 
 
+SymbolTable* symbTab;
 Scope::Scope()
 {
 

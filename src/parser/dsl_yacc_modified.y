@@ -1,26 +1,13 @@
 
   %{
+	
 	#include <stdio.h>
 	#include <string.h>
 	#include <stdlib.h>
 	#include <stdbool.h>
-<<<<<<< HEAD
-	#include "../symbolutil/SymbolTable.h"
-	#include "../maincontext/MainContext.h"
-	#include "../ast/ASTNode.h"
-    #include "../maincontext/enum_def.h"
-    #include "../ast/ASTNodeTypes.h"
-=======
-	#include "ASTNodeTypes.h"
-	#include "SymbolTable.h"
-	#include "MainContext.h"
-	#include "ASTNode.h"
-    #include "enum_def.h"
-    
->>>>>>> 43c2a08e026f040d5049c3bf784dfbb42fa84e08
-    
-	//#include <list>
-
+    #include "includeHeader.hpp"
+	//#include "y.tab.h"
+     
 	void yyerror(char *);
 	int yylex(void);
 	char mytext[100];
@@ -28,8 +15,8 @@
 	int num = 0;
 	extern char *yytext;
 	extern SymbolTable* symbTab;
-	
-	symbTab=new SymbolTable();
+	FrontEndContext *FrontEndContext::instance=0;
+    //symbTab=new SymbolTable();
 	//symbolTableList.push_back(new SymbolTable());
 %}
 
@@ -38,14 +25,15 @@
 %union {
     int  info;
     long ival;
+	bool bval;
     double fval;
     char* text;
 	ASTNode* node;
+	paramList* pList;
 	argList* aList;
 	ASTNodeList* nodeList;
-    
-    struct tempNode temporary;
-}
+    tempNode* temporary;
+     }
 %token T_INT T_FLOAT T_BOOL T_DOUBLE  T_LONG
 %token T_FORALL T_FOR  T_P_INF  T_INF T_N_INF
 %token T_FUNC T_IF T_ELSE T_WHILE T_RETURN T_DO T_IN T_FIXEDPOINT T_UNTIL T_FILTER
@@ -65,7 +53,7 @@
 
 %type <node> function_def function_data function_body param
 %type <pList> paramList
-%type <node> statement blockstatements assignment declaration proc_call control_flow reduction 
+%type <node> statement blockstatements assignment declaration proc_call control_flow reduction
 %type <node> type1 type2
 %type <node> primitive graph collections property
 %type <node> id leftSide rhs expression oid val boolean_expr
@@ -86,7 +74,7 @@
 %left '?'
 %left ':'
 %left T_OR_OP
-%left T_AND_OP 
+%left T_AND_OP
 %left T_EQ_OP  T_NE_OP
 %left '<' '>'  T_LE_OP T_GE_OP
 %left '+' '-'
@@ -98,189 +86,192 @@ program: function_def {printf("program.\n");};
 
 function_def: function_data  function_body  { };
 
-function_data: T_FUNC ID '(' paramList ')' {Identifier* funcId=createIdentifierNode($2);
-                                           $$=createFunctionNode(funcId,$4); };
+function_data: T_FUNC ID '(' paramList ')' {Identifier* funcId=(Identifier*)Util::createIdentifierNode($2);
+                                           $$=Util::createFuncNode(funcId,$4->PList); };
 
-paramList: param {$$=addToPList($$,$1);};
-               | paramList ',' param {$$=addToPList($$,$3); };
+paramList: param {$$=Util::addToPList($$,$1);};
+               | paramList ',' param {$$=Util::addToPList($$,$3); };
 
-param : type1 ID { Identifier* id=createIdentifierNode($2);
-                           $$=createParamNode($1,id); } ;
-               | type2 ID {  Identifier* id=createIdentifierNode($2);
-                             $$=createParamNode($1,id);};
-			   | type2 ID '(' ID ')' {  Identifier* id1=createIdentifierNode($4);
-			                            Identifier* id=createIdentifierNode($2);
+param : type1 ID { Identifier* id=(Identifier*)Util::createIdentifierNode($2);
+                           $$=Util::createParamNode($1,id); } ;
+               | type2 ID {  Identifier* id=(Identifier*)Util::createIdentifierNode($2);
+                             $$=Util::createParamNode($1,id);};
+			   | type2 ID '(' ID ')' {  Identifier* id1=(Identifier*)Util::createIdentifierNode($4);
+			                            Identifier* id=(Identifier*)Util::createIdentifierNode($2);
 				                        Type* tempType=(Type*)$1;
 			                            if(tempType->isNodeEdgeType())
-										   (Type*)$1->addSourceGraph(id1);
-				                         $$=createParamNode($1,id);
-									 }; 
+										   tempType->addSourceGraph(id1);
+				                         $$=Util::createParamNode(tempType,id);
+									 };
 
 
 function_body : blockstatements {$$=$1;};
 
 
 statements :  {};
-	| statements statement { addToBlock($2); };
+	| statements statement { Util::addToBlock($2); };
 
-statement: declaration ';'{$$=$1};
+statement: declaration ';'{$$=$1;};
 	|assignment ';'{$$=$1;};
-	|proc_call ';' {$$=createNodeForProcCallStmt($1);};
+	|proc_call ';' {$$=Util::createNodeForProcCallStmt($1);};
 	|control_flow {$$=$1;};
 	|reduction ';'{$$=$1;};
 	| bfs_abstraction {$$=$1; };
 	| blockstatements {$$=$1;};
-	
-	
-blockstatements : block_begin statements block_end { $$=finishBlock();};
 
-block_begin:'{' { createNewBlock(); }
+
+blockstatements : block_begin statements block_end { $$=Util::finishBlock();};
+
+block_begin:'{' { Util::createNewBlock(); }
 
 block_end:'}'
-	
-	
-declaration : type1 ID  {Identifier* id=createIdentifierNode($2);
-                         $$=createNormalDeclNode($1,id);};
-	| type1 ID '=' rhs {Identifier* id=createIdentifierNode($2);
-	                    $$=createAssignedDeclNode($1,id,$4);};
-	| type2 ID  {Identifier* id=createIdentifierNode($2);
-                         $$=createNormalDeclNode($1,id); };
-	| type2 ID '=' rhs {Identifier* id=createIdentifierNode($2);
-	                    $$=createAssignedDeclNode($1,id,$4);};
 
-type1: primitive {$$=$1}; 
-	| graph {$$=$1};
-	| collections { $$=$1};
 
-	
-primitive: T_INT { $$=createPrimitiveTypeNode(TYPE_INT);}; 
-	| T_FLOAT { $$=createPrimitiveTypeNode(TYPE_FLOAT);};
-	| T_BOOL { $$=createPrimitiveTypeNode(TYPE_BOOL);};
-	| T_DOUBLE { $$=createPrimitiveTypeNode(TYPE_DOUBLE); };
-    | T_LONG {$$=$$=createPrimitiveTypeNode(TYPE_LONG);};
+declaration : type1 ID  {Identifier* id=(Identifier*)Util::createIdentifierNode($2);
+                         $$=Util::createNormalDeclNode($1,id);};
+	| type1 ID '=' rhs {Identifier* id=(Identifier*)Util::createIdentifierNode($2);
+	                    $$=Util::createAssignedDeclNode($1,id,$4);};
+	| type2 ID  {Identifier* id=(Identifier*)Util::createIdentifierNode($2);
+                         $$=Util::createNormalDeclNode($1,id); };
+	| type2 ID '=' rhs {Identifier* id=(Identifier*)Util::createIdentifierNode($2);
+	                    $$=Util::createAssignedDeclNode($1,id,$4);};
 
-graph : T_GRAPH { $$=createGraphTypeNode(TYPE_GRAPH,NULL);};
-	|T_DIR_GRAPH {$$=createGraphTypeNode(TYPE_DIRGRAPH,NULL);};
-	
-collections : T_LIST { $$=createCollectionTypeNode(TYPE_LIST,NULL);};
-		|T_SET_NODES '<' ID '>' { $$=createCollectionTypeNode(TYPE_SETN,$3);};
-                | T_SET_EDGES '<' ID '>' { $$=createCollectionTypeNode(TYPE_SETE,$3);};
-	
-type2 : T_NODE {$$=createNodeEdgeTypeNode(TYPE_NODE) };
-       | T_EDGE {$$=createNodeEdgeTypeNode(TYPE_EDGE)};
+type1: primitive {$$=$1;};
+	| graph {$$=$1;};
+	| collections { $$=$1;};
+
+
+primitive: T_INT { $$=Util::createPrimitiveTypeNode(TYPE_INT);};
+	| T_FLOAT { $$=Util::createPrimitiveTypeNode(TYPE_FLOAT);};
+	| T_BOOL { $$=Util::createPrimitiveTypeNode(TYPE_BOOL);};
+	| T_DOUBLE { $$=Util::createPrimitiveTypeNode(TYPE_DOUBLE); };
+    | T_LONG {$$=$$=Util::createPrimitiveTypeNode(TYPE_LONG);};
+
+graph : T_GRAPH { $$=Util::createGraphTypeNode(TYPE_GRAPH,NULL);};
+	|T_DIR_GRAPH {$$=Util::createGraphTypeNode(TYPE_DIRGRAPH,NULL);};
+
+collections : T_LIST { $$=Util::createCollectionTypeNode(TYPE_LIST,NULL);};
+		|T_SET_NODES '<' ID '>' {Identifier* id=(Identifier*)Util::createIdentifierNode($3);
+			                     $$=Util::createCollectionTypeNode(TYPE_SETN,id);};
+                | T_SET_EDGES '<' ID '>' { Identifier* id=(Identifier*)Util::createIdentifierNode($3);
+					                    $$=Util::createCollectionTypeNode(TYPE_SETE,id);};
+
+type2 : T_NODE {$$=Util::createNodeEdgeTypeNode(TYPE_NODE) ;};
+       | T_EDGE {$$=Util::createNodeEdgeTypeNode(TYPE_EDGE);};
 	   | property {$$=$1;};
 
-property : T_NP '<' primitive '>' { $$=createPropertyTypeNode(PROP_NODE,$3); };
-              | T_EP '<' primitive '>' { $$=createPropertyTypeNode(PROP_EDGE,$3); };
-			  | T_NP '<' collections '>'{  $$=createPropertyTypeNode(PROP_NODE,$3); };
-			  | T_EP '<' collections '>' {$$=createPropertyTypeNode(PROP_EDGE,$3);};
-	
-assignment :  leftSide '=' rhs  { $$=createAssignmentNode($1,$3);};
+property : T_NP '<' primitive '>' { $$=Util::createPropertyTypeNode(PROP_NODE,$3); };
+              | T_EP '<' primitive '>' { $$=Util::createPropertyTypeNode(PROP_EDGE,$3); };
+			  | T_NP '<' collections '>'{  $$=Util::createPropertyTypeNode(PROP_NODE,$3); };
+			  | T_EP '<' collections '>' {$$=Util::createPropertyTypeNode(PROP_EDGE,$3);};
+
+assignment :  leftSide '=' rhs  { $$=Util::createAssignmentNode($1,$3);};
 
 rhs : expression { $$=$1;};
 
-expression : proc_call { $$=$1};
-             | expression '+' expression { $$=createNodeForArithmeticExpr($1,$3,OPERATOR_ADD);};
-	         | expression '-' expression { $$=createNodeForArithmeticExpr($1,$3,OPERATOR_SUB);};
-	         | expression '*' expression {$$=createNodeForArithmeticExpr($1,$3,OPERATOR_MUL);};
-	         | expression'/' expression{$$=createNodeForArithmeticExpr($1,$3,OPERATOR_DIV);};
-             | expression T_AND_OP expression {$$=createNodeForLogicalExpr($1,$3,OPERATOR_AND);};
-	         | expression T_OR_OP  expression {$$=createNodeForLogicalExpr($1,$3,OPERATOR_OR);};
-	         | expression T_LE_OP expression {$$=createNodeForRelationalExpr($1,$3,OPERATOR_LE);};
-	         | expression T_GE_OP expression{$$=createNodeForRelationalExpr($1,$3,OPERATOR_GE);};
-			 | expression '<' expression{$$=createNodeForRelationalExpr($1,$3,OPERATOR_LT);};
-			 | expression '>' expression{$$=createNodeForRelationalExpr($1,$3,OPERATOR_GT);};
-			 | expression T_EQ_OP expression{$$=createNodeForRelationalExpr($1,$3,OPERATOR_EQ);};
-             | expression T_NE_OP expression{$$=$$=createNodeForRelationalExpr($1,$3,OPERATOR_NE);};	
-		| '(' expression ')' {$$=$2;};		 
+expression : proc_call { $$=$1;};
+             | expression '+' expression { $$=Util::createNodeForArithmeticExpr($1,$3,OPERATOR_ADD);};
+	         | expression '-' expression { $$=Util::createNodeForArithmeticExpr($1,$3,OPERATOR_SUB);};
+	         | expression '*' expression {$$=Util::createNodeForArithmeticExpr($1,$3,OPERATOR_MUL);};
+	         | expression'/' expression{$$=Util::createNodeForArithmeticExpr($1,$3,OPERATOR_DIV);};
+             | expression T_AND_OP expression {$$=Util::createNodeForLogicalExpr($1,$3,OPERATOR_AND);};
+	         | expression T_OR_OP  expression {$$=Util::createNodeForLogicalExpr($1,$3,OPERATOR_OR);};
+	         | expression T_LE_OP expression {$$=Util::createNodeForRelationalExpr($1,$3,OPERATOR_LE);};
+	         | expression T_GE_OP expression{$$=Util::createNodeForRelationalExpr($1,$3,OPERATOR_GE);};
+			 | expression '<' expression{$$=Util::createNodeForRelationalExpr($1,$3,OPERATOR_LT);};
+			 | expression '>' expression{$$=Util::createNodeForRelationalExpr($1,$3,OPERATOR_GT);};
+			 | expression T_EQ_OP expression{$$=Util::createNodeForRelationalExpr($1,$3,OPERATOR_EQ);};
+             | expression T_NE_OP expression{$$=Util::createNodeForRelationalExpr($1,$3,OPERATOR_NE);};
+		| '(' expression ')' {$$=$2;};
 	         | val {$$=$1;};
 			 | leftSide { $$=$1 ;};
-			 
-proc_call : leftSide '(' arg_list ')' { $$=createNodeForProcCall($1,$3); };
-	
 
-			 
-val : INT_NUM { $$=createNodeForIval($1); };
-	| FLOAT_NUM {$$=createNodeForFval($1);};
-	| BOOL_VAL {$$=createNodeForBval($1);};
-	| T_INF {$$=createNodeForINF(true);};
-	| T_P_INF {$$=createNodeForINF(true);};
-	| T_N_INF {$$=createNodeForINF(false);};
-	
+proc_call : leftSide '(' arg_list ')' { $$=Util::createNodeForProcCall($1,$3->AList); };
+
+
+
+val : INT_NUM { $$=Util::createNodeForIval($1); };
+	| FLOAT_NUM {$$=Util::createNodeForFval($1);};
+	| BOOL_VAL {$$=Util::createNodeForBval($1);};
+	| T_INF {$$=Util::createNodeForINF(true);};
+	| T_P_INF {$$=Util::createNodeForINF(true);};
+	| T_N_INF {$$=Util::createNodeForINF(false);};
+
 control_flow : selection_cf { $$=$1; };
               | iteration_cf { $$=$1; };
 
-iteration_cf : T_FIXEDPOINT T_UNTIL '(' boolean_expr ')' blockstatements { $$=createNodeForFixedPointStmt($4,$6);};
-		   | T_WHILE '(' boolean_expr')' blockstatements {$$=createNodeForWhileStmt($3,$5); };
-		   | T_DO blockstatements T_WHILE '(' boolean_expr ')' {$$=createNodeForDoWhileStmt($5,$2);  };
-		| T_FORALL '(' ID T_IN ID '.' proc_call filterExpr')'  blockstatements {$$=createNodeForForAllStmt($3,$5,$7,$8,$10,true);};
-		| T_FOR '(' ID T_IN leftSide ')' blockstatements {$$=createNodeForForStmt($3,$5,$7,false);};
-		| T_FOR '(' ID T_IN ID '.' proc_call  filterExpr')' blockstatements {$$=createNodeForForAllStmt($3,$5,$7,$8,$10,false);};
-		   
+iteration_cf : T_FIXEDPOINT T_UNTIL '(' boolean_expr ')' blockstatements { $$=Util::createNodeForFixedPointStmt($4,$6);};
+		   | T_WHILE '(' boolean_expr')' blockstatements {$$=Util::createNodeForWhileStmt($3,$5); };
+		   | T_DO blockstatements T_WHILE '(' boolean_expr ')' {$$=Util::createNodeForDoWhileStmt($5,$2);  };
+		| T_FORALL '(' ID T_IN ID '.' proc_call filterExpr')'  blockstatements {$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,true);};
+		| T_FOR '(' ID T_IN leftSide ')' blockstatements {$$=Util::createNodeForForStmt($3,$5,$7,false);};
+		| T_FOR '(' ID T_IN ID '.' proc_call  filterExpr')' blockstatements {$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,false);};
+
 filterExpr  :         { $$=NULL;};
             |'.' T_FILTER '(' boolean_expr ')'{ $$=$4;};
 
 boolean_expr : expression { $$=$1 ;};
 
-selection_cf : T_IF '(' boolean_expr ')' blockstatements { $$=createNodeForIfStmt($3,$5,NULL); };
-              | T_IF '(' boolean_expr ')' blockstatements T_ELSE blockstatements  {$$=createNodeForIfStmt($3,$5,$7); };
-			  
+selection_cf : T_IF '(' boolean_expr ')' blockstatements { $$=Util::createNodeForIfStmt($3,$5,NULL); };
+              | T_IF '(' boolean_expr ')' blockstatements T_ELSE blockstatements  {$$=Util::createNodeForIfStmt($3,$5,$7); };
 
-reduction : leftSide '=' reductionCall { $$=createNodeForReductionStmt($1,$3) } 
-		   |'<' leftList '>' '=' '<' rightList '>'  {$$=createNodeForReductionStmtList($2,$6.reducCall,$6.exprVal);}; 
 
-leftList :  leftList ',' leftSide { $$=addToNList($$,$3);};
-		 | leftSide { $$=addToNList($$,$1);};
+reduction : leftSide '=' reductionCall { $$=Util::createNodeForReductionStmt($1,$3) ;}
+		   |'<' leftList '>' '=' '<' rightList '>'  {$$=Util::createNodeForReductionStmtList($2->ASTNList,$6->reducCall,$6->exprVal);};
 
-rightList : reductionCall ',' val { $$.reducCall=$1;
-                                    $$.exprVal=$3; };
-          | reductionCall {$$.reducCall=$1;} ;
-		  
-reductionCall : reduction_op '(' arg_list ')' {$$=createNodeforReductionCall($1,$3);} ;
+leftList :  leftList ',' leftSide { $$=Util::addToNList($$,$3);};
+		 | leftSide { $$=Util::addToNList($$,$1);};
+
+rightList : reductionCall ',' val { $$->reducCall=(reductionCall*)$1;
+                                    $$->exprVal=(Expression*)$3; };
+          | reductionCall {$$->reducCall=(reductionCall*)$1;} ;
+
+reductionCall : reduction_op '(' arg_list ')' {$$=Util::createNodeforReductionCall($1,$3->AList);} ;
 
 reduction_op : T_SUM { $$=REDUCE_SUM;};
 	         | T_COUNT {$$=REDUCE_COUNT;};
 	         | T_PRODUCT {$$=REDUCE_PRODUCT;};
 	         | T_MAX {$$=REDUCE_MAX;};
 	         | T_MIN {$$=REDUCE_MIN;};
-			 
-leftSide : ID { $$=createIdentifierNode($1);};
+
+leftSide : ID { $$=Util::createIdentifierNode($1);};
          | oid { $$=$1; };
 
-arg_list :   arg_list ',' assignment {argument a1;
-		                 a1.expression=$1;
-						 a1.expressionflag=true;
-						 $$=addToAList($$,a1);
+arg_list :   arg_list ',' assignment {argument* a1=new argument();
+		                 a1->assignExpr=(assignment*)$3;
+						  a1->assign=true;
+						 $$=Util::addToAList($$,a1);
                                  };
 
 
-	       |  arg_list ',' expression  {argument a1;
-		                                a1.assignExpr=$1;
-						                a1.assign=true;
-										 $$=addToAList($$,a1);
+	       |  arg_list ',' expression  {argument* a1=new argument();
+		                                a1->expression=(Expression*)$3;
+						               
+										a1->expressionflag=true;
+										 $$=Util::addToAList($$,a1);
 						                };
-	       | expression {argument a1;
-		                 a1.expression=$1;
-						 a1.expressionflag=true;
-						  $$=addToAList($$,a1); };
-	       | assignment { argument a1;
-		                  a1.assignExpr=$1;
-						  a1.assign=true;
-						   $$=addToAList($$,a1);};
-	
-		   
-bfs_abstraction	: T_BFS '(' ID ':' T_FROM ID ')' filterExpr blockstatements reverse_abstraction{$$=createIterateInBFSNode($3,$6,$8,$9,$10) ;};
+	       | expression {argument* a1=new argument();
+		                 a1->expression=(Expression*)$1;
+						 a1->expressionflag=true;
+						  $$=Util::addToAList($$,a1); };
+	       | assignment { argument* a1;
+		                  a1->assignExpr=(assignment*)$1;
+						  a1->assign=true;
+						   $$=Util::addToAList($$,a1);};
 
- 
 
-reverse_abstraction : T_REVERSE '(' boolean_expr ')' filterExpr blockstatements {$$=createIterateInReverseBFSNode($3,$5,$6)};
-                    
+bfs_abstraction	: T_BFS '(' ID ':' T_FROM ID ')' filterExpr blockstatements reverse_abstraction{$$=Util::createIterateInBFSNode($3,$6,$8,$9,$10) ;};
 
-oid : ID '.' ID { Identifier* id1=createIdentifierNode($1);
-                   Identifier* id12=createIdentifierNode($1);
-				   $$=createPropIdNode(id1,id2);
+
+
+reverse_abstraction : T_REVERSE '(' boolean_expr ')' filterExpr blockstatements {$$=Util::createIterateInReverseBFSNode($3,$5,$6);};
+
+
+oid : ID '.' ID { Identifier* id1=(Identifier*)Util::createIdentifierNode($1);
+                   Identifier* id2=(Identifier*)Util::createIdentifierNode($1);
+				   $$=Util::createPropIdNode(id1,id2);
 				    };
- 
+
 %%
 
 
@@ -292,4 +283,3 @@ int main(void) {
     yyparse();
     return 0;
 }
-

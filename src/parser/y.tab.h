@@ -185,19 +185,21 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 38 "dsl_yacc_modified.y"
+#line 25 "dsl_yacc_modified.y"
 
     int  info;
     long ival;
+	bool bval;
     double fval;
     char* text;
 	ASTNode* node;
+	paramList* pList;
 	argList* aList;
 	ASTNodeList* nodeList;
-    
-    struct tempNode temporary;
+    tempNode* temporary;
+     
 
-#line 201 "y.tab.h"
+#line 203 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

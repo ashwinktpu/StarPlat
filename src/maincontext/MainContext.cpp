@@ -1,30 +1,26 @@
-#include"MainContext.h"
-#include"../symbolutil/SymbolTable.h"
+#include "MainContext.hpp"
+#include "../symbolutil/SymbolTable.hpp"
+#include <vector>
 
+using namespace std;
 
-
-FrontEndContext::FrontEndContext()
+void FrontEndContext::startBlock(blockStatement* blockStmtSent)
 {
-   blockList=new vector<blockStatement*>();
-}
-
-void FrontendContext::startBlock(blockStatement* blockStmtSent)
-{ 
-   symbTab->createNewScope();
-  // Block* newBlock=new Block();
-   blockList.push_back(blockStmtSent);
+   // symbTab->createNewScope();
+    // Block* newBlock=new Block();
+   blockList->push_back(blockStmtSent);
+ 
 
 }
-
-void FrontendContext::endBlock()
+ void FrontEndContext::endBlock()
 {
-   symbTab->endScope();
-   blockList.pop_back();
-
+   //symbTab->endScope();
+    blockList->pop_back();
 }
 
-blockStatement* FrontendContext::getCurrentBlock()
+blockStatement* FrontEndContext::getCurrentBlock()
 {
-   blockStatement* b=blockList.back();
+   blockStatement* b= blockList->back();
    return b;
 }
+

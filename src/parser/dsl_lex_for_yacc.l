@@ -7,9 +7,10 @@ WS  [ \t\v\n\f]
     #include <stdlib.h>
     #include <stdio.h>  
     #include <string.h>
+    #include "includeHeader.hpp"
     #include "y.tab.h"
 	void yyerror(char *);
-	extern char mytext[];
+    extern char mytext[];
 %}
 
 
