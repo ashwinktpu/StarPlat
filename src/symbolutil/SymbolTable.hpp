@@ -1,9 +1,16 @@
+#ifndef SYMBOLTABLE_H
+#define SYMBOLTABLE_H
+
+
+
 #include <string>
-#include <stdio.h>
+//#include<stdio.h>
 #include <map>
-#include"Symbol.h"
+#include "Symbol.hpp"
+#include "../ast/ASTNodeTypes.hpp"
 
 using namespace std;
+
 
 
 class Scope
@@ -15,25 +22,28 @@ class Scope
   Scope();
   void buildInfo();
   bool hasHashInfo();
-  void insertInScope(Symbol* symbol);
   Symbol* LookUpinScope(Identifier* id);
+  void insertInScope(Symbol* symbol);
 
 };
 
 class SymbolTable
-{
+{ 
+  private:
   vector<Scope*> *scopeVector;
   vector<int> *activeScope;
   int current_Scope;
   int scope_count;
 
-  SymbolTable();
+  public:
 
+  SymbolTable();
   void createNewScope();
   void exitScope();
-  
   void insertSymbol(string symName,string Type,string enclosedType);
-   Symbol* LookUp(Identifier* id);
+  Symbol* LookUp(Identifier* id);
 
 
 };
+
+#endif

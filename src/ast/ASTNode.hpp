@@ -1,10 +1,13 @@
-#include<stdio.h>
-#include<string>
+#ifndef ASTNODE_H
+#define ASTNODE_H
+
+#include <string>
 
 using namespace std;
+
 class ASTNode
 {
-  public:
+  protected:
   ASTNode* parent;
   string typeofNode;
 
@@ -32,3 +35,5 @@ class ASTNode
 
 
 };
+
+#endif

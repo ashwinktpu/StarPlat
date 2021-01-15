@@ -1,4 +1,4 @@
-#include "Symbol.h"
+#include "Symbol.hpp"
 
 Symbol::Symbol(string symName,string symType,string symEnclosedType)
 {

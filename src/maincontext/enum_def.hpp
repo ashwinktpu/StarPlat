@@ -1,4 +1,6 @@
 /*enum for various graph characteristics*/
+#ifndef ENUMDEF_H
+#define ENUMDEF_H
 
 enum TYPE
 {
@@ -11,7 +13,9 @@ enum TYPE
  TYPE_DIRGRAPH,
  TYPE_LIST,
  TYPE_SETN,
- TYPE_SETE
+ TYPE_SETE,
+ TYPE_NODE,
+ TYPE_EDGE
 
 };
 
@@ -49,3 +53,4 @@ enum OPERATOR
 
 
 };
+#endif
