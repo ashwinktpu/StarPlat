@@ -11,6 +11,7 @@ WS  [ \t\v\n\f]
     #include "y.tab.h"
 	void yyerror(char *);
     extern char mytext[];
+    extern FILE* yyin;
 %}
 
 
@@ -119,9 +120,16 @@ WS  [ \t\v\n\f]
 
 
  /* Numbers and Identifies */
-{ALPHANUM}          {printf("Identifier \n"); strcpy(mytext, yytext); return ID;}
-{DIGIT}+"."{DIGIT}* {printf("Float Number"); strcpy(mytext, yytext); return FLOAT_NUM;}
-{DIGIT}{DIGIT}*     {printf("Int Number"); strcpy(mytext, yytext); return INT_NUM;}
+{ALPHANUM}          {printf("Identifier \n"); 
+                           yylval.text=yytext;
+                           
+                        return ID;}
+{DIGIT}+"."{DIGIT}* {printf("Float Number");
+                       yylval.fval=atof(yytext);
+                         return FLOAT_NUM;}
+{DIGIT}{DIGIT}*     {printf("Int Number");
+                           yylval.ival=atoi(yytext);
+                            return INT_NUM;}
 
 [ \n\t]	{ printf("\n");}  
 {WS}+					{ /* whitespace separates tokens */ } 
@@ -135,37 +143,3 @@ int yywrap(void) {
     return 1;
 }
 
-/*
-
-int main(int ac, char **av)
-{
-*/
-
- /* yyin and yyout as pointer 
-    of File type */
- /* 
-   FILE    *fd;
-
-    if (ac == 2)
-    {
-        if (!(fd = fopen(av[1], "r")))
-        {
-            perror("Error: ");
-            return (-1);
-        }
-        yyset_in(fd);
-        yylex();
-        fclose(fd);
-    }
-    else
-        printf("Usage: a.out filename\n");
-    return (0);
-//yylex();
-//return 0;
-}
-
-int yywrap(void) {
-    return 1;
-}
-
-*/

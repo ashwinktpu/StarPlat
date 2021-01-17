@@ -274,11 +274,13 @@ class formalParam:public ASTNode
       
   }
 
-  formalParam(Type* typeSent,Identifier* identifierSent)
-  {
-      type=typeSent;
-      identifier=identifierSent;
-      type->setParent(this);
+  static formalParam* createFormalParam(Type* typeSent,Identifier* identifierSent)
+  {   
+      formalParam* formalPNode=new formalParam();
+      formalPNode->type=typeSent;
+      formalPNode->identifier=identifierSent;
+    
+      return formalPNode;
    
   }
   
