@@ -1,3 +1,5 @@
 lex.yy.c
 y.tab.c
 .vscode/
+src/Makefile
+src/parser/MakeFile
