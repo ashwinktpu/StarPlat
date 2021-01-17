@@ -4,9 +4,9 @@ CC = g++
 
 all: parse 
 
-parse: dsl_yacc_modified.y
-	yacc -d dsl_yacc_modified.y
-	lex dsl_lex_for_yacc.l
+parse: lrparser.y
+	yacc -d lrparser.y
+	lex lexer.l
 	$(CC) -c -x c++ y.tab.c -o ../bin/y.tab.o
 	$(CC) -c -x c++ lex.yy.c -o ../bin/lex.yy.o
 

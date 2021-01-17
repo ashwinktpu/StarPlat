@@ -2,7 +2,7 @@ EXPENDABLES = bin/MainContext.o bin/ASTHelper.o bin/SymbolTable.o bin/Symbol.o b
 
 CC = g++  
 
-all: finalcode clean
+all: finalcode 
 
 finalcode: bin/MainContext.o bin/ASTHelper.o bin/SymbolTable.o bin/Symbol.o bin/y.tab.o bin/lex.yy.o
 	$(CC) bin/MainContext.o bin/ASTHelper.o bin/SymbolTable.o bin/Symbol.o bin/y.tab.o bin/lex.yy.o  -ll -o finalcode
