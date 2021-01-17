@@ -1,22 +1,37 @@
-#include "ASTNode.h"
-#include<string>
+#ifndef ASTNODETYPE_H
+#define ASTNODETYPE_H
+
+#include "ASTNode.hpp"
+#include <string>
 #include <list>
+
 
 using namespace std;
 /*class declaration for each node type. Incomplete at the moment.*/
 
+class Expression;
+class assignment;
+class reductionCall;
+class formalParam;
+class Type;
+class blockStatement;
 
-struct argument
-{
+
+class argument
+{ 
+  public:
   Expression* expression=NULL;
   assignment* assignExpr=NULL;
   bool expressionflag=false;
   bool assign=false;
 };
-struct tempNode
-{
+class tempNode
+{ 
+   public:
    reductionCall* reducCall=NULL;
    Expression* exprVal=NULL;
+
+   
 
 };
 
@@ -29,7 +44,7 @@ class paramList
 class argList
 {
   public:
-  list<argument> AList;
+  list<argument*> AList;
 };
 
 class ASTNodeList
@@ -147,44 +162,10 @@ class Function:public ASTNode
 
 
 };
-class formalParam:public ASTNode
-{
+
+class Type:public ASTNode
+{ 
   private:
-  Type* type;
-  Identifier* identifier;
-
-
-  public:
-  formalParam()
-  {
-      type=NULL;
-      identifier=NULL;
-      
-  }
-
-  formalParam(Type* typeSent,Identifier* identifierSent)
-  {
-      type=typeSent;
-      identifier=identifierSent;
-      type->setParent(this);
-   
-  }
-  
-  Type* getType()
-  {
-      return type;
-  }
-  
-  Identifier* getIdentifier()
-  {
-      return identifier;
-  }
-
-
-
-};
-class Type : public ASTNode
-{
   int typeId;
   int rootType;
   Identifier* TargetGraph;
@@ -192,7 +173,6 @@ class Type : public ASTNode
   Identifier* sourceGraph;
   
  public:
-
  Type()
  {
      typeId=-1;
@@ -204,7 +184,7 @@ class Type : public ASTNode
   static Type* createForPrimitive(int typeIdSent,int rootTypeSent)
   {
      Type* type=new Type();
-     type->typeName=typeNameSent;
+     type->typeId=typeIdSent;
      type->rootType=rootTypeSent;
      return type;
 
@@ -238,7 +218,7 @@ class Type : public ASTNode
   }
   static Type* createForNodeEdgeType(int typeIdSent,int rootTypeSent)
   {
-    Type* type=new Type()
+    Type* type=new Type();
     type->typeId=typeIdSent;
     type->rootType=rootTypeSent;
     return type;
@@ -279,13 +259,55 @@ class Type : public ASTNode
   }
 
 };
+class formalParam:public ASTNode
+{
+  private:
+  Type* type;
+  Identifier* identifier;
+
+
+  public:
+  formalParam()
+  {
+      type=NULL;
+      identifier=NULL;
+      
+  }
+
+  formalParam(Type* typeSent,Identifier* identifierSent)
+  {
+      type=typeSent;
+      identifier=identifierSent;
+      type->setParent(this);
+   
+  }
+  
+  Type* getType()
+  {
+      return type;
+  }
+  
+  Identifier* getIdentifier()
+  {
+      return identifier;
+  }
+
+
+
+};
+
 class statement:public ASTNode
 {
   protected: 
   string statementType;
 
   public:
-  statement();
+
+  statement()
+  {
+    statementType="";
+  }
+  
   statement(string statementTypeSent)
   {
      statementType=statementTypeSent;
@@ -305,6 +327,11 @@ class statement:public ASTNode
      list<statement*> statements;
 
      public: 
+     blockStatement()
+     {
+        
+     }
+      
       static blockStatement* createnewBlock()
       {
         blockStatement* newBlock=new blockStatement();
@@ -495,76 +522,7 @@ class whileStmt:public statement
 
   };
 
-  class forallStmt:public statement
-  {
-     
-    private:
-    Identifier* iterator;
-    Identifier* sourceGraph;
-    Identifier* source;
-    PropAccess* sourceProp;
-    proc_callExpr*  extractElemFunc;
-    statement* body;
-    Expression* filterExpr;
-    bool isSourceId;
-    bool isforall;
-    
-    public:
-    forallStmt()
-    { 
-      iterator=NULL;
-      sourceGraph=NULL;
-      extractElemFunc=NULL;
-      body=NULL;
-      filterExpr=NULL;
-      statementType="ForAllStmt";
-      isforall=false;
-      isSourceId=false;
-    }
-
-    static forallStmt* createforallStmt(Identifier* iterator,Identifier* sourceGraph,proc_callExpr* extractElemFunc,statement* body,Expression* filterExpr,bool isforall)
-    { 
-      forallStmt* new_forallStmt=new forallStmt();
-      new_forallStmt->iterator=iterator;
-      new_forallStmt->sourceGraph=sourceGraph;
-      new_forallStmt->extractElemFunc=extractElemFunc;
-      new_forallStmt->body=body;
-      new_forallStmt->filterExpr=filterExpr;
-      new_forallStmt->isforall=isforall;
-      return new_forallStmt;
-    }
-    static forallStmt* createforForStmt(Identifier* iterator,Identifier* source,statement* body,bool isforall)
-    {
-      forallStmt* new_forallStmt=new forallStmt();
-      new_forallStmt->iterator=iterator;
-      new_forallStmt->source=source;
-      new_forallStmt->body=body;
-      new_forallStmt->isforall=isforall;
-      return new_forallStmt;
-    }
-     static forallStmt* id_createforForStmt(Identifier* iterator,Identifier* source,statement* body,bool isforall)
-    {
-      forallStmt* new_forallStmt=new forallStmt();
-      new_forallStmt->iterator=iterator;
-      new_forallStmt->source=source;
-      new_forallStmt->body=body;
-      new_forallStmt->isforall=isforall;
-      isSourceId=true;
-      return new_forallStmt;
-    }
-   
-    static forallStmt* propId_createforForStmt(Identifier* iterator,PropAccess* source,statement* body,bool isforall)
-    {
-      forallStmt* new_forallStmt=new forallStmt();
-      new_forallStmt->iterator=iterator;
-      new_forallStmt->sourceProp=source;
-      new_forallStmt->body=body;
-      new_forallStmt->isforall=isforall;
-      return new_forallStmt;
-    }
-
-
-};
+  
 
 class fixedPointStmt:public statement
   {
@@ -636,13 +594,42 @@ class fixedPointStmt:public statement
 
   }; 
 
+  class iterateReverseBFS:public ASTNode
+  { 
+    private:
+    Expression* booleanExpr;
+    Expression* filterExpr;
+    statement* body;
+
+    public: 
+    iterateReverseBFS()
+    {
+      filterExpr=NULL;
+      body=NULL;
+    } 
+
+    static iterateReverseBFS* nodeForRevBFS(Expression* booleanExpr,Expression* filterExpr,statement* body)
+    {
+      iterateReverseBFS* new_revBFS=new iterateReverseBFS();
+      new_revBFS->booleanExpr=booleanExpr;
+      new_revBFS->filterExpr=filterExpr;
+      new_revBFS->body=body;
+      return new_revBFS;
+    }
+
+
+
+  };
+
   class iterateBFS:public statement
-  {
+  {   private:
       Identifier* iterator;
       Identifier* rootNode;
       Expression* filterExpr;
       statement* body;
       iterateReverseBFS* revBFS;
+
+      public:
 
       iterateBFS()
       {
@@ -667,59 +654,9 @@ class fixedPointStmt:public statement
 
 
   };
-  class iterateReverseBFS:public ASTNode
-  { 
-    private:
-    Expression* booleanExpr;
-    Expression* filterExpr;
-    statement* body;
+  
 
-    public: 
-    iterateReverseBFS()
-    {
-      filterExpr=NULL;
-      body=NULL;
-    } 
-
-    static iterateReverseBFS* nodeForRevBFS(zExpression* booleanExpr,Expression* filterExpr,statement* body)
-    {
-      iterateReverseBFS* new_revBFS=new iterateReverseBFS();
-      new_revBFS->booleanExpr=booleanExpr;
-      new_revBFS->filterExpr=filterExpr;
-      new_revBFS->body=body;
-      return new_revBFS;
-    }
-
-
-
-  };
-
-  class proc_callStmt:public statement
-  {
-    private:
-    proc_callExpr* procCall;
-
-    public:
-    proc_callStmt()
-    {
-      procCall=NULL;
-      statementType="ProcCallStatement";
-    }
-
-    static proc_callStmt* nodeForCallStmt(Expression* procCall)
-    {
-      proc_callStmt* procCallStmtNode=new proc_callStmt();
-      procCallStmtNode->procCall=(proc_callExpr*)procCall;
-
-      return procCallStmtNode;
-    }
-
-    proc_callExpr* getProcCallExpr()
-    {
-      return procCall;
-    }
-
-};
+  
   class Expression:public ASTNode
   {
     private:
@@ -733,6 +670,8 @@ class fixedPointStmt:public statement
     int typeofExpr;
     Identifier* id;
     PropAccess* propId;
+
+    public:
     
     static Expression* nodeForArithmeticExpr(Expression* left,Expression* right,int arithmeticOperator)
     {   
@@ -779,7 +718,7 @@ class fixedPointStmt:public statement
 
     }
 
-    static Expression* nodeForDoubleConstant(long doubleValue)
+    static Expression* nodeForDoubleConstant(double doubleValue)
     {
        Expression* doubleConstantExpr=new Expression();
        doubleConstantExpr->doubleConstant=doubleValue;
@@ -797,14 +736,7 @@ class fixedPointStmt:public statement
     }
     
     
-     static Expression* nodeForBooleanConstant(bool boolValue)
-    {
-       Expression* boolExpr=new Expression();
-       boolExpr->booleanConstant=boolValue;
-       boolExpr->typeofExpr=3;
-       return boolExpr;
-
-    }
+    
 
      static Expression* nodeForInfinity(bool infinityValue)
     {
@@ -844,7 +776,7 @@ class fixedPointStmt:public statement
     private:
     Identifier* id1;
     Identifier* id2;
-    list<argument> argList;
+    list<argument*> argList;
     
     public:
     proc_callExpr()
@@ -854,7 +786,7 @@ class fixedPointStmt:public statement
     }
 
     
-    static proc_callExpr* nodeForProc_Call(Identifier* id1,Identifier* id2,list<argument> argList)
+    static proc_callExpr* nodeForProc_Call(Identifier* id1,Identifier* id2,list<argument*> argList)
     {
           proc_callExpr* procExpr=new proc_callExpr();
           procExpr->id1=id1;
@@ -867,17 +799,114 @@ class fixedPointStmt:public statement
 
 
   };
+
+  class proc_callStmt:public statement
+  {
+    private:
+    proc_callExpr* procCall;
+
+    public:
+    proc_callStmt()
+    {
+      procCall=NULL;
+      statementType="ProcCallStatement";
+    }
+
+    static proc_callStmt* nodeForCallStmt(Expression* procCall)
+    {
+      proc_callStmt* procCallStmtNode=new proc_callStmt();
+      procCallStmtNode->procCall=(proc_callExpr*)procCall;
+
+      return procCallStmtNode;
+    }
+
+    proc_callExpr* getProcCallExpr()
+    {
+      return procCall;
+    }
+
+};
+  class forallStmt:public statement
+  {
+     
+    private:
+    Identifier* iterator;
+    Identifier* sourceGraph;
+    Identifier* source;
+    PropAccess* sourceProp;
+    proc_callExpr*  extractElemFunc;
+    statement* body;
+    Expression* filterExpr;
+    bool isSourceId;
+    bool isforall;
+    
+    public:
+    forallStmt()
+    { 
+      iterator=NULL;
+      sourceGraph=NULL;
+      extractElemFunc=NULL;
+      body=NULL;
+      filterExpr=NULL;
+      statementType="ForAllStmt";
+      isforall=false;
+      isSourceId=false;
+    }
+
+    static forallStmt* createforallStmt(Identifier* iterator,Identifier* sourceGraph,proc_callExpr* extractElemFunc,statement* body,Expression* filterExpr,bool isforall)
+    { 
+      forallStmt* new_forallStmt=new forallStmt();
+      new_forallStmt->iterator=iterator;
+      new_forallStmt->sourceGraph=sourceGraph;
+      new_forallStmt->extractElemFunc=extractElemFunc;
+      new_forallStmt->body=body;
+      new_forallStmt->filterExpr=filterExpr;
+      new_forallStmt->isforall=isforall;
+      return new_forallStmt;
+    }
+    static forallStmt* createforForStmt(Identifier* iterator,Identifier* source,statement* body,bool isforall)
+    {
+      forallStmt* new_forallStmt=new forallStmt();
+      new_forallStmt->iterator=iterator;
+      new_forallStmt->source=source;
+      new_forallStmt->body=body;
+      new_forallStmt->isforall=isforall;
+      return new_forallStmt;
+    }
+     static forallStmt* id_createforForStmt(Identifier* iterator,Identifier* source,statement* body,bool isforall)
+    {
+      forallStmt* new_forallStmt=new forallStmt();
+      new_forallStmt->iterator=iterator;
+      new_forallStmt->source=source;
+      new_forallStmt->body=body;
+      new_forallStmt->isforall=isforall;
+      new_forallStmt->isSourceId=true;
+      return new_forallStmt;
+    }
+   
+    static forallStmt* propId_createforForStmt(Identifier* iterator,PropAccess* source,statement* body,bool isforall)
+    {
+      forallStmt* new_forallStmt=new forallStmt();
+      new_forallStmt->iterator=iterator;
+      new_forallStmt->sourceProp=source;
+      new_forallStmt->body=body;
+      new_forallStmt->isforall=isforall;
+      return new_forallStmt;
+    }
+
+
+};
   class reductionCall:public ASTNode
   {
     int reductionType;
-     list<argument> argList;
+     list<argument*> argList;
 
      public:
      reductionCall()
      {
        reductionType=0;
      }
-     static reductionCall* nodeForReductionCall(int reduceType,list<argument> argList)
+     static reductionCall* nodeForReductionCall(int reduceType,list<argument*> argList)
      {
        reductionCall* reduceC=new reductionCall();
        reduceC->reductionType=reduceType;
@@ -890,7 +919,7 @@ class fixedPointStmt:public statement
        return reductionType;
      }
 
-     list<argument> getargList()
+     list<argument*> getargList()
      {
        return argList;
      }
@@ -976,3 +1005,4 @@ class reductionCallStmt:public statement
 
 
 };
+#endif
