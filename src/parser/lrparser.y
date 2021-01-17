@@ -92,7 +92,7 @@ function_data: T_FUNC ID '(' paramList ')' {Identifier* funcId=(Identifier*)Util
                                            $$=Util::createFuncNode(funcId,$4->PList); };
 
 paramList: param {$$=Util::createPList($1);};
-               | param ',' paramList {$$=Util::addToPList($$,$1); };
+               | param ',' paramList {$$=Util::addToPList($3,$1); };
 
 param : type1 ID {  Identifier* id=(Identifier*)Util::createIdentifierNode($2);
                     $$=Util::createParamNode($1,id); } ;
@@ -222,7 +222,7 @@ selection_cf : T_IF '(' boolean_expr ')' blockstatements { $$=Util::createNodeFo
 reduction : leftSide '=' reductionCall { $$=Util::createNodeForReductionStmt($1,$3) ;}
 		   |'<' leftList '>' '=' '<' rightList '>'  {$$=Util::createNodeForReductionStmtList($2->ASTNList,$6->reducCall,$6->exprVal);};
 
-leftList :  leftSide ',' leftList { $$=Util::addToNList($$,$1);};
+leftList :  leftSide ',' leftList { $$=Util::addToNList($3,$1);};
 		 | leftSide { $$=Util::createNList($1);};
 
 rightList : reductionCall ',' val { $$=new tempNode();
@@ -245,7 +245,7 @@ leftSide : ID { $$=Util::createIdentifierNode($1);};
 arg_list :    assignment ',' arg_list {argument* a1=new argument();
 		                 a1->assignExpr=(assignment*)$3;
 						  a1->assign=true;
-						 $$=Util::addToAList($$,a1);
+						 $$=Util::addToAList($3,a1);
                                  };
 
 
@@ -253,7 +253,7 @@ arg_list :    assignment ',' arg_list {argument* a1=new argument();
 		                                a1->expression=(Expression*)$3;
 						               
 										a1->expressionflag=true;
-										 $$=Util::addToAList($$,a1);
+										 $$=Util::addToAList($3,a1);
 						                };
 	       | expression {argument* a1=new argument();
 		                 a1->expression=(Expression*)$1;
