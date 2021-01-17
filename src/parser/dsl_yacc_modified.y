@@ -10,6 +10,8 @@
      
 	void yyerror(char *);
 	int yylex(void);
+    extern FILE* yyin;
+
 	char mytext[100];
 	char var[100];
 	int num = 0;
@@ -89,11 +91,11 @@ function_def: function_data  function_body  { };
 function_data: T_FUNC ID '(' paramList ')' {Identifier* funcId=(Identifier*)Util::createIdentifierNode($2);
                                            $$=Util::createFuncNode(funcId,$4->PList); };
 
-paramList: param {$$=Util::addToPList($$,$1);};
-               | paramList ',' param {$$=Util::addToPList($$,$3); };
+paramList: param {$$=Util::createPList($1);};
+               | param ',' paramList {$$=Util::addToPList($$,$1); };
 
-param : type1 ID { Identifier* id=(Identifier*)Util::createIdentifierNode($2);
-                           $$=Util::createParamNode($1,id); } ;
+param : type1 ID {  Identifier* id=(Identifier*)Util::createIdentifierNode($2);
+                    $$=Util::createParamNode($1,id); } ;
                | type2 ID {  Identifier* id=(Identifier*)Util::createIdentifierNode($2);
                              $$=Util::createParamNode($1,id);};
 			   | type2 ID '(' ID ')' {  Identifier* id1=(Identifier*)Util::createIdentifierNode($4);
@@ -127,16 +129,16 @@ block_begin:'{' { Util::createNewBlock(); }
 block_end:'}'
 
 
-declaration : type1 ID  {Identifier* id=(Identifier*)Util::createIdentifierNode($2);
+declaration : type1 ID   {Identifier* id=(Identifier*)Util::createIdentifierNode($2);
                          $$=Util::createNormalDeclNode($1,id);};
-	| type1 ID '=' rhs {Identifier* id=(Identifier*)Util::createIdentifierNode($2);
+	| type1 ID '=' rhs  {Identifier* id=(Identifier*)Util::createIdentifierNode($2);
 	                    $$=Util::createAssignedDeclNode($1,id,$4);};
 	| type2 ID  {Identifier* id=(Identifier*)Util::createIdentifierNode($2);
                          $$=Util::createNormalDeclNode($1,id); };
 	| type2 ID '=' rhs {Identifier* id=(Identifier*)Util::createIdentifierNode($2);
 	                    $$=Util::createAssignedDeclNode($1,id,$4);};
 
-type1: primitive {$$=$1;};
+type1: primitive {$$=$1; };
 	| graph {$$=$1;};
 	| collections { $$=$1;};
 
@@ -190,7 +192,8 @@ proc_call : leftSide '(' arg_list ')' { $$=Util::createNodeForProcCall($1,$3->AL
 
 
 
-val : INT_NUM { $$=Util::createNodeForIval($1); };
+val : INT_NUM { printf("Hi");
+                $$=Util::createNodeForIval($1); };
 	| FLOAT_NUM {$$=Util::createNodeForFval($1);};
 	| BOOL_VAL {$$=Util::createNodeForBval($1);};
 	| T_INF {$$=Util::createNodeForINF(true);};
@@ -219,12 +222,14 @@ selection_cf : T_IF '(' boolean_expr ')' blockstatements { $$=Util::createNodeFo
 reduction : leftSide '=' reductionCall { $$=Util::createNodeForReductionStmt($1,$3) ;}
 		   |'<' leftList '>' '=' '<' rightList '>'  {$$=Util::createNodeForReductionStmtList($2->ASTNList,$6->reducCall,$6->exprVal);};
 
-leftList :  leftList ',' leftSide { $$=Util::addToNList($$,$3);};
-		 | leftSide { $$=Util::addToNList($$,$1);};
+leftList :  leftSide ',' leftList { $$=Util::addToNList($$,$1);};
+		 | leftSide { $$=Util::createNList($1);};
 
-rightList : reductionCall ',' val { $$->reducCall=(reductionCall*)$1;
+rightList : reductionCall ',' val { $$=new tempNode();
+	                                $$->reducCall=(reductionCall*)$1;
                                     $$->exprVal=(Expression*)$3; };
-          | reductionCall {$$->reducCall=(reductionCall*)$1;} ;
+          | reductionCall { 
+			                $$->reducCall=(reductionCall*)$1;} ;
 
 reductionCall : reduction_op '(' arg_list ')' {$$=Util::createNodeforReductionCall($1,$3->AList);} ;
 
@@ -237,14 +242,14 @@ reduction_op : T_SUM { $$=REDUCE_SUM;};
 leftSide : ID { $$=Util::createIdentifierNode($1);};
          | oid { $$=$1; };
 
-arg_list :   arg_list ',' assignment {argument* a1=new argument();
+arg_list :    assignment ',' arg_list {argument* a1=new argument();
 		                 a1->assignExpr=(assignment*)$3;
 						  a1->assign=true;
 						 $$=Util::addToAList($$,a1);
                                  };
 
 
-	       |  arg_list ',' expression  {argument* a1=new argument();
+	       |   expression ',' arg_list   {argument* a1=new argument();
 		                                a1->expression=(Expression*)$3;
 						               
 										a1->expressionflag=true;
@@ -253,11 +258,11 @@ arg_list :   arg_list ',' assignment {argument* a1=new argument();
 	       | expression {argument* a1=new argument();
 		                 a1->expression=(Expression*)$1;
 						 a1->expressionflag=true;
-						  $$=Util::addToAList($$,a1); };
+						  $$=Util::createAList(a1); };
 	       | assignment { argument* a1;
 		                  a1->assignExpr=(assignment*)$1;
 						  a1->assign=true;
-						   $$=Util::addToAList($$,a1);};
+						   $$=Util::createAList(a1);};
 
 
 bfs_abstraction	: T_BFS '(' ID ':' T_FROM ID ')' filterExpr blockstatements reverse_abstraction{$$=Util::createIterateInBFSNode($3,$6,$8,$9,$10) ;};
@@ -272,6 +277,7 @@ oid : ID '.' ID { Identifier* id1=(Identifier*)Util::createIdentifierNode($1);
 				   $$=Util::createPropIdNode(id1,id2);
 				    };
 
+
 %%
 
 
@@ -279,7 +285,18 @@ void yyerror(char *s) {
     fprintf(stderr, "%s\n", s);
 }
 
-int main(void) {
-    yyparse();
-    return 0;
+
+int main(int argc,char **argv) {
+	
+  
+   FILE    *fd;
+
+    if (argc>1)
+     yyin= fopen(argv[1],"r");
+	else 
+	  yyin=stdin;
+	yyparse();
+
+	return 0;   
+	 
 }
