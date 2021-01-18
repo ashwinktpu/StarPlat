@@ -259,7 +259,7 @@ arg_list :    assignment ',' arg_list {argument* a1=new argument();
 		                 a1->expression=(Expression*)$1;
 						 a1->expressionflag=true;
 						  $$=Util::createAList(a1); };
-	       | assignment { argument* a1;
+	       | assignment { argument* a1=new argument();
 		                  a1->assignExpr=(assignment*)$1;
 						  a1->assign=true;
 						   $$=Util::createAList(a1);};
