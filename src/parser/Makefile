@@ -2,7 +2,7 @@ EXPENDABLES = lex.yy.c y.tab.c y.tab.h
 
 CC = g++ 
 
-all: parse clean
+all: parse 
 
 parse: lrparser.y
 	yacc -d lrparser.y

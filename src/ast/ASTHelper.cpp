@@ -1,8 +1,9 @@
 #include "../maincontext/MainContext.hpp"
 #include  "ASTNode.hpp"
 #include  "../maincontext/enum_def.hpp"
+#include<iostream>
 
-
+using namespace std;
 
 
 /*TO be implemented. It will contain functions that will be called by action part of Parser  for building the nodes of AST*/
@@ -45,20 +46,35 @@ static void addToBlock(ASTNode* statementNode)
     
 }
 static ASTNode* createIdentifierNode(char* idName)
-{
+{   
     Identifier* idNode;
     idNode=Identifier::createIdNode(idName);
     return idNode;
 }
-static paramList* addToPList(paramList* pList,ASTNode* fParam)
-{
+static paramList* createPList(ASTNode* fParam)
+{    paramList* pList=new paramList();
      pList->PList.push_back((formalParam*)fParam);
      return pList;
 } 
 
+static paramList* addToPList(paramList* pList,ASTNode* fparam)
+{
+    pList->PList.push_front((formalParam*)fparam);
+    return pList;
+}
+
+static argList* createAList(argument* arg)
+{
+    argList* aList=new argList();
+    aList->AList.push_back(arg);
+    return aList;
+}
+
+
+
 static argList* addToAList(argList* aList,argument* arg)
 {
-    aList->AList.push_back(arg);
+    aList->AList.push_front(arg);
     return aList;
 }
 
@@ -66,13 +82,22 @@ static argList* addToAList(argList* aList,argument* arg)
 
 static ASTNodeList* addToNList(ASTNodeList* nodeList,ASTNode* node)
 {
-    nodeList->ASTNList.push_back(node);
+    nodeList->ASTNList.push_front(node);
     return nodeList;
 }
 
-static ASTNode* createParamNode(ASTNode* type,Identifier* id)
+static ASTNodeList* createNList(ASTNode* node)
 {
-   formalParam* formalParamNode=new formalParam((Type*)type,id);
+    ASTNodeList* nodeList=new ASTNodeList();
+    nodeList->ASTNList.push_back(node);
+    return nodeList;
+
+    
+}
+
+static ASTNode* createParamNode(ASTNode* type,ASTNode* id)
+{
+   formalParam* formalParamNode=formalParam::createFormalParam((Type*)type,(Identifier*)id);
    return formalParamNode;
 
 }
@@ -89,8 +114,9 @@ static ASTNode* createAssignedDeclNode(ASTNode* type,Identifier* id,ASTNode* exp
     return declNode;
 }
 static ASTNode* createPrimitiveTypeNode(int typeId)
-{
+{   cout<<"Inside Func";
     Type* typeNode=Type::createForPrimitive(typeId,1);
+    cout<<"Typeofnode"<<typeNode->gettypeId();
     return typeNode;
 
 }
