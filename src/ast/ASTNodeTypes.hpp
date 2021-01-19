@@ -4,6 +4,8 @@
 #include "ASTNode.hpp"
 #include <string>
 #include <list>
+#include<iostream>
+#include "../maincontext/enum_def.hpp"
 
 
 using namespace std;
@@ -67,7 +69,7 @@ class Identifier:public ASTNode
      Identifier* idNode=new Identifier();
      idNode->identifier=id;
      idNode->accessType=0;
-     idNode->setTypeofNode("ID");
+     idNode->setTypeofNode(NODE_ID);
      return idNode;
 
    }
@@ -100,7 +102,7 @@ class PropAccess:public ASTNode
      propAccessNode->identifier1=id1;
      propAccessNode->identifier2=id2;
      propAccessNode->accessType=1;
-     propAccessNode->setTypeofNode("PROPACCESS");
+     propAccessNode->setTypeofNode(NODE_PROPACCESS);
      return propAccessNode;
 
    }
@@ -137,6 +139,7 @@ class Function:public ASTNode
       Function* func=new Function();
       func->functionId=funcId;
       func->paramList=paramList;
+      func->setTypeofNode(NODE_FUNC);
       return func;
 
   }
@@ -186,6 +189,7 @@ class Type:public ASTNode
      Type* type=new Type();
      type->typeId=typeIdSent;
      type->rootType=rootTypeSent;
+     type->setTypeofNode(NODE_TYPE);
      return type;
 
   }
@@ -279,6 +283,7 @@ class formalParam:public ASTNode
       formalParam* formalPNode=new formalParam();
       formalPNode->type=typeSent;
       formalPNode->identifier=identifierSent;
+      formalPNode->setTypeofNode(NODE_FORMALPARAM);
     
       return formalPNode;
    
@@ -309,17 +314,22 @@ class statement:public ASTNode
   {
     statementType="";
   }
+
   
   statement(string statementTypeSent)
   {
      statementType=statementTypeSent;
 
   }
-
+  
   string getType()
   {
-      return statementType;
+    return statementType;
   }
+
+
+  
+  
   
   };
   
@@ -331,19 +341,23 @@ class statement:public ASTNode
      public: 
      blockStatement()
      {
-        
+        statementType="BlockStatement";
      }
       
       static blockStatement* createnewBlock()
       {
         blockStatement* newBlock=new blockStatement();
-        newBlock->statementType="BlockStaement";
-        return newBlock;
+        newBlock->setTypeofNode(NODE_BLOCKSTMT);
+      //  newBlock->statementType="BlockStaement";
+         return newBlock;
       }
 
       void addStmtToBlock(statement* stmt)
-          {
+          { 
             statements.push_back(stmt);
+            //cout<<stmt->getInt();
+            
+            
           }     
       list<statement*> returnStatements()
       {
@@ -366,6 +380,8 @@ class statement:public ASTNode
         identifier=NULL;
         exprAssigned=NULL;
         statementType="declaration";
+        
+       
     }
 
     static declaration* normal_Declaration(Type* typeSent,Identifier* identifierSent)
@@ -373,6 +389,8 @@ class statement:public ASTNode
           declaration* decl=new declaration();
           decl->type=typeSent;
           decl->identifier=identifierSent;
+          decl->setTypeofNode(NODE_DECL);
+         // decl->statementType="declaration";
           return decl;
     }
 
@@ -412,7 +430,8 @@ class statement:public ASTNode
         identifier=NULL;
         propId=NULL;
         exprAssigned=NULL;
-        statementType="assignment";
+         statementType="assignment";
+      
     }
 
      static assignment* id_assignExpr(Identifier* identifierSent,Expression* expressionSent)
@@ -421,6 +440,8 @@ class statement:public ASTNode
             assign->identifier=identifierSent;
             assign->exprAssigned=expressionSent;
             assign->lhsType=1;
+            assign->setTypeofNode(NODE_ASSIGN);
+          //  cout<<"TYPEASSIGN="<<assign->getType();
             return assign;
          
 
@@ -475,6 +496,7 @@ class whileStmt:public statement
       whileStmt* new_whileStmt=new whileStmt();
       new_whileStmt->iterCondition=iterConditionSent;
       new_whileStmt->body=bodySent;
+      new_whileStmt->setTypeofNode(NODE_WHILESTMT);
       return new_whileStmt;
     }
 
@@ -509,6 +531,7 @@ class whileStmt:public statement
       dowhileStmt* new_dowhileStmt=new dowhileStmt();
       new_dowhileStmt->iterCondition=iterConditionSent;
       new_dowhileStmt->body=bodySent;
+      new_dowhileStmt->setTypeofNode(NODE_DOWHILESTMT);
       return new_dowhileStmt;
     }
 
@@ -539,6 +562,8 @@ class fixedPointStmt:public statement
       convergeExpr=NULL;
       body=NULL;
       statementType="FixedPointStmt";
+     
+     
     }
 
     static fixedPointStmt* createforfixedPointStmt(Expression* convergeExpr,statement* body)
@@ -546,6 +571,7 @@ class fixedPointStmt:public statement
       fixedPointStmt* new_fixedPointStmt=new fixedPointStmt();
       new_fixedPointStmt->convergeExpr=convergeExpr;
       new_fixedPointStmt->body=body;
+      new_fixedPointStmt->setTypeofNode(NODE_FIXEDPTSTMT);
       return new_fixedPointStmt;
     }
      
@@ -576,6 +602,7 @@ class fixedPointStmt:public statement
       new_ifStmt->condition=condition;
       new_ifStmt->ifBody=ifBodySent;
       new_ifStmt->thenBody=thenBodySent;
+      new_ifStmt->setTypeofNode(NODE_IFSTMT);
 
       return new_ifStmt;
     }
@@ -616,6 +643,7 @@ class fixedPointStmt:public statement
       new_revBFS->booleanExpr=booleanExpr;
       new_revBFS->filterExpr=filterExpr;
       new_revBFS->body=body;
+      new_revBFS->setTypeofNode(NODE_ITRRBFS);
       return new_revBFS;
     }
 
@@ -651,6 +679,7 @@ class fixedPointStmt:public statement
         new_iterBFS->filterExpr=filterExpr;
         new_iterBFS->body=body;
         new_iterBFS->revBFS=revBFS;
+        new_iterBFS->setTypeofNode(NODE_ITRBFS);
         return new_iterBFS;
       }
 
@@ -674,6 +703,15 @@ class fixedPointStmt:public statement
     PropAccess* propId;
 
     public:
+
+    Expression()
+    {
+      left=NULL;
+      right=NULL;
+      id=NULL;
+      propId=NULL;
+      typeofNode=NODE_EXPR;
+    }
     
     static Expression* nodeForArithmeticExpr(Expression* left,Expression* right,int arithmeticOperator)
     {   
@@ -785,6 +823,7 @@ class fixedPointStmt:public statement
     {
       id1=NULL;
       id2=NULL;
+      typeofNode=NODE_PROCCALLEXPR;
     }
 
     
@@ -794,6 +833,7 @@ class fixedPointStmt:public statement
           procExpr->id1=id1;
           procExpr->id2=id2;
           procExpr->argList=argList;
+          
           return procExpr;
 
 
@@ -812,6 +852,8 @@ class fixedPointStmt:public statement
     {
       procCall=NULL;
       statementType="ProcCallStatement";
+      typeofNode=NODE_PROCCALLSTMT;
+      
     }
 
     static proc_callStmt* nodeForCallStmt(Expression* procCall)
@@ -851,6 +893,7 @@ class fixedPointStmt:public statement
       body=NULL;
       filterExpr=NULL;
       statementType="ForAllStmt";
+      typeofNode=NODE_FORALLSTMT;
       isforall=false;
       isSourceId=false;
     }
@@ -907,6 +950,7 @@ class fixedPointStmt:public statement
      reductionCall()
      {
        reductionType=0;
+       typeofNode=NODE_REDUCTIONCALL;
      }
      static reductionCall* nodeForReductionCall(int reduceType,list<argument*> argList)
      {
@@ -945,6 +989,7 @@ class reductionCallStmt:public statement
        propAccessId=NULL;
        reducCall=NULL;
        exprVal=NULL;
+       typeofNode=NODE_REDUCTIONCALLSTMT;
      }
 
      static reductionCallStmt* id_reducCallStmt(Identifier* id,reductionCall* reducCall)

@@ -2,6 +2,7 @@
 #define ASTNODE_H
 
 #include <string>
+#include "../maincontext/enum_def.hpp"
 
 using namespace std;
 
@@ -9,8 +10,8 @@ class ASTNode
 {
   protected:
   ASTNode* parent;
-  string typeofNode;
-
+  //string typeofNode;
+  NODETYPE typeofNode;
   public:
   ASTNode()
   {
@@ -20,11 +21,11 @@ class ASTNode
   {
       parent=node;
   }
-  void setTypeofNode(string type)
+  void setTypeofNode(NODETYPE type)
   {
     typeofNode=type;
   }
-  string getTypeofNode()
+  NODETYPE getTypeofNode()
   {
     return typeofNode;
   }
