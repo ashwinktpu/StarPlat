@@ -32,8 +32,8 @@ WS  [ \t\v\n\f]
 "INF"     {printf("+Infinity: %s", yytext);strcpy(mytext, yytext); return T_INF;}
 "-INF"    {printf("-Infinity: %s", yytext);strcpy(mytext, yytext); return T_N_INF;}
 
-"True"    {printf("Type Bool: %s", yytext); strcpy(mytext, yytext); return BOOL_VAL;}
-"False"   {printf("Type Bool: %s", yytext); strcpy(mytext, yytext); return BOOL_VAL;}
+"True"    {printf("Type Bool: %s", yytext); strcpy(mytext, yytext); yylval.bval=true; return BOOL_VAL;}
+"False"   {printf("Type Bool: %s", yytext); strcpy(mytext, yytext); yylval.bval=false; return BOOL_VAL;}
 "if"      {printf("Keyword if: %s", yytext); strcpy(mytext, yytext); return T_IF;}
 "else"    {printf("Keyword else: %s", yytext); strcpy(mytext, yytext); return T_ELSE;}
 "while"   {printf("Keyword while: %s", yytext); strcpy(mytext, yytext); return T_WHILE;}

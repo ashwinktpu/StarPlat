@@ -87,7 +87,7 @@ program: function_def {printf("program.\n");};
 
 function_def: function_data  function_body  { };
 
-function_data: T_FUNC ID '(' paramList ')' {Identifier* funcId=(Identifier*)Util::createIdentifierNode($2);
+function_data: T_FUNC ID '(' paramList ')' { Identifier* funcId=(Identifier*)Util::createIdentifierNode($2);
                                            $$=Util::createFuncNode(funcId,$4->PList); };
 
 paramList: param {$$=Util::createPList($1);};
@@ -118,7 +118,7 @@ statement: declaration ';'{printf("testdeclr\n");$$=$1;};
 	|control_flow {$$=$1;};
 	|reduction ';'{$$=$1;};
 	| bfs_abstraction {$$=$1; };
-	| reverse_abstraction {$$=$1; };
+	| reverse_abstraction {$$=$1;};
 	| blockstatements {$$=$1;};
 
 
@@ -272,7 +272,7 @@ arg_list :    {printf("No args\n");argument* a1=new argument();
 						   $$=Util::createAList(a1);printf("test2\n");};
 
 
-bfs_abstraction	: //T_BFS '(' ID ':' T_FROM ID ')' filterExpr blockstatements reverse_abstraction{$$=Util::createIterateInBFSNode($3,$6,$8,$9,$10) ;};
+bfs_abstraction	: T_BFS '(' ID ':' T_FROM ID ')' filterExpr blockstatements reverse_abstraction{$$=Util::createIterateInBFSNode($3,$6,$8,$9,$10) ;};
 			| T_BFS '(' ID ':' T_FROM ID ')' filterExpr blockstatements {//$$=Util::createIterateInBFSNode($3,$6,$8,$9,$10) ;
 			};
 

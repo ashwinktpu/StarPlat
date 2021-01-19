@@ -2,6 +2,8 @@ function Compute_BC (Graph g)
 {
 	propNode <float> BC;
 	g.attachNodeProperty (BC =0);
+  propNode<float> delta;
+  g.attachNodeProperty(delta=0);
    forall (src in  g.nodes() ) {
                     
 	         propNode <list> p;
@@ -20,8 +22,7 @@ function Compute_BC (Graph g)
        
    }
  }
-propNode<float> delta;
-g.attachNodeProperty(delta=0);
+
 
  iterateInReverse(v!=s)
      {
