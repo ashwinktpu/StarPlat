@@ -118,7 +118,6 @@ statement: declaration ';'{printf("testdeclr\n");$$=$1;};
 	|control_flow {$$=$1;};
 	|reduction ';'{$$=$1;};
 	| bfs_abstraction {$$=$1; };
-	| reverse_abstraction {$$=$1;};
 	| blockstatements {$$=$1;};
 
 
