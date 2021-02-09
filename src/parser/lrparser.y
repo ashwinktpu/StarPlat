@@ -46,6 +46,12 @@
 %token T_LIST T_SET_NODES T_SET_EDGES T_ELEMENTS T_FROM
 %token T_BFS T_REVERSE
 
+%token T_NBHRS T_NFRM T_NTO T_OUTD T_IND T_ONBHRS T_INBHRS T_EFRM T_ETO
+%token T_GTSRC T_GTDEST T_GTEDGE T_GTNBHR 
+%token T_ADD_NODE T_ADD_NODES T_ADD_EDGE T_ADD_EDGES T_REM_NODE T_REM_NODES T_REM_EDGE T_REM_EDGES
+%token T_CONTAINS T_DISCARD T_TOT_ELEMS T_ISEMP T_CLR 
+%token T_ADD_NODE T_ADD_NODESET
+%token T_ADD_EDGE T_ADD_EDGESET
 
 %token <text> ID
 %token <ival> INT_NUM
@@ -57,7 +63,7 @@
 %type <node> statement blockstatements assignment declaration proc_call control_flow reduction
 %type <node> type1 type2
 %type <node> primitive graph collections property
-%type <node> id leftSide rhs expression oid val boolean_expr tid
+%type <node> leftSide rhs expression oid val boolean_expr tid
 %type <node> bfs_abstraction filterExpr reverse_abstraction
 %type <nodeList> leftList
 %type <node> iteration_cf selection_cf

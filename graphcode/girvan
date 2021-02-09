@@ -1,0 +1,64 @@
+function Girvan_Newman(Graph g){
+    while(g.edges()!=NULL){
+        propEdge <float> EB;
+        g.attachEdgeProperty(EB=0);
+
+        forall (src in  g.nodes()){
+            
+            propEdge <float> curr_EB;
+            g.attachEdgeProperty(curr_EB=0);
+
+            propNode <list> parents;
+            propNode <int> sigma;
+            propNode <int> level;
+            propNode <int> propogate;
+            g.attachNodeProperty(sigma =0, d= INF,parents=NULL,propogate=1);
+            src.sigma = 1;
+            src.d=0;
+            iterateInBFS(v:from src).filter(v!=src){
+                forall(w in g.neighbours(v).filter(w.d==v.d+1)){
+                    w.sigma=w.sigma+v.sigma;
+                    w.p.append(v);
+                }
+            }
+            iterateInReverse(v!=src){
+                int upper_nodes = v.p.size();
+                for(w in v.p){
+                    edge e = g.get_edge (w,v);
+                    e.curr_EB = e.curr_B +  v.propogate/upper_nodes;
+                    e.EB= e.EB + e.curr_EB;
+                    w.propogate = w.propogate + e.curr_EB;
+                }
+            }
+        }
+
+        SetE<g> min_set;
+        int mn_value = INT_MAX;
+        forall (e in g.edges()){
+            if(e.ED<=mn_value){
+                if(e.ED<mn_value){
+                    min_set.discard(min_set);
+                }
+                min_set.addEdge(e);
+            }
+        }
+        
+        forall (e in min_set.contents()){
+            g.rem_edge([g.get_source(e),g.get_source (e)]);
+        }
+
+        list<setN<g>> ret;
+        propNode<int> d;
+        g.attachNodeProperty(d=-1);
+        forall(src in g.nodes){
+            if(src.d == -1){
+                src.d=0;
+                setN<g> community;
+                iterateInBFS(v:from src){
+                    community.addNode(v);
+                }
+                ret.append(community);
+            }
+        }
+    }
+}
