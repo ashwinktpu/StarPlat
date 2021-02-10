@@ -1,0 +1,18 @@
+function graph_props(Graph g,node src,node dst){
+    list nodes1 = g.nodes_from (src); 
+    list nodes2 = g.nodes_to (src);
+    list nodes3 = g.neighbors();
+
+    list edges1 = g.edges_from(src);
+    list edges2 = g.edges_to(src);
+
+    int X = g.out_degree(src);
+    int Y = g.in_degree(src);
+    int A = g.count_OutNbrs(src);
+    int B = g.count_InNbrs(src);
+    
+    edge e = g.get_edge(src,dst);
+    node s1 = g.get_source(e);
+    node d1 = g.get_destination(e);
+    node f = g.get_neighbor(src,e);
+}

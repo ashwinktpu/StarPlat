@@ -1,0 +1,10 @@
+function setelements(Graph g){
+    SetN<g> st;
+    forall( n in g.nodes()){
+        st.addNode(n);
+    }
+    SetN<g> st2;
+    forall( n in st.elements){
+        st2.addNode(n);
+    }
+}

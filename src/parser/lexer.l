@@ -162,8 +162,8 @@ WS  [ \t\v\n\f]
 "addEdge" { strcpy(mytext, yytext);return T_ADD_SET_EDGE;}
 "addSetE" { strcpy(mytext, yytext);return T_ADD_EDGESET;}
 
-    /* Built In
-    "makeUndirected" { strcpy(mytext, yytext);return T_MK_UNDRCTD;}*/
+    /* Built In*/
+"makeUndirected" { strcpy(mytext, yytext);return T_MK_UNDRCTD;}
 
  /* Numbers and Identifies */
 {ALPHANUM}          { yylval.text=yytext;return ID;}

@@ -1,0 +1,16 @@
+function setnodes(Graph g){
+    SetE<g> s;
+    edge a;edge b; edge c;
+    s.addEdge(a);
+    SetE<g> s1;
+    s1.addEdge(b);
+    s1.addEdge(c);
+    s.addSetE(s1);
+    if(s.contains(a)){
+        s.discard(a);
+    }
+    if((s.isEmpty() == FALSE) && (s.totalElements() == 2)){
+        s.discard(s1);
+        s.clear();
+    }
+}

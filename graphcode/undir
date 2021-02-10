@@ -1,0 +1,3 @@
+function makeundir(dirGraph g){
+    g.makeUndirected();
+}

@@ -52,6 +52,7 @@
 %token T_NODES T_EDGES T_NUM_NODES T_NUM_EDGES
 %token T_CONTAINS T_TOT_ELEMS T_ISEMP
 %token T_ADD_SET_NODE T_ADD_SET_EDGE T_ADD_NODESET T_ADD_EDGESET T_DISCARD T_CLR
+%token T_MK_UNDRCTD
 
 %token <text> ID
 %token <ival> INT_NUM
@@ -73,9 +74,6 @@
 %type <aList> arg_list
 %type <ival> reduction_op
 %type <temporary>  rightList
-
-
-
 
  /* operator precedence
   * Lower is higher
@@ -132,6 +130,7 @@ statement: declaration ';'{$$=$1;};
 	| ID '.' graphEdgeOperations '(' edgelist ')' ';'{};
 	| ID '.' setops '(' ID ')' ';' {};
 	| ID '.' T_CLR '(' ')' ';' {};
+	| ID '.' T_MK_UNDRCTD '(' ')' ';' {};
 
 edgelist: '[' expression ',' expression ']' {};
 	| '[' expression ',' expression ']' ',' edgelist {};
@@ -217,6 +216,7 @@ expression : proc_call { $$=$1;};
 	         | val {$$=$1;}; 
 			 | leftSide { $$=$1 ;}; 
 			 | prop_fns '(' arg_list ')' {};
+			 | ID '.' T_ELEMENTS
 
 proc_call : leftSide '(' arg_list ')' { $$=Util::createNodeForProcCall($1,$3->AList); };
 
@@ -256,6 +256,7 @@ iteration_cf : T_FIXEDPOINT T_UNTIL '(' boolean_expr ')' blockstatements { $$=Ut
 		   | T_WHILE '(' boolean_expr')' blockstatements {$$=Util::createNodeForWhileStmt($3,$5); };
 		   | T_DO blockstatements T_WHILE '(' boolean_expr ')' {$$=Util::createNodeForDoWhileStmt($5,$2);  };
 		| T_FORALL '(' ID T_IN ID '.' proc_call filterExpr')'  blockstatements {$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,true);};
+		| T_FORALL '(' ID T_IN  ID '.' T_ELEMENTS filterExpr')'  blockstatements {};
 		| T_FORALL '(' ID T_IN prop_fns '(' arg_list ')' filterExpr')'  blockstatements {};
 		| T_FOR '(' ID T_IN leftSide ')' blockstatements {$$=Util::createNodeForForStmt($3,$5,$7,false);};
 		| T_FOR '(' ID T_IN ID '.' proc_call  filterExpr')' blockstatements {$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,false);};
