@@ -122,29 +122,48 @@ WS  [ \t\v\n\f]
 "rem_edge"   { strcpy(mytext, yytext);return T_REM_EDGES;}
 "rem_edges"  { strcpy(mytext, yytext);return T_REM_EDGES;}
 
- /* Collection Type 
+ /*Graph Properties*/
+"neighbors" {strcpy(mytext, yytext);return T_NBHRS;};
+"nodes_from" {strcpy(mytext, yytext);return T_NODES_FRM;};
+"nodes_to" {strcpy(mytext, yytext);return T_NODES_TO;};
+"edges_from" {strcpy(mytext, yytext);return T_EDGES_FRM;};
+"edges_to" {strcpy(mytext, yytext);return T_EDGES_TO;};
+"out_degree" {strcpy(mytext, yytext);return T_OUT_DEGREE;};
+"in_degree" {strcpy(mytext, yytext);return T_IN_DEGREE;};
+"count_outNbrs" {strcpy(mytext, yytext);return T_COUNT_OUT_NBRS;};
+"count_inNbrs" {strcpy(mytext, yytext);return T_COUNT_IN_NBRS;};
+"get_source" {strcpy(mytext, yytext);return T_GET_SRC;};
+"get_destination" {strcpy(mytext, yytext);return T_GET_DST;};
+"get_edge" {strcpy(mytext, yytext);return T_GET_EDGE;};
+"get_neighbor" {strcpy(mytext, yytext);return T_GET_NBHR;};
+"nodes" {strcpy(mytext, yytext);return T_NODES;};
+"edges" {strcpy(mytext, yytext);return T_EDGES;};
+"numNodes" {strcpy(mytext, yytext);return T_NUM_NODES;};
+"numEdges" {strcpy(mytext, yytext);return T_NUM_EDGES;};
+"contains" { strcpy(mytext, yytext); return T_CONTAINS;}
+"totalElements" { strcpy(mytext, yytext); return T_TOT_ELEMS;}
+"isEmpty" { strcpy(mytext, yytext); return T_ISEMP;}
+
+    /* Collection Type*/
 "SetN" 	{ strcpy(mytext, yytext); return T_SET_NODES;}
 "SetE" 	{ strcpy(mytext, yytext); return T_SET_EDGES;}
 "list" { strcpy(mytext, yytext); return T_LIST;}
 
  /*Built In - Set Operations(Both Nodes and Edges)
-"elements" { strcpy(mytext, yytext); return T_ELEMENTS;}
-"contains" { strcpy(mytext, yytext); return T_CONTAINS;}
-"discard" { strcpy(mytext, yytext); return T_DISCARD;}
-"totalElements" { strcpy(mytext, yytext); return T_TOT_ELEMS;}
-"isEmpty" { strcpy(mytext, yytext); return T_ISEMP;}
-"clear" { strcpy(mytext, yytext); return T_CLR;}
+    "elements" { strcpy(mytext, yytext); return T_ELEMENTS;}
+    "discard" { strcpy(mytext, yytext); return T_DISCARD;}
+    "clear" { strcpy(mytext, yytext); return T_CLR;}
 
- /*Built In - Set Operations(Nodes)
-"addNode" { strcpy(mytext, yytext);return T_ADD_NODE;}
-"addSetN" { strcpy(mytext, yytext);return T_ADD_NODESET;}
+    /*Built In - Set Operations(Nodes)
+    "addNode" { strcpy(mytext, yytext);return T_ADD_NODE;}
+    "addSetN" { strcpy(mytext, yytext);return T_ADD_NODESET;}
 
- /*Built In - Set Operations(Edges)
-"addEdge" { strcpy(mytext, yytext);return T_ADD_EDGE;}
-"addSetE" { strcpy(mytext, yytext);return T_ADD_EDGESET;}
+    /*Built In - Set Operations(Edges)
+    "addEdge" { strcpy(mytext, yytext);return T_ADD_EDGE;}
+    "addSetE" { strcpy(mytext, yytext);return T_ADD_EDGESET;}
 
- /* Built In
-"makeUndirected" { strcpy(mytext, yytext);return T_MK_UNDRCTD;}*/
+    /* Built In
+    "makeUndirected" { strcpy(mytext, yytext);return T_MK_UNDRCTD;}*/
 
  /* Numbers and Identifies */
 {ALPHANUM}          { yylval.text=yytext;return ID;}

@@ -47,6 +47,10 @@
 %token T_BFS T_REVERSE
 %token T_ADD_NODES T_ADD_EDGES
 %token T_REM_NODES T_REM_EDGES
+%token T_NBHRS T_NODES_FRM T_NODES_TO T_EDGES_FRM T_EDGES_TO T_OUT_DEGREE T_IN_DEGREE
+%token T_COUNT_OUT_NBRS T_COUNT_IN_NBRS T_GET_SRC T_GET_DST T_GET_EDGE T_GET_NBHR 
+%token T_NODES T_EDGES T_NUM_NODES T_NUM_EDGES
+%token T_CONTAINS T_TOT_ELEMS T_ISEMP
 
 %token <text> ID
 %token <ival> INT_NUM
@@ -64,6 +68,7 @@
 %type <node> iteration_cf selection_cf
 %type <node> reductionCall
 %type<node> graphNodeOperations graphEdgeOperations edgelist vertexlist 
+%type<node> prop_fns
 %type <aList> arg_list
 %type <ival> reduction_op
 %type <temporary>  rightList
@@ -125,11 +130,11 @@ statement: declaration ';'{$$=$1;};
 	| ID '.' graphNodeOperations '(' vertexlist ')' ';'{};
 	| ID '.' graphEdgeOperations '(' edgelist ')' ';'{};
 
-edgelist: '[' ID ',' ID ']' {};
-	| '[' ID ',' ID ']' ',' edgelist {};
+edgelist: '[' expression ',' expression ']' {};
+	| '[' expression ',' expression ']' ',' edgelist {};
 
-vertexlist: ID {};
-	| ID ',' vertexlist {};
+vertexlist: expression {};
+	| expression ',' vertexlist {};
 
 graphNodeOperations: T_ADD_NODES {};
 	| T_REM_NODES {};
@@ -200,13 +205,32 @@ expression : proc_call { $$=$1;};
 			 | expression T_EQ_OP expression{$$=Util::createNodeForRelationalExpr($1,$3,OPERATOR_EQ);};
              | expression T_NE_OP expression{$$=Util::createNodeForRelationalExpr($1,$3,OPERATOR_NE);};
 		| '(' expression ')' {$$=$2;};
-	         | val {$$=$1;};
-			 | leftSide { $$=$1 ;};
+	         | val {$$=$1;}; 
+			 | leftSide { $$=$1 ;}; 
+			 | prop_fns '(' arg_list ')' {};
 
 proc_call : leftSide '(' arg_list ')' { $$=Util::createNodeForProcCall($1,$3->AList); };
-		
 
-
+prop_fns: ID '.'  T_NBHRS {};
+	| ID '.'  T_NODES_FRM {};
+	| ID '.'  T_NODES_TO {};
+	| ID '.'  T_EDGES_FRM {};
+	| ID '.'  T_EDGES_TO {};
+	| ID '.'  T_OUT_DEGREE {};
+	| ID '.'  T_IN_DEGREE {};
+	| ID '.'  T_COUNT_OUT_NBRS {};
+	| ID '.'  T_COUNT_IN_NBRS {};
+	| ID '.'  T_GET_SRC {};
+	| ID '.'  T_GET_DST {};
+	| ID '.'  T_GET_EDGE {};
+	| ID '.'  T_GET_NBHR {};
+	| ID '.'  T_NODES {};
+	| ID '.'  T_EDGES {};
+	| ID '.'  T_NUM_NODES {};
+	| ID '.'  T_NUM_EDGES {};
+	| ID '.'  T_CONTAINS {};
+	| ID '.'  T_TOT_ELEMS {};
+	| ID '.'  T_ISEMP {};
 
 val : INT_NUM { 
                 $$=Util::createNodeForIval($1); };
@@ -223,6 +247,7 @@ iteration_cf : T_FIXEDPOINT T_UNTIL '(' boolean_expr ')' blockstatements { $$=Ut
 		   | T_WHILE '(' boolean_expr')' blockstatements {$$=Util::createNodeForWhileStmt($3,$5); };
 		   | T_DO blockstatements T_WHILE '(' boolean_expr ')' {$$=Util::createNodeForDoWhileStmt($5,$2);  };
 		| T_FORALL '(' ID T_IN ID '.' proc_call filterExpr')'  blockstatements {$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,true);};
+		| T_FORALL '(' ID T_IN prop_fns '(' arg_list ')' filterExpr')'  blockstatements {};
 		| T_FOR '(' ID T_IN leftSide ')' blockstatements {$$=Util::createNodeForForStmt($3,$5,$7,false);};
 		| T_FOR '(' ID T_IN ID '.' proc_call  filterExpr')' blockstatements {$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,false);};
 
