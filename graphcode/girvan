@@ -24,7 +24,7 @@ function Girvan_Newman(Graph g){
             iterateInReverse(v!=src){
                 int upper_nodes = v.p.size();
                 for(w in v.p){
-                    edge e = g.get_edge (w,v);
+                    edge e = g.get_edge(w,v);
                     e.curr_EB = e.curr_B +  v.propogate/upper_nodes;
                     e.EB= e.EB + e.curr_EB;
                     w.propogate = w.propogate + e.curr_EB;
@@ -44,16 +44,18 @@ function Girvan_Newman(Graph g){
         }
         
         forall (e in min_set.contents()){
-            g.rem_edge([g.get_source(e),g.get_source (e)]);
+            node u = g.get_source(e);
+            node v = g.get_destination(e);
+            g.rem_edges([u,v]);
         }
 
-        list<setN<g>> ret;
+        list ret;
         propNode<int> d;
-        g.attachNodeProperty(d=-1);
-        forall(src in g.nodes){
-            if(src.d == -1){
-                src.d=0;
-                setN<g> community;
+        g.attachNodeProperty(d=0.5);
+        forall(src in g.nodes()){
+            if(src.d == 0.5){
+                src.d=1;
+                SetN<g> community;
                 iterateInBFS(v:from src){
                     community.addNode(v);
                 }

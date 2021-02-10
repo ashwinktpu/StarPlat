@@ -111,33 +111,16 @@ WS  [ \t\v\n\f]
 "edge" 		{printf("Edge Type"); strcpy(mytext, yytext); return T_EDGE;}
 "propNode" {printf("Node Property"); strcpy(mytext, yytext); return T_NP;}
 "propEdge" {printf("Edge Property"); strcpy(mytext, yytext); return T_EP;}
-
-  /*Built In - Node Functions*/
-"neighbors"     {printf("Neighbor");strcpy(mytext, yytext);return T_NBHRS;}
-"nodes_from"    {printf("Nodes From");strcpy(mytext, yytext);return T_NFRM;}
-"nodes_to"      {printf("Nodes From");strcpy(mytext, yytext);return T_NTO;}
-"out_degree"    {printf("Outdegree");strcpy(mytext, yytext);return T_OUTD;}
-"in_degree"     {printf("Indegree");strcpy(mytext, yytext);return T_IND;}
-"count_outNbrs" {printf("OutNeighbors");strcpy(mytext, yytext);return T_ONBHRS;}
-"count_inNbrs"  {printf("InNeighbors");strcpy(mytext, yytext);return T_INBHRS;}
-"edges_from"    {printf("Edges From");strcpy(mytext, yytext);return T_EFRM;}
-"edges_to"      {printf("Edges To");strcpy(mytext, yytext);return T_ETO;}
-
- /*Built In - Edge Functions*/
-"get_source"      {printf("Get Source");strcpy(mytext, yytext);return T_GTSRC;}
-"get_destination" {printf("Get Destination");strcpy(mytext, yytext);return T_GTDEST;}
-"get_edge"        {printf("Get Edge");strcpy(mytext, yytext);return T_GTEDGE;}
-"get_neighbor"    {printf("Get Neighbor");strcpy(mytext, yytext);return T_GTNBHR;}
  
  /*Built In - Dynamic Instructions*/
-"add_node"   {printf("Get Source");strcpy(mytext, yytext);return T_ADD_NODE;}
-"add_nodes"  {printf("Get Source");strcpy(mytext, yytext);return T_ADD_NODES;}
-"add_edge"   {printf("Get Source");strcpy(mytext, yytext);return T_ADD_EDGE;}
-"add_edges"  {printf("Get Source");strcpy(mytext, yytext);return T_ADD_EDGES;}
-"rem_node"   {printf("Get Source");strcpy(mytext, yytext);return T_REM_NODE;}
-"rem_nodes"  {printf("Get Source");strcpy(mytext, yytext);return T_REM_NODES;}
-"rem_edge"   {printf("Get Source");strcpy(mytext, yytext);return T_REM_EDGE;}
-"rem_edges"  {printf("Get Source");strcpy(mytext, yytext);return T_REM_EDGES;}
+"add_node"   {printf("add node");strcpy(mytext, yytext);return T_ADD_NODE;}
+"add_nodes"  {printf("add nodes");strcpy(mytext, yytext);return T_ADD_NODES;}
+"add_edge"   {printf("add edge");strcpy(mytext, yytext);return T_ADD_EDGE;}
+"add_edges"  {printf("add edges");strcpy(mytext, yytext);return T_ADD_EDGES;}
+"rem_node"   {printf("rem node");strcpy(mytext, yytext);return T_REM_NODE;}
+"rem_nodes"  {printf("rem nodes");strcpy(mytext, yytext);return T_REM_NODES;}
+"rem_edge"   {printf("rem edge");strcpy(mytext, yytext);return T_REM_EDGE;}
+"rem_edges"  {printf("rem_edges");strcpy(mytext, yytext);return T_REM_EDGES;}
 
  /* Collection Type */
 "SetN" 	{printf("Set of Nodes"); strcpy(mytext, yytext); return T_SET_NODES;}
@@ -147,10 +130,10 @@ WS  [ \t\v\n\f]
  /*Built In - Set Operations(Both Nodes and Edges)*/
 "elements" {printf("elements"); strcpy(mytext, yytext); return T_ELEMENTS;}
 "contains" {printf("contains"); strcpy(mytext, yytext); return T_CONTAINS;}
-"discard" {printf("contains"); strcpy(mytext, yytext); return T_DISCARD;}
-"totalElements" {printf("contains"); strcpy(mytext, yytext); return T_TOT_ELEMS;}
-"isEmpty" {printf("contains"); strcpy(mytext, yytext); return T_ISEMP;}
-"clear" {printf("contains"); strcpy(mytext, yytext); return T_CLR;}
+"discard" {printf("discard"); strcpy(mytext, yytext); return T_DISCARD;}
+"totalElements" {printf("totalElements"); strcpy(mytext, yytext); return T_TOT_ELEMS;}
+"isEmpty" {printf("isEmpty"); strcpy(mytext, yytext); return T_ISEMP;}
+"clear" {printf("clear"); strcpy(mytext, yytext); return T_CLR;}
 
  /*Built In - Set Operations(Nodes)*/
 "addNode" {printf("Add Node");strcpy(mytext, yytext);return T_ADD_NODE;}
@@ -159,6 +142,9 @@ WS  [ \t\v\n\f]
  /*Built In - Set Operations(Edges)*/
 "addEdge" {printf("Add Edge");strcpy(mytext, yytext);return T_ADD_EDGE;}
 "addSetE" {printf("Add Edge Set");strcpy(mytext, yytext);return T_ADD_EDGESET;}
+
+ /* Built In*/
+"makeUndirected" {printf("Make Undirected");strcpy(mytext, yytext);return T_MK_UNDRCTD;}
 
  /* Numbers and Identifies */
 {ALPHANUM}          {printf("Identifier \n"); 
