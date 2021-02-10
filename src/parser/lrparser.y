@@ -89,7 +89,7 @@
 
 
 %%
-program: function_def {};
+program: function_def {printf("Program Parsed Successfully\n");};
 
 function_def: function_data  function_body  { };
 
