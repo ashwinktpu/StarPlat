@@ -114,9 +114,9 @@ static ASTNode* createAssignedDeclNode(ASTNode* type,Identifier* id,ASTNode* exp
     return declNode;
 }
 static ASTNode* createPrimitiveTypeNode(int typeId)
-{   cout<<"Inside Func";
+{   //cout<<"Inside Func";
     Type* typeNode=Type::createForPrimitive(typeId,1);
-    cout<<"Typeofnode"<<typeNode->gettypeId();
+    //cout<<"Typeofnode"<<typeNode->gettypeId();
     return typeNode;
 
 }

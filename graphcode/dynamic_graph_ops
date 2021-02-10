@@ -1,0 +1,11 @@
+function dynamicops(Graph g){
+    node a;node b;node c;
+    g.add_node(a);
+    g.add_nodes(b,c);
+    g.add_edges([a,b],[b,c]);
+    g.add_edge([a,c]);
+    g.rem_edge([a,b]);
+    g.rem_edges([a,c],[b,c]);
+    g.rem_node(c);
+    g.rem_nodes(a,b);
+}

@@ -1,4 +1,4 @@
- %{
+%{
 	
 	#include <stdio.h>
 	#include <string.h>
@@ -45,14 +45,8 @@
 %token T_NP  T_EP
 %token T_LIST T_SET_NODES T_SET_EDGES T_ELEMENTS T_FROM
 %token T_BFS T_REVERSE
-
-%token T_NBHRS T_NFRM T_NTO T_OUTD T_IND T_ONBHRS T_INBHRS T_EFRM T_ETO
-%token T_GTSRC T_GTDEST T_GTEDGE T_GTNBHR 
-%token T_ADD_NODE T_ADD_NODES T_ADD_EDGE T_ADD_EDGES T_REM_NODE T_REM_NODES T_REM_EDGE T_REM_EDGES
-%token T_CONTAINS T_DISCARD T_TOT_ELEMS T_ISEMP T_CLR 
-%token T_ADD_NODE T_ADD_NODESET
-%token T_ADD_EDGE T_ADD_EDGESET
-%token T_MK_UNDRCTD
+%token T_ADD_NODES T_ADD_EDGES
+%token T_REM_NODES T_REM_EDGES
 
 %token <text> ID
 %token <ival> INT_NUM
@@ -69,16 +63,13 @@
 %type <nodeList> leftList
 %type <node> iteration_cf selection_cf
 %type <node> reductionCall
+%type<node> graphNodeOperations graphEdgeOperations edgelist vertexlist 
 %type <aList> arg_list
 %type <ival> reduction_op
 %type <temporary>  rightList
 
 
-/* Built in Features */
-%type<node> graph_dynamic_ops node_ops edge_ops
-%type<node> node_list edge_list 
-%type<node> set_ops edge_add
-%type<node> undirop access_expression
+
 
  /* operator precedence
   * Lower is higher
@@ -94,17 +85,17 @@
 
 
 %%
-program: function_def {printf("program.\n");};
+program: function_def {};
 
 function_def: function_data  function_body  { };
 
-function_data: T_FUNC ID '(' paramList ')' {Identifier* funcId=(Identifier*)Util::createIdentifierNode($2);
+function_data: T_FUNC ID '(' paramList ')' { Identifier* funcId=(Identifier*)Util::createIdentifierNode($2);
                                            $$=Util::createFuncNode(funcId,$4->PList); };
 
 paramList: param {$$=Util::createPList($1);};
                | param ',' paramList {$$=Util::addToPList($3,$1); };
 
-param: type1 ID {  Identifier* id=(Identifier*)Util::createIdentifierNode($2);
+param : type1 ID {  Identifier* id=(Identifier*)Util::createIdentifierNode($2);
                     $$=Util::createParamNode($1,id); } ;
                | type2 ID {  Identifier* id=(Identifier*)Util::createIdentifierNode($2);
                              $$=Util::createParamNode($1,id);};
@@ -117,61 +108,43 @@ param: type1 ID {  Identifier* id=(Identifier*)Util::createIdentifierNode($2);
 									 };
 
 
-function_body: blockstatements {$$=$1;};
+function_body : blockstatements {$$=$1;};
 
 
-statements:  {};
+statements :  {};
 	| statements statement { Util::addToBlock($2); };
 
-statement: declaration ';'{printf("testdeclr\n");$$=$1;};
-	|assignment ';'{$$=$1;};
-	|proc_call ';' {printf("testprocstmt\n");$$=Util::createNodeForProcCallStmt($1);};
-	|control_flow {$$=$1;};
-	|reduction ';'{$$=$1;};
+statement: declaration ';'{$$=$1;};
+	| assignment ';'{$$=$1;};
+	| proc_call ';' {$$=Util::createNodeForProcCallStmt($1);};
+	| control_flow {$$=$1;};
+	| reduction ';'{$$=$1;};
 	| bfs_abstraction {$$=$1; };
-	| reverse_abstraction {$$=$1; };
-	| blockstatements ';' {$$=$1;};
-	| dynamic_op ';' {};
-	| ID '.' set_ops '(' ID ')' ';' {};
-	| graph_dynamic_ops ';' {};
-	| undirop ';' {};
-	| edge_add '(' ID ')' ';' {};
+	| reverse_abstraction {$$=$1;};
+	| blockstatements {$$=$1;};
+	| ID '.' graphNodeOperations '(' vertexlist ')' ';'{};
+	| ID '.' graphEdgeOperations '(' edgelist ')' ';'{};
 
-dynamic_op : ID '.' T_ADD_NODE '(' ID ')' {};
-	| ID '.' T_REM_NODE '(' ID ')' {};
+edgelist: '[' ID ',' ID ']' {};
+	| '[' ID ',' ID ']' ',' edgelist {};
 
-undirop: ID '.' T_MK_UNDRCTD '(' ')' {};
+vertexlist: ID {};
+	| ID ',' vertexlist {};
 
-graph_dynamic_ops: ID '.' node_ops '(' node_list ')' { };
-	| ID '.' edge_ops '(' edge_list ')' { };
-	| edge_add '(' '[' ID ',' ID ']' ')' { };
-	| ID '.' T_REM_EDGE '(' '[' ID ',' ID ']' ')' { };
-
-edge_add: ID '.' T_ADD_EDGE {};
-
-node_ops: T_ADD_NODES {};
+graphNodeOperations: T_ADD_NODES {};
 	| T_REM_NODES {};
 
-edge_ops: T_ADD_EDGES {};
+graphEdgeOperations: T_ADD_EDGES {};
 	| T_REM_EDGES {};
 
-node_list: ID {};
-	| ID ',' node_list {};
+blockstatements : block_begin statements block_end { $$=Util::finishBlock();};
 
-edge_list: '[' ID ',' ID ']' {};
-	| '[' ID ',' ID ']' ',' edge_list {};
+block_begin:'{' { Util::createNewBlock(); }
 
-set_ops: T_DISCARD {};
-	| T_ADD_EDGESET {};
-	| T_ADD_NODESET {};
+block_end:'}'
 
-blockstatements: block_begin statements block_end { $$=Util::finishBlock();};
 
-block_begin:'{' { Util::createNewBlock(); };
-
-block_end: '}' {};
-
-declaration: type1 ID   {Identifier* id=(Identifier*)Util::createIdentifierNode($2);
+declaration : type1 ID   {Identifier* id=(Identifier*)Util::createIdentifierNode($2);
                          $$=Util::createNormalDeclNode($1,id);};
 	| type1 ID '=' rhs  {Identifier* id=(Identifier*)Util::createIdentifierNode($2);
 	                    $$=Util::createAssignedDeclNode($1,id,$4);};
@@ -191,53 +164,51 @@ primitive: T_INT { $$=Util::createPrimitiveTypeNode(TYPE_INT);};
 	| T_DOUBLE { $$=Util::createPrimitiveTypeNode(TYPE_DOUBLE); };
     | T_LONG {$$=$$=Util::createPrimitiveTypeNode(TYPE_LONG);};
 
-graph: T_GRAPH { $$=Util::createGraphTypeNode(TYPE_GRAPH,NULL);};
+graph : T_GRAPH { $$=Util::createGraphTypeNode(TYPE_GRAPH,NULL);};
 	|T_DIR_GRAPH {$$=Util::createGraphTypeNode(TYPE_DIRGRAPH,NULL);};
 
-collections: T_LIST { $$=Util::createCollectionTypeNode(TYPE_LIST,NULL);};
+collections : T_LIST { $$=Util::createCollectionTypeNode(TYPE_LIST,NULL);};
 		|T_SET_NODES '<' ID '>' {Identifier* id=(Identifier*)Util::createIdentifierNode($3);
 			                     $$=Util::createCollectionTypeNode(TYPE_SETN,id);};
                 | T_SET_EDGES '<' ID '>' { Identifier* id=(Identifier*)Util::createIdentifierNode($3);
 					                    $$=Util::createCollectionTypeNode(TYPE_SETE,id);};
 
-type2: T_NODE {$$=Util::createNodeEdgeTypeNode(TYPE_NODE) ;};
+type2 : T_NODE {$$=Util::createNodeEdgeTypeNode(TYPE_NODE) ;};
        | T_EDGE {$$=Util::createNodeEdgeTypeNode(TYPE_EDGE);};
 	   | property {$$=$1;};
 
-property: T_NP '<' primitive '>' { $$=Util::createPropertyTypeNode(PROP_NODE,$3); };
-		| T_EP '<' primitive '>' { $$=Util::createPropertyTypeNode(PROP_EDGE,$3); };
-		| T_NP '<' collections '>'{  $$=Util::createPropertyTypeNode(PROP_NODE,$3); };
-		| T_EP '<' collections '>' {$$=Util::createPropertyTypeNode(PROP_EDGE,$3);};
+property : T_NP '<' primitive '>' { $$=Util::createPropertyTypeNode(PROP_NODE,$3); };
+              | T_EP '<' primitive '>' { $$=Util::createPropertyTypeNode(PROP_EDGE,$3); };
+			  | T_NP '<' collections '>'{  $$=Util::createPropertyTypeNode(PROP_NODE,$3); };
+			  | T_EP '<' collections '>' {$$=Util::createPropertyTypeNode(PROP_EDGE,$3);};
 
-assignment: leftSide '=' rhs  { printf("testassign\n");$$=Util::createAssignmentNode($1,$3);};
+assignment :  leftSide '=' rhs  { $$=Util::createAssignmentNode($1,$3);};
 
-rhs: expression { $$=$1;};
+rhs : expression { $$=$1;};
 
-expression: proc_call { $$=$1;};
-	| expression '+' expression { $$=Util::createNodeForArithmeticExpr($1,$3,OPERATOR_ADD);};
-	| expression '-' expression { $$=Util::createNodeForArithmeticExpr($1,$3,OPERATOR_SUB);};
-	| expression '*' expression {$$=Util::createNodeForArithmeticExpr($1,$3,OPERATOR_MUL);};
-	| expression'/' expression{$$=Util::createNodeForArithmeticExpr($1,$3,OPERATOR_DIV);};
-	| expression T_AND_OP expression {$$=Util::createNodeForLogicalExpr($1,$3,OPERATOR_AND);};
-	| expression T_OR_OP  expression {$$=Util::createNodeForLogicalExpr($1,$3,OPERATOR_OR);};
-	| expression T_LE_OP expression {$$=Util::createNodeForRelationalExpr($1,$3,OPERATOR_LE);};
-	| expression T_GE_OP expression{$$=Util::createNodeForRelationalExpr($1,$3,OPERATOR_GE);};
-	| expression '<' expression{$$=Util::createNodeForRelationalExpr($1,$3,OPERATOR_LT);};
-	| expression '>' expression{$$=Util::createNodeForRelationalExpr($1,$3,OPERATOR_GT);};
-	| expression T_EQ_OP expression{$$=Util::createNodeForRelationalExpr($1,$3,OPERATOR_EQ);};
-	| expression T_NE_OP expression{$$=Util::createNodeForRelationalExpr($1,$3,OPERATOR_NE);};
-	| '(' expression ')' {$$=$2;};
-	| val {$$=$1;};
-	| leftSide { $$=$1 ;};
-	| access_expression {};
-	| ID '.' T_ELEMENTS
+expression : proc_call { $$=$1;};
+             | expression '+' expression { $$=Util::createNodeForArithmeticExpr($1,$3,OPERATOR_ADD);};
+	         | expression '-' expression { $$=Util::createNodeForArithmeticExpr($1,$3,OPERATOR_SUB);};
+	         | expression '*' expression {$$=Util::createNodeForArithmeticExpr($1,$3,OPERATOR_MUL);};
+	         | expression'/' expression{$$=Util::createNodeForArithmeticExpr($1,$3,OPERATOR_DIV);};
+             | expression T_AND_OP expression {$$=Util::createNodeForLogicalExpr($1,$3,OPERATOR_AND);};
+	         | expression T_OR_OP  expression {$$=Util::createNodeForLogicalExpr($1,$3,OPERATOR_OR);};
+	         | expression T_LE_OP expression {$$=Util::createNodeForRelationalExpr($1,$3,OPERATOR_LE);};
+	         | expression T_GE_OP expression{$$=Util::createNodeForRelationalExpr($1,$3,OPERATOR_GE);};
+			 | expression '<' expression{$$=Util::createNodeForRelationalExpr($1,$3,OPERATOR_LT);};
+			 | expression '>' expression{$$=Util::createNodeForRelationalExpr($1,$3,OPERATOR_GT);};
+			 | expression T_EQ_OP expression{$$=Util::createNodeForRelationalExpr($1,$3,OPERATOR_EQ);};
+             | expression T_NE_OP expression{$$=Util::createNodeForRelationalExpr($1,$3,OPERATOR_NE);};
+		| '(' expression ')' {$$=$2;};
+	         | val {$$=$1;};
+			 | leftSide { $$=$1 ;};
 
-proc_call: leftSide '(' arg_list ')' {printf("testproc\n"); $$=Util::createNodeForProcCall($1,$3->AList); };
+proc_call : leftSide '(' arg_list ')' { $$=Util::createNodeForProcCall($1,$3->AList); };
 		
-access_expression: ID '.' proc_call {};
 
 
-val: INT_NUM { printf("Hi");
+
+val : INT_NUM { 
                 $$=Util::createNodeForIval($1); };
 	| FLOAT_NUM {$$=Util::createNodeForFval($1);};
 	| BOOL_VAL {$$=Util::createNodeForBval($1);};
@@ -245,18 +216,18 @@ val: INT_NUM { printf("Hi");
 	| T_P_INF {$$=Util::createNodeForINF(true);};
 	| T_N_INF {$$=Util::createNodeForINF(false);};
 
-control_flow: selection_cf { $$=$1; };
-    | iteration_cf { $$=$1; };
+control_flow : selection_cf { $$=$1; };
+              | iteration_cf { $$=$1; };
 
-iteration_cf: T_FIXEDPOINT T_UNTIL '(' boolean_expr ')' blockstatements { $$=Util::createNodeForFixedPointStmt($4,$6);};
-		| T_WHILE '(' boolean_expr')' blockstatements {$$=Util::createNodeForWhileStmt($3,$5); };
-		| T_DO blockstatements T_WHILE '(' boolean_expr ')' {$$=Util::createNodeForDoWhileStmt($5,$2);  };
+iteration_cf : T_FIXEDPOINT T_UNTIL '(' boolean_expr ')' blockstatements { $$=Util::createNodeForFixedPointStmt($4,$6);};
+		   | T_WHILE '(' boolean_expr')' blockstatements {$$=Util::createNodeForWhileStmt($3,$5); };
+		   | T_DO blockstatements T_WHILE '(' boolean_expr ')' {$$=Util::createNodeForDoWhileStmt($5,$2);  };
 		| T_FORALL '(' ID T_IN ID '.' proc_call filterExpr')'  blockstatements {$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,true);};
 		| T_FOR '(' ID T_IN leftSide ')' blockstatements {$$=Util::createNodeForForStmt($3,$5,$7,false);};
 		| T_FOR '(' ID T_IN ID '.' proc_call  filterExpr')' blockstatements {$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,false);};
 
-filterExpr:         { $$=NULL;};
-    |'.' T_FILTER '(' boolean_expr ')'{ $$=$4;};
+filterExpr  :         { $$=NULL;};
+            |'.' T_FILTER '(' boolean_expr ')'{ $$=$4;};
 
 boolean_expr : expression { $$=$1 ;};
 
@@ -288,15 +259,15 @@ leftSide : ID { $$=Util::createIdentifierNode($1);};
          | oid { $$=$1; };
          | tid {$$ = $1; };
 
-arg_list :    {printf("No args\n");argument* a1=new argument();
+arg_list :    {argument* a1=new argument();
 		                // a1->expression=(Expression*)$1;
 				//		 a1->expressionflag=true;
 						  $$=Util::createAList(a1);};
 						  
-		|assignment ',' arg_list {printf("test3\n");argument* a1=new argument();
+		|assignment ',' arg_list {argument* a1=new argument();
 		                 a1->assignExpr=(assignment*)$3;
 						  a1->assign=true;
-						 $$=Util::addToAList($3,a1);printf("test4\n");
+						 $$=Util::addToAList($3,a1);
                                  };
 
 
@@ -310,13 +281,13 @@ arg_list :    {printf("No args\n");argument* a1=new argument();
 		                 a1->expression=(Expression*)$1;
 						 a1->expressionflag=true;
 						  $$=Util::createAList(a1); };
-	       | assignment { printf("test1\n");argument* a1=new argument();
+	       | assignment { argument* a1=new argument();
 		                  a1->assignExpr=(assignment*)$1;
 						  a1->assign=true;
-						   $$=Util::createAList(a1);printf("test2\n");};
+						   $$=Util::createAList(a1);};
 
 
-bfs_abstraction	: //T_BFS '(' ID ':' T_FROM ID ')' filterExpr blockstatements reverse_abstraction{$$=Util::createIterateInBFSNode($3,$6,$8,$9,$10) ;};
+bfs_abstraction	: T_BFS '(' ID ':' T_FROM ID ')' filterExpr blockstatements reverse_abstraction{$$=Util::createIterateInBFSNode($3,$6,$8,$9,$10) ;};
 			| T_BFS '(' ID ':' T_FROM ID ')' filterExpr blockstatements {//$$=Util::createIterateInBFSNode($3,$6,$8,$9,$10) ;
 			};
 
@@ -345,6 +316,10 @@ void yyerror(char *s) {
 
 int main(int argc,char **argv) {
 	
+	//Parser running in Debug mode
+	#ifdef YYDEBUG
+		yydebug = 1;
+	#endif
   
    FILE    *fd;
 
