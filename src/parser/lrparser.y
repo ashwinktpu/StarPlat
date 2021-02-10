@@ -51,6 +51,7 @@
 %token T_COUNT_OUT_NBRS T_COUNT_IN_NBRS T_GET_SRC T_GET_DST T_GET_EDGE T_GET_NBHR 
 %token T_NODES T_EDGES T_NUM_NODES T_NUM_EDGES
 %token T_CONTAINS T_TOT_ELEMS T_ISEMP
+%token T_ADD_SET_NODE T_ADD_SET_EDGE T_ADD_NODESET T_ADD_EDGESET T_DISCARD T_CLR
 
 %token <text> ID
 %token <ival> INT_NUM
@@ -68,7 +69,7 @@
 %type <node> iteration_cf selection_cf
 %type <node> reductionCall
 %type<node> graphNodeOperations graphEdgeOperations edgelist vertexlist 
-%type<node> prop_fns
+%type<node> prop_fns setops
 %type <aList> arg_list
 %type <ival> reduction_op
 %type <temporary>  rightList
@@ -127,14 +128,22 @@ statement: declaration ';'{$$=$1;};
 	| bfs_abstraction {$$=$1; };
 	| reverse_abstraction {$$=$1;};
 	| blockstatements {$$=$1;};
-	| ID '.' graphNodeOperations '(' vertexlist ')' ';'{};
+	| ID '.' graphNodeOperations '(' vertexlist ')' ';' {};
 	| ID '.' graphEdgeOperations '(' edgelist ')' ';'{};
+	| ID '.' setops '(' ID ')' ';' {};
+	| ID '.' T_CLR '(' ')' ';' {};
 
 edgelist: '[' expression ',' expression ']' {};
 	| '[' expression ',' expression ']' ',' edgelist {};
 
-vertexlist: expression {};
+vertexlist:	expression {};
 	| expression ',' vertexlist {};
+
+setops: T_ADD_SET_NODE {};
+	| T_ADD_SET_EDGE {};
+	| T_ADD_NODESET {};
+	| T_ADD_EDGESET {};
+	| T_DISCARD {};
 
 graphNodeOperations: T_ADD_NODES {};
 	| T_REM_NODES {};

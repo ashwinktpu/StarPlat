@@ -149,18 +149,18 @@ WS  [ \t\v\n\f]
 "SetE" 	{ strcpy(mytext, yytext); return T_SET_EDGES;}
 "list" { strcpy(mytext, yytext); return T_LIST;}
 
- /*Built In - Set Operations(Both Nodes and Edges)
-    "elements" { strcpy(mytext, yytext); return T_ELEMENTS;}
-    "discard" { strcpy(mytext, yytext); return T_DISCARD;}
-    "clear" { strcpy(mytext, yytext); return T_CLR;}
+ /*Built In - Set Operations(Both Nodes and Edges)*/
+"elements" { strcpy(mytext, yytext); return T_ELEMENTS;}
+"discard" { strcpy(mytext, yytext); return T_DISCARD;}
+"clear" { strcpy(mytext, yytext); return T_CLR;}
 
-    /*Built In - Set Operations(Nodes)
-    "addNode" { strcpy(mytext, yytext);return T_ADD_NODE;}
-    "addSetN" { strcpy(mytext, yytext);return T_ADD_NODESET;}
+ /*Built In - Set Operations(Nodes)*/
+"addNode" { strcpy(mytext, yytext);return T_ADD_SET_NODE;}
+"addSetN" { strcpy(mytext, yytext);return T_ADD_NODESET;}
 
-    /*Built In - Set Operations(Edges)
-    "addEdge" { strcpy(mytext, yytext);return T_ADD_EDGE;}
-    "addSetE" { strcpy(mytext, yytext);return T_ADD_EDGESET;}
+ /*Built In - Set Operations(Edges)*/
+"addEdge" { strcpy(mytext, yytext);return T_ADD_SET_EDGE;}
+"addSetE" { strcpy(mytext, yytext);return T_ADD_EDGESET;}
 
     /* Built In
     "makeUndirected" { strcpy(mytext, yytext);return T_MK_UNDRCTD;}*/
