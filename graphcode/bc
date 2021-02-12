@@ -1,4 +1,4 @@
-function Compute_BC (Graph g)
+function Compute_BC ( Graph g )
 {
 	propNode <float> BC;
 	g.attachNodeProperty (BC =0);

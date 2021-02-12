@@ -1,4 +1,4 @@
-#include "dsl_cpp_generator.h"
+/*#include "dsl_cpp_generator.h"
 #include<string.h>
 
 
@@ -107,6 +107,100 @@ void generateStatement(statement* stmt)
 
 }
 
+void dsl_cpp_generator::findTargetGraph(vector<Identifier*> graphTypes,Type* type)
+{   
+    if(graphTypes.size()==1)
+    {
+      cerr<<"TargetGraph can't match";
+    }
+    else
+    {
+      Identifier* graphId=graphTypes[0];
+      type->setTargetGraph(graphId);
+    }
+    
+    
+}
+
+void dsl_cpp_generator::getValueTobeAssigned(Expression* expr)
+     {
+        if(expr->get)
+      
+
+     }
+void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt)
+{
+   proc_callExpr* procedure=proc_callStmt->getProcCallExpr();
+   if(procedure->getMethodId()=="attachNodeProperty")
+       {  char strBuffer[1024];
+          list<argument*> argList=procedure->getArgList();
+          list<argument*>::iterator itr;
+          main.push("#pragma omp parallel for");
+          sprintf(strBuffer,"for (%s %s = 0; %s < %s.%s(); %s ++) ","int","t","t",procedure->getId1(),"num_nodes");
+          main.push("{");
+          for(itr=argList.begin();itr!=argList.end();itr++)
+              { 
+                assignment* assign=(*itr)->assignExpr;
+                Identifier* lhsId=assign->getId();
+                Expression* exprAssigned=assign->getExpr();
+                char* valueTobeAssigned=getValueTobeAssigned(exprAssigned);
+                sprintf(strBuffer,"%s[%s] = %s",lhsId->getIdentifier(),"t",valueTobeAssigned);
+              }
+              
+
+
+       }
+}
+
+void dsl_cpp_generator::generatePropertyDefination(Type* type,char* Id)
+{ 
+  Type* targetType=type->getInnerTargetType();
+  if(targetType->gettypeId==TYPE_INT)
+  {
+     main.push("=");
+     main.push(INTALLOCATION);
+     main.push("[");
+     findTargetGraph(graphTypes,type);
+     char strBuffer[100];
+     sprintf(strBuffer,"%s.%s()",type->getTargetGraph()->getIdentifier(),"num_nodes");
+     main.push("]");
+     main.push(";");
+  }
+  if(targetType->gettypeId==TYPE_BOOL)
+  {
+     main.push("=");
+     main.push(BOOLALLOCATION);
+     main.push("[");
+     findTargetGraph(graphTypes,type);
+     char strBuffer[100];
+     sprintf(strBuffer,"%s.%s()",type->getTargetGraph()->getIdentifier(),"num_nodes");
+     main.push("]");
+     main.push(";");
+  }
+
+     
+
+
+}
+
+void dsl_cpp_generator:: generateVariableDecl(declaration* declStmt)
+{
+   Type* type=declStmt->getType();
+   if(type->isPropType())
+   {
+     if(type->getInnerTargetType()->isPrimitiveType())
+     { 
+       Type* innerType=type->getInnerTargetType();
+       main.push(convertToCppType(innerType));
+       main.space();
+       main.push(declStmt->getdeclId()->getIdentifier());
+       generatePropertyDefination(type,declStmt->getdeclId()->getIdentifier());
+     }
+   }
+
+
+
+}
 
 void dsl_cpp_generator::generateBlock(blockStatement* blockStmt)
 {
@@ -176,3 +270,4 @@ void generateProcCall(Function* proc,bool isMainFile)
     return;   
         
 }
+*/
