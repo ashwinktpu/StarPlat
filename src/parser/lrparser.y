@@ -14,6 +14,7 @@
 	char mytext[100];
 	char var[100];
 	int num = 0;
+	vector<Identifier*> graphId;
 	extern char *yytext;
 	extern SymbolTable* symbTab;
 	FrontEndContext *FrontEndContext::instance=0;
@@ -57,7 +58,7 @@
 %type <node> statement blockstatements assignment declaration proc_call control_flow reduction
 %type <node> type1 type2
 %type <node> primitive graph collections property
-%type <node> id leftSide rhs expression oid val boolean_expr tid
+%type <node> id leftSide rhs expression oid val boolean_expr tid id1
 %type <node> bfs_abstraction filterExpr reverse_abstraction
 %type <nodeList> leftList
 %type <node> iteration_cf selection_cf
@@ -81,28 +82,34 @@
 %left '+' '-'
 %left '*' '/' '%'
 
+ 
 
 %%
-program: function_def {printf("program.\n");};
+program: function_def { };
 
 function_def: function_data  function_body  { };
 
-function_data: T_FUNC ID '(' paramList ')' { Identifier* funcId=(Identifier*)Util::createIdentifierNode($2);
-                                           $$=Util::createFuncNode(funcId,$4->PList); };
+function_data: T_FUNC id '(' paramList ')' { //Identifier* id=(Identifier*)$2;
+                                             //printf("FUNC NAME %s",id->getIdentifier());
+	                                         $$=Util::createFuncNode($2,$4->PList);};
 
 paramList: param {$$=Util::createPList($1);};
                | param ',' paramList {$$=Util::addToPList($3,$1); };
 
-param : type1 ID {  Identifier* id=(Identifier*)Util::createIdentifierNode($2);
-                    $$=Util::createParamNode($1,id); } ;
-               | type2 ID {  Identifier* id=(Identifier*)Util::createIdentifierNode($2);
-                             $$=Util::createParamNode($1,id);};
-			   | type2 ID '(' ID ')' {  Identifier* id1=(Identifier*)Util::createIdentifierNode($4);
-			                            Identifier* id=(Identifier*)Util::createIdentifierNode($2);
+param : type1 id {  //Identifier* id=(Identifier*)Util::createIdentifierNode($2);
+                   
+					printf("\n");
+                    $$=Util::createParamNode($1,$2); } ;
+               | type2 id { // Identifier* id=(Identifier*)Util::createIdentifierNode($2);
+			  
+					printf("\n");
+                             $$=Util::createParamNode($1,$2);};
+			   | type2 id '(' id ')' { // Identifier* id1=(Identifier*)Util::createIdentifierNode($4);
+			                            //Identifier* id=(Identifier*)Util::createIdentifierNode($2);
 				                        Type* tempType=(Type*)$1;
 			                            if(tempType->isNodeEdgeType())
-										   tempType->addSourceGraph(id1);
-				                         $$=Util::createParamNode(tempType,id);
+										  tempType->addSourceGraph($4);
+				                         $$=Util::createParamNode(tempType,$2);
 									 };
 
 
@@ -112,13 +119,12 @@ function_body : blockstatements {$$=$1;};
 statements :  {};
 	| statements statement { Util::addToBlock($2); };
 
-statement: declaration ';'{printf("testdeclr\n");$$=$1;};
+statement: declaration ';'{$$=$1;};
 	|assignment ';'{$$=$1;};
 	|proc_call ';' {printf("testprocstmt\n");$$=Util::createNodeForProcCallStmt($1);};
 	|control_flow {$$=$1;};
 	|reduction ';'{$$=$1;};
 	| bfs_abstraction {$$=$1; };
-	| reverse_abstraction {$$=$1;};
 	| blockstatements {$$=$1;};
 
 
@@ -129,14 +135,22 @@ block_begin:'{' { Util::createNewBlock(); }
 block_end:'}'
 
 
-declaration : type1 ID   {Identifier* id=(Identifier*)Util::createIdentifierNode($2);
-                         $$=Util::createNormalDeclNode($1,id);};
-	| type1 ID '=' rhs  {Identifier* id=(Identifier*)Util::createIdentifierNode($2);
-	                    $$=Util::createAssignedDeclNode($1,id,$4);};
-	| type2 ID  {Identifier* id=(Identifier*)Util::createIdentifierNode($2);
-                         $$=Util::createNormalDeclNode($1,id); };
-	| type2 ID '=' rhs {Identifier* id=(Identifier*)Util::createIdentifierNode($2);
-	                    $$=Util::createAssignedDeclNode($1,id,$4);};
+declaration : type1 id   {
+	                     Type* type=(Type*)$1;
+	                     Identifier* id=(Identifier*)$2;
+						 
+						 if(type->isGraphType())
+						    graphId.push_back(id);
+                         $$=Util::createNormalDeclNode($1,$2);};
+	| type1 id '=' rhs  {//Identifier* id=(Identifier*)Util::createIdentifierNode($2);
+	                    
+	                    $$=Util::createAssignedDeclNode($1,$1,$4);};
+	| type2 id  {//Identifier* id=(Identifier*)Util::createIdentifierNode($2);
+	            
+                         $$=Util::createNormalDeclNode($1,$1); };
+	| type2 id '=' rhs {//Identifier* id=(Identifier*)Util::createIdentifierNode($2);
+	                   
+	                    $$=Util::createAssignedDeclNode($1,$1,$4);};
 
 type1: primitive {$$=$1; };
 	| graph {$$=$1;};
@@ -153,19 +167,19 @@ graph : T_GRAPH { $$=Util::createGraphTypeNode(TYPE_GRAPH,NULL);};
 	|T_DIR_GRAPH {$$=Util::createGraphTypeNode(TYPE_DIRGRAPH,NULL);};
 
 collections : T_LIST { $$=Util::createCollectionTypeNode(TYPE_LIST,NULL);};
-		|T_SET_NODES '<' ID '>' {Identifier* id=(Identifier*)Util::createIdentifierNode($3);
-			                     $$=Util::createCollectionTypeNode(TYPE_SETN,id);};
-                | T_SET_EDGES '<' ID '>' { Identifier* id=(Identifier*)Util::createIdentifierNode($3);
-					                    $$=Util::createCollectionTypeNode(TYPE_SETE,id);};
+		|T_SET_NODES '<' id '>' {//Identifier* id=(Identifier*)Util::createIdentifierNode($3);
+			                     $$=Util::createCollectionTypeNode(TYPE_SETN,$3);};
+                | T_SET_EDGES '<' id '>' {// Identifier* id=(Identifier*)Util::createIdentifierNode($3);
+					                    $$=Util::createCollectionTypeNode(TYPE_SETE,$3);};
 
 type2 : T_NODE {$$=Util::createNodeEdgeTypeNode(TYPE_NODE) ;};
        | T_EDGE {$$=Util::createNodeEdgeTypeNode(TYPE_EDGE);};
 	   | property {$$=$1;};
 
-property : T_NP '<' primitive '>' { $$=Util::createPropertyTypeNode(PROP_NODE,$3); };
-              | T_EP '<' primitive '>' { $$=Util::createPropertyTypeNode(PROP_EDGE,$3); };
-			  | T_NP '<' collections '>'{  $$=Util::createPropertyTypeNode(PROP_NODE,$3); };
-			  | T_EP '<' collections '>' {$$=Util::createPropertyTypeNode(PROP_EDGE,$3);};
+property : T_NP '<' primitive '>' { $$=Util::createPropertyTypeNode(TYPE_PROPNODE,$3); };
+              | T_EP '<' primitive '>' { $$=Util::createPropertyTypeNode(TYPE_PROPEDGE,$3); };
+			  | T_NP '<' collections '>'{  $$=Util::createPropertyTypeNode(TYPE_PROPNODE,$3); };
+			  | T_EP '<' collections '>' {$$=Util::createPropertyTypeNode(TYPE_PROPEDGE,$3);};
 
 assignment :  leftSide '=' rhs  { printf("testassign\n");$$=Util::createAssignmentNode($1,$3);};
 
@@ -186,14 +200,14 @@ expression : proc_call { $$=$1;};
              | expression T_NE_OP expression{$$=Util::createNodeForRelationalExpr($1,$3,OPERATOR_NE);};
 		| '(' expression ')' {$$=$2;};
 	         | val {$$=$1;};
-			 | leftSide { $$=$1 ;};
+			 | leftSide { $$=Util::createNodeForId($1);};
 
 proc_call : leftSide '(' arg_list ')' {printf("testproc\n"); $$=Util::createNodeForProcCall($1,$3->AList); };
 		
 
 
 
-val : INT_NUM { printf("Hi");
+val : INT_NUM { 
                 $$=Util::createNodeForIval($1); };
 	| FLOAT_NUM {$$=Util::createNodeForFval($1);};
 	| BOOL_VAL {$$=Util::createNodeForBval($1);};
@@ -207,9 +221,9 @@ control_flow : selection_cf { $$=$1; };
 iteration_cf : T_FIXEDPOINT T_UNTIL '(' boolean_expr ')' blockstatements { $$=Util::createNodeForFixedPointStmt($4,$6);};
 		   | T_WHILE '(' boolean_expr')' blockstatements {$$=Util::createNodeForWhileStmt($3,$5); };
 		   | T_DO blockstatements T_WHILE '(' boolean_expr ')' {$$=Util::createNodeForDoWhileStmt($5,$2);  };
-		| T_FORALL '(' ID T_IN ID '.' proc_call filterExpr')'  blockstatements {$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,true);};
-		| T_FOR '(' ID T_IN leftSide ')' blockstatements {$$=Util::createNodeForForStmt($3,$5,$7,false);};
-		| T_FOR '(' ID T_IN ID '.' proc_call  filterExpr')' blockstatements {$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,false);};
+		| T_FORALL '(' id T_IN id '.' proc_call filterExpr')'  blockstatements {$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,true);};
+		| T_FOR '(' id T_IN leftSide ')' blockstatements {$$=Util::createNodeForForStmt($3,$5,$7,false);};
+		| T_FOR '(' id T_IN id '.' proc_call  filterExpr')' blockstatements {$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,false);};
 
 filterExpr  :         { $$=NULL;};
             |'.' T_FILTER '(' boolean_expr ')'{ $$=$4;};
@@ -240,7 +254,7 @@ reduction_op : T_SUM { $$=REDUCE_SUM;};
 	         | T_MAX {$$=REDUCE_MAX;};
 	         | T_MIN {$$=REDUCE_MIN;};
 
-leftSide : ID { $$=Util::createIdentifierNode($1);};
+leftSide : id { $$=$1; };
          | oid { $$=$1; };
          | tid {$$ = $1; };
 
@@ -272,8 +286,8 @@ arg_list :    {printf("No args\n");argument* a1=new argument();
 						   $$=Util::createAList(a1);printf("test2\n");};
 
 
-bfs_abstraction	: T_BFS '(' ID ':' T_FROM ID ')' filterExpr blockstatements reverse_abstraction{$$=Util::createIterateInBFSNode($3,$6,$8,$9,$10) ;};
-			| T_BFS '(' ID ':' T_FROM ID ')' filterExpr blockstatements {//$$=Util::createIterateInBFSNode($3,$6,$8,$9,$10) ;
+bfs_abstraction	: T_BFS '(' id ':' T_FROM id ')' filterExpr blockstatements reverse_abstraction{$$=Util::createIterateInBFSNode($3,$6,$8,$9,$10) ;};
+			| T_BFS '(' id ':' T_FROM id ')' filterExpr blockstatements {//$$=Util::createIterateInBFSNode($3,$6,$8,$9,$10) ;
 			};
 
 
@@ -281,15 +295,22 @@ bfs_abstraction	: T_BFS '(' ID ':' T_FROM ID ')' filterExpr blockstatements reve
 reverse_abstraction : T_REVERSE '(' boolean_expr ')' filterExpr blockstatements {$$=Util::createIterateInReverseBFSNode($3,$5,$6);};
 
 
-oid : ID '.' ID { Identifier* id1=(Identifier*)Util::createIdentifierNode($1);
-                   Identifier* id2=(Identifier*)Util::createIdentifierNode($1);
-				   $$=Util::createPropIdNode(id1,id2);
+oid : id '.' id { //Identifier* id1=(Identifier*)Util::createIdentifierNode($1);
+                  // Identifier* id2=(Identifier*)Util::createIdentifierNode($1);
+				   $$=Util::createPropIdNode($1,$3);
 				    };
 
-tid : ID '.' ID '.' ID { Identifier* id1=(Identifier*)Util::createIdentifierNode($1);
-                   Identifier* id2=(Identifier*)Util::createIdentifierNode($1);
-				   $$=Util::createPropIdNode(id1,id2);
+tid : id '.' id '.' id {// Identifier* id1=(Identifier*)Util::createIdentifierNode($1);
+                  // Identifier* id2=(Identifier*)Util::createIdentifierNode($1);
+				   $$=Util::createPropIdNode($1,$3);
 				    };
+id : ID   { 
+	         $$=Util::createIdentifierNode($1);  
+
+            
+            };                                                   
+          
+
 
 %%
 
