@@ -2,9 +2,10 @@
 #define ASTNODETYPE_H
 
 #include "ASTNode.hpp"
-#include <string>
+#include <string.h>
 #include <list>
 #include<iostream>
+#include<vector>
 #include "../maincontext/enum_def.hpp"
 
 
@@ -17,6 +18,8 @@ class reductionCall;
 class formalParam;
 class Type;
 class blockStatement;
+class Identifier;
+extern vector<Identifier*> graphId;
 
 
 class argument
@@ -60,16 +63,22 @@ class Identifier:public ASTNode
 
 {
   private:
-  char* identifier;
+  
   int accessType;
+   char* identifier;
 
   public: 
-  static Identifier* createIdNode(char* id)
+ 
+  static Identifier* createIdNode(const char* id)
    {
+
+   
      Identifier* idNode=new Identifier();
-     idNode->identifier=id;
+     idNode->identifier=new char[strlen(id)+1];
+     strcpy(idNode->identifier,id);
      idNode->accessType=0;
      idNode->setTypeofNode(NODE_ID);
+    // std::cout<<"IDENTIFIER = "<<idNode->getIdentifier()<<" "<<strlen(idNode->getIdentifier());
      return idNode;
 
    }
@@ -79,7 +88,7 @@ class Identifier:public ASTNode
      return accessType;
    }
 
-   char* getIdentifier()
+    char* getIdentifier()
    {
      return identifier;
    }
@@ -238,16 +247,61 @@ class Type:public ASTNode
   }
   bool isNodeEdgeType()
     {
-         if(rootType==5)
-           return true;
-         else
-           return false;
+       return check_isNodeEdgeType(typeId);
          
     }
 
-  void addSourceGraph(Identifier* id)
+   bool isPropType()
+   {
+     return check_isPropType(typeId);
+   } 
+
+   bool isCollectionType()
+   {
+     return check_isCollectionType(typeId);
+   }
+   
+   bool isGraphType()
+   {
+     return check_isGraphType(typeId);
+   }
+   bool isPrimitiveType()
+   {
+     return check_isPrimitiveType(typeId);
+   }
+
+   bool isPropNodeType()
+   {
+     return check_isPropNodeType(typeId);
+   } 
+
+   bool isPropEdgeType()
+   {
+     return check_isPropEdgeType(typeId);
+   }
+
+   bool isListCollection()
+   {
+     return check_isListCollectionType(typeId);
+   }
+
+   bool isSetCollection()
+   {
+     return check_isSetCollectionType(typeId);
+   }
+
+   bool isNodeType()
+   {
+     return check_isNodeType(typeId);
+   }
+   bool isEdgeType()
+   {
+     return check_isEdgeType(typeId);
+   }
+    
+  void addSourceGraph(ASTNode* id)
   {
-    sourceGraph=id;
+    sourceGraph=(Identifier*)id;
   }  
   Type* getInnerTargetType()
   {
@@ -261,7 +315,10 @@ class Type:public ASTNode
   {
     return sourceGraph;
   }
-
+  void setTargetGraph(Identifier* id)
+  {
+    TargetGraph=id;
+  }
 };
 class formalParam:public ASTNode
 {
@@ -719,7 +776,7 @@ class fixedPointStmt:public statement
       arithmeticExpr->left=left;
       arithmeticExpr->right=right;
       arithmeticExpr->operatorType=arithmeticOperator;
-      arithmeticExpr->typeofExpr=0;
+      arithmeticExpr->typeofExpr=EXPR_ARITHMETIC;
 
        return arithmeticExpr;
 
@@ -731,7 +788,7 @@ class fixedPointStmt:public statement
       relationalExpr->left=left;
       relationalExpr->right=right;
       relationalExpr->operatorType=relationalOperator;
-      relationalExpr->typeofExpr=1;
+      relationalExpr->typeofExpr=EXPR_RELATIONAL;
 
        return relationalExpr;
 
@@ -743,7 +800,7 @@ class fixedPointStmt:public statement
       logicalExpr->left=left;
       logicalExpr->right=right;
       logicalExpr->operatorType=logicalOperator;
-      logicalExpr->typeofExpr=2;
+      logicalExpr->typeofExpr=EXPR_LOGICAL;
 
        return logicalExpr;
 
@@ -753,7 +810,7 @@ class fixedPointStmt:public statement
     {
        Expression* integerConstantExpr=new Expression();
        integerConstantExpr->integerConstant=integerValue;
-       integerConstantExpr->typeofExpr=3;
+       integerConstantExpr->typeofExpr=EXPR_INTCONSTANT;
        return integerConstantExpr;
 
     }
@@ -762,7 +819,7 @@ class fixedPointStmt:public statement
     {
        Expression* doubleConstantExpr=new Expression();
        doubleConstantExpr->doubleConstant=doubleValue;
-       doubleConstantExpr->typeofExpr=3;
+       doubleConstantExpr->typeofExpr=EXPR_DOUBLECONSTANT;
        return doubleConstantExpr;
 
     }
@@ -770,7 +827,7 @@ class fixedPointStmt:public statement
     {
        Expression* boolExpr=new Expression();
        boolExpr->booleanConstant=boolValue;
-       boolExpr->typeofExpr=3;
+       boolExpr->typeofExpr=EXPR_BOOLCONSTANT;
        return boolExpr;
 
     }
@@ -782,7 +839,7 @@ class fixedPointStmt:public statement
     {
        Expression* infinityExpr=new Expression();
        infinityExpr->infinityType=infinityValue;
-       infinityExpr->typeofExpr=3;
+       infinityExpr->typeofExpr=EXPR_INFINITY;
        return infinityExpr;
 
     }
@@ -791,7 +848,7 @@ class fixedPointStmt:public statement
     {
        Expression* idExpr=new Expression();
        idExpr->id=id;
-       idExpr->typeofExpr=4;
+       idExpr->typeofExpr=EXPR_ID;
        return idExpr;
 
     }
@@ -799,11 +856,20 @@ class fixedPointStmt:public statement
     {
        Expression* propIdExpr=new Expression();
        propIdExpr->propId=propId;
-       propIdExpr->typeofExpr=5;
+       propIdExpr->typeofExpr=EXPR_PROPID;
        return propIdExpr;
 
     }
 
+    /*bool isLiteral()
+    {
+
+    }*/
+     
+     int getTypeOfExpr()
+     {
+       return typeofExpr;
+     }
 
 
    
@@ -816,6 +882,7 @@ class fixedPointStmt:public statement
     private:
     Identifier* id1;
     Identifier* id2;
+    Identifier* methodId;
     list<argument*> argList;
     
     public:
@@ -823,20 +890,42 @@ class fixedPointStmt:public statement
     {
       id1=NULL;
       id2=NULL;
+      methodId=NULL;
       typeofNode=NODE_PROCCALLEXPR;
     }
 
     
-    static proc_callExpr* nodeForProc_Call(Identifier* id1,Identifier* id2,list<argument*> argList)
+    static proc_callExpr* nodeForProc_Call(Identifier* id1,Identifier* id2,Identifier* methodId,list<argument*> argList)
     {
           proc_callExpr* procExpr=new proc_callExpr();
           procExpr->id1=id1;
           procExpr->id2=id2;
+          procExpr->methodId=methodId;
           procExpr->argList=argList;
           
           return procExpr;
 
 
+    }
+
+    Identifier* getMethodId()
+    {
+      return methodId;
+    }
+    
+    Identifier* getId1()
+    {
+      return id1;
+    }
+    
+    Identifier* getId2()
+    {
+      return id2;
+    }
+
+    list<argument*> getArgList()
+    {
+      return argList;
     }
 
 
@@ -868,7 +957,7 @@ class fixedPointStmt:public statement
     {
       return procCall;
     }
-
+ 
 };
   class forallStmt:public statement
   {

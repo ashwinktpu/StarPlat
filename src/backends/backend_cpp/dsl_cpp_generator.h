@@ -1,3 +1,6 @@
+/*#ifndef DSL_CPP_GENERATOR
+#define DSL_CPP_GENERATOR
+
 #include <cstdio>
 #include "dslCodePad.h"
 #include "../../ast/ASTNodeTypes.hpp"
@@ -35,7 +38,13 @@ class dsl_cpp_generator
   void generateId();
   void generateOid();
   void addIncludeToFile(char* includeName,dslCodePad file,bool isCPPLib);
-  
+  void generatePropertyDefination(Type* type,char* Id);
+  void findTargetGraph(vector<Type*> graphTypes,Type* type);
 
 
 };
+
+static const char* INTALLOCATION = "new int";
+static const char* BOOLALLOCATION = "new bool";
+#endif
+*/
