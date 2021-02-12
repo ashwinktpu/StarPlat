@@ -170,7 +170,7 @@ type1: primitive { };
 	| collections { };
 
 
-node_id: ID { $$ =on_seeing_identifier($1);}
+node_id: ID { }
 
 primitive: T_INT { };
 	| T_FLOAT { };
@@ -304,7 +304,7 @@ bfs_abstraction	: T_BFS '(' node_id ':' T_FROM node_id ')' filterExpr blockstate
 reverse_abstraction : T_REVERSE '(' boolean_expr ')' filterExpr blockstatements { };
 
 
-oid : node_id '.' node_id { $$=Util::createPropIdNode($1,$3); };
+oid : node_id '.' node_id {  };
 
 tid : node_id '.' node_id '.' node_id {  };
 
