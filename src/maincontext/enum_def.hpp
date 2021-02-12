@@ -15,16 +15,58 @@ enum TYPE
  TYPE_SETN,
  TYPE_SETE,
  TYPE_NODE,
- TYPE_EDGE
+ TYPE_EDGE,
+ TYPE_PROPNODE,
+ TYPE_PROPEDGE
 
 };
 
-enum PROP
+inline bool check_isNodeEdgeType(int typeId)
 {
- PROP_NODE,
- PROP_EDGE
+  return ((typeId==TYPE_NODE)||(typeId==TYPE_EDGE));
+}
+inline bool check_isPropType(int typeId)
+{
+  return ((typeId==TYPE_PROPNODE)||(typeId==TYPE_PROPEDGE));
+}
+inline bool check_isCollectionType(int typeId)
+{
+  return ((typeId==TYPE_LIST)||(typeId==TYPE_SETE)||(typeId==TYPE_SETN));
+}
+inline bool check_isGraphType(int typeId)
+{
+  return ((typeId==TYPE_GRAPH)||(typeId==TYPE_DIRGRAPH));
+}
+inline bool check_isPrimitiveType(int typeId)
+  {
+    return ((typeId==TYPE_BOOL)||(typeId==TYPE_DOUBLE)||(typeId==TYPE_FLOAT)||(typeId==TYPE_LONG)||(typeId==TYPE_INT));
+  }
 
-};
+ inline bool check_isPropNodeType(int typeId)
+ {
+   return typeId==TYPE_PROPNODE;
+ } 
+
+ inline bool check_isPropEdgeType(int typeId)
+ {
+   return typeId==TYPE_PROPEDGE;
+ }
+inline bool check_isListCollectionType(int typeId)
+{
+  return typeId==TYPE_LIST;
+}
+inline bool check_isSetCollectionType(int typeId)
+{
+  return ((typeId==TYPE_SETN)||(typeId==TYPE_SETE));
+}
+inline bool check_isNodeType(int typeId)
+{
+  return typeId==TYPE_NODE;
+}
+inline bool check_isEdgeType(int typeId)
+{
+  return typeId==TYPE_EDGE;
+}
 
 enum REDUCE
 {
@@ -77,5 +119,21 @@ enum NODETYPE
   NODE_FORALLSTMT,
   NODE_REDUCTIONCALL,
   NODE_REDUCTIONCALLSTMT,
+};
+
+
+enum EXPR
+{
+   EXPR_RELATIONAL,
+   EXPR_LOGICAL,
+   EXPR_ARITHMETIC,
+   EXPR_BOOLCONSTANT,
+   EXPR_INTCONSTANT,
+   EXPR_LONGCONSTANT,
+   EXPR_DOUBLECONSTANT,
+   EXPR_FLOATCONSTANT,
+   EXPR_ID,
+   EXPR_PROPID,
+   EXPR_INFINITY
 };
 #endif
