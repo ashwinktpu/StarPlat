@@ -13,9 +13,9 @@ class Util
 {
 
 public:
-static ASTNode* createFuncNode(Identifier* id,list<formalParam*> formalParamList)
+static ASTNode* createFuncNode(ASTNode* id,list<formalParam*> formalParamList)
 {
-  Function* functionNode=Function::createFunctionNode(id,formalParamList);
+  Function* functionNode=Function::createFunctionNode((Identifier*)id,formalParamList);
   return functionNode;
 
 }
@@ -255,19 +255,19 @@ static ASTNode* createNodeForIfStmt(ASTNode* iterCondition,ASTNode* thenBody,AST
     ifStmtNode=ifStmt::create_ifStmt((Expression*)iterCondition,(blockStatement*)thenBody,(blockStatement*)elseBody);
     return ifStmtNode;
 }
-static ASTNode* createNodeForForAllStmt(char* iterator,char* sourceGraph,ASTNode* extractElemFunc,ASTNode* body,ASTNode* filterExpr,bool isforall)
+static ASTNode* createNodeForForAllStmt(ASTNode* iterator,ASTNode* sourceGraph,ASTNode* extractElemFunc,ASTNode* body,ASTNode* filterExpr,bool isforall)
 {
     statement* forallStmtNode;
-    Identifier* id=(Identifier*)createIdentifierNode(iterator);
-    Identifier* id1=(Identifier*)createIdentifierNode(sourceGraph);
+    Identifier* id=(Identifier*)iterator;
+    Identifier* id1=(Identifier*)sourceGraph;
 
     forallStmtNode=forallStmt::createforallStmt(id,id1,(proc_callExpr*)extractElemFunc,(statement*)body,(Expression*)filterExpr,isforall);
     return forallStmtNode;
 }
-static ASTNode* createNodeForForStmt(char* iterator,ASTNode* source,ASTNode* body,bool isforall)
+static ASTNode* createNodeForForStmt(ASTNode* iterator,ASTNode* source,ASTNode* body,bool isforall)
 {
     statement* forallStmtNode;
-    Identifier* id=(Identifier*)createIdentifierNode(iterator);
+    Identifier* id=(Identifier*)iterator;
     if(source->getTypeofNode()=="ID")
     forallStmtNode=forallStmt::id_createforForStmt(id,(Identifier*)source,(statement*)body,isforall);
     if(source->getTypeofNode()=="PROPACCESS")
@@ -311,11 +311,11 @@ static ASTNode* createIterateInReverseBFSNode( ASTNode* booleanExpr,ASTNode* fil
     iterateReverseBFSNode=iterateReverseBFS::nodeForRevBFS((Expression*)booleanExpr,(Expression*)filterExpr,(statement*)body);
     return iterateReverseBFSNode;
 }
-static ASTNode* createIterateInBFSNode(char* iterator,char* rootNode,ASTNode* filterExpr,ASTNode* body,ASTNode* revBFS)
+static ASTNode* createIterateInBFSNode(ASTNode* iterator,ASTNode* rootNode,ASTNode* filterExpr,ASTNode* body,ASTNode* revBFS)
 {
     iterateBFS* iterateBFSNode;
-    Identifier* id1=(Identifier*)createIdentifierNode(iterator);
-    Identifier* id2=(Identifier*)createIdentifierNode(rootNode);
+    Identifier* id1=(Identifier*)iterator;
+    Identifier* id2=(Identifier*)rootNode;
     iterateBFSNode=iterateBFS::nodeForIterateBFS(id1,id2,(Expression*)filterExpr,(statement*)body,(iterateReverseBFS*)revBFS);
     return iterateBFSNode;
 }

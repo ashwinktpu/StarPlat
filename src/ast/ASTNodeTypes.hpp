@@ -2,10 +2,11 @@
 #define ASTNODETYPE_H
 
 #include "ASTNode.hpp"
+#include <cstring>
 #include <string>
 #include <list>
-
-
+#include <iostream>
+#include <stdio.h>
 using namespace std;
 /*class declaration for each node type. Incomplete at the moment.*/
 
@@ -55,17 +56,18 @@ class ASTNodeList
 
 
 class Identifier:public ASTNode
-
 {
   private:
-  char* identifier;
+  string identifier;
   int accessType;
 
   public: 
-  static Identifier* createIdNode(char* id)
+  static Identifier* createIdNode(char * id)
    {
      Identifier* idNode=new Identifier();
-     idNode->identifier=id;
+     //printf("%s\n",id);
+     idNode->identifier=string(id);
+     //cout<<idNode->identifier<<"\n";
      idNode->accessType=0;
      idNode->setTypeofNode("ID");
      return idNode;
@@ -77,7 +79,7 @@ class Identifier:public ASTNode
      return accessType;
    }
 
-   char* getIdentifier()
+   string getIdentifier()
    {
      return identifier;
    }
