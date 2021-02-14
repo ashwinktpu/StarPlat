@@ -657,7 +657,24 @@ class fixedPointStmt:public statement
 
   };
   
+  class Prop_Fns:public ASTNode{
+    private:
+    Identifier* id;
+    int opcode;
 
+    public:
+    Prop_Fns(){
+      id=  NULL;
+      opcode = -1;
+    }
+
+    static Prop_Fns* nodeForPropFn(Identifier* iden,int op){
+      Prop_Fns* prop_node = new Prop_Fns();
+      prop_node->opcode = op;
+      prop_node->id = iden;
+      return prop_node;
+    }
+};
   
   class Expression:public ASTNode
   {
@@ -672,6 +689,8 @@ class fixedPointStmt:public statement
     int typeofExpr;
     Identifier* id;
     PropAccess* propId;
+    argList* args;
+    Prop_Fns* prp_fns;
 
     public:
     
@@ -770,6 +789,14 @@ class fixedPointStmt:public statement
        Expression* ElementsExpr=new Expression();
        ElementsExpr-> id = nodeid;
        ElementsExpr-> operatorType = operand;
+       return ElementsExpr;
+    }
+
+    static Expression* nodeForGraphFns(Prop_Fns* prop_f,argList* arg_list){
+      Expression* GraphFnExpr = new Expression();
+      GraphFnExpr-> prp_fns = prop_f;
+      GraphFnExpr-> args = arg_list;
+      return GraphFnExpr;
     }
 
   };
@@ -1006,6 +1033,6 @@ class reductionCallStmt:public statement
       return exprVal;
     }
 
-
 };
+
 #endif

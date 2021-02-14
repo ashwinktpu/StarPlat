@@ -325,4 +325,18 @@ static ASTNode* createNodeForElements(ASTNode* id,int code){
     Expression* elem_node = Expression::nodeForElementsAccess(iden,code);
     return elem_node;
 }
+
+static ASTNode* createPropFnNode(ASTNode* id,int opcode){
+    Identifier* iden = (Identifier*)id;
+    Prop_Fns* propnode = Prop_Fns::nodeForPropFn(iden,opcode);
+    return propnode;
+}
+
+static ASTNode* createNodeForGraphFns(ASTNode* id,argList* arguments){
+    Prop_Fns* iden = (Prop_Fns*)id;
+    Expression* GraphOpExpr = Expression::nodeForGraphFns(iden,arguments);
+    return GraphOpExpr;
+}
+
+
 };

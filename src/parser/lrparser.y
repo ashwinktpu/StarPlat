@@ -80,11 +80,11 @@
 %type <node> reductionCall
 %type<node> edgelist vertexlist 
 %type<node> prop_fns 
-%type<info> setops graphNodeOperations graphEdgeOperations
+%type<info> setops graphNodeOperations graphEdgeOperations graph_ops
 %type <aList> arg_list
 %type <ival> reduction_op
 %type <temporary>  rightList
-%type<node> node_id
+%type<node> node_id 
 
  /* operator precedence
   * Lower is higher
@@ -216,31 +216,35 @@ expression : proc_call { $$=$1;};
 		| '(' expression ')' {$$=$2;};
 	         | val {$$=$1;}; 
 			 | leftSide { $$=$1 ;}; 
-			 | prop_fns '(' arg_list ')' {};
+			 | prop_fns '(' arg_list ')' { $$=Util::createNodeForGraphFns($1,$3); };
 			 | node_id '.' T_ELEMENTS {$$=Util::createNodeForElements($1,OPERATOR_ELEM);};
 
 proc_call : leftSide '(' arg_list ')' { $$=Util::createNodeForProcCall($1,$3->AList); };
 
-prop_fns: node_id '.'  T_NBHRS {};
-	| node_id '.'  T_NODES_FRM {};
-	| node_id '.'  T_NODES_TO {};
-	| node_id '.'  T_EDGES_FRM {};
-	| node_id '.'  T_EDGES_TO {};
-	| node_id '.'  T_OUT_DEGREE {};
-	| node_id '.'  T_IN_DEGREE {};
-	| node_id '.'  T_COUNT_OUT_NBRS {};
-	| node_id '.'  T_COUNT_IN_NBRS {};
-	| node_id '.'  T_GET_SRC {};
-	| node_id '.'  T_GET_DST {};
-	| node_id '.'  T_GET_EDGE {};
-	| node_id '.'  T_GET_NBHR {};
-	| node_id '.'  T_NODES {};
-	| node_id '.'  T_EDGES {};
-	| node_id '.'  T_NUM_NODES {};
-	| node_id '.'  T_NUM_EDGES {};
-	| node_id '.'  T_CONTAINS {};
-	| node_id '.'  T_TOT_ELEMS {};
-	| node_id '.'  T_ISEMP {};
+prop_fns: node_id '.' graph_ops {$$ = Util::createPropFnNode($1,$3);};
+
+
+
+graph_ops: T_NBHRS {$$=PROP_NBHRS;};
+	| T_NODES_FRM {$$=PROP_NODES_FRM;};
+	| T_NODES_TO {$$=PROP_NODES_TO;};
+	| T_EDGES_FRM {$$=PROP_EDGES_FRM;};
+	| T_EDGES_TO {$$=PROP_EDGES_TO;};
+	| T_OUT_DEGREE {$$=PROP_OUT_DEG;};
+	| T_IN_DEGREE {$$=PROP_IN_DEG;};
+	| T_COUNT_OUT_NBRS {$$=PROP_CNT_OUT_NBH;};
+	| T_COUNT_IN_NBRS {$$=PROP_CNT_IN_NBH;};
+	| T_GET_SRC {$$=PROP_GET_SRC;};
+	| T_GET_DST {$$=PROP_GET_DST;};
+	| T_GET_EDGE {$$=PROP_GET_EDGE;};
+	| T_GET_NBHR {$$=PROP_GET_NBHR;};
+	| T_NODES {$$=PROP_NODES;};
+	| T_EDGES {$$=PROP_EDGES;};
+	| T_NUM_NODES {$$=PROP_NUM_NODES;};
+	| T_NUM_EDGES {$$=PROP_NUM_EDGES;};
+	| T_CONTAINS {$$=PROP_CONTAINS;};
+	| T_TOT_ELEMS {$$=PROP_TOT_ELEMS;};
+	| T_ISEMP {$$=PROP_ISEMP;};
 
 val : INT_NUM { 
                 $$=Util::createNodeForIval($1); };
