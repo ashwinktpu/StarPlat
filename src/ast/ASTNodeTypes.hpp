@@ -65,9 +65,7 @@ class Identifier:public ASTNode
   static Identifier* createIdNode(char * id)
    {
      Identifier* idNode=new Identifier();
-     //printf("%s\n",id);
      idNode->identifier=string(id);
-     //cout<<idNode->identifier<<"\n";
      idNode->accessType=0;
      idNode->setTypeofNode("ID");
      return idNode;
@@ -768,10 +766,11 @@ class fixedPointStmt:public statement
 
     }
 
-
-
-   
-
+    static Expression* nodeForElementsAccess(Identifier* nodeid,int operand){
+       Expression* ElementsExpr=new Expression();
+       ElementsExpr-> id = nodeid;
+       ElementsExpr-> operatorType = operand;
+    }
 
   };
 

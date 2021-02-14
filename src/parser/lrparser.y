@@ -78,8 +78,9 @@
 %type <nodeList> leftList
 %type <node> iteration_cf selection_cf
 %type <node> reductionCall
-%type<node> graphNodeOperations graphEdgeOperations edgelist vertexlist 
-%type<node> prop_fns setops
+%type<node> edgelist vertexlist 
+%type<node> prop_fns 
+%type<info> setops graphNodeOperations graphEdgeOperations
 %type <aList> arg_list
 %type <ival> reduction_op
 %type <temporary>  rightList
@@ -144,17 +145,17 @@ edgelist: '[' expression ',' expression ']' {};
 vertexlist:	expression {};
 	| expression ',' vertexlist {};
 
-setops: T_ADD_SET_NODE {};
-	| T_ADD_SET_EDGE {};
-	| T_ADD_NODESET {};
-	| T_ADD_EDGESET {};
-	| T_DISCARD {};
+setops: T_ADD_SET_NODE {$$=SETOPS_ADD_SET_NODE;};
+	| T_ADD_SET_EDGE {$$=SETOPS_ADD_SET_EDGE;};
+	| T_ADD_NODESET {$$=SETOPS_ADD_NODESET;};
+	| T_ADD_EDGESET {$$=SETOPS_ADD_EDGESET;};
+	| T_DISCARD {$$=SETOPS_DISCARD;};
 
-graphNodeOperations: T_ADD_NODES {};
-	| T_REM_NODES {};
+graphNodeOperations: T_ADD_NODES {$$=GRAPH_ADD_NODES;};
+	| T_REM_NODES {$$=GRAPH_REM_NODES;};
 
-graphEdgeOperations: T_ADD_EDGES {};
-	| T_REM_EDGES {};
+graphEdgeOperations: T_ADD_EDGES {$$=GRAPH_ADD_EDGES;};
+	| T_REM_EDGES {$$=GRAPH_REM_EDGES;};
 
 blockstatements : block_begin statements block_end { $$=Util::finishBlock();};
 
@@ -216,7 +217,7 @@ expression : proc_call { $$=$1;};
 	         | val {$$=$1;}; 
 			 | leftSide { $$=$1 ;}; 
 			 | prop_fns '(' arg_list ')' {};
-			 | node_id '.' T_ELEMENTS
+			 | node_id '.' T_ELEMENTS {$$=Util::createNodeForElements($1,OPERATOR_ELEM);};
 
 proc_call : leftSide '(' arg_list ')' { $$=Util::createNodeForProcCall($1,$3->AList); };
 

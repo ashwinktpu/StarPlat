@@ -319,4 +319,10 @@ static ASTNode* createIterateInBFSNode(ASTNode* iterator,ASTNode* rootNode,ASTNo
     iterateBFSNode=iterateBFS::nodeForIterateBFS(id1,id2,(Expression*)filterExpr,(statement*)body,(iterateReverseBFS*)revBFS);
     return iterateBFSNode;
 }
+
+static ASTNode* createNodeForElements(ASTNode* id,int code){
+    Identifier* iden = (Identifier*)id;
+    Expression* elem_node = Expression::nodeForElementsAccess(iden,code);
+    return elem_node;
+}
 };
