@@ -45,6 +45,9 @@ static void addToBlock(ASTNode* statementNode)
     
     
 }
+
+
+
 static ASTNode* createIdentifierNode(char* idName)
 {   
     Identifier* idNode;
@@ -62,6 +65,20 @@ static paramList* addToPList(paramList* pList,ASTNode* fparam)
     pList->PList.push_front((formalParam*)fparam);
     return pList;
 }
+
+static EdgeList* createEList(ASTNode* fParam1,ASTNode* fParam2)
+{    
+    EdgeList* pList=new EdgeList();
+     pList->PList.push_back({(formalParam*)fParam1,(formalParam*)fParam2});
+     return pList;
+} 
+
+static EdgeList* addToEList(EdgeList* pList,ASTNode* fparam1,ASTNode* fparam2)
+{
+    pList->PList.push_front(make_pair((formalParam*)fparam1,(formalParam*)fparam2));
+    return pList;
+}
+
 
 static argList* createAList(argument* arg)
 {
@@ -338,5 +355,10 @@ static ASTNode* createNodeForGraphFns(ASTNode* id,argList* arguments){
     return GraphOpExpr;
 }
 
+static ASTNode* createNodeForGraphEdgeStmts(ASTNode* id,int opcode,EdgeList* args){
+    Identifier* iden = (Identifier*)id;
+    GraphEdgeStmts* graphedgestmt = GraphEdgeStmts::nodeForGraphEdgeStmts(iden,opcode,args);
+    return graphedgestmt;
+}
 
 };

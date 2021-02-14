@@ -112,13 +112,8 @@ WS  [ \t\v\n\f]
 "propNode" {strcpy(mytext, yytext); return T_NP;}
 "propEdge" { strcpy(mytext, yytext); return T_EP;}
  
- /*Built In - Dynamic Instructions*/
-"add_node"   { strcpy(mytext, yytext);return T_ADD_NODES;}
-"add_nodes"  { strcpy(mytext, yytext);return T_ADD_NODES;}
 "add_edge"   { strcpy(mytext, yytext);return T_ADD_EDGES;}
 "add_edges"  { strcpy(mytext, yytext);return T_ADD_EDGES;}
-"rem_node"   { strcpy(mytext, yytext);return T_REM_NODES;}
-"rem_nodes"  { strcpy(mytext, yytext);return T_REM_NODES;}
 "rem_edge"   { strcpy(mytext, yytext);return T_REM_EDGES;}
 "rem_edges"  { strcpy(mytext, yytext);return T_REM_EDGES;}
 
@@ -151,19 +146,8 @@ WS  [ \t\v\n\f]
 
  /*Built In - Set Operations(Both Nodes and Edges)*/
 "elements" { strcpy(mytext, yytext); return T_ELEMENTS;}
-"discard" { strcpy(mytext, yytext); return T_DISCARD;}
-"clear" { strcpy(mytext, yytext); return T_CLR;}
 
- /*Built In - Set Operations(Nodes)*/
-"addNode" { strcpy(mytext, yytext);return T_ADD_SET_NODE;}
-"addSetN" { strcpy(mytext, yytext);return T_ADD_NODESET;}
 
- /*Built In - Set Operations(Edges)*/
-"addEdge" { strcpy(mytext, yytext);return T_ADD_SET_EDGE;}
-"addSetE" { strcpy(mytext, yytext);return T_ADD_EDGESET;}
-
-    /* Built In*/
-"makeUndirected" { strcpy(mytext, yytext);return T_MK_UNDRCTD;}
 
  /* Numbers and Identifies */
 {ALPHANUM}          { yylval.text=yytext;return ID;}

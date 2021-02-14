@@ -5,6 +5,7 @@
 #include <cstring>
 #include <string>
 #include <list>
+#include <utility>
 #include <iostream>
 #include <stdio.h>
 using namespace std;
@@ -40,6 +41,12 @@ class paramList
 {
   public:
   list<formalParam*> PList;
+};
+
+class EdgeList
+{
+  public:
+  list<pair<formalParam*,formalParam*>> PList;
 };
 
 class argList
@@ -1034,5 +1041,28 @@ class reductionCallStmt:public statement
     }
 
 };
+
+class GraphEdgeStmts:public statement{
+  protected:
+    Identifier* id;
+    int opcode;
+    EdgeList* params;
+
+  public:
+    GraphEdgeStmts(){
+      id = NULL;
+      opcode = -1;
+      params = NULL;
+    }
+
+    static GraphEdgeStmts* nodeForGraphEdgeStmts(Identifier* iden,int op,EdgeList* arguments){
+      GraphEdgeStmts* gstmts = new GraphEdgeStmts();
+      gstmts->id = iden;
+      gstmts->opcode = op;
+      gstmts->params = arguments;
+      return gstmts;
+    }
+};
+
 
 #endif

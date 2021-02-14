@@ -42,6 +42,7 @@
 	paramList* pList;
 	argList* aList;
 	ASTNodeList* nodeList;
+	EdgeList* eList;
     tempNode* temporary;
      }
 %token T_INT T_FLOAT T_BOOL T_DOUBLE  T_LONG
@@ -78,13 +79,13 @@
 %type <nodeList> leftList
 %type <node> iteration_cf selection_cf
 %type <node> reductionCall
-%type<node> edgelist vertexlist 
+%type<eList> edgelist 
 %type<node> prop_fns 
-%type<info> setops graphNodeOperations graphEdgeOperations graph_ops
+%type<info> graphEdgeOperations graph_ops
 %type <aList> arg_list
 %type <ival> reduction_op
 %type <temporary>  rightList
-%type<node> node_id 
+%type<node> node_id  
 
  /* operator precedence
   * Lower is higher
@@ -133,26 +134,10 @@ statement: declaration ';'{$$=$1;};
 	| bfs_abstraction {$$=$1; };
 	| reverse_abstraction {$$=$1;};
 	| blockstatements {$$=$1;};
-	| node_id '.' graphNodeOperations '(' vertexlist ')' ';' {};
-	| node_id '.' graphEdgeOperations '(' edgelist ')' ';'{};
-	| node_id '.' setops '(' node_id ')' ';' {};
-	| node_id '.' T_CLR '(' ')' ';' {};
-	| node_id '.' T_MK_UNDRCTD '(' ')' ';' {};
+	| node_id '.' graphEdgeOperations '(' edgelist ')' ';'{ $$ = Util::createNodeForGraphEdgeStmts($1,$3,$5); };
 
-edgelist: '[' expression ',' expression ']' {};
-	| '[' expression ',' expression ']' ',' edgelist {};
-
-vertexlist:	expression {};
-	| expression ',' vertexlist {};
-
-setops: T_ADD_SET_NODE {$$=SETOPS_ADD_SET_NODE;};
-	| T_ADD_SET_EDGE {$$=SETOPS_ADD_SET_EDGE;};
-	| T_ADD_NODESET {$$=SETOPS_ADD_NODESET;};
-	| T_ADD_EDGESET {$$=SETOPS_ADD_EDGESET;};
-	| T_DISCARD {$$=SETOPS_DISCARD;};
-
-graphNodeOperations: T_ADD_NODES {$$=GRAPH_ADD_NODES;};
-	| T_REM_NODES {$$=GRAPH_REM_NODES;};
+edgelist: '[' expression ',' expression ']' { $$=Util::createEList($2,$4); };
+	| '[' expression ',' expression ']' ',' edgelist {$$=Util::addToEList($7,$2,$4);};
 
 graphEdgeOperations: T_ADD_EDGES {$$=GRAPH_ADD_EDGES;};
 	| T_REM_EDGES {$$=GRAPH_REM_EDGES;};
