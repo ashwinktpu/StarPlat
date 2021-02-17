@@ -1,4 +1,4 @@
- %{
+%{
 	
 	#include <stdio.h>
 	#include <string.h>
@@ -17,7 +17,7 @@
 	vector<Identifier*> graphId;
 	extern char *yytext;
 	extern SymbolTable* symbTab;
-	FrontEndContext *FrontEndContext::instance=0;
+	FrontEndContext frontEndContext;
     //symbTab=new SymbolTable();
 	//symbolTableList.push_back(new SymbolTable());
 %}
@@ -85,19 +85,30 @@
  
 
 %%
-program: function_def { };
+program: function_def {/* printf("LIST SIZE %d",frontEndContext.getFuncList().size())  ;*/ };
 
-function_def: function_data  function_body  { };
+function_def: function_data  function_body  { 
+	                                           Function* func=(Function*)$1;
+                                               blockStatement* block=(blockStatement*)$2;
+                                              func->setBlockStatement(block);
+											   Util::addFuncToList(func);
+											    };
 
-function_data: T_FUNC id '(' paramList ')' { //Identifier* id=(Identifier*)$2;
-                                             //printf("FUNC NAME %s",id->getIdentifier());
-	                                         $$=Util::createFuncNode($2,$4->PList);};
+function_data: T_FUNC id '(' paramList ')' { 
+										   $$=Util::createFuncNode($2,$4->PList);
+
+	                                      };
 
 paramList: param {$$=Util::createPList($1);};
-               | param ',' paramList {$$=Util::addToPList($3,$1); };
+               | param ',' paramList {$$=Util::addToPList($3,$1); 
+			                           };
 
 param : type1 id {  //Identifier* id=(Identifier*)Util::createIdentifierNode($2);
-                   
+                        Type* type=(Type*)$1;
+	                     Identifier* id=(Identifier*)$2;
+						 
+						 if(type->isGraphType())
+						    graphId.push_back(id);
 					printf("\n");
                     $$=Util::createParamNode($1,$2); } ;
                | type2 id { // Identifier* id=(Identifier*)Util::createIdentifierNode($2);
@@ -144,13 +155,13 @@ declaration : type1 id   {
                          $$=Util::createNormalDeclNode($1,$2);};
 	| type1 id '=' rhs  {//Identifier* id=(Identifier*)Util::createIdentifierNode($2);
 	                    
-	                    $$=Util::createAssignedDeclNode($1,$1,$4);};
+	                    $$=Util::createAssignedDeclNode($1,$2,$4);};
 	| type2 id  {//Identifier* id=(Identifier*)Util::createIdentifierNode($2);
 	            
-                         $$=Util::createNormalDeclNode($1,$1); };
+                         $$=Util::createNormalDeclNode($1,$2); };
 	| type2 id '=' rhs {//Identifier* id=(Identifier*)Util::createIdentifierNode($2);
 	                   
-	                    $$=Util::createAssignedDeclNode($1,$1,$4);};
+	                    $$=Util::createAssignedDeclNode($1,$2,$4);};
 
 type1: primitive {$$=$1; };
 	| graph {$$=$1;};
@@ -202,7 +213,11 @@ expression : proc_call { $$=$1;};
 	         | val {$$=$1;};
 			 | leftSide { $$=Util::createNodeForId($1);};
 
-proc_call : leftSide '(' arg_list ')' {printf("testproc\n"); $$=Util::createNodeForProcCall($1,$3->AList); };
+proc_call : leftSide '(' arg_list ')' {printf("testproc\n"); 
+                                       
+                                       $$=Util::createNodeForProcCall($1,$3->AList); 
+
+									    };
 		
 
 
@@ -210,7 +225,9 @@ proc_call : leftSide '(' arg_list ')' {printf("testproc\n"); $$=Util::createNode
 val : INT_NUM { 
                 $$=Util::createNodeForIval($1); };
 	| FLOAT_NUM {$$=Util::createNodeForFval($1);};
-	| BOOL_VAL {$$=Util::createNodeForBval($1);};
+	| BOOL_VAL {  
+		
+		$$=Util::createNodeForBval($1);};
 	| T_INF {$$=Util::createNodeForINF(true);};
 	| T_P_INF {$$=Util::createNodeForINF(true);};
 	| T_N_INF {$$=Util::createNodeForINF(false);};
@@ -258,32 +275,43 @@ leftSide : id { $$=$1; };
          | oid { $$=$1; };
          | tid {$$ = $1; };
 
-arg_list :    {printf("No args\n");argument* a1=new argument();
-		                // a1->expression=(Expression*)$1;
-				//		 a1->expressionflag=true;
-						  $$=Util::createAList(a1);};
-						  
+arg_list :    {printf("No args\n");
+                 argList* aList=new argList();
+				 $$=aList;  };
+		      
 		|assignment ',' arg_list {printf("test3\n");argument* a1=new argument();
-		                 a1->assignExpr=(assignment*)$3;
-						  a1->assign=true;
-						 $$=Util::addToAList($3,a1);printf("test4\n");
-                                 };
+		                          assignment* assign=(assignment*)$1;
+		                     a1->setAssign(assign);
+							 a1->setAssignFlag();
+		                 //a1->assignExpr=(assignment*)$1;
+						 // a1->assign=true;
+						  $$=Util::addToAList($3,a1);
+						  for(argument* arg:$$->AList)
+						  {
+							  printf("VALUE OF ARG %d",arg->getAssignExpr());
+						  }
+						  printf("test4\n");
+                          };
 
 
 	       |   expression ',' arg_list   {argument* a1=new argument();
-		                                a1->expression=(Expression*)$3;
-						               
-										a1->expressionflag=true;
+		                                Expression* expr=(Expression*)$1;
+										a1->setExpression(expr);
+										a1->setExpressionFlag();
+						               // a1->expressionflag=true;
 										 $$=Util::addToAList($3,a1);
 						                };
 	       | expression {argument* a1=new argument();
-		                 a1->expression=(Expression*)$1;
-						 a1->expressionflag=true;
+		                 Expression* expr=(Expression*)$1;
+						 a1->setExpression(expr);
+						a1->setExpressionFlag();
 						  $$=Util::createAList(a1); };
 	       | assignment { printf("test1\n");argument* a1=new argument();
-		                  a1->assignExpr=(assignment*)$1;
-						  a1->assign=true;
-						   $$=Util::createAList(a1);printf("test2\n");};
+		                   assignment* assign=(assignment*)$1;
+		                     a1->setAssign(assign);
+							 a1->setAssignFlag();
+						   $$=Util::createAList(a1);printf("test2\n");
+						   };
 
 
 bfs_abstraction	: T_BFS '(' id ':' T_FROM id ')' filterExpr blockstatements reverse_abstraction{$$=Util::createIterateInBFSNode($3,$6,$8,$9,$10) ;};
@@ -313,8 +341,6 @@ id : ID   {
 
 
 %%
-
-
 void yyerror(char *s) {
     fprintf(stderr, "%s\n", s);
 }
