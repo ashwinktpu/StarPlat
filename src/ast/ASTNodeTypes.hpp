@@ -24,11 +24,61 @@ extern vector<Identifier*> graphId;
 
 class argument
 { 
+  private:
+  Expression* expression;
+  assignment* assignExpr;
+  bool expressionflag;
+  bool assign;
+
   public:
-  Expression* expression=NULL;
-  assignment* assignExpr=NULL;
-  bool expressionflag=false;
-  bool assign=false;
+  argument()
+  {
+    expression=NULL;
+    assignExpr=NULL;
+    expressionflag=false;
+    assign=false;
+  }
+  
+  void setAssign(assignment* assign)
+  {
+    assignExpr=assign;
+  }
+  void setExpression(Expression* expr)
+  {
+    expression=expr;
+  }
+  void setAssignFlag()
+  {
+    assign=true;
+  }
+  void setExpressionFlag()
+  {
+    expressionflag=true;
+  }
+  
+  assignment* getAssignExpr()
+  {
+    return assignExpr;
+  }
+  Expression* getExpr()
+  {
+    return expression;
+  }
+
+  bool isAssignExpr()
+  {
+    return assign;
+  }
+
+  bool isExpr()
+  {
+    return expressionflag;
+  }
+
+
+
+
+
 };
 class tempNode
 { 
@@ -423,6 +473,229 @@ class statement:public ASTNode
 
 
   };
+
+  class Expression:public ASTNode
+  {
+    private:
+    Expression* left;
+    Expression* right;
+    int overallType;
+    long integerConstant;
+    double floatConstant;
+    bool booleanConstant;
+    bool infinityType;
+    int operatorType;
+    int typeofExpr;
+    Identifier* id;
+    PropAccess* propId;
+
+    public:
+
+    Expression()
+    {
+      left=NULL;
+      right=NULL;
+      id=NULL;
+      propId=NULL;
+      typeofNode=NODE_EXPR;
+      overallType=-1;
+    }
+    
+    static Expression* nodeForArithmeticExpr(Expression* left,Expression* right,int arithmeticOperator)
+    {   
+      Expression* arithmeticExpr=new Expression();
+      arithmeticExpr->left=left;
+      arithmeticExpr->right=right;
+      arithmeticExpr->operatorType=arithmeticOperator;
+      arithmeticExpr->typeofExpr=EXPR_ARITHMETIC;
+
+       return arithmeticExpr;
+
+    }
+
+    static Expression* nodeForRelationalExpr(Expression* left,Expression* right,int relationalOperator)
+    {   
+      Expression* relationalExpr=new Expression();
+      relationalExpr->left=left;
+      relationalExpr->right=right;
+      relationalExpr->operatorType=relationalOperator;
+      relationalExpr->typeofExpr=EXPR_RELATIONAL;
+      relationalExpr->overallType=TYPE_BOOL;
+
+       return relationalExpr;
+
+    }
+
+    static Expression* nodeForLogicalExpr(Expression* left,Expression* right,int logicalOperator)
+    {   
+      Expression* logicalExpr=new Expression();
+      logicalExpr->left=left;
+      logicalExpr->right=right;
+      logicalExpr->operatorType=logicalOperator;
+      logicalExpr->typeofExpr=EXPR_LOGICAL;
+      logicalExpr->overallType=TYPE_BOOL;
+      
+
+       return logicalExpr;
+
+    }
+
+    static Expression* nodeForIntegerConstant(long integerValue)
+    {
+       Expression* integerConstantExpr=new Expression();
+       integerConstantExpr->integerConstant=integerValue;
+       integerConstantExpr->typeofExpr=EXPR_INTCONSTANT;
+       return integerConstantExpr;
+
+    }
+
+    static Expression* nodeForDoubleConstant(double doubleValue)
+    {
+       Expression* doubleConstantExpr=new Expression();
+       doubleConstantExpr->floatConstant=doubleValue;
+       doubleConstantExpr->typeofExpr=EXPR_FLOATCONSTANT;
+       return doubleConstantExpr;
+
+    }
+     static Expression* nodeForBooleanConstant(bool boolValue)
+    {
+       Expression* boolExpr=new Expression();
+       boolExpr->booleanConstant=boolValue;
+       boolExpr->typeofExpr=EXPR_BOOLCONSTANT;
+       return boolExpr;
+
+    }
+    
+    
+    
+
+     static Expression* nodeForInfinity(bool infinityValue)
+    {
+       Expression* infinityExpr=new Expression();
+       infinityExpr->infinityType=infinityValue;
+       infinityExpr->typeofExpr=EXPR_INFINITY;
+       return infinityExpr;
+
+    }
+    
+     static Expression* nodeForIdentifier(Identifier* id)
+    {
+       Expression* idExpr=new Expression();
+       idExpr->id=id;
+       idExpr->typeofExpr=EXPR_ID;
+       return idExpr;
+
+    }
+      static Expression* nodeForPropAccess(PropAccess* propId)
+    {
+       Expression* propIdExpr=new Expression();
+       propIdExpr->propId=propId;
+       propIdExpr->typeofExpr=EXPR_PROPID;
+       return propIdExpr;
+
+    }
+
+    bool isArithmetic()
+    {
+      return (typeofExpr==EXPR_ARITHMETIC);
+    }
+     
+    bool isRelational()
+    {
+      return (typeofExpr==EXPR_RELATIONAL);
+    }
+    bool isLogical()
+    {
+      return (typeofExpr==EXPR_LOGICAL);
+    } 
+    bool isIdentifierExpr()
+    {
+      return (typeofExpr==EXPR_ID);
+    }
+    bool isPropIdExpr()
+    {
+      return (typeofExpr==EXPR_PROPID);
+    }
+    bool isLiteral()
+    {
+      return(typeofExpr==EXPR_BOOLCONSTANT||typeofExpr==EXPR_INTCONSTANT||
+                    typeofExpr==EXPR_FLOATCONSTANT);
+    }
+    bool isInfinity()
+    {
+      return (typeofExpr==EXPR_INFINITY);
+    }
+    bool isProcCallExpr()
+     {
+       return (typeofExpr==EXPR_PROCCALL);
+     }
+
+     Expression* getLeft()
+     {
+       return left;
+     } 
+
+     Expression* getRight()
+     {
+       return right;
+     }
+
+
+     int getOperatorType()
+     {
+       return operatorType;
+     }
+
+     long getIntegerConstant()
+     {
+       return integerConstant;
+     }
+     
+     bool getBooleanConstant()
+     {
+       return booleanConstant;
+     }
+     
+
+     double getFloatConstant()
+     {
+       return floatConstant;
+     }
+     
+     bool isPositiveInfinity()
+     {
+       
+       return infinityType;
+
+     }
+
+     
+     void setTypeofExpr(int type)
+     {
+        overallType=type;
+     } 
+
+     int getTypeofExpr()
+     {
+       return overallType;
+     }
+
+     void setExpressionFamily(int exprFamily)
+     {
+
+       typeofExpr=exprFamily;
+     }  
+
+     int getExpressionFamily()
+     {
+       return typeofExpr;
+     }
+
+
+   
+
+
+  };
   class declaration:public statement
   {
     private:
@@ -455,6 +728,8 @@ class statement:public ASTNode
     {     declaration* decl=new declaration();
           decl->type=typeSent;
           decl->identifier=identifierSent;
+          decl->setTypeofNode(NODE_DECL);
+          expression->setTypeofExpr(typeSent->gettypeId());
           decl->exprAssigned=expression;
           return decl;
 
@@ -470,6 +745,11 @@ class statement:public ASTNode
     Expression* getExpressionAssigned()
     {
       return exprAssigned;
+    }
+
+    bool isInitialized()
+    {
+      return (exprAssigned!=NULL);
     }
 
   };
@@ -495,6 +775,7 @@ class statement:public ASTNode
      {
             assignment* assign=new assignment();
             assign->identifier=identifierSent;
+          //  cout<<"ID VALUES"<<identifierSent->getIdentifier()<<"\n";
             assign->exprAssigned=expressionSent;
             assign->lhsType=1;
             assign->setTypeofNode(NODE_ASSIGN);
@@ -509,11 +790,22 @@ class statement:public ASTNode
             assign->propId=propId;
             assign->exprAssigned=expressionSent;
             assign->lhsType=2;
+             assign->setTypeofNode(NODE_ASSIGN);
             return assign;
          
 
      }
+
+     bool lhs_isIdentifier()
+     {
+       return (lhsType==1);
+     }
      
+     bool lhs_isProp()
+     {
+       return (lhsType==2);
+     }
+
      Identifier* getId()
      {
        return identifier;
@@ -632,6 +924,15 @@ class fixedPointStmt:public statement
       return new_fixedPointStmt;
     }
      
+     Expression* getConvergeExpr()
+     {
+       return convergeExpr;
+     }
+
+     statement* getBody()
+     {
+       return body;
+     }
 
 
 };
@@ -745,137 +1046,7 @@ class fixedPointStmt:public statement
   
 
   
-  class Expression:public ASTNode
-  {
-    private:
-    Expression* left;
-    Expression* right;
-    long integerConstant;
-    double doubleConstant;
-    bool booleanConstant;
-    bool infinityType;
-    int operatorType;
-    int typeofExpr;
-    Identifier* id;
-    PropAccess* propId;
-
-    public:
-
-    Expression()
-    {
-      left=NULL;
-      right=NULL;
-      id=NULL;
-      propId=NULL;
-      typeofNode=NODE_EXPR;
-    }
-    
-    static Expression* nodeForArithmeticExpr(Expression* left,Expression* right,int arithmeticOperator)
-    {   
-      Expression* arithmeticExpr=new Expression();
-      arithmeticExpr->left=left;
-      arithmeticExpr->right=right;
-      arithmeticExpr->operatorType=arithmeticOperator;
-      arithmeticExpr->typeofExpr=EXPR_ARITHMETIC;
-
-       return arithmeticExpr;
-
-    }
-
-    static Expression* nodeForRelationalExpr(Expression* left,Expression* right,int relationalOperator)
-    {   
-      Expression* relationalExpr=new Expression();
-      relationalExpr->left=left;
-      relationalExpr->right=right;
-      relationalExpr->operatorType=relationalOperator;
-      relationalExpr->typeofExpr=EXPR_RELATIONAL;
-
-       return relationalExpr;
-
-    }
-
-    static Expression* nodeForLogicalExpr(Expression* left,Expression* right,int logicalOperator)
-    {   
-      Expression* logicalExpr=new Expression();
-      logicalExpr->left=left;
-      logicalExpr->right=right;
-      logicalExpr->operatorType=logicalOperator;
-      logicalExpr->typeofExpr=EXPR_LOGICAL;
-
-       return logicalExpr;
-
-    }
-
-    static Expression* nodeForIntegerConstant(long integerValue)
-    {
-       Expression* integerConstantExpr=new Expression();
-       integerConstantExpr->integerConstant=integerValue;
-       integerConstantExpr->typeofExpr=EXPR_INTCONSTANT;
-       return integerConstantExpr;
-
-    }
-
-    static Expression* nodeForDoubleConstant(double doubleValue)
-    {
-       Expression* doubleConstantExpr=new Expression();
-       doubleConstantExpr->doubleConstant=doubleValue;
-       doubleConstantExpr->typeofExpr=EXPR_DOUBLECONSTANT;
-       return doubleConstantExpr;
-
-    }
-     static Expression* nodeForBooleanConstant(bool boolValue)
-    {
-       Expression* boolExpr=new Expression();
-       boolExpr->booleanConstant=boolValue;
-       boolExpr->typeofExpr=EXPR_BOOLCONSTANT;
-       return boolExpr;
-
-    }
-    
-    
-    
-
-     static Expression* nodeForInfinity(bool infinityValue)
-    {
-       Expression* infinityExpr=new Expression();
-       infinityExpr->infinityType=infinityValue;
-       infinityExpr->typeofExpr=EXPR_INFINITY;
-       return infinityExpr;
-
-    }
-    
-     static Expression* nodeForIdentifier(Identifier* id)
-    {
-       Expression* idExpr=new Expression();
-       idExpr->id=id;
-       idExpr->typeofExpr=EXPR_ID;
-       return idExpr;
-
-    }
-      static Expression* nodeForPropAccess(PropAccess* propId)
-    {
-       Expression* propIdExpr=new Expression();
-       propIdExpr->propId=propId;
-       propIdExpr->typeofExpr=EXPR_PROPID;
-       return propIdExpr;
-
-    }
-
-    /*bool isLiteral()
-    {
-
-    }*/
-     
-     int getTypeOfExpr()
-     {
-       return typeofExpr;
-     }
-
-
-   
-
-
-  };
+  
 
   class proc_callExpr:public Expression
   {
@@ -902,7 +1073,7 @@ class fixedPointStmt:public statement
           procExpr->id2=id2;
           procExpr->methodId=methodId;
           procExpr->argList=argList;
-          
+          procExpr->setExpressionFamily(EXPR_PROCCALL);
           return procExpr;
 
 
