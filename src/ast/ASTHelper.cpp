@@ -8,16 +8,25 @@ using namespace std;
 
 /*TO be implemented. It will contain functions that will be called by action part of Parser  for building the nodes of AST*/
 
-//FrontEndContext *FrontEndContext::instance=0;                                                 
+
+extern FrontEndContext frontEndContext;                                             
 class Util
 {
 
 public:
 
+
+static void addFuncToList(ASTNode* func)
+{ 
+   Function* funcNode=(Function*)func;
+ 
+    frontEndContext.addFuncToList(funcNode);
+}
+
 static ASTNode* createFuncNode(ASTNode* id,list<formalParam*> formalParamList)
 { 
   Identifier* funcId=(Identifier*)id;
-  cout<<"INSIDE FUNC OF"<<funcId->getIdentifier()<<"\n";
+  
   Function* functionNode=Function::createFunctionNode(funcId,formalParamList);
   return functionNode;
    
@@ -26,15 +35,16 @@ static ASTNode* createFuncNode(ASTNode* id,list<formalParam*> formalParamList)
 static void createNewBlock()
 { 
     blockStatement* blockStatementNode=blockStatement::createnewBlock();
-    FrontEndContext::getInstance()->startBlock(blockStatementNode);
+    frontEndContext.startBlock(blockStatementNode);
     
 }
 
 
 static ASTNode* finishBlock()
 {   
-    blockStatement* blockStatementNode=FrontEndContext::getInstance()->getCurrentBlock();
-    FrontEndContext::getInstance()->endBlock();
+     blockStatement* blockStatementNode=frontEndContext.getCurrentBlock();
+      
+    frontEndContext.endBlock();
     
     return blockStatementNode;
    
@@ -44,7 +54,7 @@ static void addToBlock(ASTNode* statementNode)
     if(statementNode!=NULL)
     {   
         statement* nodeForStatement=(statement*)statementNode;
-        blockStatement* currentBlock=FrontEndContext::getInstance()->getCurrentBlock();
+        blockStatement* currentBlock=frontEndContext.getCurrentBlock();
         currentBlock->addStmtToBlock(nodeForStatement);
     }
     
@@ -79,9 +89,10 @@ static argList* createAList(argument* arg)
 
 
 static argList* addToAList(argList* aList,argument* arg)
-{
+{  
     aList->AList.push_front(arg);
     return aList;
+
 }
 
 
@@ -123,7 +134,7 @@ static ASTNode* createAssignedDeclNode(ASTNode* type,ASTNode* id,ASTNode* exprAs
 static ASTNode* createPrimitiveTypeNode(int typeId)
 {  // cout<<"Inside Func";
     Type* typeNode=Type::createForPrimitive(typeId,1);
-    //cout<<"Typeofnode"<<typeNode->gettypeId();
+   
     return typeNode;
 
 }
@@ -169,6 +180,8 @@ static ASTNode* createNodeForProcCallStmt(ASTNode* procCall)
 {
     statement* procCallStmt;
     procCallStmt=proc_callStmt::nodeForCallStmt((Expression*)procCall);
+    bool value=procCallStmt->getTypeofNode()==NODE_PROCCALLSTMT;
+    cout<<"TYPE OF NODE OF STATEMENT"<<value;
     return procCallStmt;
 }
 
@@ -178,6 +191,8 @@ static ASTNode* createNodeForProcCall(ASTNode* proc_callId,list<argument*> argLi
     if(proc_callId->getTypeofNode()==NODE_ID)
     {
       proc_callExprNode=proc_callExpr::nodeForProc_Call(NULL,NULL,(Identifier*)proc_callId,argList);
+     
+      
     }
     if(proc_callId->getTypeofNode()==NODE_PROPACCESS)
     {
@@ -211,13 +226,15 @@ static ASTNode* createNodeForIval(long value)
 }
 static ASTNode* createNodeForFval(double value)
 {
-    Expression* exprIVal=Expression::nodeForDoubleConstant(value);
-    return exprIVal;
+    Expression* exprFVal=Expression::nodeForDoubleConstant(value);
+    return exprFVal;
 }
 static ASTNode* createNodeForBval(bool value)
 {
-    Expression* exprIVal=Expression::nodeForBooleanConstant(value);
-    return exprIVal;
+    Expression* exprBVal=Expression::nodeForBooleanConstant(value);
+    bool check=(exprBVal->getExpressionFamily()==EXPR_BOOLCONSTANT);
+    cout<<"CHECK PASSED "<<check<<"\n";
+    return exprBVal;
 }
 static ASTNode* createNodeForINF(bool infinityFlag)
 {
