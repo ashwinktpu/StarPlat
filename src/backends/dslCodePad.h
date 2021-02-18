@@ -1,4 +1,4 @@
-/*#include<stdio.h>
+#include<stdio.h>
 #include<ctype.h>
 #include<string.h>
 
@@ -19,16 +19,17 @@ class dslCodePad
       outputFile=stdout;
       filePtr=0;
       buffer=new char[1024*2];
-      fileBuffer=new char[1024*1024*64];
+      fileBuffer=new char[1024*1024*1024];
       column=0;
+     // printf("%s","HELLO INSIDE DSLCODEPAD");
 
    }
 
    ~dslCodePad()
    {
        fflush(outputFile);
-       delete[] buffer;
-       delete[] fileBuffer;
+      // delete[] buffer;
+      // delete[] fileBuffer;
    }
 
    void setOutputFile(FILE* f)
@@ -47,7 +48,7 @@ class dslCodePad
 
     }   
 
-   void pushString(char* str)
+   void pushString(const char* str)
    {   int length=strlen(str);
        for(int i=0;i<length;i++)
        {
@@ -55,18 +56,18 @@ class dslCodePad
        }
    }
 
-   void pushstr_newL(char* str)
-   {
-       push(str);
+   void pushstr_newL(const char* str)
+   { // printf("%d HELLO FILEPTR VALUE",filePtr);
+       pushString(str);
        NewLine();
    }
-   void pushstr_space(char* str)
+   void pushstr_space(const char* str)
    {
-       push(str);
+       pushString(str);
        space();
    }
 
-   void pushUpper(char* str)
+   void pushUpper(const char* str)
    {
        int l=strlen(str);
        for(int i=0;i<l;i++)
@@ -92,7 +93,7 @@ class dslCodePad
      buffer[column++]='\0';
      int i=0;
      char temporary_buf[1024*2];
-     fileptr=fileptr+sprintf(&fileBuffer[filePtr],"%s",buffer);
+     filePtr=filePtr+sprintf(&fileBuffer[filePtr],"%s",buffer);
      while(i<filePtr)
      {
          int pointer=0;
@@ -118,14 +119,21 @@ class dslCodePad
          
          column=0;
          filePtr=0;
+         
 
     }
-    void push(char c)
+    void push(const char c)
       { 
-          buffer[column++]=c;
-          
-          if(s=='\n')
+         buffer[column++]=c;
+       /*  if(c=='\n')
           {
+              filePtr+=sprintf(fileBuffer+filePtr,"%s",buffer);
+              column=0;
+          }
+*/
+          
+          if(c =='\n') //to be checked again
+          { // printf("INSIDE CCCCCCCCCC");
              if(buffer[0]=='}')
                 indentation--;
              else if(buffer[0]==')') 
@@ -137,26 +145,26 @@ class dslCodePad
                 fileBuffer[filePtr++]=' '; 
             }
 
-            filePtr=filePtr+sprintf(&fileBuffer[filePtr],"%s",buffer);
+            filePtr+=sprintf(&fileBuffer[filePtr],"%s",buffer);
 
             int i=0;
-            for(i=0;i<filePtr;i++)
+            for(i=0;i<column;i++)
             {
                 if(buffer[i]=='}'||buffer[i]==')')
                   continue;
                 break;  
             }    
             int indentCount=0;
-            for(;i<filePtr;i++)
+            for(;i<column;i++)
             {
                 if(buffer[i]=='{')
                   indentCount++;
                 if(buffer[i]=='(')
-                   indentCount;
+                   indentCount++;
                 if(buffer[i]=='}')
                    indentCount--;
                 if(buffer[i]==')')
-                   indentCount;        
+                   indentCount--;        
 
             }  
 
@@ -168,9 +176,6 @@ class dslCodePad
            column=0;        
 
           }
-
-
-
       }
    
 
@@ -179,4 +184,3 @@ class dslCodePad
 
 
 };
-*/
