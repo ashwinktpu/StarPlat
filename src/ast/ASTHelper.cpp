@@ -8,16 +8,25 @@ using namespace std;
 
 /*TO be implemented. It will contain functions that will be called by action part of Parser  for building the nodes of AST*/
 
-//FrontEndContext *FrontEndContext::instance=0;                                                 
+
+extern FrontEndContext frontEndContext;                                             
 class Util
 {
 
 public:
 
+
+static void addFuncToList(ASTNode* func)
+{ 
+   Function* funcNode=(Function*)func;
+ 
+    frontEndContext.addFuncToList(funcNode);
+}
+
 static ASTNode* createFuncNode(ASTNode* id,list<formalParam*> formalParamList)
 { 
   Identifier* funcId=(Identifier*)id;
-  cout<<"INSIDE FUNC OF"<<funcId->getIdentifier()<<"\n";
+  
   Function* functionNode=Function::createFunctionNode(funcId,formalParamList);
   return functionNode;
    
@@ -26,15 +35,16 @@ static ASTNode* createFuncNode(ASTNode* id,list<formalParam*> formalParamList)
 static void createNewBlock()
 { 
     blockStatement* blockStatementNode=blockStatement::createnewBlock();
-    FrontEndContext::getInstance()->startBlock(blockStatementNode);
+    frontEndContext.startBlock(blockStatementNode);
     
 }
 
 
 static ASTNode* finishBlock()
 {   
-    blockStatement* blockStatementNode=FrontEndContext::getInstance()->getCurrentBlock();
-    FrontEndContext::getInstance()->endBlock();
+     blockStatement* blockStatementNode=frontEndContext.getCurrentBlock();
+      
+    frontEndContext.endBlock();
     
     return blockStatementNode;
    
@@ -44,7 +54,7 @@ static void addToBlock(ASTNode* statementNode)
     if(statementNode!=NULL)
     {   
         statement* nodeForStatement=(statement*)statementNode;
-        blockStatement* currentBlock=FrontEndContext::getInstance()->getCurrentBlock();
+        blockStatement* currentBlock=frontEndContext.getCurrentBlock();
         currentBlock->addStmtToBlock(nodeForStatement);
     }
     
@@ -79,9 +89,10 @@ static argList* createAList(argument* arg)
 
 
 static argList* addToAList(argList* aList,argument* arg)
-{
+{  
     aList->AList.push_front(arg);
     return aList;
+
 }
 
 
@@ -89,13 +100,16 @@ static argList* addToAList(argList* aList,argument* arg)
 static ASTNodeList* addToNList(ASTNodeList* nodeList,ASTNode* node)
 {
     nodeList->ASTNList.push_front(node);
+    
     return nodeList;
+    
 }
 
 static ASTNodeList* createNList(ASTNode* node)
 {
     ASTNodeList* nodeList=new ASTNodeList();
     nodeList->ASTNList.push_back(node);
+   
     return nodeList;
 
     
@@ -123,7 +137,7 @@ static ASTNode* createAssignedDeclNode(ASTNode* type,ASTNode* id,ASTNode* exprAs
 static ASTNode* createPrimitiveTypeNode(int typeId)
 {  // cout<<"Inside Func";
     Type* typeNode=Type::createForPrimitive(typeId,1);
-    //cout<<"Typeofnode"<<typeNode->gettypeId();
+   
     return typeNode;
 
 }
@@ -169,6 +183,8 @@ static ASTNode* createNodeForProcCallStmt(ASTNode* procCall)
 {
     statement* procCallStmt;
     procCallStmt=proc_callStmt::nodeForCallStmt((Expression*)procCall);
+    bool value=procCallStmt->getTypeofNode()==NODE_PROCCALLSTMT;
+    cout<<"TYPE OF NODE OF STATEMENT"<<value;
     return procCallStmt;
 }
 
@@ -178,6 +194,8 @@ static ASTNode* createNodeForProcCall(ASTNode* proc_callId,list<argument*> argLi
     if(proc_callId->getTypeofNode()==NODE_ID)
     {
       proc_callExprNode=proc_callExpr::nodeForProc_Call(NULL,NULL,(Identifier*)proc_callId,argList);
+     
+      
     }
     if(proc_callId->getTypeofNode()==NODE_PROPACCESS)
     {
@@ -204,6 +222,12 @@ static ASTNode* createNodeForLogicalExpr(ASTNode* expr1,ASTNode* expr2,int opera
     Expression* logicalExprNode=Expression::nodeForLogicalExpr((Expression*)expr1,(Expression*)expr2,operatorType);
     return logicalExprNode;
 }
+
+static ASTNode* createNodeForUnaryExpr(ASTNode* expr,int operatorType)
+{
+    Expression* unaryExpr=Expression::nodeForUnaryExpr((Expression*)expr,operatorType);
+    return unaryExpr;
+}
 static ASTNode* createNodeForIval(long value)
 {
     Expression* exprIVal=Expression::nodeForIntegerConstant(value);
@@ -211,13 +235,15 @@ static ASTNode* createNodeForIval(long value)
 }
 static ASTNode* createNodeForFval(double value)
 {
-    Expression* exprIVal=Expression::nodeForDoubleConstant(value);
-    return exprIVal;
+    Expression* exprFVal=Expression::nodeForDoubleConstant(value);
+    return exprFVal;
 }
 static ASTNode* createNodeForBval(bool value)
 {
-    Expression* exprIVal=Expression::nodeForBooleanConstant(value);
-    return exprIVal;
+    Expression* exprBVal=Expression::nodeForBooleanConstant(value);
+    bool check=(exprBVal->getExpressionFamily()==EXPR_BOOLCONSTANT);
+    cout<<"CHECK PASSED "<<check<<"\n";
+    return exprBVal;
 }
 static ASTNode* createNodeForINF(bool infinityFlag)
 {
@@ -238,10 +264,10 @@ static ASTNode* createNodeForId(ASTNode* node)
      return exprForId;
 
 }
-static ASTNode* createNodeForFixedPointStmt(ASTNode* convergeExpr,ASTNode* body)
+static ASTNode* createNodeForFixedPointStmt(ASTNode* fixedPointId,ASTNode* dependentProp,ASTNode* body)
 {
     statement* fixedPointStmtNode;
-    fixedPointStmtNode=fixedPointStmt::createforfixedPointStmt((Expression*)convergeExpr,(blockStatement*)body);
+    fixedPointStmtNode=fixedPointStmt::createforfixedPointStmt((Identifier*)fixedPointId,(Expression*)dependentProp,(blockStatement*)body);
     return fixedPointStmtNode;
 }
 static ASTNode* createNodeForWhileStmt(ASTNode* iterCondition,ASTNode* body)
@@ -262,12 +288,18 @@ static ASTNode* createNodeForIfStmt(ASTNode* iterCondition,ASTNode* thenBody,AST
     ifStmtNode=ifStmt::create_ifStmt((Expression*)iterCondition,(blockStatement*)thenBody,(blockStatement*)elseBody);
     return ifStmtNode;
 }
-static ASTNode* createNodeForForAllStmt(ASTNode* iterator,ASTNode* sourceGraph,ASTNode* extractElemFunc,ASTNode* body,ASTNode* filterExpr,bool isforall)
+static ASTNode* createNodeForForAllStmt(ASTNode* iterator,ASTNode* sourceGraph,ASTNode* extractElemFunc,ASTNode* filterExpr,ASTNode* body,bool isforall)
 {
     statement* forallStmtNode;
     Identifier* id=(Identifier*)iterator;
     Identifier* id1=(Identifier*)sourceGraph;
-
+     Expression* f=NULL;
+    if(filterExpr!=NULL)
+    {
+     f=(Expression*)filterExpr;
+    
+    //cout<<"CHECK FILTER TYPE"<<f->isRelational()<<"\n";
+    }
     forallStmtNode=forallStmt::createforallStmt(id,id1,(proc_callExpr*)extractElemFunc,(statement*)body,(Expression*)filterExpr,isforall);
     return forallStmtNode;
 }
@@ -299,10 +331,10 @@ static ASTNode* createNodeForReductionStmt(ASTNode* leftSide,ASTNode* reductionC
      }
      return reductionStmtNode;
 }
-static ASTNode* createNodeForReductionStmtList(list<ASTNode*> leftList,ASTNode* reductionCallNode,ASTNode* exprVal)
+static ASTNode* createNodeForReductionStmtList(list<ASTNode*> leftList,ASTNode* reductionCallNode,list<ASTNode*>exprList)
 {
     reductionCallStmt* reductionStmtNode;
-    reductionStmtNode=reductionCallStmt::leftList_reducCallStmt(leftList,(reductionCall*)reductionStmtNode,(Expression*)exprVal);
+    reductionStmtNode=reductionCallStmt::leftList_reducCallStmt(leftList,(reductionCall*)reductionCallNode,exprList);
     return reductionStmtNode;
 }
 
