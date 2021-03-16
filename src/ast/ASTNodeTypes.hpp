@@ -3,15 +3,15 @@
 
 #include "ASTNode.hpp"
 #include <string.h>
-#include <list>
+#include<list>
 #include<iostream>
 #include<vector>
 #include "../maincontext/enum_def.hpp"
 
 
+
 using namespace std;
 /*class declaration for each node type. Incomplete at the moment.*/
-
 class Expression;
 class assignment;
 class reductionCall;
@@ -24,11 +24,61 @@ extern vector<Identifier*> graphId;
 
 class argument
 { 
+  private:
+  Expression* expression;
+  assignment* assignExpr;
+  bool expressionflag;
+  bool assign;
+
   public:
-  Expression* expression=NULL;
-  assignment* assignExpr=NULL;
-  bool expressionflag=false;
-  bool assign=false;
+  argument()
+  {
+    expression=NULL;
+    assignExpr=NULL;
+    expressionflag=false;
+    assign=false;
+  }
+  
+  void setAssign(assignment* assign)
+  {
+    assignExpr=assign;
+  }
+  void setExpression(Expression* expr)
+  {
+    expression=expr;
+  }
+  void setAssignFlag()
+  {
+    assign=true;
+  }
+  void setExpressionFlag()
+  {
+    expressionflag=true;
+  }
+  
+  assignment* getAssignExpr()
+  {
+    return assignExpr;
+  }
+  Expression* getExpr()
+  {
+    return expression;
+  }
+
+  bool isAssignExpr()
+  {
+    return assign;
+  }
+
+  bool isExpr()
+  {
+    return expressionflag;
+  }
+
+
+
+
+
 };
 class tempNode
 { 
@@ -65,8 +115,9 @@ class Identifier:public ASTNode
   private:
   
   int accessType;
-   char* identifier;
-
+  char* identifier;
+  TableEntry* idInfo;
+   
   public: 
  
   static Identifier* createIdNode(const char* id)
@@ -91,6 +142,28 @@ class Identifier:public ASTNode
     char* getIdentifier()
    {
      return identifier;
+   }
+
+   void setSymbolInfo(TableEntry* te)
+   {
+     idInfo=te;
+
+   }
+   TableEntry* getSymbolInfo()
+   {
+     return idInfo;
+   }
+
+   Identifier* copy()
+   { 
+     Identifier* copyId;
+     copyId = new Identifier();
+      copyId->identifier=new char[strlen(identifier)+1];
+     strcpy(copyId->identifier,identifier);
+     copyId->accessType=0;
+     copyId->setTypeofNode(NODE_ID);
+     
+     return copyId;
    }
 
 
@@ -133,6 +206,76 @@ class PropAccess:public ASTNode
 
 };
 
+class statement:public ASTNode
+{
+  protected: 
+  string statementType;
+
+  public:
+
+  statement()
+  {
+    statementType="";
+  }
+
+  
+  statement(string statementTypeSent)
+  {
+     statementType=statementTypeSent;
+
+  }
+  
+  string getType()
+  {
+    return statementType;
+  }
+
+
+  
+  
+  
+  };
+  
+  class blockStatement:public statement
+  {
+     private:
+     list<statement*> statements;
+
+     public: 
+     blockStatement()
+     {
+        statementType="BlockStatement";
+        createSymbTab();
+     }
+      
+      static blockStatement* createnewBlock()
+      {
+        blockStatement* newBlock=new blockStatement();
+        newBlock->setTypeofNode(NODE_BLOCKSTMT);
+      //  newBlock->statementType="BlockStaement";
+         return newBlock;
+      }
+
+      void addStmtToBlock(statement* stmt)
+          { 
+            statements.push_back(stmt);
+            stmt->setParent(this);
+            //cout<<stmt->getInt();
+            
+            
+          } 
+      void addToFront(statement* stmt)
+      {
+        statements.push_front(stmt);
+      }        
+      list<statement*> returnStatements()
+      {
+        return statements;
+      }
+
+
+  };
+
 class Function:public ASTNode
 {  
   private:
@@ -142,6 +285,12 @@ class Function:public ASTNode
   blockStatement* blockstmt;
 
   public:
+
+  Function()
+  { functionId=NULL;
+    blockstmt=NULL;
+    createSymbTab();
+  }
 
   static Function* createFunctionNode(Identifier* funcId,list<formalParam*> paramList)
   {
@@ -156,6 +305,7 @@ class Function:public ASTNode
    void setBlockStatement(blockStatement* blockStmtSent)
    {
      blockstmt=blockStmtSent;
+     blockStmtSent->setParent(this);
    }
    
    Identifier* getIdentifier()
@@ -235,6 +385,16 @@ class Type:public ASTNode
     type->typeId=typeIdSent;
     type->rootType=rootTypeSent;
     return type;
+  }
+
+  Type* copy()
+  {  
+     Type* copyType=new Type();
+     copyType->typeId=typeId;
+     copyType->TargetGraph=(this->TargetGraph==NULL)?NULL:this->TargetGraph->copy();
+     copyType->sourceGraph=(this->sourceGraph==NULL)?NULL:this->sourceGraph->copy();
+     copyType->innerTargetType=(this->innerTargetType==NULL)?NULL:this->innerTargetType->copy();
+     return copyType;
   }
   int getRootType()
   {
@@ -360,66 +520,269 @@ class formalParam:public ASTNode
 
 };
 
-class statement:public ASTNode
-{
-  protected: 
-  string statementType;
 
-  public:
-
-  statement()
+  class Expression:public ASTNode
   {
-    statementType="";
-  }
+    private:
+    Expression* left;
+    Expression* right;
+    Expression* unaryExpr;
+    int overallType;
+    long integerConstant;
+    double floatConstant;
+    bool booleanConstant;
+    bool infinityType;
+    int operatorType;
+    int typeofExpr;
+    Identifier* id;
+    PropAccess* propId;
 
-  
-  statement(string statementTypeSent)
-  {
-     statementType=statementTypeSent;
+    public:
 
-  }
-  
-  string getType()
-  {
-    return statementType;
-  }
+    Expression()
+    {
+      left=NULL;
+      right=NULL;
+      id=NULL;
+      propId=NULL;
+      typeofNode=NODE_EXPR;
+      overallType=-1;
+    }
+    
+    static Expression* nodeForArithmeticExpr(Expression* left,Expression* right,int arithmeticOperator)
+    {   
+      Expression* arithmeticExpr=new Expression();
+      arithmeticExpr->left=left;
+      arithmeticExpr->right=right;
+      arithmeticExpr->operatorType=arithmeticOperator;
+      arithmeticExpr->typeofExpr=EXPR_ARITHMETIC;
+      left->parent=arithmeticExpr;
+      right->parent=arithmeticExpr;
+       return arithmeticExpr;
 
+    }
 
-  
-  
-  
-  };
-  
-  class blockStatement:public statement
-  {
-     private:
-     list<statement*> statements;
+    static Expression* nodeForRelationalExpr(Expression* left,Expression* right,int relationalOperator)
+    {   
+      Expression* relationalExpr=new Expression();
+      relationalExpr->left=left;
+      relationalExpr->right=right;
+      relationalExpr->operatorType=relationalOperator;
+      relationalExpr->typeofExpr=EXPR_RELATIONAL;
+      relationalExpr->overallType=TYPE_BOOL;
+      left->parent=relationalExpr;
+      right->parent=relationalExpr;
+      return relationalExpr;
 
-     public: 
-     blockStatement()
-     {
-        statementType="BlockStatement";
-     }
+    }
+
+    static Expression* nodeForLogicalExpr(Expression* left,Expression* right,int logicalOperator)
+    {   
+      Expression* logicalExpr=new Expression();
+      logicalExpr->left=left;
+      logicalExpr->right=right;
+      logicalExpr->operatorType=logicalOperator;
+      logicalExpr->typeofExpr=EXPR_LOGICAL;
+      logicalExpr->overallType=TYPE_BOOL;
+      left->parent=logicalExpr;
+      right->parent=logicalExpr;
       
-      static blockStatement* createnewBlock()
-      {
-        blockStatement* newBlock=new blockStatement();
-        newBlock->setTypeofNode(NODE_BLOCKSTMT);
-      //  newBlock->statementType="BlockStaement";
-         return newBlock;
-      }
 
-      void addStmtToBlock(statement* stmt)
-          { 
-            statements.push_back(stmt);
-            //cout<<stmt->getInt();
-            
-            
-          }     
-      list<statement*> returnStatements()
-      {
-        return statements;
-      }
+       return logicalExpr;
+
+    }
+
+    static Expression* nodeForUnaryExpr(Expression* expr,int operatorType)
+    {
+      Expression* unaryExpression=new Expression();
+      unaryExpression->unaryExpr=expr;
+      unaryExpression->operatorType=operatorType;
+      unaryExpression->typeofExpr=EXPR_UNARY;
+      expr->parent=unaryExpression;
+      
+      return unaryExpression;
+    }
+
+    static Expression* nodeForIntegerConstant(long integerValue)
+    {
+       Expression* integerConstantExpr=new Expression();
+       integerConstantExpr->integerConstant=integerValue;
+       integerConstantExpr->typeofExpr=EXPR_INTCONSTANT;
+       return integerConstantExpr;
+
+    }
+
+    static Expression* nodeForDoubleConstant(double doubleValue)
+    {
+       Expression* doubleConstantExpr=new Expression();
+       doubleConstantExpr->floatConstant=doubleValue;
+       doubleConstantExpr->typeofExpr=EXPR_FLOATCONSTANT;
+       return doubleConstantExpr;
+
+    }
+     static Expression* nodeForBooleanConstant(bool boolValue)
+    {
+       Expression* boolExpr=new Expression();
+       boolExpr->booleanConstant=boolValue;
+       boolExpr->typeofExpr=EXPR_BOOLCONSTANT;
+       return boolExpr;
+
+    }
+    
+    
+    
+
+     static Expression* nodeForInfinity(bool infinityValue)
+    {
+       Expression* infinityExpr=new Expression();
+       infinityExpr->infinityType=infinityValue;
+       infinityExpr->typeofExpr=EXPR_INFINITY;
+       return infinityExpr;
+
+    }
+    
+     static Expression* nodeForIdentifier(Identifier* id)
+    {
+       Expression* idExpr=new Expression();
+       idExpr->id=id;
+       idExpr->typeofExpr=EXPR_ID;
+       return idExpr;
+
+    }
+      static Expression* nodeForPropAccess(PropAccess* propId)
+    {
+       Expression* propIdExpr=new Expression();
+       propIdExpr->propId=propId;
+       propIdExpr->typeofExpr=EXPR_PROPID;
+       return propIdExpr;
+
+    }
+    void alterBoolValue()
+    {
+      booleanConstant=!booleanConstant;
+    }
+    bool isBooleanLiteral()
+    {
+      return (typeofExpr==EXPR_BOOLCONSTANT);
+    }
+    bool isArithmetic()
+    {
+      return (typeofExpr==EXPR_ARITHMETIC);
+    }
+     
+    bool isRelational()
+    {
+      return (typeofExpr==EXPR_RELATIONAL);
+    }
+    bool isLogical()
+    {
+      return (typeofExpr==EXPR_LOGICAL);
+    } 
+    bool isUnary()
+    {
+      return (typeofExpr==EXPR_UNARY);
+    }
+
+    bool isIdentifierExpr()
+    {
+      return (typeofExpr==EXPR_ID);
+    }
+    bool isPropIdExpr()
+    {
+      return (typeofExpr==EXPR_PROPID);
+    }
+    bool isLiteral()
+    {
+      return(typeofExpr==EXPR_BOOLCONSTANT||typeofExpr==EXPR_INTCONSTANT||
+                    typeofExpr==EXPR_FLOATCONSTANT);
+    }
+    bool isInfinity()
+    {
+      return (typeofExpr==EXPR_INFINITY);
+    }
+    bool isProcCallExpr()
+     {
+       return (typeofExpr==EXPR_PROCCALL);
+     }
+
+     Expression* getUnaryExpr()
+     {
+       return unaryExpr;
+     }
+
+     Expression* getLeft()
+     {
+       return left;
+     } 
+
+     Expression* getRight()
+     {
+       return right;
+     }
+
+     Identifier* getId()
+     {
+       return id;
+     }
+
+     PropAccess* getPropId()
+     {
+       return propId;
+     }
+
+
+     int getOperatorType()
+     {
+       return operatorType;
+     }
+
+     long getIntegerConstant()
+     {
+       return integerConstant;
+     }
+     
+     bool getBooleanConstant()
+     {
+       return booleanConstant;
+     }
+     
+
+     double getFloatConstant()
+     {
+       return floatConstant;
+     }
+     
+     bool isPositiveInfinity()
+     {
+       
+       return infinityType;
+
+     }
+
+     
+     void setTypeofExpr(int type)
+     {
+        overallType=type;
+     } 
+
+     int getTypeofExpr()
+     {
+       return overallType;
+     }
+
+     void setExpressionFamily(int exprFamily)
+     {
+
+       typeofExpr=exprFamily;
+     }  
+
+     int getExpressionFamily()
+     {
+       return typeofExpr;
+     }
+
+
+   
 
 
   };
@@ -447,6 +810,8 @@ class statement:public ASTNode
           decl->type=typeSent;
           decl->identifier=identifierSent;
           decl->setTypeofNode(NODE_DECL);
+          identifierSent->setParent(decl);
+          typeSent->setParent(decl);
          // decl->statementType="declaration";
           return decl;
     }
@@ -455,7 +820,12 @@ class statement:public ASTNode
     {     declaration* decl=new declaration();
           decl->type=typeSent;
           decl->identifier=identifierSent;
+          decl->setTypeofNode(NODE_DECL);
+          expression->setTypeofExpr(typeSent->gettypeId());
           decl->exprAssigned=expression;
+          typeSent->setParent(decl);
+          identifierSent->setParent(decl);
+          expression->setParent(decl);
           return decl;
 
     }
@@ -470,6 +840,11 @@ class statement:public ASTNode
     Expression* getExpressionAssigned()
     {
       return exprAssigned;
+    }
+
+    bool isInitialized()
+    {
+      return (exprAssigned!=NULL);
     }
 
   };
@@ -495,9 +870,12 @@ class statement:public ASTNode
      {
             assignment* assign=new assignment();
             assign->identifier=identifierSent;
+          //  cout<<"ID VALUES"<<identifierSent->getIdentifier()<<"\n";
             assign->exprAssigned=expressionSent;
             assign->lhsType=1;
             assign->setTypeofNode(NODE_ASSIGN);
+            identifierSent->setParent(assign);
+            expressionSent->setParent(assign);
           //  cout<<"TYPEASSIGN="<<assign->getType();
             return assign;
          
@@ -509,11 +887,24 @@ class statement:public ASTNode
             assign->propId=propId;
             assign->exprAssigned=expressionSent;
             assign->lhsType=2;
+             assign->setTypeofNode(NODE_ASSIGN);
+             propId->setParent(assign);
+             expressionSent->setParent(assign);
             return assign;
          
 
      }
+
+     bool lhs_isIdentifier()
+     {
+       return (lhsType==1);
+     }
      
+     bool lhs_isProp()
+     {
+       return (lhsType==2);
+     }
+
      Identifier* getId()
      {
        return identifier;
@@ -554,6 +945,8 @@ class whileStmt:public statement
       new_whileStmt->iterCondition=iterConditionSent;
       new_whileStmt->body=bodySent;
       new_whileStmt->setTypeofNode(NODE_WHILESTMT);
+      iterConditionSent->setParent(new_whileStmt);
+      bodySent->setParent(new_whileStmt);
       return new_whileStmt;
     }
 
@@ -589,6 +982,8 @@ class whileStmt:public statement
       new_dowhileStmt->iterCondition=iterConditionSent;
       new_dowhileStmt->body=bodySent;
       new_dowhileStmt->setTypeofNode(NODE_DOWHILESTMT);
+      iterConditionSent->setParent(new_dowhileStmt);
+      bodySent->setParent(new_dowhileStmt);
       return new_dowhileStmt;
     }
 
@@ -610,28 +1005,47 @@ class fixedPointStmt:public statement
   {
      
     private:
-    Expression* convergeExpr;
+    Expression* dependentProp;
+    Identifier* fixedPointId;
     statement* body;
     
     public:
     fixedPointStmt()
     { 
-      convergeExpr=NULL;
+      dependentProp=NULL;
+      fixedPointId=NULL;
       body=NULL;
       statementType="FixedPointStmt";
      
      
     }
 
-    static fixedPointStmt* createforfixedPointStmt(Expression* convergeExpr,statement* body)
+    static fixedPointStmt* createforfixedPointStmt(Identifier* fixedPointIdSent,Expression* dependentPropSent,statement* body)
     { 
       fixedPointStmt* new_fixedPointStmt=new fixedPointStmt();
-      new_fixedPointStmt->convergeExpr=convergeExpr;
+      new_fixedPointStmt->fixedPointId=fixedPointIdSent;
+      new_fixedPointStmt->dependentProp=dependentPropSent;
       new_fixedPointStmt->body=body;
       new_fixedPointStmt->setTypeofNode(NODE_FIXEDPTSTMT);
+      fixedPointIdSent->setParent(new_fixedPointStmt);
+      dependentPropSent->setParent(new_fixedPointStmt);
+      body->setParent(new_fixedPointStmt);
       return new_fixedPointStmt;
     }
      
+     Expression* getDependentProp()
+     {
+       return dependentProp;
+     }
+     
+     Identifier* getFixedPointId()
+     {
+       return fixedPointId;
+     }
+     statement* getBody()
+     {
+       return body;
+     }
 
 
 };
@@ -660,6 +1074,10 @@ class fixedPointStmt:public statement
       new_ifStmt->ifBody=ifBodySent;
       new_ifStmt->thenBody=thenBodySent;
       new_ifStmt->setTypeofNode(NODE_IFSTMT);
+      condition->setParent(new_ifStmt);
+      ifBodySent->setParent(new_ifStmt);
+      if(thenBodySent!=NULL)
+      thenBodySent->setParent(new_ifStmt);
 
       return new_ifStmt;
     }
@@ -701,6 +1119,9 @@ class fixedPointStmt:public statement
       new_revBFS->filterExpr=filterExpr;
       new_revBFS->body=body;
       new_revBFS->setTypeofNode(NODE_ITRRBFS);
+      booleanExpr->setParent(new_revBFS);
+      filterExpr->setParent(new_revBFS);
+      body->setParent(new_revBFS);
       return new_revBFS;
     }
 
@@ -737,6 +1158,7 @@ class fixedPointStmt:public statement
         new_iterBFS->body=body;
         new_iterBFS->revBFS=revBFS;
         new_iterBFS->setTypeofNode(NODE_ITRBFS);
+        body->setParent(new_iterBFS);
         return new_iterBFS;
       }
 
@@ -745,137 +1167,7 @@ class fixedPointStmt:public statement
   
 
   
-  class Expression:public ASTNode
-  {
-    private:
-    Expression* left;
-    Expression* right;
-    long integerConstant;
-    double doubleConstant;
-    bool booleanConstant;
-    bool infinityType;
-    int operatorType;
-    int typeofExpr;
-    Identifier* id;
-    PropAccess* propId;
-
-    public:
-
-    Expression()
-    {
-      left=NULL;
-      right=NULL;
-      id=NULL;
-      propId=NULL;
-      typeofNode=NODE_EXPR;
-    }
-    
-    static Expression* nodeForArithmeticExpr(Expression* left,Expression* right,int arithmeticOperator)
-    {   
-      Expression* arithmeticExpr=new Expression();
-      arithmeticExpr->left=left;
-      arithmeticExpr->right=right;
-      arithmeticExpr->operatorType=arithmeticOperator;
-      arithmeticExpr->typeofExpr=EXPR_ARITHMETIC;
-
-       return arithmeticExpr;
-
-    }
-
-    static Expression* nodeForRelationalExpr(Expression* left,Expression* right,int relationalOperator)
-    {   
-      Expression* relationalExpr=new Expression();
-      relationalExpr->left=left;
-      relationalExpr->right=right;
-      relationalExpr->operatorType=relationalOperator;
-      relationalExpr->typeofExpr=EXPR_RELATIONAL;
-
-       return relationalExpr;
-
-    }
-
-    static Expression* nodeForLogicalExpr(Expression* left,Expression* right,int logicalOperator)
-    {   
-      Expression* logicalExpr=new Expression();
-      logicalExpr->left=left;
-      logicalExpr->right=right;
-      logicalExpr->operatorType=logicalOperator;
-      logicalExpr->typeofExpr=EXPR_LOGICAL;
-
-       return logicalExpr;
-
-    }
-
-    static Expression* nodeForIntegerConstant(long integerValue)
-    {
-       Expression* integerConstantExpr=new Expression();
-       integerConstantExpr->integerConstant=integerValue;
-       integerConstantExpr->typeofExpr=EXPR_INTCONSTANT;
-       return integerConstantExpr;
-
-    }
-
-    static Expression* nodeForDoubleConstant(double doubleValue)
-    {
-       Expression* doubleConstantExpr=new Expression();
-       doubleConstantExpr->doubleConstant=doubleValue;
-       doubleConstantExpr->typeofExpr=EXPR_DOUBLECONSTANT;
-       return doubleConstantExpr;
-
-    }
-     static Expression* nodeForBooleanConstant(bool boolValue)
-    {
-       Expression* boolExpr=new Expression();
-       boolExpr->booleanConstant=boolValue;
-       boolExpr->typeofExpr=EXPR_BOOLCONSTANT;
-       return boolExpr;
-
-    }
-    
-    
-    
-
-     static Expression* nodeForInfinity(bool infinityValue)
-    {
-       Expression* infinityExpr=new Expression();
-       infinityExpr->infinityType=infinityValue;
-       infinityExpr->typeofExpr=EXPR_INFINITY;
-       return infinityExpr;
-
-    }
-    
-     static Expression* nodeForIdentifier(Identifier* id)
-    {
-       Expression* idExpr=new Expression();
-       idExpr->id=id;
-       idExpr->typeofExpr=EXPR_ID;
-       return idExpr;
-
-    }
-      static Expression* nodeForPropAccess(PropAccess* propId)
-    {
-       Expression* propIdExpr=new Expression();
-       propIdExpr->propId=propId;
-       propIdExpr->typeofExpr=EXPR_PROPID;
-       return propIdExpr;
-
-    }
-
-    /*bool isLiteral()
-    {
-
-    }*/
-     
-     int getTypeOfExpr()
-     {
-       return typeofExpr;
-     }
-
-
-   
-
-
-  };
+  
 
   class proc_callExpr:public Expression
   {
@@ -902,7 +1194,7 @@ class fixedPointStmt:public statement
           procExpr->id2=id2;
           procExpr->methodId=methodId;
           procExpr->argList=argList;
-          
+          procExpr->setExpressionFamily(EXPR_PROCCALL);
           return procExpr;
 
 
@@ -995,7 +1287,9 @@ class fixedPointStmt:public statement
       new_forallStmt->extractElemFunc=extractElemFunc;
       new_forallStmt->body=body;
       new_forallStmt->filterExpr=filterExpr;
+    //  cout<<"FILTEREXPR TYPE IN FORALL"<<filterExpr->getTypeofExpr();
       new_forallStmt->isforall=isforall;
+      body->setParent(new_forallStmt);
       return new_forallStmt;
     }
     static forallStmt* createforForStmt(Identifier* iterator,Identifier* source,statement* body,bool isforall)
@@ -1005,6 +1299,7 @@ class fixedPointStmt:public statement
       new_forallStmt->source=source;
       new_forallStmt->body=body;
       new_forallStmt->isforall=isforall;
+      body->setParent(new_forallStmt);
       return new_forallStmt;
     }
      static forallStmt* id_createforForStmt(Identifier* iterator,Identifier* source,statement* body,bool isforall)
@@ -1015,6 +1310,7 @@ class fixedPointStmt:public statement
       new_forallStmt->body=body;
       new_forallStmt->isforall=isforall;
       new_forallStmt->isSourceId=true;
+      body->setParent(new_forallStmt);
       return new_forallStmt;
     }
    
@@ -1025,7 +1321,66 @@ class fixedPointStmt:public statement
       new_forallStmt->sourceProp=source;
       new_forallStmt->body=body;
       new_forallStmt->isforall=isforall;
+      body->setParent(new_forallStmt);
       return new_forallStmt;
+    }
+
+    bool isForall()
+    {
+      return isforall;
+    }
+
+    proc_callExpr* getExtractElementFunc()
+    {
+       return extractElemFunc;
+    }
+
+    Identifier* getIterator()
+    {
+      return iterator;
+    }
+
+    PropAccess* getPropSource()
+    {
+      return sourceProp;
+    }
+
+    Identifier* getSource()
+    {
+      return source;
+    }
+   
+    Identifier* getSourceGraph()
+    {
+      return sourceGraph;
+    }
+
+    bool isSourceField()
+    {
+      return (!isSourceId);
+    }
+    
+    bool isSourceProcCall()
+    {
+      return (extractElemFunc!=NULL);
+    }
+    
+    bool hasFilterExpr()
+    {
+      return (filterExpr!=NULL);
+    }
+
+    statement* getBody()
+    {
+      return body;
+    }
+    void setBody(statement* bodySent)
+    {
+       body=bodySent;
+    }
+    Expression* getfilterExpr()
+    {
+      return filterExpr;
     }
 
 
@@ -1044,6 +1399,7 @@ class fixedPointStmt:public statement
      static reductionCall* nodeForReductionCall(int reduceType,list<argument*> argList)
      {
        reductionCall* reduceC=new reductionCall();
+      // cout<<"REDUCTION OPERATION TYPE "<<(reduceType==REDUCE_MIN);
        reduceC->reductionType=reduceType;
        reduceC->argList=argList;
        return reduceC;
@@ -1067,8 +1423,9 @@ class reductionCallStmt:public statement
      Identifier* id;
      PropAccess* propAccessId;
      list<ASTNode*> leftList;
+     list<ASTNode*> exprList;
      reductionCall* reducCall;
-     Expression* exprVal;
+    // Expression* exprVal;
      int lhsType;
      
      public:
@@ -1077,7 +1434,7 @@ class reductionCallStmt:public statement
        id=NULL;
        propAccessId=NULL;
        reducCall=NULL;
-       exprVal=NULL;
+      // exprVal=NULL;
        typeofNode=NODE_REDUCTIONCALLSTMT;
      }
 
@@ -1099,13 +1456,14 @@ class reductionCallStmt:public statement
        return reducCallStmtNode;
      }
       
-     static reductionCallStmt* leftList_reducCallStmt(list<ASTNode*> llist,reductionCall* reducCall,Expression* exprVal)
-     {
+     static reductionCallStmt* leftList_reducCallStmt(list<ASTNode*> llist,reductionCall* reducCall,list<ASTNode*> exprListSent)
+     { 
+      // cout<<"REDUC CALL TYPE "<<(reducCall->getReductionType()==REDUCE_MIN)<<"\n";
        reductionCallStmt* reducCallStmtNode=new reductionCallStmt();
        reducCallStmtNode->leftList=llist;
        reducCallStmtNode->reducCall=reducCall;
        reducCallStmtNode->lhsType=3;
-       reducCallStmtNode->exprVal=exprVal;
+       reducCallStmtNode->exprList=exprListSent;
        return reducCallStmtNode;
      }
     
@@ -1114,6 +1472,10 @@ class reductionCallStmt:public statement
         return lhsType;
 
       }
+    bool isLeftIdentifier()
+    {
+      return (id!=NULL);
+    }  
 
     reductionCall* getReducCall()
     {
@@ -1130,13 +1492,54 @@ class reductionCallStmt:public statement
        return propAccessId;
         
     }
+     bool isListInvolved()
+     {
+       return (exprList.size()!=0);
+     }
+
     list<ASTNode*> getLeftList()
     {
       return leftList;
     }
-    Expression* getExprVal()
+    list<ASTNode*> getRightList()
     {
-      return exprVal;
+      return exprList;
+    }
+
+    bool isTargetId()
+    {
+      ASTNode* node=leftList.front();
+      return (node->getTypeofNode()==NODE_ID);
+      
+    }
+    bool isTargetPropId()
+    {
+      ASTNode* node=leftList.front();
+      return (node->getTypeofNode()==NODE_PROPACCESS);
+    }
+
+    Identifier* getTargetId()
+    {
+       ASTNode* node=leftList.front();
+       Identifier* targetId=(Identifier*)node;
+       return targetId;
+    }
+
+    PropAccess* getTargetPropId()
+    {
+      ASTNode* node=leftList.front();
+      PropAccess* targetPropId=(PropAccess*)node;
+      return targetPropId;
+
+    }
+    Identifier* getAssignedId()
+    {
+      ASTNode* node=leftList.front();
+      if(node->getTypeofNode()==NODE_ID)
+          return (Identifier*)node;
+      else
+         return ((PropAccess*)node)->getIdentifier2();
+
     }
 
 

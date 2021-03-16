@@ -5,7 +5,7 @@
 	#include <stdlib.h>
 	#include <stdbool.h>
     #include "includeHeader.hpp"
-	//#include "y.tab.h"
+	//#include "../symbolutil/SymbolTableBuilder.cpp"
      
 	void yyerror(char *);
 	int yylex(void);
@@ -16,11 +16,12 @@
 	int num = 0;
 	vector<Identifier*> graphId;
 	extern char *yytext;
-	extern SymbolTable* symbTab;
-	FrontEndContext *FrontEndContext::instance=0;
+	//extern SymbolTable* symbTab;
+	FrontEndContext frontEndContext;
     //symbTab=new SymbolTable();
 	//symbolTableList.push_back(new SymbolTable());
 %}
+
 
 /* This is the yacc file in use for the DSL. The action part needs to be modified completely*/
 
@@ -60,12 +61,12 @@
 %type <node> primitive graph collections property
 %type <node> id leftSide rhs expression oid val boolean_expr tid id1
 %type <node> bfs_abstraction filterExpr reverse_abstraction
-%type <nodeList> leftList
+%type <nodeList> leftList rightList
 %type <node> iteration_cf selection_cf
 %type <node> reductionCall
 %type <aList> arg_list
 %type <ival> reduction_op
-%type <temporary>  rightList
+
 
 
 
@@ -85,19 +86,31 @@
  
 
 %%
-program: function_def { };
+program:  
+        | program function_def {/* printf("LIST SIZE %d",frontEndContext.getFuncList().size())  ;*/ };
 
-function_def: function_data  function_body  { };
+function_def: function_data  function_body  { 
+	                                           Function* func=(Function*)$1;
+                                               blockStatement* block=(blockStatement*)$2;
+                                              func->setBlockStatement(block);
+											   Util::addFuncToList(func);
+											    };
 
-function_data: T_FUNC id '(' paramList ')' { //Identifier* id=(Identifier*)$2;
-                                             //printf("FUNC NAME %s",id->getIdentifier());
-	                                         $$=Util::createFuncNode($2,$4->PList);};
+function_data: T_FUNC id '(' paramList ')' { 
+										   $$=Util::createFuncNode($2,$4->PList);
+
+	                                      };
 
 paramList: param {$$=Util::createPList($1);};
-               | param ',' paramList {$$=Util::addToPList($3,$1); };
+               | param ',' paramList {$$=Util::addToPList($3,$1); 
+			                           };
 
 param : type1 id {  //Identifier* id=(Identifier*)Util::createIdentifierNode($2);
-                   
+                        Type* type=(Type*)$1;
+	                     Identifier* id=(Identifier*)$2;
+						 
+						 if(type->isGraphType())
+						    graphId.push_back(id);
 					printf("\n");
                     $$=Util::createParamNode($1,$2); } ;
                | type2 id { // Identifier* id=(Identifier*)Util::createIdentifierNode($2);
@@ -144,13 +157,13 @@ declaration : type1 id   {
                          $$=Util::createNormalDeclNode($1,$2);};
 	| type1 id '=' rhs  {//Identifier* id=(Identifier*)Util::createIdentifierNode($2);
 	                    
-	                    $$=Util::createAssignedDeclNode($1,$1,$4);};
+	                    $$=Util::createAssignedDeclNode($1,$2,$4);};
 	| type2 id  {//Identifier* id=(Identifier*)Util::createIdentifierNode($2);
 	            
-                         $$=Util::createNormalDeclNode($1,$1); };
+                         $$=Util::createNormalDeclNode($1,$2); };
 	| type2 id '=' rhs {//Identifier* id=(Identifier*)Util::createIdentifierNode($2);
 	                   
-	                    $$=Util::createAssignedDeclNode($1,$1,$4);};
+	                    $$=Util::createAssignedDeclNode($1,$2,$4);};
 
 type1: primitive {$$=$1; };
 	| graph {$$=$1;};
@@ -198,19 +211,23 @@ expression : proc_call { $$=$1;};
 			 | expression '>' expression{$$=Util::createNodeForRelationalExpr($1,$3,OPERATOR_GT);};
 			 | expression T_EQ_OP expression{$$=Util::createNodeForRelationalExpr($1,$3,OPERATOR_EQ);};
              | expression T_NE_OP expression{$$=Util::createNodeForRelationalExpr($1,$3,OPERATOR_NE);};
-		| '(' expression ')' {$$=$2;};
+			 | '!'expression {$$=Util::createNodeForUnaryExpr($2,OPERATOR_NOT);}
+		     | '(' expression ')' {$$=$2;printf("INSIDE EXPR");};
 	         | val {$$=$1;};
 			 | leftSide { $$=Util::createNodeForId($1);};
 
-proc_call : leftSide '(' arg_list ')' {printf("testproc\n"); $$=Util::createNodeForProcCall($1,$3->AList); };
+proc_call : leftSide '(' arg_list ')' {printf("testproc\n"); 
+                                       
+                                       $$=Util::createNodeForProcCall($1,$3->AList); 
+
+									    };
 		
 
 
 
-val : INT_NUM { 
-                $$=Util::createNodeForIval($1); };
+val : INT_NUM { $$=Util::createNodeForIval($1); };
 	| FLOAT_NUM {$$=Util::createNodeForFval($1);};
-	| BOOL_VAL {$$=Util::createNodeForBval($1);};
+	| BOOL_VAL { $$=Util::createNodeForBval($1);};
 	| T_INF {$$=Util::createNodeForINF(true);};
 	| T_P_INF {$$=Util::createNodeForINF(true);};
 	| T_N_INF {$$=Util::createNodeForINF(false);};
@@ -218,10 +235,11 @@ val : INT_NUM {
 control_flow : selection_cf { $$=$1; };
               | iteration_cf { $$=$1; };
 
-iteration_cf : T_FIXEDPOINT T_UNTIL '(' boolean_expr ')' blockstatements { $$=Util::createNodeForFixedPointStmt($4,$6);};
+iteration_cf : T_FIXEDPOINT T_UNTIL '(' id ':' expression ')' blockstatements { $$=Util::createNodeForFixedPointStmt($4,$6,$8);};
 		   | T_WHILE '(' boolean_expr')' blockstatements {$$=Util::createNodeForWhileStmt($3,$5); };
 		   | T_DO blockstatements T_WHILE '(' boolean_expr ')' {$$=Util::createNodeForDoWhileStmt($5,$2);  };
-		| T_FORALL '(' id T_IN id '.' proc_call filterExpr')'  blockstatements {$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,true);};
+		| T_FORALL '(' id T_IN id '.' proc_call filterExpr')'  blockstatements { 
+																				$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,true);};
 		| T_FOR '(' id T_IN leftSide ')' blockstatements {$$=Util::createNodeForForStmt($3,$5,$7,false);};
 		| T_FOR '(' id T_IN id '.' proc_call  filterExpr')' blockstatements {$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,false);};
 
@@ -235,16 +253,21 @@ selection_cf : T_IF '(' boolean_expr ')' blockstatements { $$=Util::createNodeFo
 
 
 reduction : leftSide '=' reductionCall { $$=Util::createNodeForReductionStmt($1,$3) ;}
-		   |'<' leftList '>' '=' '<' rightList '>'  {$$=Util::createNodeForReductionStmtList($2->ASTNList,$6->reducCall,$6->exprVal);};
+		   |'<' leftList '>' '=' '<' reductionCall ',' rightList '>'  { reductionCall* reduc=(reductionCall*)$6;
+		                                                               $$=Util::createNodeForReductionStmtList($2->ASTNList,reduc,$8->ASTNList);};
 
-leftList :  leftSide ',' leftList { $$=Util::addToNList($3,$1);};
+leftList :  leftSide ',' leftList { $$=Util::addToNList($3,$1);
+                                         };
 		 | leftSide { $$=Util::createNList($1);};
 
-rightList : reductionCall ',' val { $$=new tempNode();
+rightList : val ',' rightList { $$=Util::addToNList($3,$1);};
+          | val    { $$=Util::createNList($1);};
+
+            /*reductionCall ',' val { $$=new tempNode();
 	                                $$->reducCall=(reductionCall*)$1;
                                     $$->exprVal=(Expression*)$3; };
           | reductionCall { 
-			                $$->reducCall=(reductionCall*)$1;} ;
+			                $$->reducCall=(reductionCall*)$1;} ;*/
 
 reductionCall : reduction_op '(' arg_list ')' {$$=Util::createNodeforReductionCall($1,$3->AList);} ;
 
@@ -258,32 +281,43 @@ leftSide : id { $$=$1; };
          | oid { $$=$1; };
          | tid {$$ = $1; };
 
-arg_list :    {printf("No args\n");argument* a1=new argument();
-		                // a1->expression=(Expression*)$1;
-				//		 a1->expressionflag=true;
-						  $$=Util::createAList(a1);};
-						  
+arg_list :    {printf("No args\n");
+                 argList* aList=new argList();
+				 $$=aList;  };
+		      
 		|assignment ',' arg_list {printf("test3\n");argument* a1=new argument();
-		                 a1->assignExpr=(assignment*)$3;
-						  a1->assign=true;
-						 $$=Util::addToAList($3,a1);printf("test4\n");
-                                 };
+		                          assignment* assign=(assignment*)$1;
+		                     a1->setAssign(assign);
+							 a1->setAssignFlag();
+		                 //a1->assignExpr=(assignment*)$1;
+						 // a1->assign=true;
+						  $$=Util::addToAList($3,a1);
+						  for(argument* arg:$$->AList)
+						  {
+							  printf("VALUE OF ARG %d",arg->getAssignExpr());
+						  }
+						  printf("test4\n");
+                          };
 
 
 	       |   expression ',' arg_list   {argument* a1=new argument();
-		                                a1->expression=(Expression*)$3;
-						               
-										a1->expressionflag=true;
+		                                Expression* expr=(Expression*)$1;
+										a1->setExpression(expr);
+										a1->setExpressionFlag();
+						               // a1->expressionflag=true;
 										 $$=Util::addToAList($3,a1);
 						                };
 	       | expression {argument* a1=new argument();
-		                 a1->expression=(Expression*)$1;
-						 a1->expressionflag=true;
+		                 Expression* expr=(Expression*)$1;
+						 a1->setExpression(expr);
+						a1->setExpressionFlag();
 						  $$=Util::createAList(a1); };
 	       | assignment { printf("test1\n");argument* a1=new argument();
-		                  a1->assignExpr=(assignment*)$1;
-						  a1->assign=true;
-						   $$=Util::createAList(a1);printf("test2\n");};
+		                   assignment* assign=(assignment*)$1;
+		                     a1->setAssign(assign);
+							 a1->setAssignFlag();
+						   $$=Util::createAList(a1);printf("test2\n");
+						   };
 
 
 bfs_abstraction	: T_BFS '(' id ':' T_FROM id ')' filterExpr blockstatements reverse_abstraction{$$=Util::createIterateInBFSNode($3,$6,$8,$9,$10) ;};
@@ -320,9 +354,13 @@ void yyerror(char *s) {
 }
 
 
-int main(int argc,char **argv) {
+int main(int argc,char **argv) 
+{
 	
   
+   dsl_cpp_generator cpp_backend;
+   SymbolTableBuilder stBuilder;
+   
    FILE    *fd;
 
     if (argc>1)
@@ -330,6 +368,11 @@ int main(int argc,char **argv) {
 	else 
 	  yyin=stdin;
 	yyparse();
+  // printf("%d SIZE OF FUNCLIST",frontEndContext.getFuncList().size()); 
+  // printf("GRAPH ID %s",graphId[0]->getIdentifier());
+    stBuilder.buildST(frontEndContext.getFuncList());
+	cpp_backend.generate();
+
 
 	return 0;   
 	 
