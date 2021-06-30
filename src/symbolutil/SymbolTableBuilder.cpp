@@ -19,6 +19,45 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
 
  }
 
+ void addPropToSymbolTE(SymbolTable* sTab,Identifier* id,std::list<argument*> argList)
+ {
+     assert(id!=NULL);
+     assert(id->getIdentifier()!=NULL);
+     TableEntry* tableEntry=sTab->findEntryInST(id);
+     Type* type = tableEntry->getType();
+     for(argument* arg:argList)
+     {  
+         assert(arg->isAssignExpr());
+         if(arg->isAssignExpr())
+         {
+             assignment* assign=(assignment*)arg->getAssignExpr();
+             type->addToPropList(assign->getId());
+         }
+     }
+
+
+ }
+
+  declaration*  createPropertyDeclaration(Identifier* &id)
+ {   
+     
+     Type* typeNode=Type::createForPrimitive(TYPE_INT,1);
+     Type* propType=Type::createForPropertyType(TYPE_PROPNODE,4,typeNode);
+     declaration* declNode=declaration::normal_Declaration(propType,id);
+     return declNode;
+ }
+
+ argument* createAssignedArg(Identifier* id)
+ {
+    Expression* exprForId=Expression::nodeForIntegerConstant(-1);
+    assignment* assignmentNode=assignment::id_assignExpr(id,exprForId);
+    argument* arg=new argument();
+    arg->setAssign(assignmentNode);
+    arg->setAssignFlag();
+    return arg;
+
+ }
+
  bool create_Symbol(SymbolTable* sTab,Identifier* id,Type* type)
  {
      bool checkFine=sTab->check_conflicts_and_add(sTab, id,type);
@@ -99,8 +138,9 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
        }
 
        case NODE_FORALLSTMT:
-       {    cout<<"INSIDE BUILDFORSTATEMENT SYMBOLBUILDER"<<"\n"; 
+       {   // cout<<"INSIDE BUILDFORSTATEMENT SYMBOLBUILDER"<<"\n"; 
            forallStmt* forAll=(forallStmt*)stmt;
+           
             Identifier* source1=forAll->isSourceProcCall()?forAll->getSourceGraph():NULL;
             PropAccess* propId=forAll->isSourceField()?forAll->getPropSource():NULL;
             searchSuccess=checkHeaderSymbols(source1,propId,forAll);
@@ -108,21 +148,77 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
             {
                 checkForExpressions(forAll->getfilterExpr());
             }
-            buildForStatements(forAll->getBody());
-          //  Identifier* source1=NULL;
-            break;
+           
+          
+            if(forAll->getParent()->getParent()->getTypeofNode()==NODE_ITRBFS)
+               {
+                 /* the assignment statements(arithmetic & logical) within the block of a for statement that
+                    is itself within a IterateInBFS abstraction are signaled to become atomic while code 
+                    generation. */
+
+                  forAll->addAtomicSignalToStatements();
+               }
+              buildForStatements(forAll->getBody());              
+              break;
        }
        case NODE_BLOCKSTMT:
        {  blockStatement* blockStmt=(blockStatement*)stmt;
           init_curr_SymbolTable(blockStmt);
           list<statement*> stmtList=blockStmt->returnStatements();
           list<statement*>::iterator itr;
+          int count=0;
+          int procPos=-1;
+          int bfsPos=-1;
+          list<statement*>::iterator itrIBFS;
+           list<statement*>::iterator itrProc;
+          bool flag=false;
+          bool callFlag=false;
           for(itr=stmtList.begin();itr!=stmtList.end();itr++)
           { 
            // cout<<"INSIDE BUILDFORSTATEMENT SYMBOLBUILDER"<<"\n";
             cout<<"SEE THE TYPE OF NODE"<<(*itr)->getTypeofNode()<<"\n";
+             if(!callFlag&&(*itr)->getTypeofNode()==NODE_PROCCALLSTMT)
+             {
+                 proc_callStmt* proc=(proc_callStmt*)(*itr);
+                 char* methodId=proc->getProcCallExpr()->getMethodId()->getIdentifier();
+                 string IDCoded("attachNodeProperty");
+                 int x=IDCoded.compare(IDCoded);
+                 if(x==0)
+                 {
+                  itrProc=itr;
+                  callFlag=true;
+                  procPos=count;
+                 }
+             }
+             if((*itr)->getTypeofNode()==NODE_ITRBFS)
+             {  
+               
+                itrIBFS=itr;
+             
+                flag=true;
+                bfsPos=count;
+             }
              buildForStatements((*itr));
+             count++;
           }
+          if(flag)
+          { 
+            iterateBFS* itrbFS=(iterateBFS*)(*itrIBFS);  
+            Identifier* id=Identifier::createIdNode("bfsDist");
+            declaration* decl=createPropertyDeclaration(id);
+           // printf(id->getIdentifier());
+            blockStmt->insertToBlock(decl,procPos);
+            argument* arg=createAssignedArg(id);
+            proc_callStmt* proc=(proc_callStmt*)*itrProc;
+            proc_callExpr* pExpr=proc->getProcCallExpr();
+            pExpr->addToArgList(arg);
+            PropAccess* propIdNode=PropAccess::createPropAccessNode(itrbFS->getRootNode(),id);
+            Expression* expr=Expression::nodeForIntegerConstant(0);
+            assignment* assignmentNode=assignment::prop_assignExpr(propIdNode,expr);
+            blockStmt->insertToBlock(assignmentNode,bfsPos+1);
+
+         }
+
           delete_curr_SymbolTable();
              break;
 
@@ -173,6 +269,13 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
            checkReductionExpr(reduceExpr);
            break;
        }
+       case NODE_ITRBFS:
+       {
+          iterateBFS* iBFS=(iterateBFS*)stmt;
+          buildForStatements(iBFS->getBody());
+          
+           break;
+       }
       
    }
 
@@ -208,8 +311,12 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
          {
              proc_callExpr* pExpr=(proc_callExpr*)expr;
              Identifier* id=pExpr->getId1();
+             Identifier* methodId=pExpr->getMethodId();
+             string s(methodId->getIdentifier());
              if(id!=NULL)
                 ifFine=findSymbolId(id);
+             if(s.compare("attachNodeProperty")==0) 
+                 addPropToSymbolTE(currVarSymbT,id,pExpr->getArgList());
              break;   
          }  
          case EXPR_UNARY:

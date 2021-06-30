@@ -346,19 +346,20 @@ static ASTNode* createPropIdNode(ASTNode* id1,ASTNode* id2)
     propIdNode=PropAccess::createPropAccessNode((Identifier*)id1,(Identifier*)id2);
     return propIdNode;
 }
-static ASTNode* createIterateInReverseBFSNode( ASTNode* booleanExpr,ASTNode* filterExpr,ASTNode* body)
+static ASTNode* createIterateInReverseBFSNode( ASTNode* booleanExpr,/*ASTNode* filterExpr,*/ASTNode* body)
 {
     iterateReverseBFS* iterateReverseBFSNode;
-    iterateReverseBFSNode=iterateReverseBFS::nodeForRevBFS((Expression*)booleanExpr,(Expression*)filterExpr,(statement*)body);
+    iterateReverseBFSNode=iterateReverseBFS::nodeForRevBFS((Expression*)booleanExpr,/*(Expression*)filterExpr,*/(statement*)body);
     return iterateReverseBFSNode;
 }
-static ASTNode* createIterateInBFSNode(ASTNode* iterator,ASTNode* rootNode,ASTNode* filterExpr,ASTNode* body,ASTNode* revBFS)
+static ASTNode* createIterateInBFSNode(ASTNode* iterator,ASTNode* graphId,ASTNode* rootNode,ASTNode* filterExpr,ASTNode* body,ASTNode* revBFS)
 {
     iterateBFS* iterateBFSNode;
     Identifier* id1=(Identifier*)iterator;
-    Identifier* id2=(Identifier*)rootNode;
+    Identifier* id2=(Identifier*)graphId;
+    Identifier* id3=(Identifier*)rootNode;
     cout<<"INSIDE BFS1"<<id2->getIdentifier()<<"\n";
-    iterateBFSNode=iterateBFS::nodeForIterateBFS(id1,id2,(Expression*)filterExpr,(statement*)body,(iterateReverseBFS*)revBFS);
+    iterateBFSNode=iterateBFS::nodeForIterateBFS(id1,id2,id3,(Expression*)filterExpr,(statement*)body,(iterateReverseBFS*)revBFS);
     return iterateBFSNode;
 }
 };

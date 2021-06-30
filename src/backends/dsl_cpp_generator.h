@@ -27,7 +27,7 @@ class dsl_cpp_generator
 
   }
 
-
+  void setFileName(char* f);
   bool generate();
   void generation_begin();
   void generation_end();
@@ -77,4 +77,5 @@ class dsl_cpp_generator
 
 static const char* INTALLOCATION = "new int";
 static const char* BOOLALLOCATION = "new bool";
+static const char* FLOATALLOCATION = "new float";
 #endif

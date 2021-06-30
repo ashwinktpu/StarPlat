@@ -1,76 +1,109 @@
 #include"sssp.h"
+#include <atomic>
+#include <sys/time.h>
 
-void Compute_SSSP(graph g,int* weight,int* dist,int src)
-{
+void Compute_SSSP(graph& g,int* weight,int* dist,int src)
+{ 
+
+    
   const int node_count=g.num_nodes();
-  omp_lock_t lock[node_count+1];
-  #pragma omp parallel for
-  for(int v = 1; v<=g.num_nodes(); v++)
+//  printf("nodeCount %d\n",node_count);
+  omp_lock_t* lock=(omp_lock_t*)malloc(g.num_nodes()*sizeof(omp_lock_t));
+
+  #pragma omp parallel for num_threads(4)
+  for(int v = 0; v<g.num_nodes(); v++)
   omp_init_lock(&lock[v]);
   //int* dist=new int[g.num_nodes()];
   bool* modified=new bool[g.num_nodes()];
-  #pragma omp parallel for
-  for (int t = 1; t<=g.num_nodes(); t ++) 
+
+  #pragma omp parallel for num_threads(4)
+  for (int t = 0; t<g.num_nodes(); t ++) 
   {
     dist[t] = INT_MAX;
     modified[t] = false;
+ 
   }
   modified[src] = true;
   dist[src] = 0;
-  bool finished = false;
+
+  std::atomic_bool finished = {false};
+  int round=0;
+   
   while ( !finished )
-  {
-    #pragma omp parallel for
-    for (int v = 1; v <= g.num_nodes(); v ++) 
+  { 
+    finished=true;
+    #pragma omp parallel for num_threads(4) schedule(dynamic,128)
+    for (int v = 0; v < g.num_nodes(); v ++) 
     {
       if (modified[v] == true ){
-        modified[v] = false;
-        #pragma omp parallel for
+          modified[v] = false;
         for (int edge = g.indexofNodes[v]; edge < g.indexofNodes[v+1]; edge ++) 
         {int nbr = g.edgeList[edge] ;
           int e = edge;
            int dist_new = dist[v] + weight[e];
+           
           if (dist[nbr] > dist_new)
           {
             bool modified_new = true;
-            omp_set_lock(&(lock[nbr])) ;
+            finished.store(false,std::memory_order_relaxed);
+            gm_spinlock_acquire_for_node(nbr);
             if (dist[nbr] > dist_new)
             {
+              
               dist[nbr] = dist_new;
+            
               modified[nbr] = modified_new;
             }
-            omp_unset_lock(&(lock[nbr]));
+           gm_spinlock_release_for_node(nbr);
           }
         }
       }
     }
-    bool modified_fp = false ;
-    #pragma omp parallel for reduction(||:modified_fp)
-    for (int v = 1; v <= g.num_nodes(); v ++) 
-    modified_fp = modified_fp || modified[v] ;
-    finished = !modified_fp ;
+   
+  
+   
   }
+
+    printf("Rounds : %d\n",round);
+  
+    delete[] weight;
+    delete[] modified;
+    delete[] lock;
+
+   
+ 
 
 }
 int main()
 { 
 
- 
-   graph G("oregon1_010526.txt");
+  
+   graph G("dataRecords/cleanuwUSARoad.txt");
    G.parseGraph();
+   gm_spinlock_table_init();
   int* edgeLen=G.getEdgeLen();
   int* dist=new int[G.num_nodes()+1];
   int* parent=new int[G.num_nodes()+1];
-  int src=1;
-
+  int src=0;
+ 
+    struct timeval T1, T2;
+    gettimeofday(&T1, NULL);
    Compute_SSSP(G,edgeLen,dist,src);
-
+   gettimeofday(&T2, NULL);
+    
+   printf("running time=%lf\n", (T2.tv_sec - T1.tv_sec) * 1000 + (T2.tv_usec - T1.tv_usec) * 0.001);
  // calculateShortestPath(indexOfNodes,edgeIndex,edgeLen,parent,dist,nodes,2);
   
-  for(int i=16700;i<=16752;i++)
+   char *outputfilename = "outputSG.txt";
+  FILE *outputfilepointer;
+  outputfilepointer = fopen(outputfilename, "w");
+
+  // First crossing vehicles list
+  for (int i = 0; i <= G.num_nodes(); i++)
   {
-      std::cout<<dist[i]<<" ";
+    fprintf(outputfilepointer, "%d  %d\n", i, dist[i]);
   }
+  
   
   
   
