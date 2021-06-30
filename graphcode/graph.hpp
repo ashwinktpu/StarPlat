@@ -5,7 +5,7 @@
 #include<set>
 #include<map>
 #include<algorithm>
-#include<string>
+#include<string.h>
 #include "omp.h"
 
 //using namespace std;
@@ -13,24 +13,24 @@
 class edge
 {
   public:
-  int source;
-  int destination;
-  int weight;
+  int32_t source;
+  int32_t destination;
+  int32_t weight;
 
 };
 
 class graph
 {
   private:
-  int nodesTotal;
-  int edgesTotal;
-  int* edgeLen;
+  int32_t nodesTotal;
+  int32_t edgesTotal;
+  int32_t* edgeLen;
   char* filePath;
-  std::map<int,std::vector<edge>> edges;
+  std::map<int32_t,std::vector<edge>> edges;
 
   public:
-  int* indexofNodes;
-  int* edgeList;
+  int32_t* indexofNodes;
+  int32_t* edgeList;
   graph(char* file)
   {
     filePath=file;
@@ -44,48 +44,56 @@ class graph
       return edges;
   }
   
-  int* getEdgeLen()
+   int* getEdgeLen()
   {
     return edgeLen;
   }
 
-  int num_nodes()
+    int num_nodes()
   {
-      return nodesTotal;
+      return nodesTotal+1; //change it to nodesToTal
   }
-  int num_edges()
+   int num_edges()
   {
       return edgesTotal;
   }
 
   
    void parseGraph()
-  { 
+  {  printf("OH HELLOHIHod \n");
      std::ifstream infile;
      infile.open(filePath);
      std::string line;
-     std::stringstream ss;
-     while (getline(infile, line)) 
+     ////int maxSize=2048;
+    // char line[maxSize];
+    // std::stringstream ss;
+     while (std::getline(infile,line))
      {
-       
-       if (line[0] < '0' || line[0] >'9') {
+      
+      // std::stringstream(line);
+      
+       if (line.length()==0||line[0] < '0' || line[0] >'9') {
           continue; 
 
 	    	}
-      
-        ss.clear();
-        ss<<line;
+        
+        std::stringstream ss(line);
+        
         edgesTotal++;
         
-         
+        
+
         
         edge e;
-        int source;
-        int destination;
-        if(ss>>source&&ss>>destination)
-        {  
+        int32_t source;
+        int32_t destination;
+        int32_t weightVal;
+           ss>>source; 
+          // printf("SOURCE %lu ",source);
            if(source>nodesTotal)
               nodesTotal=source;
+            ss>>destination;  
+           // printf("DESTINATION %lu \n",destination);
             if(destination>nodesTotal)
                nodesTotal=destination;  
            e.source=source;
@@ -94,15 +102,16 @@ class graph
 
            edges[source].push_back(e);
           
-        }
+           ss>>weightVal; //for edgelists having weight too.
        
       
       
         
 
      }
-    #pragma omp parallel for 
-     for(int i=1;i<=nodesTotal;i++)
+    // printf("HELLO AFTER THIS %d \n",nodesTotal);
+    #pragma omp parallel for num_threads(4)
+     for(int i=0;i<=nodesTotal;i++)//change to 1-nodesTotal.
      {
        std::vector<edge> edgeOfVertex=edges[i];
      
@@ -117,13 +126,14 @@ class graph
 
      }                      
                    
-     indexofNodes=new int[nodesTotal+2];
-     edgeList=new int[edgesTotal];
-     edgeLen=new int[edgesTotal];
+     indexofNodes=new int32_t[nodesTotal+2];
+     edgeList=new int32_t[edgesTotal];
+     edgeLen=new int32_t[edgesTotal];
     
     int edge_no=0;
     
-    for(int i=1;i<=nodesTotal;i++)
+    //#pragma omp parallel for num_threads(4)
+    for(int i=0;i<=nodesTotal;i++) //change to 1-nodesTotal.
     {
       std::vector<edge> edgeofVertex=edges[i];
       
@@ -142,9 +152,9 @@ class graph
       }
       
     }
-    indexofNodes[nodesTotal+1]=edge_no;
-
-
+    indexofNodes[nodesTotal+1]=edge_no;//change to nodesTotal+1.
+    printf("hello after this %d %d\n",nodesTotal,edgesTotal);
+    
  }
 
 

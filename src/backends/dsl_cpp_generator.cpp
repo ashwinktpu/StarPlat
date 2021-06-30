@@ -47,6 +47,116 @@ void dsl_cpp_generator::generation_begin()
 
 }
 
+void add_InitialDeclarations(dslCodePad* main,iterateBFS* bfsAbstraction)
+{
+   
+  char strBuffer[1024];
+  char* graphId=bfsAbstraction->getGraphCandidate()->getIdentifier();
+  sprintf(strBuffer,"std::vector<std::vector<int>> %s(%s.%s()) ;","levelNodes",graphId,"num_nodes");
+  main->pushstr_newL(strBuffer);
+  sprintf(strBuffer,"std::vector<int>  %s(%s.%s()) ;","levelNodes_later",graphId,"num_nodes");
+  main->pushstr_newL(strBuffer);
+  sprintf(strBuffer,"std::vector<int>  %s(%s.%s()) ;","levelCount",graphId,"num_nodes");
+  main->pushstr_newL(strBuffer);
+  main->pushstr_newL("int phase = 0 ;");
+  sprintf(strBuffer,"levelNodes[phase].push_back(%s) ;",bfsAbstraction->getRootNode()->getIdentifier());
+  main->pushstr_newL(strBuffer);
+  sprintf(strBuffer,"std::%s bfsCount = {%s} ;","atomic_int","1");
+  main->pushstr_newL(strBuffer);
+  main->pushstr_newL("levelCount[phase] = bfsCount;");
+
+
+
+}
+
+ void add_BFSIterationLoop(dslCodePad* main, iterateBFS* bfsAbstraction)
+ {
+   
+    char strBuffer[1024];
+    char* iterNode=bfsAbstraction->getIteratorNode()->getIdentifier();
+    char* graphId=bfsAbstraction->getGraphCandidate()->getIdentifier();
+    main->pushstr_newL("while ( bfsCount > 0 )");
+    main->pushstr_newL("{");
+    main->pushstr_newL(" int prev_count = bfsCount ;");
+    main->pushstr_newL("bfsCount = 0 ;");
+    main->pushstr_newL("#pragma omp for all");
+    sprintf(strBuffer,"for( %s %s = %s; %s = prev_count ; %s++)","int","l","0","l","l");
+    main->pushstr_newL(strBuffer);
+    main->pushstr_newL("{");
+    sprintf(strBuffer,"int %s = levelNodes[phase][%s] ;",iterNode,"l");
+    main->pushstr_newL(strBuffer);
+    sprintf(strBuffer,"for(%s %s = %s.%s[%s] ; %s < %s.%s[%s+1] ; %s++) ","int","edge",graphId,"indexofNodes",iterNode,"edge",graphId,"indexofNodes",iterNode,"edge");
+     main->pushString(strBuffer);
+     main->pushstr_newL("{");
+     sprintf(strBuffer,"%s %s = %s.%s[%s] ;","int","nbr",graphId,"edgeList","edge");
+     main->pushstr_newL(strBuffer);
+     main->pushstr_newL("int dnbr ;");
+     sprintf(strBuffer,"dnbr = %s(&dist[nbr],-1,dist[%s]+1);","__sync_val_compare_and_swap",iterNode);
+     main->pushstr_newL(strBuffer);
+     main->pushstr_newL("if (dnbr < 0)");
+     main->pushstr_newL("{");
+     sprintf(strBuffer,"int %s = bfsCount.fetch_add(%s,%s) ;","loc","1","std::memory_order_relaxed");
+     main->pushstr_newL(strBuffer);
+     sprintf(strBuffer," levelNodes_later[%s]=nbr ;","loc");
+     main->pushstr_newL(strBuffer);
+     main->pushstr_newL("}");
+     main->pushstr_newL("}");
+  
+  }
+
+  void add_RBFSIterationLoop(dslCodePad* main, iterateBFS* bfsAbstraction)
+  {
+   
+    char strBuffer[1024];    
+    main->pushstr_newL("while (phase > 0)") ;
+    main->pushstr_newL("{");
+    main->pushstr_newL("#pragma omp parallel for");
+    sprintf(strBuffer,"for( %s %s = %s; %s = levelCount[phase] ; %s++)","int","i","0","l","l"); 
+    main->pushstr_newL(strBuffer);
+    main->pushstr_newL("{");
+    sprintf(strBuffer,"int %s = levelCount[phase][i] ;",bfsAbstraction->getIteratorNode()->getIdentifier());
+    main->pushstr_newL(strBuffer);
+
+
+
+  }
+
+ void dsl_cpp_generator::generateBFSAbstraction(iterateBFS* bfsAbstraction)
+ {
+   add_InitialDeclarations(&main,bfsAbstraction);
+  //printf("BFS ON GRAPH %s",bfsAbstraction->getGraphCandidate()->getIdentifier());
+   add_BFSIterationLoop(&main,bfsAbstraction);
+   statement* body=bfsAbstraction->getBody();
+   assert(body->getTypeofNode()==NODE_BLOCKSTMT);
+   blockStatement* block=(blockStatement*)body;
+   list<statement*> statementList=block->returnStatements();
+   for(statement* stmt:statementList)
+   {
+       generateStatement(stmt);
+   }
+   main.pushstr_newL("}");
+
+   main.pushstr_newL("phase = phase + 1 ;");
+   main.pushstr_newL("levelCount[phase] = bfsCount ;");
+   main.pushstr_newL(" levelNodes[phase].assign(levelNodes_later.begin(),levelNodes_later.begin()+bfsCount);");
+   main.pushstr_newL("}");
+   main.pushstr_newL("phase = phase -1 ;");
+   add_RBFSIterationLoop(&main,bfsAbstraction);
+   blockStatement* revBlock=(blockStatement*)bfsAbstraction->getRBFS()->getBody();
+   list<statement*> revStmtList=revBlock->returnStatements();
+
+    for(statement* stmt:revStmtList)
+    {
+       generateStatement(stmt);
+    }
+   
+   main->pushstr_newL("}");
+   main->pushstr_newL("}");
+
+
+ }
+
+
 void dsl_cpp_generator::generateStatement(statement* stmt)
 {  
    if(stmt->getTypeofNode()==NODE_BLOCKSTMT)
@@ -96,7 +206,7 @@ void dsl_cpp_generator::generateStatement(statement* stmt)
     }
     if(stmt->getTypeofNode()==NODE_ITRBFS)
     {
-      //generateBFSAbstraction((iterateBFS*) stmt);
+      generateBFSAbstraction((iterateBFS*) stmt);
     }
     if(stmt->getTypeofNode()==NODE_PROCCALLSTMT)
     { 
@@ -305,6 +415,13 @@ void dsl_cpp_generator::generateAssignmentStmt(assignment* asmt)
    else if(asmt->lhs_isProp())  //the check for node and edge property to be carried out.
    {
      PropAccess* propId=asmt->getPropId();
+     if(asmt->getAtomicSignal())
+      { 
+        /*if(asmt->getParent()->getParent()->getParent()->getParent()->getTypeofNode()==NODE_ITRBFS)
+           if(asmt->getExpr()->isArithmetic()||asmt->getExpr()->isLogical())*/
+             main.pushstr_newL("#pragma omp atomic");
+           
+      }
      main.pushString(propId->getIdentifier2()->getIdentifier());
      main.push('[');
      main.pushString(propId->getIdentifier1()->getIdentifier());
@@ -408,6 +525,31 @@ void dsl_cpp_generator::generatePropertyDefination(Type* type,char* Id)
      main.pushstr_newL(";");
   }
 
+   if(targetType->gettypeId()==TYPE_FLOAT)
+  {
+     main.pushString("=");
+     main.pushString(FLOATALLOCATION);
+     main.pushString("[");
+     //findTargetGraph(graphId,type);
+     if(graphId.size()>1)
+    {
+      cerr<<"TargetGraph can't match";
+    }
+    else
+    { 
+      
+      Identifier* id=graphId[0];
+     
+      type->setTargetGraph(id);
+    }
+     char strBuffer[100];
+     sprintf(strBuffer,"%s.%s()",type->getTargetGraph()->getIdentifier(),"num_nodes");
+     main.pushString(strBuffer);
+     main.pushString("]");
+     main.pushstr_newL(";");
+  }
+
+
 }
 
   void dsl_cpp_generator::getDefaultValueforTypes(int type)
@@ -452,7 +594,7 @@ bool dsl_cpp_generator::allGraphIteration(char* methodId)
 bool dsl_cpp_generator::neighbourIteration(char* methodId)
 {
   string methodString(methodId);
-   return (methodString=="neighbors");
+   return (methodString=="neighbours");
 }
 
 void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll)
@@ -481,7 +623,9 @@ void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll)
 
     }
     else if(neighbourIteration(iteratorMethodId->getIdentifier()))
-    {  char* graphId=sourceGraph->getIdentifier();
+    { 
+      
+       char* graphId=sourceGraph->getIdentifier();
        char* methodId=iteratorMethodId->getIdentifier();
        list<argument*>  argList=extractElemFunc->getArgList();
        assert(argList.size()==1);
@@ -543,23 +687,56 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll)
   }
 
   generateForAllSignature(forAll);
+
   if(forAll->hasFilterExpr())
-  { cout<<"Inside FilterExpr"<<"\n";
+  { 
     blockStatement* changedBody=includeIfToBlock(forAll);
    // cout<<"CHANGED BODY TYPE"<<(changedBody->getTypeofNode()==NODE_BLOCKSTMT);
     forAll->setBody(changedBody);
    // cout<<"FORALL BODY TYPE"<<(forAll->getBody()->getTypeofNode()==NODE_BLOCKSTMT);
   }
-
+   
   if(neighbourIteration(iteratorMethodId->getIdentifier()))
-  {
-    generateBlock((blockStatement*)body,false);
+  { 
+   
+    if(forAll->getParent()->getParent()->getTypeofNode()==NODE_ITRBFS)
+     {   
+        
+         char strBuffer[1024];
+         list<argument*>  argList=extractElemFunc->getArgList();
+         assert(argList.size()==1);
+         Identifier* nodeNbr=argList.front()->getExpr()->getId();
+         sprintf(strBuffer,"if(bfsDist[%s]==bfsDist[%s]+1)",forAll->getIterator()->getIdentifier(),nodeNbr->getIdentifier());
+         main.pushstr_newL(strBuffer);
+         main.pushstr_newL("{");
+       
+     }
+
+     /* This can be merged with above condition through or operator but separating 
+        both now, for any possible individual construct updation.*/
+
+      if(forAll->getParent()->getParent()->getTypeofNode()==NODE_ITRRBFS)
+       {  
+
+         char strBuffer[1024];
+         list<argument*>  argList=extractElemFunc->getArgList();
+         assert(argList.size()==1);
+         Identifier* nodeNbr=argList.front()->getExpr()->getId();
+         sprintf(strBuffer,"if(bfsDist[%s]==bfsDist[%s]+1)",forAll->getIterator()->getIdentifier(),nodeNbr->getIdentifier());
+         main.pushstr_newL(strBuffer);
+         main.pushstr_newL("{");
+
+       }
+
+     generateBlock((blockStatement*)body,false);
+     if(forAll->getParent()->getParent()->getTypeofNode()==NODE_ITRBFS||forAll->getParent()->getParent()->getTypeofNode()==NODE_ITRRBFS)
+       main.pushstr_newL("}");
     main.pushstr_newL("}");
   }
   else
-  { cout<<"ENTER INSIDE FOR NORMAL ITER"<<"\n";
-    
-   // cout<<"TYPE OF BODY"<<(body->getTypeofNode()==NODE_BLOCKSTMT);
+  { 
+    cout<<"ENTER INSIDE FOR NORMAL ITER FORALL"<<"\n";
+    cout<<iteratorMethodId->getIdentifier()<<"\n";
     generateStatement(forAll->getBody());
   }
 
@@ -901,7 +1078,7 @@ void dsl_cpp_generator::generateBlock(blockStatement* blockStmt,bool includeBrac
    for(itr=stmtList.begin();itr!=stmtList.end();itr++)
    {
      statement* stmt=*itr;
-     
+     //printf("CHECK IF INSIDE FOR ");//%d\n",stmt->getParent()->getParent()->getTypeofNode()==NODE_FORALLSTMT);
      generateStatement(stmt);
 
    }
@@ -1049,10 +1226,12 @@ void dsl_cpp_generator:: generateFuncHeader(Function* proc,bool isMainFile)
         
 }
 
+
 bool dsl_cpp_generator::openFileforOutput()
 { 
+
   char temp[1024];
-  fileName="sssp";
+  printf("fileName %s\n",fileName);
   sprintf(temp,"%s/%s.h","../graphcode",fileName);
   headerFile=fopen(temp,"w");
   if(headerFile==NULL)
@@ -1116,4 +1295,21 @@ bool dsl_cpp_generator::generate()
    return true;
 
 }
+
+
+  void dsl_cpp_generator::setFileName(char* f) // to be changed to make it more universal.
+  {
+
+    char *token = strtok(f, "/");
+	  char* prevtoken;
+   
+   
+    while (token != NULL)
+    {   
+		prevtoken=token;
+    token = strtok(NULL, "/");
+    }
+    fileName=prevtoken;
+
+  }
 

@@ -129,7 +129,7 @@ class Identifier:public ASTNode
      strcpy(idNode->identifier,id);
      idNode->accessType=0;
      idNode->setTypeofNode(NODE_ID);
-    // std::cout<<"IDENTIFIER = "<<idNode->getIdentifier()<<" "<<strlen(idNode->getIdentifier());
+   // std::cout<<"IDENTIFIER = "<<idNode->getIdentifier()<<" "<<strlen(idNode->getIdentifier());
      return idNode;
 
    }
@@ -267,7 +267,36 @@ class statement:public ASTNode
       void addToFront(statement* stmt)
       {
         statements.push_front(stmt);
-      }        
+      }       
+
+      void insertToBlock(statement* stmt,int pos) 
+      {    
+           
+           list<statement*> newList;
+           list<statement*>::iterator itrt;
+           int count=0;
+           for(itrt=statements.begin();itrt!=statements.end();itrt++)
+           {
+             if(count==pos-1)
+             {
+               //printf("Here\n");
+               break;
+             }
+
+             newList.push_back(*itrt);  
+             count++;
+
+           }
+           newList.push_back(stmt);
+           for( ;itrt!=statements.end();itrt++)
+           {
+             newList.push_back((*itrt));
+           }
+          
+          statements.swap(newList);
+         
+      }
+
       list<statement*> returnStatements()
       {
         return statements;
@@ -333,6 +362,7 @@ class Type:public ASTNode
   Identifier* TargetGraph;
   Type* innerTargetType;
   Identifier* sourceGraph;
+  list<char*> graphPropList;
   
  public:
  Type()
@@ -479,6 +509,18 @@ class Type:public ASTNode
   {
     TargetGraph=id;
   }
+  
+  void addToPropList(Identifier* id)
+  {
+    graphPropList.push_back(id->getIdentifier());
+  }
+
+  list<char*> getPropList()
+  {
+    return graphPropList;
+
+  }
+
 };
 class formalParam:public ASTNode
 {
@@ -854,6 +896,7 @@ class formalParam:public ASTNode
      Identifier* identifier;
      PropAccess* propId;
      Expression* exprAssigned;
+     bool atomicSignal;
      int lhsType;
 
      public:
@@ -863,6 +906,7 @@ class formalParam:public ASTNode
         propId=NULL;
         exprAssigned=NULL;
          statementType="assignment";
+         atomicSignal=false;
       
     }
 
@@ -921,6 +965,16 @@ class formalParam:public ASTNode
      int getLhsType()
      {
        return lhsType;
+     }
+     void addAtomicSignal()
+     {
+       if(exprAssigned->isArithmetic()||exprAssigned->isLogical())
+          atomicSignal=true;
+     }
+
+     bool getAtomicSignal()
+     {
+       return atomicSignal;
      }
 
   };
@@ -1109,23 +1163,34 @@ class fixedPointStmt:public statement
     iterateReverseBFS()
     {
       filterExpr=NULL;
+      booleanExpr=NULL;
       body=NULL;
     } 
 
-    static iterateReverseBFS* nodeForRevBFS(Expression* booleanExpr,Expression* filterExpr,statement* body)
+    static iterateReverseBFS* nodeForRevBFS(Expression* booleanExpr,/*Expression* filterExpr,*/statement* body)
     {
       iterateReverseBFS* new_revBFS=new iterateReverseBFS();
       new_revBFS->booleanExpr=booleanExpr;
-      new_revBFS->filterExpr=filterExpr;
+      //new_revBFS->filterExpr=filterExpr;
       new_revBFS->body=body;
       new_revBFS->setTypeofNode(NODE_ITRRBFS);
+      if(booleanExpr!=NULL)
       booleanExpr->setParent(new_revBFS);
-      filterExpr->setParent(new_revBFS);
+      /*if(filterExpr!=NULL)
+      filterExpr->setParent(new_revBFS);*/
       body->setParent(new_revBFS);
       return new_revBFS;
     }
-
-
+    
+    statement* getBody()
+    {
+      return body;
+    }
+   
+    Expression* getBFSFilter()
+    {
+      return booleanExpr;
+    }
 
   };
 
@@ -1133,15 +1198,18 @@ class fixedPointStmt:public statement
   {   private:
       Identifier* iterator;
       Identifier* rootNode;
+      Identifier* graphId;
       Expression* filterExpr;
       statement* body;
       iterateReverseBFS* revBFS;
+
 
       public:
 
       iterateBFS()
       {
         iterator=NULL;
+        graphId=NULL;
         rootNode=NULL;
         filterExpr=NULL;
         body=NULL;
@@ -1149,19 +1217,45 @@ class fixedPointStmt:public statement
         statementType="IterateInBFS";
       }
     
-      static iterateBFS* nodeForIterateBFS(Identifier* iterator,Identifier* rootNode,Expression* filterExpr,statement* body,iterateReverseBFS* revBFS)
+      static iterateBFS* nodeForIterateBFS(Identifier* iterator,Identifier* graphId,Identifier* rootNode,Expression* filterExpr,statement* body,iterateReverseBFS* revBFS)
       {
         iterateBFS* new_iterBFS=new iterateBFS();
         new_iterBFS->iterator=iterator;
+        new_iterBFS->graphId=graphId;
         new_iterBFS->rootNode=rootNode;
         new_iterBFS->filterExpr=filterExpr;
         new_iterBFS->body=body;
         new_iterBFS->revBFS=revBFS;
         new_iterBFS->setTypeofNode(NODE_ITRBFS);
         body->setParent(new_iterBFS);
+        revBFS->setParent(new_iterBFS);
         return new_iterBFS;
       }
 
+      Identifier* getRootNode()
+      {
+        return rootNode;
+      }
+
+      Identifier* getIteratorNode()
+      {
+        return iterator;
+      }
+
+      Identifier* getGraphCandidate()
+      {
+        return graphId;
+      }
+
+      statement* getBody()
+      {
+        return body;
+      }
+      
+      iterateReverseBFS* getRBFS()
+      {
+        return revBFS;
+      }
 
   };
   
@@ -1218,6 +1312,11 @@ class fixedPointStmt:public statement
     list<argument*> getArgList()
     {
       return argList;
+    }
+
+    void addToArgList(argument* arg)
+    {
+         argList.push_back(arg);
     }
 
 
@@ -1381,6 +1480,20 @@ class fixedPointStmt:public statement
     Expression* getfilterExpr()
     {
       return filterExpr;
+    }
+
+    void addAtomicSignalToStatements()
+    {
+        blockStatement* block=(blockStatement*)body;
+        for(statement* stmt:block->returnStatements())
+         {
+           if(stmt->getTypeofNode()==NODE_ASSIGN)
+             {
+               assignment* assign=(assignment*)stmt;
+               assign->addAtomicSignal();
+             }
+         }
+
     }
 
 
