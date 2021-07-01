@@ -1,11 +1,11 @@
-EXPENDABLES = bin/MainContext.o bin/ASTHelper.o bin/SymbolTable.o bin/Symbol.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c
+EXPENDABLES = bin/MainContext.o bin/ASTHelper.o bin/SymbolTable.o bin/Symbol.o bin/gen.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c
 
 CC = g++  
 
 all: finalcode clean
 
-finalcode: bin/MainContext.o bin/ASTHelper.o bin/SymbolTable.o bin/Symbol.o bin/y.tab.o bin/lex.yy.o
-	$(CC) bin/MainContext.o bin/ASTHelper.o bin/SymbolTable.o bin/Symbol.o bin/y.tab.o bin/lex.yy.o  -ll -o finalcode
+finalcode: bin/MainContext.o bin/ASTHelper.o bin/SymbolTable.o bin/Symbol.o bin/gen.o bin/y.tab.o bin/lex.yy.o
+	$(CC) bin/MainContext.o bin/ASTHelper.o bin/SymbolTable.o bin/Symbol.o bin/gen.o bin/y.tab.o bin/lex.yy.o  -ll -o finalcode
 
 bin/MainContext.o: maincontext/MainContext.cpp
 	$(CC) -c maincontext/MainContext.cpp -o bin/MainContext.o
@@ -18,6 +18,9 @@ bin/SymbolTable.o: symbolutil/SymbolTable.cpp
 
 bin/Symbol.o: symbolutil/Symbol.cpp
 	$(CC) -c symbolutil/Symbol.cpp -o bin/Symbol.o
+
+bin/gen.o: backends/dsl_cpp_generator.cpp
+	$(CC) -c backends/dsl_cpp_generator.cpp -o bin/gen.o
 
 bin/y.tab.o: 
 	$(MAKE) -C parser
