@@ -6,3 +6,10 @@ function compute_val(Graph g,int c)
     g.attachNodeProperty(modified=false);
     g.attachEdgeProperty(weight=0);
 }
+
+function hello_func(Graph g1, float d)
+{
+    int value=2;
+    float a=0;
+    a=value+d;
+}

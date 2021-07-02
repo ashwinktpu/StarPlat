@@ -1,5 +1,6 @@
 #ifndef GENCPP_SSSP_H
 #define GENCPP_SSSP_H
+<<<<<<< HEAD
 #include<iostream>
 #include<cstdlib>
 #include<cstdbool>
@@ -24,3 +25,16 @@ bool is_finished (int startv,int endv,bool* modified)
   }
 
   #endif
+=======
+#include<stdio.h>
+#include<stdlib.h>
+#include<limits.h>
+#include<omp.h>
+#include"graph.hpp"
+#include"gm_spinlock/gm_lock.h"
+
+void Compute_SSSP(graph g,int* weight,int src);
+
+
+#endif
+>>>>>>> da5dbf845f87d4dee325ace2fe92861c865cd224

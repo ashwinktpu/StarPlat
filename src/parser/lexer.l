@@ -2,6 +2,7 @@
 DIGIT       [0-9]
 ALPHANUM    [a-zA-Z][a-zA-Z0-9_]*
 WS  [ \t\v\n\f]
+NEGATE [-]
 
 %{
     #include <stdlib.h>
@@ -46,7 +47,7 @@ WS  [ \t\v\n\f]
 "iterateInReverse" {printf("iterateInReverse");  return T_REVERSE;} 
 "from"          {printf("from"); return T_FROM;} 
 "filter"        {printf("from");  return T_FILTER;} 
-
+"nodesof"         {printf("nodes") ;return T_NODES;}
 "+="					{ printf ("ADD_ASSIGN "); return T_ADD_ASSIGN;}
 "-="					{ printf ("SUB_ASSIGN"); return T_SUB_ASSIGN;}
 "*="					{ printf ( "MUL_ASSIGN"); return T_MUL_ASSIGN;}
@@ -123,7 +124,7 @@ WS  [ \t\v\n\f]
 {ALPHANUM}          { yylval.text=yytext; /*printf("HELLO ID %s",yytext); printf("\n");*/ return ID;}
 {DIGIT}+"."{DIGIT}* { yylval.fval=atof(yytext);
                         return FLOAT_NUM;}
-{DIGIT}{DIGIT}*     {  yylval.ival=atoi(yytext);
+{NEGATE}*{DIGIT}{DIGIT}*     {  yylval.ival=atoi(yytext);
                             return INT_NUM;}
 
 [ \n\t]	{ printf("\n");}  
