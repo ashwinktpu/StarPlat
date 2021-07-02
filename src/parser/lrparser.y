@@ -5,12 +5,7 @@
 	#include <stdlib.h>
 	#include <stdbool.h>
     #include "includeHeader.hpp"
-<<<<<<< HEAD
-	#include "../backends/dsl_cpp_generator.h"
-	//#include "y.tab.h"
-=======
-	//#include "../symbolutil/SymbolTableBuilder.cpp"
->>>>>>> da5dbf845f87d4dee325ace2fe92861c865cd224
+    //#include "../symbolutil/SymbolTableBuilder.cpp"
      
 	void yyerror(char *);
 	int yylex(void);
@@ -21,15 +16,9 @@
 	int num = 0;
 	vector<Identifier*> graphId;
 	extern char *yytext;
-<<<<<<< HEAD
-	extern SymbolTable* symbTab;
-	FrontEndContext frontEndContext;
-	
-	
-=======
 	//extern SymbolTable* symbTab;
 	FrontEndContext frontEndContext;
->>>>>>> da5dbf845f87d4dee325ace2fe92861c865cd224
+
     //symbTab=new SymbolTable();
 	//symbolTableList.push_back(new SymbolTable());
 %}
@@ -98,20 +87,6 @@
  
 
 %%
-<<<<<<< HEAD
-program: function_def { printf("LIST SIZE %d",frontEndContext.getFuncList().size()) ; };
-
-function_def: function_data  function_body  { 
-	                                           Function* func=(Function*)$1;
-                                               blockStatement* block=(blockStatement*)$2;
-                                              func->setBlockStatement(block);
-											   Util::addFuncToList(func);
-											    };
-
-function_data: T_FUNC id '(' paramList ')' { 
-										   $$=Util::createFuncNode($2,$4->PList);
-
-=======
 program:  
         | program function_def {/* printf("LIST SIZE %d",frontEndContext.getFuncList().size())  ;*/ };
 
@@ -125,7 +100,7 @@ function_def: function_data  function_body  {
 function_data: T_FUNC id '(' paramList ')' { 
 										   $$=Util::createFuncNode($2,$4->PList);
 
->>>>>>> da5dbf845f87d4dee325ace2fe92861c865cd224
+
 	                                      };
 
 paramList: param {$$=Util::createPList($1);};
@@ -238,13 +213,8 @@ expression : proc_call { $$=$1;};
 			 | expression '>' expression{$$=Util::createNodeForRelationalExpr($1,$3,OPERATOR_GT);};
 			 | expression T_EQ_OP expression{$$=Util::createNodeForRelationalExpr($1,$3,OPERATOR_EQ);};
              | expression T_NE_OP expression{$$=Util::createNodeForRelationalExpr($1,$3,OPERATOR_NE);};
-<<<<<<< HEAD
-			 | expression ':' expression{$$=Util::createNodeForDependentExpr($1,$3,OPERATOR_COLON);};
-		| '(' expression ')' {$$=$2;};
-=======
 			 | '!'expression {$$=Util::createNodeForUnaryExpr($2,OPERATOR_NOT);}
 		     | '(' expression ')' {$$=$2;printf("INSIDE EXPR");};
->>>>>>> da5dbf845f87d4dee325ace2fe92861c865cd224
 	         | val {$$=$1;};
 			 | leftSide { /*$$=$1;*/$$=Util::createNodeForId($1);};
 
@@ -259,13 +229,7 @@ proc_call : leftSide '(' arg_list ')' {printf("testproc\n");
 
 val : INT_NUM { $$=Util::createNodeForIval($1); };
 	| FLOAT_NUM {$$=Util::createNodeForFval($1);};
-<<<<<<< HEAD
-	| BOOL_VAL {  
-		
-		$$=Util::createNodeForBval($1);};
-=======
 	| BOOL_VAL { $$=Util::createNodeForBval($1);};
->>>>>>> da5dbf845f87d4dee325ace2fe92861c865cd224
 	| T_INF {$$=Util::createNodeForINF(true);};
 	| T_P_INF {$$=Util::createNodeForINF(true);};
 	| T_N_INF {$$=Util::createNodeForINF(false);};
@@ -291,10 +255,7 @@ selection_cf : T_IF '(' boolean_expr ')' blockstatements { $$=Util::createNodeFo
 
 
 reduction : leftSide '=' reductionCall { $$=Util::createNodeForReductionStmt($1,$3) ;}
-<<<<<<< HEAD
-		   |'<' leftList '>' '=' '<' rightList '>'  {$$=Util::createNodeForReductionStmtList($2->ASTNList,$6->reducCall,$6->exprVal);};//->reducCall,
-=======
-		   |'<' leftList '>' '=' '<' reductionCall ',' rightList '>'  { reductionCall* reduc=(reductionCall*)$6;
+           |'<' leftList '>' '=' '<' reductionCall ',' rightList '>'  { reductionCall* reduc=(reductionCall*)$6;
 		                                                               $$=Util::createNodeForReductionStmtList($2->ASTNList,reduc,$8->ASTNList);};
 >>>>>>> da5dbf845f87d4dee325ace2fe92861c865cd224
 
@@ -308,10 +269,6 @@ rightList : val ',' rightList { $$=Util::addToNList($3,$1);};
             /*reductionCall ',' val { $$=new tempNode();
 	                                $$->reducCall=(reductionCall*)$1;
                                     $$->exprVal=(Expression*)$3; };
-<<<<<<< HEAD
-          | reductionCall { //$$=$1;};
-			                $$->reducCall=(reductionCall*)$1;} ;
-=======
           | reductionCall { 
 			                $$->reducCall=(reductionCall*)$1;} ;*/
 >>>>>>> da5dbf845f87d4dee325ace2fe92861c865cd224
@@ -413,12 +370,6 @@ int main(int argc,char **argv)
      yyin= fopen(argv[1],"r");
 	else 
 	  yyin=stdin;
-<<<<<<< HEAD
-	yyparse();
-	dsl_cpp_generator d;
-	d.generate();
-	
-=======
 	int error=yyparse();
 	printf("error val %d\n",error);
 	if(error!=1)
@@ -430,7 +381,7 @@ int main(int argc,char **argv)
 	cpp_backend.generate();
 	
 	}
->>>>>>> da5dbf845f87d4dee325ace2fe92861c865cd224
+
 
 	return 0;   
 	 
