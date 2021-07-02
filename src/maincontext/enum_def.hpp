@@ -92,7 +92,11 @@ enum OPERATOR
  OPERATOR_GE,
  OPERATOR_EQ,
  OPERATOR_NE,
+<<<<<<< HEAD
+ OPERATOR_COLON,
+=======
  OPERATOR_NOT
+>>>>>>> da5dbf845f87d4dee325ace2fe92861c865cd224
 
 };
 
@@ -137,5 +141,6 @@ enum EXPR
    EXPR_PROPID,
    EXPR_INFINITY,
    EXPR_PROCCALL,
+   EXPR_DEPENDENT,
 };
 #endif
