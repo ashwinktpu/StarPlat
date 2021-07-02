@@ -150,8 +150,8 @@ void add_InitialDeclarations(dslCodePad* main,iterateBFS* bfsAbstraction)
        generateStatement(stmt);
     }
    
-   main->pushstr_newL("}");
-   main->pushstr_newL("}");
+   main.pushstr_newL("}");
+   main.pushstr_newL("}");
 
 
  }

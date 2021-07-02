@@ -1,11 +1,11 @@
-%{
+ %{
 	
 	#include <stdio.h>
 	#include <string.h>
 	#include <stdlib.h>
 	#include <stdbool.h>
     #include "includeHeader.hpp"
-    //#include "../symbolutil/SymbolTableBuilder.cpp"
+	//#include "../symbolutil/SymbolTableBuilder.cpp"
      
 	void yyerror(char *);
 	int yylex(void);
@@ -18,7 +18,6 @@
 	extern char *yytext;
 	//extern SymbolTable* symbTab;
 	FrontEndContext frontEndContext;
-
     //symbTab=new SymbolTable();
 	//symbolTableList.push_back(new SymbolTable());
 %}
@@ -99,7 +98,6 @@ function_def: function_data  function_body  {
 
 function_data: T_FUNC id '(' paramList ')' { 
 										   $$=Util::createFuncNode($2,$4->PList);
-
 
 	                                      };
 
@@ -216,7 +214,7 @@ expression : proc_call { $$=$1;};
 			 | '!'expression {$$=Util::createNodeForUnaryExpr($2,OPERATOR_NOT);}
 		     | '(' expression ')' {$$=$2;printf("INSIDE EXPR");};
 	         | val {$$=$1;};
-			 | leftSide { /*$$=$1;*/$$=Util::createNodeForId($1);};
+			 | leftSide { $$=Util::createNodeForId($1);};
 
 proc_call : leftSide '(' arg_list ')' {printf("testproc\n"); 
                                        
@@ -255,9 +253,8 @@ selection_cf : T_IF '(' boolean_expr ')' blockstatements { $$=Util::createNodeFo
 
 
 reduction : leftSide '=' reductionCall { $$=Util::createNodeForReductionStmt($1,$3) ;}
-           |'<' leftList '>' '=' '<' reductionCall ',' rightList '>'  { reductionCall* reduc=(reductionCall*)$6;
+		   |'<' leftList '>' '=' '<' reductionCall ',' rightList '>'  { reductionCall* reduc=(reductionCall*)$6;
 		                                                               $$=Util::createNodeForReductionStmtList($2->ASTNList,reduc,$8->ASTNList);};
->>>>>>> da5dbf845f87d4dee325ace2fe92861c865cd224
 
 leftList :  leftSide ',' leftList { $$=Util::addToNList($3,$1);
                                          };
@@ -271,7 +268,6 @@ rightList : val ',' rightList { $$=Util::addToNList($3,$1);};
                                     $$->exprVal=(Expression*)$3; };
           | reductionCall { 
 			                $$->reducCall=(reductionCall*)$1;} ;*/
->>>>>>> da5dbf845f87d4dee325ace2fe92861c865cd224
 
 reductionCall : reduction_op '(' arg_list ')' {$$=Util::createNodeforReductionCall($1,$3->AList);} ;
 
@@ -381,7 +377,6 @@ int main(int argc,char **argv)
 	cpp_backend.generate();
 	
 	}
-
 
 	return 0;   
 	 

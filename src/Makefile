@@ -22,7 +22,7 @@ bin/SymbolTableNew.o: symbolutil/SymbolTableNew.cpp  symbolutil/SymbolTable.h
 
 
 bin/dsl_cpp_generator.o: backends/backend_omp/dsl_cpp_generator.cpp backends/dslCodePad.h
-	$(CC) -c backends/dsl_cpp_generator.cpp -o bin/dsl_cpp_generator.o
+	$(CC) -c backends/backend_omp/dsl_cpp_generator.cpp -o bin/dsl_cpp_generator.o
     	
 bin/y.tab.o: 
 	$(MAKE) -C parser
