@@ -4,7 +4,6 @@
 void Compute_SSSP(graph& g,int* weight,int* dist,int src)
 {
   const int node_count=g.num_nodes();
-  printf("nodeCount %d\n",node_count);
   omp_lock_t* lock=(omp_lock_t*)malloc(g.num_nodes()*sizeof(omp_lock_t));
 
   #pragma omp parallel for num_threads(4)
