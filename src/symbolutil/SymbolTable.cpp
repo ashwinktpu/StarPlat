@@ -1,7 +1,7 @@
 #include "SymbolTable.hpp"
 #include "../ast/ASTNodeTypes.hpp"
 
-
+/*
 SymbolTable* symbTab;
 Scope::Scope()
 {
@@ -101,5 +101,5 @@ Symbol* SymbolTable::LookUp(Identifier* id)
     }
 
     return symbol;
-}
+}*/
 

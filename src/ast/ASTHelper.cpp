@@ -26,7 +26,7 @@ static void addFuncToList(ASTNode* func)
 static ASTNode* createFuncNode(ASTNode* id,list<formalParam*> formalParamList)
 { 
   Identifier* funcId=(Identifier*)id;
-  
+  cout<<"INSIDE FUNC OF"<<funcId->getIdentifier()<<"\n";
   Function* functionNode=Function::createFunctionNode(funcId,formalParamList);
   return functionNode;
    
@@ -100,13 +100,16 @@ static argList* addToAList(argList* aList,argument* arg)
 static ASTNodeList* addToNList(ASTNodeList* nodeList,ASTNode* node)
 {
     nodeList->ASTNList.push_front(node);
+    
     return nodeList;
+    
 }
 
 static ASTNodeList* createNList(ASTNode* node)
 {
     ASTNodeList* nodeList=new ASTNodeList();
     nodeList->ASTNList.push_back(node);
+   
     return nodeList;
 
     
@@ -224,6 +227,12 @@ static ASTNode* createNodeForLogicalExpr(ASTNode* expr1,ASTNode* expr2,int opera
     Expression* logicalExprNode=Expression::nodeForLogicalExpr((Expression*)expr1,(Expression*)expr2,operatorType);
     return logicalExprNode;
 }
+
+static ASTNode* createNodeForUnaryExpr(ASTNode* expr,int operatorType)
+{
+    Expression* unaryExpr=Expression::nodeForUnaryExpr((Expression*)expr,operatorType);
+    return unaryExpr;
+}
 static ASTNode* createNodeForIval(long value)
 {
     Expression* exprIVal=Expression::nodeForIntegerConstant(value);
@@ -260,10 +269,10 @@ static ASTNode* createNodeForId(ASTNode* node)
      return exprForId;
 
 }
-static ASTNode* createNodeForFixedPointStmt(ASTNode* convergeExpr,ASTNode* body)
+static ASTNode* createNodeForFixedPointStmt(ASTNode* fixedPointId,ASTNode* dependentProp,ASTNode* body)
 {
     statement* fixedPointStmtNode;
-    fixedPointStmtNode=fixedPointStmt::createforfixedPointStmt((Expression*)convergeExpr,(blockStatement*)body);
+    fixedPointStmtNode=fixedPointStmt::createforfixedPointStmt((Identifier*)fixedPointId,(Expression*)dependentProp,(blockStatement*)body);
     return fixedPointStmtNode;
 }
 static ASTNode* createNodeForWhileStmt(ASTNode* iterCondition,ASTNode* body)
@@ -289,8 +298,19 @@ static ASTNode* createNodeForForAllStmt(ASTNode* iterator,ASTNode* sourceGraph,A
     statement* forallStmtNode;
     Identifier* id=(Identifier*)iterator;
     Identifier* id1=(Identifier*)sourceGraph;
+<<<<<<< HEAD
 
     forallStmtNode=forallStmt::createforallStmt(id,id1,(proc_callExpr*)extractElemFunc,(Expression*)filterExpr,(blockStatement*)body,isforall);
+=======
+     Expression* f=NULL;
+    if(filterExpr!=NULL)
+    {
+     f=(Expression*)filterExpr;
+    
+    //cout<<"CHECK FILTER TYPE"<<f->isRelational()<<"\n";
+    }
+    forallStmtNode=forallStmt::createforallStmt(id,id1,(proc_callExpr*)extractElemFunc,(statement*)body,(Expression*)filterExpr,isforall);
+>>>>>>> da5dbf845f87d4dee325ace2fe92861c865cd224
     return forallStmtNode;
 }
 static ASTNode* createNodeForForStmt(ASTNode* iterator,ASTNode* source,ASTNode* body,bool isforall)
@@ -321,10 +341,17 @@ static ASTNode* createNodeForReductionStmt(ASTNode* leftSide,ASTNode* reductionC
      }
      return reductionStmtNode;
 }
+<<<<<<< HEAD
 static ASTNode* createNodeForReductionStmtList(list<ASTNode*> leftList,ASTNode* reductionCallNode,ASTNode* exprVal)   
 {
     reductionCallStmt* reductionStmtNode;
     reductionStmtNode=reductionCallStmt::leftList_reducCallStmt(leftList,(reductionCall*)reductionCallNode,(Expression*)exprVal);
+=======
+static ASTNode* createNodeForReductionStmtList(list<ASTNode*> leftList,ASTNode* reductionCallNode,list<ASTNode*>exprList)
+{
+    reductionCallStmt* reductionStmtNode;
+    reductionStmtNode=reductionCallStmt::leftList_reducCallStmt(leftList,(reductionCall*)reductionCallNode,exprList);
+>>>>>>> da5dbf845f87d4dee325ace2fe92861c865cd224
     return reductionStmtNode;
 }
 
@@ -336,19 +363,20 @@ static ASTNode* createPropIdNode(ASTNode* id1,ASTNode* id2)
     propIdNode=PropAccess::createPropAccessNode((Identifier*)id1,(Identifier*)id2);
     return propIdNode;
 }
-static ASTNode* createIterateInReverseBFSNode( ASTNode* booleanExpr,ASTNode* filterExpr,ASTNode* body)
+static ASTNode* createIterateInReverseBFSNode( ASTNode* booleanExpr,/*ASTNode* filterExpr,*/ASTNode* body)
 {
     iterateReverseBFS* iterateReverseBFSNode;
-    iterateReverseBFSNode=iterateReverseBFS::nodeForRevBFS((Expression*)booleanExpr,(Expression*)filterExpr,(statement*)body);
+    iterateReverseBFSNode=iterateReverseBFS::nodeForRevBFS((Expression*)booleanExpr,/*(Expression*)filterExpr,*/(statement*)body);
     return iterateReverseBFSNode;
 }
-static ASTNode* createIterateInBFSNode(ASTNode* iterator,ASTNode* rootNode,ASTNode* filterExpr,ASTNode* body,ASTNode* revBFS)
+static ASTNode* createIterateInBFSNode(ASTNode* iterator,ASTNode* graphId,ASTNode* rootNode,ASTNode* filterExpr,ASTNode* body,ASTNode* revBFS)
 {
     iterateBFS* iterateBFSNode;
     Identifier* id1=(Identifier*)iterator;
-    Identifier* id2=(Identifier*)rootNode;
+    Identifier* id2=(Identifier*)graphId;
+    Identifier* id3=(Identifier*)rootNode;
     cout<<"INSIDE BFS1"<<id2->getIdentifier()<<"\n";
-    iterateBFSNode=iterateBFS::nodeForIterateBFS(id1,id2,(Expression*)filterExpr,(statement*)body,(iterateReverseBFS*)revBFS);
+    iterateBFSNode=iterateBFS::nodeForIterateBFS(id1,id2,id3,(Expression*)filterExpr,(statement*)body,(iterateReverseBFS*)revBFS);
     return iterateBFSNode;
 }
 };
