@@ -12,6 +12,7 @@ class ASTNode
 {
   protected:
   ASTNode* parent;
+  //string typeofNode;
   NODETYPE typeofNode;
   SymbolTable* var_symbTab;
   SymbolTable* prop_symbTab;
