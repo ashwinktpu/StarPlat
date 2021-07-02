@@ -26,7 +26,7 @@ static void addFuncToList(ASTNode* func)
 static ASTNode* createFuncNode(ASTNode* id,list<formalParam*> formalParamList)
 { 
   Identifier* funcId=(Identifier*)id;
-  cout<<"INSIDE FUNC OF"<<funcId->getIdentifier()<<"\n";
+  
   Function* functionNode=Function::createFunctionNode(funcId,formalParamList);
   return functionNode;
    
@@ -217,11 +217,6 @@ static ASTNode* createNodeForRelationalExpr(ASTNode* expr1,ASTNode* expr2,int op
     Expression* relationalExprNode=Expression::nodeForRelationalExpr((Expression*)expr1,(Expression*)expr2,operatorType);
     return relationalExprNode;
 }
-static ASTNode* createNodeForDependentExpr(ASTNode* expr1,ASTNode* expr2,int operatorType)
-{
-    Expression* dependentExprNode=Expression::nodeForDependentExpr((Expression*)expr1,(Expression*)expr2,operatorType);
-    return dependentExprNode;
-}
 static ASTNode* createNodeForLogicalExpr(ASTNode* expr1,ASTNode* expr2,int operatorType)
 {
     Expression* logicalExprNode=Expression::nodeForLogicalExpr((Expression*)expr1,(Expression*)expr2,operatorType);
@@ -298,10 +293,6 @@ static ASTNode* createNodeForForAllStmt(ASTNode* iterator,ASTNode* sourceGraph,A
     statement* forallStmtNode;
     Identifier* id=(Identifier*)iterator;
     Identifier* id1=(Identifier*)sourceGraph;
-<<<<<<< HEAD
-
-    forallStmtNode=forallStmt::createforallStmt(id,id1,(proc_callExpr*)extractElemFunc,(Expression*)filterExpr,(blockStatement*)body,isforall);
-=======
      Expression* f=NULL;
     if(filterExpr!=NULL)
     {
@@ -310,7 +301,6 @@ static ASTNode* createNodeForForAllStmt(ASTNode* iterator,ASTNode* sourceGraph,A
     //cout<<"CHECK FILTER TYPE"<<f->isRelational()<<"\n";
     }
     forallStmtNode=forallStmt::createforallStmt(id,id1,(proc_callExpr*)extractElemFunc,(statement*)body,(Expression*)filterExpr,isforall);
->>>>>>> da5dbf845f87d4dee325ace2fe92861c865cd224
     return forallStmtNode;
 }
 static ASTNode* createNodeForForStmt(ASTNode* iterator,ASTNode* source,ASTNode* body,bool isforall)
@@ -318,9 +308,9 @@ static ASTNode* createNodeForForStmt(ASTNode* iterator,ASTNode* source,ASTNode* 
     statement* forallStmtNode;
     Identifier* id=(Identifier*)iterator;
     if(source->getTypeofNode()==NODE_ID)
-    forallStmtNode=forallStmt::id_createforForStmt(id,(Identifier*)source,(blockStatement*)body,isforall);
+    forallStmtNode=forallStmt::id_createforForStmt(id,(Identifier*)source,(statement*)body,isforall);
     if(source->getTypeofNode()==NODE_PROPACCESS)
-    forallStmtNode=forallStmt::propId_createforForStmt(id,(PropAccess*)source,(blockStatement*)body,isforall);
+    forallStmtNode=forallStmt::propId_createforForStmt(id,(PropAccess*)source,(statement*)body,isforall);
     return forallStmtNode;
 }
 static ASTNode* createNodeforReductionCall(int reductionOperationType,list<argument*> argList)
@@ -341,17 +331,10 @@ static ASTNode* createNodeForReductionStmt(ASTNode* leftSide,ASTNode* reductionC
      }
      return reductionStmtNode;
 }
-<<<<<<< HEAD
-static ASTNode* createNodeForReductionStmtList(list<ASTNode*> leftList,ASTNode* reductionCallNode,ASTNode* exprVal)   
-{
-    reductionCallStmt* reductionStmtNode;
-    reductionStmtNode=reductionCallStmt::leftList_reducCallStmt(leftList,(reductionCall*)reductionCallNode,(Expression*)exprVal);
-=======
 static ASTNode* createNodeForReductionStmtList(list<ASTNode*> leftList,ASTNode* reductionCallNode,list<ASTNode*>exprList)
 {
     reductionCallStmt* reductionStmtNode;
     reductionStmtNode=reductionCallStmt::leftList_reducCallStmt(leftList,(reductionCall*)reductionCallNode,exprList);
->>>>>>> da5dbf845f87d4dee325ace2fe92861c865cd224
     return reductionStmtNode;
 }
 
