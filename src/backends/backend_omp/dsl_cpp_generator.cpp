@@ -594,7 +594,7 @@ bool dsl_cpp_generator::allGraphIteration(char* methodId)
 bool dsl_cpp_generator::neighbourIteration(char* methodId)
 {
   string methodString(methodId);
-   return (methodString=="neighbours");
+   return (methodString=="neighbors");
 }
 
 void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll)
@@ -624,7 +624,7 @@ void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll)
     }
     else if(neighbourIteration(iteratorMethodId->getIdentifier()))
     { 
-      
+       
        char* graphId=sourceGraph->getIdentifier();
        char* methodId=iteratorMethodId->getIdentifier();
        list<argument*>  argList=extractElemFunc->getArgList();
@@ -1232,13 +1232,13 @@ bool dsl_cpp_generator::openFileforOutput()
 
   char temp[1024];
   printf("fileName %s\n",fileName);
-  sprintf(temp,"%s/%s.h","../graphcode",fileName);
+  sprintf(temp,"%s/%s.h","../graphcode/generated_omp",fileName);
   headerFile=fopen(temp,"w");
   if(headerFile==NULL)
      return false;
   header.setOutputFile(headerFile);
 
-  sprintf(temp,"%s/%s.cc","../graphcode",fileName);
+  sprintf(temp,"%s/%s.cc","../graphcode/generated_omp",fileName);
   bodyFile=fopen(temp,"w"); 
   if(bodyFile==NULL)
      return false;
