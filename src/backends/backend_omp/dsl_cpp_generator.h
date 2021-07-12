@@ -63,6 +63,7 @@ class dsl_cpp_generator
   //void includeIfToBlock(forallStmt* forAll);
   bool neighbourIteration(char* methodId);
   bool allGraphIteration(char* methodId);
+  bool elementsIteration(char* extractId);
   blockStatement* includeIfToBlock(forallStmt* forAll);
 
   void generateId();

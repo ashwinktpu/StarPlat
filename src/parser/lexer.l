@@ -116,7 +116,6 @@ NEGATE [-]
  /* Collection Type */
 "SetN" 	{printf("Set of Nodes");  return T_SET_NODES;}
 "SetE" 	{printf("Set of Edges"); return T_SET_EDGES;}
-"elements" {printf("elements");  return T_ELEMENTS;}
 "list" {printf("list type"); return T_LIST;}
 
 

@@ -5,6 +5,7 @@
 	#include <stdlib.h>
 	#include <stdbool.h>
     #include "includeHeader.hpp"
+	#include<getopt.h>
 	//#include "../symbolutil/SymbolTableBuilder.cpp"
      
 	void yyerror(char *);
@@ -45,7 +46,7 @@
 %token T_AND T_OR T_SUM T_AVG T_COUNT T_PRODUCT T_MAX T_MIN
 %token T_GRAPH T_DIR_GRAPH  T_NODE T_EDGE T_NODES
 %token T_NP  T_EP
-%token T_LIST T_SET_NODES T_SET_EDGES T_ELEMENTS T_FROM
+%token T_LIST T_SET_NODES T_SET_EDGES  T_FROM
 %token T_BFS T_REVERSE
 
 
@@ -240,7 +241,7 @@ iteration_cf : T_FIXEDPOINT T_UNTIL '(' id ':' expression ')' blockstatements { 
 		   | T_DO blockstatements T_WHILE '(' boolean_expr ')' {$$=Util::createNodeForDoWhileStmt($5,$2);  };
 		| T_FORALL '(' id T_IN id '.' proc_call filterExpr')'  blockstatements { 
 																				$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,true);};
-		| T_FOR '(' id T_IN leftSide ')' blockstatements {$$=Util::createNodeForForStmt($3,$5,$7,false);};
+		| T_FOR '(' id T_IN leftSide ')' blockstatements { $$=Util::createNodeForForStmt($3,$5,$7,false);};
 		| T_FOR '(' id T_IN id '.' proc_call  filterExpr')' blockstatements {$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,false);};
 
 filterExpr  :         { $$=NULL;};
@@ -278,7 +279,7 @@ reduction_op : T_SUM { $$=REDUCE_SUM;};
 	         | T_MIN {$$=REDUCE_MIN;};
 
 leftSide : id { $$=$1; };
-         | oid { $$=$1; };
+         | oid { printf("Here hello \n"); $$=$1; };
          | tid {$$ = $1; };
 
 arg_list :    {printf("No args\n");
@@ -361,7 +362,7 @@ int main(int argc,char **argv)
    SymbolTableBuilder stBuilder;
  
      FILE    *fd;
-
+     
     if (argc>1)
      yyin= fopen(argv[1],"r");
 	else 
@@ -377,7 +378,56 @@ int main(int argc,char **argv)
 	cpp_backend.generate();
 	
 	}
+  
 
+ /* int opt;
+  char* fileName=NULL;
+  char* backendTarget=NULL;
+
+  while ((opt = getopt(argc, argv, ":f:b:")) != -1) 
+  {
+     switch (opt) 
+     {
+      case 'f':
+        fileName = optarg;
+        break;
+      case 'b':
+        backendTarget = optarg;
+        break;
+      case '?':
+        printf("Unknown option: %c\n", optopt);
+		exit(0);
+        break;
+      case ':':
+        printf("Missing arg for %c\n", optopt);
+		exit(0);
+        break;
+     }
+  }
+   
+   printf("fileName %s\n",fileName);
+   printf("Backend Target %s\n",backendTarget);
+   if(fileName==NULL||backendTarget==NULL)
+   {
+	   if(fileName==NULL)
+	      printf("FileName option Error!\n");
+	   if(backendTarget==NULL)
+	      printf("backendTarget option Error!")	;
+	   exit(0);	    
+   }
+   yyin= fopen(fileName,"r");
+   int error=yyparse();
+	printf("error val %d\n",error);
+	if(error!=1)
+	{
+  // printf("%d SIZE OF FUNCLIST",frontEndContext.getFuncList().size()); 
+  // printf("GRAPH ID %s",graphId[0]->getIdentifier());
+    stBuilder.buildST(frontEndContext.getFuncList());
+	cpp_backend.setFileName(fileName);
+	cpp_backend.generate();
+	
+	}
+  */  
 	return 0;   
 	 
 }

@@ -36,9 +36,11 @@ void dsl_cpp_generator::generation_begin()
   header.pushString("#include");
   addIncludeToFile("limits.h",header,true);
   header.pushString("#include");
+  addIncludeToFile("atomic",header,true);
+  header.pushString("#include");
   addIncludeToFile("omp.h",header,true);
   header.pushString("#include");
-  addIncludeToFile("graph.hpp",header,false);
+  addIncludeToFile("../graph.hpp",header,false);
   header.NewLine();
   main.pushString("#include");
   sprintf(temp,"%s.h",fileName);
@@ -79,8 +81,8 @@ void add_InitialDeclarations(dslCodePad* main,iterateBFS* bfsAbstraction)
     main->pushstr_newL("{");
     main->pushstr_newL(" int prev_count = bfsCount ;");
     main->pushstr_newL("bfsCount = 0 ;");
-    main->pushstr_newL("#pragma omp for all");
-    sprintf(strBuffer,"for( %s %s = %s; %s = prev_count ; %s++)","int","l","0","l","l");
+    main->pushstr_newL("#pragma omp parallel for");
+    sprintf(strBuffer,"for( %s %s = %s; %s < prev_count ; %s++)","int","l","0","l","l");
     main->pushstr_newL(strBuffer);
     main->pushstr_newL("{");
     sprintf(strBuffer,"int %s = levelNodes[phase][%s] ;",iterNode,"l");
@@ -91,7 +93,7 @@ void add_InitialDeclarations(dslCodePad* main,iterateBFS* bfsAbstraction)
      sprintf(strBuffer,"%s %s = %s.%s[%s] ;","int","nbr",graphId,"edgeList","edge");
      main->pushstr_newL(strBuffer);
      main->pushstr_newL("int dnbr ;");
-     sprintf(strBuffer,"dnbr = %s(&dist[nbr],-1,dist[%s]+1);","__sync_val_compare_and_swap",iterNode);
+     sprintf(strBuffer,"dnbr = %s(&bfsDist[nbr],-1,bfsDist[%s]+1);","__sync_val_compare_and_swap",iterNode);
      main->pushstr_newL(strBuffer);
      main->pushstr_newL("if (dnbr < 0)");
      main->pushstr_newL("{");
@@ -111,10 +113,10 @@ void add_InitialDeclarations(dslCodePad* main,iterateBFS* bfsAbstraction)
     main->pushstr_newL("while (phase > 0)") ;
     main->pushstr_newL("{");
     main->pushstr_newL("#pragma omp parallel for");
-    sprintf(strBuffer,"for( %s %s = %s; %s = levelCount[phase] ; %s++)","int","i","0","l","l"); 
+    sprintf(strBuffer,"for( %s %s = %s; %s < levelCount[phase] ; %s++)","int","l","0","l","l"); 
     main->pushstr_newL(strBuffer);
     main->pushstr_newL("{");
-    sprintf(strBuffer,"int %s = levelCount[phase][i] ;",bfsAbstraction->getIteratorNode()->getIdentifier());
+    sprintf(strBuffer,"int %s = levelNodes[phase][l] ;",bfsAbstraction->getIteratorNode()->getIdentifier());
     main->pushstr_newL(strBuffer);
 
 
@@ -597,6 +599,13 @@ bool dsl_cpp_generator::neighbourIteration(char* methodId)
    return (methodString=="neighbors");
 }
 
+bool dsl_cpp_generator::elementsIteration(char* extractId)
+{
+  string extractString(extractId);
+  return (extractString=="elements");
+}
+
+
 void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll)
 {
    char strBuffer[1024];
@@ -637,6 +646,24 @@ void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll)
        main.pushstr_newL(strBuffer);                                                                                                    //statement to a different method.
 
     }
+  }
+  else if(forAll->isSourceField())
+  {
+    PropAccess* sourceField=forAll->getPropSource();
+    Identifier* extractId=sourceField->getIdentifier2();
+    if(elementsIteration(extractId->getIdentifier()))
+      {
+        Identifier* collectionName=forAll->getPropSource()->getIdentifier1();
+        int typeId=collectionName->getSymbolInfo()->getType()->gettypeId();
+        if(typeId==TYPE_SETN)
+        {
+          main.pushstr_newL("std::set<int>::iterator itr;");
+          sprintf(strBuffer,"for(itr=%s.begin();itr!=%s.end();itr++)",collectionName->getIdentifier(),collectionName->getIdentifier());
+          main.pushstr_newL(strBuffer);
+        }
+
+      }
+
   }
 
 
@@ -679,8 +706,15 @@ blockStatement* dsl_cpp_generator::includeIfToBlock(forallStmt* forAll)
 void dsl_cpp_generator::generateForAll(forallStmt* forAll)
 { 
    proc_callExpr* extractElemFunc=forAll->getExtractElementFunc();
-    Identifier* iteratorMethodId=extractElemFunc->getMethodId();
+   PropAccess* sourceField=forAll->getPropSource();
+   Identifier* extractId;
+    if(sourceField!=NULL)
+     extractId=sourceField->getIdentifier2();
+    Identifier* iteratorMethodId;
+    if(extractElemFunc!=NULL)
+     iteratorMethodId=extractElemFunc->getMethodId();
     statement* body=forAll->getBody();
+     char strBuffer[1024];
   if(forAll->isForall())
   {
     generateForAll_header();
@@ -696,13 +730,15 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll)
    // cout<<"FORALL BODY TYPE"<<(forAll->getBody()->getTypeofNode()==NODE_BLOCKSTMT);
   }
    
+  if(extractElemFunc!=NULL)
+  { 
   if(neighbourIteration(iteratorMethodId->getIdentifier()))
   { 
    
     if(forAll->getParent()->getParent()->getTypeofNode()==NODE_ITRBFS)
      {   
+       
         
-         char strBuffer[1024];
          list<argument*>  argList=extractElemFunc->getArgList();
          assert(argList.size()==1);
          Identifier* nodeNbr=argList.front()->getExpr()->getId();
@@ -735,10 +771,43 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll)
   }
   else
   { 
-    cout<<"ENTER INSIDE FOR NORMAL ITER FORALL"<<"\n";
+  
     cout<<iteratorMethodId->getIdentifier()<<"\n";
     generateStatement(forAll->getBody());
+ 
+
   }
+  }
+  else 
+  {   
+  
+     if(elementsIteration(extractId->getIdentifier()))
+     {
+      if(body->getTypeofNode()==NODE_BLOCKSTMT)
+      main.pushstr_newL("{");
+      sprintf(strBuffer,"int %s = *itr;",forAll->getIterator()->getIdentifier()); 
+      main.pushstr_newL(strBuffer);
+      if(body->getTypeofNode()==NODE_BLOCKSTMT)
+      {
+        generateBlock((blockStatement*)body,false);
+        main.pushstr_newL("}");
+      }
+      else
+         generateStatement(forAll->getBody());
+        
+     }
+     else
+  { 
+   
+    cout<<iteratorMethodId->getIdentifier()<<"\n";
+    generateStatement(forAll->getBody());
+   /* if(forAll->getBody()->getTypeofNode()==NODE_BLOCKSTMT)
+       main.pushstr_newL("}");*/
+
+  }
+
+  }
+  
 
 } 
 
@@ -1169,7 +1238,21 @@ const char* dsl_cpp_generator:: convertToCppType(Type* type)
   }
   else if(type->isGraphType())
   {
-    return "graph";
+    return "graph&";
+  }
+  else if(type->isCollectionType())
+  { 
+     int typeId=type->gettypeId();
+
+      switch(typeId)
+      {
+        case TYPE_SETN:
+          return "std::set<int>&";
+       
+        default:
+         assert(false);          
+      }
+
   }
 
   return "NA";
@@ -1178,7 +1261,9 @@ const char* dsl_cpp_generator:: convertToCppType(Type* type)
 void dsl_cpp_generator:: generateFuncHeader(Function* proc,bool isMainFile)
 { 
   //cout<<"INSIDE THIS VIEW US"<<"\n";
+ 
   dslCodePad& targetFile=isMainFile?main:header;
+  targetFile.pushString("void ");
   targetFile.pushString(proc->getIdentifier()->getIdentifier());
   targetFile.push('(');
   
