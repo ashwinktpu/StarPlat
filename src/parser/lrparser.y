@@ -358,7 +358,7 @@ void yyerror(char *s) {
 
 int main(int argc,char **argv) 
 {
-   dsl_cpp_generator cpp_backend;
+   mpi_cpp_generator cpp_backend;
    SymbolTableBuilder stBuilder;
  
      FILE    *fd;
