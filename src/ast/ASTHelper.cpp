@@ -352,14 +352,17 @@ static ASTNode* createIterateInReverseBFSNode( ASTNode* booleanExpr,/*ASTNode* f
     iterateReverseBFSNode=iterateReverseBFS::nodeForRevBFS((Expression*)booleanExpr,/*(Expression*)filterExpr,*/(statement*)body);
     return iterateReverseBFSNode;
 }
-static ASTNode* createIterateInBFSNode(ASTNode* iterator,ASTNode* graphId,ASTNode* rootNode,ASTNode* filterExpr,ASTNode* body,ASTNode* revBFS)
+static ASTNode* createIterateInBFSNode(ASTNode* iterator,ASTNode* graphId,ASTNode* procCall,ASTNode* rootNode,ASTNode* filterExpr,ASTNode* body,ASTNode* revBFS)
 {
     iterateBFS* iterateBFSNode;
     Identifier* id1=(Identifier*)iterator;
     Identifier* id2=(Identifier*)graphId;
     Identifier* id3=(Identifier*)rootNode;
-    cout<<"INSIDE BFS1"<<id2->getIdentifier()<<"\n";
-    iterateBFSNode=iterateBFS::nodeForIterateBFS(id1,id2,id3,(Expression*)filterExpr,(statement*)body,(iterateReverseBFS*)revBFS);
+    proc_callExpr* nodeCall = (proc_callExpr*)procCall;
+    char* methodName = nodeCall->getMethodId()->getIdentifier();
+    string methodString(methodName);
+    assert(methodString.compare("nodes")==0);
+    iterateBFSNode=iterateBFS::nodeForIterateBFS(id1,id2,nodeCall,id3,(Expression*)filterExpr,(statement*)body,(iterateReverseBFS*)revBFS);
     return iterateBFSNode;
 }
 };
