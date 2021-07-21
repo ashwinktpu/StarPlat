@@ -1,14 +1,14 @@
-#ifndef DSL_CPP_GENERATOR
-#define DSL_CPP_GENERATOR
+#ifndef MPI_CPP_GENERATOR
+#define MPI_CPP_GENERATOR
 
 #include <cstdio>
-//#include "../dslCodePad.h"
+#include "../dslCodePad.h"
 #include "../../ast/ASTNodeTypes.hpp"
 #include "../../parser/includeHeader.hpp"
 //#include "dslCodePad.h"
 
 
-class dsl_cpp_generator
+class mpi_cpp_generator
 {
   private:
 
@@ -19,7 +19,7 @@ class dsl_cpp_generator
   char* fileName;
 
   public:
-  dsl_cpp_generator()
+  mpi_cpp_generator()
   {
     headerFile=NULL;
     bodyFile=NULL;
@@ -49,6 +49,8 @@ class dsl_cpp_generator
   void generateBFS();
   void generateBlock(blockStatement* blockStmt, bool includeBrace=true);
   void generateReductionStmt(reductionCallStmt* reductnStmt);
+  void generateInnerReductionStmt(reductionCallStmt* stmt);
+  void generateReductionStmtForSend(reductionCallStmt* stmt,bool send);
   void generateBFSAbstraction(iterateBFS* bfsAbstraction);
   void generateExpr(Expression* expr);
   void generate_exprRelational(Expression* expr);
@@ -56,11 +58,16 @@ class dsl_cpp_generator
   void generate_exprLiteral(Expression* expr);
   void generate_exprIdentifier(Identifier* id);
   void generate_exprPropId(PropAccess* propId) ;
-  void generate_exprPropIdReceive(PropAccess* propId);
+  void generate_exprPropIdReceive(PropAccess* propId) ;
   void generate_exprProcCall(Expression* expr);
   void generate_exprArL(Expression* expr);
+  void generate_exprArLReceive(Expression* expr);
   void generateForAll_header();
   void generateForAllSignature(forallStmt* forAll);
+  void generate_sendCall(statement* body);
+  void generate_receiveCall(statement* body);
+  void generate_addMessage(blockStatement* body,bool send);
+  void generateReceiveBlock(blockStatement* body);
   //void includeIfToBlock(forallStmt* forAll);
   bool neighbourIteration(char* methodId);
   bool allGraphIteration(char* methodId);
@@ -77,7 +84,7 @@ class dsl_cpp_generator
 
 };
 
-//static const char* INTALLOCATION = "new int";
-//static const char* BOOLALLOCATION = "new bool";
-//static const char* FLOATALLOCATION = "new float";
+static const char* INTALLOCATION = "new int";
+static const char* BOOLALLOCATION = "new bool";
+static const char* FLOATALLOCATION = "new float";
 #endif
