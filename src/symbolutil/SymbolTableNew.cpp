@@ -18,6 +18,8 @@ TableEntry::TableEntry(Identifier* idSent,Type* typeSent)
         TableEntry* e = new TableEntry(idCopy,typeCopy);
         id->setSymbolInfo(e);
         entries.push_back(e);
+
+       
     }
 
 TableEntry* SymbolTable::findEntryInST(Identifier* id)

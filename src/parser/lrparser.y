@@ -1,4 +1,4 @@
- %{
+%{
 	
 	#include <stdio.h>
 	#include <string.h>
@@ -19,6 +19,7 @@
 	extern char *yytext;
 	//extern SymbolTable* symbTab;
 	FrontEndContext frontEndContext;
+	char* backendTarget ;
     //symbTab=new SymbolTable();
 	//symbolTableList.push_back(new SymbolTable());
 %}
@@ -358,9 +359,9 @@ void yyerror(char *s) {
 
 int main(int argc,char **argv) 
 {
-   mpi_cpp_generator cpp_backend;
-   SymbolTableBuilder stBuilder;
- 
+  
+    dsl_cpp_generator cpp_backend;
+    SymbolTableBuilder stBuilder;
      FILE    *fd;
      
     if (argc>1)
@@ -378,12 +379,11 @@ int main(int argc,char **argv)
 	cpp_backend.generate();
 	
 	}
-  /*
-
-  int opt;
+  
+ /* int opt;
   char* fileName=NULL;
-  char* backendTarget=NULL;
-
+  //char* backendTarget=NULL;
+  backendTarget = NULL;
   while ((opt = getopt(argc, argv, ":f:b:")) != -1) 
   {
      switch (opt) 
