@@ -44,7 +44,7 @@
 %token T_ADD_ASSIGN T_SUB_ASSIGN T_MUL_ASSIGN T_DIV_ASSIGN T_MOD_ASSIGN T_AND_ASSIGN T_XOR_ASSIGN
 %token T_OR_ASSIGN T_RIGHT_OP T_LEFT_OP T_INC_OP T_DEC_OP T_PTR_OP T_AND_OP T_OR_OP T_LE_OP T_GE_OP T_EQ_OP T_NE_OP
 %token T_AND T_OR T_SUM T_AVG T_COUNT T_PRODUCT T_MAX T_MIN
-%token T_GRAPH T_DIR_GRAPH  T_NODE T_EDGE T_NODES
+%token T_GRAPH T_DIR_GRAPH  T_NODE T_EDGE 
 %token T_NP  T_EP
 %token T_LIST T_SET_NODES T_SET_EDGES  T_FROM
 %token T_BFS T_REVERSE
@@ -321,8 +321,8 @@ arg_list :    {printf("No args\n");
 						   };
 
 
-bfs_abstraction	: T_BFS '(' id ':' T_NODES '(' id ')' T_FROM id ')' filterExpr blockstatements reverse_abstraction{$$=Util::createIterateInBFSNode($3,$7,$10,$12,$13,$14) ;};
-			| T_BFS '(' id ':' T_FROM id ')' filterExpr blockstatements {//$$=Util::createIterateInBFSNode($3,$6,$8,$9,$10) ;
+bfs_abstraction	: T_BFS '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr blockstatements reverse_abstraction{$$=Util::createIterateInBFSNode($3,$5,$7,$9,$11,$12,$13) ;};
+			| T_BFS '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr blockstatements {//$$=Util::createIterateInBFSNode($3,$6,$8,$9,$10) ;
 			};
 
 
@@ -378,9 +378,9 @@ int main(int argc,char **argv)
 	cpp_backend.generate();
 	
 	}
-  
+  /*
 
- /* int opt;
+  int opt;
   char* fileName=NULL;
   char* backendTarget=NULL;
 
@@ -395,12 +395,12 @@ int main(int argc,char **argv)
         backendTarget = optarg;
         break;
       case '?':
-        printf("Unknown option: %c\n", optopt);
-		exit(0);
+        fprintf(stderr,"Unknown option: %c\n", optopt);
+		exit(-1);
         break;
       case ':':
-        printf("Missing arg for %c\n", optopt);
-		exit(0);
+        fprintf(stderr,"Missing arg for %c\n", optopt);
+		exit(-1);
         break;
      }
   }
@@ -410,11 +410,20 @@ int main(int argc,char **argv)
    if(fileName==NULL||backendTarget==NULL)
    {
 	   if(fileName==NULL)
-	      printf("FileName option Error!\n");
+	      fprintf(stderr,"FileName option Error!\n");
 	   if(backendTarget==NULL)
-	      printf("backendTarget option Error!")	;
-	   exit(0);	    
+	      fprintf(stderr,"backendTarget option Error!\n")	;
+	   exit(-1);	    
    }
+   else
+    {
+		if(!(strcmp(backendTarget,"omp")==0)||(strcmp(backendTarget,"mpi")==0)||(strcmp(backendTarget,"cuda")==0))
+		   {
+              // printf("Specified backend target is not implemented in the current version!\n");
+			  fprintf(stderr, "Specified backend target is not implemented in the current version!\n");
+			   exit(-1);
+		   }
+	}
    yyin= fopen(fileName,"r");
    int error=yyparse();
 	printf("error val %d\n",error);
@@ -427,7 +436,7 @@ int main(int argc,char **argv)
 	cpp_backend.generate();
 	
 	}
-  */  
+   */
 	return 0;   
 	 
 }
