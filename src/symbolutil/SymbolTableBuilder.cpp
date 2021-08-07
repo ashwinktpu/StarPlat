@@ -390,7 +390,8 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
            list<statement*>::iterator itrProc;
           bool flag=false;
           bool callFlag=false;
-          string backend(backendTarget);
+          //string backend(backendTarget);
+          //string backend = NULL;
           for(itr=stmtList.begin();itr!=stmtList.end();itr++)
           { 
           

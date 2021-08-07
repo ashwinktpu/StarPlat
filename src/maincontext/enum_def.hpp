@@ -1,7 +1,7 @@
 /*enum for various graph characteristics*/
 #ifndef ENUMDEF_H
 #define ENUMDEF_H
-
+#include <cassert>
 enum TYPE
 {
  TYPE_LONG,
