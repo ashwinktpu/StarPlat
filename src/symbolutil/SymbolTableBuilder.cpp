@@ -205,7 +205,8 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
            list<statement*>::iterator itrProc;
           bool flag=false;
           bool callFlag=false;
-          string backend(backendTarget);
+          //string backend(backendTarget);
+          //string backend = NULL;
           for(itr=stmtList.begin();itr!=stmtList.end();itr++)
           { 
           
@@ -234,6 +235,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
              count++;
           }
 
+            /*
           if(flag&&backend.compare("omp")==0)
           { 
             iterateBFS* itrbFS=(iterateBFS*)(*itrIBFS);  
@@ -250,7 +252,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
             assignment* assignmentNode=assignment::prop_assignExpr(propIdNode,expr);
             blockStmt->insertToBlock(assignmentNode,bfsPos+1);
 
-         }
+         }*/
 
           delete_curr_SymbolTable();
              break;

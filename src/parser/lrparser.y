@@ -45,7 +45,7 @@
 %token T_ADD_ASSIGN T_SUB_ASSIGN T_MUL_ASSIGN T_DIV_ASSIGN T_MOD_ASSIGN T_AND_ASSIGN T_XOR_ASSIGN
 %token T_OR_ASSIGN T_RIGHT_OP T_LEFT_OP T_INC_OP T_DEC_OP T_PTR_OP T_AND_OP T_OR_OP T_LE_OP T_GE_OP T_EQ_OP T_NE_OP
 %token T_AND T_OR T_SUM T_AVG T_COUNT T_PRODUCT T_MAX T_MIN
-%token T_GRAPH T_DIR_GRAPH  T_NODE T_EDGE 
+%token T_GRAPH T_DIR_GRAPH  T_NODE T_EDGE T_NODES	
 %token T_NP  T_EP
 %token T_LIST T_SET_NODES T_SET_EDGES  T_FROM
 %token T_BFS T_REVERSE
@@ -360,7 +360,8 @@ void yyerror(char *s) {
 int main(int argc,char **argv) 
 {
   
-    dsl_cpp_generator cpp_backend;
+    //dsl_cpp_generator cpp_backend;
+	mpi_cpp_generator cpp_backend;
     SymbolTableBuilder stBuilder;
      FILE    *fd;
      
