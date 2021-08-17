@@ -43,6 +43,7 @@ class mpi_cpp_generator
   void generateAssignmentStmt(assignment* assignStmt);
   void generateWhileStmt(whileStmt* whilestmt);
   void generateForAll(forallStmt* forAll);
+  void generateFor(forallStmt* forStmt);
   void generateFixedPoint(fixedPointStmt* fixedPoint);
   void generateIfStmt(ifStmt* ifstmt);
   void generateDoWhileStmt(dowhileStmt* doWhile);
@@ -51,6 +52,11 @@ class mpi_cpp_generator
   void generateReductionStmt(reductionCallStmt* reductnStmt);
   void generateInnerReductionStmt(reductionCallStmt* stmt);
   void generateReductionStmtForSend(reductionCallStmt* stmt,bool send);
+  void generateExprForSend(Expression* expr,int send, Identifier* remote);
+  void generateAssignmentForSend(assignment* stmt,int send,Identifier* remote);
+  void generatePropAccessForSend(PropAccess* lhs,int send,Identifier* remote);
+  void generate_exprLiteralForSend(Expression* expr,int send,Identifier *remote);
+  void generateArLForSend(Expression* stmt,int send, Identifier* remote);
   void generateBFSAbstraction(iterateBFS* bfsAbstraction);
   void generateExpr(Expression* expr);
   void generate_exprRelational(Expression* expr);
@@ -64,16 +70,18 @@ class mpi_cpp_generator
   void generate_exprArLReceive(Expression* expr);
   void generateForAll_header();
   void generateForAllSignature(forallStmt* forAll);
+  void generateForSignature(forallStmt* forAll);
   void generate_sendCall(statement* body);
   void generate_receiveCall(statement* body);
-  void generate_addMessage(blockStatement* body,bool send);
+  void generate_receiveCallBFS(statement* body,int send,Identifier *id);
+  void generate_addMessage(statement* body,int send,Identifier* id);
   void generateReceiveBlock(blockStatement* body);
   //void includeIfToBlock(forallStmt* forAll);
   bool neighbourIteration(char* methodId);
   bool allGraphIteration(char* methodId);
   bool elementsIteration(char* extractId);
   blockStatement* includeIfToBlock(forallStmt* forAll);
-
+ // void generateIsFinished();
   void generateId();
   void generateOid();
   void addIncludeToFile(char* includeName,dslCodePad& file,bool isCPPLib);
