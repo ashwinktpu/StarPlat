@@ -113,7 +113,7 @@ class graph
     #pragma omp parallel for num_threads(4)
      for(int i=0;i<=nodesTotal;i++)//change to 1-nodesTotal.
      {
-       std::vector<edge> edgeOfVertex=edges[i];
+       std::vector<edge>& edgeOfVertex=edges[i];
      
        sort(edgeOfVertex.begin(),edgeOfVertex.end(),
                             [](const edge& e1,const edge& e2) {
