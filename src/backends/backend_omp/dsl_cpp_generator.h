@@ -61,10 +61,12 @@ class dsl_cpp_generator
   void generate_exprArL(Expression* expr);
   void generateForAll_header();
   void generateForAllSignature(forallStmt* forAll);
+  void generatefixedpt_filter(Expression* filterExpr);
   //void includeIfToBlock(forallStmt* forAll);
   bool neighbourIteration(char* methodId);
   bool allGraphIteration(char* methodId);
   bool elementsIteration(char* extractId);
+  
   blockStatement* includeIfToBlock(forallStmt* forAll);
 
   void generateId();
@@ -73,6 +75,7 @@ class dsl_cpp_generator
   void generatePropertyDefination(Type* type,char* Id);
   void findTargetGraph(vector<Identifier*> graphTypes,Type* type);
   void getDefaultValueforTypes(int type);
+
 
 
 };
