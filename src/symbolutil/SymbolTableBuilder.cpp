@@ -176,10 +176,27 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                source1 = forAll->getSource();
             PropAccess* propId=forAll->isSourceField()?forAll->getPropSource():NULL;
             searchSuccess=checkHeaderSymbols(source1,propId,forAll);
+            string backend(backendTarget);
             if(forAll->hasFilterExpr())
             {
                 checkForExpressions(forAll->getfilterExpr());
             }
+            
+            /* Required for omp backend code generation,
+               the forall is checked for its existence inside 
+               another forall which is to be generated with 
+               omp parallel pragma, and then disable the parallel loop*/
+            if(backend.compare("omp")==0)
+             {
+                 if(forAll->getParent()->getParent()->getTypeofNode()==NODE_FORALLSTMT)
+                  {  
+                      forallStmt* parentFor =(forallStmt*)forAll->getParent()->getParent();
+                      if(parentFor->isForall())
+                        {
+                            forAll->disableForall();
+                        }
+                  }
+             }
            
           
             if(forAll->getParent()->getParent()->getTypeofNode()==NODE_ITRBFS)
@@ -291,7 +308,10 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                if((*itr)->getTypeofNode()==NODE_ID)
                    findSymbolId((Identifier*)*itr);
                 if((*itr)->getTypeofNode()==NODE_PROPACCESS)
-                    findSymbolPropId((PropAccess*)*itr);   
+                   {
+                    findSymbolPropId((PropAccess*)*itr);  
+                   
+                   }
            }
            for(itr1=exprList.begin();itr1!=exprList.end();itr1++)
            {
@@ -420,7 +440,7 @@ bool SymbolTableBuilder::checkForArguments(list<argument*> argList)
      Identifier* id1=propId->getIdentifier1();
      Identifier* id2=propId->getIdentifier2();
      search_and_connect_toId(currVarSymbT,id1);
-     search_and_connect_toId(currPropSymbT,id2);
+     search_and_connect_toId(currPropSymbT,id2); //need to change..ideally this should search in prop.
      
  }
 
