@@ -364,7 +364,7 @@ int main(int argc,char **argv)
     SymbolTableBuilder stBuilder;
      FILE    *fd;
      
-    if (argc>1)
+   /* if (argc>1)
      yyin= fopen(argv[1],"r");
 	else 
 	  yyin=stdin;
@@ -379,8 +379,8 @@ int main(int argc,char **argv)
 	cpp_backend.generate();
 	
 	}
-  
- /* int opt;
+  */
+  int opt;
   char* fileName=NULL;
   //char* backendTarget=NULL;
   backendTarget = NULL;
@@ -429,14 +429,14 @@ int main(int argc,char **argv)
 	printf("error val %d\n",error);
 	if(error!=1)
 	{
-  // printf("%d SIZE OF FUNCLIST",frontEndContext.getFuncList().size()); 
-  // printf("GRAPH ID %s",graphId[0]->getIdentifier());
+     //TODO: redirect to different backend generator after comparing with the 'b' option
     stBuilder.buildST(frontEndContext.getFuncList());
 	cpp_backend.setFileName(fileName);
 	cpp_backend.generate();
 	
 	}
-   */
+   
+   /* to generate code, ./finalcode -f "filename" -b "backendname"*/
 	return 0;   
 	 
 }

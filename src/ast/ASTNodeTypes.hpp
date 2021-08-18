@@ -747,6 +747,7 @@ class formalParam:public ASTNode
     {
        Expression* propIdExpr=new Expression();
        propIdExpr->propId=propId;
+       propId->setParent(propIdExpr);
        propIdExpr->typeofExpr=EXPR_PROPID;
        return propIdExpr;
 
@@ -1489,6 +1490,13 @@ class fixedPointStmt:public statement
     {
       return isforall;
     }
+    
+    /* disable parallelization of for
+       for specific instances*/
+    void disableForall() 
+    {                     
+      isforall=false;
+    }
 
     proc_callExpr* getExtractElementFunc()
     {
@@ -1635,9 +1643,17 @@ class reductionCallStmt:public statement
       // cout<<"REDUC CALL TYPE "<<(reducCall->getReductionType()==REDUCE_MIN)<<"\n";
        reductionCallStmt* reducCallStmtNode=new reductionCallStmt();
        reducCallStmtNode->leftList=llist;
+       for(ASTNode* node:llist)
+        {
+          node->setParent(reducCallStmtNode);
+        }
        reducCallStmtNode->reducCall=reducCall;
        reducCallStmtNode->lhsType=3;
        reducCallStmtNode->exprList=exprListSent;
+        for(ASTNode* node:exprListSent)
+        {
+          node->setParent(reducCallStmtNode);
+        }
        return reducCallStmtNode;
      }
     
