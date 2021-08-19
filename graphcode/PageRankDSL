@@ -1,0 +1,34 @@
+function Compute_PR(Graph g,double beta,int maxIter,propNode<double> pageRank)
+{
+ int num_nodes = g.num_nodes();
+ g.attachNodeProperty(pageRank=1/num_nodes);
+ int iterCount=0;
+ double diff ;
+
+ do
+  {
+    diff=0.0;
+
+    forall(v in g.nodes())
+    {    
+        double sum=0.0;
+ 
+        for(nbr in g.nodes_to (v))
+         {
+            sum=sum+nbr.pageRank/g.count_inNbrs(nbr);
+         }
+
+         double val=(1-delta)/num_nodes+delta*sum;
+         diff+=val-v.pageRank; //+= is reduction.
+         v.pageRank=val;
+
+    }
+
+    iterCount++;
+
+
+  } while((diff>beta)&&(iterCount<maxIter));
+
+
+
+}
