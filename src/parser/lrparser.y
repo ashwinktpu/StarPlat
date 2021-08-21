@@ -214,7 +214,9 @@ expression : proc_call { $$=$1;};
 			 | expression T_EQ_OP expression{$$=Util::createNodeForRelationalExpr($1,$3,OPERATOR_EQ);};
              | expression T_NE_OP expression{$$=Util::createNodeForRelationalExpr($1,$3,OPERATOR_NE);};
 			 | '!'expression {$$=Util::createNodeForUnaryExpr($2,OPERATOR_NOT);}
-		     | '(' expression ')' {$$=$2;printf("INSIDE EXPR");};
+		     | '(' expression ')' { Expression* expr=(Expression*)$2;
+				                     expr->setEnclosedBrackets();
+			                        $$=expr;printf("INSIDE EXPR");};
 	         | val {$$=$1;};
 			 | leftSide { $$=Util::createNodeForId($1);};
 
