@@ -47,7 +47,9 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
      assert(id->getIdentifier()!=NULL);
      TableEntry* tableEntry=sTab->findEntryInST(id);
      if(tableEntry==NULL)
-     {  return false;
+     {  
+        // sTab->create_and_add_entry();
+         return false;
          //to be added.
      }
      // cout<<"FINALLY FOUND IT"<<"\n";
@@ -56,6 +58,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
       assert(id->getSymbolInfo()==tableEntry);
       }
      else
+     {
         id->setSymbolInfo(tableEntry);
 
      return true;
@@ -528,6 +531,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
        }
        case NODE_ITRBFS:
        {
+           cout<<"At symtab bulder - iterate in bfs\n";
           iterateBFS* iBFS=(iterateBFS*)stmt;
           string backend(backendTarget);
             if(backend.compare("omp")==0 ||  backend.compare("openACC") == 0 )
