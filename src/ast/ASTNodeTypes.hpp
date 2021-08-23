@@ -630,6 +630,7 @@ class formalParam:public ASTNode
     int typeofExpr;
     Identifier* id;
     PropAccess* propId;
+    bool enclosedBrackets;
 
     public:
 
@@ -641,6 +642,7 @@ class formalParam:public ASTNode
       propId=NULL;
       typeofNode=NODE_EXPR;
       overallType=-1;
+      enclosedBrackets=false;
     }
     
     static Expression* nodeForArithmeticExpr(Expression* left,Expression* right,int arithmeticOperator)
@@ -875,7 +877,15 @@ class formalParam:public ASTNode
        return typeofExpr;
      }
 
+         bool setEnclosedBrackets()
+     {
+       enclosedBrackets=true;
+     }
 
+     bool hasEnclosedBrackets()
+     {
+       return enclosedBrackets;
+     }
    
 
 
@@ -1242,6 +1252,13 @@ class fixedPointStmt:public statement
     Expression* getBFSFilter()
     {
       return booleanExpr;
+    }
+    bool hasFilter()
+    {
+      if(booleanExpr!=NULL)
+        return true;
+      else
+        return false;
     }
 
   };

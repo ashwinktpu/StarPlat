@@ -1,8 +1,9 @@
 #include "mpi_cpp_generator.h"
 #include<string.h>
 #include<cassert>
-
-
+int count = 0;
+bool is_fixedPoint = false;
+int num_messages = 0;
 
 
 void mpi_cpp_generator::addIncludeToFile(char* includeName,dslCodePad& file,bool isCppLib)
@@ -103,8 +104,15 @@ void add_InitialDeclarations(dslCodePad* main,iterateBFS* bfsAbstraction)
   main->pushstr_newL("int phase = 0 ;");
   main->pushstr_newL("vector <int> active;");
   main->pushstr_newL("vector<int> active_next;");
+  sprintf(strBuffer,"vector <vector<int>> p (%s.num_nodes());",graphId);
+  main->pushstr_newL(strBuffer);
   sprintf(strBuffer,"int* d = new int[%s.num_nodes()];",graphId);
   main->pushstr_newL(strBuffer);
+  sprintf(strBuffer,"for (int t = 0; t < %s.num_nodes(); t++)",graphId);
+  main->pushstr_newL(strBuffer);
+  main->pushstr_newL("{");
+  main->pushstr_newL("d[t] = -1;");
+  main->pushstr_newL("}");
   sprintf(strBuffer,"active.push_back(%s);",root->getIdentifier());
   main->pushstr_newL(strBuffer);
   sprintf(strBuffer,"d[%s] = 0;",root->getIdentifier());
@@ -163,11 +171,19 @@ void add_InitialDeclarations(dslCodePad* main,iterateBFS* bfsAbstraction)
   
   }
 
-  void add_RBFSIterationLoop(dslCodePad* main, iterateBFS* bfsAbstraction)
+  void add_RBFSIterationLoop(dslCodePad* main, iterateBFS* bfsAbstraction,Identifier* graphID)
   {
    
     char strBuffer[1024];    
     char* iterNode=bfsAbstraction->getIteratorNode()->getIdentifier();
+    sprintf(strBuffer,"bool* modified = new bool[%s.num_nodes()];",graphID->getIdentifier());
+    main->pushstr_newL(strBuffer);
+    sprintf(strBuffer,"for (int t = 0; t < %s.num_nodes(); t++)",graphID->getIdentifier());
+    main->pushstr_newL(strBuffer);
+    main->pushstr_newL("{");
+    main->pushstr_newL("modified[t] = false;");
+    main->pushstr_newL("}");
+    main->pushstr_newL("MPI_Barrier(MPI_COMM_WORLD);");
     main->pushstr_newL("while (phase > 0)") ;
     main->pushstr_newL("{");
     //main->pushstr_newL("#pragma omp parallel for");
@@ -182,9 +198,11 @@ void add_InitialDeclarations(dslCodePad* main,iterateBFS* bfsAbstraction)
 
  void mpi_cpp_generator::generateBFSAbstraction(iterateBFS* bfsAbstraction)
  {
+   char strBuffer[1024];
    add_InitialDeclarations(&main,bfsAbstraction);
    Identifier* iterNode=bfsAbstraction->getIteratorNode();
   //printf("BFS ON GRAPH %s",bfsAbstraction->getGraphCandidate()->getIdentifier());
+  Identifier* graphID = bfsAbstraction->getGraphCandidate();
    add_BFSIterationLoop(&main,&header, bfsAbstraction);
    statement* body=bfsAbstraction->getBody();
    assert(body->getTypeofNode()==NODE_BLOCKSTMT);
@@ -214,15 +232,54 @@ void add_InitialDeclarations(dslCodePad* main,iterateBFS* bfsAbstraction)
 
 
 
-   add_RBFSIterationLoop(&main,bfsAbstraction);
+   add_RBFSIterationLoop(&main,bfsAbstraction,graphID);
    blockStatement* revBlock=(blockStatement*)bfsAbstraction->getRBFS()->getBody();
    list<statement*> revStmtList=revBlock->returnStatements();
+   Expression* filter = bfsAbstraction->getRBFS()->getBFSFilter();
 
   // main.pushstr_newL("}");    //if
   // main.pushstr_newL("}");    //for
 
     for(statement* stmt:revStmtList)
     {
+      if(stmt->getTypeofNode() != NODE_FORALLSTMT)
+      {
+        cout<<"Not forall\n";
+        
+        if(bfsAbstraction->getRBFS()->hasFilter())
+        {
+            cout<<"rbfs has filter\n";
+            sprintf(strBuffer,"for (int %s=startv;%s<=endv;%s++)",iterNode->getIdentifier(),iterNode->getIdentifier(),iterNode->getIdentifier());
+            main.pushstr_newL(strBuffer);
+            main.pushstr_newL("{");
+              main.pushstr_space("if(");
+                generateExpr(filter);
+              sprintf(strBuffer," && modified[%s] == true)",iterNode->getIdentifier());
+              main.pushstr_newL(strBuffer);
+              main.pushstr_newL("{");
+                sprintf(strBuffer,"modified[%s] = false;",iterNode->getIdentifier());
+                main.pushstr_newL(strBuffer);
+                generateStatement(stmt);
+              main.pushstr_newL("}");
+            main.pushstr_newL("}");
+        }
+        else
+        {
+          cout<<"rbfs has no filter\n";
+            sprintf(strBuffer,"for (int %s=startv;%s<=endv;%s++)",iterNode->getIdentifier(),iterNode->getIdentifier(),iterNode->getIdentifier());
+            main.pushstr_newL(strBuffer);
+            main.pushstr_newL("{");
+              sprintf(strBuffer,"if( modified[%s] == true )",iterNode->getIdentifier());
+              main.pushstr_newL(strBuffer);
+              main.pushstr_newL("{");
+                sprintf(strBuffer,"modified[%s] = false;",iterNode->getIdentifier());
+                main.pushstr_newL(strBuffer);
+                generateStatement(stmt);
+              main.pushstr_newL("}");
+            main.pushstr_newL("}");
+        }
+      }
+      else
        generateStatement(stmt);
     }
    
@@ -233,16 +290,6 @@ void add_InitialDeclarations(dslCodePad* main,iterateBFS* bfsAbstraction)
    main.pushstr_newL("send_data.clear();");
    main.pushstr_newL("receive_data.clear();");
    main.pushstr_newL("}"); //outer while
-
-   main.pushstr_newL("gettimeofday(&end, NULL);");
-   main.pushstr_newL("seconds = (end.tv_sec - start.tv_sec);");
-   main.pushstr_newL("micros = ((seconds * 1000000) + end.tv_usec) - (start.tv_usec);");
-   main.pushstr_newL("if(my_rank==0)");
-   main.pushstr_newL("{");
-      main.pushstr_newL("printf(\"The iteration time = %ld micro secs.\\n\",micros);");
-      main.pushstr_newL("printf(\"The iteration time = %ld secs.\\n\",seconds);");
-   main.pushstr_newL("}");
-
 
 
  }
@@ -732,23 +779,24 @@ void mpi_cpp_generator::generateReductionStmtForSend(reductionCallStmt* stmt,boo
 
 }
 
-void mpi_cpp_generator::generateExprForSend(Expression* expr,int send, Identifier* remote)
+void mpi_cpp_generator::generateExprForSend(Expression* expr,int send, Identifier* remote,Identifier* replace)
 {
   cout<<" reached generateExprForSend\n";
   if(expr->isArithmetic() || expr->isLogical())
   {
     cout<<"Expression is arithmetics...calling arl\n";
-    generateArLForSend( expr,send,remote);
+    generateArLForSend( expr,send,remote,replace);
   }
   else if(expr->isPropIdExpr())
   {
     cout<<"Expression is propid...calling propidgen\n";
-    generatePropAccessForSend(expr->getPropId(),send,remote);
+    //expr->getPropId()->getIdentifier2()->getSymbolInfo()->getType();
+    generatePropAccessForSend(expr->getPropId(),send,remote,replace);
   }
   else if(expr->isLiteral())
   {
     cout<<"Expression is literal...calling literalforsend\n";
-    generate_exprLiteralForSend(expr,send,remote);
+    generate_exprLiteralForSend(expr,send,remote,replace);
   }
   else 
        {
@@ -756,26 +804,26 @@ void mpi_cpp_generator::generateExprForSend(Expression* expr,int send, Identifie
        }
 }
 
-void mpi_cpp_generator::generateAssignmentForSend(assignment* stmt,int send, Identifier* remote)
+void mpi_cpp_generator::generateAssignmentForSend(assignment* stmt,int send, Identifier* remote, Identifier* replace)
 {
   cout<<"reaced generateAssignmentForSend\n";
   if(stmt->lhs_isProp())
   {
     PropAccess* lhs = stmt->getPropId();
     if(send==3)
-      generatePropAccessForSend(lhs,send,remote);
+      generatePropAccessForSend(lhs,send,remote,replace);
   }
   if (send == 3)
     main.pushstr_space(" =");
   Expression* rhs = stmt->getExpr();
   if(rhs->isPropIdExpr())
   {
-    generatePropAccessForSend(rhs->getPropId(),send,remote);
+    generatePropAccessForSend(rhs->getPropId(),send,remote,replace);
   }
   else
   {
     cout<<"Rhs of assignment is expr..calling generateExprForSend\n";
-    generateExprForSend(rhs,send,remote);
+    generateExprForSend(rhs,send,remote,replace);
   }
     /*
   Expression* left = rhs->getLeft();
@@ -801,7 +849,7 @@ void mpi_cpp_generator::generateAssignmentForSend(assignment* stmt,int send, Ide
     main.pushstr_newL(";");
 }
 
-void mpi_cpp_generator::generatePropAccessForSend(PropAccess* stmt,int send, Identifier* remote)
+void mpi_cpp_generator::generatePropAccessForSend(PropAccess* stmt,int send, Identifier* remote,Identifier* replace)
 {
   char strBuffer[1024];
   Identifier* id1 = stmt->getIdentifier1();
@@ -809,6 +857,7 @@ void mpi_cpp_generator::generatePropAccessForSend(PropAccess* stmt,int send, Ide
   string i1(id1->getIdentifier());
   string i2(id2->getIdentifier());
   string rem(remote->getIdentifier());
+  cout<<"Testing........................."<<i1 << rem <<endl;
   if(i1 == rem)
   {
     if(send == 1)
@@ -817,6 +866,7 @@ void mpi_cpp_generator::generatePropAccessForSend(PropAccess* stmt,int send, Ide
       main.pushString(strBuffer);
       generate_exprPropId(stmt);
       main.pushstr_newL(");");
+      num_messages++;
     }
     else if(send == 3)
     {
@@ -825,16 +875,54 @@ void mpi_cpp_generator::generatePropAccessForSend(PropAccess* stmt,int send, Ide
     else
     {
       //Identifier* id2 = stmt->getIdentifier2(); 
-      cout<<id2->getIdentifier() << endl;
-      //Type* type = id2->getSymbolInfo()->getType()->getInnerTargetType();
+      //PropAccess* newProp = new PropAccess();
+      cout<<"send type is.sssssssssssssssssssssss 2"<<endl;
+      if(replace !=NULL)
+      //if(to_replace == true)
+      {
+         cout<<"reached here.........................replace not equal to null\n";
+         //PropAccess* newProp = new PropAccess();
+        //newProp = (PropAccess*)Util::createPropIdNode((ASTNode*)replace,(ASTNode*)id2);
+        PropAccess* newProp;
+
+        newProp=PropAccess::createPropAccessNode(replace,id2);
+        //cout<<id2->getIdentifier() << endl;
+        cout<<newProp->getIdentifier1()->getIdentifier() << endl;
+        cout<<newProp->getIdentifier2()->getIdentifier() << endl;
+        //TableEntry* t = id2->getSymbolInfo();
+        Type* t = id2->getSymbolInfo()->getType()->getInnerTargetType();
+        //TableEntry* t1 = newProp->getPropSymbT()->findEntryInST(id2);
+        if(t == NULL)
+          cout<<"t  NULLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL\n";
+       // if(t1 == NULL)
+         // cout<<"t1  also NULLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL\n";
+        //Type* t = newProp->getIdentifier2()->getSymbolInfo()->getType()->getInnerTargetType();
+        main.pushstr_space(convertToCppType(t));
+        generate_exprPropIdReceive(newProp);
+        sprintf(strBuffer," = receive_data[t][x+%d];",count);
+        main.pushstr_newL(strBuffer);
+        count++;
+      }
+      //((declaration*)id2)->getType();
+      //stmt->getAccessType()
+      //stmt->getPropSymbT()->getEntries()->g
+      //Type* t = stmt->getPropSymbT()->findEntryInST(id2)->getType()->getInnerTargetType();
+      //Type* type = id1->getSymbolInfo()->getType()->getInnerTargetType();
       //TableEntry* t = id2->getSymbolInfo();
       //cout<<t->getId()->getIdentifier();
       //// = convertToCppType(t); 
       //sprintf(strBuffer,"%s ",convertToCppType(t));
-      //main.pushString(strBuffer);    
-      generate_exprPropIdReceive(stmt);
-      sprintf(strBuffer," = receive_data[t][x+3];");
-      main.pushstr_newL(strBuffer);
+      //main.pushString(strBuffer);  
+      else
+      {  
+        cout<<"reached here.........................replace  equal to null\n";
+        Type* t = id2->getSymbolInfo()->getType()->getInnerTargetType();
+        main.pushstr_space(convertToCppType(t));
+        generate_exprPropIdReceive(stmt);
+        sprintf(strBuffer," = receive_data[t][x+%d];",count);
+        main.pushstr_newL(strBuffer);
+        count++;
+      }
       //main.pushstr_newL(");");
     }
   }
@@ -845,16 +933,21 @@ void mpi_cpp_generator::generatePropAccessForSend(PropAccess* stmt,int send, Ide
   }
 }
 
-void mpi_cpp_generator::generateArLForSend(Expression* stmt,int send, Identifier* remote)
+void mpi_cpp_generator::generateArLForSend(Expression* stmt,int send, Identifier* remote,Identifier* replace)
 {
   cout<<"Reached generateArLForSend\n";
   char strBuffer[1024];
+  if(send == 3 )
+  {
+    if(stmt->hasEnclosedBrackets())
+      main.pushstr_space("(");
+  }
   Expression* left = stmt->getLeft();
   //if(left->isPropIdExpr())
   //{
     //  generatePropAccessForSend(left->getPropId(),send,remote);
   //}
-  generateExprForSend(left,send,remote);
+  generateExprForSend(left,send,remote,replace);
   if (send == 3)
   {
     main.space();
@@ -867,11 +960,16 @@ void mpi_cpp_generator::generateArLForSend(Expression* stmt,int send, Identifier
     //  generatePropAccessForSend(right->getPropId(),send,remote);
   //}
   //else
-    generateExprForSend(right,send,remote);
+    generateExprForSend(right,send,remote,replace);
+    if(send == 3)
+    {
+      if(stmt->hasEnclosedBrackets())
+        main.pushstr_space(")");
+    }
     cout<<"exiting generateArLForSend\n";
 }
 
-void mpi_cpp_generator::generate_exprLiteralForSend(Expression* expr,int send,Identifier *remote)
+void mpi_cpp_generator::generate_exprLiteralForSend(Expression* expr,int send,Identifier *remote,Identifier* replace)
      {  
       
         char valBuffer[1024];
@@ -1166,7 +1264,7 @@ void mpi_cpp_generator::generate_receiveCallBFS(statement* body,int send,Identif
         //main.pushstr_newL("{");
           //  main.pushstr_newL("for (int x=0; x < receive_data[t].size();x+=4)");
             //main.pushstr_newL("{");
-              generate_addMessage(body,send,remote);
+              generate_addMessage(body,send,remote,NULL);
               //generateReceiveBlock((blockStatement*)body);
             //  main.pushstr_newL("}");
             //main.pushstr_newL("}");
@@ -1275,7 +1373,7 @@ blockStatement* mpi_cpp_generator::includeIfToBlock(forallStmt* forAll)
 }
 
  
-void mpi_cpp_generator::generate_addMessage(statement* stmt,int send,Identifier* remote)
+void mpi_cpp_generator::generate_addMessage(statement* stmt,int send,Identifier* remote, Identifier* replace)
 {
   char strBuffer[1024];
   if(stmt->getTypeofNode() == NODE_BLOCKSTMT)
@@ -1285,7 +1383,7 @@ void mpi_cpp_generator::generate_addMessage(statement* stmt,int send,Identifier*
       for(itr=stmtList.begin();itr!=stmtList.end();itr++)
       {
         statement* stmts=*itr;
-        generate_addMessage(stmts,send,remote);
+        generate_addMessage(stmts,send,remote,replace);
         //printf("CHECK IF INSIDE FOR ");//%d\n",stmt->getParent()->getParent()->getTypeofNode()==NODE_FORALLSTMT);
         //generateStatement(stmt);
         cout<< stmt->getTypeofNode() <<endl;
@@ -1300,10 +1398,10 @@ void mpi_cpp_generator::generate_addMessage(statement* stmt,int send,Identifier*
     else if (stmt->getTypeofNode() == NODE_ASSIGN)
     {
       cout<<"it is node assign\n";
-      generateAssignmentForSend((assignment*)stmt,send, remote);
+      generateAssignmentForSend((assignment*)stmt,send, remote,replace);
     }
     else if(stmt->getTypeofNode() == NODE_EXPR)
-      generateExprForSend((Expression*)stmt,send,remote);
+      generateExprForSend((Expression*)stmt,send,remote,replace);
 
     else if (stmt->getTypeofNode() == NODE_FORALLSTMT)
     {
@@ -1326,7 +1424,9 @@ void mpi_cpp_generator::generate_addMessage(statement* stmt,int send,Identifier*
               main.pushstr_newL("{");
                 main.pushstr_newL("if(t != my_rank)");
                 main.pushstr_newL("{");
-                    main.pushstr_newL("for (int x=0; x < receive_data[t].size();x+=4)");
+                    sprintf(strBuffer,"for (int x=0; x < receive_data[t].size();x+=%d)",num_messages);
+                    main.pushstr_newL(strBuffer);
+                    num_messages = 0;
                     main.pushstr_newL("{");
               sprintf(strBuffer,"int d_%s = receive_data[t][x];",nodeNbr->getIdentifier());
               main.pushstr_newL(strBuffer);
@@ -1334,7 +1434,9 @@ void mpi_cpp_generator::generate_addMessage(statement* stmt,int send,Identifier*
               main.pushstr_newL(strBuffer);
               sprintf(strBuffer,"int %s = receive_data[t][x+2];",nodeNbr->getIdentifier());
               main.pushstr_newL(strBuffer);
-                generate_addMessage(/*(blockStatement*)*/body,2,nodeNbr);
+              count = 3;
+                generate_addMessage(/*(blockStatement*)*/body,2,nodeNbr,NULL);
+              count = 0;
               sprintf(strBuffer,"if (d[%s] < 0 )",iterator->getIdentifier());
               main.pushstr_newL(strBuffer);
               main.pushstr_newL("{");
@@ -1347,7 +1449,9 @@ void mpi_cpp_generator::generate_addMessage(statement* stmt,int send,Identifier*
               main.pushstr_newL(strBuffer);
              // main.insert_indent();
               main.pushstr_newL("{");
-                generate_addMessage(/*(blockStatement*)*/ body,3,nodeNbr); 
+                sprintf(strBuffer,"p[%s].push_back(%s);",iterator->getIdentifier(),nodeNbr->getIdentifier());
+                  main.pushstr_newL(strBuffer);
+                generate_addMessage(/*(blockStatement*)*/ body,3,nodeNbr,NULL); 
 
                 main.pushstr_newL("}");
                   main.pushstr_newL("}");
@@ -1360,20 +1464,27 @@ void mpi_cpp_generator::generate_addMessage(statement* stmt,int send,Identifier*
             {
 
               cout<<"test here rbfs add mes\n";
+              //cout<<"TESTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT "<<
                   main.pushstr_newL("for(int t=0;t<np;t++)");
             main.pushstr_newL("{");
                 main.pushstr_newL("if(t != my_rank)");
                 main.pushstr_newL("{");
-                    main.pushstr_newL("for (int x=0; x < receive_data[t].size();x+=4)");
+                    sprintf(strBuffer,"for (int x=0; x < receive_data[t].size();x+=%d)",num_messages);
+                    main.pushstr_newL(strBuffer);
+                    num_messages = 0;
                     main.pushstr_newL("{");
-                      sprintf(strBuffer,"int w = receive_data[t][x];");
+                      sprintf(strBuffer,"int %s = receive_data[t][x];",iterator->getIdentifier());
                       main.pushstr_newL(strBuffer);
-                      sprintf(strBuffer,"int v = receive_data[t][x+1];");
+                      sprintf(strBuffer,"int %s = receive_data[t][x+1];",nodeNbr->getIdentifier());
                       main.pushstr_newL(strBuffer);
+                      count = 2;
               //sprintf(strBuffer,"int %s = receive_data[t][x+2];",nodeNbr->getIdentifier());
               //main.pushstr_newL(strBuffer);
-                      generate_addMessage(body,2,nodeNbr);
-                      generate_addMessage(body,3,nodeNbr); 
+                      //generate_addMessage(body,2,nodeNbr);
+                      generate_addMessage(body,2,nodeNbr,iterator);
+                      count = 0;
+                      //generate_addMessage(body,3,nodeNbr); 
+                      generate_addMessage(body,3,iterator,NULL); 
                       main.pushstr_newL("}");
                   main.pushstr_newL("}");
               main.pushstr_newL("}");
@@ -1555,7 +1666,7 @@ void mpi_cpp_generator::generateForAll(forallStmt* forAll)
           list<argument*>  argList=extractElemFunc->getArgList();
           assert(argList.size()==1);
            Identifier* nodeNbr=argList.front()->getExpr()->getId();
-            generate_addMessage((blockStatement*) body,1,nodeNbr);
+            generate_addMessage((blockStatement*) body,1,nodeNbr,NULL);
         //main.pushstr_newL("test2");
         main.pushstr_newL("}");
 
@@ -1645,6 +1756,8 @@ void mpi_cpp_generator::generateForSignature(forallStmt* forAll)
   {
     cout<<"Reached here test\n";
     Identifier* source = forAll->getSource();
+    main.pushstr_newL("MPI_Barrier(MPI_COMM_WORLD);");
+    main.pushstr_newL("gettimeofday(&start, NULL);");
     sprintf(strBuffer,"for (int i = 0; i < %s.size(); i++)",source->getIdentifier());
     main.pushstr_newL(strBuffer);
     main.pushstr_newL("{");
@@ -1777,10 +1890,12 @@ void mpi_cpp_generator::generateFor(forallStmt* forAll)
                 sprintf(strBuffer,"d[%s] = d[%s] + 1;",iterator->getIdentifier(),nodeNbr->getIdentifier());
                 main.pushstr_newL(strBuffer);
               main.pushstr_newL("}");
-              sprintf(strBuffer,"if d[%s] == d[%s] + 1)",iterator->getIdentifier(),nodeNbr->getIdentifier());
+              sprintf(strBuffer,"if (d[%s] == d[%s] + 1)",iterator->getIdentifier(),nodeNbr->getIdentifier());
               main.pushstr_newL(strBuffer);
               main.insert_indent();
                 main.pushstr_newL("{");
+                  sprintf(strBuffer,"p[%s].push_back(%s);",iterator->getIdentifier(),nodeNbr->getIdentifier());
+                  main.pushstr_newL(strBuffer);
                   generateBlock((blockStatement*)body,false);
                 main.pushstr_newL("}");
             //Close of if part
@@ -1789,13 +1904,18 @@ void mpi_cpp_generator::generateFor(forallStmt* forAll)
             //Remote part
             main.pushstr_newL("else");
             main.pushstr_newL("{");
+              sprintf(strBuffer,"dest_pro = %s / part_size;",iterator->getIdentifier());
+              main.pushstr_newL(strBuffer);
               sprintf(strBuffer,"send_data[dest_pro].push_back(d[%s]);",nodeNbr->getIdentifier());
               main.pushstr_newL(strBuffer);
+              num_messages++;
               sprintf(strBuffer,"send_data[dest_pro].push_back(%s);",iterator->getIdentifier());
               main.pushstr_newL(strBuffer);
+              num_messages++;
               sprintf(strBuffer,"send_data[dest_pro].push_back(%s);",nodeNbr->getIdentifier());
               main.pushstr_newL(strBuffer);
-                generate_addMessage((blockStatement*)body,1,nodeNbr);
+              num_messages++;
+                generate_addMessage((blockStatement*)body,1,nodeNbr,NULL);
             main.pushstr_newL("}");
 
             main.pushstr_newL("}"); //Closing neighbor iteration
@@ -1812,7 +1932,8 @@ void mpi_cpp_generator::generateFor(forallStmt* forAll)
             sprintf(strBuffer,"if(d[%s] == phase)",nodeNbr->getIdentifier());
             main.pushstr_newL(strBuffer);
               main.pushstr_newL("{");
-
+                sprintf(strBuffer,"modified[%s] = true;",nodeNbr->getIdentifier());
+                main.pushstr_newL(strBuffer);
               generateForSignature(forAll);
 
             sprintf(strBuffer,"if(%s >= startv && %s <= endv)",iterator->getIdentifier(),iterator->getIdentifier());
@@ -1849,7 +1970,7 @@ void mpi_cpp_generator::generateFor(forallStmt* forAll)
             main.pushstr_newL("}");
 
             //Else part
-            sprintf(strBuffer,"if(d[%s] == (k+1))",nodeNbr->getIdentifier());
+            sprintf(strBuffer,"if(d[%s] == (phase+1))",nodeNbr->getIdentifier());
             main.pushstr_newL(strBuffer);
             main.pushstr_newL("{");
               main.pushstr_newL("for (int j=0;j<p[v].size();j++)");
@@ -1861,8 +1982,11 @@ void mpi_cpp_generator::generateFor(forallStmt* forAll)
                   main.pushstr_newL("dest_pro = w / part_size;");
                   sprintf(strBuffer,"send_data[dest_pro].push_back(%s);",nodeNbr->getIdentifier());
                   main.pushstr_newL(strBuffer);
-                  main.pushstr_newL("send_data[dest_pro].push_back(w);");
-                  generate_addMessage((blockStatement*)body,1,nodeNbr);
+                  num_messages++;
+                  sprintf(strBuffer,"send_data[dest_pro].push_back(%s);",iterator->getIdentifier());
+                  main.pushstr_newL(strBuffer);
+                  num_messages++;
+                  generate_addMessage((blockStatement*)body,1,nodeNbr,NULL);
                 main.pushstr_newL("}");
               main.pushstr_newL("}");
             main.pushstr_newL("}");
@@ -1895,6 +2019,7 @@ void mpi_cpp_generator::generateFor(forallStmt* forAll)
       }
     else if(!(forAll->isSourceField()))
     {
+       generateForSignature(forAll);
       generateBlock((blockStatement*)body,false);
     //generateStatement(forAll->getBody());  
 
@@ -2128,13 +2253,16 @@ void mpi_cpp_generator::generateExpr(Expression* expr)
 void mpi_cpp_generator::generate_exprArL(Expression* expr)
 {
   //cout<<"INSIDE RELATIONAL EXPR"<<"\n";
-    
+    if(expr->hasEnclosedBrackets())
+      main.pushstr_space("(");
     generateExpr(expr->getLeft());
     
     main.space();
     const char* operatorString=getOperatorString(expr->getOperatorType());
     main.pushstr_space(operatorString);
     generateExpr(expr->getRight());
+    if(expr->hasEnclosedBrackets())
+      main.pushstr_space(")");
 
 }
 
@@ -2191,7 +2319,9 @@ void mpi_cpp_generator::generate_exprPropIdReceive(PropAccess* propId) //This ne
 }
 
 void mpi_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct)
-{ char strBuffer[1024];
+{ 
+  is_fixedPoint = true;
+  char strBuffer[1024];
   Expression* convergeExpr=fixedPointConstruct->getDependentProp();
   Identifier* fixedPointId=fixedPointConstruct->getFixedPointId();
   statement* blockStmt=fixedPointConstruct->getBody();
@@ -2302,17 +2432,6 @@ void mpi_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct)
      main.pushstr_newL("send_data.clear();");
      main.pushstr_newL("receive_data.clear();");
      main.pushstr_newL("}");
-     main.pushstr_newL("gettimeofday(&end, NULL);");
-     main.pushstr_newL("seconds = (end.tv_sec - start.tv_sec);");
-     main.pushstr_newL("micros = ((seconds * 1000000) + end.tv_usec) - (start.tv_usec);");
-
-     main.pushstr_newL("if(my_rank==0)");
-     main.pushstr_newL("{");
-        main.pushstr_newL("printf(\"The number of iterations taken %d \\n\",num_iter);");
-        main.pushstr_newL("printf(\"The iteration time = %ld micro secs.\\n\",micros);");
-        main.pushstr_newL("printf(\"The iteration time = %ld secs.\\n\",seconds);");
-     main.pushstr_newL("}");
-     main.pushstr_newL("MPI_Finalize();");
 }
 
 
@@ -2404,6 +2523,18 @@ void mpi_cpp_generator::generateFunc(ASTNode* proc)
 
    generateBlock(func->getBlockStatement(),false);
    main.NewLine();
+
+   main.pushstr_newL("gettimeofday(&end, NULL);");
+   main.pushstr_newL("seconds = (end.tv_sec - start.tv_sec);");
+   main.pushstr_newL("micros = ((seconds * 1000000) + end.tv_usec) - (start.tv_usec);");
+   main.pushstr_newL("if(my_rank==0)");
+   main.pushstr_newL("{");
+      if(is_fixedPoint)
+        main.pushstr_newL("printf(\"The number of iterations taken = %d\\n\",num_iter);");
+      main.pushstr_newL("printf(\"The iteration time = %ld micro secs.\\n\",micros);");
+      main.pushstr_newL("printf(\"The iteration time = %ld secs.\\n\",seconds);");
+   main.pushstr_newL("}");
+   main.pushstr_newL("MPI_Finalize();");
    main.push('}');
 
    return;
@@ -2476,7 +2607,7 @@ const char* mpi_cpp_generator:: convertToCppType(Type* type)
       switch(typeId)
       {
         case TYPE_SETN:
-          return "std::set<int>&";
+          return "std::vector<int>";
        
         default:
          assert(false);          

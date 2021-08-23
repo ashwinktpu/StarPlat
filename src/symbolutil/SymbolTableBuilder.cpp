@@ -6,7 +6,9 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
      assert(id->getIdentifier()!=NULL);
      TableEntry* tableEntry=sTab->findEntryInST(id);
      if(tableEntry==NULL)
-     {  return false;
+     {  
+        // sTab->create_and_add_entry();
+         return false;
          //to be added.
      }
      cout<<"FINALLY FOUND IT"<<"\n";
@@ -15,8 +17,10 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
       assert(id->getSymbolInfo()==tableEntry);
       }
      else
+     {
         id->setSymbolInfo(tableEntry);
-
+        cout<<"cout entry added for the symbol\n";
+     }
      return true;  
 
  }
@@ -129,6 +133,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                  searchSuccess=findSymbolPropId(propId);
 
              }
+             checkForExpressions (assign->getExpr());
              break;
        }
        case NODE_FIXEDPTSTMT:
@@ -306,10 +311,20 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
        }
        case NODE_ITRBFS:
        {
+           cout<<"At symtab bulder - iterate in bfs\n";
           iterateBFS* iBFS=(iterateBFS*)stmt;
           buildForStatements(iBFS->getBody());
+          buildForStatements(((statement*)iBFS->getRBFS()));
           
            break;
+       }
+       case NODE_ITRRBFS:
+       {
+          // iterateBFS* iBFS=(iterateBFS*)stmt;
+          cout<<"At symtab bulder - iterate in reverse bfs\n";
+          iterateReverseBFS* iRBFS =(iterateReverseBFS*)stmt;
+          buildForStatements(iRBFS->getBody());
+          break;
        }
       
    }
