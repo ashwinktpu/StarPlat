@@ -1532,6 +1532,13 @@ class fixedPointStmt:public statement
     {
       return booleanExpr;
     }
+    bool hasFilter()
+    {
+      if(booleanExpr!=NULL)
+        return true;
+      else
+        return false;
+    }
 
     void initUsedVariable(list<Identifier*> usedVars){
       this->usedVars = usedVars;

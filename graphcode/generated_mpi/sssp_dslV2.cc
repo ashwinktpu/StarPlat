@@ -50,7 +50,7 @@ void Compute_SSSP(graph g,int src)
   dist[src] = 0;
   bool finished = false;
   int num_iter=0;
-  MPI_Barrier(MPI_COMM_WORLD)
+  MPI_Barrier(MPI_COMM_WORLD);
   gettimeofday(&start, NULL);
   while ( is_finished(startv,endv,modified)  )
   {
@@ -113,15 +113,15 @@ void Compute_SSSP(graph g,int src)
     send_data.clear();
     receive_data.clear();
   }
+
   gettimeofday(&end, NULL);
   seconds = (end.tv_sec - start.tv_sec);
   micros = ((seconds * 1000000) + end.tv_usec) - (start.tv_usec);
   if(my_rank==0)
   {
-    printf("The number of iterations taken %d \n",num_iter);
+    printf("The number of iterations taken = %d\n",num_iter);
     printf("The iteration time = %ld micro secs.\n",micros);
     printf("The iteration time = %ld secs.\n",seconds);
   }
   MPI_Finalize();
-
 }

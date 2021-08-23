@@ -52,11 +52,11 @@ class mpi_cpp_generator
   void generateReductionStmt(reductionCallStmt* reductnStmt);
   void generateInnerReductionStmt(reductionCallStmt* stmt);
   void generateReductionStmtForSend(reductionCallStmt* stmt,bool send);
-  void generateExprForSend(Expression* expr,int send, Identifier* remote);
-  void generateAssignmentForSend(assignment* stmt,int send,Identifier* remote);
-  void generatePropAccessForSend(PropAccess* lhs,int send,Identifier* remote);
-  void generate_exprLiteralForSend(Expression* expr,int send,Identifier *remote);
-  void generateArLForSend(Expression* stmt,int send, Identifier* remote);
+  void generateExprForSend(Expression* expr,int send, Identifier* remote, Identifier* replace);
+  void generateAssignmentForSend(assignment* stmt,int send,Identifier* remote,Identifier* replace);
+  void generatePropAccessForSend(PropAccess* lhs,int send,Identifier* remote,Identifier* replace);
+  void generate_exprLiteralForSend(Expression* expr,int send,Identifier *remote,Identifier* replace);
+  void generateArLForSend(Expression* stmt,int send, Identifier* remote,Identifier* replace);
   void generateBFSAbstraction(iterateBFS* bfsAbstraction);
   void generateExpr(Expression* expr);
   void generate_exprRelational(Expression* expr);
@@ -74,7 +74,7 @@ class mpi_cpp_generator
   void generate_sendCall(statement* body);
   void generate_receiveCall(statement* body);
   void generate_receiveCallBFS(statement* body,int send,Identifier *id);
-  void generate_addMessage(statement* body,int send,Identifier* id);
+  void generate_addMessage(statement* body,int send,Identifier* id,Identifier* replace);
   void generateReceiveBlock(blockStatement* body);
   //void includeIfToBlock(forallStmt* forAll);
   bool neighbourIteration(char* methodId);
