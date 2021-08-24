@@ -88,19 +88,7 @@ void add_InitialDeclarations(dslCodePad* main,iterateBFS* bfsAbstraction)
   char strBuffer[1024];
   char* graphId=bfsAbstraction->getGraphCandidate()->getIdentifier();
   Identifier* root = bfsAbstraction->getRootNode();
-  /*
-  sprintf(strBuffer,"std::vector<std::vector<int>> %s(%s.%s()) ;","levelNodes",graphId,"num_nodes");
-  main->pushstr_newL(strBuffer);
-  sprintf(strBuffer,"std::vector<int>  %s(%s.%s()) ;","levelNodes_later",graphId,"num_nodes");
-  main->pushstr_newL(strBuffer);
-  sprintf(strBuffer,"std::vector<int>  %s(%s.%s()) ;","levelCount",graphId,"num_nodes");
-  main->pushstr_newL(strBuffer);
-  main->pushstr_newL("int phase = 0 ;");
-  sprintf(strBuffer,"levelNodes[phase].push_back(%s) ;",bfsAbstraction->getRootNode()->getIdentifier());
-  main->pushstr_newL(strBuffer);
-  sprintf(strBuffer,"std::%s bfsCount = {%s} ;","atomic_int","1");
-  main->pushstr_newL(strBuffer);
-  main->pushstr_newL("levelCount[phase] = bfsCount;");*/
+
   main->pushstr_newL("int phase = 0 ;");
   main->pushstr_newL("vector <int> active;");
   main->pushstr_newL("vector<int> active_next;");
@@ -126,34 +114,6 @@ void add_InitialDeclarations(dslCodePad* main,iterateBFS* bfsAbstraction)
     char strBuffer[1024];
     char* iterNode=bfsAbstraction->getIteratorNode()->getIdentifier();
     char* graphId=bfsAbstraction->getGraphCandidate()->getIdentifier();
-    /*
-    main->pushstr_newL("while ( bfsCount > 0 )");
-    main->pushstr_newL("{");
-    main->pushstr_newL(" int prev_count = bfsCount ;");
-    main->pushstr_newL("bfsCount = 0 ;");
-    main->pushstr_newL("#pragma omp parallel for");
-    sprintf(strBuffer,"for( %s %s = %s; %s < prev_count ; %s++)","int","l","0","l","l");
-    main->pushstr_newL(strBuffer);
-    main->pushstr_newL("{");
-    sprintf(strBuffer,"int %s = levelNodes[phase][%s] ;",iterNode,"l");
-    main->pushstr_newL(strBuffer);
-    sprintf(strBuffer,"for(%s %s = %s.%s[%s] ; %s < %s.%s[%s+1] ; %s++) ","int","edge",graphId,"indexofNodes",iterNode,"edge",graphId,"indexofNodes",iterNode,"edge");
-     main->pushString(strBuffer);
-     main->pushstr_newL("{");
-     sprintf(strBuffer,"%s %s = %s.%s[%s] ;","int","nbr",graphId,"edgeList","edge");
-     main->pushstr_newL(strBuffer);
-     main->pushstr_newL("int dnbr ;");
-     sprintf(strBuffer,"dnbr = %s(&bfsDist[nbr],-1,bfsDist[%s]+1);","__sync_val_compare_and_swap",iterNode);
-     main->pushstr_newL(strBuffer);
-     main->pushstr_newL("if (dnbr < 0)");
-     main->pushstr_newL("{");
-     sprintf(strBuffer,"int %s = bfsCount.fetch_add(%s,%s) ;","loc","1","std::memory_order_relaxed");
-     main->pushstr_newL(strBuffer);
-     sprintf(strBuffer," levelNodes_later[%s]=nbr ;","loc");
-     main->pushstr_newL(strBuffer);"
-     main->pushstr_newL("}");
-     main->pushstr_newL("}");
-     */
     main->pushstr_newL("while(is_finished(startv,endv,active))");
     generateIsFinished(header);
     main->pushstr_newL("{");
@@ -196,6 +156,7 @@ void add_InitialDeclarations(dslCodePad* main,iterateBFS* bfsAbstraction)
 
   }
 
+//Function to generate BFS Abstraction
  void mpi_cpp_generator::generateBFSAbstraction(iterateBFS* bfsAbstraction)
  {
    char strBuffer[1024];
@@ -294,7 +255,7 @@ void add_InitialDeclarations(dslCodePad* main,iterateBFS* bfsAbstraction)
 
  }
 
-
+//Fuction to handle translation of different types of statements
 void mpi_cpp_generator::generateStatement(statement* stmt)
 {  
    if(stmt->getTypeofNode()==NODE_BLOCKSTMT)
@@ -362,6 +323,7 @@ void mpi_cpp_generator::generateStatement(statement* stmt)
 
 }
 
+//Function to translate reduction statement
 void mpi_cpp_generator::generateReductionStmt(reductionCallStmt* stmt)
 { char strBuffer[1024];
   reductionCall* reduceCall=stmt->getReducCall();
@@ -483,6 +445,8 @@ void mpi_cpp_generator::generateReductionStmt(reductionCallStmt* stmt)
 
 }
 
+
+//Function to translate reduciton statement after receiving the data...Can be merged with previous function
 void mpi_cpp_generator::generateInnerReductionStmt(reductionCallStmt* stmt)
 { char strBuffer[1024];
   reductionCall* reduceCall=stmt->getReducCall();
@@ -514,16 +478,7 @@ void mpi_cpp_generator::generateInnerReductionStmt(reductionCallStmt* stmt)
              argItr=argList.begin();
              argItr++; 
             main.pushString(" = ");
-            //generateExpr((*argItr)->getExpr());
-            /*
-            Expression* e = (*argItr)->getExpr();
-            if(e->isPropIdExpr())
-              generate_exprPropIdReceive(e->getPropId());
-            else if(e->isArithmetic())
-              generate_exprArLReceive(e);
-            else
-              generateExpr((*argItr)->getExpr());
-              */
+
             main.pushstr_newL("x.second;");
             
             list<ASTNode*>::iterator itr1;
@@ -633,6 +588,8 @@ void mpi_cpp_generator::generateInnerReductionStmt(reductionCallStmt* stmt)
 
 }
 
+
+//Function to generate reduction statement for sending the data
 void mpi_cpp_generator::generateReductionStmtForSend(reductionCallStmt* stmt,bool send)
 { char strBuffer[1024];
   reductionCall* reduceCall=stmt->getReducCall();
@@ -779,6 +736,7 @@ void mpi_cpp_generator::generateReductionStmtForSend(reductionCallStmt* stmt,boo
 
 }
 
+//Function to generate expressions after reciving the data sent
 void mpi_cpp_generator::generateExprForSend(Expression* expr,int send, Identifier* remote,Identifier* replace)
 {
   cout<<" reached generateExprForSend\n";
@@ -825,25 +783,6 @@ void mpi_cpp_generator::generateAssignmentForSend(assignment* stmt,int send, Ide
     cout<<"Rhs of assignment is expr..calling generateExprForSend\n";
     generateExprForSend(rhs,send,remote,replace);
   }
-    /*
-  Expression* left = rhs->getLeft();
-  if(left->isPropIdExpr())
-  {
-      generatePropAccessForSend(left->getPropId(),send,remote);
-  }
-
-  if (send == 3)
-  {
-    main.space();
-    const char* operatorString=getOperatorString(rhs->getOperatorType());
-    main.pushstr_space(operatorString);
-  }
-
-  Expression* right = rhs->getRight();
-  if(right->isPropIdExpr())
-  {
-      generatePropAccessForSend(right->getPropId(),send,remote);
-  }*/
     
   if (send == 3)
     main.pushstr_newL(";");
@@ -874,15 +813,11 @@ void mpi_cpp_generator::generatePropAccessForSend(PropAccess* stmt,int send, Ide
     }
     else
     {
-      //Identifier* id2 = stmt->getIdentifier2(); 
-      //PropAccess* newProp = new PropAccess();
       cout<<"send type is.sssssssssssssssssssssss 2"<<endl;
       if(replace !=NULL)
       //if(to_replace == true)
       {
          cout<<"reached here.........................replace not equal to null\n";
-         //PropAccess* newProp = new PropAccess();
-        //newProp = (PropAccess*)Util::createPropIdNode((ASTNode*)replace,(ASTNode*)id2);
         PropAccess* newProp;
 
         newProp=PropAccess::createPropAccessNode(replace,id2);
@@ -893,26 +828,14 @@ void mpi_cpp_generator::generatePropAccessForSend(PropAccess* stmt,int send, Ide
         Type* t = id2->getSymbolInfo()->getType()->getInnerTargetType();
         //TableEntry* t1 = newProp->getPropSymbT()->findEntryInST(id2);
         if(t == NULL)
-          cout<<"t  NULLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL\n";
-       // if(t1 == NULL)
-         // cout<<"t1  also NULLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL\n";
-        //Type* t = newProp->getIdentifier2()->getSymbolInfo()->getType()->getInnerTargetType();
+          cout<<"t  NULL\n";
         main.pushstr_space(convertToCppType(t));
         generate_exprPropIdReceive(newProp);
         sprintf(strBuffer," = receive_data[t][x+%d];",count);
         main.pushstr_newL(strBuffer);
         count++;
       }
-      //((declaration*)id2)->getType();
-      //stmt->getAccessType()
-      //stmt->getPropSymbT()->getEntries()->g
-      //Type* t = stmt->getPropSymbT()->findEntryInST(id2)->getType()->getInnerTargetType();
-      //Type* type = id1->getSymbolInfo()->getType()->getInnerTargetType();
-      //TableEntry* t = id2->getSymbolInfo();
-      //cout<<t->getId()->getIdentifier();
-      //// = convertToCppType(t); 
-      //sprintf(strBuffer,"%s ",convertToCppType(t));
-      //main.pushString(strBuffer);  
+
       else
       {  
         cout<<"reached here.........................replace  equal to null\n";
@@ -933,6 +856,7 @@ void mpi_cpp_generator::generatePropAccessForSend(PropAccess* stmt,int send, Ide
   }
 }
 
+//Function to generate arithmetic and logical expression after receiving the data
 void mpi_cpp_generator::generateArLForSend(Expression* stmt,int send, Identifier* remote,Identifier* replace)
 {
   cout<<"Reached generateArLForSend\n";
@@ -943,10 +867,7 @@ void mpi_cpp_generator::generateArLForSend(Expression* stmt,int send, Identifier
       main.pushstr_space("(");
   }
   Expression* left = stmt->getLeft();
-  //if(left->isPropIdExpr())
-  //{
-    //  generatePropAccessForSend(left->getPropId(),send,remote);
-  //}
+
   generateExprForSend(left,send,remote,replace);
   if (send == 3)
   {
@@ -955,11 +876,7 @@ void mpi_cpp_generator::generateArLForSend(Expression* stmt,int send, Identifier
     main.pushstr_space(operatorString);
   }
   Expression* right = stmt->getRight();
-  //if(right->isPropIdExpr())
-  //{
-    //  generatePropAccessForSend(right->getPropId(),send,remote);
-  //}
-  //else
+
     generateExprForSend(right,send,remote,replace);
     if(send == 3)
     {
@@ -1002,6 +919,8 @@ void mpi_cpp_generator::generate_exprLiteralForSend(Expression* expr,int send,Id
 
      }
 
+
+//Function to translate if statement
 void mpi_cpp_generator::generateIfStmt(ifStmt* ifstmt)
 { cout<<"INSIDE IF STMT"<<"\n";
   Expression* condition=ifstmt->getCondition();
@@ -1033,6 +952,7 @@ void mpi_cpp_generator::findTargetGraph(vector<Identifier*> graphTypes,Type* typ
     
 }
 
+//Function to translate assignment statement
 void mpi_cpp_generator::generateAssignmentStmt(assignment* asmt)
 {  
    
@@ -1200,10 +1120,6 @@ void mpi_cpp_generator::generatePropertyDefination(Type* type,char* Id)
          assert(false);
          return;        
     }
-
-
-
-
   }
 
 void mpi_cpp_generator::generateForAll_header()
@@ -1233,6 +1149,7 @@ bool mpi_cpp_generator::elementsIteration(char* extractId)
   return (extractString=="elements");
 }
 
+//********Function to generate send collective communication call***********//
 void mpi_cpp_generator::generate_sendCall(statement* body)
 {
     char strBuffer[1024];
@@ -1241,6 +1158,7 @@ void mpi_cpp_generator::generate_sendCall(statement* body)
     main.pushstr_newL("all_to_all(world, send_data, receive_data);");
 
 }
+
 void mpi_cpp_generator::generate_receiveCall(statement* body)
 {
     main.pushstr_newL("for(int t=0;t<np;t++)");
@@ -1256,19 +1174,11 @@ void mpi_cpp_generator::generate_receiveCall(statement* body)
         main.pushstr_newL("}");
 }
 
+//*****This can be modified to directly use generate_addMessage() function**********//
 void mpi_cpp_generator::generate_receiveCallBFS(statement* body,int send,Identifier* remote)
 {
-    //main.pushstr_newL("for(int t=0;t<np;t++)");
-    //main.pushstr_newL("{");
-      //  main.pushstr_newL("if(t != my_rank)");
-        //main.pushstr_newL("{");
-          //  main.pushstr_newL("for (int x=0; x < receive_data[t].size();x+=4)");
-            //main.pushstr_newL("{");
               generate_addMessage(body,send,remote,NULL);
-              //generateReceiveBlock((blockStatement*)body);
-            //  main.pushstr_newL("}");
-            //main.pushstr_newL("}");
-        //main.pushstr_newL("}");
+
 }
 
 void mpi_cpp_generator::generateForAllSignature(forallStmt* forAll)
@@ -1334,11 +1244,8 @@ void mpi_cpp_generator::generateForAllSignature(forallStmt* forAll)
       }
 
   }
-
-
-
-
 }
+
 
 blockStatement* mpi_cpp_generator::includeIfToBlock(forallStmt* forAll)
 { 
@@ -1373,6 +1280,8 @@ blockStatement* mpi_cpp_generator::includeIfToBlock(forallStmt* forAll)
 }
 
  
+/*********************Function to generate message send and receive part*****************
+ * int send = 1 generate message send, send = 2 generate message reception, send = 3 generate computation using recieved data**********/
 void mpi_cpp_generator::generate_addMessage(statement* stmt,int send,Identifier* remote, Identifier* replace)
 {
   char strBuffer[1024];
@@ -1478,33 +1387,14 @@ void mpi_cpp_generator::generate_addMessage(statement* stmt,int send,Identifier*
                       sprintf(strBuffer,"int %s = receive_data[t][x+1];",nodeNbr->getIdentifier());
                       main.pushstr_newL(strBuffer);
                       count = 2;
-              //sprintf(strBuffer,"int %s = receive_data[t][x+2];",nodeNbr->getIdentifier());
-              //main.pushstr_newL(strBuffer);
-                      //generate_addMessage(body,2,nodeNbr);
                       generate_addMessage(body,2,nodeNbr,iterator);
                       count = 0;
-                      //generate_addMessage(body,3,nodeNbr); 
                       generate_addMessage(body,3,iterator,NULL); 
                       main.pushstr_newL("}");
                   main.pushstr_newL("}");
               main.pushstr_newL("}");
-                /*
-              sprintf(strBuffer,"if (d[%s] < 0 )",iterator->getIdentifier());
-              main.pushstr_newL(strBuffer);
-              main.pushstr_newL("{");
-                sprintf(strBuffer,"active_next.push_back(%s);",iterator->getIdentifier());
-                main.pushstr_newL(strBuffer);
-                sprintf(strBuffer,"d[%s] = d_%s + 1;",iterator->getIdentifier(),nodeNbr->getIdentifier());
-                main.pushstr_newL(strBuffer);
-              main.pushstr_newL("}");
-              sprintf(strBuffer,"if (d[%s] == d_%s+1)",iterator->getIdentifier(),nodeNbr->getIdentifier());
-              main.pushstr_newL(strBuffer);
-              main.pushstr_newL("{");
-              */
-                  
-              //main.pushstr_newL("}");
+
             }
-              //generate_addMessage((blockStatement*)body,3,nodeNbr);
       }
     }
     else
@@ -1512,6 +1402,7 @@ void mpi_cpp_generator::generate_addMessage(statement* stmt,int send,Identifier*
 
    //}
 }
+
 
 void mpi_cpp_generator::generateReceiveBlock(blockStatement* body)
 {
@@ -1536,6 +1427,7 @@ void mpi_cpp_generator::generateReceiveBlock(blockStatement* body)
    }
 }
 
+//****************Function to translate forAll****************//
 void mpi_cpp_generator::generateForAll(forallStmt* forAll)
 { 
    proc_callExpr* extractElemFunc=forAll->getExtractElementFunc();
@@ -1734,10 +1626,7 @@ void mpi_cpp_generator::generateForAll(forallStmt* forAll)
    
     cout<<iteratorMethodId->getIdentifier()<<"\n";
     generateStatement(forAll->getBody());
-          
 
-   /* if(forAll->getBody()->getTypeofNode()==NODE_BLOCKSTMT)
-       main.pushstr_newL("}");*/
 
     }
 
@@ -1827,23 +1716,16 @@ void mpi_cpp_generator::generateForSignature(forallStmt* forAll)
   }
 }
 
+
+//***************Function to translate for loop..Can be merged with function to generate forAll*********//
 void mpi_cpp_generator::generateFor(forallStmt* forAll)
 { 
   cout<<"Reaced generate For\n";
   
   Identifier* sourceField;
-  //proc_callExpr* extractElemFunc;
-  
-  //if(forAll->isSourceProcCall())
-    //  extractElemFunc=forAll->getExtractElementFunc();
-   PropAccess* sourceField1;
-
-   
-   Identifier* extractId;
-    
+   PropAccess* sourceField1;   
+   Identifier* extractId;    
     Identifier* iteratorMethodId;
-    //if(extractElemFunc!=NULL)
-     //iteratorMethodId=extractElemFunc->getMethodId();
 
    Identifier* iterator=forAll->getIterator();
    if(!(forAll->isSourceField()))
@@ -1854,11 +1736,6 @@ void mpi_cpp_generator::generateFor(forallStmt* forAll)
    statement* body=forAll->getBody();
      char strBuffer[1024];
   
-   //generateForSignature(forAll);
-
-    //main.pushstr_newL("{");
-
-     
 
       if(forAll->isSourceProcCall())
       {
@@ -1872,7 +1749,7 @@ void mpi_cpp_generator::generateFor(forallStmt* forAll)
         if(neighbourIteration(iteratorMethodId->getIdentifier()))
         {
           cout<<"neighbor iteration\n";
-          
+          //*******************If for loop present inside iterate in bfs************//
           if(forAll->getParent()->getParent()->getTypeofNode() == NODE_ITRBFS)
           {
             cout<<"parent itrbfs"<<endl;
@@ -1920,7 +1797,8 @@ void mpi_cpp_generator::generateFor(forallStmt* forAll)
 
             main.pushstr_newL("}"); //Closing neighbor iteration
           }
-
+           
+          //*******************If for loop present inside iterate in reverse bfs************//
           else if(forAll->getParent()->getParent()->getTypeofNode() == NODE_ITRRBFS)
           {
             cout<<"parent itrbfs"<<endl;
@@ -1991,29 +1869,12 @@ void mpi_cpp_generator::generateFor(forallStmt* forAll)
               main.pushstr_newL("}");
             main.pushstr_newL("}");
 
-           // ASTNode* bfsAbst = forAll->getParent()->getParent();
-           // statement* bfsAbstraction = (statement*) bfsAbst;
-           // iterateBFS* babst = (iterateBFS*) bfsAbstraction;
-           // statement* revBlock=babst->getRBFS()->getBody();
+          
            main.pushstr_newL("}");
              generate_sendCall(body);
              generate_receiveCallBFS(forAll,2,nodeNbr);
 
-           // main.pushstr_newL("}"); 
-            /*
-            //Remote part
-            main.pushstr_newL("else");
-            main.pushstr_newL("{");
-              sprintf(strBuffer,"send_data[dest_pro].push_back(d[%s]);",nodeNbr->getIdentifier());
-              main.pushstr_newL(strBuffer);
-              sprintf(strBuffer,"send_data[dest_pro].push_back(%s);",iterator->getIdentifier());
-              main.pushstr_newL(strBuffer);
-              sprintf(strBuffer,"send_data[dest_pro].push_back(%s);",nodeNbr->getIdentifier());
-              main.pushstr_newL(strBuffer);
-                generate_addMessage((blockStatement*)body,1,nodeNbr);
-            main.pushstr_newL("}");
-            */
-           // main.pushstr_newL("}"); //Closing neighbor iteration
+           
           }
         }
       }
@@ -2209,6 +2070,7 @@ void mpi_cpp_generator::generate_exprIdentifier(Identifier* id)
    main.pushString(id->getIdentifier());
 }
 
+//**************Function to translate expressions*****************//
 void mpi_cpp_generator::generateExpr(Expression* expr)
 { 
   if(expr->isLiteral())
@@ -2296,6 +2158,7 @@ void mpi_cpp_generator::generate_exprProcCall(Expression* expr)
   }
 }
 
+//***************Function to translate property id***************//
 void mpi_cpp_generator::generate_exprPropId(PropAccess* propId) //This needs to be made more generic.
 { char strBuffer[1024];
   //PropAccess* propId=(PropAccess*)expr->getPropId();
@@ -2303,11 +2166,9 @@ void mpi_cpp_generator::generate_exprPropId(PropAccess* propId) //This needs to 
   Identifier* id2=propId->getIdentifier2();
   sprintf(strBuffer,"%s[%s]",id2->getIdentifier(),id1->getIdentifier());
   main.pushString(strBuffer);
-
-
-
 }
 
+//******************Function to translate property id while receiving**************//
 void mpi_cpp_generator::generate_exprPropIdReceive(PropAccess* propId) //This needs to be made more generic.
 { char strBuffer[1024];
   //PropAccess* propId=(PropAccess*)expr->getPropId();
@@ -2318,6 +2179,7 @@ void mpi_cpp_generator::generate_exprPropIdReceive(PropAccess* propId) //This ne
 
 }
 
+//**************Function to translate fixedPoint construct***************//
 void mpi_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct)
 { 
   is_fixedPoint = true;
@@ -2364,9 +2226,6 @@ void mpi_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct)
           header.pushstr_newL("if(sum ==0) return false;");
           header.pushstr_newL("else return true;");
           header.pushstr_newL("}");
-          //main.pushString("#pragma omp parallel for");
-          //sprintf(strBuffer," reduction(||:%s_fp)",dependentId->getIdentifier());
-          //main.pushstr_newL(strBuffer);
       }
     }
   }
@@ -2391,43 +2250,7 @@ void mpi_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct)
     generateBlock((blockStatement*)fixedPointConstruct->getBody(),false);
   
   assert(convergeExpr->getExpressionFamily()==EXPR_UNARY||convergeExpr->getExpressionFamily()==EXPR_ID);
-  /*
-  
-       if(dependentId!=NULL)
-     {
-       if(dependentId->getSymbolInfo()->getType()->isPropType())
-       {   
-        sprintf(strBuffer,"bool %s_fp = false ;",dependentId->getIdentifier());
-        main.pushstr_newL(strBuffer);
-         if(dependentId->getSymbolInfo()->getType()->isPropNodeType())
-         {  Type* type=dependentId->getSymbolInfo()->getType();
-              main.pushString("#pragma omp parallel for");
-           sprintf(strBuffer," reduction(||:%s_fp)",dependentId->getIdentifier());
-           main.pushstr_newL(strBuffer);
-           if(graphId.size()>1)
-             {
-               cerr<<"GRAPH AMBIGUILTY";
-             }
-             else
-            sprintf(strBuffer,"for (%s %s = 0; %s < %s.%s(); %s ++) ","int","v","v",graphId[0]->getIdentifier(),"num_nodes","v");
-           main.pushstr_newL(strBuffer);
-           sprintf(strBuffer,"%s_fp = %s_fp || %s[%s] ;",dependentId->getIdentifier(),dependentId->getIdentifier(),dependentId->getIdentifier(),"v");
-           main.pushstr_newL(strBuffer);
-           if(isNot)
-           {
-            sprintf(strBuffer,"%s = !%s_fp ;",fixedPointId->getIdentifier(),dependentId->getIdentifier());
-            main.pushstr_newL(strBuffer);
-             }
-             else
-             {
-               sprintf(strBuffer,"%s = %s_fp ;",fixedPointId->getIdentifier(),dependentId->getIdentifier());
-               main.pushString(strBuffer);
-             }
 
-        }
-      }
-     }
-      */
      main.pushstr_newL("MPI_Barrier(MPI_COMM_WORLD);");
      main.pushstr_newL("send_data.clear();");
      main.pushstr_newL("receive_data.clear();");
@@ -2435,7 +2258,7 @@ void mpi_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct)
 }
 
 
-
+//************Function to translate statements inside a block***************//
 void mpi_cpp_generator::generateBlock(blockStatement* blockStmt,bool includeBrace)
 {  cout<<"INSIDE BLOCK OF NORMAL ITER"<<"\n";
    list<statement*> stmtList=blockStmt->returnStatements();
@@ -2456,6 +2279,8 @@ void mpi_cpp_generator::generateBlock(blockStatement* blockStmt,bool includeBrac
    main.pushstr_newL("}");
    }
 }
+
+//*********Generate initial and final part of function*************//
 void mpi_cpp_generator::generateFunc(ASTNode* proc)
 {  char strBuffer[1024];
    Function* func=(Function*)proc;
@@ -2672,6 +2497,7 @@ void mpi_cpp_generator:: generateFuncHeader(Function* proc,bool isMainFile)
 }
 
 
+//****************Opening files for storing generated code******************//
 bool mpi_cpp_generator::openFileforOutput()
 { 
 
