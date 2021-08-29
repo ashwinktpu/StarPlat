@@ -188,6 +188,19 @@ static ASTNode* createNodeForProcCallStmt(ASTNode* procCall)
     return procCallStmt;
 }
 
+static ASTNode* createNodeForUnaryStatements(ASTNode* unaryExpr)
+{
+  statement* unaryStmt;
+  Expression* unaryExprNode=(Expression*)unaryExpr;
+  Expression* leftSideExpr=unaryExprNode->getUnaryExpr();
+  assert(leftSideExpr->getExpressionFamily()==EXPR_ID||leftSideExpr->getExpressionFamily()==EXPR_PROPID);
+  unaryStmt=unary_stmt::nodeForUnaryStmt((Expression*)unaryExpr);
+
+  return unaryStmt;
+
+
+}
+
 static ASTNode* createNodeForProcCall(ASTNode* proc_callId,list<argument*> argList)
 {    
     proc_callExpr* proc_callExprNode;
@@ -336,6 +349,22 @@ static ASTNode* createNodeForReductionStmtList(list<ASTNode*> leftList,ASTNode* 
     reductionCallStmt* reductionStmtNode;
     reductionStmtNode=reductionCallStmt::leftList_reducCallStmt(leftList,(reductionCall*)reductionCallNode,exprList);
     return reductionStmtNode;
+}
+
+static ASTNode* createNodeForReductionOpStmt(ASTNode* leftSide,int reduction_op,ASTNode* rightSide)
+{
+  reductionCallStmt* reductionStmtNode;
+    if(leftSide->getTypeofNode()==NODE_ID)
+    {
+      reductionStmtNode=reductionCallStmt::id_reduc_opStmt((Identifier*)leftSide,reduction_op,(Expression*)rightSide);
+    }
+    if(leftSide->getTypeofNode()==NODE_PROPACCESS)
+    {
+        reductionStmtNode=reductionCallStmt::propId_reduc_opStmt((PropAccess*)leftSide,reduction_op,(Expression*)rightSide);
+    }
+
+    return reductionStmtNode;
+
 }
 
 
