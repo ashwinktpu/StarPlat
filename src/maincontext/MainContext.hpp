@@ -36,7 +36,6 @@ class FrontEndContext
   list<Function*> getFuncList();
   void addFuncToList(Function* func);
 
-
 };
 
 
