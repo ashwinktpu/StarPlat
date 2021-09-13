@@ -29,8 +29,12 @@ class graph
   std::map<int32_t,std::vector<edge>> edges;
 
   public:
-  int32_t* indexofNodes;
-  int32_t* edgeList;
+  int32_t* indexofNodes; /* stores prefix sum for outneighbours of a node*/
+  int32_t* rev_indexofNodes; /* stores prefix sum for inneighbours of a node*/
+  int32_t* edgeList; /*stores destination corresponding to edgeNo.
+                       required for iteration over out neighbours */
+  int32_t* srcList;  /*stores source corresponding to edgeNo.
+                       required for iteration over in neighbours */
   graph(char* file)
   {
     filePath=file;
@@ -58,15 +62,51 @@ class graph
       return edgesTotal;
   }
 
+  bool check_if_nbr(int s, int d)
+    {
+      int startEdge=indexofNodes[s];
+      int endEdge=indexofNodes[s+1]-1;
+
+
+      if(edgeList[startEdge]==d)
+          return true;
+      if(edgeList[endEdge]==d)
+         return true;   
+
+       int mid = (startEdge+endEdge)/2;
+
+      while(startEdge<=endEdge)
+        {
+       
+          if(edgeList[mid]==d)
+             return true;
+
+          if(d<edgeList[mid])
+             endEdge=mid-1;
+          else
+            startEdge=mid+1;   
+          
+          mid = (startEdge+endEdge)/2;
+
+        }
+      
+      return false;
+
+
+
+    }
+
   
    void parseGraph()
   {  printf("OH HELLOHIHod \n");
      std::ifstream infile;
      infile.open(filePath);
      std::string line;
-     ////int maxSize=2048;
-    // char line[maxSize];
-    // std::stringstream ss;
+    
+   
+
+
+    
      while (std::getline(infile,line))
      {
       
@@ -81,10 +121,11 @@ class graph
         
         edgesTotal++;
         
-        
+ 
 
         
         edge e;
+    
         int32_t source;
         int32_t destination;
         int32_t weightVal;
@@ -102,15 +143,17 @@ class graph
 
            edges[source].push_back(e);
           
+          
            ss>>weightVal; //for edgelists having weight too.
-       
-      
-      
+          
         
 
      }
+    
+     
+   
     // printf("HELLO AFTER THIS %d \n",nodesTotal);
-    #pragma omp parallel for num_threads(4)
+    #pragma omp parallel for 
      for(int i=0;i<=nodesTotal;i++)//change to 1-nodesTotal.
      {
        std::vector<edge> edgeOfVertex=edges[i];
@@ -127,12 +170,17 @@ class graph
      }                      
                    
      indexofNodes=new int32_t[nodesTotal+2];
+     rev_indexofNodes=new int32_t[nodesTotal+2];
      edgeList=new int32_t[edgesTotal];
+     srcList=new int32_t[edgesTotal];
      edgeLen=new int32_t[edgesTotal];
     
     int edge_no=0;
     
-    //#pragma omp parallel for num_threads(4)
+
+    /* Prefix Sum computation for out neighbours 
+       Loads indexofNodes and edgeList.
+    */
     for(int i=0;i<=nodesTotal;i++) //change to 1-nodesTotal.
     {
       std::vector<edge> edgeofVertex=edges[i];
@@ -153,6 +201,71 @@ class graph
       
     }
     indexofNodes[nodesTotal+1]=edge_no;//change to nodesTotal+1.
+
+   
+     #pragma omp parallel for
+    for(int i=0;i<nodesTotal+1;i++)
+       rev_indexofNodes[i] = 0;
+   
+
+        
+    /* Prefix Sum computation for in neighbours 
+       Loads rev_indexofNodes and srcList.
+    */
+
+    /* count indegrees first */
+    int32_t* edge_indexinrevCSR = new int32_t[edgesTotal];
+
+    #pragma omp parallel for
+    for(int i=0;i<=nodesTotal;i++)
+      {
+
+       for(int j=indexofNodes[i];j<indexofNodes[i+1];j++)
+           {
+             int dest = edgeList[j];
+             int temp = __sync_fetch_and_add( &rev_indexofNodes[dest], 1 );
+             edge_indexinrevCSR[j] = temp;
+           }
+
+      }   
+
+      /* convert to revCSR */
+      int prefix_sum = 0;
+      for(int i=0;i<=nodesTotal;i++)
+        {
+          int temp = prefix_sum;
+          prefix_sum = prefix_sum + rev_indexofNodes[i];
+          rev_indexofNodes[i]=temp;
+      
+        }
+        rev_indexofNodes[nodesTotal+1] = prefix_sum;
+
+    /* store the sources in srcList */
+      #pragma omp parallel for 
+      for(int i=0;i<=nodesTotal;i++)
+        {
+          for(int j=indexofNodes[i];j<indexofNodes[i+1];j++)
+            {
+               int dest = edgeList[j];
+               int index_in_srcList=rev_indexofNodes[dest]+edge_indexinrevCSR[j];
+               srcList[index_in_srcList] = i;
+            }
+        }
+        
+       #pragma omp parallel for num_threads(4)
+        for(int i=0;i<=nodesTotal;i++)
+        {
+          std::vector<int> vect;
+          vect.insert(vect.begin(),srcList+rev_indexofNodes[i],srcList+rev_indexofNodes[i+1]);
+          std::sort(vect.begin(),vect.end());
+          for(int j=0;j<vect.size();j++)
+            srcList[j+rev_indexofNodes[i]]=vect[j];
+
+            vect.clear();
+
+        }
+
+    //change to nodesTotal+1.
     printf("hello after this %d %d\n",nodesTotal,edgesTotal);
     
  }
