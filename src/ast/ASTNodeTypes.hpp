@@ -2137,6 +2137,10 @@ class reductionCallStmt:public statement
      reductionCall* reducCall;
      int reduc_op;
      bool is_reduceCall;
+<<<<<<< HEAD
+=======
+     int type;
+>>>>>>> 4825f48 (code gen for tc)
     // Expression* exprVal;
      int lhsType;
 
@@ -2149,6 +2153,7 @@ class reductionCallStmt:public statement
        rightSide=NULL;
       // exprVal=NULL;
        typeofNode=NODE_REDUCTIONCALLSTMT;
+       type = 0;
      }
 
      static reductionCallStmt* id_reducCallStmt(Identifier* id,reductionCall* reducCall)
@@ -2157,6 +2162,7 @@ class reductionCallStmt:public statement
        reducCallStmtNode->id=id;
        reducCallStmtNode->reducCall=reducCall;
        reducCallStmtNode->lhsType=1;
+       reducCallStmtNode->type = 1;
        return reducCallStmtNode;
      }
 
@@ -2166,6 +2172,7 @@ class reductionCallStmt:public statement
        reducCallStmtNode->propAccessId=propId;
        reducCallStmtNode->reducCall=reducCall;
        reducCallStmtNode->lhsType=2;
+       reducCallStmtNode->type = 2;
        return reducCallStmtNode;
      }
 
@@ -2176,6 +2183,10 @@ class reductionCallStmt:public statement
          rightSide->setParent(reducCallStmtNode);
          reducCallStmtNode->reduc_op=reduce_op;
          reducCallStmtNode->rightSide=rightSide;
+<<<<<<< HEAD
+=======
+         reducCallStmtNode->type = 3;
+>>>>>>> 4825f48 (code gen for tc)
          return reducCallStmtNode;
 
      }
@@ -2187,6 +2198,10 @@ class reductionCallStmt:public statement
          rightSide->setParent(reducCallStmtNode);
          reducCallStmtNode->reduc_op=reduce_op;
          reducCallStmtNode->rightSide=rightSide;
+<<<<<<< HEAD
+=======
+         reducCallStmtNode->type = 4;
+>>>>>>> 4825f48 (code gen for tc)
          return reducCallStmtNode;
 
      }
@@ -2196,6 +2211,10 @@ class reductionCallStmt:public statement
       // cout<<"REDUC CALL TYPE "<<(reducCall->getReductionType()==REDUCE_MIN)<<"\n";
        reductionCallStmt* reducCallStmtNode=new reductionCallStmt();
        reducCallStmtNode->leftList=llist;
+<<<<<<< HEAD
+=======
+       reducCallStmtNode->type = 5;
+>>>>>>> 4825f48 (code gen for tc)
        for(ASTNode* node:llist)
         {
           node->setParent(reducCallStmtNode);
@@ -2302,6 +2321,7 @@ class reductionCallStmt:public statement
 
       return false;  
     }
+<<<<<<< HEAD
 
 
 };
@@ -2323,4 +2343,13 @@ class varTransferStmt: public statement
     setTypeofNode(NODE_TRANSFERSTMT);
   } 
 };
+=======
+    int get_type()
+    {
+      return type;
+    }
+
+
+};
+>>>>>>> 4825f48 (code gen for tc)
 #endif

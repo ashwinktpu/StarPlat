@@ -25,6 +25,7 @@ void Compute_BC(graph g,std::vector<int> sourceSet)
   startv = my_rank*part_size;
   endv = startv + (part_size-1);
 
+  int dest_pro;
   int local_ipDeg=0, global_ipDeg=0;
   for (int i=startv; i<=endv;i++)
   {
@@ -75,7 +76,6 @@ void Compute_BC(graph g,std::vector<int> sourceSet)
     {
       vector < vector <float> > send_data(np);
       vector < vector <float> > receive_data(np);
-      int dest_pro;
       while (active.size() > 0)
       {
         int v = active.back();
@@ -151,7 +151,6 @@ void Compute_BC(graph g,std::vector<int> sourceSet)
       {
         vector <vector <float> > send_data(np);
         vector <vector <float> > receive_data(np);
-        int dest_pro;
         for(int v=startv; v<=endv; v++)
         {
           if(d[v] == phase)
