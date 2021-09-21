@@ -4,6 +4,9 @@
 int count = 0;
 bool is_fixedPoint = false;
 int num_messages = 0;
+bool make_parallel = false;
+Identifier* parallel_identifier;
+bool comm_needed = false;
 
 
 void mpi_cpp_generator::addIncludeToFile(char* includeName,dslCodePad& file,bool isCppLib)
@@ -119,7 +122,7 @@ void add_InitialDeclarations(dslCodePad* main,iterateBFS* bfsAbstraction)
     main->pushstr_newL("{");
       main->pushstr_newL("vector < vector <float> > send_data(np);");
       main->pushstr_newL("vector < vector <float> > receive_data(np);");
-      main->pushstr_newL("int dest_pro;");
+      //main->pushstr_newL("int dest_pro;");
       main->pushstr_newL("while (active.size() > 0)");
       main->pushstr_newL("{");
         sprintf(strBuffer,"int %s = active.back();",iterNode);
@@ -149,7 +152,7 @@ void add_InitialDeclarations(dslCodePad* main,iterateBFS* bfsAbstraction)
     //main->pushstr_newL("#pragma omp parallel for");
     main->pushstr_newL("vector <vector <float> > send_data(np);");
     main->pushstr_newL("vector <vector <float> > receive_data(np);");
-    main->pushstr_newL("int dest_pro;");
+    //main->pushstr_newL("int dest_pro;");
     //sprintf(strBuffer,"for( %s %s = %s; %s < levelCount[phase] ; %s++)","int","l","0","l","l"); 
     //main->pushstr_newL(strBuffer);
 
@@ -287,6 +290,7 @@ void mpi_cpp_generator::generateStatement(statement* stmt)
 
    if(stmt->getTypeofNode()==NODE_DOWHILESTMT)
    {
+      generateDoWhileStmt((dowhileStmt*) stmt);
     //  generateBlock((blockStatement*) stmt);
    }
 
@@ -316,7 +320,7 @@ void mpi_cpp_generator::generateStatement(statement* stmt)
     }
     if(stmt->getTypeofNode()==NODE_PROCCALLSTMT)
     { 
-      cout<<"calling iteraterbfs"<<endl;
+      cout<<"calling proc call"<<endl;
       generateProcCall((proc_callStmt*) stmt);
     }
 
@@ -326,121 +330,135 @@ void mpi_cpp_generator::generateStatement(statement* stmt)
 //Function to translate reduction statement
 void mpi_cpp_generator::generateReductionStmt(reductionCallStmt* stmt)
 { char strBuffer[1024];
-  reductionCall* reduceCall=stmt->getReducCall();
-  if(reduceCall->getReductionType()==REDUCE_MIN)
-  {
-    
-    if(stmt->isListInvolved())
+  if(stmt->get_type() == 5)
+  {  
+      reductionCall* reduceCall=stmt->getReducCall();
+      if(reduceCall->getReductionType()==REDUCE_MIN)
       {
-        cout<<"INSIDE THIS OF LIST PRESENT"<<"\n";
-        list<argument*> argList=reduceCall->getargList();
-        list<ASTNode*>  leftList=stmt->getLeftList();
-        int i=0;
-   
-        list<ASTNode*> rightList=stmt->getRightList();
-        printf("LEFT LIST SIZE %d \n",leftList.size());
+        
+        if(stmt->isListInvolved())
+          {
+            cout<<"INSIDE THIS OF LIST PRESENT"<<"\n";
+            list<argument*> argList=reduceCall->getargList();
+            list<ASTNode*>  leftList=stmt->getLeftList();
+            int i=0;
       
-            main.space();
-            if(stmt->getAssignedId()->getSymbolInfo()->getType()->isPropType())
-            { Type* type=stmt->getAssignedId()->getSymbolInfo()->getType();
-              
-              main.pushstr_space(convertToCppType(type->getInnerTargetType()));
-            }
-            cout<<"INSIDE ARG ID"<<stmt->getAssignedId()->getSymbolInfo()->getType()->gettypeId()<<"\n";
-
-          //  
-            sprintf(strBuffer,"%s_new",stmt->getAssignedId()->getIdentifier());
-            main.pushString(strBuffer);
-            list<argument*>::iterator argItr;
-             argItr=argList.begin();
-             argItr++; 
-            main.pushString(" = ");
-            generateExpr((*argItr)->getExpr());
-            main.pushstr_newL(";");
-            
-            list<ASTNode*>::iterator itr1;
-            list<ASTNode*>::iterator itr2;
-            
-            itr2=rightList.begin();
-            itr1=leftList.begin();
-            itr1++;
-            for( ;itr1!=leftList.end();itr1++)
-            {   ASTNode* node=*itr1;
-                ASTNode* node1=*itr2;
-                
-                  if(node->getTypeofNode()==NODE_ID)
-                    {
-                      main.pushstr_space(convertToCppType(((Identifier*)node)->getSymbolInfo()->getType()));
-                      sprintf(strBuffer,"%s_new",((Identifier*)node)->getIdentifier());
-                      main.pushString(strBuffer);
-                      main.pushString(" = ");
-                      generateExpr((Expression*)node1);
-                    } 
-                    if(node->getTypeofNode()==NODE_PROPACCESS)
-                    {
-                      PropAccess* p=(PropAccess*)node;
-                      Type* type=p->getIdentifier2()->getSymbolInfo()->getType();
-                      if(type->isPropType())
-                      {
-                        main.pushstr_space(convertToCppType(type->getInnerTargetType()));
-                      }
-                      
-                      sprintf(strBuffer,"%s_new",p->getIdentifier2()->getIdentifier());
-                      main.pushString(strBuffer);
-                      main.pushString(" = ");
-                      Expression* expr=(Expression*)node1;
-                      generateExpr((Expression*)node1);
-                      main.pushstr_newL(";");
-                    }
-                    itr2++;
-            }
-         
-             main.pushString("if (");
-            if(stmt->isTargetId())
-            generate_exprIdentifier(stmt->getTargetId());
-            else
-              generate_exprPropId(stmt->getTargetPropId());
-            main.space();
-            main.pushstr_space(">");
-            //generateExpr((*argItr)->getExpr())
-            generate_exprIdentifier(stmt->getAssignedId());            
-            main.pushString("_new");
-            main.pushstr_newL(")");
-            main.pushstr_newL("{");
-            
-            itr1=leftList.begin();
-            i=0;
-            for( ;itr1!=leftList.end();itr1++)
-            {   ASTNode* node=*itr1;
-
-              if(node->getTypeofNode()==NODE_ID)
-                    {
-                        generate_exprIdentifier((Identifier*)node);
-                    }
-               if(node->getTypeofNode()==NODE_PROPACCESS)
-                {
-                  generate_exprPropId((PropAccess*)node);
-                } 
-                main.space();
-                main.pushstr_space("=");
-                if(node->getTypeofNode()==NODE_ID)
-                    {
-                        generate_exprIdentifier((Identifier*)node);
-                    }
-               if(node->getTypeofNode()==NODE_PROPACCESS)
-                {
-                  generate_exprIdentifier(((PropAccess*)node)->getIdentifier2());
-                } 
-                main.pushString("_new");
-                main.pushstr_newL(";");    
-
-            }
-            main.pushstr_newL("}");
-
-             // main.pushstr_newL("}");
+            list<ASTNode*> rightList=stmt->getRightList();
+            printf("LEFT LIST SIZE %d \n",leftList.size());
           
+                main.space();
+                if(stmt->getAssignedId()->getSymbolInfo()->getType()->isPropType())
+                { Type* type=stmt->getAssignedId()->getSymbolInfo()->getType();
+                  
+                  main.pushstr_space(convertToCppType(type->getInnerTargetType()));
+                }
+                cout<<"INSIDE ARG ID"<<stmt->getAssignedId()->getSymbolInfo()->getType()->gettypeId()<<"\n";
 
+              //  
+                sprintf(strBuffer,"%s_new",stmt->getAssignedId()->getIdentifier());
+                main.pushString(strBuffer);
+                list<argument*>::iterator argItr;
+                argItr=argList.begin();
+                argItr++; 
+                main.pushString(" = ");
+                generateExpr((*argItr)->getExpr());
+                main.pushstr_newL(";");
+                
+                list<ASTNode*>::iterator itr1;
+                list<ASTNode*>::iterator itr2;
+                
+                itr2=rightList.begin();
+                itr1=leftList.begin();
+                itr1++;
+                for( ;itr1!=leftList.end();itr1++)
+                {   ASTNode* node=*itr1;
+                    ASTNode* node1=*itr2;
+                    
+                      if(node->getTypeofNode()==NODE_ID)
+                        {
+                          main.pushstr_space(convertToCppType(((Identifier*)node)->getSymbolInfo()->getType()));
+                          sprintf(strBuffer,"%s_new",((Identifier*)node)->getIdentifier());
+                          main.pushString(strBuffer);
+                          main.pushString(" = ");
+                          generateExpr((Expression*)node1);
+                        } 
+                        if(node->getTypeofNode()==NODE_PROPACCESS)
+                        {
+                          PropAccess* p=(PropAccess*)node;
+                          Type* type=p->getIdentifier2()->getSymbolInfo()->getType();
+                          if(type->isPropType())
+                          {
+                            main.pushstr_space(convertToCppType(type->getInnerTargetType()));
+                          }
+                          
+                          sprintf(strBuffer,"%s_new",p->getIdentifier2()->getIdentifier());
+                          main.pushString(strBuffer);
+                          main.pushString(" = ");
+                          Expression* expr=(Expression*)node1;
+                          generateExpr((Expression*)node1);
+                          main.pushstr_newL(";");
+                        }
+                        itr2++;
+                }
+            
+                main.pushString("if (");
+                if(stmt->isTargetId())
+                generate_exprIdentifier(stmt->getTargetId());
+                else
+                  generate_exprPropId(stmt->getTargetPropId());
+                main.space();
+                main.pushstr_space(">");
+                //generateExpr((*argItr)->getExpr())
+                generate_exprIdentifier(stmt->getAssignedId());            
+                main.pushString("_new");
+                main.pushstr_newL(")");
+                main.pushstr_newL("{");
+                
+                itr1=leftList.begin();
+                i=0;
+                for( ;itr1!=leftList.end();itr1++)
+                {   ASTNode* node=*itr1;
+
+                  if(node->getTypeofNode()==NODE_ID)
+                        {
+                            generate_exprIdentifier((Identifier*)node);
+                        }
+                  if(node->getTypeofNode()==NODE_PROPACCESS)
+                    {
+                      generate_exprPropId((PropAccess*)node);
+                    } 
+                    main.space();
+                    main.pushstr_space("=");
+                    if(node->getTypeofNode()==NODE_ID)
+                        {
+                            generate_exprIdentifier((Identifier*)node);
+                        }
+                  if(node->getTypeofNode()==NODE_PROPACCESS)
+                    {
+                      generate_exprIdentifier(((PropAccess*)node)->getIdentifier2());
+                    } 
+                    main.pushString("_new");
+                    main.pushstr_newL(";");    
+
+                }
+                main.pushstr_newL("}");
+
+                // main.pushstr_newL("}");
+              
+
+          }
       }
+  }
+  else if(stmt->get_type() == 3)
+  {
+    printf("Reduction type 3\n");
+    Identifier* id = stmt->getLeftId();
+    int op = stmt->reduction_op();
+    Expression* rhs = stmt->getRightSide();
+    main.pushstr_space(id->getIdentifier());
+    const char* operatorString=getOperatorString(op);
+    main.pushstr_space(operatorString);
+    generateExpr(rhs);
   }
 
 }
@@ -449,291 +467,303 @@ void mpi_cpp_generator::generateReductionStmt(reductionCallStmt* stmt)
 //Function to translate reduciton statement after receiving the data...Can be merged with previous function
 void mpi_cpp_generator::generateInnerReductionStmt(reductionCallStmt* stmt)
 { char strBuffer[1024];
-  reductionCall* reduceCall=stmt->getReducCall();
-  if(reduceCall->getReductionType()==REDUCE_MIN)
-  {
-    
-    if(stmt->isListInvolved())
+  if(stmt->get_type() == 5)
+  {    
+      reductionCall* reduceCall=stmt->getReducCall();
+      if(reduceCall->getReductionType()==REDUCE_MIN)
       {
-        cout<<"INSIDE THIS OF LIST PRESENT"<<"\n";
-        list<argument*> argList=reduceCall->getargList();
-        list<ASTNode*>  leftList=stmt->getLeftList();
-        int i=0;
-   
-        list<ASTNode*> rightList=stmt->getRightList();
-        printf("LEFT LIST SIZE %d \n",leftList.size());
+        
+        if(stmt->isListInvolved())
+          {
+            cout<<"INSIDE THIS OF LIST PRESENT"<<"\n";
+            list<argument*> argList=reduceCall->getargList();
+            list<ASTNode*>  leftList=stmt->getLeftList();
+            int i=0;
       
-            //main.space();
-            if(stmt->getAssignedId()->getSymbolInfo()->getType()->isPropType())
-            { Type* type=stmt->getAssignedId()->getSymbolInfo()->getType();
-              
-              main.pushstr_space(convertToCppType(type->getInnerTargetType()));
-            }
-            cout<<"INSIDE ARG ID"<<stmt->getAssignedId()->getSymbolInfo()->getType()->gettypeId()<<"\n";
-
-          //  
-            sprintf(strBuffer,"%s_new",stmt->getAssignedId()->getIdentifier());
-            main.pushString(strBuffer);
-            list<argument*>::iterator argItr;
-             argItr=argList.begin();
-             argItr++; 
-            main.pushString(" = ");
-
-            main.pushstr_newL("x.second;");
-            
-            list<ASTNode*>::iterator itr1;
-            list<ASTNode*>::iterator itr2;
-            
-            itr2=rightList.begin();
-            itr1=leftList.begin();
-            itr1++;
-            for( ;itr1!=leftList.end();itr1++)
-            {   ASTNode* node=*itr1;
-                ASTNode* node1=*itr2;
-                
-                  if(node->getTypeofNode()==NODE_ID)
-                    {
-                      main.pushstr_space(convertToCppType(((Identifier*)node)->getSymbolInfo()->getType()));
-                      sprintf(strBuffer,"%s_new",((Identifier*)node)->getIdentifier());
-                      main.pushString(strBuffer);
-                      main.pushString(" = ");
-                      if(node1->getTypeofNode()==NODE_PROPACCESS)
-                        generate_exprPropIdReceive(((Expression*)node1)->getPropId());
-                      else 
-                        generateExpr((Expression*)node1);
-                    } 
-                    if(node->getTypeofNode()==NODE_PROPACCESS)
-                    {
-                      PropAccess* p=(PropAccess*)node;
-                      Type* type=p->getIdentifier2()->getSymbolInfo()->getType();
-                      if(type->isPropType())
-                      {
-                        main.pushstr_space(convertToCppType(type->getInnerTargetType()));
-                      }
-                      
-                      sprintf(strBuffer,"%s_new",p->getIdentifier2()->getIdentifier());
-                      main.pushString(strBuffer);
-                      main.pushString(" = ");
-                      if(node1->getTypeofNode()==NODE_PROPACCESS)
-                        generate_exprPropIdReceive(((Expression*)node1)->getPropId());
-                      else 
-                        generateExpr((Expression*)node1);
-                      //Expression* expr=(Expression*)node1;
-                      //generateExpr((Expression*)node1);
-                      main.pushstr_newL(";");
-                    }
-                    itr2++;
-            }
-         
-            if(stmt->isTargetId())
-            {
-              //generate_exprIdentifier(stmt->getTargetId());
-              sprintf(strBuffer,"%s = x.first;",stmt->getTargetId()->getIdentifier());
-              main.pushstr_newL(strBuffer);
-            }
-            else
-            {
-              //generate_exprPropId(stmt->getTargetPropId());
-              sprintf(strBuffer,"int %s = x.first;",stmt->getTargetPropId()->getIdentifier1()->getIdentifier());
-              main.pushstr_newL(strBuffer);
-            }
-
-            main.pushString("if (");
-            if(stmt->isTargetId())
-              generate_exprIdentifier(stmt->getTargetId());
-            else
-              generate_exprPropId(stmt->getTargetPropId());
-            main.space();
-            main.pushstr_space(">");
-            //generateExpr((*argItr)->getExpr())
-            generate_exprIdentifier(stmt->getAssignedId());            
-            main.pushString("_new");
-            main.pushstr_newL(")");
-            main.pushstr_newL("{");
-            
-            itr1=leftList.begin();
-            i=0;
-            for( ;itr1!=leftList.end();itr1++)
-            {   ASTNode* node=*itr1;
-
-              if(node->getTypeofNode()==NODE_ID)
-                    {
-                        generate_exprIdentifier((Identifier*)node);
-                    }
-               if(node->getTypeofNode()==NODE_PROPACCESS)
-                {
-                  generate_exprPropId((PropAccess*)node);
-                } 
-                main.space();
-                main.pushstr_space("=");
-                if(node->getTypeofNode()==NODE_ID)
-                    {
-                        generate_exprIdentifier((Identifier*)node);
-                    }
-               if(node->getTypeofNode()==NODE_PROPACCESS)
-                {
-                  generate_exprIdentifier(((PropAccess*)node)->getIdentifier2());
-                } 
-                main.pushString("_new");
-                main.pushstr_newL(";");    
-
-            }
-            main.pushstr_newL("}");
-
-              //main.pushstr_newL("}");
+            list<ASTNode*> rightList=stmt->getRightList();
+            printf("LEFT LIST SIZE %d \n",leftList.size());
           
+                //main.space();
+                if(stmt->getAssignedId()->getSymbolInfo()->getType()->isPropType())
+                { Type* type=stmt->getAssignedId()->getSymbolInfo()->getType();
+                  
+                  main.pushstr_space(convertToCppType(type->getInnerTargetType()));
+                }
+                cout<<"INSIDE ARG ID"<<stmt->getAssignedId()->getSymbolInfo()->getType()->gettypeId()<<"\n";
 
+              //  
+                sprintf(strBuffer,"%s_new",stmt->getAssignedId()->getIdentifier());
+                main.pushString(strBuffer);
+                list<argument*>::iterator argItr;
+                argItr=argList.begin();
+                argItr++; 
+                main.pushString(" = ");
+
+                main.pushstr_newL("x.second;");
+                
+                list<ASTNode*>::iterator itr1;
+                list<ASTNode*>::iterator itr2;
+                
+                itr2=rightList.begin();
+                itr1=leftList.begin();
+                itr1++;
+                for( ;itr1!=leftList.end();itr1++)
+                {   ASTNode* node=*itr1;
+                    ASTNode* node1=*itr2;
+                    
+                      if(node->getTypeofNode()==NODE_ID)
+                        {
+                          main.pushstr_space(convertToCppType(((Identifier*)node)->getSymbolInfo()->getType()));
+                          sprintf(strBuffer,"%s_new",((Identifier*)node)->getIdentifier());
+                          main.pushString(strBuffer);
+                          main.pushString(" = ");
+                          if(node1->getTypeofNode()==NODE_PROPACCESS)
+                            generate_exprPropIdReceive(((Expression*)node1)->getPropId());
+                          else 
+                            generateExpr((Expression*)node1);
+                        } 
+                        if(node->getTypeofNode()==NODE_PROPACCESS)
+                        {
+                          PropAccess* p=(PropAccess*)node;
+                          Type* type=p->getIdentifier2()->getSymbolInfo()->getType();
+                          if(type->isPropType())
+                          {
+                            main.pushstr_space(convertToCppType(type->getInnerTargetType()));
+                          }
+                          
+                          sprintf(strBuffer,"%s_new",p->getIdentifier2()->getIdentifier());
+                          main.pushString(strBuffer);
+                          main.pushString(" = ");
+                          if(node1->getTypeofNode()==NODE_PROPACCESS)
+                            generate_exprPropIdReceive(((Expression*)node1)->getPropId());
+                          else 
+                            generateExpr((Expression*)node1);
+                          //Expression* expr=(Expression*)node1;
+                          //generateExpr((Expression*)node1);
+                          main.pushstr_newL(";");
+                        }
+                        itr2++;
+                }
+            
+                if(stmt->isTargetId())
+                {
+                  //generate_exprIdentifier(stmt->getTargetId());
+                  sprintf(strBuffer,"%s = x.first;",stmt->getTargetId()->getIdentifier());
+                  main.pushstr_newL(strBuffer);
+                }
+                else
+                {
+                  //generate_exprPropId(stmt->getTargetPropId());
+                  sprintf(strBuffer,"int %s = x.first;",stmt->getTargetPropId()->getIdentifier1()->getIdentifier());
+                  main.pushstr_newL(strBuffer);
+                }
+
+                main.pushString("if (");
+                if(stmt->isTargetId())
+                  generate_exprIdentifier(stmt->getTargetId());
+                else
+                  generate_exprPropId(stmt->getTargetPropId());
+                main.space();
+                main.pushstr_space(">");
+                //generateExpr((*argItr)->getExpr())
+                generate_exprIdentifier(stmt->getAssignedId());            
+                main.pushString("_new");
+                main.pushstr_newL(")");
+                main.pushstr_newL("{");
+                
+                itr1=leftList.begin();
+                i=0;
+                for( ;itr1!=leftList.end();itr1++)
+                {   ASTNode* node=*itr1;
+
+                  if(node->getTypeofNode()==NODE_ID)
+                        {
+                            generate_exprIdentifier((Identifier*)node);
+                        }
+                  if(node->getTypeofNode()==NODE_PROPACCESS)
+                    {
+                      generate_exprPropId((PropAccess*)node);
+                    } 
+                    main.space();
+                    main.pushstr_space("=");
+                    if(node->getTypeofNode()==NODE_ID)
+                        {
+                            generate_exprIdentifier((Identifier*)node);
+                        }
+                  if(node->getTypeofNode()==NODE_PROPACCESS)
+                    {
+                      generate_exprIdentifier(((PropAccess*)node)->getIdentifier2());
+                    } 
+                    main.pushString("_new");
+                    main.pushstr_newL(";");    
+
+                }
+                main.pushstr_newL("}");
+
+                  //main.pushstr_newL("}");
+              
+
+          }
       }
   }
-
+  else if(stmt->get_type()==3)
+  {
+    printf("Reduction type 3\n");
+  }
 }
 
 
 //Function to generate reduction statement for sending the data
 void mpi_cpp_generator::generateReductionStmtForSend(reductionCallStmt* stmt,bool send)
 { char strBuffer[1024];
-  reductionCall* reduceCall=stmt->getReducCall();
-  if(reduceCall->getReductionType()==REDUCE_MIN)
-  {
-    if(send)
-    {
-        if(stmt->isListInvolved())
-          {
-            cout<<"INSIDE THIS OF LIST PRESENT"<<"\n";
-        list<argument*> argList=reduceCall->getargList();
-        list<ASTNode*>  leftList=stmt->getLeftList();
-        int i=0;
-   
-        list<ASTNode*> rightList=stmt->getRightList();
-        printf("LEFT LIST SIZE %d \n",leftList.size());
-         
-            list<ASTNode*>::iterator itr1;
-            list<ASTNode*>::iterator itr2;
-            list<argument*>::iterator argItr;
-            
-            itr2=rightList.begin();
-            itr1=leftList.begin();
-            argItr=argList.begin();
-            
-           Identifier* id;
-           Expression* to_be_updated;
-           main.pushstr_newL("if (itr != send_data[dest_pro].end())");
-           main.pushstr_space("itr->second = min(");
-           main.insert_indent();
-            // main.pushString("if (");
-            if(stmt->isTargetId())
-            {
-              //generate_exprIdentifier(stmt->getTargetId());
-              id = stmt->getTargetId();
-            }
-            else
-            {
-              //generate_exprPropId(stmt->getTargetPropId());
-              PropAccess* p1 = stmt->getTargetPropId();
-              string p1id1(p1->getIdentifier1()->getIdentifier());
-              string p1id2(p1->getIdentifier2()->getIdentifier());
-              
-              id = p1->getIdentifier1();
-              Identifier* i2 = p1->getIdentifier2();
-              for( ;argItr!=argList.end();argItr++)
-              {
-                PropAccess* p2 = NULL;
-                Expression* e = (*argItr)->getExpr();
-                if(e->isPropIdExpr()) 
-                {               
-                  p2 = e->getPropId();
-
-                  string p2id1(p2->getIdentifier1()->getIdentifier());
-                  string p2id2(p2->getIdentifier2()->getIdentifier());
-                  if(p1id1.compare(p2id1)==0 && p1id2.compare(p2id2)==0)
-                  {
-                    cout<<"both ids match"<<endl;
-                    sprintf(strBuffer,"send_data[dest_pro][%s]",id->getIdentifier());
-                    main.pushString(strBuffer);
-                  }
-                }
-                else
-                {
-                  to_be_updated = (*argItr)->getExpr();
-                  generateExpr((*argItr)->getExpr());
-                }
-                ++i;
-                if(i!=argList.size())
-                  main.pushstr_space(",");
-
-              }
-            }
-            main.pushstr_newL(");");
-            main.decrease_indent();
-
-            //Else part of send
-            main.pushstr_newL("else");
-            main.insert_indent();
-            sprintf(strBuffer,"send_data[dest_pro][%s] = ",id->getIdentifier());
-            main.pushString(strBuffer);
-            generateExpr(to_be_updated);
-            main.pushstr_newL(";");
-            main.decrease_indent();
-            
-            }
-      }
-      else
+  if(stmt->get_type() == 5)
       {
-          if(stmt->isListInvolved())
-          {
-            cout<<"INSIDE THIS OF LIST PRESENT"<<"\n";
+      reductionCall* reduceCall=stmt->getReducCall();
+      if(reduceCall->getReductionType()==REDUCE_MIN)
+      {
+        if(send)
+        {
+            if(stmt->isListInvolved())
+              {
+                cout<<"INSIDE THIS OF LIST PRESENT"<<"\n";
             list<argument*> argList=reduceCall->getargList();
             list<ASTNode*>  leftList=stmt->getLeftList();
             int i=0;
-          
+      
             list<ASTNode*> rightList=stmt->getRightList();
             printf("LEFT LIST SIZE %d \n",leftList.size());
-              
+            
+                list<ASTNode*>::iterator itr1;
+                list<ASTNode*>::iterator itr2;
                 list<argument*>::iterator argItr;
+                
+                itr2=rightList.begin();
+                itr1=leftList.begin();
                 argItr=argList.begin();
-                argItr++; 
                 
-                
-                Expression* expr = (*argItr)->getExpr();
-                if(expr->isArithmetic())
+              Identifier* id;
+              Expression* to_be_updated;
+              main.pushstr_newL("if (itr != send_data[dest_pro].end())");
+              main.pushstr_space("itr->second = min(");
+              main.insert_indent();
+                // main.pushString("if (");
+                if(stmt->isTargetId())
                 {
-                  cout<<"The exprression in reduction is arithmetic ***"<<endl;
-                  Expression *left = expr->getLeft();
-                  Expression *right = expr ->getRight();
-                  if(left->isPropIdExpr())
+                  //generate_exprIdentifier(stmt->getTargetId());
+                  id = stmt->getTargetId();
+                }
+                else
+                {
+                  //generate_exprPropId(stmt->getTargetPropId());
+                  PropAccess* p1 = stmt->getTargetPropId();
+                  string p1id1(p1->getIdentifier1()->getIdentifier());
+                  string p1id2(p1->getIdentifier2()->getIdentifier());
+                  
+                  id = p1->getIdentifier1();
+                  Identifier* i2 = p1->getIdentifier2();
+                  for( ;argItr!=argList.end();argItr++)
                   {
-                    main.pushstr_space("int");
-                    generate_exprPropIdReceive(left->getPropId());
-                    main.pushstr_newL(" = recv_data[(t*3*max_degree)+k];");
-                    //generateExpr(left);
-                    //main.pushstr_newL(";");
-                    
-                  }
-                  if(right->isPropIdExpr())
-                  {
-                    main.pushstr_space("int");
-                    generate_exprPropIdReceive(right->getPropId());
-                    main.pushstr_newL(" = recv_data[(t*3*max_degree)+k+1];");
-                    //generateExpr(right);                    
-                    //main.pushstr_newL(";");
+                    PropAccess* p2 = NULL;
+                    Expression* e = (*argItr)->getExpr();
+                    if(e->isPropIdExpr()) 
+                    {               
+                      p2 = e->getPropId();
+
+                      string p2id1(p2->getIdentifier1()->getIdentifier());
+                      string p2id2(p2->getIdentifier2()->getIdentifier());
+                      if(p1id1.compare(p2id1)==0 && p1id2.compare(p2id2)==0)
+                      {
+                        cout<<"both ids match"<<endl;
+                        sprintf(strBuffer,"send_data[dest_pro][%s]",id->getIdentifier());
+                        main.pushString(strBuffer);
+                      }
+                    }
+                    else
+                    {
+                      to_be_updated = (*argItr)->getExpr();
+                      generateExpr((*argItr)->getExpr());
+                    }
+                    ++i;
+                    if(i!=argList.size())
+                      main.pushstr_space(",");
+
                   }
                 }
+                main.pushstr_newL(");");
+                main.decrease_indent();
 
-                Identifier *id;
-                if(stmt->isTargetId())
-                  generate_exprIdentifier(stmt->getTargetId());
-                else
-                  id = (stmt->getTargetPropId())->getIdentifier1();
-                  //generate_exprPropId(stmt->getTargetPropId());
-                  main.pushstr_space("int");
-                sprintf(strBuffer,"%s = recv_data[(t*3*max_degree)+k+2];",id->getIdentifier());
-                main.pushstr_newL(strBuffer);
-                //generateExpr((*argItr)->getExpr());
-                //main.pushstr_newL(";");
-            }
+                //Else part of send
+                main.pushstr_newL("else");
+                main.insert_indent();
+                sprintf(strBuffer,"send_data[dest_pro][%s] = ",id->getIdentifier());
+                main.pushString(strBuffer);
+                generateExpr(to_be_updated);
+                main.pushstr_newL(";");
+                main.decrease_indent();
+                
+                }
+          }
+          else
+          {
+              if(stmt->isListInvolved())
+              {
+                cout<<"INSIDE THIS OF LIST PRESENT"<<"\n";
+                list<argument*> argList=reduceCall->getargList();
+                list<ASTNode*>  leftList=stmt->getLeftList();
+                int i=0;
+              
+                list<ASTNode*> rightList=stmt->getRightList();
+                printf("LEFT LIST SIZE %d \n",leftList.size());
+                  
+                    list<argument*>::iterator argItr;
+                    argItr=argList.begin();
+                    argItr++; 
+                    
+                    
+                    Expression* expr = (*argItr)->getExpr();
+                    if(expr->isArithmetic())
+                    {
+                      cout<<"The exprression in reduction is arithmetic ***"<<endl;
+                      Expression *left = expr->getLeft();
+                      Expression *right = expr ->getRight();
+                      if(left->isPropIdExpr())
+                      {
+                        main.pushstr_space("int");
+                        generate_exprPropIdReceive(left->getPropId());
+                        main.pushstr_newL(" = recv_data[(t*3*max_degree)+k];");
+                        //generateExpr(left);
+                        //main.pushstr_newL(";");
+                        
+                      }
+                      if(right->isPropIdExpr())
+                      {
+                        main.pushstr_space("int");
+                        generate_exprPropIdReceive(right->getPropId());
+                        main.pushstr_newL(" = recv_data[(t*3*max_degree)+k+1];");
+                        //generateExpr(right);                    
+                        //main.pushstr_newL(";");
+                      }
+                    }
+
+                    Identifier *id;
+                    if(stmt->isTargetId())
+                      generate_exprIdentifier(stmt->getTargetId());
+                    else
+                      id = (stmt->getTargetPropId())->getIdentifier1();
+                      //generate_exprPropId(stmt->getTargetPropId());
+                      main.pushstr_space("int");
+                    sprintf(strBuffer,"%s = recv_data[(t*3*max_degree)+k+2];",id->getIdentifier());
+                    main.pushstr_newL(strBuffer);
+                    //generateExpr((*argItr)->getExpr());
+                    //main.pushstr_newL(";");
+                }
+          }
       }
   }
-
+  else if(stmt->get_type()==3)
+  {
+    printf("Recution for send type = 3\n");
+  }
 }
 
 //Function to generate expressions after reciving the data sent
@@ -756,6 +786,22 @@ void mpi_cpp_generator::generateExprForSend(Expression* expr,int send, Identifie
     cout<<"Expression is literal...calling literalforsend\n";
     generate_exprLiteralForSend(expr,send,remote,replace);
   }
+  else if(expr->isProcCallExpr())
+  {
+    cout<<"Expression is proce call....calling procCall for send\n";
+  }
+    
+     else if(expr->isInfinity())
+       {
+         cout<<"Expression is infinity\n";
+         //generate_exprInfinity(expr);
+       }
+
+       else if(expr->isIdentifierExpr())
+       {
+         cout<<"Expression is identifier\n";
+         //generate_exprIdentifier(expr->getId());
+       }
   else 
        {
          assert(false);
@@ -1427,6 +1473,268 @@ void mpi_cpp_generator::generateReceiveBlock(blockStatement* body)
    }
 }
 
+bool checkReductionCallStmt(reductionCallStmt* stmt,Identifier* remote)
+{
+  char strBuffer[1024];
+  bool ret;
+  if(stmt->get_type() == 5)
+  {  
+      reductionCall* reduceCall=stmt->getReducCall();
+      if(reduceCall->getReductionType()==REDUCE_MIN)
+      {
+        
+        if(stmt->isListInvolved())
+          {
+            cout<<"INSIDE THIS OF LIST PRESENT"<<"\n";
+            list<argument*> argList=reduceCall->getargList();
+            list<ASTNode*>  leftList=stmt->getLeftList();
+            int i=0;
+      
+            list<ASTNode*> rightList=stmt->getRightList();
+            printf("LEFT LIST SIZE %d \n",leftList.size());
+          
+                //if(stmt->getAssignedId()->getSymbolInfo()->getType()->isPropType())
+               // { Type* type=stmt->getAssignedId()->getSymbolInfo()->getType();
+                  
+                 // main.pushstr_space(convertToCppType(type->getInnerTargetType()));
+                //}
+                //cout<<"INSIDE ARG ID"<<stmt->getAssignedId()->getSymbolInfo()->getType()->gettypeId()<<"\n";
+
+              //  
+                //sprintf(strBuffer,"%s_new",stmt->getAssignedId()->getIdentifier());
+                //main.pushString(strBuffer);
+                list<argument*>::iterator argItr;
+                argItr=argList.begin();
+                argItr++; 
+                //main.pushString(" = ");
+                checkExpr((*argItr)->getExpr(),remote);
+                //main.pushstr_newL(";");
+                
+                list<ASTNode*>::iterator itr1;
+                list<ASTNode*>::iterator itr2;
+                
+                itr2=rightList.begin();
+                itr1=leftList.begin();
+                itr1++;
+                for( ;itr1!=leftList.end();itr1++)
+                {   ASTNode* node=*itr1;
+                    ASTNode* node1=*itr2;
+                    
+                      if(node->getTypeofNode()==NODE_ID)
+                        {
+                          /*
+                          main.pushstr_space(convertToCppType(((Identifier*)node)->getSymbolInfo()->getType()));
+                          sprintf(strBuffer,"%s_new",((Identifier*)node)->getIdentifier());
+                          main.pushString(strBuffer);
+                          main.pushString(" = ");
+                          generateExpr((Expression*)node1);*/
+                          cout <<"id\n";
+                        } 
+                        if(node->getTypeofNode()==NODE_PROPACCESS)
+                        {
+                          PropAccess* p=(PropAccess*)node;
+                          ret = checkPropAccess(p,remote);
+                            if(ret == true)
+                              return true;
+                          /*
+                          Type* type=p->getIdentifier2()->getSymbolInfo()->getType();
+                          if(type->isPropType())
+                          {
+                            main.pushstr_space(convertToCppType(type->getInnerTargetType()));
+                          }
+                          
+                          sprintf(strBuffer,"%s_new",p->getIdentifier2()->getIdentifier());
+                          main.pushString(strBuffer);
+                          main.pushString(" = ");
+                          */
+                          Expression* expr=(Expression*)node1;
+                            checkExpr(expr,remote);
+                          //generateExpr((Expression*)node1);
+                          //main.pushstr_newL(";");
+                        }
+                        itr2++;
+                }
+            
+                //main.pushString("if (");
+                if(stmt->isTargetId())
+                  //checkExpr(stmt->getTargetId(),remote);
+                  cout<<"exp is id\n";
+                else
+                  return (checkPropAccess(stmt->getTargetPropId(),remote));
+                //main.space();
+                //main.pushstr_space(">");
+                //generateExpr((*argItr)->getExpr())
+                //generate_exprIdentifier(stmt->getAssignedId());            
+                //main.pushString("_new");
+                //main.pushstr_newL(")");
+                //main.pushstr_newL("{");
+                
+                itr1=leftList.begin();
+                i=0;
+                for( ;itr1!=leftList.end();itr1++)
+                {   ASTNode* node=*itr1;
+
+                  //if(node->getTypeofNode()==NODE_ID)
+                    //    {
+                            //generate_exprIdentifier((Identifier*)node);
+                      //  }
+                  if(node->getTypeofNode()==NODE_PROPACCESS)
+                    {
+                      return(checkPropAccess((PropAccess*)node,remote));
+                    } 
+                   // if(node->getTypeofNode()==NODE_ID)
+                     //   {
+                       //     generate_exprIdentifier((Identifier*)node);
+                        //}
+                  //if(node->getTypeofNode()==NODE_PROPACCESS)
+                    //{
+                      //return (checkPropAccess(((PropAccess*)node)->getIdentifier2(),remote));
+                    //}  
+
+                }
+          }
+      }
+  }
+  else if(stmt->get_type() == 3)
+  {
+    printf("Reduction type 3\n");
+    Identifier* id = stmt->getLeftId();
+    int op = stmt->reduction_op();
+    Expression* rhs = stmt->getRightSide();
+    checkExpr(rhs,remote);
+    //main.pushstr_space(id->getIdentifier());
+    //const char* operatorString=getOperatorString(op);
+    //main.pushstr_space(operatorString);
+    //generateExpr(rhs);
+  }
+  return false;
+}
+
+bool checkPropAccess(PropAccess* stmt,Identifier* remote)
+{
+  char strBuffer[1024];
+  Identifier* id1 = stmt->getIdentifier1();
+  Identifier* id2 = stmt->getIdentifier2();
+  string i1(id1->getIdentifier());
+  string i2(id2->getIdentifier());
+  string rem(remote->getIdentifier());
+  cout<<"Testing........................."<<i1 << rem <<endl;
+  if(i1 == rem)
+  {
+    return true;
+  }
+  
+     
+}
+
+
+void checkArL(Expression* stmt,Identifier* remote)
+{
+  cout<<"Reached generateArLForSend\n";
+  char strBuffer[1024];
+  
+  Expression* left = stmt->getLeft();
+
+  checkExpr(left,remote);
+  
+  Expression* right = stmt->getRight();
+
+    checkExpr(right,remote);
+    
+    cout<<"exiting generateArLForSend\n";
+}
+
+bool checkExpr(Expression* expr,Identifier* remote)
+{
+  cout<<" reached generateExprForSend\n";
+  if(expr->isArithmetic() || expr->isLogical())
+  {
+    cout<<"Expression is arithmetics...calling arl\n";
+    checkArL( expr,remote);
+  }
+  else if(expr->isPropIdExpr())
+  {
+    cout<<"Expression is propid...calling propidgen\n";
+    //expr->getPropId()->getIdentifier2()->getSymbolInfo()->getType();
+    return (checkPropAccess(expr->getPropId(),remote));
+  }
+  else if(expr->isLiteral())
+  {
+    cout<<"Expression is literal...calling literalforsend\n";
+    //checkexprLiteral(expr,remote);
+  }
+  else if(expr->isProcCallExpr())
+  {
+    cout<<"Expression is proce call....calling procCall for send\n";
+  }
+    
+     else if(expr->isInfinity())
+       {
+         cout<<"Expression is infinity\n";
+         //generate_exprInfinity(expr);
+       }
+
+       else if(expr->isIdentifierExpr())
+       {
+         cout<<"Expression is identifier\n";
+         //generate_exprIdentifier(expr->getId());
+       }
+  else 
+       {
+         assert(false);
+       }
+}
+
+
+bool communication_needed(blockStatement* blockStmt, Identifier* nbr)
+{
+   list<statement*> stmtList=blockStmt->returnStatements();
+   list<statement*> ::iterator itr;
+    bool ret = false;
+   for(itr=stmtList.begin();itr!=stmtList.end();itr++)
+   {
+     statement* stmt=*itr;
+     //printf("CHECK IF INSIDE FOR ");//%d\n",stmt->getParent()->getParent()->getTypeofNode()==NODE_FORALLSTMT);
+     //generateStatement(stmt);
+     if(stmt->getTypeofNode()==NODE_ASSIGN)
+     {
+        assignment* astmt = (assignment*) stmt;
+                  cout<<"reaced generateAssignmentForSend\n";
+        if(astmt->lhs_isProp())
+        {
+          PropAccess* lhs = astmt->getPropId();
+            ret = checkPropAccess(lhs,nbr);
+            if(ret == true)
+              return true;
+        }
+        Expression* rhs = astmt->getExpr();
+        if(rhs->isPropIdExpr())
+        {
+          ret=checkPropAccess(rhs->getPropId(),nbr);
+          if(ret == true)
+              return true;
+        }
+        else
+        {
+          cout<<"Rhs of assignment is expr..calling generateExprForSend\n";
+          ret=checkExpr(rhs,nbr);
+          if(ret == true)
+              return true;
+        }
+        //return true;
+     }
+     else if(stmt->getTypeofNode()==NODE_REDUCTIONCALLSTMT)
+     {
+        ret = checkReductionCallStmt((reductionCallStmt*)stmt,nbr);
+        if(ret == true)
+          return true;
+     }
+
+   }
+   return false;
+
+}
+
 //****************Function to translate forAll****************//
 void mpi_cpp_generator::generateForAll(forallStmt* forAll)
 { 
@@ -1441,7 +1749,7 @@ void mpi_cpp_generator::generateForAll(forallStmt* forAll)
      iteratorMethodId=extractElemFunc->getMethodId();
     statement* body=forAll->getBody();
      char strBuffer[1024];
-  
+  //bool comm_needed = false;
   //if(forAll->isForall())
   //{
     //generateForAll_header();
@@ -1464,8 +1772,16 @@ void mpi_cpp_generator::generateForAll(forallStmt* forAll)
         Expression* expr2=filterExpr->getRight();
         main.pushstr_space("if (");
         generateExpr(expr1);
-        sprintf(strBuffer," [%s]",iterator->getIdentifier());
-        main.pushstr_space(strBuffer);
+        main.space();
+        if(expr1->isIdentifierExpr())
+        {
+          Identifier* id = expr1->getId();
+          if(id->getSymbolInfo()->getType()->isPropType())
+          {
+            sprintf(strBuffer,"[%s]",iterator->getIdentifier());
+            main.pushstr_space(strBuffer);
+          }
+        }
             const char* operatorString=getOperatorString(filterExpr->getOperatorType());
             main.pushstr_space(operatorString);
             //main.pushstr_space(" =");
@@ -1508,61 +1824,68 @@ void mpi_cpp_generator::generateForAll(forallStmt* forAll)
   { 
     if(neighbourIteration(iteratorMethodId->getIdentifier()))
     { 
-      sprintf(strBuffer,"if(%s >= startv && %s <=endv)",iterator->getIdentifier(),iterator->getIdentifier());
-      main.pushstr_newL(strBuffer); 
-      main.pushstr_newL("{");
-
-      if(forAll->getParent()->getParent()->getTypeofNode()==NODE_ITRBFS)
+      comm_needed = communication_needed((blockStatement*)body,iterator);
+      if(comm_needed)
       {   
-        
+          sprintf(strBuffer,"if(%s >= startv && %s <=endv)",iterator->getIdentifier(),iterator->getIdentifier());
+          main.pushstr_newL(strBuffer); 
+          main.pushstr_newL("{");
+
+          if(forAll->getParent()->getParent()->getTypeofNode()==NODE_ITRBFS)
+          {   
+            
+              
+              list<argument*>  argList=extractElemFunc->getArgList();
+              assert(argList.size()==1);
+              Identifier* nodeNbr=argList.front()->getExpr()->getId();
+              sprintf(strBuffer,"if(bfsDist[%s]==bfsDist[%s]+1)",forAll->getIterator()->getIdentifier(),nodeNbr->getIdentifier());
+              main.pushstr_newL(strBuffer);
+              main.pushstr_newL("{");
+            
+          }
+
+          /* This can be merged with above condition through or operator but separating 
+              both now, for any possible individual construct updation.*/
+
+            if(forAll->getParent()->getParent()->getTypeofNode()==NODE_ITRRBFS)
+            {  
+
+              char strBuffer[1024];
+              list<argument*>  argList=extractElemFunc->getArgList();
+              assert(argList.size()==1);
+              Identifier* nodeNbr=argList.front()->getExpr()->getId();
+              sprintf(strBuffer,"if(bfsDist[%s]==bfsDist[%s]+1)",forAll->getIterator()->getIdentifier(),nodeNbr->getIdentifier());
+              main.pushstr_newL(strBuffer);
+              main.pushstr_newL("{");
+
+            }
+
+          generateBlock((blockStatement*)body,false);
           
-          list<argument*>  argList=extractElemFunc->getArgList();
-          assert(argList.size()==1);
-          Identifier* nodeNbr=argList.front()->getExpr()->getId();
-          sprintf(strBuffer,"if(bfsDist[%s]==bfsDist[%s]+1)",forAll->getIterator()->getIdentifier(),nodeNbr->getIdentifier());
-          main.pushstr_newL(strBuffer);
-          main.pushstr_newL("{");
-        
+          if(forAll->getParent()->getParent()->getTypeofNode()==NODE_ITRBFS||forAll->getParent()->getParent()->getTypeofNode()==NODE_ITRRBFS)
+              main.pushstr_newL("}");
+            
+          //main.pushstr_newL("test1");
+          main.pushstr_newL("}");     //Closing local part - if
+          //Else part if nbr is remote
+            main.pushstr_newL("else"); 
+            main.pushstr_newL("{");
+              sprintf(strBuffer,"dest_pro = %s / part_size;",iterator->getIdentifier());
+              main.pushstr_newL(strBuffer);
+              sprintf(strBuffer,"itr = send_data[dest_pro].find(%s);",iterator->getIdentifier());
+              main.pushstr_newL(strBuffer);
+              list<argument*>  argList=extractElemFunc->getArgList();
+              assert(argList.size()==1);
+              Identifier* nodeNbr=argList.front()->getExpr()->getId();
+                generate_addMessage((blockStatement*) body,1,nodeNbr,NULL);
+            //main.pushstr_newL("test2");
+            main.pushstr_newL("}");
+
       }
-
-      /* This can be merged with above condition through or operator but separating 
-          both now, for any possible individual construct updation.*/
-
-        if(forAll->getParent()->getParent()->getTypeofNode()==NODE_ITRRBFS)
-        {  
-
-          char strBuffer[1024];
-          list<argument*>  argList=extractElemFunc->getArgList();
-          assert(argList.size()==1);
-          Identifier* nodeNbr=argList.front()->getExpr()->getId();
-          sprintf(strBuffer,"if(bfsDist[%s]==bfsDist[%s]+1)",forAll->getIterator()->getIdentifier(),nodeNbr->getIdentifier());
-          main.pushstr_newL(strBuffer);
-          main.pushstr_newL("{");
-
-        }
-
-      generateBlock((blockStatement*)body,false);
-      
-      if(forAll->getParent()->getParent()->getTypeofNode()==NODE_ITRBFS||forAll->getParent()->getParent()->getTypeofNode()==NODE_ITRRBFS)
-          main.pushstr_newL("}");
-        
-      //main.pushstr_newL("test1");
-      main.pushstr_newL("}");     //Closing local part - if
-      //Else part if nbr is remote
-        main.pushstr_newL("else"); 
-        main.pushstr_newL("{");
-          sprintf(strBuffer,"dest_pro = %s / part_size;",iterator->getIdentifier());
-          main.pushstr_newL(strBuffer);
-          sprintf(strBuffer,"itr = send_data[dest_pro].find(%s);",iterator->getIdentifier());
-          main.pushstr_newL(strBuffer);
-          list<argument*>  argList=extractElemFunc->getArgList();
-          assert(argList.size()==1);
-           Identifier* nodeNbr=argList.front()->getExpr()->getId();
-            generate_addMessage((blockStatement*) body,1,nodeNbr,NULL);
-        //main.pushstr_newL("test2");
-        main.pushstr_newL("}");
-
-
+      else
+      {
+          generateBlock((blockStatement*)body,false);
+      }
       //Closing brace for filter  
       if(forAll->hasFilterExpr())
           main.pushstr_newL("}");
@@ -1578,14 +1901,20 @@ void mpi_cpp_generator::generateForAll(forallStmt* forAll)
     {
       cout<<"Testing iterator method 1111 "<<iteratorMethodId->getIdentifier()<<"\n";
       //generateStatement(forAll->getBody());
+      if(body != NULL)
+        make_parallel = true;
       generateBlock((blockStatement*)forAll->getBody(),false);
 
+      make_parallel = false;
       //Closing brace for filter  
       if(forAll->hasFilterExpr())
           main.pushstr_newL("}");
       main.pushstr_newL("}"); //Closing of for-all
-      generate_sendCall(body);
-      generate_receiveCall(body);
+      if(comm_needed)
+      {
+        generate_sendCall(body);
+        generate_receiveCall(body);
+      }
     }
     else
     { 
@@ -1721,7 +2050,7 @@ void mpi_cpp_generator::generateForSignature(forallStmt* forAll)
 void mpi_cpp_generator::generateFor(forallStmt* forAll)
 { 
   cout<<"Reaced generate For\n";
-  
+  make_parallel = false;
   Identifier* sourceField;
    PropAccess* sourceField1;   
    Identifier* extractId;    
@@ -1877,6 +2206,54 @@ void mpi_cpp_generator::generateFor(forallStmt* forAll)
            
           }
         }
+        else if(allGraphIteration(iteratorMethodId->getIdentifier()))
+        {
+          if (body != NULL)
+            make_parallel = true;
+        }
+        else
+        {
+          string method(iteratorMethodId->getIdentifier());
+          if(method == "nodes_to")
+          {
+            cout<<"IT IS IN NEIGHBOR ITERATION\n";
+            char* graphId=sourceGraph->getIdentifier();
+            char* methodId=iteratorMethodId->getIdentifier();
+            list<argument*>  argList=extractElemFunc->getArgList();
+            assert(argList.size()==1);
+            Identifier* nodeNbr=argList.front()->getExpr()->getId();
+            sprintf(strBuffer,"for (%s %s = %s.%s[%s]; %s < %s.%s[%s+1]; %s++) ","int","edge",graphId,"rev_indexofNodes",nodeNbr->getIdentifier(),"edge",graphId,"rev_indexofNodes",nodeNbr->getIdentifier(),"edge");
+            main.pushstr_newL(strBuffer);
+            main.pushstr_newL("{");
+            sprintf(strBuffer,"%s %s = %s.%s[%s] ;","int",iterator->getIdentifier(),graphId,"srcList","edge"); //needs to move the addition of
+            main.pushstr_newL(strBuffer);
+              sprintf(strBuffer,"if (%s >= startv && %s <= endv)",iterator->getIdentifier(),iterator->getIdentifier());
+              main.pushstr_newL(strBuffer);
+              main.pushstr_newL("{");
+                generateBlock((blockStatement*)body,false);
+              main.pushstr_newL("}");
+            main.pushstr_newL("}");
+            sprintf(strBuffer,"for (int edge1 = %s.indexofNodes[%s]; edge1 < %s.indexofNodes[%s+1]; edge1++)",graphId,nodeNbr->getIdentifier(),graphId,nodeNbr->getIdentifier());
+            main.pushstr_newL(strBuffer);
+              main.pushstr_newL("{");
+                sprintf(strBuffer,"int out_nbr = %s.edgeList[edge1];",graphId);
+                main.pushstr_newL(strBuffer);
+                main.pushstr_newL("if(!(out_nbr >= startv && out_nbr <= endv))");
+                main.pushstr_newL("{");
+                  main.pushstr_newL("dest_pro = out_nbr / part_size;");
+                  sprintf(strBuffer,"send_data[dest_pro].push_back(%s);",nodeNbr->getIdentifier());
+                  main.pushstr_newL(strBuffer);
+                  num_messages++;
+                  sprintf(strBuffer,"send_data[dest_pro].push_back(%s);","out_nbr");
+                  main.pushstr_newL(strBuffer);
+                  num_messages++;
+                  generate_addMessage((blockStatement*)body,1,iterator,NULL);
+                main.pushstr_newL("}");
+              main.pushstr_newL("}");
+            main.pushstr_newL("}");
+
+          }
+        }
       }
     else if(!(forAll->isSourceField()))
     {
@@ -1891,8 +2268,23 @@ void mpi_cpp_generator::generateFor(forallStmt* forAll)
 
 } 
 
+//Generation of do-while
+void mpi_cpp_generator:: generateDoWhileStmt(dowhileStmt* stmt)
+{
+   Expression* iterCond = stmt->getCondition();
+   statement* body = stmt->getBody();
+   main.pushstr_newL("do");
+   main.pushstr_newL("{");
+      generateBlock((blockStatement*)body,false);
+   main.pushstr_space("}");
+   main.pushstr_space("while (");
+      generateExpr(iterCond);
+   main.pushstr_newL(");");
+}
+
 void mpi_cpp_generator:: generateVariableDecl(declaration* declStmt)
 {
+   char strBuffer[1024];
    Type* type=declStmt->getType();
    //bool value=type->gettypeId()==TYPE_BOOL;
    
@@ -1911,19 +2303,48 @@ void mpi_cpp_generator:: generateVariableDecl(declaration* declStmt)
    }
    else if(type->isPrimitiveType())
    { 
-     main.pushstr_space(convertToCppType(type));
-     main.pushString(declStmt->getdeclId()->getIdentifier());
-     if(declStmt->isInitialized())
+     
+     if(!make_parallel)
      {
-       main.pushString(" = ");
-       generateExpr(declStmt->getExpressionAssigned());
-       main.pushstr_newL(";");
+        main.pushstr_space(convertToCppType(type));
+        main.pushString(declStmt->getdeclId()->getIdentifier());
+        if(declStmt->isInitialized())
+        {
+          main.pushString(" = ");
+          generateExpr(declStmt->getExpressionAssigned());
+          main.pushstr_newL(";");
+        }
+        else
+        {
+            main.pushString(" = ");
+            getDefaultValueforTypes(type->gettypeId());
+            main.pushstr_newL(";");
+        }
      }
      else
      {
-        main.pushString(" = ");
-        getDefaultValueforTypes(type->gettypeId());
-        main.pushstr_newL(";");
+        sprintf(strBuffer,"%s %s = new %s[%s.num_nodes()];",convertToCppType(type),declStmt->getdeclId()->getIdentifier(),convertToCppType(type),graphId[0]->getIdentifier());
+        main.pushstr_newL(strBuffer);
+        sprintf(strBuffer,"for(int i0=0;i0<%s.num_nodes();i0++)",graphId[0]->getIdentifier());
+        main.pushstr_newL(strBuffer);
+        main.insert_indent();
+        parallel_identifier = declStmt->getdeclId();
+        //main.pushstr_space(convertToCppType(type));
+        sprintf(strBuffer,"%s[i0]", declStmt->getdeclId()->getIdentifier());
+        main.pushString(strBuffer);
+        if(declStmt->isInitialized())
+        {
+          main.pushString(" = ");
+          generateExpr(declStmt->getExpressionAssigned());
+          main.pushstr_newL(";");
+        }
+        else
+        {
+            main.pushString(" = ");
+            getDefaultValueforTypes(type->gettypeId());
+            main.pushstr_newL(";");
+        }
+        main.decrease_indent();
      }
      
 
@@ -1958,6 +2379,9 @@ void mpi_cpp_generator::generate_exprLiteral(Expression* expr)
                 sprintf(valBuffer,"%ld",expr->getIntegerConstant());
                 break;
             
+             case EXPR_FLOATCONSTANT:
+                sprintf(valBuffer,"%lf",expr->getFloatConstant());
+                break;
              case EXPR_DOUBLECONSTANT:
                 sprintf(valBuffer,"%lf",expr->getFloatConstant());
                 break;
@@ -2046,12 +2470,23 @@ void mpi_cpp_generator::generate_exprLiteral(Expression* expr)
       return "&&";
       case OPERATOR_OR:
       return "||";
+      case OPERATOR_ADDASSIGN:
+        return "+=";
+      case OPERATOR_ANDASSIGN:
+        return "&=";
+      case OPERATOR_MULASSIGN:
+        return "*=";
+      case OPERATOR_ORASSIGN:
+        return "|=";
+      case OPERATOR_SUBASSIGN:
+        return "-=";
       default:
       return "NA";         
     }
 
     
   }
+
 
   void  mpi_cpp_generator::generate_exprRelational(Expression* expr)
   {
@@ -2149,6 +2584,7 @@ void mpi_cpp_generator::generate_exprArLReceive(Expression* expr)
 
 void mpi_cpp_generator::generate_exprProcCall(Expression* expr)
 {
+  char strBuffer[1024];
   proc_callExpr* proc=(proc_callExpr*)expr;
   string methodId(proc->getMethodId()->getIdentifier());
   if(methodId=="get_edge")
@@ -2156,6 +2592,70 @@ void mpi_cpp_generator::generate_exprProcCall(Expression* expr)
     main.pushString("edge"); //To be changed..need to check for a neighbour iteration 
                              // and then replace by the iterator.
   }
+  else if(methodId=="num_nodes")
+  {
+    Identifier* id1 = proc->getId1();
+    main.pushString(id1->getIdentifier());
+    main.pushString(".ori_num_nodes()"); //To be changed..need to check for a neighbour iteration 
+                             // and then replace by the iterator.
+  }
+  else if(methodId == "count_inNbrs")
+  {
+    Identifier* id1 = proc->getId1();
+    Identifier* arg;
+    list<argument*> argList = proc->getArgList();
+    list<argument*> :: iterator itr;
+    if(argList.size() == 1)
+    {
+      itr = argList.begin();
+      if((*itr)->isExpr())
+        {
+          if((*itr)->getExpr()->isIdentifierExpr())
+            arg = (*itr)->getExpr()->getId();
+        }
+    }
+    sprintf(strBuffer,"(%s.indexofNodes[%s+1]-%s.indexofNodes[%s])",id1->getIdentifier(),arg->getIdentifier(),id1->getIdentifier(),arg->getIdentifier());
+    main.pushString(strBuffer);
+
+  }
+  else if(methodId == "is_an_edge")
+  {
+    Identifier* id1 = proc->getId1();
+    Identifier* arg;
+    list<argument*> argList = proc->getArgList();
+    list<argument*> :: iterator itr;
+    sprintf(strBuffer,"%s.check_if_nbr(",id1->getIdentifier());
+    main.pushstr_space(strBuffer);
+    int argumentTotal = argList.size();
+    int arg_currNo=0;
+    int maximum_arginline = 4;
+    for(itr=argList.begin();itr!=argList.end();itr++)
+    {
+      arg_currNo++;
+      argumentTotal--;
+
+      if((*itr)->isExpr())
+      {
+          if((*itr)->getExpr()->isIdentifierExpr())
+            arg = (*itr)->getExpr()->getId();
+            main.pushString(arg->getIdentifier());
+       }
+      
+      if(argumentTotal>0)
+         main.pushstr_space(",");
+
+      if(arg_currNo==maximum_arginline)
+      {
+         main.NewLine();  
+         arg_currNo=0;  
+      } 
+     // if(argumentTotal==0)
+         
+    }
+    main.pushstr_space(")");
+
+  }
+
 }
 
 //***************Function to translate property id***************//
@@ -2243,7 +2743,7 @@ void mpi_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct)
   main.pushstr_newL("vector < map<int,int> > send_data(np);");
   main.pushstr_newL("vector < map<int,int> > receive_data(np);");
   main.pushstr_newL("std::map<int,int>::iterator itr;");
-  main.pushstr_newL("int dest_pro;");
+ // main.pushstr_newL("int dest_pro;");
   if(fixedPointConstruct->getBody()->getTypeofNode()!=NODE_BLOCKSTMT)
   generateStatement(fixedPointConstruct->getBody());
   else
@@ -2324,7 +2824,7 @@ void mpi_cpp_generator::generateFunc(ASTNode* proc)
     main.pushstr_newL("startv = my_rank*part_size;");
     main.pushstr_newL("endv = startv + (part_size-1);");
     main.pushstr_newL("");
-  
+    main.pushstr_newL("int dest_pro;");
     //Calculation of Inter-partition degree
     main.pushstr_newL("int local_ipDeg=0, global_ipDeg=0;");
     main.pushstr_newL("for (int i=startv; i<=endv;i++)");

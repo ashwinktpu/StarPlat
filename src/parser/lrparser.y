@@ -61,13 +61,13 @@
 %type <node> statement blockstatements assignment declaration proc_call control_flow reduction
 %type <node> type1 type2
 %type <node> primitive graph collections property
-%type <node> id leftSide rhs expression oid val boolean_expr tid id1
+%type <node> id leftSide rhs expression oid val boolean_expr unary_expr tid id1
 %type <node> bfs_abstraction filterExpr reverse_abstraction
 %type <nodeList> leftList rightList
 %type <node> iteration_cf selection_cf
-%type <node> reductionCall
+%type <node> reductionCall 
 %type <aList> arg_list
-%type <ival> reduction_op
+%type <ival> reduction_calls reduce_op
 
 
 
@@ -141,6 +141,7 @@ statement: declaration ';'{$$=$1;};
 	|reduction ';'{$$=$1;};
 	| bfs_abstraction {$$=$1; };
 	| blockstatements {$$=$1;};
+	| unary_expr ';' {$$=Util::createNodeForUnaryStatements($1);};
 
 
 blockstatements : block_begin statements block_end { $$=Util::finishBlock();};
@@ -219,6 +220,10 @@ expression : proc_call { $$=$1;};
 			                        $$=expr;printf("INSIDE EXPR");};
 	         | val {$$=$1;};
 			 | leftSide { $$=Util::createNodeForId($1);};
+			 | unary_expr {$$=$1;};
+
+unary_expr :   expression T_INC_OP {$$=Util::createNodeForUnaryExpr($1,OPERATOR_INC);};
+			 |  expression T_DEC_OP {$$=Util::createNodeForUnaryExpr($1,OPERATOR_DEC);}; 			 
 
 proc_call : leftSide '(' arg_list ')' {printf("testproc\n"); 
                                        
@@ -241,7 +246,7 @@ control_flow : selection_cf { $$=$1; };
 
 iteration_cf : T_FIXEDPOINT T_UNTIL '(' id ':' expression ')' blockstatements { $$=Util::createNodeForFixedPointStmt($4,$6,$8);};
 		   | T_WHILE '(' boolean_expr')' blockstatements {$$=Util::createNodeForWhileStmt($3,$5); };
-		   | T_DO blockstatements T_WHILE '(' boolean_expr ')' {$$=Util::createNodeForDoWhileStmt($5,$2);  };
+		   | T_DO blockstatements T_WHILE '(' boolean_expr ')' ';' {$$=Util::createNodeForDoWhileStmt($5,$2);  };
 		| T_FORALL '(' id T_IN id '.' proc_call filterExpr')'  blockstatements { 
 																				$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,true);};
 		| T_FOR '(' id T_IN leftSide ')' blockstatements { $$=Util::createNodeForForStmt($3,$5,$7,false);};
@@ -259,6 +264,14 @@ selection_cf : T_IF '(' boolean_expr ')' blockstatements { $$=Util::createNodeFo
 reduction : leftSide '=' reductionCall { $$=Util::createNodeForReductionStmt($1,$3) ;}
 		   |'<' leftList '>' '=' '<' reductionCall ',' rightList '>'  { reductionCall* reduc=(reductionCall*)$6;
 		                                                               $$=Util::createNodeForReductionStmtList($2->ASTNList,reduc,$8->ASTNList);};
+		   | leftSide reduce_op expression {$$=Util::createNodeForReductionOpStmt($1,$2,$3);}; 															   
+
+
+reduce_op : T_ADD_ASSIGN {$$=OPERATOR_ADDASSIGN;};
+          | T_MUL_ASSIGN {$$=OPERATOR_MULASSIGN;}
+		  | T_OR_ASSIGN  {$$=OPERATOR_ORASSIGN;}
+		  | T_AND_ASSIGN {$$=OPERATOR_ANDASSIGN;}
+		  | T_SUB_ASSIGN {$$=OPERATOR_SUBASSIGN;}
 
 leftList :  leftSide ',' leftList { $$=Util::addToNList($3,$1);
                                          };
@@ -273,9 +286,9 @@ rightList : val ',' rightList { $$=Util::addToNList($3,$1);};
           | reductionCall { 
 			                $$->reducCall=(reductionCall*)$1;} ;*/
 
-reductionCall : reduction_op '(' arg_list ')' {$$=Util::createNodeforReductionCall($1,$3->AList);} ;
+reductionCall : reduction_calls '(' arg_list ')' {$$=Util::createNodeforReductionCall($1,$3->AList);} ;
 
-reduction_op : T_SUM { $$=REDUCE_SUM;};
+reduction_calls : T_SUM { $$=REDUCE_SUM;};
 	         | T_COUNT {$$=REDUCE_COUNT;};
 	         | T_PRODUCT {$$=REDUCE_PRODUCT;};
 	         | T_MAX {$$=REDUCE_MAX;};

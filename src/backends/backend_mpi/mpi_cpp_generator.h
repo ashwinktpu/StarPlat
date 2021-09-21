@@ -91,7 +91,8 @@ class mpi_cpp_generator
 
 
 };
-
+bool checkExpr(Expression* expr,Identifier* remote);
+bool checkPropAccess(PropAccess* stmt,Identifier* remote);
 static const char* INTALLOCATION = "new int";
 static const char* BOOLALLOCATION = "new bool";
 static const char* FLOATALLOCATION = "new float";

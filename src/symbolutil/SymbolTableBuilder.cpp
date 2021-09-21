@@ -269,6 +269,13 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
            buildForStatements(whilestmt->getBody());
            break;
        }
+       case NODE_DOWHILESTMT:
+       {
+           dowhileStmt* dowhilestmt = (dowhileStmt*) stmt;
+           checkForExpressions(dowhilestmt->getCondition());
+           buildForStatements(dowhilestmt->getBody());
+           break;
+       }
        case NODE_IFSTMT:
        {
            ifStmt* ifstmt=(ifStmt*)stmt;
@@ -289,24 +296,37 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
        case NODE_REDUCTIONCALLSTMT:
        {   
            reductionCallStmt* reducStmt=(reductionCallStmt*)stmt;
-           list<ASTNode*> leftList=reducStmt->getLeftList();
-           list<ASTNode*> exprList=reducStmt->getRightList();
-           list<ASTNode*>::iterator itr;
-           list<ASTNode*>::iterator itr1;
-           for(itr=leftList.begin();itr!=leftList.end();itr++)
+           int type = reducStmt->get_type();
+           if(type == 5)
            {
-               if((*itr)->getTypeofNode()==NODE_ID)
-                   findSymbolId((Identifier*)*itr);
-                if((*itr)->getTypeofNode()==NODE_PROPACCESS)
-                    findSymbolPropId((PropAccess*)*itr);   
+                list<ASTNode*> leftList=reducStmt->getLeftList();
+                list<ASTNode*> exprList=reducStmt->getRightList();
+                list<ASTNode*>::iterator itr;
+                list<ASTNode*>::iterator itr1;
+                for(itr=leftList.begin();itr!=leftList.end();itr++)
+                {
+                    if((*itr)->getTypeofNode()==NODE_ID)
+                        findSymbolId((Identifier*)*itr);
+                        if((*itr)->getTypeofNode()==NODE_PROPACCESS)
+                            findSymbolPropId((PropAccess*)*itr);   
+                }
+                for(itr1=exprList.begin();itr1!=exprList.end();itr1++)
+                {
+                    checkForExpressions((Expression*)*itr1);
+                } 
+                
+                reductionCall* reduceExpr=reducStmt->getReducCall();
+                checkReductionExpr(reduceExpr);
+                //break;
            }
-           for(itr1=exprList.begin();itr1!=exprList.end();itr1++)
+           else if (type == 3)
            {
-               checkForExpressions((Expression*)*itr1);
-           } 
-           
-           reductionCall* reduceExpr=reducStmt->getReducCall();
-           checkReductionExpr(reduceExpr);
+               Identifier* id = reducStmt->getLeftId();
+               findSymbolId(id);
+               Expression* expr = reducStmt->getRightSide();
+               checkForExpressions(expr);
+
+           }
            break;
        }
        case NODE_ITRBFS:
