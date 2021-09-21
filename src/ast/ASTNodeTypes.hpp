@@ -116,6 +116,16 @@ class Identifier:public ASTNode
   
   int accessType;
   char* identifier;
+  Expression* assignedExpr; /*added to store node/edge property initialized values.
+                             - Used in SymbolTable phase for storing metadata. 
+                             - This field is more of a code generation utility.  */
+  bool redecl; /*added for fixedPoint.(node property parameter)
+                - This field is populated during SymbolTable creation.
+                - it checks if double buffering is required for a node/edge prop.*/
+  bool fp_association; /*checks if the identifier as a node/edge property
+                         is used as a dependent for fixedpoint.*/ 
+  char* fpId;          /*If the identifier is associated with a fixedpoint,
+                         the field stores the fixedpoint id name*/
   TableEntry* idInfo;
    
   public: 
@@ -129,6 +139,9 @@ class Identifier:public ASTNode
      strcpy(idNode->identifier,id);
      idNode->accessType=0;
      idNode->setTypeofNode(NODE_ID);
+     idNode->redecl=false;
+     idNode->fp_association = false;
+     idNode->assignedExpr = NULL;
    // std::cout<<"IDENTIFIER = "<<idNode->getIdentifier()<<" "<<strlen(idNode->getIdentifier());
      return idNode;
 
@@ -158,14 +171,53 @@ class Identifier:public ASTNode
    { 
      Identifier* copyId;
      copyId = new Identifier();
-      copyId->identifier=new char[strlen(identifier)+1];
+     copyId->identifier=new char[strlen(identifier)+1];
      strcpy(copyId->identifier,identifier);
      copyId->accessType=0;
      copyId->setTypeofNode(NODE_ID);
      
      return copyId;
    }
+   
+   void set_redecl()
+   {
+     redecl=true;
+   }
 
+   bool require_redecl()
+   {
+     return redecl;
+   }
+
+   void set_fpassociation()
+   {
+     fp_association=true;
+   }
+
+   bool get_fp_association()
+   {
+     return fp_association;
+   }
+
+   void set_fpId(char* fp_sentId)
+   {
+     fpId=fp_sentId;
+   }
+
+   char* get_fpId()
+   {
+     return fpId;
+   }
+
+   void set_assignedExpr(Expression* assignExprSent)
+   {
+     assignedExpr = assignExprSent;
+   }
+
+   Expression* get_assignedExpr()
+   {
+     return assignedExpr;
+   }
 
 };
 
@@ -578,6 +630,7 @@ class formalParam:public ASTNode
     int typeofExpr;
     Identifier* id;
     PropAccess* propId;
+    bool enclosedBrackets;
 
     public:
 
@@ -589,6 +642,7 @@ class formalParam:public ASTNode
       propId=NULL;
       typeofNode=NODE_EXPR;
       overallType=-1;
+      enclosedBrackets=false;
     }
     
     static Expression* nodeForArithmeticExpr(Expression* left,Expression* right,int arithmeticOperator)
@@ -695,6 +749,7 @@ class formalParam:public ASTNode
     {
        Expression* propIdExpr=new Expression();
        propIdExpr->propId=propId;
+       propId->setParent(propIdExpr);
        propIdExpr->typeofExpr=EXPR_PROPID;
        return propIdExpr;
 
@@ -822,7 +877,16 @@ class formalParam:public ASTNode
      {
        return typeofExpr;
      }
+     
+     bool setEnclosedBrackets()
+     {
+       enclosedBrackets=true;
+     }
 
+     bool hasEnclosedBrackets()
+     {
+       return enclosedBrackets;
+     }
 
    
 
@@ -1194,72 +1258,6 @@ class fixedPointStmt:public statement
 
   };
 
-  class iterateBFS:public statement
-  {   private:
-      Identifier* iterator;
-      Identifier* rootNode;
-      Identifier* graphId;
-      Expression* filterExpr;
-      statement* body;
-      iterateReverseBFS* revBFS;
-
-
-      public:
-
-      iterateBFS()
-      {
-        iterator=NULL;
-        graphId=NULL;
-        rootNode=NULL;
-        filterExpr=NULL;
-        body=NULL;
-        revBFS=NULL;
-        statementType="IterateInBFS";
-      }
-    
-      static iterateBFS* nodeForIterateBFS(Identifier* iterator,Identifier* graphId,Identifier* rootNode,Expression* filterExpr,statement* body,iterateReverseBFS* revBFS)
-      {
-        iterateBFS* new_iterBFS=new iterateBFS();
-        new_iterBFS->iterator=iterator;
-        new_iterBFS->graphId=graphId;
-        new_iterBFS->rootNode=rootNode;
-        new_iterBFS->filterExpr=filterExpr;
-        new_iterBFS->body=body;
-        new_iterBFS->revBFS=revBFS;
-        new_iterBFS->setTypeofNode(NODE_ITRBFS);
-        body->setParent(new_iterBFS);
-        revBFS->setParent(new_iterBFS);
-        return new_iterBFS;
-      }
-
-      Identifier* getRootNode()
-      {
-        return rootNode;
-      }
-
-      Identifier* getIteratorNode()
-      {
-        return iterator;
-      }
-
-      Identifier* getGraphCandidate()
-      {
-        return graphId;
-      }
-
-      statement* getBody()
-      {
-        return body;
-      }
-      
-      iterateReverseBFS* getRBFS()
-      {
-        return revBFS;
-      }
-
-  };
-  
-
   
   
 
@@ -1321,7 +1319,109 @@ class fixedPointStmt:public statement
 
 
   };
+  
+  class iterateBFS:public statement
+  {   private:
+      Identifier* iterator;
+      Identifier* rootNode;
+      Identifier* graphId;
+      proc_callExpr* nodeCall;
+      Expression* filterExpr;
+      statement* body;
+      iterateReverseBFS* revBFS;
 
+
+      public:
+
+      iterateBFS()
+      {
+        iterator=NULL;
+        graphId=NULL;
+        nodeCall = NULL;
+        rootNode=NULL;
+        filterExpr=NULL;
+        body=NULL;
+        revBFS=NULL;
+        statementType="IterateInBFS";
+      }
+    
+      static iterateBFS* nodeForIterateBFS(Identifier* iterator,Identifier* graphId,proc_callExpr* nodeCall,Identifier* rootNode,Expression* filterExpr,statement* body,iterateReverseBFS* revBFS)
+      {
+        iterateBFS* new_iterBFS=new iterateBFS();
+        new_iterBFS->iterator=iterator;
+        new_iterBFS->graphId=graphId;
+        new_iterBFS->rootNode=rootNode;
+        new_iterBFS->nodeCall = nodeCall;
+        new_iterBFS->filterExpr=filterExpr;
+        new_iterBFS->body=body;
+        new_iterBFS->revBFS=revBFS;
+        new_iterBFS->setTypeofNode(NODE_ITRBFS);
+        body->setParent(new_iterBFS);
+        revBFS->setParent(new_iterBFS);
+        return new_iterBFS;
+      }
+
+      Identifier* getRootNode()
+      {
+        return rootNode;
+      }
+
+      Identifier* getIteratorNode()
+      {
+        return iterator;
+      }
+
+      Identifier* getGraphCandidate()
+      {
+        return graphId;
+      }
+
+      statement* getBody()
+      {
+        return body;
+      }
+      
+      iterateReverseBFS* getRBFS()
+      {
+        return revBFS;
+      }
+
+      proc_callExpr* getMethodCall()
+      {
+        return nodeCall;
+      }
+
+  };
+  
+  class unary_stmt:public statement
+  {
+    private:
+    Expression* unaryExpr;
+
+    public:
+    unary_stmt()
+    {
+      unaryExpr=NULL;
+      statementType="UnaryStatement";
+      typeofNode=NODE_UNARYSTMT;
+    }
+  
+     static unary_stmt* nodeForUnaryStmt(Expression* unaryExpr)
+    {
+      unary_stmt* unary_stmtNode=new unary_stmt();
+      unary_stmtNode->unaryExpr=unaryExpr;
+
+      return unary_stmtNode;
+    }
+
+     Expression* getUnaryExpr()
+    {
+      return unaryExpr;
+    }
+
+  };
+
+  
   class proc_callStmt:public statement
   {
     private:
@@ -1427,6 +1527,13 @@ class fixedPointStmt:public statement
     bool isForall()
     {
       return isforall;
+    }
+    
+    /* disable parallelization of for
+       for specific instances*/
+    void disableForall() 
+    {                     
+      isforall=false;
     }
 
     proc_callExpr* getExtractElementFunc()
@@ -1535,9 +1642,12 @@ class reductionCallStmt:public statement
      private:
      Identifier* id;
      PropAccess* propAccessId;
+     Expression* rightSide;
      list<ASTNode*> leftList;
      list<ASTNode*> exprList;
      reductionCall* reducCall;
+     int reduc_op;
+     bool is_reduceCall;
     // Expression* exprVal;
      int lhsType;
      
@@ -1547,6 +1657,7 @@ class reductionCallStmt:public statement
        id=NULL;
        propAccessId=NULL;
        reducCall=NULL;
+       rightSide=NULL;
       // exprVal=NULL;
        typeofNode=NODE_REDUCTIONCALLSTMT;
      }
@@ -1568,15 +1679,45 @@ class reductionCallStmt:public statement
        reducCallStmtNode->lhsType=2;
        return reducCallStmtNode;
      }
+
+     static reductionCallStmt* id_reduc_opStmt(Identifier* id,int reduce_op,Expression* rightSide)
+     {
+         reductionCallStmt* reducCallStmtNode=new reductionCallStmt();
+         reducCallStmtNode->id=id;
+         rightSide->setParent(reducCallStmtNode);
+         reducCallStmtNode->reduc_op=reduce_op;
+         reducCallStmtNode->rightSide=rightSide;
+         return reducCallStmtNode;
+
+     }
+
+     static reductionCallStmt* propId_reduc_opStmt(PropAccess* propId,int reduce_op,Expression* rightSide)
+     {
+         reductionCallStmt* reducCallStmtNode=new reductionCallStmt();
+         reducCallStmtNode->propAccessId=propId;
+         rightSide->setParent(reducCallStmtNode);
+         reducCallStmtNode->reduc_op=reduce_op;
+         reducCallStmtNode->rightSide=rightSide;
+         return reducCallStmtNode;
+
+     }
       
      static reductionCallStmt* leftList_reducCallStmt(list<ASTNode*> llist,reductionCall* reducCall,list<ASTNode*> exprListSent)
      { 
       // cout<<"REDUC CALL TYPE "<<(reducCall->getReductionType()==REDUCE_MIN)<<"\n";
        reductionCallStmt* reducCallStmtNode=new reductionCallStmt();
        reducCallStmtNode->leftList=llist;
+       for(ASTNode* node:llist)
+        {
+          node->setParent(reducCallStmtNode);
+        }
        reducCallStmtNode->reducCall=reducCall;
        reducCallStmtNode->lhsType=3;
        reducCallStmtNode->exprList=exprListSent;
+        for(ASTNode* node:exprListSent)
+        {
+          node->setParent(reducCallStmtNode);
+        }
        return reducCallStmtNode;
      }
     
@@ -1619,6 +1760,16 @@ class reductionCallStmt:public statement
       return exprList;
     }
 
+    Expression* getRightSide()
+    {
+      return rightSide;
+    }
+
+    int reduction_op()
+    {
+      return reduc_op;
+    }
+
     bool isTargetId()
     {
       ASTNode* node=leftList.front();
@@ -1653,6 +1804,14 @@ class reductionCallStmt:public statement
       else
          return ((PropAccess*)node)->getIdentifier2();
 
+    }
+
+    bool is_reducCall()
+    {
+      if(reducCall!=NULL)
+        return true;
+
+      return false;  
     }
 
 

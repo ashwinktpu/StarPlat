@@ -40,6 +40,7 @@ bin/lex.yy.o:
 
 bin:
 	mkdir -p bin
+	mkdir -p ../graphcode/generated_cuda
 
 clean:
 	rm -f $(EXPENDABLES)

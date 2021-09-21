@@ -22,6 +22,7 @@
 
 #define DEBUG1 if(DEBUGCODE >= 1)
 #define DEBUG2 if(DEBUGCODE >= 2)
+
 unsigned DEBUGCODE = 0;
 
 #define cudaCheckError() {                                             \
@@ -52,9 +53,7 @@ __global__ void swapPointersKernel(T *gModifiedPrev, T* gModifiedNext){
 __global__ void SSSPKernel(unsigned nSize, int* csrMeta, int* csrData,int* csrWeight, int* distance, bool* modifiedPrev, bool* modifiedNext, bool* finished){
   unsigned u = threadIdx.x + blockDim.x*blockIdx.x; // tid
   if(u < nSize){ //Only modified u's //&& modified[u]
-    //~ modifiedNext[u] = false; // RESET NEXT iteration flags; If modified will be set in current iteration or remains false
     if(modifiedPrev[u]) {
-      //printf("\tOperating on u:%d\n",u);
       for(int ii=csrMeta[u], end = csrMeta[u+1]; ii < end; ++ii){ //PUSH
         unsigned v = csrData[ii];
         int newDistance = distance[u] + csrWeight[ii] /*edgeweight(uv)*/ ;
@@ -65,7 +64,6 @@ __global__ void SSSPKernel(unsigned nSize, int* csrMeta, int* csrData,int* csrWe
         }
       }
     }
-
   }
   //~ if(u == 0) {
     //~ for(int i=0; i< 4;++i){
@@ -151,7 +149,7 @@ bool* modified)
    ***************/
   const unsigned numOfThreads = 1024;
   const unsigned numOfBlocks  = (nSize+numOfThreads-1)/numOfThreads; //Ceil(n/#threads) with function call
-  //~ cudaSetDevice(1);
+  //cudaSetDevice(1);
 
   //~ cudaSetDevice(1);
   DEBUG1 std::cout<< "FPLOCK..start.." << '\n';

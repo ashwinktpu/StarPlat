@@ -6,3 +6,4 @@ all:
 	./ssspMain.out < input.txt
 	./ssspMain.out < ../dataRecords/USA-road-d.NY.gr
 
+cp:

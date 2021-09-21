@@ -63,7 +63,6 @@ class dsl_cpp_generator
   //void includeIfToBlock(forallStmt* forAll);
   bool neighbourIteration(char* methodId);
   bool allGraphIteration(char* methodId);
-  bool elementsIteration(char* extractId);
   blockStatement* includeIfToBlock(forallStmt* forAll);
 
   void generateId();
@@ -73,6 +72,21 @@ class dsl_cpp_generator
   void findTargetGraph(vector<Identifier*> graphTypes,Type* type);
   void getDefaultValueforTypes(int type);
 
+  void generateInitialization();
+  void generateStatement1(statement* stmt);
+  void generateFuncSSSPBody();
+  void generateFuncCUDASizeAllocation();
+  void generateFuncCudaMalloc();
+  void generateBlockForSSSPBody(blockStatement* blockStmt,bool includeBrace);
+  void generateStatementForSSSPBody(statement* stmt);
+  void generateCudaMemCpyForSSSPBody();
+  void generateFuncPrintingSSSPOutput();
+  void generateFuncVariableINITForSSSP();
+  void generateFuncTerminatingConditionForSSSP();
+  void generateCudaIndex();
+  void generateAtomicBlock();
+  void generateVariableDeclForEdge(declaration* declStmt);
+  void generateLocalInitForID();
 
 };
 
