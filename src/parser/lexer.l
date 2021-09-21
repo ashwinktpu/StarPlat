@@ -47,7 +47,6 @@ NEGATE [-]
 "iterateInReverse" {printf("iterateInReverse");  return T_REVERSE;} 
 "from"          {printf("from"); return T_FROM;} 
 "filter"        {printf("from");  return T_FILTER;} 
-"nodesof"         {printf("nodes") ;return T_NODES;}
 "+="					{ printf ("ADD_ASSIGN "); return T_ADD_ASSIGN;}
 "-="					{ printf ("SUB_ASSIGN"); return T_SUB_ASSIGN;}
 "*="					{ printf ( "MUL_ASSIGN"); return T_MUL_ASSIGN;}

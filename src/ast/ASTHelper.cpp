@@ -2,6 +2,7 @@
 #include  "ASTNode.hpp"
 #include  "../maincontext/enum_def.hpp"
 #include<iostream>
+#include<assert.h>
 
 using namespace std;
 
@@ -9,7 +10,7 @@ using namespace std;
 /*TO be implemented. It will contain functions that will be called by action part of Parser  for building the nodes of AST*/
 
 
-extern FrontEndContext frontEndContext;                                             
+extern FrontEndContext frontEndContext;
 class Util
 {
 
@@ -17,51 +18,51 @@ public:
 
 
 static void addFuncToList(ASTNode* func)
-{ 
+{
    Function* funcNode=(Function*)func;
- 
+
     frontEndContext.addFuncToList(funcNode);
 }
 
 static ASTNode* createFuncNode(ASTNode* id,list<formalParam*> formalParamList)
-{ 
+{
   Identifier* funcId=(Identifier*)id;
-  
+
   Function* functionNode=Function::createFunctionNode(funcId,formalParamList);
   return functionNode;
-   
+
 }
 
 static void createNewBlock()
-{ 
+{
     blockStatement* blockStatementNode=blockStatement::createnewBlock();
     frontEndContext.startBlock(blockStatementNode);
-    
+
 }
 
 
 static ASTNode* finishBlock()
-{   
+{
      blockStatement* blockStatementNode=frontEndContext.getCurrentBlock();
-      
+
     frontEndContext.endBlock();
-    
+
     return blockStatementNode;
-   
+
     }
 static void addToBlock(ASTNode* statementNode)
 {  // cout<<"Inside ADD BLOCK"<<statementNode<<"\n";
     if(statementNode!=NULL)
-    {   
+    {
         statement* nodeForStatement=(statement*)statementNode;
         blockStatement* currentBlock=frontEndContext.getCurrentBlock();
         currentBlock->addStmtToBlock(nodeForStatement);
     }
-    
-    
+
+
 }
 static ASTNode* createIdentifierNode(char* idName)
-{  
+{
     Identifier* idNode;
     idNode=Identifier::createIdNode(idName);
    // cout<<"IDENTIFIER VALUE"<<idNode->getIdentifier()<<"\n";
@@ -71,7 +72,7 @@ static paramList* createPList(ASTNode* fParam)
 {    paramList* pList=new paramList();
      pList->PList.push_back((formalParam*)fParam);
      return pList;
-} 
+}
 
 static paramList* addToPList(paramList* pList,ASTNode* fparam)
 {
@@ -89,7 +90,7 @@ static argList* createAList(argument* arg)
 
 
 static argList* addToAList(argList* aList,argument* arg)
-{  
+{
     aList->AList.push_front(arg);
     return aList;
 
@@ -100,19 +101,19 @@ static argList* addToAList(argList* aList,argument* arg)
 static ASTNodeList* addToNList(ASTNodeList* nodeList,ASTNode* node)
 {
     nodeList->ASTNList.push_front(node);
-    
+
     return nodeList;
-    
+
 }
 
 static ASTNodeList* createNList(ASTNode* node)
 {
     ASTNodeList* nodeList=new ASTNodeList();
     nodeList->ASTNList.push_back(node);
-   
+
     return nodeList;
 
-    
+
 }
 
 static ASTNode* createParamNode(ASTNode* type,ASTNode* id)
@@ -137,7 +138,7 @@ static ASTNode* createAssignedDeclNode(ASTNode* type,ASTNode* id,ASTNode* exprAs
 static ASTNode* createPrimitiveTypeNode(int typeId)
 {  // cout<<"Inside Func";
     Type* typeNode=Type::createForPrimitive(typeId,1);
-   
+
     return typeNode;
 
 }
@@ -160,7 +161,7 @@ static ASTNode* createPropertyTypeNode(int typeId,ASTNode* innerTargetType)
 
 }
 static ASTNode* createNodeEdgeTypeNode(int typeId)
-{   
+{
     Type* typeNode=Type::createForNodeEdgeType(typeId,5);
     return typeNode;
 
@@ -188,22 +189,35 @@ static ASTNode* createNodeForProcCallStmt(ASTNode* procCall)
     return procCallStmt;
 }
 
+static ASTNode* createNodeForUnaryStatements(ASTNode* unaryExpr)
+{
+  statement* unaryStmt;
+  Expression* unaryExprNode=(Expression*)unaryExpr;
+  Expression* leftSideExpr=unaryExprNode->getUnaryExpr();
+  assert(leftSideExpr->getExpressionFamily()==EXPR_ID||leftSideExpr->getExpressionFamily()==EXPR_PROPID);
+  unaryStmt=unary_stmt::nodeForUnaryStmt((Expression*)unaryExpr);
+
+  return unaryStmt;
+
+
+}
+
 static ASTNode* createNodeForProcCall(ASTNode* proc_callId,list<argument*> argList)
-{    
+{
     proc_callExpr* proc_callExprNode;
     if(proc_callId->getTypeofNode()==NODE_ID)
     {
       proc_callExprNode=proc_callExpr::nodeForProc_Call(NULL,NULL,(Identifier*)proc_callId,argList);
-     
-      
+
+
     }
     if(proc_callId->getTypeofNode()==NODE_PROPACCESS)
     {
       PropAccess* propAccessId=(PropAccess*)proc_callId;
-      
+
       proc_callExprNode=proc_callExpr::nodeForProc_Call(propAccessId->getIdentifier1(),NULL,propAccessId->getIdentifier2(),argList);
     }
-    
+
     return proc_callExprNode;
 }
 
@@ -297,7 +311,7 @@ static ASTNode* createNodeForForAllStmt(ASTNode* iterator,ASTNode* sourceGraph,A
     if(filterExpr!=NULL)
     {
      f=(Expression*)filterExpr;
-    
+
     //cout<<"CHECK FILTER TYPE"<<f->isRelational()<<"\n";
     }
     forallStmtNode=forallStmt::createforallStmt(id,id1,(proc_callExpr*)extractElemFunc,(statement*)body,(Expression*)filterExpr,isforall);
@@ -338,6 +352,22 @@ static ASTNode* createNodeForReductionStmtList(list<ASTNode*> leftList,ASTNode* 
     return reductionStmtNode;
 }
 
+static ASTNode* createNodeForReductionOpStmt(ASTNode* leftSide,int reduction_op,ASTNode* rightSide)
+{
+  reductionCallStmt* reductionStmtNode;
+    if(leftSide->getTypeofNode()==NODE_ID)
+    {
+      reductionStmtNode=reductionCallStmt::id_reduc_opStmt((Identifier*)leftSide,reduction_op,(Expression*)rightSide);
+    }
+    if(leftSide->getTypeofNode()==NODE_PROPACCESS)
+    {
+        reductionStmtNode=reductionCallStmt::propId_reduc_opStmt((PropAccess*)leftSide,reduction_op,(Expression*)rightSide);
+    }
+
+    return reductionStmtNode;
+
+}
+
 
 
 static ASTNode* createPropIdNode(ASTNode* id1,ASTNode* id2)
@@ -352,14 +382,17 @@ static ASTNode* createIterateInReverseBFSNode( ASTNode* booleanExpr,/*ASTNode* f
     iterateReverseBFSNode=iterateReverseBFS::nodeForRevBFS((Expression*)booleanExpr,/*(Expression*)filterExpr,*/(statement*)body);
     return iterateReverseBFSNode;
 }
-static ASTNode* createIterateInBFSNode(ASTNode* iterator,ASTNode* graphId,ASTNode* rootNode,ASTNode* filterExpr,ASTNode* body,ASTNode* revBFS)
+static ASTNode* createIterateInBFSNode(ASTNode* iterator,ASTNode* graphId,ASTNode* procCall,ASTNode* rootNode,ASTNode* filterExpr,ASTNode* body,ASTNode* revBFS)
 {
     iterateBFS* iterateBFSNode;
     Identifier* id1=(Identifier*)iterator;
     Identifier* id2=(Identifier*)graphId;
     Identifier* id3=(Identifier*)rootNode;
-    cout<<"INSIDE BFS1"<<id2->getIdentifier()<<"\n";
-    iterateBFSNode=iterateBFS::nodeForIterateBFS(id1,id2,id3,(Expression*)filterExpr,(statement*)body,(iterateReverseBFS*)revBFS);
+    proc_callExpr* nodeCall = (proc_callExpr*)procCall;
+    char* methodName = nodeCall->getMethodId()->getIdentifier();
+    string methodString(methodName);
+    assert(methodString.compare("nodes")==0);
+    iterateBFSNode=iterateBFS::nodeForIterateBFS(id1,id2,nodeCall,id3,(Expression*)filterExpr,(statement*)body,(iterateReverseBFS*)revBFS);
     return iterateBFSNode;
 }
 };
