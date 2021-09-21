@@ -25,6 +25,7 @@ void Compute_SSSP(graph g,int src)
   startv = my_rank*part_size;
   endv = startv + (part_size-1);
 
+  int dest_pro;
   int local_ipDeg=0, global_ipDeg=0;
   for (int i=startv; i<=endv;i++)
   {
@@ -58,7 +59,6 @@ void Compute_SSSP(graph g,int src)
     vector < map<int,int> > send_data(np);
     vector < map<int,int> > receive_data(np);
     std::map<int,int>::iterator itr;
-    int dest_pro;
     for (int v = startv; v <= endv; v++) 
     {
       if ( modified [v] == true )

@@ -453,6 +453,13 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
            buildForStatements(whilestmt->getBody());
            break;
        }
+       case NODE_DOWHILESTMT:
+       {
+           dowhileStmt* dowhilestmt = (dowhileStmt*) stmt;
+           checkForExpressions(dowhilestmt->getCondition());
+           buildForStatements(dowhilestmt->getBody());
+           break;
+       }
        case NODE_IFSTMT:
        {
            ifStmt* ifstmt=(ifStmt*)stmt;
