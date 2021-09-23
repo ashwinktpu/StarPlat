@@ -1,6 +1,6 @@
 # GraphDSL
 
-Graph DSL for basic graph algorithms (such as <b>BC and SSSP</b>).It contains the following steps :-
+Graph DSL for basic graph algorithms (such as <b>BC, SSSP, TC and PR </b>).It contains the following steps :-
 
 1.Generating the grammar using Lex and YACC <br>
 2.Generating IR. <br>
