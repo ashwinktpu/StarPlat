@@ -1,7 +1,7 @@
 /*enum for various graph characteristics*/
 #ifndef ENUMDEF_H
 #define ENUMDEF_H
-#include <cassert>
+
 enum TYPE
 {
  TYPE_LONG,
@@ -104,10 +104,6 @@ enum OPERATOR
  OPERATOR_ORASSIGN,
  OPERATOR_ANDASSIGN,
  OPERATOR_SUBASSIGN,
-<<<<<<< HEAD
-=======
-
->>>>>>> 4825f48 (code gen for tc)
 
 };
 
@@ -144,14 +140,11 @@ enum NODETYPE{
   NODE_REDUCTIONCALL,
   NODE_REDUCTIONCALLSTMT,
   NODE_UNARYSTMT,
-<<<<<<< HEAD
   NODE_RETURN,
   NODE_BATCHBLOCKSTMT,
   NODE_ONADDBLOCK,
   NODE_ONDELETEBLOCK,
   NODE_TRANSFERSTMT,
-=======
->>>>>>> 4825f48 (code gen for tc)
 };
 
 
@@ -172,7 +165,6 @@ enum EXPR
    EXPR_PROCCALL,
    EXPR_DEPENDENT,
 };
-<<<<<<< HEAD
 
 static const char *currentBatch = "currentBatch";
 static const char *attachNodeCall = "attachNodeProperty";
@@ -186,6 +178,3 @@ static const char* nodesCall = "nodes";
 
 #endif
 
-=======
-#endif
->>>>>>> 4825f48 (code gen for tc)
