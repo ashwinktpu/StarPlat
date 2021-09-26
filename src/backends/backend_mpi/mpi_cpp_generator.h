@@ -50,10 +50,12 @@ class mpi_cpp_generator
   void generateBFS();
   void generateBlock(blockStatement* blockStmt, bool includeBrace=true);
   void generateReductionStmt(reductionCallStmt* reductnStmt);
-  void generateInnerReductionStmt(reductionCallStmt* stmt);
+  void generateInnerReductionStmt(reductionCallStmt* stmt,int send);
   void generateReductionStmtForSend(reductionCallStmt* stmt,bool send);
   void generateExprForSend(Expression* expr,int send, Identifier* remote, Identifier* replace);
   void generateAssignmentForSend(assignment* stmt,int send,Identifier* remote,Identifier* replace);
+  void generateIdentifierForSend(Identifier* stmt,int send, Identifier* remote,Identifier* replace);
+  void generateProcCallForSend(Expression* expr,int send, Identifier* remote, Identifier* replace);
   void generatePropAccessForSend(PropAccess* lhs,int send,Identifier* remote,Identifier* replace);
   void generate_exprLiteralForSend(Expression* expr,int send,Identifier *remote,Identifier* replace);
   void generateArLForSend(Expression* stmt,int send, Identifier* remote,Identifier* replace);
@@ -66,6 +68,7 @@ class mpi_cpp_generator
   void generate_exprPropId(PropAccess* propId) ;
   void generate_exprPropIdReceive(PropAccess* propId) ;
   void generate_exprProcCall(Expression* expr);
+  void generate_exprUnary(Expression* expr);
   void generate_exprArL(Expression* expr);
   void generate_exprArLReceive(Expression* expr);
   void generateForAll_header();
@@ -89,6 +92,74 @@ class mpi_cpp_generator
   void findTargetGraph(vector<Identifier*> graphTypes,Type* type);
   void getDefaultValueforTypes(int type);
 
+
+};
+class reduction_details
+{
+  bool has_reduction;
+  int reduction_op;
+  Identifier* reduction_var;
+  //PropAccess* reduction_var;
+  public:
+  reduction_details()
+  {
+      has_reduction = false;
+      reduction_op = -1;
+      reduction_var = NULL;
+      //reduction_var = NULL;
+  }
+  void set_reductionDetails(bool has_red, int red_op,Identifier* red_var)
+  {
+    has_reduction = has_red;
+      reduction_op = red_op;
+      reduction_var = red_var;
+  }
+  bool contains_reduction()
+  {
+    return this->has_reduction;
+  }
+  Identifier* get_reductionVar()
+  {
+    return this->reduction_var;
+  }
+  int get_reductionOp()
+  {
+    return this->reduction_op;
+  }
+};
+class make_par
+{
+  bool make_parallel;
+  Identifier* par_id;
+  Identifier* iter;
+  public:
+  make_par()
+  {
+    make_parallel = false;
+    par_id = NULL;
+    iter = NULL;
+  }
+  void set_par(bool val,Identifier* id)
+  {
+    make_parallel = val;
+    par_id = id;
+  }
+  void set_iter(Identifier* it)
+  {
+    iter = it;
+  }
+  bool check_makeParallel()
+  {
+    return make_parallel;
+  }
+  Identifier* get_parId()
+  {
+    return par_id;
+  }
+  Identifier* get_Iter()
+  {
+    return iter;
+  }
 
 };
 bool checkExpr(Expression* expr,Identifier* remote);
