@@ -54,7 +54,8 @@ void Compute_TC(graph g)
           if ( w > v )
           {
             if (g.check_if_nbr( u, w)  ){
-              triangle_count += 1}
+              triangle_count += 1;
+            }
           }
         }
       }

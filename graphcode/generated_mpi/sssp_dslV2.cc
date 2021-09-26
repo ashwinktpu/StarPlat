@@ -92,6 +92,7 @@ void Compute_SSSP(graph g,int src)
       }
     }
     all_to_all(world, send_data, receive_data);
+    int e = edge;
     for(int t=0;t<np;t++)
     {
       if(t != my_rank)
