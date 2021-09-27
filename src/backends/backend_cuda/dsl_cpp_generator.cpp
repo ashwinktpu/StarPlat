@@ -1445,6 +1445,14 @@ void dsl_cpp_generator::generateFuncTerminatingConditionForSSSP()
     main.pushString(strBuffer);
     main.pushstr_newL(" )");
     main.pushstr_newL("{");
+
+    sprintf(strBuffer,"%s[0] =%s;",fixedpointVarforSSSP, "true");
+    main.pushString(strBuffer);
+    main.pushstr_newL("");
+    sprintf(strBuffer,"%s<%s><<<%s,%s>>>(%s, %s, %s);","initKernel","bool","1","1","1","gpu_finished","true");
+    main.pushString(strBuffer);
+    main.pushstr_newL("");
+
     main.pushstr_newL("Compute_SSSP_kernel<<<num_blocks , block_size>>>(gpu_OA,gpu_edgeList, gpu_edgeLen ,gpu_dist,src, V ,MAX_VAL , gpu_modified_prev, gpu_modified_next, gpu_finished);");
     main.pushstr_newL("cudaDeviceSynchronize();");
     sprintf(strBuffer,"%s<%s><<<%s,%s>>>(%s, %s, %s);","initKernel","bool","num_blocks","block_size","V","gpu_modified_prev",initValForInitKernel);
