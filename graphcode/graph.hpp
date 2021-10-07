@@ -19,6 +19,7 @@ class edge
 
 };
 
+bool counter=true;
 class graph
 {
   private:
@@ -27,6 +28,7 @@ class graph
   int32_t* edgeLen;
   char* filePath;
   std::map<int32_t,std::vector<edge>> edges;
+ 
 
   public:
   int32_t* indexofNodes; /* stores prefix sum for outneighbours of a node*/
@@ -35,6 +37,7 @@ class graph
                        required for iteration over out neighbours */
   int32_t* srcList;  /*stores source corresponding to edgeNo.
                        required for iteration over in neighbours */
+   std::vector<edge> graph_edge;                     
   graph(char* file)
   {
     filePath=file;
@@ -95,6 +98,45 @@ class graph
 
     }
 
+    int common_nbrscount(int node1, int node2)
+    {
+       int count=0;
+       int a=indexofNodes[node1+1];
+       int b=indexofNodes[node2+1];
+       int i=indexofNodes[node1];
+       int j=indexofNodes[node2];
+       
+        
+      while(i<a&&j<b)
+       {  
+         int n = edgeList[i];
+         int m = edgeList[j];
+       
+          if(n==m)
+           {
+             i++;
+             j++;
+             count++;
+           }
+           else if(n<m)
+                 i++;
+           else
+               j++;      
+
+        }
+
+
+     
+         
+        
+
+
+       return count;
+
+
+
+    }
+
   
    void parseGraph()
   {  printf("OH HELLOHIHod \n");
@@ -142,6 +184,8 @@ class graph
            e.weight=1;
 
            edges[source].push_back(e);
+           graph_edge.push_back(e);
+          
 
            /*edge e1; //TO BE REMOVED 
            e1.source=destination; //TO BE REMOVED 
@@ -150,14 +194,15 @@ class graph
           
           
            ss>>weightVal; //for edgelists having weight too.
+           
           
-
+           
      }
     
      
-   //  printf("Here half\n");
-    // printf("HELLO AFTER THIS %d \n",nodesTotal);
-    #pragma omp parallel for 
+     printf("Here half\n");
+     //printf("HELLO AFTER THIS %d \n",nodesTotal);
+     #pragma omp parallel for 
      for(int i=0;i<=nodesTotal;i++)//change to 1-nodesTotal.
      {
        std::vector<edge>& edgeOfVertex=edges[i];
@@ -181,7 +226,6 @@ class graph
     
     int edge_no=0;
     
-
     /* Prefix Sum computation for out neighbours 
        Loads indexofNodes and edgeList.
     */
@@ -204,6 +248,8 @@ class graph
       }
       
     }
+
+  
     indexofNodes[nodesTotal+1]=edge_no;//change to nodesTotal+1.
 
    
@@ -218,7 +264,7 @@ class graph
     */
 
     /* count indegrees first */
-    int32_t* edge_indexinrevCSR = new int32_t[edgesTotal];
+   int32_t* edge_indexinrevCSR = new int32_t[edgesTotal];
 
     #pragma omp parallel for num_threads(4)
     for(int i=0;i<=nodesTotal;i++)
@@ -234,7 +280,7 @@ class graph
       }   
     
       /* convert to revCSR */
-     int prefix_sum = 0;
+      int prefix_sum = 0;
       for(int i=0;i<=nodesTotal;i++)
         {
           int temp = prefix_sum;
@@ -270,7 +316,7 @@ class graph
         }
      
     //change to nodesTotal+1.
-   // printf("hello after this %d %d\n",nodesTotal,edgesTotal);
+    // printf("hello after this %d %d\n",nodesTotal,edgesTotal);
     
  }
 
