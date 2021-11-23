@@ -1,4 +1,5 @@
 #please change accordingly
+#this program is used to compare two files(fiels have two columns) with second column and try to see their difference is greater than some threshold value or not.
 
 import numpy as np
 file="C:\\Users\\ashwina\\Downloads\\prLJ.txt"
