@@ -1,5 +1,7 @@
 #please change accordingly
-
+#Input : two files having two columns, we are interested in second column and find the diff of values taking from two files having PR values.
+#output : count (how many fileds differ)
+#correctness : if the answer is 0 (count values), it means result is correct.
 import numpy as np
 file="C:\\Users\\ashwina\\Downloads\\prLJ.txt"
 file1="C:\\Users\\ashwina\\Downloads\\outputPRMain-input.txt"
