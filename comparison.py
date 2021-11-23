@@ -1,10 +1,9 @@
-#please change accordingly
-#Input : two files having two columns, we are interested in second column and find the diff of values taking from two files having PR values.
-#output : count (how many fileds differ)
-#correctness : if the answer is 0 (count values), it means result is correct.
-import numpy as np
-file="C:\\Users\\ashwina\\Downloads\\prLJ.txt"
-file1="C:\\Users\\ashwina\\Downloads\\outputPRMain-input.txt"
+import sys
+
+#first file name
+file = sys.argv[1] 
+#second file name
+file1 = sys.argv[2] 
 f=open(file,"r")
 f1=open(file1,"r")
 lines=f.readlines()
@@ -38,7 +37,7 @@ for sub in result1:
 count=0;
  
 for i in range(len(result)):
-    if abs(round(float(result[i]),2) - round(float((result1[i])),2)) > 0.000001:
+    if abs(round(float(result[i]),3) - round(float((result1[i])),3)) > 0.000001:
         count = count+1
 
 print(count)
