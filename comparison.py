@@ -1,3 +1,5 @@
+#please change accordingly
+
 import numpy as np
 file="C:\\Users\\ashwina\\Downloads\\prLJ.txt"
 file1="C:\\Users\\ashwina\\Downloads\\outputPRMain-input.txt"
