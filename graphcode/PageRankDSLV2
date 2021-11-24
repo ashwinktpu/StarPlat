@@ -24,7 +24,7 @@ function Compute_PR(Graph g,float beta,float delta,int maxIter,propNode<float> p
 
     }
      
-    pageRank = pageRank_nxt ; 
+    pageRank = pageRank_nxt ; // copies pageRank_nxt property values to pageRank property.
     iterCount++;
 
 
