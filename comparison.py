@@ -1,3 +1,10 @@
+
+"""
+How to run  :  python name_of_python_script  <filename1> <filename2>
+Output  : Count of non-matching rows in both files
+"""
+
+
 import sys
 
 #first file name
