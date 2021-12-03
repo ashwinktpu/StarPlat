@@ -19,7 +19,7 @@ class edge
 
 };
 
-bool counter=true;
+//bool counter=true;
 class graph
 {
   private:
@@ -37,7 +37,8 @@ class graph
                        required for iteration over out neighbours */
   int32_t* srcList;  /*stores source corresponding to edgeNo.
                        required for iteration over in neighbours */
-   std::vector<edge> graph_edge;                     
+   std::vector<edge> graph_edge;  
+   int32_t* edgeMap;                   
   graph(char* file)
   {
     filePath=file;
@@ -45,6 +46,8 @@ class graph
     edgesTotal=0;
 
   }
+
+ 
 
   std::map<int,std::vector<edge>> getEdges()
   {
@@ -64,6 +67,25 @@ class graph
   {
       return edgesTotal;
   }
+
+
+  // library function to check candidate vertex is in the path from root to dest in SPT.
+  bool inRouteFromSource(int candidate, int dest, int* parent)
+  {
+
+    while(parent[dest]!=-1)
+      {
+        if(parent[dest]==candidate)
+          return true;
+
+        dest = parent[dest];
+      }
+
+      return false;
+
+  }
+
+
 
   bool check_if_nbr(int s, int d)
     {
@@ -137,17 +159,109 @@ class graph
 
     }
 
-  
-   void parseGraph()
-  {  printf("OH HELLOHIHod \n");
+
+    void addEdge(int src, int dest)
+     {
+        int startIndex = indexofNodes[src];
+        int endIndex = indexofNodes[src+1];
+        int nbrsCount = endIndex - startIndex ;
+        int insertAt = 0;
+
+        if(edgeList[startIndex]>=dest||nbrsCount==0)
+           insertAt = startIndex;
+        else if(edgeList[endIndex-1]<=dest)
+             insertAt = endIndex;    
+        else
+         {
+         
+        for(int i=startIndex;i<endIndex-1;i++) // find the correct index to insert.
+         {
+           if(edgeList[i]<=dest && edgeList[i+1]>=dest)
+              {
+                insertAt = i+1;
+                break;
+              }
+         }
+         }
+        
+       edgeList = (int32_t*)realloc(edgeList,sizeof(int32_t)*(edgesTotal+1));
+       edgeLen =  (int32_t*)realloc(edgeLen,sizeof(int32_t)*(edgesTotal+1));
+        
+       for(int i=edgesTotal-1;i>=insertAt;i--) //shift the elements
+         { 
+           edgeList[i+1] = edgeList[i];
+           edgeLen[i+1] = edgeLen[i] ;
+         }  
+          
+         edgeList[insertAt] = dest; 
+         edgeLen[insertAt] = 1; // to be changed. the weight should be from paramters.
+         
+         //update the CSR offset array.
+         #pragma omp parallel for
+         for(int i=src+1;i<=nodesTotal+1;i++)
+          {
+            indexofNodes[i]+=1;
+          }
+          
+          edge newEdge;
+          newEdge.source = src;
+          newEdge.destination = dest;
+          edges[src].push_back(newEdge);
+          edgesTotal++;
+        
+     }
+
+   void delEdge(int src, int dest)
+     {
+         int startEdge=indexofNodes[src];
+         int endEdge=indexofNodes[src+1]-1;
+         int mid ;
+        
+       while(startEdge<=endEdge)
+        {
+         mid = (startEdge+endEdge)/2;
+
+          if(edgeList[mid]==dest)
+             break;
+     
+          if(dest<edgeList[mid])
+             endEdge=mid-1;   
+          else
+            startEdge=mid+1;   
+          
+        
+        }
+      
+       /* int startEdge=rev_indexofNodes[dest];
+         int endEdge=rev_indexofNodes[dest+1]-1;
+         int mid ;
+
+       while(startEdge<=endEdge)
+        {
+         mid = (startEdge+endEdge)/2;
+
+          if(srcList[mid]==src)
+             break;
+     
+          if(src<srcList[mid])
+             endEdge=mid-1;   
+          else
+            startEdge=mid+1;   
+          
+        
+        }
+       */
+        edgeLen[mid]=INT_MAX/2;
+        //printf("mid %d\n",mid);
+
+     }
+
+
+   void parseEdges()
+   {
      std::ifstream infile;
      infile.open(filePath);
      std::string line;
-    
-   
-
-
-    
      while (std::getline(infile,line))
      {
       
@@ -185,7 +299,7 @@ class graph
 
            edges[source].push_back(e);
            graph_edge.push_back(e);
-          
+       
 
            /*edge e1; //TO BE REMOVED 
            e1.source=destination; //TO BE REMOVED 
@@ -200,6 +314,16 @@ class graph
      }
     
      
+   }
+
+
+  
+   void parseGraph()
+   {  
+     
+     
+     parseEdges();
+   
      printf("Here half\n");
      //printf("HELLO AFTER THIS %d \n",nodesTotal);
      #pragma omp parallel for 
@@ -220,10 +344,13 @@ class graph
                    
      indexofNodes=new int32_t[nodesTotal+2];
      rev_indexofNodes=new int32_t[nodesTotal+2];
-     edgeList=new int32_t[edgesTotal];
+     edgeList=new int32_t[edgesTotal]; //new int32_t[edgesTotal] ;
      srcList=new int32_t[edgesTotal];
-     edgeLen=new int32_t[edgesTotal];
-    
+     edgeLen=new int32_t[edgesTotal]; //new int32_t[edgesTotal] ;
+     edgeMap =  new int32_t[edgesTotal];    
+     int* edgeMapInter = new int32_t[edgesTotal]; 
+     int* vertexInter = new int32_t[edgesTotal];         
+     
     int edge_no=0;
     
     /* Prefix Sum computation for out neighbours 
@@ -265,7 +392,7 @@ class graph
 
     /* count indegrees first */
    int32_t* edge_indexinrevCSR = new int32_t[edgesTotal];
-
+             
     #pragma omp parallel for num_threads(4)
     for(int i=0;i<=nodesTotal;i++)
       {
@@ -299,7 +426,11 @@ class graph
                int dest = edgeList[j];
                int index_in_srcList=rev_indexofNodes[dest]+edge_indexinrevCSR[j];
                srcList[index_in_srcList] = i;
-            }
+               edgeMapInter[index_in_srcList] = j ;// RevCSR to CSR edge mapping.
+               vertexInter[index_in_srcList] = srcList[index_in_srcList]; /*store the original content of srcList
+                                                                           before sorting srcList.
+                                                                           */                                                          
+            }   
         }
         
       #pragma omp parallel for num_threads(4)
@@ -310,11 +441,26 @@ class graph
           std::sort(vect.begin(),vect.end());
           for(int j=0;j<vect.size();j++)
             srcList[j+rev_indexofNodes[i]]=vect[j];
-
+          int srcListIndex;  
+          for(int j=0;j<vect.size();j++)
+          {
+            srcListIndex = j+rev_indexofNodes[i]; 
+            for(int k=0;k<vect.size();k++)
+              {
+                if(vertexInter[k+rev_indexofNodes[i]]==srcList[srcListIndex])
+                  {
+                    edgeMap[srcListIndex] = edgeMapInter[k+rev_indexofNodes[i]];
+                    break;
+                  }
+              }
+          }
             vect.clear();
 
         }
      
+      printf("After this \n");
+      free(vertexInter);
+      free(edgeMapInter);
     //change to nodesTotal+1.
     // printf("hello after this %d %d\n",nodesTotal,edgesTotal);
     
