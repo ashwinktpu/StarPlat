@@ -4,7 +4,7 @@ function Compute_BC ( Graph g,propNode <float> BC,SetN<g> sourceSet)
  
    for (src in sourceSet) {
                     
-	          propNode <int> sigma;
+	          propNode <double> sigma;
              propNode<float> delta;
              g.attachNodeProperty(delta=0);
              g.attachNodeProperty(sigma = 0);
