@@ -7,6 +7,7 @@
 #include "../maincontext/MainContext.hpp"
 #include <cassert>
 
+extern char* backendTarget;
 class SymbolTableBuilder
 {
  private:
@@ -14,8 +15,11 @@ class SymbolTableBuilder
  list<SymbolTable*> propSymbolTables;
  SymbolTable* currVarSymbT;
  SymbolTable* currPropSymbT;
+ 
+ 
 
  public:
+ stack<ASTNode*> parallelConstruct;
  SymbolTableBuilder()
  {
      currVarSymbT=NULL;
@@ -57,8 +61,10 @@ void checkForExpressions(Expression* expr);
 bool checkHeaderSymbols(Identifier* src,PropAccess* propId,forallStmt* forall);
 bool findSymbolId(Identifier* id);
 bool findSymbolPropId(PropAccess* propId);
-
+bool checkForArguments(list<argument*> arglist);
+char* getbackendTarget();
 
 };
+
 
 #endif

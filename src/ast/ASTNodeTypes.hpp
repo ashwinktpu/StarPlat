@@ -6,6 +6,9 @@
 #include<list>
 #include<iostream>
 #include<vector>
+#include<stack>
+#include<map>
+#include<set>
 #include "../maincontext/enum_def.hpp"
 
 
@@ -1463,6 +1466,8 @@ class fixedPointStmt:public statement
     Expression* filterExpr;
     bool isSourceId;
     bool isforall;
+    map<int,list<Identifier*>> reduction_map;
+    set<int> reduc_keys;
     
     public:
     forallStmt()
@@ -1588,6 +1593,24 @@ class fixedPointStmt:public statement
     {
       return filterExpr;
     }
+
+    void push_reduction(int key,Identifier* val)
+    {
+        reduction_map[key].push_back(val);
+        reduc_keys.insert(key);
+    }
+
+    set<int> get_reduceKeys()
+    {
+      return reduc_keys;
+    } 
+    
+    list<Identifier*> get_reduceIds(int key)
+    {
+      return reduction_map[key];
+    }
+    
+   
 
     void addAtomicSignalToStatements()
     {

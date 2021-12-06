@@ -1,13 +1,13 @@
 %{
-
+	
 	#include <stdio.h>
 	#include <string.h>
 	#include <stdlib.h>
 	#include <stdbool.h>
-  #include "includeHeader.hpp"
+    #include "includeHeader.hpp"
 	#include<getopt.h>
 	//#include "../symbolutil/SymbolTableBuilder.cpp"
-
+     
 	void yyerror(char *);
 	int yylex(void);
     extern FILE* yyin;
@@ -45,7 +45,7 @@
 %token T_ADD_ASSIGN T_SUB_ASSIGN T_MUL_ASSIGN T_DIV_ASSIGN T_MOD_ASSIGN T_AND_ASSIGN T_XOR_ASSIGN
 %token T_OR_ASSIGN T_RIGHT_OP T_LEFT_OP T_INC_OP T_DEC_OP T_PTR_OP T_AND_OP T_OR_OP T_LE_OP T_GE_OP T_EQ_OP T_NE_OP
 %token T_AND T_OR T_SUM T_AVG T_COUNT T_PRODUCT T_MAX T_MIN
-%token T_GRAPH T_DIR_GRAPH  T_NODE T_EDGE
+%token T_GRAPH T_DIR_GRAPH  T_NODE T_EDGE 
 %token T_NP  T_EP
 %token T_LIST T_SET_NODES T_SET_EDGES  T_FROM
 %token T_BFS T_REVERSE
@@ -65,7 +65,7 @@
 %type <node> bfs_abstraction filterExpr reverse_abstraction
 %type <nodeList> leftList rightList
 %type <node> iteration_cf selection_cf
-%type <node> reductionCall
+%type <node> reductionCall 
 %type <aList> arg_list
 %type <ival> reduction_calls reduce_op
 
@@ -82,41 +82,41 @@
 %left T_AND_OP
 %left T_EQ_OP  T_NE_OP
 %left '<' '>'  T_LE_OP T_GE_OP
-%left '+' '-'
+%left '+' '-' 
 %left '*' '/' '%'
 
-
+ 
 
 %%
-program:
+program:  
         | program function_def {/* printf("LIST SIZE %d",frontEndContext.getFuncList().size())  ;*/ };
 
-function_def: function_data  function_body  {
+function_def: function_data  function_body  { 
 	                                           Function* func=(Function*)$1;
                                                blockStatement* block=(blockStatement*)$2;
                                               func->setBlockStatement(block);
 											   Util::addFuncToList(func);
 											    };
 
-function_data: T_FUNC id '(' paramList ')' {
+function_data: T_FUNC id '(' paramList ')' { 
 										   $$=Util::createFuncNode($2,$4->PList);
 
 	                                      };
 
 paramList: param {$$=Util::createPList($1);};
-               | param ',' paramList {$$=Util::addToPList($3,$1);
+               | param ',' paramList {$$=Util::addToPList($3,$1); 
 			                           };
 
 param : type1 id {  //Identifier* id=(Identifier*)Util::createIdentifierNode($2);
                         Type* type=(Type*)$1;
 	                     Identifier* id=(Identifier*)$2;
-
+						 
 						 if(type->isGraphType())
 						    graphId.push_back(id);
 					printf("\n");
                     $$=Util::createParamNode($1,$2); } ;
                | type2 id { // Identifier* id=(Identifier*)Util::createIdentifierNode($2);
-
+			  
 					printf("\n");
                              $$=Util::createParamNode($1,$2);};
 			   | type2 id '(' id ')' { // Identifier* id1=(Identifier*)Util::createIdentifierNode($4);
@@ -154,18 +154,18 @@ block_end:'}'
 declaration : type1 id   {
 	                     Type* type=(Type*)$1;
 	                     Identifier* id=(Identifier*)$2;
-
+						 
 						 if(type->isGraphType())
 						    graphId.push_back(id);
                          $$=Util::createNormalDeclNode($1,$2);};
 	| type1 id '=' rhs  {//Identifier* id=(Identifier*)Util::createIdentifierNode($2);
-
+	                    
 	                    $$=Util::createAssignedDeclNode($1,$2,$4);};
 	| type2 id  {//Identifier* id=(Identifier*)Util::createIdentifierNode($2);
-
+	            
                          $$=Util::createNormalDeclNode($1,$2); };
 	| type2 id '=' rhs {//Identifier* id=(Identifier*)Util::createIdentifierNode($2);
-
+	                   
 	                    $$=Util::createAssignedDeclNode($1,$2,$4);};
 
 type1: primitive {$$=$1; };
@@ -223,14 +223,14 @@ expression : proc_call { $$=$1;};
 			 | unary_expr {$$=$1;};
 
 unary_expr :   expression T_INC_OP {$$=Util::createNodeForUnaryExpr($1,OPERATOR_INC);};
-			 |  expression T_DEC_OP {$$=Util::createNodeForUnaryExpr($1,OPERATOR_DEC);};
+			 |  expression T_DEC_OP {$$=Util::createNodeForUnaryExpr($1,OPERATOR_DEC);}; 			 
 
-proc_call : leftSide '(' arg_list ')' {printf("testproc\n");
-
-                                       $$=Util::createNodeForProcCall($1,$3->AList);
+proc_call : leftSide '(' arg_list ')' {printf("testproc\n"); 
+                                       
+                                       $$=Util::createNodeForProcCall($1,$3->AList); 
 
 									    };
-
+		
 
 
 
@@ -247,7 +247,7 @@ control_flow : selection_cf { $$=$1; };
 iteration_cf : T_FIXEDPOINT T_UNTIL '(' id ':' expression ')' blockstatements { $$=Util::createNodeForFixedPointStmt($4,$6,$8);};
 		   | T_WHILE '(' boolean_expr')' blockstatements {$$=Util::createNodeForWhileStmt($3,$5); };
 		   | T_DO blockstatements T_WHILE '(' boolean_expr ')' ';' {$$=Util::createNodeForDoWhileStmt($5,$2);  };
-		| T_FORALL '(' id T_IN id '.' proc_call filterExpr')'  blockstatements {
+		| T_FORALL '(' id T_IN id '.' proc_call filterExpr')'  blockstatements { 
 																				$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,true);};
 		| T_FOR '(' id T_IN leftSide ')' blockstatements { $$=Util::createNodeForForStmt($3,$5,$7,false);};
 		| T_FOR '(' id T_IN id '.' proc_call  filterExpr')' blockstatements {$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,false);};
@@ -264,7 +264,7 @@ selection_cf : T_IF '(' boolean_expr ')' blockstatements { $$=Util::createNodeFo
 reduction : leftSide '=' reductionCall { $$=Util::createNodeForReductionStmt($1,$3) ;}
 		   |'<' leftList '>' '=' '<' reductionCall ',' rightList '>'  { reductionCall* reduc=(reductionCall*)$6;
 		                                                               $$=Util::createNodeForReductionStmtList($2->ASTNList,reduc,$8->ASTNList);};
-		   | leftSide reduce_op expression {$$=Util::createNodeForReductionOpStmt($1,$2,$3);};
+		   | leftSide reduce_op expression {$$=Util::createNodeForReductionOpStmt($1,$2,$3);}; 															   
 
 
 reduce_op : T_ADD_ASSIGN {$$=OPERATOR_ADDASSIGN;};
@@ -283,7 +283,7 @@ rightList : val ',' rightList { $$=Util::addToNList($3,$1);};
             /*reductionCall ',' val { $$=new tempNode();
 	                                $$->reducCall=(reductionCall*)$1;
                                     $$->exprVal=(Expression*)$3; };
-          | reductionCall {
+          | reductionCall { 
 			                $$->reducCall=(reductionCall*)$1;} ;*/
 
 reductionCall : reduction_calls '(' arg_list ')' {$$=Util::createNodeforReductionCall($1,$3->AList);} ;
@@ -301,7 +301,7 @@ leftSide : id { $$=$1; };
 arg_list :    {printf("No args\n");
                  argList* aList=new argList();
 				 $$=aList;  };
-
+		      
 		|assignment ',' arg_list {printf("test3\n");argument* a1=new argument();
 		                          assignment* assign=(assignment*)$1;
 		                     a1->setAssign(assign);
@@ -356,12 +356,12 @@ tid : id '.' id '.' id {// Identifier* id1=(Identifier*)Util::createIdentifierNo
                   // Identifier* id2=(Identifier*)Util::createIdentifierNode($1);
 				   $$=Util::createPropIdNode($1,$3);
 				    };
-id : ID   {
-	         $$=Util::createIdentifierNode($1);
+id : ID   { 
+	         $$=Util::createIdentifierNode($1);  
 
-
-            };
-
+            
+            };                                                   
+          
 
 
 %%
@@ -372,36 +372,36 @@ void yyerror(char *s) {
 }
 
 
-int main(int argc,char **argv)
+int main(int argc,char **argv) 
 {
-
+  
     dsl_cpp_generator cpp_backend;
     SymbolTableBuilder stBuilder;
      FILE    *fd;
-
+     
    /* if (argc>1)
      yyin= fopen(argv[1],"r");
-	else
+	else 
 	  yyin=stdin;
 	int error=yyparse();
 	printf("error val %d\n",error);
 	if(error!=1)
 	{
-  // printf("%d SIZE OF FUNCLIST",frontEndContext.getFuncList().size());
+  // printf("%d SIZE OF FUNCLIST",frontEndContext.getFuncList().size()); 
   // printf("GRAPH ID %s",graphId[0]->getIdentifier());
     stBuilder.buildST(frontEndContext.getFuncList());
 	cpp_backend.setFileName(argv[1]);
 	cpp_backend.generate();
-
+	
 	}
   */
   int opt;
   char* fileName=NULL;
   //char* backendTarget=NULL;
   backendTarget = NULL;
-  while ((opt = getopt(argc, argv, ":f:b:")) != -1)
+  while ((opt = getopt(argc, argv, ":f:b:")) != -1) 
   {
-     switch (opt)
+     switch (opt) 
      {
       case 'f':
         fileName = optarg;
@@ -419,7 +419,7 @@ int main(int argc,char **argv)
         break;
      }
   }
-
+   
    printf("fileName %s\n",fileName);
    printf("Backend Target %s\n",backendTarget);
    if(fileName==NULL||backendTarget==NULL)
@@ -428,7 +428,7 @@ int main(int argc,char **argv)
 	      fprintf(stderr,"FileName option Error!\n");
 	   if(backendTarget==NULL)
 	      fprintf(stderr,"backendTarget option Error!\n")	;
-	   exit(-1);
+	   exit(-1);	    
    }
    else
     {
@@ -439,18 +439,21 @@ int main(int argc,char **argv)
 			   exit(-1);
 		   }
 	}
-  yyin= fopen(fileName,"r");
-  int error=yyparse();
+
+   yyin= fopen(fileName,"r");
+   int error=yyparse();
 	printf("error val %d\n",error);
 	if(error!=1)
 	{
      //TODO: redirect to different backend generator after comparing with the 'b' option
     stBuilder.buildST(frontEndContext.getFuncList());
-    cpp_backend.setFileName(fileName);
-    cpp_backend.generate();
+	 printf("hiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii");
+	cpp_backend.setFileName(fileName);
+	cpp_backend.generate();
+	
 	}
-
+   
    /* to generate code, ./finalcode -f "filename" -b "backendname"*/
-	return 0;
-
+	return 0;   
+	 
 }
