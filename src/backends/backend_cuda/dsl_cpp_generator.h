@@ -83,14 +83,39 @@ class dsl_cpp_generator
   void generateFuncPrintingSSSPOutput();
   void generateFuncVariableINITForSSSP();
   void generateFuncTerminatingConditionForSSSP();
+  //newly added for cuda speific handlings index
   void generateCudaIndex();
   void generateAtomicBlock();
   void generateVariableDeclForEdge(declaration* declStmt);
   void generateLocalInitForID();
+  //new
+  void castIfRequired(Type* type,Identifier* methodID,dslCodePad& main);
+  void generateReductionCallStmt(reductionCallStmt* stmt);
+  void generateReductionOpStmt(reductionCallStmt* stmt);
+  void generate_exprUnary(Expression* expr);
+  void generateForAll_header(forallStmt* forAll);
+  void generatefixedpt_filter(Expression* filterExpr);
+
+  bool elementsIteration(char* extractId);
+  void generateCudaMallocStr(const char* dVar,const char* typeStr, const char* sizeOfType, bool isMainFile);
+  void generateCudaMalloc(Type* type, const char* identifier, bool isMainFile);
+  void generateCudaMemcpy(const char* dVar,const char* cVar,const char* typeStr, const char* sizeOfType, bool isMainFile,const char* from);
+
+  //for algorithm specific function implementation headers
+
+  void generateKernelFuncForTC();
+  void generateKernelFuncForPR();
+  void generateKernelFuncForSSSP(ASTNode* proc);
+  void generateKernelFuncForBC();
+
+  
+
+  
 
 };
 
-static const char* INTALLOCATION = "new int";
-static const char* BOOLALLOCATION = "new bool";
-static const char* FLOATALLOCATION = "new float";
+ static const char* INTALLOCATION = "new int";
+ static const char* BOOLALLOCATION = "new bool";
+ static const char* FLOATALLOCATION = "new float";
+ static const char* DOUBLEALLOCATION = "new double";
 #endif

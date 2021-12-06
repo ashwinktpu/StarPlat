@@ -11,7 +11,9 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
      }
      cout<<"FINALLY FOUND IT"<<"\n";
      if(id->getSymbolInfo()!=NULL)
+      {
       assert(id->getSymbolInfo()==tableEntry);
+      }
      else
         id->setSymbolInfo(tableEntry);
 
@@ -32,6 +34,8 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
          {
              assignment* assign=(assignment*)arg->getAssignExpr();
              type->addToPropList(assign->getId());
+             Identifier* TE_id = assign->getId()->getSymbolInfo()->getId();
+             TE_id->set_assignedExpr(assign->getExpr()); // added to extract the initialization value.
          }
      }
 
@@ -71,7 +75,8 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
  }
 
  void SymbolTableBuilder::buildForProc(Function* func)
- {  cout<<"INSIDE PROC OF SYMBOLBUILDER"<<"\n";
+ {  
+    
      init_curr_SymbolTable(func);
      list<formalParam*> paramList=func->getParamList();
      list<formalParam*>::iterator itr;
@@ -83,6 +88,8 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
          SymbolTable* symbTab=type->isPropNodeType()?currPropSymbT:currVarSymbT;
          bool creationFine=create_Symbol(symbTab,id,type);
          id->getSymbolInfo()->setArgument(true);
+
+         
 
     }
 
@@ -127,10 +134,34 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
        }
        case NODE_FIXEDPTSTMT:
        { 
-          fixedPointStmt* fpStmt=(fixedPointStmt*)stmt;
+           fixedPointStmt* fpStmt=(fixedPointStmt*)stmt;
            Identifier* fixedPointId=fpStmt->getFixedPointId();
            searchSuccess=findSymbolId(fixedPointId);
            checkForExpressions(fpStmt->getDependentProp());
+           /* This else portion needs to be generalized to handle expressions of all kinds.
+              Currently handling dependent expressions that is based on a single node property and is Unary*/
+           
+           if(fpStmt->getDependentProp()->isUnary()||fpStmt->getDependentProp()->isIdentifierExpr())
+           {  
+               printf("INSIDE FIXEDPTCHECK\n");
+               Identifier* depId ;
+               if(fpStmt->getDependentProp()->isUnary())
+               {
+                  depId = fpStmt->getDependentProp()->getUnaryExpr()->getId();
+               }
+               else
+               {  
+                   depId = fpStmt->getDependentProp()->getId();
+               }
+               if(depId->getSymbolInfo()!=NULL)
+                 {  
+                     printf("Inside fixedptId\n");
+                     Identifier* tableId = depId->getSymbolInfo()->getId();
+                     tableId->set_redecl(); //explained in the ASTNodeTypes
+                     tableId->set_fpassociation(); //explained in the ASTNodeTypes
+                     tableId->set_fpId(fixedPointId->getIdentifier()); //explained in the ASTNodeTypes
+                 }
+           }
            buildForStatements(fpStmt->getBody());
          
          break;
@@ -138,16 +169,40 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
        }
 
        case NODE_FORALLSTMT:
-       {   // cout<<"INSIDE BUILDFORSTATEMENT SYMBOLBUILDER"<<"\n"; 
-           forallStmt* forAll=(forallStmt*)stmt;
+       {   
            
-            Identifier* source1=forAll->isSourceProcCall()?forAll->getSourceGraph():NULL;
+           forallStmt* forAll=(forallStmt*)stmt;
+           Identifier* source1=forAll->isSourceProcCall()?forAll->getSourceGraph():NULL;
+            if(forAll->getSource()!=NULL)
+               source1 = forAll->getSource();
             PropAccess* propId=forAll->isSourceField()?forAll->getPropSource():NULL;
             searchSuccess=checkHeaderSymbols(source1,propId,forAll);
+            string backend(backendTarget);
             if(forAll->hasFilterExpr())
             {
                 checkForExpressions(forAll->getfilterExpr());
             }
+            /* Required for omp backend code generation,
+               the forall is checked for its existence inside 
+               another forall which is to be generated with 
+               omp parallel pragma, and then disable the parallel loop*/
+            if((backend.compare("omp")==0) || (backend.compare("cuda")==0))
+             {  
+                 if(parallelConstruct.size()>0)
+                  {  
+                     // forallStmt* parentFor =(forallStmt*)forAll->getParent()->getParent();
+                      //if(parentFor->isForall())
+                        //{
+                            forAll->disableForall();
+                        //}
+                  }
+
+                  if(forAll->isForall())
+                    {
+                        parallelConstruct.push(forAll);
+                       
+                    }
+             }
            
           
             if(forAll->getParent()->getParent()->getTypeofNode()==NODE_ITRBFS)
@@ -155,10 +210,16 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                  /* the assignment statements(arithmetic & logical) within the block of a for statement that
                     is itself within a IterateInBFS abstraction are signaled to become atomic while code 
                     generation. */
-
+                  
                   forAll->addAtomicSignalToStatements();
                }
-              buildForStatements(forAll->getBody());              
+
+              buildForStatements(forAll->getBody());  
+               if((backend.compare("omp")==0 || backend.compare("cuda")==0) &&forAll->isForall())
+                    {  
+                        parallelConstruct.pop();
+                    } 
+
               break;
        }
        case NODE_BLOCKSTMT:
@@ -173,10 +234,10 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
            list<statement*>::iterator itrProc;
           bool flag=false;
           bool callFlag=false;
+          string backend(backendTarget);
           for(itr=stmtList.begin();itr!=stmtList.end();itr++)
           { 
-           // cout<<"INSIDE BUILDFORSTATEMENT SYMBOLBUILDER"<<"\n";
-            cout<<"SEE THE TYPE OF NODE"<<(*itr)->getTypeofNode()<<"\n";
+          
              if(!callFlag&&(*itr)->getTypeofNode()==NODE_PROCCALLSTMT)
              {
                  proc_callStmt* proc=(proc_callStmt*)(*itr);
@@ -201,12 +262,13 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
              buildForStatements((*itr));
              count++;
           }
-          if(flag)
+
+          if(flag && (backend.compare("omp")==0 || backend.compare("cuda")==0))
           { 
             iterateBFS* itrbFS=(iterateBFS*)(*itrIBFS);  
             Identifier* id=Identifier::createIdNode("bfsDist");
             declaration* decl=createPropertyDeclaration(id);
-           // printf(id->getIdentifier());
+            buildForStatements(decl);
             blockStmt->insertToBlock(decl,procPos);
             argument* arg=createAssignedArg(id);
             proc_callStmt* proc=(proc_callStmt*)*itrProc;
@@ -247,8 +309,10 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
 
        }
        case NODE_REDUCTIONCALLSTMT:
-       {   cout<<"INSIDE SYMBOLBUILDER REDUCE"<<"\n";
+       {   
            reductionCallStmt* reducStmt=(reductionCallStmt*)stmt;
+           if(reducStmt->is_reducCall())
+           {
            list<ASTNode*> leftList=reducStmt->getLeftList();
            list<ASTNode*> exprList=reducStmt->getRightList();
            list<ASTNode*>::iterator itr;
@@ -258,7 +322,10 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                if((*itr)->getTypeofNode()==NODE_ID)
                    findSymbolId((Identifier*)*itr);
                 if((*itr)->getTypeofNode()==NODE_PROPACCESS)
-                    findSymbolPropId((PropAccess*)*itr);   
+                   {
+                    findSymbolPropId((PropAccess*)*itr);  
+                   
+                   }
            }
            for(itr1=exprList.begin();itr1!=exprList.end();itr1++)
            {
@@ -267,6 +334,25 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
            
            reductionCall* reduceExpr=reducStmt->getReducCall();
            checkReductionExpr(reduceExpr);
+           }
+           else
+           {
+               if(reducStmt->isLeftIdentifier())
+                 {
+                     findSymbolId(reducStmt->getLeftId());
+                     ASTNode* nearest_Parallel=parallelConstruct.top();
+                     if(nearest_Parallel->getTypeofNode()==NODE_FORALLSTMT)
+                       {  
+                           forallStmt* forAll=(forallStmt*)nearest_Parallel;
+                           forAll->push_reduction(reducStmt->reduction_op(),reducStmt->getLeftId());
+                       }
+                 }
+               else
+               {
+                   findSymbolPropId(reducStmt->getPropAccess());
+               }
+                 checkForExpressions(reducStmt->getRightSide());
+           }
            break;
        }
        case NODE_ITRBFS:
@@ -276,6 +362,13 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
           
            break;
        }
+       case NODE_DOWHILESTMT:
+       {   
+           dowhileStmt* doStmt=(dowhileStmt*)stmt;
+           checkForExpressions(doStmt->getCondition());
+           buildForStatements(doStmt->getBody());
+           break;
+       }
       
    }
 
@@ -283,7 +376,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
  }
 
  void SymbolTableBuilder::checkReductionExpr(reductionCall* reduce)
- {  cout<<"Inside this for checking vars"<<"\n"; 
+ {   
     list<argument*> argList=reduce->getargList();
     list<argument*>::iterator itr;
     for(itr=argList.begin();itr!=argList.end();itr++)
@@ -297,6 +390,33 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
 
 
  }
+
+bool SymbolTableBuilder::checkForArguments(list<argument*> argList)
+{
+    /* primarly required for situations where we require to create a alias for the
+       variable for double buffering purposes*/
+     for(argument* arg:argList)
+     {  
+         
+         if(arg->isAssignExpr())
+         {
+             assignment* assign=(assignment*)arg->getAssignExpr();
+             if(assign->lhs_isIdentifier())
+               findSymbolId(assign->getId());
+             else
+               findSymbolPropId(assign->getPropId());
+               
+         }
+         if(arg->isExpr())
+         {
+            checkForExpressions(arg->getExpr());
+         }
+          
+     }
+
+
+}
+
  void SymbolTableBuilder::checkForExpressions(Expression* expr)
  {  bool ifFine=false;
      switch(expr->getExpressionFamily())
@@ -315,12 +435,15 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
              string s(methodId->getIdentifier());
              if(id!=NULL)
                 ifFine=findSymbolId(id);
-             if(s.compare("attachNodeProperty")==0) 
+              checkForArguments(pExpr->getArgList());  
+              if(s.compare("attachNodeProperty")==0) 
+                {
                  addPropToSymbolTE(currVarSymbT,id,pExpr->getArgList());
+                }
              break;   
          }  
          case EXPR_UNARY:
-         {   cout<<"INSIDE UNARY FOR FIXEDPOINT"<<"\n";
+         {   
              checkForExpressions(expr->getUnaryExpr());
              break;
          }
@@ -337,12 +460,12 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
              break;
          }
          case EXPR_ID:
-         {   cout<<"INSIDE EXPR_ID"<<"\n";
+         {  
              ifFine=findSymbolId(expr->getId());
              break;
          }
          case EXPR_PROPID:
-         {   cout<<"INSIDE EXPR_PROPID"<<"\n";
+         {  
              cout<<expr->getPropId()->getIdentifier1()->getIdentifier()<<"\n";
              ifFine=findSymbolPropId(expr->getPropId());
              break;
@@ -352,13 +475,13 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
      }
  }
  bool SymbolTableBuilder::findSymbolPropId(PropAccess* propId)
- {   cout<<"INSIDE THIS FINSYMBOLPROPID"<<"\n";
+ {  
      bool isFine = true;
      Identifier* id1=propId->getIdentifier1();
      Identifier* id2=propId->getIdentifier2();
      search_and_connect_toId(currVarSymbT,id1);
-     search_and_connect_toId(currPropSymbT,id2);
-     cout<<"OVER"<<"\n";
+     search_and_connect_toId(currPropSymbT,id2); //need to change..ideally this should search in prop.
+     
  }
 
  bool SymbolTableBuilder::findSymbolId(Identifier* id)
@@ -374,6 +497,12 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
     {
      if(!findSymbolPropId(propId))
        return false;
+    }
+
+    if(src!=NULL)
+    {
+        if(!findSymbolId(src))
+          return false;
     }
 
      return true;   //more checking need to be carried out.  
@@ -400,8 +529,8 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
  }
 
 void SymbolTableBuilder::buildST(list<Function*> funcList)
-{   cout<<"I WAS HERE! SEE ME!"<<"\n";
-    //list<Function*> funcList=frontEndContext.getFuncList();
+{  
+   
     list<Function*>::iterator itr;
     for(itr=funcList.begin();itr!=funcList.end();itr++)
        buildForProc((*itr));
@@ -409,4 +538,3 @@ void SymbolTableBuilder::buildST(list<Function*> funcList)
   
 
  
-
