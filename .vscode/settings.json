@@ -4,6 +4,9 @@
         "string": "cpp",
         "ostream": "cpp",
         "iostream": "cpp",
-        "xtree": "cpp"
+        "xtree": "cpp",
+        "list": "cpp",
+        "xlocale": "cpp",
+        "xlocnum": "cpp"
     }
 }

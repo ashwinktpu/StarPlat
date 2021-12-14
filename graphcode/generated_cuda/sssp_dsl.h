@@ -22,8 +22,22 @@ void Compute_SSSP (int * OA, int *edgeList)
   cudaMalloc(&d_gpu_edgeList, sizeof(int)*(E));
   cudaMalloc(&d_gpu_edgeList, sizeof(int)*(E));
 
-  if()
+  if( V <= 1024)
   {
+    block_size = V;
+    num_blocks = 1;
+  }
+  else
+  {
+    block_size = 1024;
+    num_blocks = ceil(((float)V) / block_size);
+  }
+  cudaMemcpy(&d_gpu_OA,OA, sizeof(int)*(1+V), cudaMemcpyHostToDevice);
+  cudaMemcpy(&d_gpu_edgeList,edgeList, sizeof(int)*E, cudaMemcpyHostToDevice);
+  Compute_SSSP_kernel<<<num_blocks, block_size>>>(gpu_OA, gpu_edgeList, V, E ;
+    cudaDeviceSynchronize();
+    int countprintf("TC = %d",count);
+  }
 
 
-    #endif
+  #endif
