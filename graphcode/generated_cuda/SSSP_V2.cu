@@ -17,8 +17,10 @@ __global__ void Compute_SSSP_kernel(graph& g,int* dist,int src)
   while ( !finished[0] )
   {
     finished[0] = true;
-    {
-    }
-  }
+  
+    bool* tempModPtr = modified_nxt ;
+    modified_nxt = modified_prev ;
+    modified_prev = tempModPtr ;
+    modified_nxt[v] = false ;
 
 }
