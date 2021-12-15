@@ -1591,7 +1591,7 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct, 
   if(fixedPointConstruct->getBody()->getTypeofNode()!=NODE_BLOCKSTMT)
   generateStatement(fixedPointConstruct->getBody(), isMainFile);
   else
-    generateBlock((blockStatement*)fixedPointConstruct->getBody(),isMainFile);
+   generateBlock((blockStatement*)fixedPointConstruct->getBody(),isMainFile);
   Identifier* dependentId=NULL;
   bool isNot=false;
   assert(convergeExpr->getExpressionFamily()==EXPR_UNARY||convergeExpr->getExpressionFamily()==EXPR_ID);
@@ -1605,30 +1605,41 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct, 
   }
   if(convergeExpr->getExpressionFamily()==EXPR_ID)
      dependentId=convergeExpr->getId();
-    /* if(dependentId!=NULL)
+     if(dependentId!=NULL)
      {
        if(dependentId->getSymbolInfo()->getType()->isPropType())
        {   
        
          if(dependentId->getSymbolInfo()->getType()->isPropNodeType())
          {  Type* type=dependentId->getSymbolInfo()->getType();
-              main.pushstr_newL("#pragma omp parallel for");
+            
             if(graphId.size()>1)
              {
                cerr<<"GRAPH AMBIGUILTY";
              }
              else
-            sprintf(strBuffer,"for (%s %s = 0; %s < %s.%s(); %s ++) ","int","v","v",graphId[0]->getIdentifier(),"num_nodes","v");
-            main.pushstr_newL(strBuffer);
-            main.pushstr_space("{");
-            sprintf(strBuffer,"%s[%s] =  %s_nxt[%s] ;",dependentId->getIdentifier(),"v",dependentId->getIdentifier(),"v");
-            main.pushstr_newL(strBuffer);
+           // sprintf(strBuffer,"for (%s %s = 0; %s < %s.%s(); %s ++) ","int","v","v",graphId[0]->getIdentifier(),"num_nodes","v");
+           // targetFile.pushstr_newL(strBuffer);
+            //targetFile.pushstr_space("{");
+
+            sprintf(strBuffer,"%s* %s = %s_nxt ;","bool","tempModPtr", dependentId->getIdentifier());
+            targetFile.pushstr_newL(strBuffer);
+
+            sprintf(strBuffer,"%s_nxt = %s_prev ;", dependentId->getIdentifier(),dependentId->getIdentifier());
+            targetFile.pushstr_newL(strBuffer);
+
+            
+            sprintf(strBuffer,"%s_prev = %s ;", dependentId->getIdentifier(), "tempModPtr");
+            targetFile.pushstr_newL(strBuffer);
+
+            
             Expression* initializer = dependentId->getSymbolInfo()->getId()->get_assignedExpr();
             assert(initializer->isBooleanLiteral());
             sprintf(strBuffer,"%s_nxt[%s] = %s ;",dependentId->getIdentifier(),"v",initializer->getBooleanConstant()?"true":"false");
-            main.pushstr_newL(strBuffer);
-            main.pushstr_newL("}");
-          /* if(isNot)------chopped out.
+            targetFile.pushstr_newL(strBuffer);
+            //targetFile.pushstr_newL("}");
+            /*
+          if(isNot)------chopped out.
            {
             sprintf(strBuffer,"%s = !%s_fp ;",fixedPointId->getIdentifier(),dependentId->getIdentifier());
             main.pushstr_newL(strBuffer);
@@ -1638,11 +1649,12 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct, 
                sprintf(strBuffer,"%s = %s_fp ;",fixedPointId->getIdentifier(),dependentId->getIdentifier());
                main.pushString(strBuffer);
              }--------chopped out.
+             */
            
         }
       }
-     }*/
-     targetFile.pushstr_newL("}");
+     }
+    // targetFile.pushstr_newL("}");
 }
 
 
