@@ -6,3 +6,4 @@ src/Makefile
 src/finalcode
 *.out
 src/bin/
+.history/*

@@ -1626,7 +1626,7 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct, 
             targetFile.pushstr_newL(strBuffer);
 
             sprintf(strBuffer,"%s_nxt = %s_prev ;", dependentId->getIdentifier(),dependentId->getIdentifier());
-            targetFile.pushstr_newL(strBuffer);
+            targetFile.pushstr_newL(strBuffer);  
 
             
             sprintf(strBuffer,"%s_prev = %s ;", dependentId->getIdentifier(), "tempModPtr");
