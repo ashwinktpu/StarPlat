@@ -7,38 +7,20 @@
 #include"../graph.hpp"
 #include"../libcuda.cuh"
 
-Compute_PR(graph& g,float beta,float delta,int maxIter,
+__global__ void void Compute_PR_kernel(graph& g,float beta,float delta,int maxIter,
   float* pageRank);
 
-void Compute_PR (int * OA, int *edgeList)
-{
-  unsigned V = g.num_nodes();
-  unsigned E = g.num_edges();
-
-  int* gpu_OA;
-  int* gpu_edgeList;
-  int* gpu_edgeList;
-
-  cudaMalloc(&d_gpu_OA, sizeof(int)*(1+V));
-  cudaMalloc(&d_gpu_edgeList, sizeof(int)*(E));
-  cudaMalloc(&d_gpu_edgeList, sizeof(int)*(E));
-
-  if( V <= 1024)
-  {
-    block_size = V;
-    num_blocks = 1;
+graph& g,float beta,float delta,int maxIter,
+float* pageRankunsigned int id = threadIdx.x + (blockDim.x * blockIdx.x);
+unsigned int v =id;
+if (id < V)
+{float sum = 0.000000;
+  for (int edge = gpu_rev_OA[v]; edge < gpu_rev_OA[v+1]; edge ++) 
+  {int nbr = srcList[edge] ;
+    sum = sum + pageRank[nbr] / (gpu_OA[nbr+1]-gpu_OA[nbr]);
   }
-  else
-  {
-    block_size = 1024;
-    num_blocks = ceil(((float)V) / block_size);
-  }
-  cudaMemcpy(&d_gpu_OA,OA, sizeof(int)*(1+V), cudaMemcpyHostToDevice);
-  cudaMemcpy(&d_gpu_edgeList,edgeList, sizeof(int)*E, cudaMemcpyHostToDevice);
-  Compute_PR_kernel<<<num_blocks, block_size>>>(gpu_OA, gpu_edgeList, V, E ;
-    cudaDeviceSynchronize();
-    int countprintf("TC = %d",count);
-  }
-
+  float val = (1 - delta) / num_nodes + delta * sum;
+  diff = diff+ val - pageRank[v];
+  pageRank[v] = val;
 
   #endif
