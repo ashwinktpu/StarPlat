@@ -7,9 +7,9 @@
 #include"../graph.hpp"
 #include"../libcuda.cuh"
 
-Compute_SSSP(graph& g,int* dist,int src);
+__global__ void void Compute_SSSP_kernel(graph& g,int* dist,int src);
 
-unsigned int id = threadIdx.x + (blockDim.x * blockIdx.x);
+graph& g,int* dist,int srcunsigned int id = threadIdx.x + (blockDim.x * blockIdx.x);
 unsigned int v =id;
 if (id < V)
 {if (modified[v] == true )for (int edge = gpu_OA[id]; edge < gpu_OA[id+1]; edge ++) 

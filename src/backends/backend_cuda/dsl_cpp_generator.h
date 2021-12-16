@@ -136,6 +136,7 @@ class dsl_cpp_generator
   void generateCudaMalloc(Type* type,const char* identifier);	
   void generateCudaMallocStr(const char* dVar,const char* type, const char* sizeOfType);	
   void generateThreadId(const char* str);
+  void generateFuncBody(Function* proc,bool isMainFile);
 
   
    void setGenCSR(bool yes=true){	

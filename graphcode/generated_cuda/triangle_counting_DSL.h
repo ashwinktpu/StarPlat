@@ -7,9 +7,9 @@
 #include"../graph.hpp"
 #include"../libcuda.cuh"
 
-Compute_TC(graph& g);
+__global__ void void Compute_TC_kernel(graph& g);
 
-unsigned int id = threadIdx.x + (blockDim.x * blockIdx.x);
+graph& gunsigned int id = threadIdx.x + (blockDim.x * blockIdx.x);
 unsigned int v =id;
 if (id < V)
 {for (int edge = gpu_OA[id]; edge < gpu_OA[id+1]; edge ++) 
