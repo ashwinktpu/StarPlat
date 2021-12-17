@@ -1,6 +1,6 @@
 #include"SSSP_V2.h"
 
-void Compute_SSSP(graph& g,int* dist,int src)
+void Compute_SSSP(int * OA , int * edgeList , int* cpu_edgeLen  , int src)
 
 {
   unsigned V = g.num_nodes();
@@ -67,6 +67,10 @@ void Compute_SSSP(graph& g,int* dist,int src)
       finished[0] = true;
       {
       }
+       initKernel<bool> <<< 1, 1>>>(1, gpu_finished, true);
+       Compute_SSSP_kernel<<<num_blocks , block_size>>>(gpu_OA,gpu_edgeList, gpu_edgeLen ,gpu_dist,src, V ,MAX_VAL , gpu_modified_prev, gpu_modified_next, gpu_finished);
+       initKernel<bool><<<num_blocks,block_size>>>(V, gpu_modified_prev, false);
+       cudaMemcpy(finished, gpu_finished,  sizeof(bool) *(1), cudaMemcpyDeviceToHost);
       bool* tempModPtr = modified_nxt ;
       modified_nxt = modified_prev ;
       modified_prev = tempModPtr ;

@@ -404,6 +404,8 @@ void dsl_cpp_generator::generateReductionCallStmt(reductionCallStmt* stmt, bool 
                     char* fpId=affected_Id->getSymbolInfo()->getId()->get_fpId();
                     sprintf(strBuffer,"%s[0] = %s ;",fpId,"false");
                     targetFile.pushstr_newL(strBuffer);
+                    targetFile.pushstr_newL("}"); //needs to be removed
+                    targetFile.pushstr_newL("}"); //needs to be removed
                   } 
 
             }
@@ -829,7 +831,7 @@ void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll, bool isMainF
        sprintf(strBuffer,"for (%s %s = %s[%s]; %s < %s[%s+1]; %s ++) ","int","edge","gpu_OA","id","edge","gpu_OA","id","edge");
        targetFile.pushstr_newL(strBuffer);
        targetFile.pushString("{");
-       sprintf(strBuffer,"%s %s = %s.%s[%s] ;","int",iterator->getIdentifier(),graphId,"edgeList","edge"); //needs to move the addition of
+       sprintf(strBuffer,"%s %s = gpu_%s[%s] ;","int",graphId,"edgeList","edge"); //needs to move the addition of
        targetFile.pushstr_newL(strBuffer);
        }
        if(s.compare("nodes_to")==0) //for pageRank
@@ -1621,7 +1623,10 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct, 
            // sprintf(strBuffer,"for (%s %s = 0; %s < %s.%s(); %s ++) ","int","v","v",graphId[0]->getIdentifier(),"num_nodes","v");
            // targetFile.pushstr_newL(strBuffer);
             //targetFile.pushstr_space("{");
-
+            targetFile.pushstr_newL(" initKernel<bool> <<< 1, 1>>>(1, gpu_finished, true);");
+            targetFile.pushstr_newL(" Compute_SSSP_kernel<<<num_blocks , block_size>>>(gpu_OA,gpu_edgeList, gpu_edgeLen ,gpu_dist,src, V ,MAX_VAL , gpu_modified_prev, gpu_modified_next, gpu_finished);");
+            targetFile.pushstr_newL(" initKernel<bool><<<num_blocks,block_size>>>(V, gpu_modified_prev, false);");
+             targetFile.pushstr_newL(" cudaMemcpy(finished, gpu_finished,  sizeof(bool) *(1), cudaMemcpyDeviceToHost);");
             sprintf(strBuffer,"%s* %s = %s_nxt ;","bool","tempModPtr", dependentId->getIdentifier());
             targetFile.pushstr_newL(strBuffer);
 
@@ -1814,6 +1819,8 @@ const char* dsl_cpp_generator:: convertToCppType(Type* type)
 
 void dsl_cpp_generator:: generateFuncBody(Function* proc, bool isMainFile)
 {
+  
+  
   dslCodePad &targetFile = isMainFile ? main : header;
   char strBuffer[1024];
   
@@ -1831,28 +1838,28 @@ void dsl_cpp_generator:: generateFuncBody(Function* proc, bool isMainFile)
       argumentTotal--;
 
       Type* type=(*itr)->getType();
-      targetFile.pushString(convertToCppType(type));
+      //targetFile.pushString(convertToCppType(type));
     
     
-      targetFile.pushString(" ");
+      //targetFile.pushString(" ");
          
 
       // added here
       const char* parName=(*itr)->getIdentifier()->getIdentifier();
-      cout << "param:" <<  parName << endl;
+      //cout << "param:" <<  parName << endl;
       if(!isMainFile && type->isGraphType()){
         genCSR=true;
         gId = parName;
       }
 
 
-      targetFile.pushString(/*createParamName(*/(*itr)->getIdentifier()->getIdentifier());
+      //targetFile.pushString(/*createParamName(*/(*itr)->getIdentifier()->getIdentifier());
       if(argumentTotal>0)
-         targetFile.pushString(",");
+        // targetFile.pushString(",");
 
       if(arg_currNo==maximum_arginline)
       {
-         targetFile.NewLine();  
+        // targetFile.NewLine();  
          arg_currNo=0;  
       } 
          
@@ -1860,10 +1867,7 @@ void dsl_cpp_generator:: generateFuncBody(Function* proc, bool isMainFile)
 
 
       if (!isMainFile) {
-      //targetFile.pushString(proc->getIdentifier()->getIdentifier());
-      //sprintf(strBuffer,"void %s (int * OA, int *edgeList)",proc->getIdentifier()->getIdentifier());
-      //main.pushstr_newL(strBuffer);
-      //main.pushstr_newL("{");
+    
       sprintf(strBuffer,"unsigned V = %s.num_nodes();",gId); //assuming DSL  do not contain variables as V and E
       main.pushstr_newL(strBuffer);
       sprintf(strBuffer,"unsigned E = %s.num_edges();",gId);
@@ -1953,7 +1957,7 @@ void dsl_cpp_generator:: generateFuncBody(Function* proc, bool isMainFile)
       main.NewLine();
   
       main.NewLine();
-     // main.pushstr_newL("}");
+  
       main.NewLine();
       
     }
@@ -2023,8 +2027,12 @@ void dsl_cpp_generator:: generateFuncHeader(Function* proc,bool isMainFile)
   }
 
    targetFile.pushString(")");
-   if(!isMainFile)
-      targetFile.pushString(";");
+   if(!isMainFile){
+     targetFile.NewLine();
+     targetFile.pushString("{");
+
+   }
+    
       targetFile.NewLine();
       targetFile.NewLine();
     
