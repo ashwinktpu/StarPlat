@@ -19,15 +19,15 @@ class dsl_cpp_generator
   char* fileName;
 
   //added here
-  bool genCSR;	
-  char* gName;	
-  int kernelCount;	
-  struct vars{	
-    string varType;	
-    string varName;	
-    bool result;	
-  };	
-  vector<vars> varList;	
+  bool genCSR;
+  char* gName;
+  int kernelCount;
+  struct vars{
+    string varType;
+    string varName;
+    bool result;
+  };
+  vector<vars> varList;
   bool isHeader;
 
 
@@ -36,9 +36,9 @@ class dsl_cpp_generator
   {
 
     //added here
-    genCSR=false;	
-    isHeader=false;	
-    kernelCount=0;	
+    genCSR=false;
+    isHeader=false;
+    kernelCount=0;
     gName=new char[25];
 
     headerFile=NULL;
@@ -88,7 +88,7 @@ class dsl_cpp_generator
 
   void generateId();
   void generateOid();
-  void addIncludeToFile(char* includeName,dslCodePad& file,bool isCPPLib);
+  void addIncludeToFile(const char* includeName,dslCodePad& file,bool isCPPLib);
   void generatePropertyDefination(Type* type,char* Id, bool isMainFile);
   void findTargetGraph(vector<Identifier*> graphTypes,Type* type);
   void getDefaultValueforTypes(int type);
@@ -123,40 +123,40 @@ class dsl_cpp_generator
 
   //for algorithm specific function implementation headers
 
-  void generatePrintAnswer();	
-  void generateGPUTimerStop();	
-  void generateGPUTimerStart();	
-  void generateCudaMemCpyStr(const char* ,const char* , const char* , const char* , bool);	
-  void generateInitkernel(const char* name);	
-  void generateLaunchConfig(const char* name);	
-  void generateCudaDeviceSync();	
-  void generateForKernel();	
-  void generateForKernel(Identifier*);	
-  void generateCudaIndex(const char* idName);	
-  void generateCudaMalloc(Type* type,const char* identifier);	
-  void generateCudaMallocStr(const char* dVar,const char* type, const char* sizeOfType);	
+  void generatePrintAnswer();
+  void generateGPUTimerStop();
+  void generateGPUTimerStart();
+  void generateCudaMemCpyStr(const char* ,const char* , const char* , const char* , bool);
+  void generateInitkernel(const char* name);
+  void generateLaunchConfig(const char* name);
+  void generateCudaDeviceSync();
+  void generateForKernel();
+  void generateForKernel(Identifier*);
+  void generateCudaIndex(const char* idName);
+  void generateCudaMalloc(Type* type,const char* identifier);
+  void generateCudaMallocStr(const char* dVar,const char* type, const char* sizeOfType);
   void generateThreadId(const char* str);
   void generateFuncBody(Function* proc,bool isMainFile);
 
-  
-   void setGenCSR(bool yes=true){	
-      genCSR=yes;	
-    }	
-  bool isGenCSR(){	
-      return genCSR;	
-    }	
-  void setGName(const char* str){	
-      strlen(str);	
-      strcpy(gName,str);	
-    }	
-  char* getGName(){	
-      return gName;	
-    }	
-  void IncrementKCount(){	
-      kernelCount++;	
-    }	
-  int getKCount(){	
-        return kernelCount;	
+
+   void setGenCSR(bool yes=true){
+      genCSR=yes;
+    }
+  bool isGenCSR(){
+      return genCSR;
+    }
+  void setGName(const char* str){
+      strlen(str);
+      strcpy(gName,str);
+    }
+  char* getGName(){
+      return gName;
+    }
+  void IncrementKCount(){
+      kernelCount++;
+    }
+  int getKCount(){
+        return kernelCount;
   }
 
 
