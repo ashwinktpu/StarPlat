@@ -100,15 +100,16 @@ int main()
 
   graph G("../dataRecords/uniform-random1m.txt");
   G.parseGraph();
-  randomGeneratorUtil rand;
+//  randomGeneratorUtil rand;
   //randomGeneratorUtil rand(0,G.num_nodes());
   float *BC = new float[G.num_nodes()];
   std::set<int> seeds;
+  seeds.insert(5);
 
   //int seeds[5];={267649,518682,10978,22382,43958};
    //rand.feedRandomUniqueNum(seeds,20);
   //int nseeds[5];
-    rand.feedFromFile(seeds,"../dataRecords/socJournalSources/sources-uniform/sources20.txt");
+  //  rand.feedFromFile(seeds,"../dataRecords/socJournalSources/sources-uniform/sources20.txt");
    /* std::set<int>::iterator itr;
    int count=0;
     char *outputfilename = "sources20.txt";
