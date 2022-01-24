@@ -963,6 +963,7 @@ class formalParam:public ASTNode
      Identifier* identifier;
      PropAccess* propId;
      Expression* exprAssigned;
+     bool isPropCopy ;
      bool atomicSignal;
      int lhsType;
 
@@ -972,8 +973,9 @@ class formalParam:public ASTNode
         identifier=NULL;
         propId=NULL;
         exprAssigned=NULL;
-         statementType="assignment";
-         atomicSignal=false;
+        statementType="assignment";
+        atomicSignal=false;
+        isPropCopy = false;
       
     }
 
@@ -1043,6 +1045,16 @@ class formalParam:public ASTNode
      {
        return atomicSignal;
      }
+
+     void setPropCopy()
+       {
+         isPropCopy = true;
+       }
+
+       bool hasPropCopy()
+       {
+         return isPropCopy ;
+       }
 
   };
 class whileStmt:public statement

@@ -6,7 +6,8 @@
 #include<map>
 #include<algorithm>
 #include<string.h>
-#include "omp.h"
+#include<omp.h>
+//#include "graph_ompv2.hpp"
 
 //using namespace std;
 
@@ -16,8 +17,11 @@ class edge
   int32_t source;
   int32_t destination;
   int32_t weight;
-
+ 
+ 
 };
+
+
 
 //bool counter=true;
 class graph
@@ -37,13 +41,15 @@ class graph
                        required for iteration over out neighbours */
   int32_t* srcList;  /*stores source corresponding to edgeNo.
                        required for iteration over in neighbours */
-   std::vector<edge> graph_edge;  
-   int32_t* edgeMap;                   
+   std::vector<edge> graph_edge; 
+   int32_t* edgeMap;  
+
   graph(char* file)
   {
     filePath=file;
     nodesTotal=0;
     edgesTotal=0;
+    
 
   }
 
@@ -64,10 +70,12 @@ class graph
       return nodesTotal+1; //change it to nodesToTal
   }
    int num_edges()
-  {
-      return edgesTotal;
+  {   
+  
+     return edgesTotal;
   }
 
+  
 
   // library function to check candidate vertex is in the path from root to dest in SPT.
   bool inRouteFromSource(int candidate, int dest, int* parent)
@@ -84,7 +92,7 @@ class graph
       return false;
 
   }
-
+  
 
 
   bool check_if_nbr(int s, int d)
@@ -113,6 +121,8 @@ class graph
           
         
         }
+
+
       
       return false;
 
@@ -191,6 +201,7 @@ class graph
          { 
            edgeList[i+1] = edgeList[i];
            edgeLen[i+1] = edgeLen[i] ;
+           //edgeMap[i+1] = edgeMap[i];
          }  
           
          edgeList[insertAt] = dest; 
@@ -251,10 +262,14 @@ class graph
         
         }
        */
+        
         edgeLen[mid]=INT_MAX/2;
-        //printf("mid %d\n",mid);
 
      }
+
+
+   
+   
 
 
    void parseEdges()
@@ -312,6 +327,8 @@ class graph
           
            
      }
+
+     infile.close();
     
      
    }
@@ -324,8 +341,8 @@ class graph
      
      parseEdges();
    
-     printf("Here half\n");
-     //printf("HELLO AFTER THIS %d \n",nodesTotal);
+     
+     
      #pragma omp parallel for 
      for(int i=0;i<=nodesTotal;i++)//change to 1-nodesTotal.
      {
@@ -343,11 +360,10 @@ class graph
      }                      
                    
      indexofNodes=new int32_t[nodesTotal+2];
-     rev_indexofNodes=new int32_t[nodesTotal+2];
      edgeList=new int32_t[edgesTotal]; //new int32_t[edgesTotal] ;
      srcList=new int32_t[edgesTotal];
      edgeLen=new int32_t[edgesTotal]; //new int32_t[edgesTotal] ;
-     edgeMap =  new int32_t[edgesTotal];    
+     edgeMap =  new int32_t[edgesTotal]; 
      int* edgeMapInter = new int32_t[edgesTotal]; 
      int* vertexInter = new int32_t[edgesTotal];         
      
@@ -373,6 +389,7 @@ class graph
         edgeLen[edge_no]=(*itr).weight;
         edge_no++;
       }
+
       
     }
 
@@ -442,6 +459,7 @@ class graph
           for(int j=0;j<vect.size();j++)
             srcList[j+rev_indexofNodes[i]]=vect[j];
           int srcListIndex;  
+
           for(int j=0;j<vect.size();j++)
           {
             srcListIndex = j+rev_indexofNodes[i]; 
@@ -458,16 +476,18 @@ class graph
 
         }
      
-      printf("After this \n");
       free(vertexInter);
       free(edgeMapInter);
-    //change to nodesTotal+1.
-    // printf("hello after this %d %d\n",nodesTotal,edgesTotal);
-    
+  
+  
  }
 
 
 
+ /******************************|| Dynamic Graph Libraries ||********************************/
+
+
+ 
 
 
 
