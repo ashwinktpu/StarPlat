@@ -2,7 +2,7 @@
 #define DSL_CPP_GENERATOR
 
 #include <cstdio>
-//#include "../dslCodePad.h"
+#include "../dslCodePad.h"
 #include "../../ast/ASTNodeTypes.hpp"
 #include "../../parser/includeHeader.hpp"
 //#include "dslCodePad.h"
@@ -34,6 +34,7 @@ class dsl_cpp_generator
   bool openFileforOutput();
   void closeOutputFile();
   const char* convertToCppType(Type* type);
+  void castIfRequired(Type* type,Identifier* methodID,dslCodePad& main);
   const char* getOperatorString(int operatorId);
   void generateFunc(ASTNode* proc);
   void generateFuncHeader(Function* proc,bool isMainFile);
@@ -49,6 +50,8 @@ class dsl_cpp_generator
   void generateBFS();
   void generateBlock(blockStatement* blockStmt, bool includeBrace=true);
   void generateReductionStmt(reductionCallStmt* reductnStmt);
+  void generateReductionCallStmt(reductionCallStmt* stmt);
+  void generateReductionOpStmt(reductionCallStmt* stmt);
   void generateBFSAbstraction(iterateBFS* bfsAbstraction);
   void generateExpr(Expression* expr);
   void generate_exprRelational(Expression* expr);
@@ -59,12 +62,15 @@ class dsl_cpp_generator
   void generate_exprPropIdReceive(PropAccess* propId);
   void generate_exprProcCall(Expression* expr);
   void generate_exprArL(Expression* expr);
-  void generateForAll_header();
+  void generate_exprUnary(Expression* expr);
+  void generateForAll_header(forallStmt* forAll);
   void generateForAllSignature(forallStmt* forAll);
+  void generatefixedpt_filter(Expression* filterExpr);
   //void includeIfToBlock(forallStmt* forAll);
   bool neighbourIteration(char* methodId);
   bool allGraphIteration(char* methodId);
   bool elementsIteration(char* extractId);
+  
   blockStatement* includeIfToBlock(forallStmt* forAll);
 
   void generateId();
@@ -75,9 +81,11 @@ class dsl_cpp_generator
   void getDefaultValueforTypes(int type);
 
 
+
 };
 
-//static const char* INTALLOCATION = "new int";
-//static const char* BOOLALLOCATION = "new bool";
-//static const char* FLOATALLOCATION = "new float";
+ static const char* INTALLOCATION = "new int";
+ static const char* BOOLALLOCATION = "new bool";
+ static const char* FLOATALLOCATION = "new float";
+ static const char* DOUBLEALLOCATION = "new double";
 #endif

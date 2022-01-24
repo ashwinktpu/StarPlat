@@ -6,6 +6,9 @@
 #include<list>
 #include<iostream>
 #include<vector>
+#include<stack>
+#include<map>
+#include<set>
 #include "../maincontext/enum_def.hpp"
 
 
@@ -630,6 +633,7 @@ class formalParam:public ASTNode
     int typeofExpr;
     Identifier* id;
     PropAccess* propId;
+    bool enclosedBrackets;
 
     public:
 
@@ -641,6 +645,7 @@ class formalParam:public ASTNode
       propId=NULL;
       typeofNode=NODE_EXPR;
       overallType=-1;
+      enclosedBrackets=false;
     }
     
     static Expression* nodeForArithmeticExpr(Expression* left,Expression* right,int arithmeticOperator)
@@ -875,7 +880,16 @@ class formalParam:public ASTNode
      {
        return typeofExpr;
      }
+     
+     bool setEnclosedBrackets()
+     {
+       enclosedBrackets=true;
+     }
 
+     bool hasEnclosedBrackets()
+     {
+       return enclosedBrackets;
+     }
 
    
 
@@ -949,6 +963,7 @@ class formalParam:public ASTNode
      Identifier* identifier;
      PropAccess* propId;
      Expression* exprAssigned;
+     bool isPropCopy ;
      bool atomicSignal;
      int lhsType;
 
@@ -958,8 +973,9 @@ class formalParam:public ASTNode
         identifier=NULL;
         propId=NULL;
         exprAssigned=NULL;
-         statementType="assignment";
-         atomicSignal=false;
+        statementType="assignment";
+        atomicSignal=false;
+        isPropCopy = false;
       
     }
 
@@ -1029,6 +1045,16 @@ class formalParam:public ASTNode
      {
        return atomicSignal;
      }
+
+     void setPropCopy()
+       {
+         isPropCopy = true;
+       }
+
+       bool hasPropCopy()
+       {
+         return isPropCopy ;
+       }
 
   };
 class whileStmt:public statement
@@ -1382,6 +1408,33 @@ class fixedPointStmt:public statement
 
   };
   
+  class unary_stmt:public statement
+  {
+    private:
+    Expression* unaryExpr;
+
+    public:
+    unary_stmt()
+    {
+      unaryExpr=NULL;
+      statementType="UnaryStatement";
+      typeofNode=NODE_UNARYSTMT;
+    }
+  
+     static unary_stmt* nodeForUnaryStmt(Expression* unaryExpr)
+    {
+      unary_stmt* unary_stmtNode=new unary_stmt();
+      unary_stmtNode->unaryExpr=unaryExpr;
+
+      return unary_stmtNode;
+    }
+
+     Expression* getUnaryExpr()
+    {
+      return unaryExpr;
+    }
+
+  };
 
   
   class proc_callStmt:public statement
@@ -1425,6 +1478,8 @@ class fixedPointStmt:public statement
     Expression* filterExpr;
     bool isSourceId;
     bool isforall;
+    map<int,list<Identifier*>> reduction_map;
+    set<int> reduc_keys;
     
     public:
     forallStmt()
@@ -1551,6 +1606,24 @@ class fixedPointStmt:public statement
       return filterExpr;
     }
 
+    void push_reduction(int key,Identifier* val)
+    {
+        reduction_map[key].push_back(val);
+        reduc_keys.insert(key);
+    }
+
+    set<int> get_reduceKeys()
+    {
+      return reduc_keys;
+    } 
+    
+    list<Identifier*> get_reduceIds(int key)
+    {
+      return reduction_map[key];
+    }
+    
+   
+
     void addAtomicSignalToStatements()
     {
         blockStatement* block=(blockStatement*)body;
@@ -1604,9 +1677,12 @@ class reductionCallStmt:public statement
      private:
      Identifier* id;
      PropAccess* propAccessId;
+     Expression* rightSide;
      list<ASTNode*> leftList;
      list<ASTNode*> exprList;
      reductionCall* reducCall;
+     int reduc_op;
+     bool is_reduceCall;
     // Expression* exprVal;
      int lhsType;
      
@@ -1616,6 +1692,7 @@ class reductionCallStmt:public statement
        id=NULL;
        propAccessId=NULL;
        reducCall=NULL;
+       rightSide=NULL;
       // exprVal=NULL;
        typeofNode=NODE_REDUCTIONCALLSTMT;
      }
@@ -1636,6 +1713,28 @@ class reductionCallStmt:public statement
        reducCallStmtNode->reducCall=reducCall;
        reducCallStmtNode->lhsType=2;
        return reducCallStmtNode;
+     }
+
+     static reductionCallStmt* id_reduc_opStmt(Identifier* id,int reduce_op,Expression* rightSide)
+     {
+         reductionCallStmt* reducCallStmtNode=new reductionCallStmt();
+         reducCallStmtNode->id=id;
+         rightSide->setParent(reducCallStmtNode);
+         reducCallStmtNode->reduc_op=reduce_op;
+         reducCallStmtNode->rightSide=rightSide;
+         return reducCallStmtNode;
+
+     }
+
+     static reductionCallStmt* propId_reduc_opStmt(PropAccess* propId,int reduce_op,Expression* rightSide)
+     {
+         reductionCallStmt* reducCallStmtNode=new reductionCallStmt();
+         reducCallStmtNode->propAccessId=propId;
+         rightSide->setParent(reducCallStmtNode);
+         reducCallStmtNode->reduc_op=reduce_op;
+         reducCallStmtNode->rightSide=rightSide;
+         return reducCallStmtNode;
+
      }
       
      static reductionCallStmt* leftList_reducCallStmt(list<ASTNode*> llist,reductionCall* reducCall,list<ASTNode*> exprListSent)
@@ -1696,6 +1795,16 @@ class reductionCallStmt:public statement
       return exprList;
     }
 
+    Expression* getRightSide()
+    {
+      return rightSide;
+    }
+
+    int reduction_op()
+    {
+      return reduc_op;
+    }
+
     bool isTargetId()
     {
       ASTNode* node=leftList.front();
@@ -1730,6 +1839,14 @@ class reductionCallStmt:public statement
       else
          return ((PropAccess*)node)->getIdentifier2();
 
+    }
+
+    bool is_reducCall()
+    {
+      if(reducCall!=NULL)
+        return true;
+
+      return false;  
     }
 
 
