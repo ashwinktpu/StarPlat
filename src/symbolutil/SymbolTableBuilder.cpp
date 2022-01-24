@@ -119,6 +119,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
        case NODE_ASSIGN:
        { 
            assignment* assign=(assignment*)stmt;
+           Expression* exprAssigned = assign->getExpr();
            if(assign->lhs_isIdentifier())
              {
                  Identifier* id=assign->getId();
@@ -129,7 +130,26 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                  PropAccess* propId=assign->getPropId();
                  searchSuccess=findSymbolPropId(propId);
 
+
              }
+
+             checkForExpressions(exprAssigned);
+             
+             if(assign->lhs_isIdentifier())
+             {
+                  Identifier* id=assign->getId();
+                  if(id->getSymbolInfo()->getType()->isPropNodeType())
+                    {
+                        if(exprAssigned->isIdentifierExpr())
+                          {
+                              Identifier* rhsPropId = exprAssigned->getId();
+                              if(rhsPropId->getSymbolInfo()->getType()->isPropNodeType())
+                                 assign->setPropCopy() ; 
+                          }
+                    }
+                   
+              }
+
              break;
        }
        case NODE_FIXEDPTSTMT:
