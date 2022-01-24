@@ -15,8 +15,11 @@ class SymbolTableBuilder
  list<SymbolTable*> propSymbolTables;
  SymbolTable* currVarSymbT;
  SymbolTable* currPropSymbT;
+ 
+ 
 
  public:
+ stack<ASTNode*> parallelConstruct;
  SymbolTableBuilder()
  {
      currVarSymbT=NULL;

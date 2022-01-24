@@ -4,6 +4,7 @@
 #include <string>
 #include "../maincontext/enum_def.hpp"
 #include "../symbolutil/SymbolTable.h"
+#include<assert.h>
 
 
 using namespace std;
