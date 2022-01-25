@@ -118,7 +118,7 @@ void Compute_BC(graph& g, float *BC,std::set<int>& sourceSet)
 int main()
 {
 
-  graph G("../GraphDSL/graphcode/dataRecords/cleanuwUSARoad.txt");
+  graph G("../../dataRecords/cleanuwUSARoad.txt");
   G.parseGraph();
   printf("max threads %d\n",omp_get_max_threads());
   randomGeneratorUtil rand;
@@ -129,7 +129,7 @@ int main()
   //int seeds[5];={267649,518682,10978,22382,43958};
    //rand.feedRandomUniqueNum(seeds,20);
   //int nseeds[5];
-    rand.feedFromFile(seeds,"../GraphDSL/graphcode/dataRecords/socJournalSources/sources-USRoad/sources20.txt");
+    rand.feedFromFile(seeds,"../../dataRecords/socJournalSources/sources-USRoad/sources20.txt");
 
    /* std::set<int>::iterator itr;
    int count=0;
