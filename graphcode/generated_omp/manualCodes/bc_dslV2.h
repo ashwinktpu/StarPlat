@@ -5,7 +5,7 @@
 #include<limits.h>
 #include<atomic>
 #include<omp.h>
-#include"../graph.hpp"
+#include"../../graph.hpp"
 
 void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet);
 

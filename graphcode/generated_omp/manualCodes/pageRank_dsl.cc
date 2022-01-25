@@ -5,7 +5,7 @@
 #include<cmath>
 #include<algorithm>
 #include<omp.h>
-#include"graph.hpp"
+#include"../../graph.hpp"
 
 void Compute_PR(graph& g,float beta,float delta,int maxIter,
   float* pageRank)
