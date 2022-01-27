@@ -3,7 +3,57 @@
 #include<cassert>
 
 
+void dsl_cpp_generator::generateInitkernel(const char* name){
+  char strBuffer[1024];
+  header.pushstr_newL("template <typename T>");
+  sprintf(strBuffer,"__global__ void initKernel(unsigned %s, T* d_array, T initVal) {",name);
+  header.pushstr_newL(strBuffer);
+  header.pushstr_newL("unsigned id = threadIdx.x + blockDim.x * blockIdx.x;");
+  sprintf(strBuffer,"if(id < %s) {",name);
+  header.pushstr_newL(strBuffer);
+  header.pushstr_newL("d_array[id]=initVal;");
+  header.pushstr_newL("}");
+  header.pushstr_newL("}");
+}
+void dsl_cpp_generator::generateInitkernel1(const char* inVarName, const char* initVal){ // const char* typ,
+  //~ initKernel<double> <<<numBlocks,numThreads>>>(V,d_BC, 0.0);
 
+  char strBuffer[1024];
+
+  sprintf(strBuffer,"initKernel<double> <<<numBlocks,numThreads>>>(V,d_%s, %s);", inVarName,initVal);
+  main.pushstr_newL(strBuffer);
+  main.NewLine();
+}
+
+void dsl_cpp_generator:: generateLaunchConfig(const char* name)
+{
+  //~ const unsigned threadsPerBlock = 512;                                  //
+  //~ unsigned numThreads   = V < threadsPerBlock ? V: 512;                  // LAUNCH CONFIG
+  //~ unsigned numBlocks    = (numThreads+threadsPerBlock-1)/threadsPerBlock;//
+
+  char strBuffer[1024];
+  main.NewLine();
+  const unsigned threadsPerBlock=512;
+  const char* totalThreads = (strcmp(name,"nodes")==0)? "V" : "E";
+  sprintf(strBuffer,"const unsigned threadsPerBlock = %u;",threadsPerBlock);
+  main.pushstr_newL(strBuffer);
+  sprintf(strBuffer,"unsigned numThreads   = (%s < threadsPerBlock)? %s: %u;",totalThreads,totalThreads,threadsPerBlock);
+  main.pushstr_newL(strBuffer);
+  sprintf(strBuffer,"unsigned numBlocks    = (numThreads+threadsPerBlock-1)/threadsPerBlock;");
+  main.pushstr_newL(strBuffer);
+  main.NewLine();
+  //main.pushstr_newL("}");
+
+}
+
+void dsl_cpp_generator::generateCudaMemCpyStr(const char* sVarName,const char* tVarName, const char* type, const char* sizeV, bool isH2D=true)
+{
+  //~ cudaMemcpy(  d_data,   h_data, sizeof(int)*(   E), cudaMemcpyHostToDevice);
+  //                1         2               3       4       5
+  char strBuffer[1024];
+  sprintf(strBuffer,"cudaMemcpy(%8s, %8s, sizeof(%3s)*(%4s), %s);",sVarName,tVarName,type,sizeV, (isH2D?"cudaMemcpyHostToDevice":"cudaMemcpyDeviceToHost"));
+  main.pushstr_newL(strBuffer);
+}
 
 void dsl_cpp_generator::addIncludeToFile(const char* includeName,dslCodePad& file,bool isCppLib)
 {  //cout<<"ENTERED TO THIS ADD INCLUDE FILE"<<"\n";
@@ -29,20 +79,20 @@ void dsl_cpp_generator::generation_begin()
   header.pushString("#define GENCPP_");
    header.pushUpper(fileName);
   header.pushstr_newL("_H");
-  header.pushString("#include");
+  header.pushString("#include ");
   addIncludeToFile("stdio.h",header,true);
-  header.pushString("#include");
+  header.pushString("#include ");
   addIncludeToFile("stdlib.h",header,true);
-  header.pushString("#include");
+  header.pushString("#include ");
   addIncludeToFile("limits.h",header,true);
-  header.pushString("#include");
+  header.pushString("#include ");
   addIncludeToFile("cuda.h",header,true);
-  header.pushString("#include");
+  header.pushString("#include ");
   addIncludeToFile("../graph.hpp",header,false);
-  header.pushString("#include");
+  header.pushString("#include ");
   addIncludeToFile("../libcuda.cuh",header,false);
   header.NewLine();
-  main.pushString("#include");
+  main.pushString("#include ");
   sprintf(temp,"%s.h",fileName);
   addIncludeToFile(temp,main,false);
   main.NewLine();
@@ -551,13 +601,31 @@ void dsl_cpp_generator::generateAssignmentStmt(assignment* asmt, bool isMainFile
 void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt, bool isMainFile)
 {
 
-   dslCodePad &targetFile = isMainFile ? main : header;
-   // cout<<"INSIDE PROCCALL OF GENERATION"<<"\n";
-   proc_callExpr* procedure=proc_callStmt->getProcCallExpr();
+  dslCodePad &targetFile = isMainFile ? main : header;
+  // cout<<"INSIDE PROCCALL OF GENERATION"<<"\n";
+  proc_callExpr* procedure=proc_callStmt->getProcCallExpr();
   // cout<<"FUNCTION NAME"<<procedure->getMethodId()->getIdentifier();
-   string methodID(procedure->getMethodId()->getIdentifier());
-   string IDCoded("attachNodeProperty");
-   int x=methodID.compare(IDCoded);
+  string methodID(procedure->getMethodId()->getIdentifier());
+  string IDCoded("attachNodeProperty");
+  int x=methodID.compare(IDCoded);
+
+  if(x==0){
+    char strBuffer[1024];
+    list<argument*> argList=procedure->getArgList();
+    list<argument*>::iterator itr;
+
+    for(itr=argList.begin();itr!=argList.end();itr++){
+      assignment* assign=(*itr)->getAssignExpr();
+      Identifier* lhsId=assign->getId();
+      if(argList.size()==1)
+        generateInitkernel1(lhsId->getIdentifier(),"0.0");
+        /// initKernel<double> <<<numBlocks,numThreads>>>(V,d_BC, 0.0);
+      else if(argList.size()==2) {
+        generateInitkernel1(lhsId->getIdentifier(),"0.0");
+      }
+    }
+  }
+  /*
    if(x==0)
        {
          // cout<<"MADE IT TILL HERE";
@@ -565,11 +633,12 @@ void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt, bool isMa
           list<argument*> argList=procedure->getArgList();
           list<argument*>::iterator itr;
          // targetFile.pushstr_newL("#pragma omp parallel for");
-          //~ sprintf(strBuffer,"for (%s %s = 0; %s < V; %s ++) ","int","t","t",procedure->getId1()->getIdentifier(),"num_nodes","t");
+          //sprintf(strBuffer,"for (%s %s = 0; %s < V; %s ++) ","int","t","t",procedure->getId1()->getIdentifier(),"num_nodes","t");
           // to ashwina, there is something wrong in above! commenting it. -rajz
           sprintf(strBuffer,"for (%s %s = 0; %s < V; %s ++) ","int","t","t","t");
           targetFile.pushstr_newL(strBuffer);
           targetFile.pushstr_newL("{");
+          targetFile.pushstr_newL("");
           for(itr=argList.begin();itr!=argList.end();itr++)
               {
                 assignment* assign=(*itr)->getAssignExpr();
@@ -588,12 +657,16 @@ void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt, bool isMa
                      generateExpr(exprAssigned, isMainFile);
                      targetFile.pushstr_newL(";");
                    }
-
+                sprintf(strBuffer,"***  %s",lhsId->getIdentifier());
+                targetFile.pushString(strBuffer);
+                sprintf(strBuffer,"***  %d",lhsId->getSymbolInfo()->getType());
+                targetFile.pushString(strBuffer);
               }
 
         targetFile.pushstr_newL("}");
 
        }
+       */
 }
 
 void dsl_cpp_generator::generatePropertyDefination(Type* type,char* Id , bool isMainFile)
@@ -865,7 +938,7 @@ void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll, bool isMainF
 
     }
 
-    /*
+
     if(elementsIteration(extractId->getIdentifier()))
       {
         Identifier* collectionName=forAll->getPropSource()->getIdentifier1();
@@ -1403,7 +1476,7 @@ void dsl_cpp_generator::generateExpr(Expression* expr, bool isMainFile)
 
   if(expr->isLiteral())
      {
-      // cout<<"INSIDE THIS FOR LITERAL"<<"\n";
+      cout<<"INSIDE THIS FOR LITERAL"<<"\n";
        generate_exprLiteral(expr, isMainFile);
      }
      else if(expr->isInfinity())
@@ -1868,7 +1941,7 @@ void dsl_cpp_generator:: generateFuncBody(Function* proc, bool isMainFile)
   }
 
 
-      if (!isMainFile) {
+      if (isGenCSR()) {
 
       sprintf(strBuffer,"unsigned V = %s.num_nodes();",gId); //assuming DSL  do not contain variables as V and E
       main.pushstr_newL(strBuffer);
@@ -1876,89 +1949,112 @@ void dsl_cpp_generator:: generateFuncBody(Function* proc, bool isMainFile)
       main.pushstr_newL(strBuffer);
       main.NewLine();
 
-      sprintf(strBuffer,"int MAX_VAL = 2147483647 ;");
-      main.pushstr_newL(strBuffer);
-      sprintf(strBuffer,"int * gpu_edgeList;");
-      main.pushstr_newL(strBuffer);
-      sprintf(strBuffer," int * gpu_edgeLen;");
-      main.pushstr_newL(strBuffer);
-      sprintf(strBuffer,"int * gpu_dist;");
-      main.pushstr_newL(strBuffer);
+      //~ sprintf(strBuffer,"int MAX_VAL = 2147483647 ;");
+      //~ main.pushstr_newL(strBuffer);
+      //~ sprintf(strBuffer,"int * gpu_edgeList;");
+      //~ main.pushstr_newL(strBuffer);
+      //~ sprintf(strBuffer," int * gpu_edgeLen;");
+      //~ main.pushstr_newL(strBuffer);
+      //~ sprintf(strBuffer,"int * gpu_dist;");
+      //~ main.pushstr_newL(strBuffer);
 
-      sprintf(strBuffer," int * gpu_OA;");
-      main.pushstr_newL(strBuffer);
+      //~ sprintf(strBuffer," int * gpu_OA;");
+      //~ main.pushstr_newL(strBuffer);
 
-      sprintf(strBuffer,"bool * gpu_modified_prev;");
-      main.pushstr_newL(strBuffer);
+      //~ sprintf(strBuffer,"bool * gpu_modified_prev;");
+      //~ main.pushstr_newL(strBuffer);
 
-      sprintf(strBuffer,"bool * gpu_finished;");
-      main.pushstr_newL(strBuffer);
+      //~ sprintf(strBuffer,"bool * gpu_finished;");
+      //~ main.pushstr_newL(strBuffer);
 
-      sprintf(strBuffer,"int *gpu_rev_OA;");
-      main.pushstr_newL(strBuffer);
+      //~ sprintf(strBuffer,"int *gpu_rev_OA;");
+      //~ main.pushstr_newL(strBuffer);
 
-      sprintf(strBuffer,"int *gpu_srcList;");
-      main.pushstr_newL(strBuffer);
+      //~ sprintf(strBuffer,"int *gpu_srcList;");
+      //~ main.pushstr_newL(strBuffer);
 
-       sprintf(strBuffer,"float  *gpu_node_pr;");
-      main.pushstr_newL(strBuffer);
-
-
-      main.NewLine();
-
-      generateCudaMallocStr("gpu_OA"  ,"int","(1+V)");
-      generateCudaMallocStr("gpu_edgeList"  ,"int","(E)" );
-      generateCudaMallocStr("gpu_edgeLen","int","(E)");
-      generateCudaMallocStr("gpu_dist","int","(V)");
-      generateCudaMallocStr("gpu_modified_prev","bool","(V)");
-      generateCudaMallocStr("gpu_modified_next","bool","(V)");
-      generateCudaMallocStr("gpu_finished","bool","(1)");
-      generateCudaMallocStr("gpu_srcList","int","(E)");
-      generateCudaMallocStr("gpu_node_pr","flaot","(V)");
-      main.NewLine();
-
-      sprintf(strBuffer,"unsigned int block_size;");
-      main.pushstr_newL(strBuffer);
-
-      sprintf(strBuffer,"unsigned int num_blocks;");
-      main.pushstr_newL(strBuffer);
-
-      sprintf(strBuffer,"if( V <= 1024)");
-      main.pushstr_newL(strBuffer);
-      main.pushstr_newL("{");
-      main.pushstr_newL("block_size = V;");
-      main.pushstr_newL("num_blocks = 1;");
-      main.pushstr_newL("}");
-      main.pushstr_newL("else");
-      main.pushstr_newL("{");
-      main.pushstr_newL("block_size = 1024;");
-      main.pushstr_newL("num_blocks = ceil(((float)V) / block_size);");
-      main.pushstr_newL("}");
-
-      generateCudaMemcpy("gpu_OA", "OA","int", "(1+V)",false, "cudaMemcpyHostToDevice");
-      generateCudaMemcpy("gpu_edgeList", "edgeList","int", "E",false, "cudaMemcpyHostToDevice");
-
-      generateCudaMemcpy("gpu_edgeList", "edgeList","int", "E",false, "cudaMemcpyHostToDevice");
-      generateCudaMemcpy("gpu_edgeList", "edgeList","int", "E",false, "cudaMemcpyHostToDevice");
-      generateCudaMemcpy("gpu_edgeLen", "cpu_edgeLen ","int", "E",false, "cudaMemcpyHostToDevice");
-      generateCudaMemcpy("gpu_dist", "modified ","bool", "V",false, "cudaMemcpyHostToDevice");
-      generateCudaMemcpy("gpu_finished", "finished ","bool", "1",false, "cudaMemcpyHostToDevice");
-      generateCudaMemcpy("gpu_srcList", "cpu_srcList","int", "(E)",false, "cudaMemcpyHostToDevice");
+       //~ sprintf(strBuffer,"float  *gpu_node_pr;");
+      //~ main.pushstr_newL(strBuffer);
 
 
-      main.pushString(proc->getIdentifier()->getIdentifier());
-      main.pushString("_kernel");
-      main.pushString("<<<");
-      main.pushString("num_blocks, block_size");
-      main.pushString(">>>");
-      main.push('(');
-      main.pushString("gpu_OA, gpu_edgeList, V, E )");
-      main.push(';');
-      main.NewLine();
-      main.pushString("cudaDeviceSynchronize();");
-      main.NewLine();
+      //~ main.NewLine();
+
+      //~ generateCudaMallocStr("gpu_OA"  ,"int","(1+V)");
+      //~ generateCudaMallocStr("gpu_edgeList"  ,"int","(E)" );
+      //~ generateCudaMallocStr("gpu_edgeLen","int","(E)");
+      //~ generateCudaMallocStr("gpu_dist","int","(V)");
+      //~ generateCudaMallocStr("gpu_modified_prev","bool","(V)");
+      //~ generateCudaMallocStr("gpu_modified_next","bool","(V)");
+      //~ generateCudaMallocStr("gpu_finished","bool","(1)");
+      //~ generateCudaMallocStr("gpu_srcList","int","(E)");
+      //~ generateCudaMallocStr("gpu_node_pr","flaot","(V)");
+      //~ main.NewLine();
+
+      //~ sprintf(strBuffer,"unsigned int block_size;");
+      //~ main.pushstr_newL(strBuffer);
+
+      //~ sprintf(strBuffer,"unsigned int num_blocks;");
+      //~ main.pushstr_newL(strBuffer);
+
+      //~ sprintf(strBuffer,"if( V <= 1024)");
+      //~ main.pushstr_newL(strBuffer);
+      //~ main.pushstr_newL("{");
+      //~ main.pushstr_newL("block_size = V;");
+      //~ main.pushstr_newL("num_blocks = 1;");
+      //~ main.pushstr_newL("}");
+      //~ main.pushstr_newL("else");
+      //~ main.pushstr_newL("{");
+      //~ main.pushstr_newL("block_size = 1024;");
+      //~ main.pushstr_newL("num_blocks = ceil(((float)V) / block_size);");
+      //~ main.pushstr_newL("}");
+
+      //~ generateCudaMemcpy("gpu_OA", "OA","int", "(1+V)",false, "cudaMemcpyHostToDevice");
+      //~ generateCudaMemcpy("gpu_edgeList", "edgeList","int", "E",false, "cudaMemcpyHostToDevice");
+
+      //~ generateCudaMemcpy("gpu_edgeList", "edgeList","int", "E",false, "cudaMemcpyHostToDevice");
+      //~ generateCudaMemcpy("gpu_edgeList", "edgeList","int", "E",false, "cudaMemcpyHostToDevice");
+      //~ generateCudaMemcpy("gpu_edgeLen", "cpu_edgeLen ","int", "E",false, "cudaMemcpyHostToDevice");
+      //~ generateCudaMemcpy("gpu_dist", "modified ","bool", "V",false, "cudaMemcpyHostToDevice");
+      //~ generateCudaMemcpy("gpu_finished", "finished ","bool", "1",false, "cudaMemcpyHostToDevice");
+      //~ generateCudaMemcpy("gpu_srcList", "cpu_srcList","int", "(E)",false, "cudaMemcpyHostToDevice");
 
       main.NewLine();
+
+      sprintf(strBuffer,"int* d_meta;");
+      main.pushstr_newL(strBuffer);
+      sprintf(strBuffer,"int* d_data;");
+      main.pushstr_newL(strBuffer);
+      sprintf(strBuffer,"int* d_weight;");
+      main.pushstr_newL(strBuffer);
+      main.NewLine();
+
+      generateCudaMallocStr("d_meta"  ,"int","(1+V)");
+      generateCudaMallocStr("d_data"  ,"int","(E)"  );
+      generateCudaMallocStr("d_weight","int","(E)"  );
+      main.NewLine();
+
+      // h_meta h_data h_weight has to be populated!
+
+      generateCudaMemCpyStr("d_meta","h_meta", "int","V+1")  ;
+      generateCudaMemCpyStr("d_data","h_data", "int","E")    ;
+      generateCudaMemCpyStr("d_weight","h_weight", "int","E");
+      main.NewLine();
+
+      generateLaunchConfig("nodes"); // Most of the time unless we perform edgeBased!
+
+      //~ main.pushString(proc->getIdentifier()->getIdentifier());
+      //~ main.pushString("_kernel");
+      //~ main.pushString("<<<");
+      //~ main.pushString("num_blocks, block_size");
+      //~ main.pushString(">>>");
+      //~ main.push('(');
+      //~ main.pushString("gpu_OA, gpu_edgeList, V, E )");
+      //~ main.push(';');
+      //~ main.NewLine();
+      //~ main.pushString("cudaDeviceSynchronize();");
+      //~ main.NewLine();
+
+      //~ main.NewLine();
 
       main.NewLine();
 
@@ -2003,20 +2099,26 @@ void dsl_cpp_generator:: generateFuncHeader(Function* proc,bool isMainFile)
       Type* type=(*itr)->getType();
       targetFile.pushString(convertToCppType(type));
 
+      const char* parName=(*itr)->getIdentifier()->getIdentifier();
 
       targetFile.pushString(" ");
 
 
       // added here
-      const char* parName=(*itr)->getIdentifier()->getIdentifier();
+
       cout << "param:" <<  parName << endl;
       if(!isMainFile && type->isGraphType()){
         genCSR=true;
         gId = parName;
+        //~ varList.push_back({"int*","d_meta", false})  ;
+        //~ varList.push_back({"int*","d_data", false})  ;
+        //~ varList.push_back({"int*","d_weight", false});
       }
+      //~ if(!type->isGraphType() && isMainFile){
+        //~ varList.push_back({convertToCppType(type),parName, false});
+      //~ }
 
-
-      targetFile.pushString(/*createParamName(*/(*itr)->getIdentifier()->getIdentifier());
+      targetFile.pushString(/*createParamName(*/parName);
       if(argumentTotal>0)
          targetFile.pushString(",");
 
