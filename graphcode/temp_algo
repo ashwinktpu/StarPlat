@@ -1,0 +1,8 @@
+function count_nodes(Graph g)
+{
+    int result = 0;
+    for(v in g.nodes())
+    {
+        result = result + 1;
+    }
+}
