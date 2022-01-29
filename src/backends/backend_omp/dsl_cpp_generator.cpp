@@ -1249,7 +1249,7 @@ void dsl_cpp_generator::generate_exprLiteral(Expression* expr)
  void dsl_cpp_generator::generate_exprInfinity(Expression* expr)
  {
               char valBuffer[1024];
-              if(expr->getTypeofExpr()!=NULL)
+              if(expr->getTypeofExpr()!=0)
                    {
                      int typeClass=expr->getTypeofExpr();
                      switch(typeClass)
@@ -1847,16 +1847,17 @@ bool dsl_cpp_generator::generate()
   void dsl_cpp_generator::setFileName(char* f) // to be changed to make it more universal.
   {
 
-    char *token = strtok(f, "/");
+    char *token = strtok(f, "\\");
 	  char* prevtoken;
    
    
     while (token != NULL)
     {   
 		prevtoken=token;
-    token = strtok(NULL, "/");
+    token = strtok(NULL, "\\");
     }
     fileName=prevtoken;
+    printf("OutFile: %s \n", fileName);
 
   }
 

@@ -357,7 +357,9 @@ class statement:public ASTNode
         return statements;
       }
 
-
+      void removeStatement(statement* stmt){
+          statements.remove(stmt);
+      }
   };
 
 class Function:public ASTNode

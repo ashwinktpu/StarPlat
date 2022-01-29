@@ -61,7 +61,7 @@
 %type <node> statement blockstatements assignment declaration proc_call control_flow reduction
 %type <node> type1 type2
 %type <node> primitive graph collections property
-%type <node> id leftSide rhs expression oid val boolean_expr unary_expr tid id1
+%type <node> id leftSide rhs expression oid val boolean_expr unary_expr tid 
 %type <node> bfs_abstraction filterExpr reverse_abstraction
 %type <nodeList> leftList rightList
 %type <node> iteration_cf selection_cf
