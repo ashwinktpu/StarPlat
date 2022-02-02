@@ -360,6 +360,10 @@ class statement:public ASTNode
       void removeStatement(statement* stmt){
           statements.remove(stmt);
       }
+
+      void clearStatements(statement* stmt){
+        statements.clear();
+      }
   };
 
 class Function:public ASTNode

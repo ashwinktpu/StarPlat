@@ -5,6 +5,7 @@
 	#include <stdlib.h>
 	#include <stdbool.h>
     #include "includeHeader.hpp"
+	#include "../analyser/ASTAnalyser.h"
 	#include<getopt.h>
 	//#include "../symbolutil/SymbolTableBuilder.cpp"
      
@@ -379,22 +380,6 @@ int main(int argc,char **argv)
     SymbolTableBuilder stBuilder;
      FILE    *fd;
      
-   /* if (argc>1)
-     yyin= fopen(argv[1],"r");
-	else 
-	  yyin=stdin;
-	int error=yyparse();
-	printf("error val %d\n",error);
-	if(error!=1)
-	{
-  // printf("%d SIZE OF FUNCLIST",frontEndContext.getFuncList().size()); 
-  // printf("GRAPH ID %s",graphId[0]->getIdentifier());
-    stBuilder.buildST(frontEndContext.getFuncList());
-	cpp_backend.setFileName(argv[1]);
-	cpp_backend.generate();
-	
-	}
-  */
   int opt;
   char* fileName=NULL;
   //char* backendTarget=NULL;
@@ -446,6 +431,10 @@ int main(int argc,char **argv)
 	{
      //TODO: redirect to different backend generator after comparing with the 'b' option
     stBuilder.buildST(frontEndContext.getFuncList());
+	
+	ASTAnalyser propMerge;
+	propMerge.analyse();
+	
 	cpp_backend.setFileName(fileName);
 	cpp_backend.generate();
 	

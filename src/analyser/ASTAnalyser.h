@@ -1,11 +1,7 @@
 #ifndef AST_ANALYSER
 #define AST_ANALYSER
 
-#include <cstdio>
-#include "../dslCodePad.h"
-#include "../../ast/ASTNodeTypes.hpp"
-#include "../../parser/includeHeader.hpp"
-//#include "dslCodePad.h"
+#include "../ast/ASTNodeTypes.hpp"
 
 class ASTAnalyser
 {
