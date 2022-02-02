@@ -1,8 +1,17 @@
 function count_nodes(Graph g)
 {
     int result = 0;
+    propNode <int> prop;
+    propNode <int> prop1;
+    g.attachNodeProperty(prop = 10);
+    g.attachNodeProperty(prop1 = 10);
     for(v in g.nodes())
     {
+        propNode <int> prop2;
+        propNode <int> prop3;
+        g.attachNodeProperty(prop2 = 10);
         result = result + 1;
+        v.prop = 11;
+        g.attachNodeProperty(prop3 = result);
     }
 }
