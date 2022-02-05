@@ -114,11 +114,11 @@ param : type1 id {  //Identifier* id=(Identifier*)Util::createIdentifierNode($2)
 						 
 						 if(type->isGraphType())
 						    graphId.push_back(id);
-					printf("\n");
+					
                     $$=Util::createParamNode($1,$2); } ;
                | type2 id { // Identifier* id=(Identifier*)Util::createIdentifierNode($2);
 			  
-					printf("\n");
+					
                              $$=Util::createParamNode($1,$2);};
 			   | type2 id '(' id ')' { // Identifier* id1=(Identifier*)Util::createIdentifierNode($4);
 			                            //Identifier* id=(Identifier*)Util::createIdentifierNode($2);
@@ -137,7 +137,7 @@ statements :  {};
 
 statement: declaration ';'{$$=$1;};
 	|assignment ';'{$$=$1;};
-	|proc_call ';' {printf("testprocstmt\n");$$=Util::createNodeForProcCallStmt($1);};
+	|proc_call ';' {$$=Util::createNodeForProcCallStmt($1);};
 	|control_flow {$$=$1;};
 	|reduction ';'{$$=$1;};
 	| bfs_abstraction {$$=$1; };
@@ -198,7 +198,7 @@ property : T_NP '<' primitive '>' { $$=Util::createPropertyTypeNode(TYPE_PROPNOD
 			  | T_NP '<' collections '>'{  $$=Util::createPropertyTypeNode(TYPE_PROPNODE,$3); };
 			  | T_EP '<' collections '>' {$$=Util::createPropertyTypeNode(TYPE_PROPEDGE,$3);};
 
-assignment :  leftSide '=' rhs  { printf("testassign\n");$$=Util::createAssignmentNode($1,$3);};
+assignment :  leftSide '=' rhs  { $$=Util::createAssignmentNode($1,$3);};
 
 rhs : expression { $$=$1;};
 
@@ -218,7 +218,7 @@ expression : proc_call { $$=$1;};
 			 | '!'expression {$$=Util::createNodeForUnaryExpr($2,OPERATOR_NOT);};
 		     | '(' expression ')' { Expression* expr=(Expression*)$2;
 				                     expr->setEnclosedBrackets();
-			                        $$=expr;printf("INSIDE EXPR");};
+			                        $$=expr;};
 	         | val {$$=$1;};
 			 | leftSide { $$=Util::createNodeForId($1);};
 			 | unary_expr {$$=$1;};
@@ -226,7 +226,7 @@ expression : proc_call { $$=$1;};
 unary_expr :   expression T_INC_OP {$$=Util::createNodeForUnaryExpr($1,OPERATOR_INC);};
 			 |  expression T_DEC_OP {$$=Util::createNodeForUnaryExpr($1,OPERATOR_DEC);}; 			 
 
-proc_call : leftSide '(' arg_list ')' {printf("testproc\n"); 
+proc_call : leftSide '(' arg_list ')' { 
                                        
                                        $$=Util::createNodeForProcCall($1,$3->AList); 
 
@@ -296,14 +296,14 @@ reduction_calls : T_SUM { $$=REDUCE_SUM;};
 	         | T_MIN {$$=REDUCE_MIN;};
 
 leftSide : id { $$=$1; };
-         | oid { printf("Here hello \n"); $$=$1; };
+         | oid {  $$=$1; };
          | tid {$$ = $1; };
 
-arg_list :    {printf("No args\n");
+arg_list :    {
                  argList* aList=new argList();
 				 $$=aList;  };
 		      
-		|assignment ',' arg_list {printf("test3\n");argument* a1=new argument();
+		|assignment ',' arg_list {argument* a1=new argument();
 		                          assignment* assign=(assignment*)$1;
 		                     a1->setAssign(assign);
 							 a1->setAssignFlag();
@@ -314,7 +314,7 @@ arg_list :    {printf("No args\n");
 						  {
 							  printf("VALUE OF ARG %d",arg->getAssignExpr());
 						  }
-						  printf("test4\n");
+						  
                           };
 
 
@@ -330,11 +330,11 @@ arg_list :    {printf("No args\n");
 						 a1->setExpression(expr);
 						a1->setExpressionFlag();
 						  $$=Util::createAList(a1); };
-	       | assignment { printf("test1\n");argument* a1=new argument();
+	       | assignment { argument* a1=new argument();
 		                   assignment* assign=(assignment*)$1;
 		                     a1->setAssign(assign);
 							 a1->setAssignFlag();
-						   $$=Util::createAList(a1);printf("test2\n");
+						   $$=Util::createAList(a1);
 						   };
 
 
