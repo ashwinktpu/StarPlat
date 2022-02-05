@@ -4,6 +4,7 @@
 #include <cassert>
 #include <unordered_map>
 #include <unordered_set>
+#include <analyserUtil.hpp>
 #include "../ast/ASTHelper.cpp"
 
 struct statementRange
@@ -11,6 +12,7 @@ struct statementRange
   statement *stmt;
   int l;
   int r;
+
 
   bool operator < (statementRange &stmt1)
   {
@@ -28,90 +30,18 @@ struct statementPos
 
   bool operator < (statementPos &stmt1)
   {
-      return (pos < stmt1.p)
+      return (pos < stmt1.pos);
   }
 };
 
-void ASTAnalyser::analyseStatement(statement *stmt)
-{
-  switch (stmt->getTypeofNode())
-  {
-  case NODE_BLOCKSTMT:
-    analyseBlock((blockStatement *)stmt);
-    break;
-
-  case NODE_WHILESTMT:
-    analyseStatement(((whileStmt *)stmt)->getBody());
-    break;
-
-  case NODE_DOWHILESTMT:
-    analyseStatement(((dowhileStmt *)stmt)->getBody());
-    break;
-
-  case NODE_FIXEDPTSTMT:
-    analyseStatement(((fixedPointStmt *)stmt)->getBody());
-    break;
-
-  case NODE_IFSTMT:
-  {
-    statement *ifBody = ((ifStmt *)stmt)->getIfBody();
-    statement *elseBody = ((ifStmt *)stmt)->getElseBody();
-    if (ifBody != NULL)
-      analyseStatement(ifBody);
-    if (elseBody != NULL)
-      analyseStatement(elseBody);
-    break;
-  }
-
-  case NODE_ITRBFS:
-  {
-    analyseStatement(((iterateBFS *)stmt)->getBody());
-    iterateReverseBFS *revBFS = ((iterateBFS *)stmt)->getRBFS();
-    if (revBFS != NULL)
-      analyseStatement(revBFS->getBody());
-    break;
-  }
-
-  case NODE_FORALLSTMT:
-    analyseStatement(((forallStmt *)stmt)->getBody());
-    break;
-  }
-}
-
-list<Identifier *> getVarsExpr(Expression *expr)
-{
-  list<Identifier *> result;
-
-  if (expr->isIdentifierExpr())
-  {
-    Identifier *iden = expr->getId();
-    result.push_back(iden);
-  }
-  else if (expr->isPropIdExpr())
-  {
-    PropAccess *propExpr = expr->getPropId();
-    result.push_back(propExpr->getIdentifier2());
-  }
-  else if (expr->isUnary())
-    result = getVarsExpr(expr->getUnaryExpr());
-  else if (expr->isLogical() || expr->isArithmetic() || expr->isLogical())
-  {
-    result = getVarsExpr(expr->getLeft());
-    result.merge(getVarsExpr(expr->getRight()));
-  }
-  return result;
-}
-
-bool checkDependancy(statement *stmt, unordered_set<string> &usedVars)
+bool checkDependancy(statement *stmt, usedVariables &usedVars)
 {
   switch (stmt->getTypeofNode())
   {
   case NODE_DECL:
   {
     declaration *declStmt = (declaration *)stmt;
-    string idenAssigned(declStmt->getdeclId()->getIdentifier());
-
-    if (usedVars.find(idenAssigned) != usedVars.end())
+    if (usedVars.isUsed(declStmt->getdeclId()))
       return true;
   }
   break;
@@ -121,15 +51,24 @@ bool checkDependancy(statement *stmt, unordered_set<string> &usedVars)
     assignment *assgnStmt = (assignment *)stmt;
     if (assgnStmt->lhs_isIdentifier())
     {
-      string idenAssigned(assgnStmt->getId()->getIdentifier());
-      if (usedVars.find(idenAssigned) != usedVars.end())
+      if(usedVars.isUsed(assgnStmt->getId()))
         return true;
     }
     else if (assgnStmt->lhs_isProp())
     {
       PropAccess *propId = assgnStmt->getPropId();
-      string propAssigned(propId->getIdentifier2()->getIdentifier());
-      if (usedVars.find(propAssigned) != usedVars.end())
+      if (usedVars.isUsed(propId->getIdentifier2()))
+        return true;
+    }
+
+    usedVariables exprVars = getVarsExpr(assgnStmt->getExpr());      
+    for(Identifier* wVars: exprVars.getWriteVariables()){
+      if(usedVars.isUsed(wVars))
+        return true;
+    }
+
+    for(Identifier* rVars: exprVars.getReadVariables()){
+      if(usedVars.isWrite(wVars))
         return true;
     }
   }
@@ -146,14 +85,12 @@ bool checkDependancy(statement *stmt, unordered_set<string> &usedVars)
     if (expr->isPropIdExpr())
     {
       PropAccess *propId = expr->getPropId();
-      string propAssigned(propId->getIdentifier2()->getIdentifier());
-      if (usedVars.find(propAssigned) != usedVars.end())
+      if (usedVars.isUsed(propId->getIdentifier2()))
         return true;
     }
     else if (expr->isIdentifierExpr())
     {
-      string idenAssigned(expr->getId()->getIdentifier());
-      if (usedVars.find(idenAssigned) != usedVars.end())
+      if (usedVars.isUsed(expr->getId()))
         return true;
     }
   }
@@ -162,7 +99,6 @@ bool checkDependancy(statement *stmt, unordered_set<string> &usedVars)
   default:
     return true;
   }
-
   return false;
 }
 
@@ -171,7 +107,7 @@ pair<int, int> getRange(proc_callStmt *stmt, int currPos, vector<statement *> st
   int l = currPos;
   int r = currPos + 1;
 
-  unordered_set<string> usedVars;
+  usedVariables usedVars;
   proc_callExpr *callStmt = stmt->getProcCallExpr();
   for (argument *arg : callStmt->getArgList())
   {
@@ -180,8 +116,8 @@ pair<int, int> getRange(proc_callStmt *stmt, int currPos, vector<statement *> st
       assignment *asgn = arg->getAssignExpr();
       Expression *expr = asgn->getExpr();
 
-      for (Identifier *iden : getVarsExpr(expr))
-        usedVars.insert(string(iden->getIdentifier()));
+      usedVars.merge(getVarsExpr(expr));
+      usedVars.addVariable(asgn->getId(), 2);
     }
   }
 
@@ -190,7 +126,7 @@ pair<int, int> getRange(proc_callStmt *stmt, int currPos, vector<statement *> st
     l--;
   }
 
-  while (r < stmts.size() && !checkDependancy(stmts[r], usedVars))
+  while (r <= stmts.size() && !checkDependancy(stmts[r-1], usedVars))
   {
     r++;
   }
@@ -204,7 +140,7 @@ list<statementPos> findStmtPosition(list<statementRange> stmts)
   list<statementRange>::iterator itr, itr1;
   list<statementPos> result;
 
-  for(itr = stmts.begin(); itr!=stmts.end())
+  for(itr = stmts.begin(); itr!=stmts.end();)
   {
     int left = itr->l;
     int right = itr->r;
@@ -216,6 +152,8 @@ list<statementPos> findStmtPosition(list<statementRange> stmts)
       {
         left = max(left, itr1->l);
         right = min(right, itr1->r);
+
+        itr1++;
       }
       else
         break;
@@ -230,8 +168,8 @@ list<statementPos> findStmtPosition(list<statementRange> stmts)
   return result;
 }
 
-void ASTAnalyser::analyseBlock(blockStatement *blockStmt)
-{
+void attachPropAnalyser::analyseBlock(blockStatement *blockStmt)
+{  
   list<statement *> stmtList = blockStmt->returnStatements();
   list<statement *>::iterator itr;
 
@@ -284,10 +222,14 @@ void ASTAnalyser::analyseBlock(blockStatement *blockStmt)
     }
   }
 
+  //cout<<numStmts<<' '<<nodePropList.size()<<' '<<nodeAttachList.size()<<endl;
+
   unordered_map<string, list<statementRange>> uMap;
   for (statementPos stPos : nodeAttachList)
   {
-    pair<int, int> validRange = getRange(stPos.stmt, stPos.pos, newStatements);
+    pair<int, int> validRange = getRange((proc_callStmt*) stPos.stmt, stPos.pos, newStatements);
+
+    cout<<"Statement Range "<<validRange.first<<' '<<validRange.second<<endl;
 
     proc_callExpr *callExpr = ((proc_callStmt *)stPos.stmt)->getProcCallExpr();
     Identifier *graphIden = callExpr->getId1();
@@ -322,9 +264,14 @@ void ASTAnalyser::analyseBlock(blockStatement *blockStmt)
     }
   }
   
+  //cout<<newAttachNodeStmt.size()<<' '<<newStatements.size()<<endl;
+
   newAttachNodeStmt.sort();
-  for(list<statementPos>::iterator itr = newAttachNodeStmt.rbegin(); itr != newAttachNodeStmt.rbegin(); itr++)
+  for(list<statementPos>::reverse_iterator itr = newAttachNodeStmt.rbegin(); itr != newAttachNodeStmt.rend(); itr++)
+  {
+    //cout<<itr->pos<<endl;
     newStatements.insert(newStatements.begin() + itr->pos, itr->stmt);
+  }
 
   blockStmt->clearStatements();
   for(statementPos stmt: nodePropList)
@@ -333,14 +280,60 @@ void ASTAnalyser::analyseBlock(blockStatement *blockStmt)
     blockStmt->addStmtToBlock(stmt);
 }
 
-void ASTAnalyser::analyseFunc(ASTNode *proc)
+void attachPropAnalyser::analyseStatement(statement *stmt)
+{
+  switch (stmt->getTypeofNode())
+  {
+  case NODE_BLOCKSTMT:
+    analyseBlock((blockStatement *)stmt);
+    break;
+
+  case NODE_WHILESTMT:
+    analyseStatement(((whileStmt *)stmt)->getBody());
+    break;
+
+  case NODE_DOWHILESTMT:
+    analyseStatement(((dowhileStmt *)stmt)->getBody());
+    break;
+
+  case NODE_FIXEDPTSTMT:
+    analyseStatement(((fixedPointStmt *)stmt)->getBody());
+    break;
+
+  case NODE_IFSTMT:
+  {
+    statement *ifBody = ((ifStmt *)stmt)->getIfBody();
+    statement *elseBody = ((ifStmt *)stmt)->getElseBody();
+    if (ifBody != NULL)
+      analyseStatement(ifBody);
+    if (elseBody != NULL)
+      analyseStatement(elseBody);
+    break;
+  }
+
+  case NODE_ITRBFS:
+  {
+    analyseStatement(((iterateBFS *)stmt)->getBody());
+    iterateReverseBFS *revBFS = ((iterateBFS *)stmt)->getRBFS();
+    if (revBFS != NULL)
+      analyseStatement(revBFS->getBody());
+    break;
+  }
+
+  case NODE_FORALLSTMT:
+    analyseStatement(((forallStmt *)stmt)->getBody());
+    break;
+  }
+}
+
+void attachPropAnalyser::analyseFunc(ASTNode *proc)
 {
   Function *func = (Function *)proc;
   analyseBlock(func->getBlockStatement());
   return;
 }
 
-void ASTAnalyser::analyse()
+void attachPropAnalyser::analyse()
 {
   list<Function *> funcList = frontEndContext.getFuncList();
   for (Function *func : funcList)

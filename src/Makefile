@@ -1,4 +1,5 @@
 EXPENDABLES = bin\MainContext.o bin\ASTHelper.o bin\SymbolTableBuilder.o bin\SymbolTableNew.o bin\y.tab.o bin\lex.yy.o parser\y.tab.c parser\lex.yy.c bin\dsl_cpp_generator.o bin\ASTAnalyser.o
+ANALYSER = bin\ASTAnalyser.o
 
 CC = g++  
 
@@ -37,4 +38,4 @@ bin/lex.yy.o:
 	$(MAKE) -C parser
 
 clean: 
-	del $(EXPENDABLES)
+	del $(ANALYSER)

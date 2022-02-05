@@ -361,7 +361,7 @@ class statement:public ASTNode
           statements.remove(stmt);
       }
 
-      void clearStatements(statement* stmt){
+      void clearStatements(){
         statements.clear();
       }
   };

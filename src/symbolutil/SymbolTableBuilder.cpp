@@ -1,7 +1,7 @@
 #include "SymbolTableBuilder.h"
 
 bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
- {   cout<<"ID VALUE IN SEARCH"<<id->getIdentifier()<<"\n";
+ {   // cout<<"ID VALUE IN SEARCH"<<id->getIdentifier()<<"\n";
      assert(id!=NULL);
      assert(id->getIdentifier()!=NULL);
      TableEntry* tableEntry=sTab->findEntryInST(id);
@@ -9,7 +9,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
      {  return false;
          //to be added.
      }
-     cout<<"FINALLY FOUND IT"<<"\n";
+     // cout<<"FINALLY FOUND IT"<<"\n";
      if(id->getSymbolInfo()!=NULL)
       {
       assert(id->getSymbolInfo()==tableEntry);
@@ -163,7 +163,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
            
            if(fpStmt->getDependentProp()->isUnary()||fpStmt->getDependentProp()->isIdentifierExpr())
            {  
-               printf("INSIDE FIXEDPTCHECK\n");
+               
                Identifier* depId ;
                if(fpStmt->getDependentProp()->isUnary())
                {
@@ -175,7 +175,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                }
                if(depId->getSymbolInfo()!=NULL)
                  {  
-                     printf("Inside fixedptId\n");
+                     
                      Identifier* tableId = depId->getSymbolInfo()->getId();
                      tableId->set_redecl(); //explained in the ASTNodeTypes
                      tableId->set_fpassociation(); //explained in the ASTNodeTypes
@@ -486,7 +486,7 @@ bool SymbolTableBuilder::checkForArguments(list<argument*> argList)
          }
          case EXPR_PROPID:
          {  
-             cout<<expr->getPropId()->getIdentifier1()->getIdentifier()<<"\n";
+             // cout<<expr->getPropId()->getIdentifier1()->getIdentifier()<<"\n";
              ifFine=findSymbolPropId(expr->getPropId());
              break;
          }

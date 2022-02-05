@@ -66,7 +66,7 @@ int getStructure(statement *stmt, Identifier *itr1, Identifier *itr2)
     return INVALID_STUCTURE;
 }
 
-void ASTAnalyser::analyseForAll(forallStmt *stmt)
+void dataRaceAnalyser::analyseForAll(forallStmt *stmt)
 {
     Identifier *itr = stmt->getIterator();
     Identifier *srcGraph = stmt->getSourceGraph();
@@ -144,7 +144,7 @@ void ASTAnalyser::analyseForAll(forallStmt *stmt)
     }
 }
 
-void ASTAnalyser::analyseStatement(statement *stmt)
+void dataRaceAnalyser::analyseStatement(statement *stmt)
 {
     switch (stmt->getTypeofNode())
     {
@@ -200,14 +200,14 @@ void ASTAnalyser::analyseStatement(statement *stmt)
     }
 }
 
-void ASTAnalyser::analyseFunc(ASTNode *proc)
+void dataRaceAnalyser::analyseFunc(ASTNode *proc)
 {
     Function *func = (Function *)proc;
     analyseStatement(func->getBlockStatement());
     return;
 }
 
-void ASTAnalyser::analyse()
+void dataRaceAnalyser::analyse()
 {
     list<Function *> funcList = frontEndContext.getFuncList();
     for (Function *func : funcList)

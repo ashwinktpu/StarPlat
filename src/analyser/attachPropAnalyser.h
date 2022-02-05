@@ -3,10 +3,10 @@
 
 #include "../ast/ASTNodeTypes.hpp"
 
-class ASTAnalyser
+class attachPropAnalyser
 {
   public:
-  ASTAnalyser(){
+  attachPropAnalyser(){
   }
 
   void analyse();
