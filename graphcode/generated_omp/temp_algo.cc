@@ -10,28 +10,14 @@ void count_nodes(graph& g)
   int result = 0;
   int x = 0 ;
   int y = 0 ;
+  int z = 0 ;
+  x = 10 + 13;
   #pragma omp parallel for
   for (int t = 0; t < g.num_nodes(); t ++) 
   {
     prop[t] = y;
+    prop1[t] = x;
   }
-  int z = 0 ;
-  x = 10 + 13;
-  y = 15;
-  #pragma omp parallel for
-  for (int t = 0; t < g.num_nodes(); t ++) 
-  {
-    prop1[t] = (x < y);
-  }
-  y = 15;
-  #pragma omp parallel for
-  for (int t = 0; t < g.num_nodes(); t ++) 
-  {
-    prop2[t] = y;
-    prop3[t] = y;
-  }
-  z = 18;
-  z = 100;
-  x = 100;
+  y = x;
 
 }
