@@ -1,10 +1,10 @@
-#include "ASTAnalyser.h"
+#include "attachPropAnalyser.h"
 
 #include <string.h>
 #include <cassert>
 #include <unordered_map>
 #include <unordered_set>
-#include <analyserUtil.hpp>
+#include "analyserUtil.hpp"
 #include "../ast/ASTHelper.cpp"
 
 struct statementRange
@@ -68,7 +68,7 @@ bool checkDependancy(statement *stmt, usedVariables &usedVars)
     }
 
     for(Identifier* rVars: exprVars.getReadVariables()){
-      if(usedVars.isWrite(wVars))
+      if(usedVars.isWrite(rVars))
         return true;
     }
   }

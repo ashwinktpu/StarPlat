@@ -1,5 +1,5 @@
-#ifndef AST_ANALYSER
-#define AST_ANALYSER
+#ifndef ATTACH_PROP_ANALYSER
+#define ATTACH_PROP_ANALYSER
 
 #include "../ast/ASTNodeTypes.hpp"
 
