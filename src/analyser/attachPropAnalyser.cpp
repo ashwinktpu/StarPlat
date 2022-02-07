@@ -68,6 +68,11 @@ bool checkDependancy(statement *stmt, usedVariables &usedVars)
       if(usedVars.isUsed(wVars))
         return true;
     }
+
+    for(Identifier* rVars: exprVars.getReadVariables()){
+      if(usedVars.isWrite(rVars))
+        return true;
+    }
   }
   break;
 
@@ -120,12 +125,12 @@ pair<int, int> getRange(proc_callStmt *stmt, int currPos, vector<statement *> st
 
   /*cout<<"Read variables"<<endl;
   for(Identifier* rVars: usedVars.getReadVariables())
-    printf("%s ", rVars->getSymbolInfo());
+    printf("%p ", rVars->getSymbolInfo());
   cout<<endl;
 
   cout<<"Write variables"<<endl;
   for(Identifier* wVars: usedVars.getWriteVariables())
-    printf("%s ", wVars->getSymbolInfo());
+    printf("%p ", wVars->getSymbolInfo());
   cout<<endl;*/
 
   while (l > 0 && !checkDependancy(stmts[l - 1], usedVars))
