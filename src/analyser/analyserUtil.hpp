@@ -2,7 +2,8 @@
 #define ANALYSER_UTIL
 
 #include "../ast/ASTNodeTypes.hpp"
-#include <unordered_set>
+#include <unordered_map>
+#include "../symbolutil/SymbolTable.h"
 
 enum variable_type
 {
@@ -10,6 +11,19 @@ enum variable_type
     WRITE,
     READ_WRITE
 };
+
+/*
+enum depeandancy
+{
+    READ_READ,
+    READ_WRITE,
+    WRTIE_READ,
+    WRITE_WRTIE,
+    ALL_READ,
+    ALL_WRITE,
+    READ_ALL,
+    WRITE_ALL
+}*/
 
 struct IdentifierWrap
 {
@@ -37,67 +51,62 @@ struct IdentifierWrap
 class usedVariables
 {
 private:
-    unordered_set<IdentifierWrap, IdentifierWrap::HashFunction> readVars, writeVars;
+    unordered_map<TableEntry*, Identifier*> readVars, writeVars;
 
 public:
-    bool checkEqual(Identifier *iden1, Identifier *iden2)
-    {
-        return (strcmp(iden1->getIdentifier(), iden2->getIdentifier()) == 0);
-    }
     void addVariable(Identifier *iden, int type)
     {
         if (type & 1)
-            readVars.insert(IdentifierWrap(iden));
+            readVars.insert({iden->getSymbolInfo(), iden});
         if (type & 2)
-            writeVars.insert(IdentifierWrap(iden));
+            writeVars.insert({iden->getSymbolInfo(), iden});
     }
 
     void merge(usedVariables usedVars1)
     {
-        for (IdentifierWrap var : usedVars1.readVars)
-            this->readVars.insert(var);
+        for (pair<TableEntry*, Identifier*> iden: usedVars1.readVars)
+            this->readVars.insert({iden.first, iden.second});
 
-        for (IdentifierWrap var : usedVars1.writeVars)
-            this->writeVars.insert(var);
+        for (pair<TableEntry*, Identifier*> iden : usedVars1.writeVars)
+            this->writeVars.insert({iden.first, iden.second});
     }
 
     void removeVariable(Identifier *iden, int type)
     {
-        IdentifierWrap idenNew(iden);
         if (type & 1)
         {
-            if (readVars.find(idenNew) != readVars.end())
-                readVars.erase(idenNew);
+            if (readVars.find(iden->getSymbolInfo()) != readVars.end())
+                readVars.erase(iden->getSymbolInfo());
         }
 
         if (type & 2)
         {
-            if (writeVars.find(idenNew) != writeVars.end())
-                writeVars.erase(idenNew);
+            if (writeVars.find(iden->getSymbolInfo()) != writeVars.end())
+                writeVars.erase(iden->getSymbolInfo());
         }
     }
 
     bool isRead(Identifier *iden)
     {
-        return (readVars.find(IdentifierWrap(iden)) != readVars.end());
+        return (readVars.find(iden->getSymbolInfo()) != readVars.end());
     }
 
     bool isWrite(Identifier *iden)
     {
-        return (writeVars.find(IdentifierWrap(iden)) != writeVars.end());
+        return (writeVars.find(iden->getSymbolInfo()) != writeVars.end());
     }
 
     bool isUsed(Identifier *iden)
     {
-        IdentifierWrap idenNew(iden);
-        return ((readVars.find(idenNew) != readVars.end()) || (writeVars.find(idenNew) != writeVars.end()));
+        TableEntry* symbInfo = iden->getSymbolInfo();
+        return ((readVars.find(symbInfo) != readVars.end()) || (writeVars.find(symbInfo) != writeVars.end()));
     }
 
     list<Identifier *> getReadVariables()
     {
         list<Identifier *> result;
-        for (IdentifierWrap iden : readVars)
-            result.push_back(iden.iden);
+        for (pair<TableEntry*, Identifier*> iden : readVars)
+            result.push_back(iden.second);
 
         return result;
     }
@@ -105,8 +114,8 @@ public:
     list<Identifier *> getWriteVariables()
     {
         list<Identifier *> result;
-        for (IdentifierWrap iden : writeVars)
-            result.push_back(iden.iden);
+        for (pair<TableEntry*, Identifier*> iden : writeVars)
+            result.push_back(iden.second);
 
         return result;
     }
@@ -119,12 +128,12 @@ usedVariables getVarsExpr(Expression *expr)
     if (expr->isIdentifierExpr())
     {
         Identifier *iden = expr->getId();
-        result.addVariable(iden, 1);
+        result.addVariable(iden, READ);
     }
     else if (expr->isPropIdExpr())
     {
         PropAccess *propExpr = expr->getPropId();
-        result.addVariable(propExpr->getIdentifier2(), 1);
+        result.addVariable(propExpr->getIdentifier2(), READ);
     }
     else if (expr->isUnary())
     {
@@ -134,9 +143,9 @@ usedVariables getVarsExpr(Expression *expr)
         {
             Expression *uExpr = expr->getUnaryExpr();
             if (uExpr->isIdentifierExpr())
-                result.addVariable(uExpr->getId(), 3);
+                result.addVariable(uExpr->getId(), READ_WRITE);
             else if (uExpr->isPropIdExpr())
-                result.addVariable(uExpr->getPropId()->getIdentifier2(), 3);
+                result.addVariable(uExpr->getPropId()->getIdentifier2(), READ_WRITE);
         }
     }
     else if (expr->isLogical() || expr->isArithmetic() || expr->isRelational())

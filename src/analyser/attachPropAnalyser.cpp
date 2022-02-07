@@ -41,6 +41,7 @@ bool checkDependancy(statement *stmt, usedVariables &usedVars)
   case NODE_DECL:
   {
     declaration *declStmt = (declaration *)stmt;
+    //printf("%p Decl Var\n", declStmt->getdeclId()->getSymbolInfo());
     if (usedVars.isUsed(declStmt->getdeclId()))
       return true;
   }
@@ -51,6 +52,7 @@ bool checkDependancy(statement *stmt, usedVariables &usedVars)
     assignment *assgnStmt = (assignment *)stmt;
     if (assgnStmt->lhs_isIdentifier())
     {
+      //printf("%p Assign Var\n", assgnStmt->getId()->getSymbolInfo());
       if(usedVars.isUsed(assgnStmt->getId()))
         return true;
     }
@@ -61,14 +63,9 @@ bool checkDependancy(statement *stmt, usedVariables &usedVars)
         return true;
     }
 
-    usedVariables exprVars = getVarsExpr(assgnStmt->getExpr());      
+    usedVariables exprVars = getVarsExpr(assgnStmt->getExpr());     
     for(Identifier* wVars: exprVars.getWriteVariables()){
       if(usedVars.isUsed(wVars))
-        return true;
-    }
-
-    for(Identifier* rVars: exprVars.getReadVariables()){
-      if(usedVars.isWrite(rVars))
         return true;
     }
   }
@@ -117,9 +114,19 @@ pair<int, int> getRange(proc_callStmt *stmt, int currPos, vector<statement *> st
       Expression *expr = asgn->getExpr();
 
       usedVars.merge(getVarsExpr(expr));
-      usedVars.addVariable(asgn->getId(), 2);
+      usedVars.addVariable(asgn->getId(), WRITE);
     }
   }
+
+  /*cout<<"Read variables"<<endl;
+  for(Identifier* rVars: usedVars.getReadVariables())
+    printf("%s ", rVars->getSymbolInfo());
+  cout<<endl;
+
+  cout<<"Write variables"<<endl;
+  for(Identifier* wVars: usedVars.getWriteVariables())
+    printf("%s ", wVars->getSymbolInfo());
+  cout<<endl;*/
 
   while (l > 0 && !checkDependancy(stmts[l - 1], usedVars))
   {
@@ -222,14 +229,12 @@ void attachPropAnalyser::analyseBlock(blockStatement *blockStmt)
     }
   }
 
-  //cout<<numStmts<<' '<<nodePropList.size()<<' '<<nodeAttachList.size()<<endl;
-
   unordered_map<string, list<statementRange>> uMap;
   for (statementPos stPos : nodeAttachList)
   {
     pair<int, int> validRange = getRange((proc_callStmt*) stPos.stmt, stPos.pos, newStatements);
 
-    cout<<"Statement Range "<<validRange.first<<' '<<validRange.second<<endl;
+    //cout<<"Statement Range "<<validRange.first<<' '<<validRange.second<<endl;
 
     proc_callExpr *callExpr = ((proc_callStmt *)stPos.stmt)->getProcCallExpr();
     Identifier *graphIden = callExpr->getId1();
@@ -264,12 +269,8 @@ void attachPropAnalyser::analyseBlock(blockStatement *blockStmt)
     }
   }
   
-  //cout<<newAttachNodeStmt.size()<<' '<<newStatements.size()<<endl;
-
   newAttachNodeStmt.sort();
-  for(list<statementPos>::reverse_iterator itr = newAttachNodeStmt.rbegin(); itr != newAttachNodeStmt.rend(); itr++)
-  {
-    //cout<<itr->pos<<endl;
+  for(list<statementPos>::reverse_iterator itr = newAttachNodeStmt.rbegin(); itr != newAttachNodeStmt.rend(); itr++) {
     newStatements.insert(newStatements.begin() + itr->pos, itr->stmt);
   }
 
@@ -336,8 +337,7 @@ void attachPropAnalyser::analyseFunc(ASTNode *proc)
 void attachPropAnalyser::analyse()
 {
   list<Function *> funcList = frontEndContext.getFuncList();
-  for (Function *func : funcList)
-  {
+  for (Function *func : funcList){
     analyseFunc(func);
   }
 }

@@ -322,6 +322,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
        }
        case NODE_PROCCALLSTMT:
        {
+           //cout<<"Procedure Call statment"<<endl;
            proc_callStmt* proc_call=(proc_callStmt*)stmt;
            proc_callExpr* pExpr=proc_call->getProcCallExpr();
            checkForExpressions(pExpr);
@@ -549,8 +550,7 @@ bool SymbolTableBuilder::checkForArguments(list<argument*> argList)
  }
 
 void SymbolTableBuilder::buildST(list<Function*> funcList)
-{  
-   
+{     
     list<Function*>::iterator itr;
     for(itr=funcList.begin();itr!=funcList.end();itr++)
        buildForProc((*itr));
