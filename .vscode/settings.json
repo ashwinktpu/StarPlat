@@ -22,6 +22,7 @@
         "list": "cpp",
         "xstring": "cpp",
         "xlocale": "cpp",
-        "xlocnum": "cpp"
+        "xlocnum": "cpp",
+        "utility": "cpp"
     }
 }
