@@ -426,7 +426,8 @@ bool SymbolTableBuilder::checkForArguments(list<argument*> argList)
                findSymbolId(assign->getId());
              else
                findSymbolPropId(assign->getPropId());
-               
+            
+            checkForExpressions(assign->getExpr());
          }
          if(arg->isExpr())
          {
