@@ -10,9 +10,11 @@ class dataRaceAnalyser
   }
 
   void analyse();
-  void analyseFunc(ASTNode* proc);
-  void analyseStatement(statement* stmt);
-  void analyseForAll(forallStmt* stmt);
+  void analyseFunc(ASTNode* );
+  void analyseStatement(statement* );
+  ASTNode* forAllAnalysis(forallStmt* );
+  ASTNode* ngbrForAnalysis(forallStmt*, Identifier*, Identifier*);
+  ASTNode* relPropUpdateAnalysis(ifStmt*, Identifier*);
 };
 
 #endif

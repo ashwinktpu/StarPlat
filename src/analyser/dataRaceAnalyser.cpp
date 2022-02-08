@@ -82,7 +82,7 @@ class relPropUpdateStruct: public neighbourLoop
     list<statement*> otherStmts;
 };*/
 
-ASTNode *relPropUpdateAnalysis(ifStmt *stmt, Identifier *forIterator)
+ASTNode* dataRaceAnalyser::relPropUpdateAnalysis(ifStmt *stmt, Identifier *forIterator)
 {
     Expression *cond = stmt->getCondition();
     if ((currStmt->getElseBody() == nullptr) && cond->isRelational())
@@ -111,13 +111,12 @@ ASTNode *relPropUpdateAnalysis(ifStmt *stmt, Identifier *forIterator)
             if (propExpr != nullptr)
             {
                 blockStatement *ifBody = (blockStatement *)stmt->getIfBody();
-                statement *reqStmt = nullptr;
 
                 list<ASTNode *> leftList;
-                reductionCall *reductionCallNode;
+                reductionCall *reductionCallNode = nullptr;
                 list<ASTNode *> rightList;
 
-                leftList.push_back(propExpr);
+                leftList.push_back(propExpr->getPropId());
 
                 argument *a1 = new argument();
                 a1->setExpression(propExpr);
@@ -127,7 +126,9 @@ ASTNode *relPropUpdateAnalysis(ifStmt *stmt, Identifier *forIterator)
                 a2->setExpression(otherExpr);
                 a2->setExpressionFlag();
 
-                
+                list<argument *> argList;
+                argList.push_back(a1);
+                argList.push_back(a2);
 
                 for (statement *stmt : ifBody->returnStatements())
                 {
@@ -139,29 +140,50 @@ ASTNode *relPropUpdateAnalysis(ifStmt *stmt, Identifier *forIterator)
                             PropAccess *propId = assgn->getPropId();
                             PropAccess *ifPropId = propExpr->getPropId();
 
-                            if (checkIdEqual(ifPropId->getIdentifier1(), propId->getIdentifier1()) && checkIdEqual(ifPropId->getIdentifier2(), propId->getIdentifier2()))
+                            if (checkPropIdEqual(ifPropId, propId))
                             {
-                                if ((reqStmt == nullptr) && checkExprEqual(otherExpr, assgn->getExpr()))
+                                if ((reductionCallNode == nullptr) && checkExprEqual(otherExpr, assgn->getExpr()))
                                 {
-                                    reqStmt = stmt;
-                                    cntValid++;
+                                    if(opType == OPERATOR_GT)
+                                        reductionCallNode = Util::createNodeforReductionCall(REDUCE_MIN, argList);
+                                    else
+                                        reductionCallNode = Util::createNodeforReductionCall(REDUCE_MAX, argList);
                                 }
                             }
                             else if (assgn->getExpr()->isLiteral())
-                                cntValid++;
+                            {
+                                leftList.push_back(assgn->getPropId());
+                                rightList.push_back(assgn->getExpr());
+                            }
                         }
                         else if (assgn->getExpr()->isLiteral())
-                            cntValid++;
+                        {
+                            leftList.push_back(assgn->getId());
+                            rightList.push_back(assgn->getExpr());
+                        }
                     }
                 }
 
-                if (cntValid == (ifBody->returnStatements()).size())
-                    return RELATIONAL_PROP_UPDATE;
+                if (leftList.size() == (ifBody->returnStatements()).size())
+                {
+                    if(rightList.size() == 0)
+                    {
+                        reductionCallStmt* reductionCall = Util::createNodeForReductionStmt(propExpr->getPropId(), reductionCallNode);
+                        return reductionCall;
+                    }
+                    else
+                    {
+                        reductionCallStmt *reductionCall = Util::createNodeForReductionStmtList(leftList, reductionCallNode, rightList);
+                        return reductionCall;
+                    }
+                }
             }
         }
+    
+    return stmt;
 }
 
-ASTNode *ngbrForAnalysis(forallStmt *stmt, Identifier *forAllIterator, Identifier *srcGraph)
+ASTNode* dataRaceAnalyser::ngbrForAnalysis(forallStmt *stmt, Identifier *forAllIterator, Identifier *srcGraph)
 {
     proc_callExpr *procCall = stmt->getExtractElementFunc();
 
@@ -195,7 +217,7 @@ ASTNode *ngbrForAnalysis(forallStmt *stmt, Identifier *forAllIterator, Identifie
     return nullptr;
 }
 
-ASTNode *forAllAnalysis(forallStmt *stmt)
+ASTNode* dataRaceAnalyser::forAllAnalysis(forallStmt *stmt)
 {
     proc_callExpr *procCall = stmt->getExtractElementFunc();
     if (stmt->isForall() && checkIdNameEqual(procCall->getMethodId(), "node"))
@@ -219,6 +241,7 @@ ASTNode *forAllAnalysis(forallStmt *stmt)
     return nullptr;
 }
 
+/*
 void dataRaceAnalyser::analyseForAll(forallStmt *stmt)
 {
     Identifier *itr = stmt->getIterator();
@@ -293,6 +316,7 @@ void dataRaceAnalyser::analyseForAll(forallStmt *stmt)
         }
     }
 }
+*/
 
 void dataRaceAnalyser::analyseStatement(statement *stmt)
 {
@@ -342,7 +366,7 @@ void dataRaceAnalyser::analyseStatement(statement *stmt)
     {
         forallStmt *currStmt = (forallStmt *)stmt;
         if (currStmt->isForall())
-            analyseForAll(currStmt);
+            forAllAnalysis(currStmt);
         else
             analyseStatement(currStmt->getBody());
     }
