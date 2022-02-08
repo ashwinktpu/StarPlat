@@ -1,7 +1,7 @@
 #include "dataRaceAnalyser.h"
 #include "../ast/ASTHelper.cpp"
 
-enum codeStructure
+enum STRUCTURE_TYPE
 {
     INVALID_STUCTURE,
     MIN_PROP_UPDATE,
@@ -13,26 +13,121 @@ bool checkIdEqual(Identifier *id1, Identifier *id2)
     return (strcmp(id1->getIdentifier(), id2->getIdentifier()) == 0);
 }
 
+bool checkPropIdEqual(PropAccess* prop1, PropAccess* prop2)
+{
+    return checkIdEqual(prop1->getIdentifier1(), prop2->getIdentifier1())
+            && checkIdEqual(prop2->getIdentifier2(), prop2->getIdentifier2());
+}
+
+bool checkIdNameEqual(Identifier *id1, char *c)
+{
+    return (strcmp(id1->getIdentifier(), c) == 0);
+}
+
 bool checkExprEqual(Expression *expr1, Expression *expr2)
 {
     //to check whether two expressions are equal
     return true;
 }
 
-int getStructure(statement *stmt, Identifier *itr1, Identifier *itr2)
+/*
+class structure
 {
-    if (stmt->getTypeofNode() == NODE_IFSTMT)
+    public:
+    STRUCTURE_TYPE type;
+    structure(STRUCTURE_TYPE type){
+        this->type = type;
+    }
+};
+
+class forAllStruct : structure
+{
+    public:
+    forallStmt* forAllStmt;
+    Identifier* iterator;
+
+    forAllStruct(forallStmt* stmt)
     {
-        ifStmt *currStmt = (ifStmt *)stmt;
-        Expression *cond = currStmt->getCondition();
-        if ((currStmt->getElseBody() == nullptr) && cond->isRelational() && (cond->getOperatorType() == OPERATOR_GT))
+        this->forAllStmt = stmt;
+        this->iterator = stmt->getIterator();
+    }
+
+    forAllStruct(forAllStruct* struct1)
+    {
+        this->forAllStmt = struct1->forAllStmt;
+        this->iterator = struct1->iterator;
+        this->type = struct1->type;
+    }
+};
+
+class ngbrLoopStruct: public forAllStruct
+{
+    public:
+    forallStmt* forStmt;
+    Identifier* iterator;
+
+    ngbrLoopStruct(forallStmt* stmt, forAllStruct* parStruct){
+
+    }
+};
+
+class relPropUpdateStruct: public neighbourLoop
+{
+    public:
+    ifStmt* stmt;
+    PropAccess* propertyAcess;
+    Expression* compareExpr;
+    OPERATOR type;
+    
+    list<statement*> otherStmts;
+};*/
+
+ASTNode *relPropUpdateAnalysis(ifStmt *stmt, Identifier *forIterator)
+{
+    Expression *cond = stmt->getCondition();
+    if ((currStmt->getElseBody() == nullptr) && cond->isRelational())
+        if ((cond->getOperatorType() == OPERATOR_GT) || (cond->getOperatorType() == OPERATOR_LT))
         {
-            Expression *lExpr = cond->getLeft();
-            if (lExpr->isPropIdExpr() && checkIdEqual(lExpr->getPropId()->getIdentifier1(), id2))
+            Expression *propExpr = nullptr;
+            Expression *otherExpr = nullptr;
+            OPERATOR opType = cond->getOperatorType();
+
+            Expression *lExpr = propExpr->getLeft(), *rExpr = propExpr->getRight();
+
+            if (lExpr->isPropIdExpr() && checkIdEqual(lExpr->getPropId()->getIdentifier1(), forIterator))
             {
-                blockStatement *ifBody = (blockStatement *)currStmt->getIfBody();
+                propExpr = lExpr;
+                otherExpr = rExpr;
+            }
+            else if (rExpr->isPropIdExpr() && checkIdEqual(rExpr->getPropId()->getIdentifier1(), forIterator))
+            {
+                propExpr = rExpr;
+                otherExpr = lExpr;
+
+                if(opType == OPERATOR_LT) opType = OPERATOR_GT;
+                else opType = OPERATOR_LT;
+            }
+
+            if (propExpr != nullptr)
+            {
+                blockStatement *ifBody = (blockStatement *)stmt->getIfBody();
                 statement *reqStmt = nullptr;
-                int cntValid = 0;
+
+                list<ASTNode *> leftList;
+                reductionCall *reductionCallNode;
+                list<ASTNode *> rightList;
+
+                leftList.push_back(propExpr);
+
+                argument *a1 = new argument();
+                a1->setExpression(propExpr);
+                a1->setExpressionFlag();
+
+                argument *a2 = new argument();
+                a2->setExpression(otherExpr);
+                a2->setExpressionFlag();
+
+                
 
                 for (statement *stmt : ifBody->returnStatements())
                 {
@@ -42,11 +137,11 @@ int getStructure(statement *stmt, Identifier *itr1, Identifier *itr2)
                         if (assgn->lhs_isProp())
                         {
                             PropAccess *propId = assgn->getPropId();
-                            PropAccess *ifPropId = lExpr->getPropId();
+                            PropAccess *ifPropId = propExpr->getPropId();
 
                             if (checkIdEqual(ifPropId->getIdentifier1(), propId->getIdentifier1()) && checkIdEqual(ifPropId->getIdentifier2(), propId->getIdentifier2()))
                             {
-                                if ((reqStmt == nullptr) && checkExprEqual(cond->getRight(), assgn->getExpr()))
+                                if ((reqStmt == nullptr) && checkExprEqual(otherExpr, assgn->getExpr()))
                                 {
                                     reqStmt = stmt;
                                     cntValid++;
@@ -55,15 +150,73 @@ int getStructure(statement *stmt, Identifier *itr1, Identifier *itr2)
                             else if (assgn->getExpr()->isLiteral())
                                 cntValid++;
                         }
+                        else if (assgn->getExpr()->isLiteral())
+                            cntValid++;
                     }
                 }
 
                 if (cntValid == (ifBody->returnStatements()).size())
-                    return MIN_PROP_UPDATE;
+                    return RELATIONAL_PROP_UPDATE;
+            }
+        }
+}
+
+ASTNode *ngbrForAnalysis(forallStmt *stmt, Identifier *forAllIterator, Identifier *srcGraph)
+{
+    proc_callExpr *procCall = stmt->getExtractElementFunc();
+
+    if (stmt->isSourceProcCall() && (procCall->getArgList().size() == 1) && checkIdEqual(srcGraph, stmt->getSourceGraph()) && checkIdNameEqual(procCall->getMethodId(), "neighbors"))
+    {
+        Identifier *ngbrItr = stmt->getIterator();
+        argument *firstArg = *(procCall1->getArgList().begin());
+        Expression *argVal = firstArg->getExpr();
+
+        if (argVal->isIdentifierExpr() && checkIdEqual(argVal->getId(), forAllIterator))
+        {
+            statement *body = stmt->getBody();
+            if (body->getTypeofNode() == NODE_BLOCKSTMT)
+            {
+                blockStatement *body = (blockStatement *)body;
+                for (statement *stmt : body->returnStatements())
+                {
+                    if (stmt->getTypeofNode() == NODE_IFSTMT)
+                    {
+                        ASTNode *newStmt = relPropUpdateAnalysis((ifStmt *)stmt, Identifier * ngbrItr);
+                    }
+                }
+            }
+            else if (body->getTypeofNode() == NODE_IFSTMT)
+            {
+                ASTNode *newStmt = relPropUpdateAnalysis((ifStmt *)stmt, Identifier * ngbrItr);
+                stmt->setBody(newStmt);
             }
         }
     }
-    return INVALID_STUCTURE;
+    return nullptr;
+}
+
+ASTNode *forAllAnalysis(forallStmt *stmt)
+{
+    proc_callExpr *procCall = stmt->getExtractElementFunc();
+    if (stmt->isForall() && checkIdNameEqual(procCall->getMethodId(), "node"))
+    {
+        Identifier *itr = stmt->getIterator();
+        Identifier *sourceGraph = stmt->getSourceGraph();
+
+        statement *body = stmt->getBody();
+        if (body->getTypeofNode() == NODE_BLOCKSTMT)
+        {
+            blockStatement *body = (blockStatement *)body;
+            for (statement *stmt : body->returnStatements())
+            {
+                if (stmt->getTypeofNode() == NODE_FORALLSTMT)
+                    ngbrForAnalysis((forallStmt * stmt), itr, sourceGraph);
+            }
+        }
+        else if (body->getTypeofNode() == NODE_FORALLSTMT)
+            ngbrForAnalysis((forallStmt * stmt), itr, sourceGraph);
+    }
+    return nullptr;
 }
 
 void dataRaceAnalyser::analyseForAll(forallStmt *stmt)
@@ -72,13 +225,12 @@ void dataRaceAnalyser::analyseForAll(forallStmt *stmt)
     Identifier *srcGraph = stmt->getSourceGraph();
     proc_callExpr *procCall = stmt->getExtractElementFunc();
 
-    if (strcmp(procCall->getMethodId()->getIdentifier(), "nodes") == 0)
+    if (checkIdEqual(procCall->getMethodId(), "nodes"))
     {
         blockStatement *body = (blockStatement *)stmt->getBody();
         for (statement *cstmt : body->returnStatements())
         {
-            if ((cstmt->getTypeofNode() == NODE_FORALLSTMT) &&
-                !((forallStmt *)cstmt)->isForall())
+            if (cstmt->getTypeofNode() == NODE_FORALLSTMT)
             {
                 forallStmt *forStmt = (forallStmt *)cstmt;
 
@@ -86,7 +238,7 @@ void dataRaceAnalyser::analyseForAll(forallStmt *stmt)
                 Identifier *srcGraph1 = forStmt->getSourceGraph();
                 proc_callExpr *procCall1 = forStmt->getExtractElementFunc();
 
-                if (checkIdEqual(srcGraph, srcGraph1) && (strcmp(procCall1->getMethodId()->getIdentifier(), "neighbors") == 0))
+                if (checkIdEqual(srcGraph, srcGraph1) && checkIdEqual(procCall1->getMethodId(), "neighbors"))
                 {
                     argument *firstArg = *(procCall1->getArgList().begin());
                     Expression *argVal = firstArg->getExpr();
@@ -102,9 +254,7 @@ void dataRaceAnalyser::analyseForAll(forallStmt *stmt)
                                 ifStmt *currStmt = (ifStmt *)istmt;
                                 Expression *cond = currStmt->getCondition();
 
-                                list<ASTNode *> leftList;
-                                reductionCall *reductionCallNode;
-                                list<ASTNode *> rightList;
+                                
 
                                 leftList.push_back(cond->getLeft()->getPropId());
 
@@ -122,19 +272,19 @@ void dataRaceAnalyser::analyseForAll(forallStmt *stmt)
 
                                 reductionCallNode = Util::createNodeforReductionCall(REDUCE_MIN, argList);
 
-                                for(statement* ifBodyStmt: currStmt->getIfBody())
+                                for (statement *ifBodyStmt : currStmt->getIfBody())
                                 {
                                     assignment *assgn = (assignment *)stmt;
                                     PropAccess *propId = assgn->getPropId();
 
-                                    if(assgn->getExpr()->isLiteral())
+                                    if (assgn->getExpr()->isLiteral())
                                     {
                                         leftList.push_back(propId);
                                         rightList.push_back(assgn->getExpr());
                                     }
                                 }
-                            
-                                reductionCallStmt* modifiedStmt = Util::createNodeForReductionStmtList(leftList, reductionCallNode, rightList);
+
+                                reductionCallStmt *modifiedStmt = Util::createNodeForReductionStmtList(leftList, reductionCallNode, rightList);
                             }
                         }
                     }
@@ -211,7 +361,5 @@ void dataRaceAnalyser::analyse()
 {
     list<Function *> funcList = frontEndContext.getFuncList();
     for (Function *func : funcList)
-    {
         analyseFunc(func);
-    }
 }
