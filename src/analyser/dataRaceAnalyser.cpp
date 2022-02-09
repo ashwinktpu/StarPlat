@@ -1,12 +1,13 @@
 #include "dataRaceAnalyser.h"
 #include "../ast/ASTHelper.cpp"
 
+/*
 enum STRUCTURE_TYPE
 {
     INVALID_STUCTURE,
     MIN_PROP_UPDATE,
     PROP_UPDATE
-};
+};*/
 
 bool checkIdEqual(Identifier *id1, Identifier *id2)
 {
@@ -30,8 +31,45 @@ bool checkExprEqual(Expression *expr1, Expression *expr2)
     {
         switch (expr1->getTypeofExpr())
         {
-        case /* constant-expression */:
-            /* code */
+        case EXPR_RELATIONAL:        
+        case EXPR_LOGICAL:
+        case EXPR_ARITHMETIC:
+            if(expr1->getOperatorType() == expr2->getOperatorType())
+                return (checkExprEqual(expr1->getLeft(), expr2->getLeft())
+                        && checkExprEqual(expr1->getRight(), expr2->getRight()));
+            break;
+
+        case EXPR_UNARY:
+            if(expr1->getOperatorType() == expr2->getOperatorType())
+                return checkExprEqual(expr1->getUnaryExpr(), expr2->getUnaryExpr());
+            break;
+            
+        case EXPR_ID:
+            return checkIdEqual(expr1->getId(), expr2->getId());
+            break;
+
+        case EXPR_PROPID:
+            return checkPropIdEqual(expr1->getPropId(), expr2->getPropId());
+            break;
+
+        case EXPR_PROCCALL:
+            /* To be written */
+            break;
+
+        case EXPR_BOOLCONSTANT:
+            return (expr1->getBooleanConstant() == expr2->getBooleanConstant());
+            break;
+        
+        case EXPR_INTCONSTANT:
+            return (expr1->getIntegerConstant() == expr2->getIntegerConstant());
+            break;
+        
+        case EXPR_FLOATCONSTANT:
+            return (expr1->getFloatConstant() == expr2->getFloatConstant());
+            break;
+        
+        case EXPR_INFINITY:
+            return (expr1->isPositiveInfinity() == expr2->isPositiveInfinity());
             break;
         
         default:
