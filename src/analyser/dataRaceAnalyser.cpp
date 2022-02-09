@@ -26,8 +26,19 @@ bool checkIdNameEqual(Identifier *id1, char *c)
 
 bool checkExprEqual(Expression *expr1, Expression *expr2)
 {
-    //to check whether two expressions are equal
-    return true;
+    if(expr1->getTypeofExpr() == expr2->getTypeofExpr())
+    {
+        switch (expr1->getTypeofExpr())
+        {
+        case /* constant-expression */:
+            /* code */
+            break;
+        
+        default:
+            break;
+        }
+    }
+    return false;
 }
 
 /*
