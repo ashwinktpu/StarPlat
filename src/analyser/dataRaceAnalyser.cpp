@@ -1,4 +1,5 @@
 #include "dataRaceAnalyser.h"
+#include "analyserUtil.h"
 #include "../ast/ASTHelper.cpp"
 
 /*
@@ -266,6 +267,70 @@ ASTNode* dataRaceAnalyser::ngbrForAnalysis(forallStmt *stmt, Identifier *forAllI
     return nullptr;
 }
 
+ASTNode* dataRaceAnalyser::ngbrAssignAnalysis(assignment *stmt, Identifier *forAllIterator, Identifier *srcGraph)
+{
+    if (stmt->lhs_isIdentifier())
+    {
+        Identifier *lhsId = stmt->getId();
+        Expression *rhsExpr = stmt->getExpr();
+        if (rhsExpr->isArithmetic() || rhsExpr->isLogical())
+        {
+            Expression *leftSide = rhsExpr->getLeft();
+            Expression *rightSide = rhsExpr->getRight();
+            if (leftSide->isIdentifierExpr() && checkIdEqual(leftSide->getId(), lhsId))
+            {
+                usedVariables rightSideVars = getVarsExpr(rightSide);
+                if (!rightSideVars.isUsed(lhsId))
+                {
+                    // modify the statement
+                    switch(rhsExpr->getOperatorType())
+                    {
+                        case OPERATOR_PLUS:
+                            reductionCallStmt *reductionCall = Util::createNodeForReductionStmt(lhsId, OPERATOR_ADDASSIGN, rightSide);
+                            return reductionCall;
+                        case OPERATOR_MINUS:
+                            reductionCallStmt *reductionCall = Util::createNodeForReductionStmt(lhsId, OPERATOR_SUBASSIGN, rightSide);
+                            return reductionCall;
+                        case OPERATOR_MULTIPLY:
+                            reductionCallStmt *reductionCall = Util::createNodeForReductionStmt(lhsId, OPERATOR_MULASSIGN, rightSide);
+                            return reductionCall;
+                        case OPERATOR_AND:
+                            reductionCallStmt *reductionCall = Util::createNodeForReductionStmt(lhsId, OPERATOR_ANDASSIGN, rightSide);
+                            return reductionCall;
+                        case OPERATOR_OR:
+                            reductionCallStmt *reductionCall = Util::createNodeForReductionStmt(lhsId, OPERATOR_ORASSIGN, rightSide);
+                            return reductionCall;
+                    }
+                }
+            }
+            else if (rightSide->isIdentifierExpr() && checkIdEqual(rightSide->getId(), lhsId))
+            {
+                usedVariables leftSideVars = getVarsExpr(leftSide);
+                if (!leftSideVars.isUsed(lhsId))
+                {
+                    // modify the statement
+                    switch(rhsExpr->getOperatorType())
+                    {
+                        case OPERATOR_PLUS:
+                            reductionCallStmt *reductionCall = Util::createNodeForReductionStmt(lhsId, OPERATOR_ADDASSIGN, leftSide);
+                            return reductionCall;
+                        case OPERATOR_MULTIPLY:
+                            reductionCallStmt *reductionCall = Util::createNodeForReductionStmt(lhsId, OPERATOR_MULASSIGN, leftSide);
+                            return reductionCall;
+                        case OPERATOR_AND:
+                            reductionCallStmt *reductionCall = Util::createNodeForReductionStmt(lhsId, OPERATOR_ANDASSIGN, leftSide);
+                            return reductionCall;
+                        case OPERATOR_OR:
+                            reductionCallStmt *reductionCall = Util::createNodeForReductionStmt(lhsId, OPERATOR_ORASSIGN, leftSide);
+                            return reductionCall;
+                    }
+                }
+            }
+        }
+    }
+    return stmt;
+}
+
 ASTNode* dataRaceAnalyser::forAllAnalysis(forallStmt *stmt)
 {
     proc_callExpr *procCall = stmt->getExtractElementFunc();
@@ -285,7 +350,12 @@ ASTNode* dataRaceAnalyser::forAllAnalysis(forallStmt *stmt)
             }
         }
         else if (body->getTypeofNode() == NODE_FORALLSTMT)
-            ngbrForAnalysis((forallStmt * stmt), itr, sourceGraph);
+            ngbrForAnalysis((forallStmt *)body, itr, sourceGraph);
+        else if (body->getTypeofNode() == NODE_ASSIGN)
+        {
+            ASTNode *newStmt = ngbrAssignAnalysis((assignment *)body, itr, sourceGraph);
+            stmt->setBody(newStmt);
+        }
     }
     return nullptr;
 }
