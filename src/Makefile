@@ -1,9 +1,11 @@
-EXPENDABLES = bin\MainContext.o bin\ASTHelper.o bin\SymbolTableBuilder.o bin\SymbolTableNew.o bin\y.tab.o bin\lex.yy.o parser\y.tab.c parser\lex.yy.c bin\dsl_cpp_generator.o bin\attachPropAnalyser.o
+EXPENDABLES_WINDOWS = bin\MainContext.o bin\ASTHelper.o bin\SymbolTableBuilder.o bin\SymbolTableNew.o bin\y.tab.o bin\lex.yy.o parser\y.tab.c parser\lex.yy.c bin\dsl_cpp_generator.o bin\attachPropAnalyser.o
+EXPENDABLES = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c bin/dsl_cpp_generator.o bin/attachPropAnalyser.o
 ANALYSER = bin\attachPropAnalyser.o
 
 CC = g++  
 
 all: finalcode clean
+windows: finalcode clean_windows
 
 finalcode: bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o bin/attachPropAnalyser.o
 	$(CC) bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o bin/attachPropAnalyser.o -o finalcode
@@ -41,4 +43,7 @@ bin/lex.yy.o:
 	$(MAKE) -C parser
 
 clean: 
-	del $(EXPENDABLES)
+	rm $(EXPENDABLES)
+
+clean_windows:
+	del $(EXPENDABLES_WINDOWS)

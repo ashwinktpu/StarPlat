@@ -11,7 +11,7 @@ void count_nodes(graph& g)
   #pragma omp parallel for
   for (int t = 0; t < g.num_nodes(); t ++) 
   {
-    prop[t] = (x && z);
+    prop[t] = (x || z);
   }
 
 }

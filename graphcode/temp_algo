@@ -8,5 +8,5 @@ function count_nodes(Graph g)
     y = x+10;
     z = x;
 
-    g.attachNodeProperty(prop = (x&&z));
+    g.attachNodeProperty(prop = (x || z));
 }
