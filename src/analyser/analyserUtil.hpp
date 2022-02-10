@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include "../symbolutil/SymbolTable.h"
 
+typedef pair<TableEntry*, TableEntry*> propKey
+
 enum variable_type
 {
     READ = 1,
@@ -52,6 +54,7 @@ class usedVariables
 {
 private:
     unordered_map<TableEntry*, Identifier*> readVars, writeVars;
+    unordered_map<propKey, PropAccess*> readProp, writeProp;
 
 public:
     void addVariable(Identifier *iden, int type)
@@ -62,6 +65,18 @@ public:
             writeVars.insert({iden->getSymbolInfo(), iden});
     }
 
+    void addPropAccess(PropAccess *prop, int type)
+    {
+        Identifier* iden1 = prop->getIdentifier1();
+        Identifier* iden2 = prop->getIdentifier2();
+        propKey prop_key = make_pair(iden1->getSymbolInfo(), iden2->getSymbolInfo());
+
+        if (type & 1)
+            readProp.insert({prop_key, prop});
+        if (type & 2)
+            writeProp.insert({prop_key, prop});
+    }
+
     void merge(usedVariables usedVars1)
     {
         for (pair<TableEntry*, Identifier*> iden: usedVars1.readVars)
@@ -69,6 +84,12 @@ public:
 
         for (pair<TableEntry*, Identifier*> iden : usedVars1.writeVars)
             this->writeVars.insert({iden.first, iden.second});
+
+        for (pair<propKey, Identifier*> iden: usedVars1.readProp)
+            this->readProp.insert({iden.first, iden.second});
+
+        for (pair<propKey, Identifier*> iden : usedVars1.writeProp)
+            this->writeProp.insert({iden.first, iden.second});
     }
 
     void removeVariable(Identifier *iden, int type)
