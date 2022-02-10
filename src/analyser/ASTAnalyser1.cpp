@@ -1,6 +1,7 @@
 #include "ASTAnalyser1.h"
 #include <string.h>
 
+/*
 usedVariables ASTAnalyser1::getVarsExpr(Expression* expr)
 {
   usedVariables result;
@@ -25,7 +26,7 @@ usedVariables ASTAnalyser1::getVarsExpr(Expression* expr)
     result.merge(getVarsExpr(expr->getRight()));
   }
   return result;
-}
+}*/
 
 usedVariables ASTAnalyser1::getVarsWhile(whileStmt* stmt)
 {
