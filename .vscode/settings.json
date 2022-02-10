@@ -23,6 +23,7 @@
         "xstring": "cpp",
         "xlocale": "cpp",
         "xlocnum": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "unordered_set": "cpp"
     }
 }
