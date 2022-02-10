@@ -119,6 +119,14 @@ public:
 
         return result;
     }
+
+    bool hasReadVariables(){
+        return (readVars.size() > 0);
+    }
+
+    bool hasWriteVariables(){
+        return (writeVars.size() > 0);
+    }
 };
 
 usedVariables getVarsExpr(Expression *expr)

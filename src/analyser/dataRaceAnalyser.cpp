@@ -2,16 +2,10 @@
 #include "analyserUtil.h"
 #include "../ast/ASTHelper.cpp"
 
-/*
-enum STRUCTURE_TYPE
-{
-    INVALID_STUCTURE,
-    MIN_PROP_UPDATE,
-    PROP_UPDATE
-};*/
 
 bool checkIdEqual(Identifier *id1, Identifier *id2)
 {
+    // TODO : Update with checking TableEntry*
     return (strcmp(id1->getIdentifier(), id2->getIdentifier()) == 0);
 }
 
@@ -41,7 +35,8 @@ bool checkExprEqual(Expression *expr1, Expression *expr2)
             break;
 
         case EXPR_UNARY:
-            if(expr1->getOperatorType() == expr2->getOperatorType())
+            if((expr1->getOperatorType() == expr2->getOperatorType())
+                && (expr1->getOperatorType() == OPERATOR_NOT))
                 return checkExprEqual(expr1->getUnaryExpr(), expr2->getUnaryExpr());
             break;
             
@@ -54,7 +49,7 @@ bool checkExprEqual(Expression *expr1, Expression *expr2)
             break;
 
         case EXPR_PROCCALL:
-            /* To be written */
+            // TODO: Add procedure call check here
             break;
 
         case EXPR_BOOLCONSTANT:
@@ -254,6 +249,7 @@ ASTNode* dataRaceAnalyser::ngbrForAnalysis(forallStmt *stmt, Identifier *forAllI
                     if (stmt->getTypeofNode() == NODE_IFSTMT)
                     {
                         ASTNode *newStmt = relPropUpdateAnalysis((ifStmt *)stmt, Identifier * ngbrItr);
+                        // TODO : Replace the current statment with new statement
                     }
                 }
             }
@@ -267,7 +263,7 @@ ASTNode* dataRaceAnalyser::ngbrForAnalysis(forallStmt *stmt, Identifier *forAllI
     return nullptr;
 }
 
-ASTNode* dataRaceAnalyser::ngbrAssignAnalysis(assignment *stmt, Identifier *forAllIterator, Identifier *srcGraph)
+ASTNode* dataRaceAnalyser::ngbrAssignAnalysis(assignment *stmt)
 {
     if (stmt->lhs_isIdentifier())
     {
@@ -280,9 +276,8 @@ ASTNode* dataRaceAnalyser::ngbrAssignAnalysis(assignment *stmt, Identifier *forA
             if (leftSide->isIdentifierExpr() && checkIdEqual(leftSide->getId(), lhsId))
             {
                 usedVariables rightSideVars = getVarsExpr(rightSide);
-                if (!rightSideVars.isUsed(lhsId))
+                if (!rightSideVars.isUsed(lhsId) && !rightSideVars.hasWriteVariables())
                 {
-                    // modify the statement
                     switch(rhsExpr->getOperatorType())
                     {
                         case OPERATOR_PLUS:
@@ -306,9 +301,8 @@ ASTNode* dataRaceAnalyser::ngbrAssignAnalysis(assignment *stmt, Identifier *forA
             else if (rightSide->isIdentifierExpr() && checkIdEqual(rightSide->getId(), lhsId))
             {
                 usedVariables leftSideVars = getVarsExpr(leftSide);
-                if (!leftSideVars.isUsed(lhsId))
+                if (!leftSideVars.isUsed(lhsId) && !leftSideVars.hasWriteVariables())
                 {
-                    // modify the statement
                     switch(rhsExpr->getOperatorType())
                     {
                         case OPERATOR_PLUS:
@@ -359,83 +353,6 @@ ASTNode* dataRaceAnalyser::forAllAnalysis(forallStmt *stmt)
     }
     return nullptr;
 }
-
-/*
-void dataRaceAnalyser::analyseForAll(forallStmt *stmt)
-{
-    Identifier *itr = stmt->getIterator();
-    Identifier *srcGraph = stmt->getSourceGraph();
-    proc_callExpr *procCall = stmt->getExtractElementFunc();
-
-    if (checkIdEqual(procCall->getMethodId(), "nodes"))
-    {
-        blockStatement *body = (blockStatement *)stmt->getBody();
-        for (statement *cstmt : body->returnStatements())
-        {
-            if (cstmt->getTypeofNode() == NODE_FORALLSTMT)
-            {
-                forallStmt *forStmt = (forallStmt *)cstmt;
-
-                Identifier *itr1 = forStmt->getIterator();
-                Identifier *srcGraph1 = forStmt->getSourceGraph();
-                proc_callExpr *procCall1 = forStmt->getExtractElementFunc();
-
-                if (checkIdEqual(srcGraph, srcGraph1) && checkIdEqual(procCall1->getMethodId(), "neighbors"))
-                {
-                    argument *firstArg = *(procCall1->getArgList().begin());
-                    Expression *argVal = firstArg->getExpr();
-
-                    if (argVal->isIdentifierExpr() &&
-                        checkIdEqual(argVal->getId(), itr))
-                    {
-                        blockStatement *forBody = (blockStatement *)forStmt->getBody();
-                        for (statement *istmt : forBody->returnStatements())
-                        {
-                            if (getStructure(istmt, itr, itr1) == MIN_PROP_UPDATE)
-                            {
-                                ifStmt *currStmt = (ifStmt *)istmt;
-                                Expression *cond = currStmt->getCondition();
-
-                                
-
-                                leftList.push_back(cond->getLeft()->getPropId());
-
-                                argument *a1 = new argument();
-                                a1->setExpression(cond->getLeft());
-                                a1->setExpressionFlag();
-
-                                argument *a2 = new argument();
-                                a2->setExpression(cond->getRight());
-                                a2->setExpressionFlag();
-
-                                list<argument *> argList;
-                                argList.push_back(a1);
-                                argList.push_back(a2);
-
-                                reductionCallNode = Util::createNodeforReductionCall(REDUCE_MIN, argList);
-
-                                for (statement *ifBodyStmt : currStmt->getIfBody())
-                                {
-                                    assignment *assgn = (assignment *)stmt;
-                                    PropAccess *propId = assgn->getPropId();
-
-                                    if (assgn->getExpr()->isLiteral())
-                                    {
-                                        leftList.push_back(propId);
-                                        rightList.push_back(assgn->getExpr());
-                                    }
-                                }
-
-                                reductionCallStmt *modifiedStmt = Util::createNodeForReductionStmtList(leftList, reductionCallNode, rightList);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-*/
 
 void dataRaceAnalyser::analyseStatement(statement *stmt)
 {
