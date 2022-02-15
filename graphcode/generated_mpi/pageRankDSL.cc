@@ -9,38 +9,71 @@ void Compute_PR(graph g,float beta,float delta,int maxIter,
   mpi::communicator world;
   my_rank = world.rank();
   np = world.size();
-
-  gettimeofday(&start1, NULL);
-  g.parseGraph();
-  gettimeofday(&end1, NULL);
-  seconds = (end1.tv_sec - start1.tv_sec);
-  micros = ((seconds * 1000000) + end1.tv_usec) - (start1.tv_usec);
+  int max_degree,num_nodes;
+  int *index,*rev_index, *weight,*edgeList;
+  int *local_index,*local_rev_index, *local_weight,*local_edgeList;
+  int dest_pro;
   if(my_rank == 0)
   {
-    printf("The graph loading time = %ld secs.\n",seconds);
-  }
-  int max_degree = g.max_degree();
-  int *weight = g.getEdgeLen();
-
-  part_size = g.num_nodes()/np;
-  startv = my_rank*part_size;
-  endv = startv + (part_size-1);
-
-  int dest_pro;
-  int local_ipDeg=0, global_ipDeg=0;
-  for (int i=startv; i<=endv;i++)
-  {
-    for (int j = g.indexofNodes[i]; j<g.indexofNodes[i+1]; j++)
-    {
-      int nbr = g.edgeList[j];
-      if(!(nbr >= startv && nbr <=endv))
-        local_ipDeg++;
+    gettimeofday(&start, NULL);
+    g.parseGraph();
+    gettimeofday(&end, NULL);
+    seconds = (end.tv_sec - start.tv_sec);
+    micros = ((seconds * 1000000) + end.tv_usec) - (start.tv_usec);
+    printf("The graph loading time = %ld micro secs.\n",micros);
+    max_degree = g.max_degree();
+    weight = g.getEdgeLen();
+    edgeList = g.getEdgeList();
+    index = g.getIndexofNodes();
+    rev_index = g.rev_indexofNodes;
+    num_nodes = g.num_nodes();
+    part_size = g.num_nodes()/np;
+    MPI_Bcast (&max_degree,1,MPI_INT,my_rank,MPI_COMM_WORLD);
+    MPI_Bcast (&num_nodes,1,MPI_INT,my_rank,MPI_COMM_WORLD);
+    MPI_Bcast (&part_size,1,MPI_INT,my_rank,MPI_COMM_WORLD);
+    local_index = new int[part_size+1];
+    local_rev_index = new int[part_size+1];
+    for(int i=0;i<part_size+1;i++) {
+      local_index[i] = index[i];
+      local_rev_index[i] = rev_index[i];
     }
+    int num_ele = local_index[part_size]-local_index[0];
+    local_weight = new int[num_ele];
+    for(int i=0;i<num_ele;i++)
+    local_weight[i] = weight[i];
+    local_edgeList = new int[num_ele];
+    for(int i=0;i<num_ele;i++)
+    local_edgeList[i] = edgeList[i];
+    for(int i=1;i<np;i++)
+    {
+      int pos = i*part_size;
+      MPI_Send (index+pos,part_size+1,MPI_INT,i,0,MPI_COMM_WORLD);
+      MPI_Send (rev_index+pos,part_size+1,MPI_INT,i,1,MPI_COMM_WORLD);
+      int start = index[pos];
+      int end = index[pos+part_size];
+      int count_ = end - start;
+      MPI_Send (weight+start,count_,MPI_INT,i,2,MPI_COMM_WORLD);
+      MPI_Send (edgeList+start,count_,MPI_INT,i,3,MPI_COMM_WORLD);
+    }
+    delete [] weight;
+    delete [] edgeList;
+    delete [] index;
   }
-
-  all_reduce(world, local_ipDeg, global_ipDeg, mpi::maximum<int>());
-  if(my_rank==0)
-    printf("Global inter part degree %d\n",global_ipDeg);
+  else
+  {
+    MPI_Bcast (&max_degree,1,MPI_INT,0,MPI_COMM_WORLD); 
+    MPI_Bcast (&num_nodes,1,MPI_INT,0,MPI_COMM_WORLD);
+    MPI_Bcast (&part_size,1,MPI_INT,0,MPI_COMM_WORLD);
+    local_index = new int[part_size+1];
+    MPI_Recv (local_index,part_size+1,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+    local_rev_index = new int[part_size+1];
+    MPI_Recv (local_rev_index,part_size+1,MPI_INT,0,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+    int num_ele = local_index[part_size]-local_index[0];
+    local_weight = new int[num_ele];
+    MPI_Recv (local_weight,num_ele,MPI_INT,0,2,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+    local_edgeList = new int[num_ele];
+    MPI_Recv (local_edgeList,num_ele,MPI_INT,0,3,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+  }
   float num_nodes = g.ori_num_nodes();
   for (int t = 0; t < g.num_nodes(); t ++) 
   {
@@ -63,7 +96,7 @@ void Compute_PR(graph g,float beta,float delta,int maxIter,
         int nbr = g.srcList[edge] ;
         if (nbr >= startv && nbr <= endv)
         {
-          sum[v]  = sum[v]  + pageRank[nbr] / (g.indexofNodes[nbr+1]-g.indexofNodes[nbr]);
+          sum[v]  = sum[v]  + pageRank[nbr-startv] / (g.indexofNodes[nbr+1]-g.indexofNodes[nbr]);
         }
       }
       for (int edge1 = g.indexofNodes[v]; edge1 < g.indexofNodes[v+1]; edge1++)
@@ -74,7 +107,7 @@ void Compute_PR(graph g,float beta,float delta,int maxIter,
           dest_pro = nbr / part_size;
           send_data[dest_pro].push_back(v);
           send_data[dest_pro].push_back(nbr);
-          send_data[dest_pro].push_back(pageRank[nbr]);
+          send_data[dest_pro].push_back(pageRank[nbr-startv]);
         }
       }
     }
@@ -95,7 +128,7 @@ void Compute_PR(graph g,float beta,float delta,int maxIter,
     for (int v = startv; v <= endv; v++) 
     {
       float val = ( 1 - delta)  / num_nodes + delta * sum[v] ;
-      diff += val - pageRank[v];
+      diff += val - pageRank[v-startv];
       pageRank[v] = val;
     }
     iterCount++;

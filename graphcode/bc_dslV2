@@ -1,11 +1,10 @@
-function Compute_BC ( Graph g,SetN<g> sourceSet)
+function Compute_BC ( Graph g,propNode <float> BC,SetN<g> sourceSet)
 {
-  propNode <float> BC;
   g.attachNodeProperty (BC =0);
  
    for (src in sourceSet) {
                     
-	          propNode <float> sigma;
+	          propNode <double> sigma;
              propNode<float> delta;
              g.attachNodeProperty(delta=0);
              g.attachNodeProperty(sigma = 0);
@@ -22,7 +21,7 @@ function Compute_BC ( Graph g,SetN<g> sourceSet)
 
  iterateInReverse(v!=src)
      {
-       for(w in g.neighbors(v).filter(w.d==v.d+1))
+       for(w in g.neighbors(v))
      	{
        	v.delta = v.delta + (v.sigma / w.sigma) * ( 1 + w.delta);
         }

@@ -18,7 +18,7 @@
 using namespace std;
 namespace mpi = boost::mpi;
 
-void Compute_BC(graph g,std::vector<int> sourceSet);
+void Compute_BC(graph g,float* BC,std::vector<int> sourceSet);
 bool is_finished (int startv,int endv,vector <int> modified)
 {
   int sum = 0,res = 0;
