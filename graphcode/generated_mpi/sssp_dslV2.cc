@@ -26,20 +26,6 @@ void Compute_SSSP(graph g,int src)
   endv = startv + (part_size-1);
 
   int dest_pro;
-  int local_ipDeg=0, global_ipDeg=0;
-  for (int i=startv; i<=endv;i++)
-  {
-    for (int j = g.indexofNodes[i]; j<g.indexofNodes[i+1]; j++)
-    {
-      int nbr = g.edgeList[j];
-      if(!(nbr >= startv && nbr <=endv))
-        local_ipDeg++;
-    }
-  }
-
-  all_reduce(world, local_ipDeg, global_ipDeg, mpi::maximum<int>());
-  if(my_rank==0)
-    printf("Global inter part degree %d\n",global_ipDeg);
   int* dist=new int[g.num_nodes()];
   bool* modified=new bool[g.num_nodes()];
   for (int t = 0; t < g.num_nodes(); t ++) 
@@ -70,12 +56,12 @@ void Compute_SSSP(graph g,int src)
           if(nbr >= startv && nbr <=endv)
           {
             int e = edge;
-             int dist_new = dist[v] + weight[e];
+             int dist_new = dist[v-startv] + weight[e-startv];
             bool modified_new = true;
-            if (dist[nbr] > dist_new)
+            if (dist[nbr-startv] > dist_new)
             {
-              dist[nbr] = dist_new;
-              modified[nbr] = modified_new;
+              dist[nbr-startv] = dist_new;
+              modified[nbr-startv] = modified_new;
             }
           }
           else
@@ -84,9 +70,9 @@ void Compute_SSSP(graph g,int src)
             itr = send_data[dest_pro].find(nbr);
             int e = edge;
             if (itr != send_data[dest_pro].end())
-              itr->second = min( send_data[dest_pro][nbr], dist[v] + weight[e]);
+              itr->second = min( send_data[dest_pro][nbr], dist[v-startv] + weight[e-startv]);
             else
-              send_data[dest_pro][nbr] = dist[v] + weight[e];
+              send_data[dest_pro][nbr] = dist[v-startv] + weight[e-startv];
           }
         }
       }
@@ -102,10 +88,10 @@ void Compute_SSSP(graph g,int src)
           int dist_new = x.second;
           bool modified_new = true;
           int nbr = x.first;
-          if (dist[nbr] > dist_new)
+          if (dist[nbr-startv] > dist_new)
           {
-            dist[nbr] = dist_new;
-            modified[nbr] = modified_new;
+            dist[nbr-startv] = dist_new;
+            modified[nbr-startv] = modified_new;
           }
         }
       }
