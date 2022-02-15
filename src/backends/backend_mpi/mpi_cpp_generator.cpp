@@ -1,13 +1,14 @@
 #include "mpi_cpp_generator.h"
 #include<string.h>
 #include<cassert>
-int count = 0;
+int count_ = 0;
 bool is_fixedPoint = false;
 int num_messages = 0;
 bool comm_needed = false;
 reduction_details* red_details = NULL;
 make_par* mp = NULL;
 bool make_decl_par = false;
+bool comm_needed_gbl = false;
 
 void mpi_cpp_generator::addIncludeToFile(char* includeName,dslCodePad& file,bool isCppLib)
 {  //cout<<"ENTERED TO THIS ADD INCLUDE FILE"<<"\n";
@@ -95,18 +96,25 @@ void add_InitialDeclarations(dslCodePad* main,iterateBFS* bfsAbstraction)
   main->pushstr_newL("int phase = 0 ;");
   main->pushstr_newL("vector <int> active;");
   main->pushstr_newL("vector<int> active_next;");
-  sprintf(strBuffer,"vector <vector<int>> p (%s.num_nodes());",graphId);
+  sprintf(strBuffer,"vector <vector<int>> p (part_size);");
   main->pushstr_newL(strBuffer);
-  sprintf(strBuffer,"int* d = new int[%s.num_nodes()];",graphId);
+  sprintf(strBuffer,"int* d = new int[part_size];");
   main->pushstr_newL(strBuffer);
-  sprintf(strBuffer,"for (int t = 0; t < %s.num_nodes(); t++)",graphId);
+  sprintf(strBuffer,"for (int t = 0; t < %s; t++)","part_size");
   main->pushstr_newL(strBuffer);
   main->pushstr_newL("{");
   main->pushstr_newL("d[t] = -1;");
   main->pushstr_newL("}");
   sprintf(strBuffer,"active.push_back(%s);",root->getIdentifier());
   main->pushstr_newL(strBuffer);
+  
+  sprintf(strBuffer,"if(%s >= startv && %s <= endv)",root->getIdentifier(), root->getIdentifier());
+  main->pushstr_newL(strBuffer);
+  sprintf(strBuffer,"{");
+  main->pushstr_newL(strBuffer);
   sprintf(strBuffer,"d[%s] = 0;",root->getIdentifier());
+  main->pushstr_newL(strBuffer);
+  sprintf(strBuffer,"}");
   main->pushstr_newL(strBuffer);
 
 }
@@ -1021,9 +1029,9 @@ void mpi_cpp_generator::generatePropAccessForSend(PropAccess* stmt,int send, Ide
           cout<<"t  NULL\n";
         main.pushstr_space(convertToCppType(t));
         generate_exprPropIdReceive(newProp);
-        sprintf(strBuffer," = receive_data[t][x+%d];",count);
+        sprintf(strBuffer," = receive_data[t][x+%d];",count_);
         main.pushstr_newL(strBuffer);
-        count++;
+        count_++;
       }
 
       else
@@ -1032,9 +1040,9 @@ void mpi_cpp_generator::generatePropAccessForSend(PropAccess* stmt,int send, Ide
         Type* t = id2->getSymbolInfo()->getType()->getInnerTargetType();
         main.pushstr_space(convertToCppType(t));
         generate_exprPropIdReceive(stmt);
-        sprintf(strBuffer," = receive_data[t][x+%d];",count);
+        sprintf(strBuffer," = receive_data[t][x+%d];",count_);
         main.pushstr_newL(strBuffer);
-        count++;
+        count_++;
       }
       //main.pushstr_newL(");");
     }
@@ -1554,22 +1562,22 @@ void mpi_cpp_generator::generate_addMessage(statement* stmt,int send,Identifier*
               main.pushstr_newL(strBuffer);
               sprintf(strBuffer,"int %s = receive_data[t][x+2];",nodeNbr->getIdentifier());
               main.pushstr_newL(strBuffer);
-              count = 3;
+              count_ = 3;
                 generate_addMessage(/*(blockStatement*)*/body,2,nodeNbr,NULL);
-              count = 0;
-              sprintf(strBuffer,"if (d[%s] < 0 )",iterator->getIdentifier());
+              count_ = 0;
+              sprintf(strBuffer,"if (d[%s-startv] < 0 )",iterator->getIdentifier());
               main.pushstr_newL(strBuffer);
               main.pushstr_newL("{");
                 sprintf(strBuffer,"active_next.push_back(%s);",iterator->getIdentifier());
                 main.pushstr_newL(strBuffer);
-                sprintf(strBuffer,"d[%s] = d_%s + 1;",iterator->getIdentifier(),nodeNbr->getIdentifier());
+                sprintf(strBuffer,"d[%s-startv] = d_%s + 1;",iterator->getIdentifier(),nodeNbr->getIdentifier());
                 main.pushstr_newL(strBuffer);
               main.pushstr_newL("}");
-              sprintf(strBuffer,"if (d[%s] == d_%s+1)",iterator->getIdentifier(),nodeNbr->getIdentifier());
+              sprintf(strBuffer,"if (d[%s-startv] == d_%s+1)",iterator->getIdentifier(),nodeNbr->getIdentifier());
               main.pushstr_newL(strBuffer);
              // main.insert_indent();
               main.pushstr_newL("{");
-                sprintf(strBuffer,"p[%s].push_back(%s);",iterator->getIdentifier(),nodeNbr->getIdentifier());
+                sprintf(strBuffer,"p[%s-startv].push_back(%s);",iterator->getIdentifier(),nodeNbr->getIdentifier());
                   main.pushstr_newL(strBuffer);
                 generate_addMessage(/*(blockStatement*)*/ body,3,nodeNbr,NULL); 
 
@@ -1597,9 +1605,9 @@ void mpi_cpp_generator::generate_addMessage(statement* stmt,int send,Identifier*
                       main.pushstr_newL(strBuffer);
                       sprintf(strBuffer,"int %s = receive_data[t][x+1];",nodeNbr->getIdentifier());
                       main.pushstr_newL(strBuffer);
-                      count = 2;
+                      count_ = 2;
                       generate_addMessage(body,2,nodeNbr,iterator);
-                      count = 0;
+                      count_ = 0;
                       generate_addMessage(body,3,iterator,NULL); 
                       main.pushstr_newL("}");
                   main.pushstr_newL("}");
@@ -1625,12 +1633,12 @@ void mpi_cpp_generator::generate_addMessage(statement* stmt,int send,Identifier*
                                 main.pushstr_newL("{");
                                       sprintf(strBuffer,"int %s = receive_data[t][x];",iterator->getIdentifier());
                                       main.pushstr_newL(strBuffer);
-                                      //count = 1;
+                                      //count_ = 1;
                                       sprintf(strBuffer,"int %s = receive_data[t][x+1];",nodeNbr->getIdentifier());
                                       main.pushstr_newL(strBuffer);
-                                      count = 2;
+                                      count_ = 2;
                                       generate_addMessage(body,2,iterator,NULL);
-                                      count = 0;
+                                      count_ = 0;
                                       generate_addMessage(body,3,iterator,NULL); 
                                   main.pushstr_newL("}");
                                 main.pushstr_newL("}");
@@ -1662,9 +1670,9 @@ void mpi_cpp_generator::generate_addMessage(statement* stmt,int send,Identifier*
                                 main.pushstr_newL("{");
                                       sprintf(strBuffer,"int %s = receive_data[t][x];",iterator->getIdentifier());
                                       main.pushstr_newL(strBuffer);
-                                      count = 1;
+                                      count_ = 1;
                                       generate_addMessage(body,2,iterator,NULL);
-                                      count = 0;
+                                      count_ = 0;
                                       generate_addMessage(body,3,iterator,NULL); 
                                   main.pushstr_newL("}");
                                 main.pushstr_newL("}");
@@ -1978,13 +1986,13 @@ void mpi_cpp_generator::generateForAll(forallStmt* forAll)
    PropAccess* sourceField=forAll->getPropSource();
    Identifier* iterator=forAll->getIterator();
    Identifier* extractId;
-    if(sourceField!=NULL)
-     extractId=sourceField->getIdentifier2();
-    Identifier* iteratorMethodId;
-    if(extractElemFunc!=NULL)
-     iteratorMethodId=extractElemFunc->getMethodId();
-    statement* body=forAll->getBody();
-     char strBuffer[1024];
+  if(sourceField!=NULL)
+    extractId=sourceField->getIdentifier2();
+  Identifier* iteratorMethodId;
+  if(extractElemFunc!=NULL)
+    iteratorMethodId=extractElemFunc->getMethodId();
+  statement* body=forAll->getBody();
+    char strBuffer[1024];
   //bool comm_needed = false;
   //if(forAll->isForall())
   //{
@@ -2279,6 +2287,7 @@ void mpi_cpp_generator::generateForSignature(forallStmt* forAll)
   cout<<"reaced generateForSig\n";
   char strBuffer[1024];
   Identifier* iterator = forAll->getIterator();
+  // TODO identify if comm needed and then proceeed
   if(!(forAll->isSourceField()))
   {
     cout<<"Reached here test\n";
@@ -2393,24 +2402,25 @@ void mpi_cpp_generator::generateFor(forallStmt* forAll)
           {
             cout<<"parent itrbfs"<<endl;
 
+            // TODO Change this function based on comm_needed
             generateForSignature(forAll);
 
             sprintf(strBuffer,"if(%s >= startv && %s <= endv)",iterator->getIdentifier(),iterator->getIdentifier());
             main.pushstr_newL(strBuffer);
             main.pushstr_newL("{");
-              sprintf(strBuffer,"if (d[%s] < 0)",iterator->getIdentifier());
+              sprintf(strBuffer,"if (d[%s-startv] < 0)",iterator->getIdentifier());
               main.pushstr_newL(strBuffer);
               main.pushstr_newL("{");
                 sprintf(strBuffer,"active_next.push_back(%s);",iterator->getIdentifier());
                 main.pushstr_newL(strBuffer);
-                sprintf(strBuffer,"d[%s] = d[%s] + 1;",iterator->getIdentifier(),nodeNbr->getIdentifier());
+                sprintf(strBuffer,"d[%s-startv] = d[%s-startv] + 1;",iterator->getIdentifier(),nodeNbr->getIdentifier());
                 main.pushstr_newL(strBuffer);
               main.pushstr_newL("}");
-              sprintf(strBuffer,"if (d[%s] == d[%s] + 1)",iterator->getIdentifier(),nodeNbr->getIdentifier());
+              sprintf(strBuffer,"if (d[%s-startv] == d[%s-startv] + 1)",iterator->getIdentifier(),nodeNbr->getIdentifier());
               main.pushstr_newL(strBuffer);
               main.insert_indent();
                 main.pushstr_newL("{");
-                  sprintf(strBuffer,"p[%s].push_back(%s);",iterator->getIdentifier(),nodeNbr->getIdentifier());
+                  sprintf(strBuffer,"p[%s-startv].push_back(%s);",iterator->getIdentifier(),nodeNbr->getIdentifier());
                   main.pushstr_newL(strBuffer);
                   generateBlock((blockStatement*)body,false);
                 main.pushstr_newL("}");
@@ -2422,7 +2432,7 @@ void mpi_cpp_generator::generateFor(forallStmt* forAll)
             main.pushstr_newL("{");
               sprintf(strBuffer,"dest_pro = %s / part_size;",iterator->getIdentifier());
               main.pushstr_newL(strBuffer);
-              sprintf(strBuffer,"send_data[dest_pro].push_back(d[%s]);",nodeNbr->getIdentifier());
+              sprintf(strBuffer,"send_data[dest_pro].push_back(d[%s-startv]);",nodeNbr->getIdentifier());
               main.pushstr_newL(strBuffer);
               num_messages++;
               sprintf(strBuffer,"send_data[dest_pro].push_back(%s);",iterator->getIdentifier());
@@ -2446,11 +2456,12 @@ void mpi_cpp_generator::generateFor(forallStmt* forAll)
             main.pushstr_newL("{");
             //sprintf(strBuffer,"int %s = levelNodes[phase][l] ;",bfsAbstraction->getIteratorNode()->getIdentifier());
             //main->pushstr_newL(strBuffer);
-            sprintf(strBuffer,"if(d[%s] == phase)",nodeNbr->getIdentifier());
+            sprintf(strBuffer,"if(d[%s-startv] == phase)",nodeNbr->getIdentifier());
             main.pushstr_newL(strBuffer);
               main.pushstr_newL("{");
-                sprintf(strBuffer,"modified[%s] = true;",nodeNbr->getIdentifier());
+                sprintf(strBuffer,"modified[%s-startv] = true;",nodeNbr->getIdentifier());
                 main.pushstr_newL(strBuffer);
+              // TODO Change this function based on comm_needed
               generateForSignature(forAll);
 
             sprintf(strBuffer,"if(%s >= startv && %s <= endv)",iterator->getIdentifier(),iterator->getIdentifier());
@@ -2487,12 +2498,12 @@ void mpi_cpp_generator::generateFor(forallStmt* forAll)
             main.pushstr_newL("}");
 
             //Else part
-            sprintf(strBuffer,"if(d[%s] == (phase+1))",nodeNbr->getIdentifier());
+            sprintf(strBuffer,"if(d[%s-startv] == (phase+1))",nodeNbr->getIdentifier());
             main.pushstr_newL(strBuffer);
             main.pushstr_newL("{");
-              main.pushstr_newL("for (int j=0;j<p[v].size();j++)");
+              main.pushstr_newL("for (int j=0;j<p[v-startv].size();j++)");
               main.pushstr_newL("{");
-                sprintf(strBuffer,"int w = p[%s][j];",nodeNbr->getIdentifier());
+                sprintf(strBuffer,"int w = p[%s-startv][j];",nodeNbr->getIdentifier());
                 main.pushstr_newL(strBuffer);
                 main.pushstr_newL("if(!(w >= startv && w <= endv))");
                 main.pushstr_newL("{");
@@ -3046,7 +3057,8 @@ void mpi_cpp_generator::generate_exprPropId(PropAccess* propId) //This needs to 
   //PropAccess* propId=(PropAccess*)expr->getPropId();
   Identifier* id1=propId->getIdentifier1();
   Identifier* id2=propId->getIdentifier2();
-  sprintf(strBuffer,"%s[%s]",id2->getIdentifier(),id1->getIdentifier());
+  // TODO see if comm_needed_gbl true.. then based on that do this
+  sprintf(strBuffer,"%s[%s-startv]",id2->getIdentifier(),id1->getIdentifier());
   main.pushString(strBuffer);
 }
 
@@ -3127,7 +3139,7 @@ void mpi_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct)
   main.pushstr_newL("std::map<int,int>::iterator itr;");
  // main.pushstr_newL("int dest_pro;");
   if(fixedPointConstruct->getBody()->getTypeofNode()!=NODE_BLOCKSTMT)
-  generateStatement(fixedPointConstruct->getBody());
+    generateStatement(fixedPointConstruct->getBody());
   else
     generateBlock((blockStatement*)fixedPointConstruct->getBody(),false);
   
@@ -3164,70 +3176,192 @@ void mpi_cpp_generator::generateBlock(blockStatement* blockStmt,bool includeBrac
 
 //*********Generate initial and final part of function*************//
 void mpi_cpp_generator::generateFunc(ASTNode* proc)
-{  char strBuffer[1024];
-   Function* func=(Function*)proc;
-   generateFuncHeader(func,false);
-   generateFuncHeader(func,true);
-   main.pushstr_newL("{");
-   //main.insert_indent();
-    main.pushstr_newL("int my_rank,np,part_size,startv,endv;");
-    //main.pushstr_newL("MPI_Init(&argc,&argv);");
-    main.pushstr_newL("struct timeval start, end, start1, end1;");
-    main.pushstr_newL("long seconds,micros;");
-    //main.pushstr_newL("MPI_Init(NULL,NULL);");
-    //main.pushstr_newL("MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);");
-    //main.pushstr_newL("MPI_Comm_size(MPI_COMM_WORLD, &np);");
-    //main.pushstr_newL("MPI_Request request;");
-    main.pushstr_newL("mpi::communicator world;");
-    main.pushstr_newL("my_rank = world.rank();");
-    main.pushstr_newL("np = world.size();");
-    main.pushstr_newL("");
-
-    main.pushstr_newL("gettimeofday(&start1, NULL);");
-    sprintf(strBuffer,"%s.parseGraph();",graphId[0]->getIdentifier());
-    main.pushstr_newL(strBuffer);
-    //main.pushstr_newL("g.parseGraph();");
-    main.pushstr_newL("gettimeofday(&end1, NULL);");
-    main.pushstr_newL("seconds = (end1.tv_sec - start1.tv_sec);");
-    main.pushstr_newL("micros = ((seconds * 1000000) + end1.tv_usec) - (start1.tv_usec);");
-    main.pushstr_newL("if(my_rank == 0)");
+{  
+    char strBuffer[1024];
+    Function* func=(Function*)proc;
+    generateFuncHeader(func,false);
+    generateFuncHeader(func,true);
     main.pushstr_newL("{");
-    main.pushstr_newL("printf(\"The graph loading time = %ld secs.\\n\",seconds);");
-    main.pushstr_newL("}");
-    sprintf(strBuffer,"int max_degree = %s.%s();",graphId[0]->getIdentifier(),"max_degree");
-    main.pushstr_newL(strBuffer);
-    sprintf(strBuffer,"int *weight = %s.getEdgeLen();",graphId[0]->getIdentifier());
-    main.pushstr_newL(strBuffer);
-    //main.pushstr_newL("int* weight=g.getEdgeLen();");
-    main.pushstr_newL("");
+    //main.insert_indent();
 
-    sprintf(strBuffer,"part_size = %s.%s()/np;",graphId[0]->getIdentifier(),"num_nodes");
-    main.pushstr_newL(strBuffer);
-    main.pushstr_newL("startv = my_rank*part_size;");
-    main.pushstr_newL("endv = startv + (part_size-1);");
-    main.pushstr_newL("");
-    main.pushstr_newL("int dest_pro;");
-    //Calculation of Inter-partition degree
-    main.pushstr_newL("int local_ipDeg=0, global_ipDeg=0;");
-    main.pushstr_newL("for (int i=startv; i<=endv;i++)");
-    main.pushstr_newL("{");
-      main.pushstr_newL("for (int j = g.indexofNodes[i]; j<g.indexofNodes[i+1]; j++)");
+    /* 
+    TODO check if communication is needed 
+    then based on that do a conditional code generation
+
+    check not done SSSP code?
+    */
+    blockStatement* blockStmt = func->getBlockStatement();
+    list<statement*> stmtList = blockStmt->returnStatements();
+    list<statement*> ::iterator itr;
+    bool comm_needed = false;
+    for(itr=stmtList.begin();itr!=stmtList.end();itr++)
+    {
+      statement* stmt=*itr;
+      if(stmt->getTypeofNode()==NODE_FORALLSTMT)
+      {
+        forallStmt* f = (forallStmt*) stmt;
+        statement* body = f->getBody();
+        Identifier* iterator = f->getIterator();
+        comm_needed = (comm_needed || communication_needed((blockStatement*)body, iterator));
+      }
+      if(stmt->getTypeofNode()==NODE_DOWHILESTMT)
+      {
+        dowhileStmt* f = (dowhileStmt*) stmt;
+        blockStatement* bodytemp = (blockStatement*)f->getBody();
+        list<statement*> stmtList2 = bodytemp->returnStatements();
+        list<statement*> ::iterator itr2;
+        for(itr2=stmtList2.begin();itr2!=stmtList2.end();itr2++)
+        {
+          statement* stmt2=*itr2;
+          if(stmt2->getTypeofNode()==NODE_FORALLSTMT)
+          {
+            forallStmt* f = (forallStmt*) stmt2;
+            statement* body = f->getBody();
+            Identifier* iterator = f->getIterator();
+            comm_needed = (comm_needed || communication_needed((blockStatement*)body, iterator));
+          }
+        }
+      }
+    }
+    comm_needed_gbl = comm_needed;
+    if(comm_needed) {
+      // generate code snippet for communication and graph split
+      main.pushstr_newL("int my_rank,np,part_size,startv,endv;");
+      main.pushstr_newL("struct timeval start, end, start1, end1;");
+      main.pushstr_newL("long seconds,micros;");
+      main.pushstr_newL("mpi::communicator world;");
+      main.pushstr_newL("my_rank = world.rank();");
+      main.pushstr_newL("np = world.size();");
+
+      main.pushstr_newL("int max_degree,num_nodes;");
+      main.pushstr_newL("int *index,*rev_index, *weight,*edgeList;");
+      main.pushstr_newL("int *local_index,*local_rev_index, *local_weight,*local_edgeList;");
+      main.pushstr_newL("int dest_pro;");
+
+      main.pushstr_newL("if(my_rank == 0)");
       main.pushstr_newL("{");
-        main.pushstr_newL("int nbr = g.edgeList[j];");
-        main.pushstr_newL("if(!(nbr >= startv && nbr <=endv))");
-        main.insert_indent();
-          main.pushstr_newL("local_ipDeg++;");
-        main.decrease_indent();
+      main.pushstr_newL("gettimeofday(&start, NULL);");
+      // main.pushstr_newL("g.parseGraph();");
+      sprintf(strBuffer,"%s.parseGraph();",graphId[0]->getIdentifier());
+      main.pushstr_newL(strBuffer);
+
+      main.pushstr_newL("gettimeofday(&end, NULL);");
+      main.pushstr_newL("seconds = (end.tv_sec - start.tv_sec);");
+      main.pushstr_newL("micros = ((seconds * 1000000) + end.tv_usec) - (start.tv_usec);");
+      main.pushstr_newL("printf(\"The graph loading time = %ld micro secs.\\n\",micros);");
+
+      // main.pushstr_newL("max_degree = g.max_degree();");
+      sprintf(strBuffer,"max_degree = %s.max_degree();",graphId[0]->getIdentifier());
+      main.pushstr_newL(strBuffer);
+      // main.pushstr_newL("weight = g.getEdgeLen();");
+      sprintf(strBuffer,"weight = %s.getEdgeLen();",graphId[0]->getIdentifier());
+      main.pushstr_newL(strBuffer);
+      // main.pushstr_newL("edgeList = g.getEdgeList();");
+      sprintf(strBuffer,"edgeList = %s.getEdgeList();",graphId[0]->getIdentifier());
+      main.pushstr_newL(strBuffer);
+      // main.pushstr_newL("index = g.getIndexofNodes();");
+      sprintf(strBuffer,"index = %s.getIndexofNodes();",graphId[0]->getIdentifier());
+      main.pushstr_newL(strBuffer);
+      // main.pushstr_newL("rev_index = g.rev_indexofNodes;");
+      sprintf(strBuffer,"rev_index = %s.rev_indexofNodes;",graphId[0]->getIdentifier());
+      main.pushstr_newL(strBuffer);
+      // main.pushstr_newL("num_nodes = g.num_nodes();");
+      sprintf(strBuffer,"num_nodes = g.num_nodes();",graphId[0]->getIdentifier());
+      main.pushstr_newL(strBuffer);
+      // main.pushstr_newL("part_size = g.num_nodes()/np;");
+      sprintf(strBuffer,"part_size = g.num_nodes()/np;",graphId[0]->getIdentifier());
+      main.pushstr_newL(strBuffer);
+
+      main.pushstr_newL("MPI_Bcast (&max_degree,1,MPI_INT,my_rank,MPI_COMM_WORLD);");
+      main.pushstr_newL("MPI_Bcast (&num_nodes,1,MPI_INT,my_rank,MPI_COMM_WORLD);");
+      main.pushstr_newL("MPI_Bcast (&part_size,1,MPI_INT,my_rank,MPI_COMM_WORLD);");
+      main.pushstr_newL("local_index = new int[part_size+1];");
+      main.pushstr_newL("local_rev_index = new int[part_size+1];");
+          
+      main.pushstr_newL("for(int i=0;i<part_size+1;i++) {");
+          main.pushstr_newL("local_index[i] = index[i];");
+          main.pushstr_newL("local_rev_index[i] = rev_index[i];");
       main.pushstr_newL("}");
-    main.pushstr_newL("}");
-    main.pushstr_newL("");
+      main.pushstr_newL("int num_ele = local_index[part_size]-local_index[0];");
+      main.pushstr_newL("local_weight = new int[num_ele];");
+      main.pushstr_newL("for(int i=0;i<num_ele;i++)");
+          main.pushstr_newL("local_weight[i] = weight[i];");
+      main.pushstr_newL("local_edgeList = new int[num_ele];");
+      main.pushstr_newL("for(int i=0;i<num_ele;i++)");
+          main.pushstr_newL("local_edgeList[i] = edgeList[i];");
+      main.pushstr_newL("for(int i=1;i<np;i++)");
+      main.pushstr_newL("{");
+          main.pushstr_newL("int pos = i*part_size;");
+          main.pushstr_newL("MPI_Send (index+pos,part_size+1,MPI_INT,i,0,MPI_COMM_WORLD);");
+          main.pushstr_newL("MPI_Send (rev_index+pos,part_size+1,MPI_INT,i,1,MPI_COMM_WORLD);");
+          main.pushstr_newL("int start = index[pos];");
+          main.pushstr_newL("int end = index[pos+part_size];");
+          main.pushstr_newL("int count_ = end - start;");
+          main.pushstr_newL("MPI_Send (weight+start,count_,MPI_INT,i,2,MPI_COMM_WORLD);");
+          main.pushstr_newL("MPI_Send (edgeList+start,count_,MPI_INT,i,3,MPI_COMM_WORLD);");
+      main.pushstr_newL("}");
+      main.pushstr_newL("delete [] weight;");
+      main.pushstr_newL("delete [] edgeList;");
+      main.pushstr_newL("delete [] index;");
+      main.pushstr_newL("}");
+      main.pushstr_newL("else");
+      main.pushstr_newL("{");
+      main.pushstr_newL("MPI_Bcast (&max_degree,1,MPI_INT,0,MPI_COMM_WORLD); ");
+      main.pushstr_newL("MPI_Bcast (&num_nodes,1,MPI_INT,0,MPI_COMM_WORLD);");
+      main.pushstr_newL("MPI_Bcast (&part_size,1,MPI_INT,0,MPI_COMM_WORLD);");
 
-    main.pushstr_newL("all_reduce(world, local_ipDeg, global_ipDeg, mpi::maximum<int>());");
-    main.pushstr_newL("if(my_rank==0)");
-    main.insert_indent();
-      main.pushstr_newL("printf(\"Global inter part degree %d\\n\",global_ipDeg);");
-    main.decrease_indent();
+      main.pushstr_newL("local_index = new int[part_size+1];");
+      main.pushstr_newL("MPI_Recv (local_index,part_size+1,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);");
+      main.pushstr_newL("local_rev_index = new int[part_size+1];");
+      main.pushstr_newL("MPI_Recv (local_rev_index,part_size+1,MPI_INT,0,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);");
 
+      main.pushstr_newL("int num_ele = local_index[part_size]-local_index[0];");
+      main.pushstr_newL("local_weight = new int[num_ele];");
+      main.pushstr_newL("MPI_Recv (local_weight,num_ele,MPI_INT,0,2,MPI_COMM_WORLD,MPI_STATUS_IGNORE);");
+      main.pushstr_newL("local_edgeList = new int[num_ele];");
+      main.pushstr_newL("MPI_Recv (local_edgeList,num_ele,MPI_INT,0,3,MPI_COMM_WORLD,MPI_STATUS_IGNORE);");
+      main.pushstr_newL("}");
+    } else {
+      // generate code snippet without graph split
+      main.pushstr_newL("int my_rank,np,part_size,startv,endv;");
+      //main.pushstr_newL("MPI_Init(&argc,&argv);");
+      main.pushstr_newL("struct timeval start, end, start1, end1;");
+      main.pushstr_newL("long seconds,micros;");
+      //main.pushstr_newL("MPI_Init(NULL,NULL);");
+      //main.pushstr_newL("MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);");
+      //main.pushstr_newL("MPI_Comm_size(MPI_COMM_WORLD, &np);");
+      //main.pushstr_newL("MPI_Request request;");
+      main.pushstr_newL("mpi::communicator world;");
+      main.pushstr_newL("my_rank = world.rank();");
+      main.pushstr_newL("np = world.size();");
+      main.pushstr_newL("");
+
+      main.pushstr_newL("gettimeofday(&start1, NULL);");
+      sprintf(strBuffer,"%s.parseGraph();",graphId[0]->getIdentifier());
+      main.pushstr_newL(strBuffer);
+      //main.pushstr_newL("g.parseGraph();");
+      main.pushstr_newL("gettimeofday(&end1, NULL);");
+      main.pushstr_newL("seconds = (end1.tv_sec - start1.tv_sec);");
+      main.pushstr_newL("micros = ((seconds * 1000000) + end1.tv_usec) - (start1.tv_usec);");
+      main.pushstr_newL("if(my_rank == 0)");
+      main.pushstr_newL("{");
+      main.pushstr_newL("printf(\"The graph loading time = %ld secs.\\n\",seconds);");
+      main.pushstr_newL("}");
+      sprintf(strBuffer,"int max_degree = %s.%s();",graphId[0]->getIdentifier(),"max_degree");
+      main.pushstr_newL(strBuffer);
+      sprintf(strBuffer,"int *weight = %s.getEdgeLen();",graphId[0]->getIdentifier());
+      main.pushstr_newL(strBuffer);
+      //main.pushstr_newL("int* weight=g.getEdgeLen();");
+      main.pushstr_newL("");
+
+      sprintf(strBuffer,"part_size = %s.%s()/np;",graphId[0]->getIdentifier(),"num_nodes");
+      main.pushstr_newL(strBuffer);
+      main.pushstr_newL("startv = my_rank*part_size;");
+      main.pushstr_newL("endv = startv + (part_size-1);");
+      main.pushstr_newL("");
+      main.pushstr_newL("int dest_pro;");
+    }
+   
    generateBlock(func->getBlockStatement(),false);
    main.NewLine();
 
@@ -3243,9 +3377,6 @@ void mpi_cpp_generator::generateFunc(ASTNode* proc)
    main.pushstr_newL("}");
    main.pushstr_newL("MPI_Finalize();");
    main.push('}');
-
-   return;
-
 } 
 
 const char* mpi_cpp_generator:: convertToCppType(Type* type)

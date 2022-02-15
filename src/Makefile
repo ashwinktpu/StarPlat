@@ -5,7 +5,7 @@ CC = g++
 all: finalcode clean
 
 finalcode: bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o
-	$(CC) bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o  -ll -o finalcode
+	$(CC) bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o -o finalcode
 
 bin/MainContext.o: maincontext/MainContext.cpp
 	$(CC) -c maincontext/MainContext.cpp -o bin/MainContext.o
