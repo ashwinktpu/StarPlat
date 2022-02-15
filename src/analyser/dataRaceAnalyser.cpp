@@ -346,6 +346,24 @@ ASTNode* dataRaceAnalyser::assignReductionAnalysis(assignment *stmt)
     return stmt;
 }
 
+/*
+Assignment
+Declaration
+Unary statement
+
+var = var op expr
+expr:
+    local variable
+    properties of current iterator
+    constants
+    read only global variables
+
+can Reduce:
+    op = +,-,*,&&,||
+    var is globalVar
+    var shouldn't read or written in any of other statements
+*/
+
 ASTNode* dataRaceAnalyser::blockReductionAnalysis(blockStatement* blockStmt, Identifier* forAllItr)
 {
     usedVariables declaredVars, globalVars;
