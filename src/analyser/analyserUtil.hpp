@@ -185,4 +185,70 @@ usedVariables getVarsExpr(Expression *expr)
     return result;
 }
 
+usedVariables getVarsBlock(Statement *inp_stmt)
+{
+    list<statement *> stmtList = inp_stmt->returnStatements();
+    usedVariables result;
+
+    for (statement *stmt: stmtList)
+    {
+        if (stmt->getTypeOfNode() == NODE_ASSIGN)
+        {
+            Assignment *assign = stmt->getAssignment();
+            Expression *lExpr = assign->getLeft();
+            Expression *rExpr = assign->getRight();
+
+            if (lExpr->isIdentifierExpr())
+            {
+                Identifier *iden = lExpr->getId();
+                result.addVariable(iden, WRITE);
+            }
+            else if (lExpr->isPropIdExpr())
+            {
+                PropAccess *propExpr = lExpr->getPropId();
+                result.addVariable(propExpr->getIdentifier2(), WRITE);
+            }
+
+            result.merge(getVarsExpr(rExpr));
+
+        }
+        else if (stmt->getTypeOfNode() == NODE_UNARYSTMT)
+        {
+            result.merge(getVarsExpr(stmt->getUnaryExpr()));
+        }
+        else if (stmt->getTypeOfNode() == NODE_DECL)
+        {
+            result.addVariable(stmt->getDeclId(), WRITE);
+            if (stmt->getExpressionAssigned() != NULL) {
+                result.merge(getVarsExpr(stmt->getExprressionAssigned()));
+            }
+        }
+        else if (stmt->getTypeOfNode() == NODE_BLOCKSTMT)
+        {
+            result.merge(getVarsBlock(stmt));
+        }
+    }
+}
+
+usedVariables getDeclBlock(statement *inp_stmt)
+{
+    list<statement *> stmtList = inp_stmt->returnStatements();
+    usedVariables result;
+    
+    for (statement *stmt: stmtList)
+    {
+        if (inp_stmt->getTypeOfNode() == NODE_DECL)
+        {
+            result.addVariable(stmt->getDeclId(), WRITE);
+        }
+        else if (inp_stmt->getTypeOfNode() == NODE_BLOCKSTMT)
+        {
+            list<statement *> stmtList = inp_stmt->returnStatements();
+            for (statement *stmt: stmtList)
+                result.merge(getDeclBlock(stmt));
+        }
+    }
+    return result;
+}
+
 #endif
