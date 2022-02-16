@@ -116,9 +116,11 @@ void Compute_BC(graph g,float* BC,std::vector<int> sourceSet)
         active.pop_back();
         if(v >=startv && v<= endv)
         {
-          for (int edge = g.indexofNodes[v]; edge < g.indexofNodes[v+1]; edge ++) 
+          int local_v = v - my_rank*part_size;
+          for (int j = 0; j < local_index[local_v+1]-local_index[local_v]; j++)
           {
-            int w = g.edgeList[edge] ;
+            int begin = local_index[0];
+            int w = local_edgeList[local_index[local_v]-begin+j];
             if(w >= startv && w <= endv)
             {
               if (d[w-startv] < 0)
@@ -190,9 +192,11 @@ void Compute_BC(graph g,float* BC,std::vector<int> sourceSet)
           if(d[v-startv] == phase)
           {
             modified[v-startv] = true;
-            for (int edge = g.indexofNodes[v]; edge < g.indexofNodes[v+1]; edge ++) 
+            int local_v = v - my_rank*part_size;
+            for (int j = 0; j < local_index[local_v+1]-local_index[local_v]; j++)
             {
-              int w = g.edgeList[edge] ;
+              int begin = local_index[0];
+              int w = local_edgeList[local_index[local_v]-begin+j];
               if(w >= startv && w <= endv)
               {
                 delta[v] = delta[v-startv] + ( sigma[v-startv] / sigma[w-startv])  * ( 1 + delta[w-startv]) ;

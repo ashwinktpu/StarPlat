@@ -26,20 +26,6 @@ void Compute_TC(graph g)
   endv = startv + (part_size-1);
 
   int dest_pro;
-  int local_ipDeg=0, global_ipDeg=0;
-  for (int i=startv; i<=endv;i++)
-  {
-    for (int j = g.indexofNodes[i]; j<g.indexofNodes[i+1]; j++)
-    {
-      int nbr = g.edgeList[j];
-      if(!(nbr >= startv && nbr <=endv))
-        local_ipDeg++;
-    }
-  }
-
-  all_reduce(world, local_ipDeg, global_ipDeg, mpi::maximum<int>());
-  if(my_rank==0)
-    printf("Global inter part degree %d\n",global_ipDeg);
   long triangle_count = 0;
   for (int v = startv; v <= endv; v++) 
   {
