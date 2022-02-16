@@ -2334,11 +2334,19 @@ void mpi_cpp_generator::generateForSignature(forallStmt* forAll)
        list<argument*>  argList=extractElemFunc->getArgList();
        assert(argList.size()==1);
        Identifier* nodeNbr=argList.front()->getExpr()->getId();
-       sprintf(strBuffer,"for (%s %s = %s.%s[%s]; %s < %s.%s[%s+1]; %s ++) ","int","edge",graphId,"indexofNodes",nodeNbr->getIdentifier(),"edge",graphId,"indexofNodes",nodeNbr->getIdentifier(),"edge");
+
+       sprintf(strBuffer,"int local_v = v - my_rank*part_size;");
+       main.pushstr_newL(strBuffer);
+       // sprintf(strBuffer,"for (%s %s = %s.%s[%s]; %s < %s.%s[%s+1]; %s ++) ","int","edge",graphId,"indexofNodes",nodeNbr->getIdentifier(),"edge",graphId,"indexofNodes",nodeNbr->getIdentifier(),"edge");
+       sprintf(strBuffer,"for (int j = 0; j < local_index[local_v+1]-local_index[local_v]; j++)");
        main.pushstr_newL(strBuffer);
        main.pushstr_newL("{");
-       sprintf(strBuffer,"%s %s = %s.%s[%s] ;","int",iterator->getIdentifier(),graphId,"edgeList","edge"); //needs to move the addition of
+       sprintf(strBuffer,"int begin = local_index[0];");
        main.pushstr_newL(strBuffer);
+       sprintf(strBuffer,"%s %s = local_edgeList[local_index[local_v]-begin+j];", "int",iterator->getIdentifier());
+       main.pushstr_newL(strBuffer);
+      //  sprintf(strBuffer,"%s %s = %s.%s[%s] ;","int",iterator->getIdentifier(),graphId,"edgeList","edge"); //needs to move the addition of
+      //  main.pushstr_newL(strBuffer);
        //statement to a different method.
     }
   }
@@ -2402,7 +2410,6 @@ void mpi_cpp_generator::generateFor(forallStmt* forAll)
           {
             cout<<"parent itrbfs"<<endl;
 
-            // TODO Change this function based on comm_needed
             generateForSignature(forAll);
 
             sprintf(strBuffer,"if(%s >= startv && %s <= endv)",iterator->getIdentifier(),iterator->getIdentifier());
@@ -2461,7 +2468,6 @@ void mpi_cpp_generator::generateFor(forallStmt* forAll)
               main.pushstr_newL("{");
                 sprintf(strBuffer,"modified[%s-startv] = true;",nodeNbr->getIdentifier());
                 main.pushstr_newL(strBuffer);
-              // TODO Change this function based on comm_needed
               generateForSignature(forAll);
 
             sprintf(strBuffer,"if(%s >= startv && %s <= endv)",iterator->getIdentifier(),iterator->getIdentifier());
@@ -3057,8 +3063,12 @@ void mpi_cpp_generator::generate_exprPropId(PropAccess* propId) //This needs to 
   //PropAccess* propId=(PropAccess*)expr->getPropId();
   Identifier* id1=propId->getIdentifier1();
   Identifier* id2=propId->getIdentifier2();
-  // TODO see if comm_needed_gbl true.. then based on that do this
-  sprintf(strBuffer,"%s[%s-startv]",id2->getIdentifier(),id1->getIdentifier());
+  // DONE see if comm_needed_gbl true.. then based on that do this
+  if(comm_needed_gbl) {
+    sprintf(strBuffer,"%s[%s-startv]",id2->getIdentifier(),id1->getIdentifier());
+  } else {
+    sprintf(strBuffer,"%s[%s]",id2->getIdentifier(),id1->getIdentifier());
+  }
   main.pushString(strBuffer);
 }
 
@@ -3321,6 +3331,8 @@ void mpi_cpp_generator::generateFunc(ASTNode* proc)
       main.pushstr_newL("local_edgeList = new int[num_ele];");
       main.pushstr_newL("MPI_Recv (local_edgeList,num_ele,MPI_INT,0,3,MPI_COMM_WORLD,MPI_STATUS_IGNORE);");
       main.pushstr_newL("}");
+      main.pushstr_newL("startv = my_rank*part_size;");
+      main.pushstr_newL("endv = startv+part_size-1;");
     } else {
       // generate code snippet without graph split
       main.pushstr_newL("int my_rank,np,part_size,startv,endv;");

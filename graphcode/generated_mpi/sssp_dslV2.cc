@@ -56,12 +56,12 @@ void Compute_SSSP(graph g,int src)
           if(nbr >= startv && nbr <=endv)
           {
             int e = edge;
-             int dist_new = dist[v-startv] + weight[e-startv];
+             int dist_new = dist[v] + weight[e];
             bool modified_new = true;
-            if (dist[nbr-startv] > dist_new)
+            if (dist[nbr] > dist_new)
             {
-              dist[nbr-startv] = dist_new;
-              modified[nbr-startv] = modified_new;
+              dist[nbr] = dist_new;
+              modified[nbr] = modified_new;
             }
           }
           else
@@ -70,9 +70,9 @@ void Compute_SSSP(graph g,int src)
             itr = send_data[dest_pro].find(nbr);
             int e = edge;
             if (itr != send_data[dest_pro].end())
-              itr->second = min( send_data[dest_pro][nbr], dist[v-startv] + weight[e-startv]);
+              itr->second = min( send_data[dest_pro][nbr], dist[v] + weight[e]);
             else
-              send_data[dest_pro][nbr] = dist[v-startv] + weight[e-startv];
+              send_data[dest_pro][nbr] = dist[v] + weight[e];
           }
         }
       }
@@ -88,10 +88,10 @@ void Compute_SSSP(graph g,int src)
           int dist_new = x.second;
           bool modified_new = true;
           int nbr = x.first;
-          if (dist[nbr-startv] > dist_new)
+          if (dist[nbr] > dist_new)
           {
-            dist[nbr-startv] = dist_new;
-            modified[nbr-startv] = modified_new;
+            dist[nbr] = dist_new;
+            modified[nbr] = modified_new;
           }
         }
       }
