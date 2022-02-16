@@ -58,7 +58,7 @@ bool checkDependancy(statement *stmt, usedVariables &usedVars)
     {
       PropAccess *propId = assgnStmt->getPropId();
       if ((usedVars.isUsedVar(propId->getIdentifier2()))
-          || (usedVars.isUsedProp(propId->getIdentifier2())))
+          || (usedVars.isUsedProp(propId)))
         return true;
     }
 
@@ -75,7 +75,7 @@ bool checkDependancy(statement *stmt, usedVariables &usedVars)
 
     for(PropAccess* propId: exprVars.getPropAcess()){
       if ((usedVars.isUsedVar(propId->getIdentifier2()))
-          || (usedVars.isUsedProp(propId->getIdentifier2())))
+          || (usedVars.isUsedProp(propId)))
         return true;
     }
   }
@@ -93,7 +93,7 @@ bool checkDependancy(statement *stmt, usedVariables &usedVars)
     {
       PropAccess *propId = expr->getPropId();
       if ((usedVars.isUsedVar(propId->getIdentifier2()))
-          || (usedVars.isUsedProp(propId->getIdentifier2())))
+          || (usedVars.isUsedProp(propId)))
         return true;
     }
     else if (expr->isIdentifierExpr())
