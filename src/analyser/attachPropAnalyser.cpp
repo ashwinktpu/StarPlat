@@ -41,7 +41,6 @@ bool checkDependancy(statement *stmt, usedVariables &usedVars)
   case NODE_DECL:
   {
     declaration *declStmt = (declaration *)stmt;
-    //printf("%p Decl Var\n", declStmt->getdeclId()->getSymbolInfo());
     if (usedVars.isUsedVar(declStmt->getdeclId()))
       return true;
   }
@@ -52,14 +51,14 @@ bool checkDependancy(statement *stmt, usedVariables &usedVars)
     assignment *assgnStmt = (assignment *)stmt;
     if (assgnStmt->lhs_isIdentifier())
     {
-      //printf("%p Assign Var\n", assgnStmt->getId()->getSymbolInfo());
       if(usedVars.isUsedVar(assgnStmt->getId()))
         return true;
     }
     else if (assgnStmt->lhs_isProp())
     {
       PropAccess *propId = assgnStmt->getPropId();
-      if (usedVars.isUsedVar(propId->getIdentifier2()))
+      if ((usedVars.isUsedVar(propId->getIdentifier2()))
+          || (usedVars.isUsedProp(propId->getIdentifier2())))
         return true;
     }
 
@@ -71,6 +70,12 @@ bool checkDependancy(statement *stmt, usedVariables &usedVars)
 
     for(Identifier* rVars: exprVars.getVariables(READ)){
       if(usedVars.isUsedVar(rVars, WRITE))
+        return true;
+    }
+
+    for(PropAccess* propId: exprVars.getPropAcess()){
+      if ((usedVars.isUsedVar(propId->getIdentifier2()))
+          || (usedVars.isUsedProp(propId->getIdentifier2())))
         return true;
     }
   }
@@ -87,7 +92,8 @@ bool checkDependancy(statement *stmt, usedVariables &usedVars)
     if (expr->isPropIdExpr())
     {
       PropAccess *propId = expr->getPropId();
-      if (usedVars.isUsedVar(propId->getIdentifier2()))
+      if ((usedVars.isUsedVar(propId->getIdentifier2()))
+          || (usedVars.isUsedProp(propId->getIdentifier2())))
         return true;
     }
     else if (expr->isIdentifierExpr())
