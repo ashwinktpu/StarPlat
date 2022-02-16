@@ -148,6 +148,8 @@ public:
     bool hasWriteVariables(){
         return (writeVars.size() > 0);
     }
+
+    //TODO: add function to clear
 };
 
 usedVariables getVarsExpr(Expression *expr)

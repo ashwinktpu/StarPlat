@@ -366,7 +366,8 @@ can Reduce:
 
 ASTNode* dataRaceAnalyser::blockReductionAnalysis(blockStatement* blockStmt, Identifier* forAllItr)
 {
-    usedVariables declaredVars, globalVars;
+    usedVariables declaredVars, reducedVars;
+
 
     list<statement*> newStatements;
     list<statement*> oldStatements = blockStmt->returnStatements();
@@ -387,68 +388,120 @@ ASTNode* dataRaceAnalyser::blockReductionAnalysis(blockStatement* blockStmt, Ide
             {
                 if(!declaredVars.isUsed(currStmt->getId()))
                 {
-                    if(globalVars.isUsed(currStmt->getId()))
+                    if(reducedVars.isUsed(currStmt->getId()))
                         return blockStmt;
                     else
                     {
-                        globalVars.addVariable(currStmt->getId(), WRITE);
+                        reducedVars.addVariable(currStmt->getId(), WRITE);
                         ASTNode* newStmt = assignReductionAnalysis(currStmt);
 
-                        if(newStmt->getTypeofNode() == NODE_REDUCTIONCALLSTMT)
-                        {
-                            Expression* rhsExpr = ((reductionCallStmt*) newStmt)->getRightSide();
-                            bool isValid = true;
-
-                            
-                        }
+                        if(!(newStmt->getTypeofNode() == NODE_REDUCTIONCALLSTMT))
+                            return blockStmt;
+                        newStatements.push_back(newStmt);
                     }
                 }
                 else
-                {
-
-                }
+                    newStatements.push_back(currStmt);
             }
             else if(currStmt->lhs_isProp())
-                globalVars.addVariable(currStmt->getPropId()->getIdentifier2(), WRITE);
-
-            if((newStmt->getTypeofNode() == NODE_REDUCTIONCALLSTMT)
-                && !declaredVars.isUsed(((reductionCallStmt*) newStmt)->getLeftId()))
             {
-                newStatements.push_back((reductionCallStmt*) newStmt);
-                Identifier* rednIden = ((reductionCallStmt*) newStmt)->getLeftId();
-                rednFrequency[rednIden->getSymbolInfo()]++;
-
-
+                PropAccess* lhs = currStmt->getPropId();
+                if(!checkIdEqual(forAllItr, lhs->getIdentifier1()))
+                    return blockStmt;
+                else
+                    newStatements.push_back(currStmt);
             }
-            else
-                newStatements.push_back(stmt);
         }
         else if(stmt->getTypeofNode() == NODE_UNARYSTMT)
         {
-            ASTNode* newStmt = unaryReductionAnalysis((unary_stmt*) stmt);
-            if((newStmt->getTypeofNode() == NODE_REDUCTIONCALLSTMT)
-                && !declaredVars.isUsed(((reductionCallStmt*) newStmt)->getLeftId()))
-            {
-                newStatements.push_back((reductionCallStmt*) newStmt);
-                Identifier* rednIden = ((reductionCallStmt*) newStmt)->getLeftId();
-                rednFrequency[rednIden->getSymbolInfo()]++;
+            unary_stmt* currStmt = (unary_stmt*) stmt;
+            Expression* unaryExpr = currStmt->getUnaryExpr();
 
-                globalVars.merge(getVarsExpr(((unary_stmt*) stmt)->getUnaryExpr()));
+            if(unaryExpr->isPropIdExpr())
+            {
+                PropAccess* lhs = unaryExpr->getPropId();
+                if(!checkIdEqual(forAllItr, lhs->getIdentifier1()))
+                    return blockStmt;
+                else
+                    newStatements.push_back(currStmt);
+            }
+            else if(unaryExpr->isIdentifierExpr())
+            {
+                Identifier* lhs = unaryExpr->getId();
+                if(!declaredVars.isUsed(lhs))
+                {
+                    if(reducedVars.isUsed(lhs))
+                        return blockStmt;
+                    else
+                    {
+                        reducedVars.addVariable(lhs, WRITE);
+                        ASTNode* newStmt = unaryReductionAnalysis(currStmt);
+
+                        if(!(newStmt->getTypeofNode() == NODE_REDUCTIONCALLSTMT))
+                            return blockStmt;
+                        newStatements.push_back(newStmt);
+                    }
+                }
+                else
+                    newStatements.push_back(currStmt);
             }
             else
-                newStatements.push_back(stmt);
+                return blockStmt;
         }
         else
             return blockStmt;
     }
 
+    declaredVars.clear();
     blockStatement* newBlock = blockStatement::createnewBlock();
-    for(int i=0; i<oldStatements.size(); i++)
+    for(statement* stmt: newStatements)
     {
-        if(oldStatements[i] == newStatements[i])
-            newBlock->addStmtToBlock(oldStatements[i]);
-        
+        if(stmt->getTypeofNode() == NODE_DECL)
+        {
+            declaration* stmt = (declaration*) stmt;
+            declaredVars.addVariable(stmt->getdeclId(), READ_WRITE);
+        }
+        else if(stmt->getTypeofNode() == NODE_ASSIGN)
+        {
+            usedVariables currUsed = getVarsExpr(((assignment*) stmt)->getExpr());
+            //No reduced variable should be used
+            for(Identifier* redVars: reducedVars.getWriteVariables()){
+                if(currUsed.isUsed(redVars))
+                    return blockStmt;
+            }
+
+            //All writed should be to local variabls
+            for(Identifier* wVars: currUsed.getWriteVariables()){
+                if(!declaredVars.isUsed(wVars))
+                    return blockStmt;
+            }
+
+            //All used properties should be to current iterator
+        }
+        else if(stmt->getTypeofNode() == NODE_REDUCTIONCALLSTMT)
+        {
+            reductionCallStmt* currStmt = (reductionCallStmt*) stmt;
+            Expression* rExpr = currStmt->getRightSide();
+
+            usedVariables currUsed = getVarsExpr(((assignment*) stmt)->getExpr());
+            //No reduced variable should be used
+            for(Identifier* redVars: reducedVars.getWriteVariables()){
+                if(currUsed.isUsed(redVars))
+                    return blockStmt;
+            }
+
+            //All writed should be to local variabls
+            for(Identifier* wVars: currUsed.getWriteVariables()){
+                if(!declaredVars.isUsed(wVars))
+                    return blockStmt;
+            }
+
+            //All used properties should be to current iterator
+        }
+        newBlock->addStmtToBlock(stmt);
     }
+
+    return newBlock;
 }
 
 ASTNode* dataRaceAnalyser::forAllAnalysis(forallStmt *stmt)
