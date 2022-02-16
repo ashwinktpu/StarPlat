@@ -1,11 +1,7 @@
 function Compute_TC(Graph g)
 {
   long triangle_count = 0;
-  propNode <bool> modified;
-  g.attachNodeProperty(dist=INF, modified = False);
-  src.modified = True; 
-  bool finished = True;
-  fixedPoint until(finished:!modified) {
+  
   forall(v in g.nodes())
    {
       forall(u in g.neighbors(v).filter(u < v))
@@ -17,7 +13,10 @@ function Compute_TC(Graph g)
                     triangle_count+=1;
                    }
              }
+
          } 
+
+
    }
-  }
+
 }
