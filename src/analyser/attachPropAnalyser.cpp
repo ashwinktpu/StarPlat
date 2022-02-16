@@ -42,7 +42,7 @@ bool checkDependancy(statement *stmt, usedVariables &usedVars)
   {
     declaration *declStmt = (declaration *)stmt;
     //printf("%p Decl Var\n", declStmt->getdeclId()->getSymbolInfo());
-    if (usedVars.isUsed(declStmt->getdeclId()))
+    if (usedVars.isUsedVar(declStmt->getdeclId()))
       return true;
   }
   break;
@@ -53,24 +53,24 @@ bool checkDependancy(statement *stmt, usedVariables &usedVars)
     if (assgnStmt->lhs_isIdentifier())
     {
       //printf("%p Assign Var\n", assgnStmt->getId()->getSymbolInfo());
-      if(usedVars.isUsed(assgnStmt->getId()))
+      if(usedVars.isUsedVar(assgnStmt->getId()))
         return true;
     }
     else if (assgnStmt->lhs_isProp())
     {
       PropAccess *propId = assgnStmt->getPropId();
-      if (usedVars.isUsed(propId->getIdentifier2()))
+      if (usedVars.isUsedVar(propId->getIdentifier2()))
         return true;
     }
 
     usedVariables exprVars = getVarsExpr(assgnStmt->getExpr());     
-    for(Identifier* wVars: exprVars.getWriteVariables()){
-      if(usedVars.isUsed(wVars))
+    for(Identifier* wVars: exprVars.getVariables(WRITE)){
+      if(usedVars.isUsedVar(wVars))
         return true;
     }
 
-    for(Identifier* rVars: exprVars.getReadVariables()){
-      if(usedVars.isWrite(rVars))
+    for(Identifier* rVars: exprVars.getVariables(READ)){
+      if(usedVars.isUsedVar(rVars, WRITE))
         return true;
     }
   }
@@ -87,12 +87,12 @@ bool checkDependancy(statement *stmt, usedVariables &usedVars)
     if (expr->isPropIdExpr())
     {
       PropAccess *propId = expr->getPropId();
-      if (usedVars.isUsed(propId->getIdentifier2()))
+      if (usedVars.isUsedVar(propId->getIdentifier2()))
         return true;
     }
     else if (expr->isIdentifierExpr())
     {
-      if (usedVars.isUsed(expr->getId()))
+      if (usedVars.isUsedVar(expr->getId()))
         return true;
     }
   }

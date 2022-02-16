@@ -24,6 +24,7 @@
         "xlocale": "cpp",
         "xlocnum": "cpp",
         "utility": "cpp",
-        "unordered_set": "cpp"
+        "unordered_set": "cpp",
+        "functional": "cpp"
     }
 }

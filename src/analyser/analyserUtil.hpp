@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include "../symbolutil/SymbolTable.h"
 
-typedef pair<TableEntry*, TableEntry*> propKey
+typedef pair<TableEntry*, TableEntry*> propKey;
 
 enum variable_type
 {
@@ -25,7 +25,7 @@ enum depeandancy
     ALL_WRITE,
     READ_ALL,
     WRITE_ALL
-}*/
+}
 
 struct IdentifierWrap
 {
@@ -48,7 +48,7 @@ struct IdentifierWrap
             return hash<string>()(iden.id);
         }
     };
-};
+};*/
 
 class usedVariables
 {
@@ -92,6 +92,7 @@ public:
             this->writeProp.insert({iden.first, iden.second});
     }
 
+    /*
     void removeVariable(Identifier *iden, int type)
     {
         if (type & 1)
@@ -105,51 +106,99 @@ public:
             if (writeVars.find(iden->getSymbolInfo()) != writeVars.end())
                 writeVars.erase(iden->getSymbolInfo());
         }
-    }
+    }*/
 
-    bool isRead(Identifier *iden)
-    {
-        return (readVars.find(iden->getSymbolInfo()) != readVars.end());
-    }
-
-    bool isWrite(Identifier *iden)
-    {
-        return (writeVars.find(iden->getSymbolInfo()) != writeVars.end());
-    }
-
-    bool isUsed(Identifier *iden)
+    bool isUsedVar(Identifier *iden, int type = READ_WRITE)
     {
         TableEntry* symbInfo = iden->getSymbolInfo();
-        return ((readVars.find(symbInfo) != readVars.end()) || (writeVars.find(symbInfo) != writeVars.end()));
+        if(type == READ)
+            return (readVars.find(symbInfo) != readVars.end());
+        else if(type == WRITE)
+            return (writeVars.find(symbInfo) != writeVars.end());
+        else
+            return ((readVars.find(symbInfo) != readVars.end()) || (writeVars.find(symbInfo) != writeVars.end()));
     }
 
-    list<Identifier *> getReadVariables()
+    list<Identifier *> getVariables(int type = READ_WRITE)
     {
         list<Identifier *> result;
-        for (pair<TableEntry*, Identifier*> iden : readVars)
-            result.push_back(iden.second);
-
+        if(type & 1)
+        {
+            for (pair<TableEntry*, Identifier*> iden : readVars)
+                result.push_back(iden.second);
+        }
+        if(type & 2)
+        {
+            for (pair<TableEntry*, Identifier*> iden : writeVars)
+                result.push_back(iden.second);
+        }
         return result;
     }
 
-    list<Identifier *> getWriteVariables()
-    {
-        list<Identifier *> result;
-        for (pair<TableEntry*, Identifier*> iden : writeVars)
-            result.push_back(iden.second);
+    bool hasVariables(int type == READ_WRITE){
+        if(type == READ)
+            return (readVars.size() > 0);
+        else if(type == WRITE)
+            return (writeVars.size() > 0);
+        else
+            return ((writeVars.size() > 0) || (readVars.size() > 0));
+    }
 
+    bool isUsedPropAcess(PropAccess *propId, int type = READ_WRITE)
+    {
+        Identifier* iden1 = prop->getIdentifier1();
+        Identifier* iden2 = prop->getIdentifier2();
+        propKey prop_key = make_pair(iden1->getSymbolInfo(), iden2->getSymbolInfo());
+
+        if(type == READ)
+            return (readProp.find(prop_key) != readVars.end());
+        else if(type == WRITE)
+            return (writeProp.find(prop_key) != writeVars.end());
+        else
+            return ((readProp.find(prop_key) != readVars.end()) || (writeProp.find(prop_key) != writeVars.end()));
+    }
+
+    bool isUsedProp(PropAccess *propId, int type = READ_WRITE)
+    {
+        Identifier* iden1 = prop->getIdentifier1();
+        TableEntry* symbInfo = iden1->getSymbolInfo();
+
+        if(type & 1)
+        {
+            for (pair<propKey, PropAccess*> iden : readProp)
+                if(iden.first.second == symbInfo) return true;
+        }
+        if(type & 2)
+        {
+            for (pair<propKey, PropAccess*> iden : writeProp)
+                if(iden.first.second == symbInfo) return true;
+        }
+        return true;
+    }
+
+    list<PropAccess *> getPropAcess(int type = READ_WRITE)
+    {
+        list<PropAccess *> result;
+        if(type & 1)
+        {
+            for (pair<propKey, PropAccess*> iden : readProp)
+                result.push_back(iden.second);
+        }
+        if(type & 2)
+        {
+            for (pair<propKey, PropAccess*> iden : writeProp)
+                result.push_back(iden.second);
+        }
         return result;
     }
 
-    bool hasReadVariables(){
-        return (readVars.size() > 0);
-    }
+    void clear(){
+        readVars.clear();
+        writeVars.clear();
 
-    bool hasWriteVariables(){
-        return (writeVars.size() > 0);
+        readProp.clear();
+        writeProp.clear();
     }
-
-    //TODO: add function to clear
 };
 
 usedVariables getVarsExpr(Expression *expr)
@@ -164,7 +213,7 @@ usedVariables getVarsExpr(Expression *expr)
     else if (expr->isPropIdExpr())
     {
         PropAccess *propExpr = expr->getPropId();
-        result.addVariable(propExpr->getIdentifier2(), READ);
+        result.addPropAccess(propExpr, READ);
     }
     else if (expr->isUnary())
     {
@@ -176,7 +225,7 @@ usedVariables getVarsExpr(Expression *expr)
             if (uExpr->isIdentifierExpr())
                 result.addVariable(uExpr->getId(), READ_WRITE);
             else if (uExpr->isPropIdExpr())
-                result.addVariable(uExpr->getPropId()->getIdentifier2(), READ_WRITE);
+                result.addPropAccess(uExpr->getPropId(), READ_WRITE);
         }
     }
     else if (expr->isLogical() || expr->isArithmetic() || expr->isRelational())
@@ -187,7 +236,7 @@ usedVariables getVarsExpr(Expression *expr)
     return result;
 }
 
-usedVariables getVarsBlock(Statement *inp_stmt)
+usedVariables getVarsBlock(statement *inp_stmt)
 {
     list<statement *> stmtList = inp_stmt->returnStatements();
     usedVariables result;
@@ -196,7 +245,7 @@ usedVariables getVarsBlock(Statement *inp_stmt)
     {
         if (stmt->getTypeOfNode() == NODE_ASSIGN)
         {
-            Assignment *assign = stmt->getAssignment();
+            assignment *assign = stmt->getAssignment();
             Expression *lExpr = assign->getLeft();
             Expression *rExpr = assign->getRight();
 
@@ -208,7 +257,7 @@ usedVariables getVarsBlock(Statement *inp_stmt)
             else if (lExpr->isPropIdExpr())
             {
                 PropAccess *propExpr = lExpr->getPropId();
-                result.addVariable(propExpr->getIdentifier2(), WRITE);
+                result.addPropAccess(propExpr, WRITE);
             }
 
             result.merge(getVarsExpr(rExpr));
@@ -230,6 +279,8 @@ usedVariables getVarsBlock(Statement *inp_stmt)
             result.merge(getVarsBlock(stmt));
         }
     }
+
+    return result;
 }
 
 usedVariables getDeclBlock(statement *inp_stmt)
