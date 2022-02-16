@@ -6,15 +6,19 @@
 class dataRaceAnalyser
 {
   public:
-  class dataRaceAnalyser(){
-  }
+  dataRaceAnalyser(){}
 
   void analyse();
   void analyseFunc(ASTNode* );
   void analyseStatement(statement* );
-  ASTNode* forAllAnalysis(forallStmt* );
-  ASTNode* ngbrForAnalysis(forallStmt*, Identifier*, Identifier*);
-  ASTNode* relPropUpdateAnalysis(ifStmt*, Identifier*);
+  statement* forAllAnalysis(forallStmt* );
+  statement* ngbrForAnalysis(forallStmt*, Identifier*, Identifier*);
+  statement* relPropUpdateAnalysis(ifStmt*, Identifier*);
+  statement* unaryReductionAnalysis(unary_stmt* );
+  statement* assignReductionAnalysis(assignment *);
+  statement* blockReductionAnalysis(blockStatement* , Identifier* );
+
+
 };
 
 #endif

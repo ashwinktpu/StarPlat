@@ -131,12 +131,12 @@ class relPropUpdateStruct: public neighbourLoop
 statement* dataRaceAnalyser::relPropUpdateAnalysis(ifStmt *stmt, Identifier *forIterator)
 {
     Expression *cond = stmt->getCondition();
-    if ((currStmt->getElseBody() == nullptr) && cond->isRelational())
+    if ((stmt->getElseBody() == nullptr) && cond->isRelational())
         if ((cond->getOperatorType() == OPERATOR_GT) || (cond->getOperatorType() == OPERATOR_LT))
         {
             Expression *propExpr = nullptr;
             Expression *otherExpr = nullptr;
-            OPERATOR opType = cond->getOperatorType();
+            int opType = cond->getOperatorType();
 
             Expression *lExpr = propExpr->getLeft(), *rExpr = propExpr->getRight();
 
@@ -159,7 +159,7 @@ statement* dataRaceAnalyser::relPropUpdateAnalysis(ifStmt *stmt, Identifier *for
                 blockStatement *ifBody = (blockStatement *)stmt->getIfBody();
 
                 list<ASTNode *> leftList;
-                reductionCall *reductionCallNode = nullptr;
+                ASTNode *reductionCallNode = nullptr;
                 list<ASTNode *> rightList;
 
                 leftList.push_back(propExpr->getPropId());
@@ -214,12 +214,12 @@ statement* dataRaceAnalyser::relPropUpdateAnalysis(ifStmt *stmt, Identifier *for
                 {
                     if(rightList.size() == 0)
                     {
-                        reductionCallStmt* reductionCall = Util::createNodeForReductionOpStmt(propExpr->getPropId(), reductionCallNode);
+                        statement* reductionCall = (statement*) Util::createNodeForReductionStmt(propExpr->getPropId(), reductionCallNode);
                         return reductionCall;
                     }
                     else
                     {
-                        reductionCallStmt *reductionCall = Util::createNodeForReductionStmtList(leftList, reductionCallNode, rightList);
+                        statement *reductionCall = (statement*) Util::createNodeForReductionStmtList(leftList, reductionCallNode, rightList);
                         return reductionCall;
                     }
                 }
@@ -234,10 +234,10 @@ statement* dataRaceAnalyser::ngbrForAnalysis(forallStmt *stmt, Identifier *forAl
     proc_callExpr *procCall = stmt->getExtractElementFunc();
 
     if (stmt->isSourceProcCall() && (procCall->getArgList().size() == 1) 
-        && checkIdEqual(srcGraph, stmt->getSourceGraph()) && checkIdNameEqual(procCall->getMethodId(), "neighbors"))
+        && checkIdEqual(srcGraph, stmt->getSourceGraph()) && checkIdNameEqual(procCall->getMethodId(), "neighbours"))
     {
         Identifier *ngbrItr = stmt->getIterator();
-        argument *firstArg = *(procCall1->getArgList().begin());
+        argument *firstArg = *(procCall->getArgList().begin());
         Expression *argVal = firstArg->getExpr();
 
         if (argVal->isIdentifierExpr() && checkIdEqual(argVal->getId(), forAllIterator))
@@ -250,14 +250,14 @@ statement* dataRaceAnalyser::ngbrForAnalysis(forallStmt *stmt, Identifier *forAl
                 {
                     if (stmt->getTypeofNode() == NODE_IFSTMT)
                     {
-                        statement *newStmt = relPropUpdateAnalysis((ifStmt *)stmt, Identifier * ngbrItr);
+                        statement *newStmt = relPropUpdateAnalysis((ifStmt *)stmt, (Identifier *) ngbrItr);
                         // TODO : Replace the current statment with new statement
                     }
                 }
             }
             else if (body->getTypeofNode() == NODE_IFSTMT)
             {
-                statement *newStmt = relPropUpdateAnalysis((ifStmt *)stmt, Identifier * ngbrItr);
+                statement *newStmt = relPropUpdateAnalysis((ifStmt *)stmt, (Identifier *) ngbrItr);
                 stmt->setBody(newStmt);
             }
         }
@@ -270,15 +270,15 @@ statement* dataRaceAnalyser::unaryReductionAnalysis(unary_stmt* stmt)
     Expression* unaryExpr = stmt->getUnaryExpr();
     if(unaryExpr->isIdentifierExpr())
     {
-        Expression* VALUE_ONE = Util::createNodeForIval(1ll);
+        ASTNode* VALUE_ONE = Util::createNodeForIval(1ll);
         if(unaryExpr->getOperatorType() == OPERATOR_INC)
         {
-            reductionCallStmt *reductionCall = Util::createNodeForReductionOpStmt(unaryExpr->getId(), OPERATOR_ADDASSIGN, VALUE_ONE);
+            statement *reductionCall = (statement*) Util::createNodeForReductionOpStmt(unaryExpr->getId(), OPERATOR_ADDASSIGN, VALUE_ONE);
             return reductionCall;
         }
         else if(unaryExpr->getOperatorType() == OPERATOR_DEC)
         {
-            reductionCallStmt *reductionCall = Util::createNodeForReductionOpStmt(unaryExpr->getId(), OPERATOR_SUBASSIGN, VALUE_ONE);
+            statement *reductionCall = (statement*) Util::createNodeForReductionOpStmt(unaryExpr->getId(), OPERATOR_SUBASSIGN, VALUE_ONE);
             return reductionCall;
         }
     }
@@ -300,20 +300,30 @@ statement* dataRaceAnalyser::assignReductionAnalysis(assignment *stmt)
                 switch(rhsExpr->getOperatorType())
                 {
                     case OPERATOR_ADD:
-                        reductionCallStmt *reductionCall = Util::createNodeForReductionOpStmt(lhsId, OPERATOR_ADDASSIGN, rightSide);
-                        return reductionCall;
+                    {
+                        ASTNode *reductionCall = Util::createNodeForReductionOpStmt(lhsId, OPERATOR_ADDASSIGN, rightSide);
+                        return (statement*) reductionCall;
+                    }
                     case OPERATOR_SUB:
-                        reductionCallStmt *reductionCall = Util::createNodeForReductionOpStmt(lhsId, OPERATOR_SUBASSIGN, rightSide);
-                        return reductionCall;
+                    {
+                        ASTNode *reductionCall = Util::createNodeForReductionOpStmt(lhsId, OPERATOR_SUBASSIGN, rightSide);
+                        return (statement*) reductionCall;
+                    }
                     case OPERATOR_MUL:
-                        reductionCallStmt *reductionCall = Util::createNodeForReductionOpStmt(lhsId, OPERATOR_MULASSIGN, rightSide);
-                        return reductionCall;
+                    {
+                        ASTNode *reductionCall = Util::createNodeForReductionOpStmt(lhsId, OPERATOR_MULASSIGN, rightSide);
+                        return (statement*) reductionCall;
+                    }
                     case OPERATOR_AND:
-                        reductionCallStmt *reductionCall = Util::createNodeForReductionOpStmt(lhsId, OPERATOR_ANDASSIGN, rightSide);
-                        return reductionCall;
+                    {
+                        ASTNode *reductionCall = Util::createNodeForReductionOpStmt(lhsId, OPERATOR_ANDASSIGN, rightSide);
+                        return (statement*) reductionCall;
+                    }
                     case OPERATOR_OR:
-                        reductionCallStmt *reductionCall = Util::createNodeForReductionOpStmt(lhsId, OPERATOR_ORASSIGN, rightSide);
-                        return reductionCall;
+                    {
+                        ASTNode *reductionCall = Util::createNodeForReductionOpStmt(lhsId, OPERATOR_ORASSIGN, rightSide);
+                        return (statement*) reductionCall;
+                    }
                 }
             }
             else if (rightSide->isIdentifierExpr() && checkIdEqual(rightSide->getId(), lhsId))
@@ -322,17 +332,25 @@ statement* dataRaceAnalyser::assignReductionAnalysis(assignment *stmt)
                 switch(rhsExpr->getOperatorType())
                 {
                     case OPERATOR_ADD:
-                        reductionCallStmt *reductionCall = Util::createNodeForReductionOpStmt(lhsId, OPERATOR_ADDASSIGN, leftSide);
-                        return reductionCall;
+                    {
+                        ASTNode *reductionCall = Util::createNodeForReductionOpStmt(lhsId, OPERATOR_ADDASSIGN, leftSide);
+                        return (statement*) reductionCall;
+                    }
                     case OPERATOR_MUL:
-                        reductionCallStmt *reductionCall = Util::createNodeForReductionOpStmt(lhsId, OPERATOR_MULASSIGN, leftSide);
-                        return reductionCall;
+                    {
+                        ASTNode *reductionCall = Util::createNodeForReductionOpStmt(lhsId, OPERATOR_MULASSIGN, leftSide);
+                        return (statement*) reductionCall;
+                    }
                     case OPERATOR_AND:
-                        reductionCallStmt *reductionCall = Util::createNodeForReductionOpStmt(lhsId, OPERATOR_ANDASSIGN, leftSide);
-                        return reductionCall;
+                    {
+                        ASTNode *reductionCall = Util::createNodeForReductionOpStmt(lhsId, OPERATOR_ANDASSIGN, leftSide);
+                        return (statement*) reductionCall;
+                    }
                     case OPERATOR_OR:
-                        reductionCallStmt *reductionCall = Util::createNodeForReductionOpStmt(lhsId, OPERATOR_ORASSIGN, leftSide);
-                        return reductionCall;
+                    {
+                        ASTNode *reductionCall = Util::createNodeForReductionOpStmt(lhsId, OPERATOR_ORASSIGN, leftSide);
+                        return (statement*) reductionCall;
+                    }
                 }
             }
         }
@@ -459,13 +477,13 @@ statement* dataRaceAnalyser::blockReductionAnalysis(blockStatement* blockStmt, I
         {
             usedVariables currUsed = getVarsExpr(((assignment*) stmt)->getExpr());
             //No reduced variable should be used
-            for(Identifier* redVars: reducedVars.getWriteVariables()){
+            for(Identifier* redVars: reducedVars.getVariables(WRITE)){
                 if(currUsed.isUsedVar(redVars))
                     return blockStmt;
             }
 
             //All writed should be to local variabls
-            for(Identifier* wVars: currUsed.getWriteVariables()){
+            for(Identifier* wVars: currUsed.getVariables(WRITE)){
                 if(!declaredVars.isUsedVar(wVars))
                     return blockStmt;
             }
@@ -483,13 +501,13 @@ statement* dataRaceAnalyser::blockReductionAnalysis(blockStatement* blockStmt, I
 
             usedVariables currUsed = getVarsExpr(((assignment*) stmt)->getExpr());
             //No reduced variable should be used
-            for(Identifier* redVars: reducedVars.getWriteVariables()){
+            for(Identifier* redVars: reducedVars.getVariables(WRITE)){
                 if(currUsed.isUsedVar(redVars))
                     return blockStmt;
             }
 
             //All writed should be to local variabls
-            for(Identifier* wVars: currUsed.getWriteVariables()){
+            for(Identifier* wVars: currUsed.getVariables(WRITE)){
                 if(!declaredVars.isUsedVar(wVars))
                     return blockStmt;
             }
@@ -541,7 +559,7 @@ statement* dataRaceAnalyser::forAllAnalysis(forallStmt *stmt)
                 if(currUsed.hasVariables(WRITE)) flag = false;
 
                 for(PropAccess* propId: currUsed.getPropAcess(READ_WRITE)){
-                    if(!checkIdEqual(propId->getIdentifier1(), forAllItr))
+                    if(!checkIdEqual(propId->getIdentifier1(), itr))
                         flag = false;
                 }
                 
@@ -564,7 +582,7 @@ void dataRaceAnalyser::analyseStatement(statement *stmt)
     case NODE_BLOCKSTMT:
     {
         blockStatement *blockStmt = (blockStatement *)stmt;
-        for (statement *stmt : blockStmt)
+        for (statement *stmt : blockStmt->returnStatements())
             analyseStatement(stmt);
     }
     break;

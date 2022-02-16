@@ -5,7 +5,7 @@
 	#include <stdlib.h>
 	#include <stdbool.h>
     #include "includeHeader.hpp"
-	#include "../analyser/attachPropAnalyser.h"
+	#include "../analyser/dataRaceAnalyser.h"
 	#include<getopt.h>
 	//#include "../symbolutil/SymbolTableBuilder.cpp"
      
@@ -432,8 +432,8 @@ int main(int argc,char **argv)
      //TODO: redirect to different backend generator after comparing with the 'b' option
     stBuilder.buildST(frontEndContext.getFuncList());
 	
-	attachPropAnalyser propMerge;
-	propMerge.analyse();
+	//attachPropAnalyser propMerge;
+	//propMerge.analyse();
 	
 	cpp_backend.setFileName(fileName);
 	cpp_backend.generate();

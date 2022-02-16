@@ -1,4 +1,4 @@
-EXPENDABLES_WINDOWS = bin\MainContext.o bin\ASTHelper.o bin\SymbolTableBuilder.o bin\SymbolTableNew.o bin\y.tab.o bin\lex.yy.o parser\y.tab.c parser\lex.yy.c bin\dsl_cpp_generator.o bin\attachPropAnalyser.o
+EXPENDABLES_WINDOWS = bin\MainContext.o bin\ASTHelper.o bin\SymbolTableBuilder.o bin\SymbolTableNew.o bin\y.tab.o bin\lex.yy.o parser\y.tab.c parser\lex.yy.c bin\dsl_cpp_generator.o bin\dataRaceAnalyser.o
 EXPENDABLES = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c bin/dsl_cpp_generator.o bin/attachPropAnalyser.o
 ANALYSER = bin\attachPropAnalyser.o
 
@@ -7,8 +7,8 @@ CC = g++
 all: finalcode clean
 windows: finalcode clean_windows
 
-finalcode: bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o bin/attachPropAnalyser.o
-	$(CC) bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o bin/attachPropAnalyser.o -o finalcode
+finalcode: bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o bin/dataRaceAnalyser.o
+	$(CC) bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o bin/dataRaceAnalyser.o -o finalcode
 
 bin/MainContext.o: maincontext/MainContext.cpp
 	$(CC) -c maincontext/MainContext.cpp -o bin/MainContext.o
@@ -29,6 +29,9 @@ bin/dsl_cpp_generator.o: backends/backend_omp/dsl_cpp_generator.cpp backends/dsl
 
 bin/attachPropAnalyser.o: analyser/attachPropAnalyser.cpp analyser/attachPropAnalyser.h
 	$(CC) -c analyser/attachPropAnalyser.cpp -o bin/attachPropAnalyser.o
+
+bin/dataRaceAnalyser.o: analyser/dataRaceAnalyser.cpp analyser/dataRaceAnalyser.h
+	$(CC) -c analyser/dataRaceAnalyser.cpp -o bin/dataRaceAnalyser.o
 
 bin/analyserUtil.o: analyser/analyserUtil.hpp
 	$(CC) -c analyser/analyserUtil.hpp -o bin/analyserUtil.o
