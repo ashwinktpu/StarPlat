@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include "../symbolutil/SymbolTable.h"
 
-typedef pair<TableEntry*, TableEntry*> propKey;
+#define propKey pair<TableEntry*, TableEntry*> 
 
 enum variable_type
 {
@@ -53,10 +53,23 @@ struct IdentifierWrap
 class usedVariables
 {
 private:
+
+    struct hash_pair {
+        template <class T1, class T2>
+        size_t operator()(const pair<T1, T2>& p) const
+        {
+            auto hash1 = hash<T1>{}(p.first);
+            auto hash2 = hash<T2>{}(p.second);
+            return hash1 ^ hash2;
+        }
+    };
+
     unordered_map<TableEntry*, Identifier*> readVars, writeVars;
-    unordered_map<propKey, PropAccess*> readProp, writeProp;
+    unordered_map<propKey, PropAccess*, hash_pair> readProp, writeProp;
 
 public:
+    usedVariables() {}
+
     void addVariable(Identifier *iden, int type)
     {
         if (type & 1)
@@ -85,10 +98,10 @@ public:
         for (pair<TableEntry*, Identifier*> iden : usedVars1.writeVars)
             this->writeVars.insert({iden.first, iden.second});
 
-        for (pair<propKey, Identifier*> iden: usedVars1.readProp)
+        for (pair<propKey, PropAccess*> iden: usedVars1.readProp)
             this->readProp.insert({iden.first, iden.second});
 
-        for (pair<propKey, Identifier*> iden : usedVars1.writeProp)
+        for (pair<propKey, PropAccess*> iden : usedVars1.writeProp)
             this->writeProp.insert({iden.first, iden.second});
     }
 
@@ -135,7 +148,7 @@ public:
         return result;
     }
 
-    bool hasVariables(int type == READ_WRITE){
+    bool hasVariables(int type = READ_WRITE){
         if(type == READ)
             return (readVars.size() > 0);
         else if(type == WRITE)
@@ -146,22 +159,22 @@ public:
 
     bool isUsedPropAcess(PropAccess *propId, int type = READ_WRITE)
     {
-        Identifier* iden1 = prop->getIdentifier1();
-        Identifier* iden2 = prop->getIdentifier2();
+        Identifier* iden1 = propId->getIdentifier1();
+        Identifier* iden2 = propId->getIdentifier2();
         propKey prop_key = make_pair(iden1->getSymbolInfo(), iden2->getSymbolInfo());
 
         if(type == READ)
-            return (readProp.find(prop_key) != readVars.end());
+            return (readProp.find(prop_key) != readProp.end());
         else if(type == WRITE)
-            return (writeProp.find(prop_key) != writeVars.end());
+            return (writeProp.find(prop_key) != writeProp.end());
         else
-            return ((readProp.find(prop_key) != readVars.end()) || (writeProp.find(prop_key) != writeVars.end()));
+            return ((readProp.find(prop_key) != readProp.end()) || (writeProp.find(prop_key) != writeProp.end()));
     }
 
     bool isUsedProp(PropAccess *propId, int type = READ_WRITE)
     {
-        Identifier* iden1 = prop->getIdentifier1();
-        TableEntry* symbInfo = iden1->getSymbolInfo();
+        Identifier* iden2 = propId->getIdentifier2();
+        TableEntry* symbInfo = iden2->getSymbolInfo();
 
         if(type & 1)
         {
@@ -236,14 +249,15 @@ usedVariables getVarsExpr(Expression *expr)
     return result;
 }
 
+/*
 usedVariables getVarsBlock(statement *inp_stmt)
 {
-    list<statement *> stmtList = inp_stmt->returnStatements();
+    list<statement *> stmtList = ((blockStatement*) inp_stmt)->returnStatements();
     usedVariables result;
 
     for (statement *stmt: stmtList)
     {
-        if (stmt->getTypeOfNode() == NODE_ASSIGN)
+        if (stmt->getTypeofNode() == NODE_ASSIGN)
         {
             assignment *assign = stmt->getAssignment();
             Expression *lExpr = assign->getLeft();
@@ -302,6 +316,6 @@ usedVariables getDeclBlock(statement *inp_stmt)
         }
     }
     return result;
-}
+}*/
 
 #endif
