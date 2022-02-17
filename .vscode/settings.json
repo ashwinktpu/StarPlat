@@ -25,6 +25,10 @@
         "xlocnum": "cpp",
         "utility": "cpp",
         "unordered_set": "cpp",
-        "functional": "cpp"
+        "functional": "cpp",
+        "deque": "cpp",
+        "vector": "cpp",
+        "memory": "cpp",
+        "istream": "cpp"
     }
 }
