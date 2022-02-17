@@ -214,13 +214,13 @@ statement* dataRaceAnalyser::relPropUpdateAnalysis(ifStmt *stmt, Identifier *for
                 {
                     if(rightList.size() == 0)
                     {
-                        statement* reductionCall = (statement*) Util::createNodeForReductionStmt(propExpr->getPropId(), reductionCallNode);
-                        return reductionCall;
+                        ASTNode* reductionCall = Util::createNodeForReductionStmt(propExpr->getPropId(), reductionCallNode);
+                        return (statement*) reductionCall;
                     }
                     else
                     {
-                        statement *reductionCall = (statement*) Util::createNodeForReductionStmtList(leftList, reductionCallNode, rightList);
-                        return reductionCall;
+                        ASTNode *reductionCall = Util::createNodeForReductionStmtList(leftList, reductionCallNode, rightList);
+                        return (statement*) reductionCall;
                     }
                 }
             }
@@ -273,13 +273,13 @@ statement* dataRaceAnalyser::unaryReductionAnalysis(unary_stmt* stmt)
         ASTNode* VALUE_ONE = Util::createNodeForIval(1ll);
         if(unaryExpr->getOperatorType() == OPERATOR_INC)
         {
-            statement *reductionCall = (statement*) Util::createNodeForReductionOpStmt(unaryExpr->getId(), OPERATOR_ADDASSIGN, VALUE_ONE);
-            return reductionCall;
+            ASTNode *reductionCall = Util::createNodeForReductionOpStmt(unaryExpr->getId(), OPERATOR_ADDASSIGN, VALUE_ONE);
+            return (statement*) reductionCall;
         }
         else if(unaryExpr->getOperatorType() == OPERATOR_DEC)
         {
-            statement *reductionCall = (statement*) Util::createNodeForReductionOpStmt(unaryExpr->getId(), OPERATOR_SUBASSIGN, VALUE_ONE);
-            return reductionCall;
+            ASTNode *reductionCall = Util::createNodeForReductionOpStmt(unaryExpr->getId(), OPERATOR_SUBASSIGN, VALUE_ONE);
+            return (statement*) reductionCall;
         }
     }
     return stmt;

@@ -7,41 +7,56 @@
 #include "analyserUtil.hpp"
 #include "../ast/ASTHelper.cpp"
 
-struct statementRange
-{
-  statement *stmt;
-  int l;
-  int r;
-
-
-  bool operator < (statementRange &stmt1)
-  {
-      if(l < stmt1.l)
-        return true;
-
-      return (r < stmt1.r);
-  }
-};
-
 struct statementPos
 {
   statement *stmt;
   int pos;
+};
 
-  bool operator < (statementPos &stmt1)
-  {
-      return (pos < stmt1.pos);
-  }
+struct statementRange
+{
+  statementPos stPos;
+  int l;
+  int r;
+
+  usedVariables dependantVars;
 };
 
 bool checkDependancy(statement *stmt, usedVariables &usedVars)
 {
+  auto checkExprDependancy = [&usedVars](Expression *expr) -> bool
+  {
+    usedVariables exprVars = getVarsExpr(expr);
+    for (Identifier *wVars : exprVars.getVariables(WRITE))
+    {
+      if (usedVars.isUsedVar(wVars))
+        return true;
+    }
+
+    for (Identifier *rVars : exprVars.getVariables(READ))
+    {
+      if (usedVars.isUsedVar(rVars, WRITE))
+        return true;
+    }
+
+    for (PropAccess *propId : exprVars.getPropAcess())
+    {
+      if ((usedVars.isUsedVar(propId->getIdentifier2())) || (usedVars.isUsedProp(propId)))
+        return true;
+    }
+
+    return false;
+  };
+
   switch (stmt->getTypeofNode())
   {
   case NODE_DECL:
   {
     declaration *declStmt = (declaration *)stmt;
     if (usedVars.isUsedVar(declStmt->getdeclId()))
+      return true;
+
+    if (declStmt->isInitialized() && checkExprDependancy(declStmt->getExpressionAssigned()))
       return true;
   }
   break;
@@ -51,38 +66,45 @@ bool checkDependancy(statement *stmt, usedVariables &usedVars)
     assignment *assgnStmt = (assignment *)stmt;
     if (assgnStmt->lhs_isIdentifier())
     {
-      if(usedVars.isUsedVar(assgnStmt->getId()))
+      if (usedVars.isUsedVar(assgnStmt->getId()))
         return true;
     }
     else if (assgnStmt->lhs_isProp())
     {
       PropAccess *propId = assgnStmt->getPropId();
-      if ((usedVars.isUsedVar(propId->getIdentifier2()))
-          || (usedVars.isUsedProp(propId)))
+      if ((usedVars.isUsedVar(propId->getIdentifier2())) || (usedVars.isUsedProp(propId)))
         return true;
     }
 
-    usedVariables exprVars = getVarsExpr(assgnStmt->getExpr());     
-    for(Identifier* wVars: exprVars.getVariables(WRITE)){
-      if(usedVars.isUsedVar(wVars))
-        return true;
-    }
-
-    for(Identifier* rVars: exprVars.getVariables(READ)){
-      if(usedVars.isUsedVar(rVars, WRITE))
-        return true;
-    }
-
-    for(PropAccess* propId: exprVars.getPropAcess()){
-      if ((usedVars.isUsedVar(propId->getIdentifier2()))
-          || (usedVars.isUsedProp(propId)))
-        return true;
-    }
+    if (checkExprDependancy(assgnStmt->getExpr()))
+      return true;
   }
   break;
 
   case NODE_PROCCALLSTMT:
-    break;
+  {
+    proc_callExpr *procedure = ((proc_callStmt *)stmt)->getProcCallExpr();
+    string methodID(procedure->getMethodId()->getIdentifier());
+
+    if (methodID == "attachNodeProperty")
+    {
+      for (argument *arg : procedure->getArgList())
+      {
+        
+        if (arg->isAssignExpr())
+        {
+          assignment *asgn = arg->getAssignExpr();
+          if(usedVars.isUsedProp(PropAccess::createPropAccessNode(nullptr, asgn->getId())))
+            return true;
+          
+          if (checkExprDependancy(asgn->getExpr()))
+            return true;
+          
+        }
+      }
+    }
+  }
+  break;
 
   case NODE_UNARYSTMT:
   {
@@ -110,13 +132,16 @@ bool checkDependancy(statement *stmt, usedVariables &usedVars)
   return false;
 }
 
-pair<int, int> getRange(proc_callStmt *stmt, int currPos, vector<statement *> stmts)
+statementRange getRange(statementPos stPos, vector<statement *> stmts)
 {
-  int l = currPos;
-  int r = currPos + 1;
+  int l = stPos.pos;
+  int r = stPos.pos + 1;
 
   usedVariables usedVars;
+
+  proc_callStmt *stmt = (proc_callStmt *)stPos.stmt;
   proc_callExpr *callStmt = stmt->getProcCallExpr();
+
   for (argument *arg : callStmt->getArgList())
   {
     if (arg->isAssignExpr())
@@ -144,14 +169,15 @@ pair<int, int> getRange(proc_callStmt *stmt, int currPos, vector<statement *> st
     l--;
   }
 
-  while (r <= stmts.size() && !checkDependancy(stmts[r-1], usedVars))
+  while (r <= stmts.size() && !checkDependancy(stmts[r - 1], usedVars))
   {
     r++;
   }
 
-  return make_pair(l, r);
+  return {stPos, l, r, usedVars};
 }
 
+/*
 list<statementPos> findStmtPosition(list<statementRange> stmts)
 {
   stmts.sort();
@@ -176,7 +202,7 @@ list<statementPos> findStmtPosition(list<statementRange> stmts)
       else
         break;
     }
-    
+
     while(itr != itr1)
     {
       result.push_back({itr->stmt, left});
@@ -184,10 +210,10 @@ list<statementPos> findStmtPosition(list<statementRange> stmts)
     }
   }
   return result;
-}
+}*/
 
 void attachPropAnalyser::analyseBlock(blockStatement *blockStmt)
-{  
+{
   list<statement *> stmtList = blockStmt->returnStatements();
   list<statement *>::iterator itr;
 
@@ -240,55 +266,64 @@ void attachPropAnalyser::analyseBlock(blockStatement *blockStmt)
     }
   }
 
-  unordered_map<string, list<statementRange>> uMap;
+  list<statementRange> stmtRanges;
   for (statementPos stPos : nodeAttachList)
   {
-    pair<int, int> validRange = getRange((proc_callStmt*) stPos.stmt, stPos.pos, newStatements);
-
-    //cout<<"Statement Range "<<validRange.first<<' '<<validRange.second<<endl;
-
-    proc_callExpr *callExpr = ((proc_callStmt *)stPos.stmt)->getProcCallExpr();
-    Identifier *graphIden = callExpr->getId1();
-
-    uMap[string(graphIden->getIdentifier())].push_back({stPos.stmt, validRange.first, validRange.second});
+    statementRange validRange = getRange(stPos, newStatements);
+    cout<<"Statement Range "<<validRange.l<<' '<<validRange.r<<endl;
+    stmtRanges.push_back(validRange);
   }
 
   list<statementPos> newAttachNodeStmt;
-  for (pair<string, list<statementRange>> attachList : uMap)
+  list<statementRange>::iterator itrs, itre;
+
+  for (itrs = stmtRanges.begin(); itrs != stmtRanges.end();)
   {
-    list<statementPos> currAttachList = findStmtPosition(attachList.second);
+    cout<<"ITERATION"<<endl;
 
-    for (list<statementPos>::iterator itr = currAttachList.begin(); itr != currAttachList.end();)
+    int left = (itrs->stPos).pos;
+    int right = itrs->r;
+
+    usedVariables currMerge;
+
+    itre = itrs;
+    while (itre != stmtRanges.end())
     {
-      proc_callStmt *proc_call = (proc_callStmt *)(itr->stmt);
-      proc_callExpr *procedure = proc_call->getProcCallExpr();
-
-      list<statementPos>::iterator itrNxt = itr;
-      itrNxt++;
-
-      while (itrNxt != currAttachList.end() && (itrNxt->pos) == itr->pos)
+      if (itre->l < right && !checkDependancy((itre->stPos).stmt, currMerge))
       {
-        proc_callExpr *nxtProcedure = ((proc_callStmt *)(itrNxt->stmt))->getProcCallExpr();
-        for (argument *arg : nxtProcedure->getArgList())
-          procedure->addToArgList(arg);
+        left = max(left, itre->l);
+        right = min(right, itre->r);
 
-        itrNxt++;
+        currMerge.merge(itre->dependantVars);
+        itre++;
       }
-
-      newAttachNodeStmt.push_back(*itr);
-      itr = itrNxt;
+      else
+        break;
     }
+
+    proc_callStmt *proc_call = (proc_callStmt *)(itrs->stPos).stmt;
+    proc_callExpr *procedure = proc_call->getProcCallExpr();
+
+    ++itrs;
+    while (itrs != itre)
+    {
+      proc_callExpr *nxtProcedure = ((proc_callStmt *)(itrs->stPos).stmt)->getProcCallExpr();
+      for (argument *arg : nxtProcedure->getArgList())
+        procedure->addToArgList(arg);
+
+      ++itrs;
+    }
+    newAttachNodeStmt.push_back({proc_call, left});
   }
-  
-  newAttachNodeStmt.sort();
-  for(list<statementPos>::reverse_iterator itr = newAttachNodeStmt.rbegin(); itr != newAttachNodeStmt.rend(); itr++) {
+
+  for (list<statementPos>::reverse_iterator itr = newAttachNodeStmt.rbegin(); itr != newAttachNodeStmt.rend(); itr++){
     newStatements.insert(newStatements.begin() + itr->pos, itr->stmt);
   }
 
   blockStmt->clearStatements();
-  for(statementPos stmt: nodePropList)
+  for (statementPos stmt : nodePropList)
     blockStmt->addStmtToBlock(stmt.stmt);
-  for(statement* stmt: newStatements)
+  for (statement *stmt : newStatements)
     blockStmt->addStmtToBlock(stmt);
 }
 
@@ -348,7 +383,8 @@ void attachPropAnalyser::analyseFunc(ASTNode *proc)
 void attachPropAnalyser::analyse()
 {
   list<Function *> funcList = frontEndContext.getFuncList();
-  for (Function *func : funcList){
+  for (Function *func : funcList)
+  {
     analyseFunc(func);
   }
 }

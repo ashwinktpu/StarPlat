@@ -186,7 +186,7 @@ public:
             for (pair<propKey, PropAccess*> iden : writeProp)
                 if(iden.first.second == symbInfo) return true;
         }
-        return true;
+        return false;
     }
 
     list<PropAccess *> getPropAcess(int type = READ_WRITE)
