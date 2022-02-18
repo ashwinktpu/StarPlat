@@ -246,19 +246,38 @@ statement* dataRaceAnalyser::ngbrForAnalysis(forallStmt *stmt, Identifier *forAl
             if (body->getTypeofNode() == NODE_BLOCKSTMT)
             {
                 blockStatement *body = (blockStatement *)body;
+                blockStatement *newBody = blockStatement::createnewBlock();
                 for (statement *stmt : body->returnStatements())
                 {
                     if (stmt->getTypeofNode() == NODE_IFSTMT)
                     {
                         statement *newStmt = relPropUpdateAnalysis((ifStmt *)stmt, (Identifier *) ngbrItr);
                         // TODO : Replace the current statment with new statement
+                        newBody->addStmtToBlock(newStmt);
+                    }
+                    else if (stmt->getTypeofNode() == NODE_UNARYSTMT)
+                    {
+                        statement *newStmt = unaryPropReductionAnalysis((unaryStmt *)stmt, (Identifier *) ngbrItr);
+                        // TODO : Replace the current statment with new statement
+                        newBody->addStmtToBlock(newStmt);
+                    }
+                    else
+                    {
+                        newBody->addStmtToBlock(stmt);
                     }
                 }
+                stmt->setBody(newBody);
             }
             else if (body->getTypeofNode() == NODE_IFSTMT)
             {
-                statement *newStmt = relPropUpdateAnalysis((ifStmt *)stmt, (Identifier *) ngbrItr);
+                statement *newStmt = relPropUpdateAnalysis((ifStmt *)body, (Identifier *) ngbrItr);
                 stmt->setBody(newStmt);
+            }
+            else if (body->getTypeofNode() == NODE_UNARYSTMT)
+            {
+                statement *newStmt = unaryPropReductionAnalysis((unaryStmt *)body, (Identifier *) ngbrItr);
+                // TODO : Replace the current statment with new statement
+                stmt->newBody(newStmt);
             }
         }
     }
@@ -284,6 +303,27 @@ statement* dataRaceAnalyser::unaryReductionAnalysis(unary_stmt* stmt)
     }
     return stmt;
 }
+
+statement* dataRaceAnalyser::unaryPropReductionAnalysis(unary_stmt* stmt, Identifier* propId)
+{
+    Expression* unaryExpr = stmt->getUnaryExpr();
+    if(unaryExpr->isPropIdExpr() && checkIdEqual(unaryExpr->getPropId()->getIdentifier1(), propId))
+    {
+        ASTNode* VALUE_ONE = Util::createNodeForIval(1ll);
+        if(unaryExpr->getOperatorType() == OPERATOR_INC)
+        {
+            ASTNode *reductionCall = Util::createNodeForReductionOpStmt(unaryExpr->getPropId(), OPERATOR_ADDASSIGN, VALUE_ONE);
+            return (statement*) reductionCall;
+        }
+        else if(unaryExpr->getOperatorType() == OPERATOR_DEC)
+        {
+            ASTNode *reductionCall = Util::createNodeForReductionOpStmt(unaryExpr->getPropId(), OPERATOR_SUBASSIGN, VALUE_ONE);
+            return (statement*) reductionCall;
+        }
+    }
+    return stmt;
+}
+
 
 statement* dataRaceAnalyser::assignReductionAnalysis(assignment *stmt)
 {
@@ -380,7 +420,7 @@ statement* dataRaceAnalyser::blockReductionAnalysis(blockStatement* blockStmt, I
 {
     usedVariables declaredVars, reducedVars;
 
-
+    cout << "hi " << string(forAllItr->getIdentifier()) << endl;
     list<statement*> newStatements;
     list<statement*> oldStatements = blockStmt->returnStatements();
 
@@ -526,22 +566,35 @@ statement* dataRaceAnalyser::blockReductionAnalysis(blockStatement* blockStmt, I
 
 statement* dataRaceAnalyser::forAllAnalysis(forallStmt *stmt)
 {
+    cout << "Hello" << endl;
     proc_callExpr *procCall = stmt->getExtractElementFunc();
-    if (stmt->isForall() && checkIdNameEqual(procCall->getMethodId(), "node"))
+    if (stmt->isForall() && checkIdNameEqual(procCall->getMethodId(), "nodes"))
     {
         Identifier *itr = stmt->getIterator();
         Identifier *sourceGraph = stmt->getSourceGraph();
 
         statement *body = stmt->getBody();
+        cout << "lol" << endl;
+
+        assert (body != NULL);
+        assert (body->getTypeofNode() == NODE_BLOCKSTMT);
+        cout << "asserts passed" << endl;
         if (body->getTypeofNode() == NODE_BLOCKSTMT)
         {
-            blockStatement *body = (blockStatement *)body;
-            for (statement *stmt : body->returnStatements())
+            cout << "hibro" << endl;
+            blockStatement *blockbody = (blockStatement *)body;
+            assert(body != NULL);
+            cout << "hibro2" << blockbody->returnStatements().size() << endl;
+            assert(blockbody->returnStatements().size() > 0);
+            cout << "hibro3" << endl;
+            for (statement *stmt : blockbody->returnStatements())
             {
+                cout << "kek" << endl;
                 if (stmt->getTypeofNode() == NODE_FORALLSTMT)
                     ngbrForAnalysis((forallStmt *) stmt, itr, sourceGraph);
             }
-            statement* rednAnalysisBlock = blockReductionAnalysis(body, itr);
+            cout << "LSV" << endl;
+            statement* rednAnalysisBlock = blockReductionAnalysis(blockbody, itr);
             stmt->setBody(rednAnalysisBlock);
         }
         else if (body->getTypeofNode() == NODE_FORALLSTMT)

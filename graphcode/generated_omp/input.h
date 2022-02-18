@@ -1,5 +1,5 @@
-#ifndef GENCPP_INPUT6_H
-#define GENCPP_INPUT6_H
+#ifndef GENCPP_INPUT_H
+#define GENCPP_INPUT_H
 #include<stdio.h>
 #include<stdlib.h>
 #include<limits.h>

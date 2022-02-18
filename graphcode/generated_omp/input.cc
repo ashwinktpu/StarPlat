@@ -1,21 +1,18 @@
-#include"input7.h"
+#include"input.h"
 
 void test(graph& g)
 {
+  int x = 0;
   int* prop=new int[g.num_nodes()];
-  int* prop1=new int[g.num_nodes()];
-  int x = 0 ;
-  x = 10;
   #pragma omp parallel for
   for (int t = 0; t < g.num_nodes(); t ++) 
   {
-    prop[t] = x;
+    prop[t] = 10;
   }
-  x = 11;
   #pragma omp parallel for
-  for (int t = 0; t < g.num_nodes(); t ++) 
+  for (int v = 0; v < g.num_nodes(); v ++) 
   {
-    prop1[t] = x;
+    x = x+ prop[v];
   }
 
 }
