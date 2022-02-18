@@ -1,5 +1,5 @@
-#ifndef GENCPP_INPUT9_H
-#define GENCPP_INPUT9_H
+#ifndef GENCPP_INPUT.TXT_H
+#define GENCPP_INPUT.TXT_H
 #include<stdio.h>
 #include<stdlib.h>
 #include<limits.h>
