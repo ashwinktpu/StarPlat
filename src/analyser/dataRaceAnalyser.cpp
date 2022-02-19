@@ -695,7 +695,6 @@ void dataRaceAnalyser::analyse()
     for (Function *func : funcList)
     {
         analyseFunc(func);
-        printAST::tabSpace = 0;
-        printAST::printFunction(func);
+        printAST().printFunction(func);
     }
 }
