@@ -46,7 +46,7 @@ bin/lex.yy.o:
 	$(MAKE) -C parser
 
 clean: 
-	rm $(ANALYSER)
+	rm $(EXPENDABLES)
 
 clean_windows:
 	del $(EXPENDABLES_WINDOWS)

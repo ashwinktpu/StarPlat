@@ -109,7 +109,7 @@ bool checkDependancy(statement *stmt, usedVariables &usedVars)
   case NODE_UNARYSTMT:
   {
     unary_stmt *unaryStmt = (unary_stmt *)stmt;
-    Expression *expr = unaryStmt->getUnaryExpr();
+    Expression *expr = unaryStmt->getUnaryExpr()->getUnaryExpr();
 
     if (expr->isPropIdExpr())
     {
