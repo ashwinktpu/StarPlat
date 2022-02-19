@@ -257,8 +257,7 @@ statement* dataRaceAnalyser::ngbrForAnalysis(forallStmt *stmt, Identifier *forAl
                     }
                     else if (stmt->getTypeofNode() == NODE_UNARYSTMT)
                     {
-                        statement *newStmt = unaryPropReductionAnalysis((unaryStmt *)stmt, (Identifier *) ngbrItr);
-                        // TODO : Replace the current statment with new statement
+                        statement *newStmt = unaryPropReductionAnalysis((unary_stmt *)stmt, (Identifier *) ngbrItr);
                         newBody->addStmtToBlock(newStmt);
                     }
                     else
@@ -275,9 +274,8 @@ statement* dataRaceAnalyser::ngbrForAnalysis(forallStmt *stmt, Identifier *forAl
             }
             else if (body->getTypeofNode() == NODE_UNARYSTMT)
             {
-                statement *newStmt = unaryPropReductionAnalysis((unaryStmt *)body, (Identifier *) ngbrItr);
-                // TODO : Replace the current statment with new statement
-                stmt->newBody(newStmt);
+                statement *newStmt = unaryPropReductionAnalysis((unary_stmt *)body, (Identifier *) ngbrItr);
+                stmt->setBody(newStmt);
             }
         }
     }
@@ -695,5 +693,9 @@ void dataRaceAnalyser::analyse()
 {
     list<Function *> funcList = frontEndContext.getFuncList();
     for (Function *func : funcList)
+    {
         analyseFunc(func);
+        printAST::tabSpace = 0;
+        printAST::printFunction(func);
+    }
 }
