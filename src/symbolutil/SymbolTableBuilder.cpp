@@ -390,6 +390,12 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
            buildForStatements(doStmt->getBody());
            break;
        }
+       case NODE_UNARYSTMT:
+       {
+           unary_stmt* unaryStmt = (unary_stmt*) stmt;
+           checkForExpressions(unaryStmt->getUnaryExpr());
+           break;
+       }
       
    }
 

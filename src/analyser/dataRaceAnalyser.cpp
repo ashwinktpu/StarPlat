@@ -189,8 +189,6 @@ statement* dataRaceAnalyser::ngbrForAnalysis(forallStmt *stmt, Identifier *forAl
         argument *firstArg = *(procCall->getArgList().begin());
         Expression *argVal = firstArg->getExpr();
         
-        //cout<<string(ngbrItr->getIdentifier())<<' '<<string(argVal->getId()->getIdentifier())<<endl;
-
         if (argVal->isIdentifierExpr() && checkIdEqual(argVal->getId(), forAllIterator))
         {
             statement *stmtbody = stmt->getBody();
@@ -456,7 +454,6 @@ statement* dataRaceAnalyser::blockReductionAnalysis(blockStatement* blockStmt, I
         else
             return blockStmt;
     }
-    //cout<<"First step completed"<<endl;
 
     declaredVars.clear();
     blockStatement* newBlock = blockStatement::createnewBlock();
@@ -488,9 +485,6 @@ statement* dataRaceAnalyser::blockReductionAnalysis(blockStatement* blockStmt, I
 
     for(statement* stmt: newStatements)
     {
-        printf("%p \n", stmt);
-        cout<<endl;
-
         if(stmt->getTypeofNode() == NODE_DECL)
         {
             declaration* cstmt = (declaration*) stmt;
@@ -633,7 +627,6 @@ void dataRaceAnalyser::analyseFunc(ASTNode *proc)
 
 void dataRaceAnalyser::analyse()
 {
-    cout<<"In data Race Analyser"<<endl;
     list<Function *> funcList = frontEndContext.getFuncList();
     for (Function *func : funcList)
     {
