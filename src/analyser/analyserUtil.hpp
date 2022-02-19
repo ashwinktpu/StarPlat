@@ -214,6 +214,140 @@ public:
     }
 };
 
+class printAST{
+    static void printTabs()
+    {
+        int temp = tabSpace;
+        while(temp--)
+            cout<<'\t';
+    }
+
+    public:
+    static int tabSpace;
+    static void printFunction(Function* func)
+    {
+        printTabs();
+        cout<<"Function "<<string(func->getIdentifier()->getIdentifier())<<'\n';
+        tabSpace++;
+        printBlock(func->getBlockStatement());
+        tabSpace--;
+    }
+
+    static void printBlock(blockStatement* stmt)
+    {
+        printTabs();
+        cout<<"{\n";
+        tabSpace++;
+
+        for(statement* body: stmt->returnStatements())
+            printStatement(body);
+        
+        tabSpace--;
+        printTabs();
+        cout<<"}\n";
+    }
+
+    static void printStatement(statement* stmt)
+    {
+        if(stmt == nullptr) return;
+
+        switch (stmt->getTypeofNode())
+        {
+        case NODE_DECL:
+            printTabs();
+            cout<<"Declaration\n";
+            break;
+        
+        case NODE_ASSIGN:
+            printTabs();
+            cout<<"Assignment\n";
+            break;
+        
+        case NODE_REDUCTIONCALLSTMT:
+            printTabs();
+            cout<<"Reduction\n";
+            break;
+
+        case NODE_PROCCALLSTMT:
+            printTabs();
+            cout<<"Procedure Call\n";
+            break;
+
+        case NODE_UNARYSTMT:
+            printTabs();
+            cout<<"Unary statment\n";
+            break;
+
+        case NODE_BLOCKSTMT:
+            printBlock((blockStatement*) stmt);
+            break;
+
+        case NODE_WHILESTMT:
+            printTabs();
+            cout<<"While\n";
+            tabSpace++;
+            printStatement(((whileStmt*) stmt)->getBody());
+            tabSpace--;
+            break;
+
+        case NODE_DOWHILESTMT:
+            printTabs();
+            cout<<"Do While\n";
+            tabSpace++;
+            printStatement(((dowhileStmt*) stmt)->getBody());
+            tabSpace--;
+            break;
+
+        case NODE_FORALLSTMT:
+            printTabs();
+            cout<<"For all\n";
+            tabSpace++;
+            printStatement(((forallStmt*) stmt)->getBody());
+            tabSpace--;
+            break;
+
+        case NODE_FIXEDPTSTMT:
+            printTabs();
+            cout<<"Fixed Point\n";
+            tabSpace++;
+            printStatement(((fixedPointStmt*) stmt)->getBody());
+            tabSpace--;
+            break;
+
+        case NODE_ITRBFS:
+            printTabs();
+            cout<<"ITRBFS\n";
+            tabSpace++;
+            printStatement(((iterateBFS*) stmt)->getBody());
+            tabSpace--;
+            if(((iterateBFS*) stmt)->getRBFS())
+            {
+                cout<<"ITRBFS Reverse\n";
+                tabSpace++;
+                printStatement(((iterateBFS*) stmt)->getRBFS()->getBody());
+                tabSpace--;
+            }
+            break;
+
+        case NODE_IFSTMT:
+            printTabs();
+            cout<<"If statment\n";
+            tabSpace++;
+            printStatement(((ifStmt*) stmt)->getIfBody());
+            tabSpace--;
+            if(((ifStmt*) stmt)->getElseBody())
+            {
+                cout<<"Else statment\n";
+                tabSpace++;
+                printStatement(((ifStmt*) stmt)->getElseBody());
+                tabSpace--;
+            }
+        default:
+            break;
+        }
+    }
+};
+
 usedVariables getVarsExpr(Expression *expr)
 {
     usedVariables result;

@@ -15,10 +15,9 @@ class dataRaceAnalyser
   statement* ngbrForAnalysis(forallStmt*, Identifier*, Identifier*);
   statement* relPropUpdateAnalysis(ifStmt*, Identifier*);
   statement* unaryReductionAnalysis(unary_stmt* );
+  statement* unaryPropReductionAnalysis(unary_stmt* , Identifier* );
   statement* assignReductionAnalysis(assignment *);
   statement* blockReductionAnalysis(blockStatement* , Identifier* );
-
-
 };
 
 #endif
