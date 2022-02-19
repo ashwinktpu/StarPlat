@@ -12,8 +12,8 @@ bool checkIdEqual(Identifier *id1, Identifier *id2)
 
 bool checkPropIdEqual(PropAccess* prop1, PropAccess* prop2)
 {
-    return checkIdEqual(prop1->getIdentifier1(), prop2->getIdentifier1())
-            && checkIdEqual(prop2->getIdentifier2(), prop2->getIdentifier2());
+    return (checkIdEqual(prop1->getIdentifier1(), prop2->getIdentifier1())
+            && checkIdEqual(prop1->getIdentifier2(), prop2->getIdentifier2()));
 }
 
 bool checkIdNameEqual(Identifier *id1, char *c)
@@ -23,9 +23,9 @@ bool checkIdNameEqual(Identifier *id1, char *c)
 
 bool checkExprEqual(Expression *expr1, Expression *expr2)
 {
-    if(expr1->getTypeofExpr() == expr2->getTypeofExpr())
+    if(expr1->getExpressionFamily() == expr2->getExpressionFamily())
     {
-        switch (expr1->getTypeofExpr())
+        switch (expr1->getExpressionFamily())
         {
         case EXPR_RELATIONAL:        
         case EXPR_LOGICAL:
@@ -76,61 +76,10 @@ bool checkExprEqual(Expression *expr1, Expression *expr2)
     return false;
 }
 
-/*
-class structure
-{
-    public:
-    STRUCTURE_TYPE type;
-    structure(STRUCTURE_TYPE type){
-        this->type = type;
-    }
-};
-
-class forAllStruct : structure
-{
-    public:
-    forallStmt* forAllStmt;
-    Identifier* iterator;
-
-    forAllStruct(forallStmt* stmt)
-    {
-        this->forAllStmt = stmt;
-        this->iterator = stmt->getIterator();
-    }
-
-    forAllStruct(forAllStruct* struct1)
-    {
-        this->forAllStmt = struct1->forAllStmt;
-        this->iterator = struct1->iterator;
-        this->type = struct1->type;
-    }
-};
-
-class ngbrLoopStruct: public forAllStruct
-{
-    public:
-    forallStmt* forStmt;
-    Identifier* iterator;
-
-    ngbrLoopStruct(forallStmt* stmt, forAllStruct* parStruct){
-
-    }
-};
-
-class relPropUpdateStruct: public neighbourLoop
-{
-    public:
-    ifStmt* stmt;
-    PropAccess* propertyAcess;
-    Expression* compareExpr;
-    OPERATOR type;
-    
-    list<statement*> otherStmts;
-};*/
-
 statement* dataRaceAnalyser::relPropUpdateAnalysis(ifStmt *stmt, Identifier *forIterator)
 {
     Expression *cond = stmt->getCondition();
+
     if ((stmt->getElseBody() == nullptr) && cond->isRelational())
         if ((cond->getOperatorType() == OPERATOR_GT) || (cond->getOperatorType() == OPERATOR_LT))
         {
@@ -138,7 +87,7 @@ statement* dataRaceAnalyser::relPropUpdateAnalysis(ifStmt *stmt, Identifier *for
             Expression *otherExpr = nullptr;
             int opType = cond->getOperatorType();
 
-            Expression *lExpr = propExpr->getLeft(), *rExpr = propExpr->getRight();
+            Expression *lExpr = cond->getLeft(), *rExpr = cond->getRight();
 
             if (lExpr->isPropIdExpr() && checkIdEqual(lExpr->getPropId()->getIdentifier1(), forIterator))
             {
@@ -153,7 +102,7 @@ statement* dataRaceAnalyser::relPropUpdateAnalysis(ifStmt *stmt, Identifier *for
                 if(opType == OPERATOR_LT) opType = OPERATOR_GT;
                 else opType = OPERATOR_LT;
             }
-
+            
             if (propExpr != nullptr)
             {
                 blockStatement *ifBody = (blockStatement *)stmt->getIfBody();
@@ -185,7 +134,6 @@ statement* dataRaceAnalyser::relPropUpdateAnalysis(ifStmt *stmt, Identifier *for
                         {
                             PropAccess *propId = assgn->getPropId();
                             PropAccess *ifPropId = propExpr->getPropId();
-
                             if (checkPropIdEqual(ifPropId, propId))
                             {
                                 if ((reductionCallNode == nullptr) && checkExprEqual(otherExpr, assgn->getExpr()))
@@ -210,7 +158,8 @@ statement* dataRaceAnalyser::relPropUpdateAnalysis(ifStmt *stmt, Identifier *for
                     }
                 }
 
-                if (leftList.size() == (ifBody->returnStatements()).size())
+                if ((leftList.size() == (ifBody->returnStatements()).size())
+                    && (reductionCallNode != nullptr))
                 {
                     if(rightList.size() == 0)
                     {
@@ -239,42 +188,45 @@ statement* dataRaceAnalyser::ngbrForAnalysis(forallStmt *stmt, Identifier *forAl
         Identifier *ngbrItr = stmt->getIterator();
         argument *firstArg = *(procCall->getArgList().begin());
         Expression *argVal = firstArg->getExpr();
+        
+        //cout<<string(ngbrItr->getIdentifier())<<' '<<string(argVal->getId()->getIdentifier())<<endl;
 
         if (argVal->isIdentifierExpr() && checkIdEqual(argVal->getId(), forAllIterator))
         {
-            statement *body = stmt->getBody();
-            if (body->getTypeofNode() == NODE_BLOCKSTMT)
+            statement *stmtbody = stmt->getBody();
+            if (stmtbody->getTypeofNode() == NODE_BLOCKSTMT)
             {
-                blockStatement *body = (blockStatement *)body;
+                blockStatement *body = (blockStatement *)stmtbody;
                 blockStatement *newBody = blockStatement::createnewBlock();
-                for (statement *stmt : body->returnStatements())
+
+                for (statement *bstmt : body->returnStatements())
                 {
-                    if (stmt->getTypeofNode() == NODE_IFSTMT)
+                    if (bstmt->getTypeofNode() == NODE_IFSTMT)
                     {
-                        statement *newStmt = relPropUpdateAnalysis((ifStmt *)stmt, (Identifier *) ngbrItr);
+                        statement *newStmt = relPropUpdateAnalysis((ifStmt *)bstmt, (Identifier *) ngbrItr);
                         // TODO : Replace the current statment with new statement
                         newBody->addStmtToBlock(newStmt);
                     }
-                    else if (stmt->getTypeofNode() == NODE_UNARYSTMT)
+                    else if (bstmt->getTypeofNode() == NODE_UNARYSTMT)
                     {
-                        statement *newStmt = unaryPropReductionAnalysis((unary_stmt *)stmt, (Identifier *) ngbrItr);
+                        statement *newStmt = unaryPropReductionAnalysis((unary_stmt *)bstmt, (Identifier *) ngbrItr);
                         newBody->addStmtToBlock(newStmt);
                     }
                     else
                     {
-                        newBody->addStmtToBlock(stmt);
+                        newBody->addStmtToBlock(bstmt);
                     }
                 }
                 stmt->setBody(newBody);
             }
-            else if (body->getTypeofNode() == NODE_IFSTMT)
+            else if (stmtbody->getTypeofNode() == NODE_IFSTMT)
             {
-                statement *newStmt = relPropUpdateAnalysis((ifStmt *)body, (Identifier *) ngbrItr);
+                statement *newStmt = relPropUpdateAnalysis((ifStmt *)stmtbody, (Identifier *) ngbrItr);
                 stmt->setBody(newStmt);
             }
-            else if (body->getTypeofNode() == NODE_UNARYSTMT)
+            else if (stmtbody->getTypeofNode() == NODE_UNARYSTMT)
             {
-                statement *newStmt = unaryPropReductionAnalysis((unary_stmt *)body, (Identifier *) ngbrItr);
+                statement *newStmt = unaryPropReductionAnalysis((unary_stmt *)stmtbody, (Identifier *) ngbrItr);
                 stmt->setBody(newStmt);
             }
         }
@@ -285,17 +237,19 @@ statement* dataRaceAnalyser::ngbrForAnalysis(forallStmt *stmt, Identifier *forAl
 statement* dataRaceAnalyser::unaryReductionAnalysis(unary_stmt* stmt)
 {
     Expression* unaryExpr = stmt->getUnaryExpr();
-    if(unaryExpr->isIdentifierExpr())
+    Expression* varExpr = unaryExpr->getUnaryExpr();
+
+    if(varExpr->isIdentifierExpr())
     {
         ASTNode* VALUE_ONE = Util::createNodeForIval(1ll);
         if(unaryExpr->getOperatorType() == OPERATOR_INC)
         {
-            ASTNode *reductionCall = Util::createNodeForReductionOpStmt(unaryExpr->getId(), OPERATOR_ADDASSIGN, VALUE_ONE);
+            ASTNode *reductionCall = Util::createNodeForReductionOpStmt(varExpr->getId(), OPERATOR_ADDASSIGN, VALUE_ONE);
             return (statement*) reductionCall;
         }
         else if(unaryExpr->getOperatorType() == OPERATOR_DEC)
         {
-            ASTNode *reductionCall = Util::createNodeForReductionOpStmt(unaryExpr->getId(), OPERATOR_SUBASSIGN, VALUE_ONE);
+            ASTNode *reductionCall = Util::createNodeForReductionOpStmt(varExpr->getId(), OPERATOR_SUBASSIGN, VALUE_ONE);
             return (statement*) reductionCall;
         }
     }
@@ -305,17 +259,19 @@ statement* dataRaceAnalyser::unaryReductionAnalysis(unary_stmt* stmt)
 statement* dataRaceAnalyser::unaryPropReductionAnalysis(unary_stmt* stmt, Identifier* propId)
 {
     Expression* unaryExpr = stmt->getUnaryExpr();
-    if(unaryExpr->isPropIdExpr() && checkIdEqual(unaryExpr->getPropId()->getIdentifier1(), propId))
+    Expression* varExpr = unaryExpr->getUnaryExpr();
+
+    if(varExpr->isPropIdExpr() && checkIdEqual(varExpr->getPropId()->getIdentifier1(), propId))
     {
         ASTNode* VALUE_ONE = Util::createNodeForIval(1ll);
         if(unaryExpr->getOperatorType() == OPERATOR_INC)
         {
-            ASTNode *reductionCall = Util::createNodeForReductionOpStmt(unaryExpr->getPropId(), OPERATOR_ADDASSIGN, VALUE_ONE);
+            ASTNode *reductionCall = Util::createNodeForReductionOpStmt(varExpr->getPropId(), OPERATOR_ADDASSIGN, VALUE_ONE);
             return (statement*) reductionCall;
         }
         else if(unaryExpr->getOperatorType() == OPERATOR_DEC)
         {
-            ASTNode *reductionCall = Util::createNodeForReductionOpStmt(unaryExpr->getPropId(), OPERATOR_SUBASSIGN, VALUE_ONE);
+            ASTNode *reductionCall = Util::createNodeForReductionOpStmt(varExpr->getPropId(), OPERATOR_SUBASSIGN, VALUE_ONE);
             return (statement*) reductionCall;
         }
     }
@@ -366,7 +322,6 @@ statement* dataRaceAnalyser::assignReductionAnalysis(assignment *stmt)
             }
             else if (rightSide->isIdentifierExpr() && checkIdEqual(rightSide->getId(), lhsId))
             {
-
                 switch(rhsExpr->getOperatorType())
                 {
                     case OPERATOR_ADD:
@@ -418,7 +373,6 @@ statement* dataRaceAnalyser::blockReductionAnalysis(blockStatement* blockStmt, I
 {
     usedVariables declaredVars, reducedVars;
 
-    cout << "hi " << string(forAllItr->getIdentifier()) << endl;
     list<statement*> newStatements;
     list<statement*> oldStatements = blockStmt->returnStatements();
 
@@ -426,9 +380,9 @@ statement* dataRaceAnalyser::blockReductionAnalysis(blockStatement* blockStmt, I
     {
         if(stmt->getTypeofNode() == NODE_DECL)
         {
-            declaration* stmt = (declaration*) stmt;
-            declaredVars.addVariable(stmt->getdeclId(), READ_WRITE);
-            newStatements.push_back(stmt);
+            declaration* cstmt = (declaration*) stmt;
+            declaredVars.addVariable(cstmt->getdeclId(), READ_WRITE);
+            newStatements.push_back(cstmt);
         }
         else if(stmt->getTypeofNode() == NODE_ASSIGN)
         {
@@ -447,6 +401,7 @@ statement* dataRaceAnalyser::blockReductionAnalysis(blockStatement* blockStmt, I
 
                         if(!(newStmt->getTypeofNode() == NODE_REDUCTIONCALLSTMT))
                             return blockStmt;
+
                         newStatements.push_back(newStmt);
                     }
                 }
@@ -465,7 +420,7 @@ statement* dataRaceAnalyser::blockReductionAnalysis(blockStatement* blockStmt, I
         else if(stmt->getTypeofNode() == NODE_UNARYSTMT)
         {
             unary_stmt* currStmt = (unary_stmt*) stmt;
-            Expression* unaryExpr = currStmt->getUnaryExpr();
+            Expression* unaryExpr = currStmt->getUnaryExpr()->getUnaryExpr();
 
             if(unaryExpr->isPropIdExpr())
             {
@@ -501,70 +456,69 @@ statement* dataRaceAnalyser::blockReductionAnalysis(blockStatement* blockStmt, I
         else
             return blockStmt;
     }
+    //cout<<"First step completed"<<endl;
 
     declaredVars.clear();
     blockStatement* newBlock = blockStatement::createnewBlock();
+
+    auto checkExprVars = [&declaredVars, &reducedVars, &forAllItr](Expression *expr) -> bool
+    {
+        usedVariables currUsed = getVarsExpr(expr);
+
+        //No reduced variable should be used
+        for(Identifier* redVars: reducedVars.getVariables(WRITE)){
+            if(currUsed.isUsedVar(redVars))
+                return false;
+        }
+
+        //All writed should be to local variabls
+        for(Identifier* wVars: currUsed.getVariables(WRITE)){
+            if(!declaredVars.isUsedVar(wVars))
+                return false;
+        }
+
+        //All used properties should be to current iterator
+        for(PropAccess* propId: currUsed.getPropAcess(READ_WRITE)){
+            if(!checkIdEqual(propId->getIdentifier1(), forAllItr))
+                return false;
+        }
+
+        return true;
+    };
+
     for(statement* stmt: newStatements)
     {
+        printf("%p \n", stmt);
+        cout<<endl;
+
         if(stmt->getTypeofNode() == NODE_DECL)
         {
-            declaration* stmt = (declaration*) stmt;
-            declaredVars.addVariable(stmt->getdeclId(), READ_WRITE);
+            declaration* cstmt = (declaration*) stmt;
+            declaredVars.addVariable(cstmt->getdeclId(), READ_WRITE);
+
+            if(cstmt->isInitialized() && !checkExprVars(cstmt->getExpressionAssigned()))
+                return blockStmt;
         }
         else if(stmt->getTypeofNode() == NODE_ASSIGN)
         {
-            usedVariables currUsed = getVarsExpr(((assignment*) stmt)->getExpr());
-            //No reduced variable should be used
-            for(Identifier* redVars: reducedVars.getVariables(WRITE)){
-                if(currUsed.isUsedVar(redVars))
-                    return blockStmt;
-            }
-
-            //All writed should be to local variabls
-            for(Identifier* wVars: currUsed.getVariables(WRITE)){
-                if(!declaredVars.isUsedVar(wVars))
-                    return blockStmt;
-            }
-
-            //All used properties should be to current iterator
-            for(PropAccess* propId: currUsed.getPropAcess(READ_WRITE)){
-                if(!checkIdEqual(propId->getIdentifier1(), forAllItr))
-                    return blockStmt;
-            }
+            if(!checkExprVars(((assignment*) stmt)->getExpr()))
+                return blockStmt;
         }
         else if(stmt->getTypeofNode() == NODE_REDUCTIONCALLSTMT)
         {
             reductionCallStmt* currStmt = (reductionCallStmt*) stmt;
             Expression* rExpr = currStmt->getRightSide();
 
-            usedVariables currUsed = getVarsExpr(((assignment*) stmt)->getExpr());
-            //No reduced variable should be used
-            for(Identifier* redVars: reducedVars.getVariables(WRITE)){
-                if(currUsed.isUsedVar(redVars))
-                    return blockStmt;
-            }
-
-            //All writed should be to local variabls
-            for(Identifier* wVars: currUsed.getVariables(WRITE)){
-                if(!declaredVars.isUsedVar(wVars))
-                    return blockStmt;
-            }
-
-            //All used properties should be to current iterator
-            for(PropAccess* propId: currUsed.getPropAcess(READ_WRITE)){
-                if(!checkIdEqual(propId->getIdentifier1(), forAllItr))
-                    return blockStmt;
-            }
+            if(!checkExprVars(((assignment*) stmt)->getExpr()))
+                return blockStmt;
         }
         newBlock->addStmtToBlock(stmt);
     }
-
     return newBlock;
 }
 
 statement* dataRaceAnalyser::forAllAnalysis(forallStmt *stmt)
 {
-    cout << "Hello" << endl;
     proc_callExpr *procCall = stmt->getExtractElementFunc();
     if (stmt->isForall() && checkIdNameEqual(procCall->getMethodId(), "nodes"))
     {
@@ -572,26 +526,14 @@ statement* dataRaceAnalyser::forAllAnalysis(forallStmt *stmt)
         Identifier *sourceGraph = stmt->getSourceGraph();
 
         statement *body = stmt->getBody();
-        cout << "lol" << endl;
-
-        assert (body != NULL);
-        assert (body->getTypeofNode() == NODE_BLOCKSTMT);
-        cout << "asserts passed" << endl;
         if (body->getTypeofNode() == NODE_BLOCKSTMT)
         {
-            cout << "hibro" << endl;
             blockStatement *blockbody = (blockStatement *)body;
-            assert(body != NULL);
-            cout << "hibro2" << blockbody->returnStatements().size() << endl;
-            assert(blockbody->returnStatements().size() > 0);
-            cout << "hibro3" << endl;
-            for (statement *stmt : blockbody->returnStatements())
+            for (statement *bodyStmt : blockbody->returnStatements())
             {
-                cout << "kek" << endl;
-                if (stmt->getTypeofNode() == NODE_FORALLSTMT)
-                    ngbrForAnalysis((forallStmt *) stmt, itr, sourceGraph);
+                if (bodyStmt->getTypeofNode() == NODE_FORALLSTMT)
+                    ngbrForAnalysis((forallStmt *) bodyStmt, itr, sourceGraph);
             }
-            cout << "LSV" << endl;
             statement* rednAnalysisBlock = blockReductionAnalysis(blockbody, itr);
             stmt->setBody(rednAnalysisBlock);
         }
@@ -691,6 +633,7 @@ void dataRaceAnalyser::analyseFunc(ASTNode *proc)
 
 void dataRaceAnalyser::analyse()
 {
+    cout<<"In data Race Analyser"<<endl;
     list<Function *> funcList = frontEndContext.getFuncList();
     for (Function *func : funcList)
     {
