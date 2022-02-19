@@ -1,8 +1,8 @@
-#include "ASTAnalyser1.h"
+#include "deviceVarsAnalyser.h"
 #include <string.h>
 
 
-usedVariables ASTAnalyser1::getVarsExpr(Expression* expr)
+usedVariables deviceVarsAnalyser::getVarsExpr(Expression* expr)
 {
   usedVariables result;
 
@@ -28,21 +28,21 @@ usedVariables ASTAnalyser1::getVarsExpr(Expression* expr)
   return result;
 }
 
-usedVariables ASTAnalyser1::getVarsWhile(whileStmt* stmt)
+usedVariables deviceVarsAnalyser::getVarsWhile(whileStmt* stmt)
 {
     usedVariables currVars = getVarsExpr(stmt->getCondition());
     currVars.merge(getVarsStatement(stmt->getBody()));
 
     return currVars;
 }
-usedVariables ASTAnalyser1::getVarsDoWhile(dowhileStmt* stmt)
+usedVariables deviceVarsAnalyser::getVarsDoWhile(dowhileStmt* stmt)
 {
     usedVariables currVars = getVarsExpr(stmt->getCondition());
     currVars.merge(getVarsStatement(stmt->getBody()));
 
     return currVars;
 }
-usedVariables ASTAnalyser1::getVarsAssignment(assignment* stmt)
+usedVariables deviceVarsAnalyser::getVarsAssignment(assignment* stmt)
 {
   usedVariables currVars;
   if(stmt->lhs_isProp())
@@ -57,7 +57,7 @@ usedVariables ASTAnalyser1::getVarsAssignment(assignment* stmt)
 
   return currVars;
 }
-usedVariables ASTAnalyser1::getVarsIf(ifStmt* stmt)
+usedVariables deviceVarsAnalyser::getVarsIf(ifStmt* stmt)
 {
     usedVariables currVars = getVarsExpr(stmt->getCondition());
     currVars.merge(getVarsStatement(stmt->getIfBody()));
@@ -66,27 +66,27 @@ usedVariables ASTAnalyser1::getVarsIf(ifStmt* stmt)
     
     return currVars;
 }
-usedVariables ASTAnalyser1::getVarsFixedPoint(fixedPointStmt* stmt)
+usedVariables deviceVarsAnalyser::getVarsFixedPoint(fixedPointStmt* stmt)
 {
     usedVariables currVars = getVarsExpr(stmt->getDependentProp());
     currVars.addVariable(stmt->getFixedPointId());
     currVars.merge(getVarsStatement(stmt->getBody()));
     return currVars;
 }
-usedVariables ASTAnalyser1::getVarsReduction(reductionCallStmt* stmt)
+usedVariables deviceVarsAnalyser::getVarsReduction(reductionCallStmt* stmt)
 {
     usedVariables currVars;
 
     return currVars;
 }
-usedVariables ASTAnalyser1::getVarsBFS(iterateBFS* stmt)
+usedVariables deviceVarsAnalyser::getVarsBFS(iterateBFS* stmt)
 {
     usedVariables currVars;
 
     return currVars;
 }
 
-usedVariables ASTAnalyser1::getVarsStatement(statement* stmt)
+usedVariables deviceVarsAnalyser::getVarsStatement(statement* stmt)
 {
     switch (stmt->getTypeofNode())
     {
@@ -115,7 +115,7 @@ usedVariables ASTAnalyser1::getVarsStatement(statement* stmt)
     return usedVariables();
 }
 
-usedVariables ASTAnalyser1::getVarsBlock(blockStatement *blockStmt)
+usedVariables deviceVarsAnalyser::getVarsBlock(blockStatement *blockStmt)
 {
     list<statement*> stmtList = blockStmt->returnStatements();
     usedVariables currVars;
@@ -139,7 +139,7 @@ usedVariables ASTAnalyser1::getVarsBlock(blockStatement *blockStmt)
     return currVars;
 }
 
-void ASTAnalyser1::analyseForAll(forallStmt* stmt)
+void deviceVarsAnalyser::analyseForAll(forallStmt* stmt)
 {
     Identifier* itr = stmt->getIterator();
     Identifier* graph = stmt->getSourceGraph();
@@ -147,7 +147,7 @@ void ASTAnalyser1::analyseForAll(forallStmt* stmt)
     usedVariables vars = getVarsStatment(stmt->getBody());
 }
 
-void ASTAnalyser1::analyseStatement(statement* stmt)
+void deviceVarsAnalyser::analyseStatement(statement* stmt)
 {  
     switch (stmt->getTypeofNode())
     {
@@ -189,14 +189,14 @@ void ASTAnalyser1::analyseStatement(statement* stmt)
 
 
 
-void ASTAnalyser1::analyseFunc(ASTNode* proc)
+void deviceVarsAnalyser::analyseFunc(ASTNode* proc)
 {
     Function *func = (Function *)proc;
     analyseStatement(func->getBlockStatement());
     return;
 }
 
-void ASTAnalyser1::analyse()
+void deviceVarsAnalyser::analyse()
 {
     list<Function*> funcList = frontEndContext.getFuncList();
     for(Function* func: funcList)
