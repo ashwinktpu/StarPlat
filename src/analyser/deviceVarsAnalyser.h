@@ -1,15 +1,13 @@
 #ifndef AST_ANALYSER1
 #define AST_ANALYSER1
 
-#include <cstdio>
-#include "../dslCodePad.h"
 #include "../../ast/ASTNodeTypes.hpp"
-#include "../../parser/includeHeader.hpp"
+#include "analyserUtil.hpp"
 
-class ASTAnalyser1
+class deviceVarsAnalyser
 {
   public:
-  ASTAnalyser1(){
+  deviceVarsAnalyser(){
   }
 
   void analyse();
