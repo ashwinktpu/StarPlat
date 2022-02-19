@@ -215,7 +215,7 @@ public:
 };
 
 class printAST{
-    static void printTabs()
+    void printTabs()
     {
         int temp = tabSpace;
         while(temp--)
@@ -223,8 +223,9 @@ class printAST{
     }
 
     public:
-    static int tabSpace;
-    static void printFunction(Function* func)
+    int tabSpace = 0;
+
+    void printFunction(Function* func)
     {
         printTabs();
         cout<<"Function "<<string(func->getIdentifier()->getIdentifier())<<'\n';
@@ -233,7 +234,7 @@ class printAST{
         tabSpace--;
     }
 
-    static void printBlock(blockStatement* stmt)
+    void printBlock(blockStatement* stmt)
     {
         printTabs();
         cout<<"{\n";
@@ -247,7 +248,7 @@ class printAST{
         cout<<"}\n";
     }
 
-    static void printStatement(statement* stmt)
+    void printStatement(statement* stmt)
     {
         if(stmt == nullptr) return;
 
