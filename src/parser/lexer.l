@@ -29,6 +29,7 @@ NEGATE [-]
 "bool"    {printf("Type: %s", yytext);  return T_BOOL;}
 "forall"  {printf("Keyword-forall: %s", yytext); return T_FORALL;}
 "for"     {printf("For: %s", yytext); return T_FOR;}
+"return"  {printf("Return: %s", yytext); return T_RETURN;}
 "+INF"    {printf("+Infinity: %s", yytext); return T_P_INF;}
 "INF"     {printf("+Infinity: %s", yytext); return T_INF;}
 "-INF"    {printf("-Infinity: %s", yytext); return T_N_INF;}
@@ -38,7 +39,6 @@ NEGATE [-]
 "if"      {printf("Keyword if: %s", yytext);  return T_IF;}
 "else"    {printf("Keyword else: %s", yytext); return T_ELSE;}
 "while"   {printf("Keyword while: %s", yytext);  return T_WHILE;}
-"Return"  {printf("Keyword return: %s", yytext);  return T_RETURN;}
 "do"      {printf("Keyword do: %s", yytext);  return T_DO;}
 "in"      {printf("Keyword in ");  return T_IN;}
 "fixedPoint" {printf("Keyword fixedPoint"); return T_FIXEDPOINT;}
@@ -46,7 +46,10 @@ NEGATE [-]
 "iterateInBFS"  {printf("iterateInBFS");  return T_BFS;}
 "iterateInReverse" {printf("iterateInReverse");  return T_REVERSE;} 
 "from"          {printf("from"); return T_FROM;} 
-"filter"        {printf("from");  return T_FILTER;} 
+"filter"        {printf("filter");  return T_FILTER;} 
+"Incremental"   {printf("incremental"); return T_INCREMENTAL;}
+"Decremental"   {printf("decremental"); return T_DECREMENTAL;}
+"Static"        {printf("static"); return T_STATIC;}
 "+="					{ printf ("ADD_ASSIGN "); return T_ADD_ASSIGN;}
 "-="					{ printf ("SUB_ASSIGN"); return T_SUB_ASSIGN;}
 "*="					{ printf ( "MUL_ASSIGN"); return T_MUL_ASSIGN;}
@@ -111,11 +114,15 @@ NEGATE [-]
 "edge" 		{printf("Edge Type");return T_EDGE;}
 "propNode" {printf("Node Property");  return T_NP;}
 "propEdge" {printf("Edge Property"); return T_EP;}
+
+
+
  
  /* Collection Type */
 "SetN" 	{printf("Set of Nodes");  return T_SET_NODES;}
 "SetE" 	{printf("Set of Edges"); return T_SET_EDGES;}
 "list" {printf("list type"); return T_LIST;}
+"updates" {printf("updates type"); return T_UPDATES;}
 
 
  /* Numbers and Identifies */
