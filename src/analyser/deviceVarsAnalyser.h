@@ -1,9 +1,9 @@
-#ifndef AST_ANALYSER1
-#define AST_ANALYSER1
+#ifndef DEVICE_VARS_ANALYSER
+#define DEVICE_VARS_ANALYSER
 
-#include "../../ast/ASTNodeTypes.hpp"
+#include "../ast/ASTNodeTypes.hpp"
 #include "analyserUtil.hpp"
-#include "unordered_map"
+#include <unordered_map>
 
 class lattice
 {  
@@ -32,7 +32,7 @@ public:
       addVariable(iden);
   }
 
-  lattice(lattice &l1){
+  lattice(const lattice &l1){
     for(pair<TableEntry*, PointType> pr: l1.typeMap)
       typeMap[pr.first] = pr.second;
   }
@@ -89,7 +89,9 @@ public:
 
   void print()
   {
-    
+    for(pair<TableEntry*, PointType> pr: typeMap)
+      cout<<string(pr.first->getId()->getIdentifier())<<": "<<pr.second<<' ';
+    cout<<endl;
   }
 };
 
@@ -107,7 +109,7 @@ class deviceVarsAnalyser
 
   unordered_map<ASTNode*, ASTNodeWrap*> latticeMap;
 
-  ASTNodeWrap* getWrapNode(ASTNode* node, lattice &inLattice)
+  ASTNodeWrap* getWrapNode(ASTNode* node,const lattice &inLattice)
   {
     if(latticeMap.find(node) == latticeMap.end())
     {
