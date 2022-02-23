@@ -60,7 +60,7 @@ class update
 
 
         updates.push_back(u);
-       // updates.push_back(u1) //only required for undirected graph case.
+        updates.push_back(u1); //only required for undirected graph case.
      
          
      }
