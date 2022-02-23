@@ -14,10 +14,20 @@ class FrontEndContext
   vector<blockStatement*> blockList;
   list<Function*> funcList;
   static FrontEndContext* instance;
+  int currentFuncType;
+  int genFuncCount;
+  int staticFuncCount;
+  int inFuncCount;
+  int decFuncCount;
+
 
   public:
   FrontEndContext()
   {
+    genFuncCount = 0;
+    staticFuncCount = 0;
+    inFuncCount = 0;
+    decFuncCount = 0;
   
   }
 
@@ -35,6 +45,10 @@ class FrontEndContext
   blockStatement* getCurrentBlock();
   list<Function*> getFuncList();
   void addFuncToList(Function* func);
+  void setCurrentFuncType(int funcType);
+  int getCurrentFuncType();
+  void incrementCurrentFuncCount();
+  int getCurrentFuncCount();
 
 };
 
