@@ -1,7 +1,7 @@
 #include "SymbolTableBuilder.h"
 
 bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
- {   cout<<"ID VALUE IN SEARCH"<<id->getIdentifier()<<"\n";
+ {  
      assert(id!=NULL);
      assert(id->getIdentifier()!=NULL);
      TableEntry* tableEntry=sTab->findEntryInST(id);
@@ -9,7 +9,6 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
      {  return false;
          //to be added.
      }
-     cout<<"FINALLY FOUND IT"<<"\n";
      if(id->getSymbolInfo()!=NULL)
       {
       assert(id->getSymbolInfo()==tableEntry);
@@ -62,6 +61,24 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
 
  }
 
+ /*void SymbolTableBuilder::setLockDeclInFunc(ASTNode* node)
+  {
+
+     ASTNode* parent = node->getParent();
+     if(parent!=NULL)
+       { 
+         if(parent->getTypeofNode()!=NODE_FUNC)
+            setLockDeclInFunc(parent);
+         else
+           {   
+               
+               Function* func = (Function*) node;
+               func->setInitialLockDecl();
+           }     
+       }
+
+  }*/
+
  bool create_Symbol(SymbolTable* sTab,Identifier* id,Type* type)
  {
      bool checkFine=sTab->check_conflicts_and_add(sTab, id,type);
@@ -74,9 +91,29 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
      return checkFine;
  }
 
+ bool checkInsideBFSIter(std::vector<ASTNode*> parallelRegions)
+  {
+      int size = parallelRegions.size() - 1;
+      while(size >= 0)
+        { 
+           ASTNode* parallelRegion = parallelRegions[size];
+           if(parallelRegion->getTypeofNode() == NODE_ITRBFS)
+              return true;
+
+           size = size - 1;   
+
+        }
+
+        return false;
+
+
+  }
+
+
+
  void SymbolTableBuilder::buildForProc(Function* func)
  {  
-    
+     currentFunc = func;
      init_curr_SymbolTable(func);
      list<formalParam*> paramList=func->getParamList();
      list<formalParam*>::iterator itr;
@@ -85,7 +122,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
          formalParam* fp=(*itr);
          Type* type=fp->getType();
          Identifier* id=fp->getIdentifier(); 
-         SymbolTable* symbTab=type->isPropNodeType()?currPropSymbT:currVarSymbT;
+         SymbolTable* symbTab=type->isPropType()?currPropSymbT:currVarSymbT;
          bool creationFine=create_Symbol(symbTab,id,type);
          id->getSymbolInfo()->setArgument(true);
 
@@ -94,6 +131,8 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
     }
 
     buildForStatements(func->getBlockStatement());
+    delete_curr_SymbolTable();
+
 
 
  }
@@ -107,7 +146,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
        {
            declaration* declStmt=(declaration*)stmt;
            Type* type=declStmt->getType();
-           SymbolTable* symbTab=type->isPropNodeType()?currPropSymbT:currVarSymbT;
+           SymbolTable* symbTab=type->isPropType()?currPropSymbT:currVarSymbT;
            bool creatsFine=create_Symbol(symbTab,declStmt->getdeclId(),type);
            if(declStmt->isInitialized())
            {
@@ -175,11 +214,12 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                }
                if(depId->getSymbolInfo()!=NULL)
                  {  
-                     printf("Inside fixedptId\n");
+                     printf("Inside fixedptId...\n");
                      Identifier* tableId = depId->getSymbolInfo()->getId();
                      tableId->set_redecl(); //explained in the ASTNodeTypes
                      tableId->set_fpassociation(); //explained in the ASTNodeTypes
                      tableId->set_fpId(fixedPointId->getIdentifier()); //explained in the ASTNodeTypes
+                     tableId->set_dependentExpr(fpStmt->getDependentProp());
                  }
            }
            buildForStatements(fpStmt->getBody());
@@ -219,25 +259,34 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
 
                   if(forAll->isForall())
                     {
-                        parallelConstruct.push(forAll);
+                        parallelConstruct.push_back(forAll);
                        
                     }
              }
            
           
-            if(forAll->getParent()->getParent()->getTypeofNode()==NODE_ITRBFS)
+            if(checkInsideBFSIter(parallelConstruct))
                {
                  /* the assignment statements(arithmetic & logical) within the block of a for statement that
                     is itself within a IterateInBFS abstraction are signaled to become atomic while code 
                     generation. */
-                  
-                  forAll->addAtomicSignalToStatements();
+                  proc_callExpr* extractElem = forAll->getExtractElementFunc();
+                  if(extractElem!=NULL)
+                   {
+                     string methodString(extractElem->getMethodId()->getIdentifier());
+                     list<argument*> argList = extractElem->getArgList();
+                     if(methodString == "neighbors")
+                       {  
+
+                        forAll->addAtomicSignalToStatements();
+                       }
+                   }
                }
 
               buildForStatements(forAll->getBody());  
                if(backend.compare("omp")==0&&forAll->isForall())
                     {  
-                        parallelConstruct.pop();
+                        parallelConstruct.pop_back();
                     } 
 
               break;
@@ -347,6 +396,16 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                    
                    }
            }
+            
+            if(leftList.size() > 2)
+               {
+                   string backend(backendTarget);
+                   if(backend.compare("omp") == 0)
+                     {
+                        currentFunc->setInitialLockDecl();
+                     }   
+               }
+
            for(itr1=exprList.begin();itr1!=exprList.end();itr1++)
            {
                checkForExpressions((Expression*)*itr1);
@@ -360,7 +419,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                if(reducStmt->isLeftIdentifier())
                  {
                      findSymbolId(reducStmt->getLeftId());
-                     ASTNode* nearest_Parallel=parallelConstruct.top();
+                     ASTNode* nearest_Parallel=parallelConstruct.back();
                      if(nearest_Parallel->getTypeofNode()==NODE_FORALLSTMT)
                        {  
                            forallStmt* forAll=(forallStmt*)nearest_Parallel;
@@ -378,8 +437,21 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
        case NODE_ITRBFS:
        {
           iterateBFS* iBFS=(iterateBFS*)stmt;
-          buildForStatements(iBFS->getBody());
+          string backend(backendTarget);
+            if(backend.compare("omp")==0)
+             { 
+               parallelConstruct.push_back(iBFS);
+               
+             }     
           
+          buildForStatements(iBFS->getBody());
+
+          if(backend.compare("omp")==0)
+             { 
+              parallelConstruct.pop_back();
+               
+             } 
+        
            break;
        }
        case NODE_DOWHILESTMT:
