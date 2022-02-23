@@ -964,6 +964,8 @@ class formalParam:public ASTNode
      PropAccess* propId;
      Expression* exprAssigned;
      bool atomicSignal;
+     bool deviceVariable;
+     bool accumulateKernel;
      int lhsType;
 
      public:
@@ -974,6 +976,8 @@ class formalParam:public ASTNode
         exprAssigned=NULL;
          statementType="assignment";
          atomicSignal=false;
+         deviceVariable=false;
+         accumulateKernel=false;
 
     }
 
@@ -1042,6 +1046,21 @@ class formalParam:public ASTNode
      bool getAtomicSignal()
      {
        return atomicSignal;
+     }
+
+     void flagAsDeviceVariable(){
+        //~ if(exprAssigned->isArithmetic()||exprAssigned->isLogical())
+          deviceVariable=true;
+     }
+     bool isDeviceAssignment(){
+      return deviceVariable;
+     }
+     void flagAccumulateKernel(){
+        //~ if(exprAssigned->isArithmetic()||exprAssigned->isLogical())
+          accumulateKernel=true;
+     }
+     bool isAccumulateKernel(){
+      return accumulateKernel;
      }
 
   };
@@ -1259,6 +1278,20 @@ class fixedPointStmt:public statement
       return booleanExpr;
     }
 
+    void addAccumulateAssignment(){
+      blockStatement* block=(blockStatement*)body;
+       //~ int i=0;
+        for(statement* stmt:block->returnStatements())
+         {
+             //~ std::cout<< "i" << i++ << '\n';
+             if(stmt->getTypeofNode()==NODE_ASSIGN){
+               std::cout<< "\t\tON ACC ASST STMT IN REV BFS" << '\n';
+               assignment* assign=(assignment*)stmt;
+               assign->flagAccumulateKernel();
+              }
+         }
+    }
+
   };
 
 
@@ -1393,6 +1426,9 @@ class fixedPointStmt:public statement
       {
         return nodeCall;
       }
+
+
+
 
   };
 
@@ -1619,6 +1655,7 @@ class fixedPointStmt:public statement
          {
            if(stmt->getTypeofNode()==NODE_ASSIGN)
              {
+               std::cout<< "\t\tON: ATOMIC ASST" << '\n';
                assignment* assign=(assignment*)stmt;
                assign->addAtomicSignal();
              }
@@ -1626,6 +1663,24 @@ class fixedPointStmt:public statement
 
     }
 
+    void addDeviceAssignment(){
+      blockStatement* block=(blockStatement*)body;
+        for(statement* stmt:block->returnStatements())
+         {
+           if(stmt->getTypeofNode()==NODE_ASSIGN)
+             {
+               std::cout<< "\t\tON: DEV ASST" << '\n';
+               assignment* assign=(assignment*)stmt;
+               assign->flagAsDeviceVariable();
+             }
+
+             //~ if(stmt->getTypeofNode()==NODE_ASSIGN){
+               //~ std::cout<< "ON ACC ASST" << '\n';
+               //~ assignment* assign=(assignment*)stmt;
+               //~ assign->flagAccumulateKernel();
+              //~ }
+         }
+    }
 
 };
   class reductionCall:public ASTNode
