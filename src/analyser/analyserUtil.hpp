@@ -105,21 +105,21 @@ public:
             this->writeProp.insert({iden.first, iden.second});
     }
 
-    /*
     void removeVariable(Identifier *iden, int type)
     {
+        TableEntry* symbInfo = iden->getSymbolInfo();
         if (type & 1)
         {
-            if (readVars.find(iden->getSymbolInfo()) != readVars.end())
-                readVars.erase(iden->getSymbolInfo());
+            if (readVars.find(symbInfo) != readVars.end())
+                readVars.erase(symbInfo);
         }
 
         if (type & 2)
         {
-            if (writeVars.find(iden->getSymbolInfo()) != writeVars.end())
-                writeVars.erase(iden->getSymbolInfo());
+            if (writeVars.find(symbInfo) != writeVars.end())
+                writeVars.erase(symbInfo);
         }
-    }*/
+    }
 
     bool isUsedVar(Identifier *iden, int type = READ_WRITE)
     {

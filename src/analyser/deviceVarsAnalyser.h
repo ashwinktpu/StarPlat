@@ -14,6 +14,13 @@ public:
     CPU_GPU_SHARED,
   };
 
+  enum AccessType{
+    CPU_READ,
+    GPU_READ,
+    CPU_WRITE,
+    GPU_WRITE,
+  };
+
 private:
   unordered_map<TableEntry*, PointType> typeMap;
 
@@ -49,7 +56,18 @@ public:
     }
   }
 
-  void meet(Identifier* iden, PointType type)
+  lattice operator^ (const lattice &l1)
+  {
+    lattice out;
+    for(pair<TableEntry*, PointType> pr: l1.typeMap)
+    {
+      if(typeMap.find(pr.first) != typeMap.end())
+        out.typeMap[pr.first] = meet(typeMap[pr.first], pr.second);
+    }
+    return out;
+  }
+
+  void meet(Identifier* iden, AccessType type)
   {
     TableEntry* symbInfo = iden->getSymbolInfo();
     if(typeMap.find(symbInfo) != typeMap.end()){
@@ -67,6 +85,11 @@ public:
   {
     TableEntry* symbInfo = iden->getSymbolInfo();
     typeMap.erase(symbInfo);
+  }
+
+  void print()
+  {
+    
   }
 };
 
@@ -98,25 +121,47 @@ class deviceVarsAnalyser
     return latticeMap.at(node);
   }
 
+  ASTNodeWrap* getWrapNode(ASTNode* node)
+  {
+    return latticeMap.at(node);
+  }
+
   public:
   deviceVarsAnalyser(){
   }
 
   void analyse();
   void analyseFunc(ASTNode* proc);
-  void analyseStatement(statement* stmt);
-  void analyseBlock(blockStatement* blockStmt);
-  void analyseUnary(unary_stmt* blockStmt);
+
+  lattice analyseStatement(statement* stmt, lattice&);
+  lattice analyseBlock(blockStatement* blockStmt, lattice&);
+  lattice analyseUnary(unary_stmt* blockStmt, lattice&);
+  lattice analyseIfElse(ifStmt* stmt, lattice&);
+  lattice analyseAssignment(assignment* stmt, lattice&);
+  lattice analyseDeclaration(declaration*, lattice&);
+  lattice analyseForAll(forallStmt*, lattice&);
+
+  void printStatement(statement* , int);
+  void printBlock(blockStatement* , int);
+  void printUnary(unary_stmt* , int);
+  void printIfElse(ifStmt* , int);
+  void printAssignment(assignment* , int);
+  void printDeclaration(declaration*, int);
+  void printForAll(forallStmt*, int);
+
   usedVariables getVarsStatement(statement* stmt);
   usedVariables getVarsBlock(blockStatement* stmt);
-  usedVariables getVarsWhile(whileStmt* stmt);
-  usedVariables getVarsDoWhile(dowhileStmt* stmt);
+  usedVariables getVarsForAll(forallStmt* stmt);
+  usedVariables getVarsUnary(unary_stmt* stmt);
+  usedVariables getVarsDeclaration(declaration* stmt);
+  //usedVariables getVarsWhile(whileStmt* stmt);
+  //usedVariables getVarsDoWhile(dowhileStmt* stmt);
   usedVariables getVarsAssignment(assignment* stmt);
   usedVariables getVarsIf(ifStmt* stmt);
-  usedVariables getVarsFixedPoint(fixedPointStmt* stmt);
-  usedVariables getVarsReduction(reductionCallStmt* stmt);
-  usedVariables getVarsBFS(iterateBFS* stmt);
-  usedVariables getVarsExpr(Expression* stmt);
+  //usedVariables getVarsFixedPoint(fixedPointStmt* stmt);
+  //usedVariables getVarsReduction(reductionCallStmt* stmt);
+  //usedVariables getVarsBFS(iterateBFS* stmt);
+  //usedVariables getVarsExpr(Expression* stmt);
   //usedVariables getVarsProcCall(proc_callStmt* stmt);
 };
 
