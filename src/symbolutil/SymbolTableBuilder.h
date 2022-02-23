@@ -15,11 +15,13 @@ class SymbolTableBuilder
  list<SymbolTable*> propSymbolTables;
  SymbolTable* currVarSymbT;
  SymbolTable* currPropSymbT;
+ Function* currentFunc; 
+
  
  
 
  public:
- stack<ASTNode*> parallelConstruct;
+ vector<ASTNode*> parallelConstruct;
  SymbolTableBuilder()
  {
      currVarSymbT=NULL;

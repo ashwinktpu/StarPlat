@@ -12,6 +12,7 @@ void FrontEndContext::startBlock(blockStatement* blockStmtSent)
  
 
 }
+
  void FrontEndContext::endBlock()
 {
    //symbTab->endScope();
@@ -33,3 +34,47 @@ list<Function*> FrontEndContext::getFuncList()
 {
    return funcList;
 }
+
+void FrontEndContext::setCurrentFuncType(int funcType )
+{
+   currentFuncType = funcType;
+}
+
+int FrontEndContext::getCurrentFuncType()
+{
+   return currentFuncType;
+}
+
+ void FrontEndContext::incrementCurrentFuncCount()
+  {
+     int funcType = currentFuncType;
+     if(funcType==GEN_FUNC)
+        genFuncCount++;
+     else if(funcType == STATIC_FUNC)
+          genFuncCount++;
+     else if(funcType==INCREMENTAL_FUNC)
+          inFuncCount++;
+     else
+        decFuncCount++;             
+
+
+
+  }
+
+  int FrontEndContext::getCurrentFuncCount()
+      {
+          int funcType = currentFuncType;
+          int count = 0;
+          if(funcType == GEN_FUNC)
+             count = genFuncCount;
+          else if(funcType == STATIC_FUNC)
+                count = staticFuncCount;
+          else if(funcType == INCREMENTAL_FUNC)
+                 count = inFuncCount;         
+          else
+              count = decFuncCount;
+
+        return count;
+
+
+      }
