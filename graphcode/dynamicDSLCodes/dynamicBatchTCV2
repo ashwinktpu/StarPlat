@@ -21,7 +21,7 @@ Static staticTC(Graph g)
 
 }
 
-incremental(Graph g, int triangle_countSent, propEdge<bool> modified)
+Incremental(Graph g, int triangle_countSent, propEdge<bool> modified, updates<g> addBatch)
 {
 
  long triangle_count = triangle_countSent;
@@ -30,17 +30,17 @@ incremental(Graph g, int triangle_countSent, propEdge<bool> modified)
  int count3 = 0;
   
  
- Update Processing:
+  forall(update in addBatch)
     {
       int v1 = update.source;
       int v2 = update.destination;
       
-      forall(v3 in g.neighbors(v1))
+      forall(v3 in g.neighbors(v1).filter(v3!=v2))
          {
            edge e1 = g.get_edge(v1, v3); 
             int newEdge = 1;
             bool isTriangle = False;
-
+            
 
            if(e1.modified)
               newEdge = newEdge + 1;
@@ -81,27 +81,26 @@ incremental(Graph g, int triangle_countSent, propEdge<bool> modified)
 }
 
 
-decremental(Graph g, int triangle_countSent, propEdge<bool> modified)
+Decremental(Graph g, int triangle_countSent, propEdge<bool> modified, updates<g> deleteBatch)
 {
   long triangle_count = triangle_countSent;
- int count1 = 0;
- int count2 = 0;
- int count3 = 0;
+  int count1 = 0;
+  int count2 = 0;
+  int count3 = 0;
   
   
- Update Processing:
+   forall(update in deleteBatch)
      {
-     
+
       int v1 = update.source;
       int v2 = update.destination;
       
-      forall(v3 in g.neighbors(v1))
+      forall(v3 in g.neighbors(v1).filter(v3!=v2))
          {
            edge e1 = g.get_edge(v1, v3); 
            int newEdge = 1;
            bool isTriangle = False;
-
-
+          
            if(e1.modified)
               newEdge = newEdge + 1;
 
@@ -132,61 +131,11 @@ decremental(Graph g, int triangle_countSent, propEdge<bool> modified)
          }       
    }
 
+
+   triangle_count = triangle_count - (count1/2 + count2/4 + count3/6);
+   
    return triangle_count ;
  
 
 }
-
-Dynamic DynTC(Graph g, list<update> updates)
-{
-  int triangleCount = staticTC(g);
-
-  propNode<bool> modified_add;
-  propNode<bool> modified_del;
-
-  Batch{
-     g.attachNodeProperty(modified_add = false,modified_del = false);
-
-     Update Processing:
-         deletion
-          {
-            int src = update.source;
-            int dest = update.destination;
-
-            for(nbr in g.neighbors(src))
-               {
-                 edge e = g.get_edge(src,nbr);
-                 if(nbr == dest)
-                  modified_del[e] = True;
-               }
-          }
-
-
-     triangleCount = Decremental(g, triangleCount, modified_del);
-     g.updateCSR_Del();
-
-     g.updsteCSR_Add();
-
-     Update Processing:
-          addition
-            {
-               int src = update.source;
-               int dest = update.destination;
-
-               for(nbr in g.neighbors(src))
-                  {
-                    edge e = g.get_edge(src,nbr);
-                    if(nbr == dest)
-                       modified_add[e] = True;
-                  }
-             }  
-
-       triangleCount = Incremental(g, triangleCount, modified_add);    
-
-  }
-
-
-
-  }
-
 
