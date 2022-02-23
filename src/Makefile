@@ -1,14 +1,14 @@
 EXPENDABLES_WINDOWS = bin\MainContext.o bin\ASTHelper.o bin\SymbolTableBuilder.o bin\SymbolTableNew.o bin\y.tab.o bin\lex.yy.o parser\y.tab.c parser\lex.yy.c bin\dsl_cpp_generator.o bin\attachPropAnalyser.o
 EXPENDABLES = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c bin/dsl_cpp_generator.o bin/dataRaceAnalyser.o
-ANALYSER = bin/dataRaceAnalyser.o
+ANALYSER = bin/deviceVarsAnalyser.o
 
 CC = g++  
 
 all: finalcode clean
 windows: finalcode clean_windows
 
-finalcode: bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o bin/dataRaceAnalyser.o
-	$(CC) bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o bin/dataRaceAnalyser.o -o finalcode
+finalcode: bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o bin/deviceVarsAnalyser.o
+	$(CC) bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o bin/deviceVarsAnalyser.o -o finalcode
 
 bin/MainContext.o: maincontext/MainContext.cpp
 	$(CC) -c maincontext/MainContext.cpp -o bin/MainContext.o
@@ -32,6 +32,9 @@ bin/attachPropAnalyser.o: analyser/attachPropAnalyser.cpp analyser/attachPropAna
 
 bin/dataRaceAnalyser.o: analyser/dataRaceAnalyser.cpp analyser/dataRaceAnalyser.h
 	$(CC) -c analyser/dataRaceAnalyser.cpp -o bin/dataRaceAnalyser.o
+
+bin/deviceVarsAnalyser.o: analyser/deviceVarsAnalyser.cpp analyser/deviceVarsAnalyser.h
+	$(CC) -c analyser/deviceVarsAnalyser.cpp -o bin/deviceVarsAnalyser.o
 
 bin/analyserUtil.o: analyser/analyserUtil.hpp
 	$(CC) -c analyser/analyserUtil.hpp -o bin/analyserUtil.o

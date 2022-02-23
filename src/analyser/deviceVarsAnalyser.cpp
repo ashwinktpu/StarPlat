@@ -1,7 +1,10 @@
 #include "deviceVarsAnalyser.h"
+
 #include <string.h>
 #include <unordered_map>
 #include "analyserUtil.hpp"
+#include "../ast/ASTHelper.cpp"
+
 
 /*
 usedVariables deviceVarsAnalyser::getVarsWhile(whileStmt *stmt)
@@ -53,13 +56,13 @@ usedVariables deviceVarsAnalyser::getVarsAssignment(assignment *stmt)
   if (stmt->lhs_isProp())
   {
     PropAccess *propId = stmt->getPropId();
-    currVars.addPropAccess(propId->getIdentifier1(), READ);
-    currVars.addPropAccess(propId->getIdentifier2(), WRITE);
+    currVars.addVariable(propId->getIdentifier1(), READ);
+    currVars.addVariable(propId->getIdentifier2(), WRITE);
   }
   else if (stmt->lhs_isIdentifier())
     currVars.addVariable(stmt->getId(), WRITE);
 
-  usedVariables exprVars = seperatePropAccess(getVarsExpr(stmt->getExpr));
+  usedVariables exprVars = seperatePropAccess(getVarsExpr(stmt->getExpr()));
   currVars.merge(exprVars);
   return currVars;
 }
@@ -152,7 +155,7 @@ usedVariables deviceVarsAnalyser::getVarsBlock(blockStatement *blockStmt)
         for(Identifier* dVars: declVars){
           exprVars.removeVariable(dVars, READ_WRITE);
         }
-        currVars.addVariable(exprVars);
+        currVars.merge(exprVars);
       }
     }
     else
@@ -207,12 +210,12 @@ usedVariables deviceVarsAnalyser::getVarsStatement(statement *stmt)
 //Statement Analyser
 //Current assuming filter expression gets evaluated in GPU
 
-void deviceVarsAnalyser::analyseForAll(forallStmt *stmt, lattice& inp)
+lattice deviceVarsAnalyser::analyseForAll(forallStmt *stmt, lattice &inMap)
 {
-  ASTNodeWrap* wrapNode = getWrapNode(stmt, inp);
-  wrapNode->inMap = inp;
+  ASTNodeWrap* wrapNode = getWrapNode(stmt, inMap);
+  wrapNode->inMap = inMap;
 
-  lattice outMap = inp;
+  lattice outMap = inMap;
 
   usedVariables vars = getVarsForAll(stmt);
   for(Identifier* iden: vars.getVariables(READ)){
@@ -251,6 +254,9 @@ lattice deviceVarsAnalyser::analyseAssignment(assignment *stmt, lattice &inMap)
   for(Identifier* iden: usedVars.getVariables(WRITE)){
     outMap.meet(iden, lattice::CPU_WRITE);
   }
+
+  wrapNode->outMap = outMap;
+  return outMap;
 }
 
 lattice deviceVarsAnalyser::analyseIfElse(ifStmt *stmt, lattice &inMap)
@@ -308,27 +314,27 @@ lattice deviceVarsAnalyser::analyseUnary(unary_stmt *stmt, lattice &inMap)
   return outMap;
 }
 
-/*lattice deviceVarsAnalyser::analyseWhile(whileStmt *stmt, lattice &inMap)
+/*lattice deviceVarsAnalyser::analyseWhile(whileStmt *stmt, lattice &inp)
 {
 }
 
-lattice deviceVarsAnalyser::analyseDoWhile(dowhileStmt *stmt, lattice &inMap)
+lattice deviceVarsAnalyser::analyseDoWhile(dowhileStmt *stmt, lattice &inp)
 {
 }
 
-lattice deviceVarsAnalyser::analyseFixedPoint(fixedPointStmt *stmt, lattice &inMap)
+lattice deviceVarsAnalyser::analyseFixedPoint(fixedPointStmt *stmt, lattice &inp)
 {
 }
 
-lattice deviceVarsAnalyser::analyseItrBFS(iterateBFS *stmt, lattice &inMap)
+lattice deviceVarsAnalyser::analyseItrBFS(iterateBFS *stmt, lattice &inp)
 {
 }
 
-lattice deviceVarsAnalyser::analyseFor(forallStmt *stmt, lattice &inMap)
+lattice deviceVarsAnalyser::analyseFor(forallStmt *stmt, lattice &inp)
 {
 }
 
-lattice deviceVarsAnalyser::analyseReduction(reductionCallStmt *stmt, lattice &inMap)
+lattice deviceVarsAnalyser::analyseReduction(reductionCallStmt *stmt, lattice &inp)
 {
 
 }*/
@@ -412,7 +418,7 @@ void deviceVarsAnalyser::printBlock(blockStatement *stmt, int tabSpace)
   cout<<"Block Begin\n";
   tabSpace++;
   for (statement *bstmt : stmt->returnStatements()){
-    printStatement(bstmt);
+    printStatement(bstmt, tabSpace);
   }
   tabSpace--;
   printTabs(tabSpace);
@@ -448,7 +454,8 @@ void deviceVarsAnalyser::printIfElse(ifStmt *stmt, int tabSpace)
   Expression* cond = stmt->getCondition();
   ASTNodeWrap* wrapNode = getWrapNode(cond);
   (wrapNode->outMap).print();
-
+  
+  printTabs(tabSpace);
   cout<<"If Body\n";
   tabSpace++;
   printStatement(stmt->getIfBody(), tabSpace);
@@ -456,22 +463,34 @@ void deviceVarsAnalyser::printIfElse(ifStmt *stmt, int tabSpace)
 
   if(stmt->getElseBody() != nullptr)
   {
+    printTabs(tabSpace);
     cout<<"Else Body\n";
     tabSpace++;
     printStatement(stmt->getElseBody(), tabSpace);
     tabSpace--;
   }
   
-  printTabs();
+  ASTNodeWrap* stmtWrap = getWrapNode(stmt);
+
+  printTabs(tabSpace);
+  cout<<"Merge point: ";
   (stmtWrap->outMap).print();
   tabSpace--;
 }
 
-void deviceVarsAnalyser::printUnary(unary_stmt *stmt)
+void deviceVarsAnalyser::printUnary(unary_stmt *stmt, int tabSpace)
 {
   ASTNodeWrap* wrapNode = getWrapNode(stmt);
   printTabs(tabSpace);
   cout<<"Unary statment: ";
+  (wrapNode->outMap).print();
+}
+
+void deviceVarsAnalyser::printForAll(forallStmt* stmt, int tabSpace)
+{
+  ASTNodeWrap* wrapNode = getWrapNode(stmt);
+  printTabs(tabSpace);
+  cout<<"For All stmt: ";
   (wrapNode->outMap).print();
 }
 
@@ -486,7 +505,6 @@ void deviceVarsAnalyser::printStatement(statement *stmt, int tabSpace)
   case NODE_FORALLSTMT:
   {
     forallStmt* forStmt = (forallStmt*) stmt;
-
     if(forStmt->isForall())
       printForAll((forallStmt*)stmt, tabSpace);
   }
@@ -508,6 +526,7 @@ void deviceVarsAnalyser::analyseFunc(ASTNode *proc)
 
   lattice inpLattice;
   analyseStatement(func->getBlockStatement(), inpLattice);
+  printStatement(func->getBlockStatement(), 0);
   return;
 }
 
