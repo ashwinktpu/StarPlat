@@ -7,16 +7,16 @@
 #include "../dslCodePad.h"
 //#include "dslCodePad.h"
 //~ struct vars {
-    //~ string varType;
-    //~ string varName;
-    //~ bool result;
-    //~ vars(){}
-    //~ vars(string vType,string vName,bool res) {
-      //~ varType=vType;
-      //~ varName=vName;
-      //~ result=res;
-    //~ }
-  //~ };
+//~ string varType;
+//~ string varName;
+//~ bool result;
+//~ vars(){}
+//~ vars(string vType,string vName,bool res) {
+//~ varType=vType;
+//~ varName=vName;
+//~ result=res;
+//~ }
+//~ };
 
 class dsl_cpp_generator {
  private:
@@ -34,7 +34,7 @@ class dsl_cpp_generator {
   //~ vector<vars> varList;
   //~ std::vector <string> vvList;
   //~ vector<string> varList;
-  std::vector<std::pair<string,string>> variableList;
+  std::vector<std::pair<string, string>> variableList;
   bool isHeader;
 
  public:
@@ -52,8 +52,8 @@ class dsl_cpp_generator {
   }
 
   //~ ~dsl_cpp_generator(){
-    //~ vList.clear();
-    //~ vvList.clear();
+  //~ vList.clear();
+  //~ vvList.clear();
   //~ }
 
   void setFileName(char* f);
@@ -70,7 +70,7 @@ class dsl_cpp_generator {
   void generateVariableDecl(declaration* decl, bool isMainFile);
   void generateStatement(statement* stmt, bool isMainFile);
   // void generateAssignmentStmt(assignment* assignStmt);
-  void generateAssignmentStmt(assignment* assignStmt, bool isMainFile );
+  void generateAssignmentStmt(assignment* assignStmt, bool isMainFile);
   void generateWhileStmt(whileStmt* whilestmt);
   void generateForAll(forallStmt* forAll, bool isMainFile);
   void generateFixedPoint(fixedPointStmt* fixedPoint, bool isMainFile);
@@ -84,8 +84,8 @@ class dsl_cpp_generator {
   void generateRevBFSAbstraction(iterateBFS* bfsAbstraction,
                                  bool isMainFile);  // reverse
 
-  void generateExpr(Expression* expr, bool isMainFile, bool isAtomic=false);
-  void generate_exprArL(Expression* expr, bool isMainFile, bool isAtomic=false);
+  void generateExpr(Expression* expr, bool isMainFile, bool isAtomic = false);
+  void generate_exprArL(Expression* expr, bool isMainFile, bool isAtomic = false);
 
   void generate_exprRelational(Expression* expr, bool isMainFile);
   void generate_exprInfinity(Expression* expr, bool isMainFile);
@@ -149,8 +149,7 @@ class dsl_cpp_generator {
                              bool);
   void generateInitkernel1(assignment*, bool);
 
-
-  void generateInitkernelStr(const char* inVarType, const char* inVarName,  const char* initVal);
+  void generateInitkernelStr(const char* inVarType, const char* inVarName, const char* initVal);
 
   void generateCSRArrays(const char*);
   void generateInitkernel(const char* name);
@@ -168,20 +167,19 @@ class dsl_cpp_generator {
   void generateStartTimer();
   void generateStopTimer();
 
-
   void addCudaRevBFSIterationLoop(iterateBFS* bfsAbstraction);
   void addCudaBFSIterationLoop(iterateBFS* bfsAbstraction);
-  void generateExtraDeviceVariable(const char* typeStr, const char* dVar,const char* sizeVal);
+  void generateExtraDeviceVariable(const char* typeStr, const char* dVar, const char* sizeVal);
   void addCudaBFSIterKernel(iterateBFS* bfsAbstraction);
-  void addCudaRevBFSIterKernel(list<statement*> &revStmtList);
+  void addCudaRevBFSIterKernel(list<statement*>& revStmtList);
   void generateAtomicDeviceAssignmentStmt(assignment* asmt, bool isMainFile);
   void generateDeviceAssignmentStmt(assignment* asmt, bool isMainFile);
 
   //~ void setGenCSR(bool yes = true) { genCSR = yes; }
   //~ bool isGenCSR() { return genCSR; }
   //~ void setGName(const char* str) {
-    //~ strlen(str);
-    //~ strcpy(gName, str);
+  //~ strlen(str);
+  //~ strcpy(gName, str);
   //~ }
   //~ char* getGName() { return gName; }
   void IncrementKCount() { kernelCount++; }
