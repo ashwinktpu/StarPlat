@@ -2,10 +2,7 @@
 
 #include <string.h>
 #include <unordered_map>
-#include "analyserUtil.hpp"
 #include "../ast/ASTHelper.cpp"
-
-
 /*
 usedVariables deviceVarsAnalyser::getVarsWhile(whileStmt *stmt)
 {
@@ -62,14 +59,14 @@ usedVariables deviceVarsAnalyser::getVarsAssignment(assignment *stmt)
   else if (stmt->lhs_isIdentifier())
     currVars.addVariable(stmt->getId(), WRITE);
 
-  usedVariables exprVars = seperatePropAccess(getVarsExpr(stmt->getExpr()));
+  usedVariables exprVars = seperatePropAccess(analyserUtils::getVarsExpr(stmt->getExpr()));
   currVars.merge(exprVars);
   return currVars;
 }
 
 usedVariables deviceVarsAnalyser::getVarsIf(ifStmt *stmt)
 {
-  usedVariables currVars = seperatePropAccess(getVarsExpr(stmt->getCondition()));
+  usedVariables currVars = seperatePropAccess(analyserUtils::getVarsExpr(stmt->getCondition()));
   currVars.merge(getVarsStatement(stmt->getIfBody()));
   if (stmt->getElseBody() != NULL)
     currVars.merge(getVarsStatement(stmt->getElseBody()));
@@ -129,7 +126,7 @@ usedVariables deviceVarsAnalyser::getVarsForAll(forallStmt *stmt)
   currVars.removeVariable(stmt->getIterator(), READ_WRITE);
 
   if(stmt->hasFilterExpr())
-    currVars.merge(seperatePropAccess(getVarsExpr(stmt->getfilterExpr())));
+    currVars.merge(seperatePropAccess(analyserUtils::getVarsExpr(stmt->getfilterExpr())));
   
   return currVars;
 }
@@ -149,7 +146,7 @@ usedVariables deviceVarsAnalyser::getVarsBlock(blockStatement *blockStmt)
 
       if(decl->isInitialized())
       {
-        usedVariables exprVars = getVarsExpr(decl->getExpressionAssigned());
+        usedVariables exprVars = analyserUtils::getVarsExpr(decl->getExpressionAssigned());
         exprVars = seperatePropAccess(exprVars);
 
         for(Identifier* dVars: declVars){
@@ -221,7 +218,7 @@ lattice deviceVarsAnalyser::analyseForAll(forallStmt *stmt, lattice &inMap)
   for(Identifier* iden: vars.getVariables(READ)){
     outMap.meet(iden, lattice::GPU_READ);
   }
-  for(Identifier* iden: vars.getVariables(READ)){
+  for(Identifier* iden: vars.getVariables(WRITE)){
     outMap.meet(iden, lattice::GPU_WRITE);
   }
 
@@ -261,12 +258,14 @@ lattice deviceVarsAnalyser::analyseAssignment(assignment *stmt, lattice &inMap)
 
 lattice deviceVarsAnalyser::analyseIfElse(ifStmt *stmt, lattice &inMap)
 {
+  cout<<"In if else"<<endl;
+
   Expression* cond = stmt->getCondition();
-  ASTNodeWrap* wrapNode = getWrapNode(cond);
+  ASTNodeWrap* wrapNode = getWrapNode(cond, inMap);
   wrapNode->inMap = inMap;
 
   lattice condOut = inMap;
-  usedVariables exprVars = seperatePropAccess(getVarsExpr(cond));
+  usedVariables exprVars = seperatePropAccess(analyserUtils::getVarsExpr(cond));
 
   for(Identifier* iden: exprVars.getVariables(READ)){
     condOut.meet(iden, lattice::CPU_READ);
@@ -395,6 +394,7 @@ lattice deviceVarsAnalyser::analyseBlock(blockStatement *stmt, lattice &inMap)
 
   for (statement *bstmt : currStmts)
   {
+    //printf("%p %d\n", bstmt, bstmt->getTypeofNode());
     lastOut = analyseStatement(bstmt, lastOut);
     if (bstmt->getTypeofNode() == NODE_DECL)
       declaredVars.push_back(((declaration *)bstmt)->getdeclId());
@@ -500,20 +500,26 @@ void deviceVarsAnalyser::printStatement(statement *stmt, int tabSpace)
   {
   case NODE_DECL:
     printDeclaration((declaration *)stmt, tabSpace);
+    break;
   case NODE_ASSIGN:
     printAssignment((assignment *)stmt, tabSpace);
+    break;
   case NODE_FORALLSTMT:
   {
     forallStmt* forStmt = (forallStmt*) stmt;
     if(forStmt->isForall())
       printForAll((forallStmt*)stmt, tabSpace);
+    break;
   }
   case NODE_BLOCKSTMT:
     printBlock((blockStatement *)stmt, tabSpace);
+    break;
   case NODE_UNARYSTMT:
     printUnary((unary_stmt *)stmt, tabSpace);
+    break;
   case NODE_IFSTMT:
     printIfElse((ifStmt *)stmt, tabSpace);
+    break;
   }
 
 }

@@ -2,16 +2,16 @@
 #define DEVICE_VARS_ANALYSER
 
 #include "../ast/ASTNodeTypes.hpp"
-#include "analyserUtil.hpp"
+#include "analyserUtil.cpp"
 #include <unordered_map>
 
 class lattice
 {  
 public:
   enum PointType{
-    CPU_ONLY,
-    GPU_ONLY,
     CPU_GPU_SHARED,
+    GPU_ONLY,
+    CPU_ONLY,
   };
 
   enum AccessType{
@@ -38,13 +38,8 @@ public:
   }
 
   //TODO : Needs to be changed
-  PointType meet(PointType p1, PointType p2)
-  {
-    if(p1 == p2) return p1;
-    else if((p1 == CPU_ONLY) && (p2 == GPU_ONLY)) return CPU_GPU_SHARED;
-    else if((p1 == GPU_ONLY) && (p2 == CPU_ONLY)) return CPU_GPU_SHARED;
-    else if(p1 == CPU_GPU_SHARED) return p2;
-    else return p1;
+  PointType meet(PointType p1, PointType p2){
+    return max(p1, p2);
   }
 
   void operator ^= (lattice &l1)
@@ -67,11 +62,68 @@ public:
     return out;
   }
 
-  void meet(Identifier* iden, AccessType type)
+  void meet(Identifier* iden, AccessType acType)
   {
     TableEntry* symbInfo = iden->getSymbolInfo();
-    if(typeMap.find(symbInfo) != typeMap.end()){
-      // TODO : Add code for meet of symbol info
+    if(typeMap.find(symbInfo) != typeMap.end())
+    {
+      PointType cType = typeMap.at(symbInfo);
+      switch (cType)
+      {
+      case CPU_GPU_SHARED:
+        switch (acType)
+        {
+        case CPU_READ:
+          typeMap[symbInfo] = CPU_GPU_SHARED;
+          break;
+        case CPU_WRITE:
+          typeMap[symbInfo] = CPU_ONLY;
+          break;
+        case GPU_READ:
+          typeMap[symbInfo] = CPU_GPU_SHARED;
+          break;
+        case GPU_WRITE:
+          typeMap[symbInfo] = GPU_ONLY;
+          break;
+        }
+        break;
+      
+      case GPU_ONLY:
+        switch (acType)
+        {
+        case CPU_READ:
+          typeMap[symbInfo] = CPU_GPU_SHARED;
+          break;
+        case CPU_WRITE:
+          typeMap[symbInfo] = CPU_ONLY;
+          break;
+        case GPU_READ:
+          typeMap[symbInfo] = GPU_ONLY;
+          break;
+        case GPU_WRITE:
+          typeMap[symbInfo] = GPU_ONLY;
+          break;
+        }
+        break;
+      
+      case CPU_ONLY:
+        switch (acType)
+        {
+        case CPU_READ:
+          typeMap[symbInfo] = CPU_ONLY;
+          break;
+        case CPU_WRITE:
+          typeMap[symbInfo] = CPU_ONLY;
+          break;
+        case GPU_READ:
+          typeMap[symbInfo] = CPU_GPU_SHARED;
+          break;
+        case GPU_WRITE:
+          typeMap[symbInfo] = GPU_ONLY;
+          break;
+        }
+        break;
+      }
     }
   }
 
@@ -90,7 +142,17 @@ public:
   void print()
   {
     for(pair<TableEntry*, PointType> pr: typeMap)
-      cout<<string(pr.first->getId()->getIdentifier())<<": "<<pr.second<<' ';
+    {
+      string type;
+      if(pr.second == CPU_GPU_SHARED)
+        type = "CPU_GPU_SHARED";
+      else if(pr.second == GPU_ONLY)
+        type = "GPU_ONLY";
+      else
+        type = "CPU_ONLY";
+
+      cout<<string(pr.first->getId()->getIdentifier())<<": "<<type<<' ';
+    }
     cout<<endl;
   }
 };
