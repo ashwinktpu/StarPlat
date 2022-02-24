@@ -437,7 +437,7 @@ void dsl_cpp_generator::generateBFSAbstraction(iterateBFS* bfsAbstraction,
   main.pushstr_newL("int hops_from_source=0;");
 
   main.pushstr_newL("bool* d_finished;       cudaMalloc(&d_finished,sizeof(bool) *(1));");
-  main.pushstr_newL("int* d_hops_from_source;cudaMalloc(&d_hops_from_source, sizeof(int));");
+  main.pushstr_newL("int* d_hops_from_source;cudaMalloc(&d_hops_from_source, sizeof(int));  cudaMemset(d_hops_from_source,0,sizeof(int));");
   main.pushstr_newL("int* d_level;           cudaMalloc(&d_level,sizeof(int) *(V));");
 
   main.NewLine();
