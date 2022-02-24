@@ -58,12 +58,12 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
   float milliseconds = 0;
   cudaEventRecord(start,0);
 
-  //END CSR 
+  //END CSR
 
   //DECLAR DEVICE AND HOST vars in params
-  double * d_BC;cudaMalloc(&d_BC, sizeof(int)*(V));
+  double* d_BC; cudaMalloc(&d_BC, sizeof(double)*(V)); ///TODO from func
 
-  //BEGIN DSL PARSING 
+  //BEGIN DSL PARSING
   initKernel<double> <<<numBlocks,numThreads>>>(V,d_BC,0);
 
   double* d_sigma;
@@ -87,17 +87,20 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
     bool finished;
     int hops_from_source=0;
     bool* d_finished;       cudaMalloc(&d_finished,sizeof(bool) *(1));
-    int* d_hops_from_source;cudaMalloc(&d_hops_from_source, sizeof(int));
+    int* d_hops_from_source;cudaMalloc(&d_hops_from_source, sizeof(int));  cudaMemset(d_hops_from_source,0,sizeof(int));
     int* d_level;           cudaMalloc(&d_level,sizeof(int) *(V));
 
+    //EXTRA vars INITIALIZATION
     initKernel<int> <<<numBlocks,numThreads>>>(V,d_level,-1);
+    initIndex<int><<<1,1>>>(V,d_level,src, 0);
+
     // long k =0 ;// For DEBUG
     do {
       finished = true;
       cudaMemcpy(d_finished, &finished, sizeof(bool)*(1), cudaMemcpyHostToDevice);
 
       //Kernel LAUNCH
-      fwd_pass<<<numBlocks,numThreads>>>(V, d_meta, d_data,d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished, d_BC);
+      fwd_pass<<<numBlocks,numThreads>>>(V, d_meta, d_data,d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished, d_BC); ///TODO from varList
 
       incrementDeviceVar<<<1,1>>>(d_hops_from_source);
       cudaDeviceSynchronize(); //MUST - rupesh
@@ -114,16 +117,82 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
     while(hops_from_source > 1) {
 
       //KERNEL Launch
-      back_pass<<<numBlocks,numThreads>>>(V, d_meta, d_data, d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished, d_BC);
+      back_pass<<<numBlocks,numThreads>>>(V, d_meta, d_data, d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished, d_BC); ///TODO from varList
 
       hops_from_source--;
       cudaMemcpy(d_hops_from_source, &hops_from_source, sizeof(int)*(1), cudaMemcpyHostToDevice);
     }
+    //accumulate_bc<<<numBlocks,numThreads>>>(V,d_delta, d_BC, d_level, src);
   }
-  //ADD TIMER STOP
+  //TIMER STOP
   cudaEventRecord(stop,0);
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&milliseconds, start, stop);
   printf("GPU Time: %.6f ms\n", milliseconds);
+
+  cudaMemcpy(BC,d_BC , sizeof(double) * (V), cudaMemcpyDeviceToHost);
+} //end FUN
+
+// driver program to test above function
+int main(int argc , char ** argv)
+{
+  graph G(argv[1]);
+  G.parseGraph();
+  bool printAns = false;
+
+  std::set<int> src;
+
+  if(argc>3) { // ./a.out inputfile srcFile -p
+      printAns = true;
+  }
+
+  // Check and READ Src file =================
+
+  std::string line;
+  std::ifstream srcfile(argv[2]);
+  if (!srcfile.is_open()) {
+    std::cout << "Unable to open src file :" << argv[1] << std::endl;
+    exit(1);
+  }
+
+
+  int nodeVal;
+  while ( std::getline (srcfile,line) ) {
+   std::stringstream ss(line);
+   ss>> nodeVal;
+   //~ std::cout << "src " << nodeVal << '\n';
+   src.insert(nodeVal);
+  }
+
+  srcfile.close();
+  //==========================================
+
+
+
+
+    //~ cudaEvent_t start, stop; // should not be here!
+    //~ cudaEventCreate(&start);
+    //~ cudaEventCreate(&stop);
+    //~ float milliseconds = 0;
+    //~ cudaEventRecord(start,0);
+    unsigned V = G.num_nodes();
+    unsigned E = G.num_nodes();
+    double* BC = (double *)malloc(sizeof(double)*V);
+    Compute_BC(G,BC,src);
+
+    if(printAns){
+      for (int i = 0; i <V; i++){
+        printf("%d %lf\n", i, BC[i]);
+      }
+    }
+    //~ cudaDeviceSynchronize();
+
+    //~ cudaEventRecord(stop,0);
+    //~ cudaEventSynchronize(stop);
+    //~ cudaEventElapsedTime(&milliseconds, start, stop);
+    //~ printf("Time taken by function to execute is: %.6f ms\n", milliseconds);
+    cudaCheckError();
+
+  return 0;
 
 }
