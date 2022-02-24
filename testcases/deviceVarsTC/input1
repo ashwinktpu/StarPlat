@@ -1,0 +1,22 @@
+function test(Graph g, node src)
+{
+    int y;
+    int x;
+
+    propNode<int> prop;
+    g.attachNodeProp(prop);
+
+    if(y)
+    {
+        forall(v in g.nodes()){
+            int t = x+1;
+            v.prop = 100;
+        }
+    }
+    else
+    {
+        src.prop = 100;
+    }
+
+    y = x;
+}

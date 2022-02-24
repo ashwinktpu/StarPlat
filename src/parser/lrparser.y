@@ -7,6 +7,7 @@
     #include "includeHeader.hpp"
 	//#include "../analyser/attachPropAnalyser.h"
 	//#include "../analyser/dataRaceAnalyser.h"
+	#include "../analyser/deviceVarsAnalyser.h"
 	#include<getopt.h>
 	//#include "../symbolutil/SymbolTableBuilder.cpp"
      
@@ -439,6 +440,9 @@ int main(int argc,char **argv)
 	//dataRaceAnalyser dataRaceAnalyse;
 	//dataRaceAnalyse.analyse();
 	
+	deviceVarsAnalyser dvAnalyser;
+	dvAnalyser.analyse();
+
 	cpp_backend.setFileName(fileName);
 	cpp_backend.generate();
 	

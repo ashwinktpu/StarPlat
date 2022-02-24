@@ -1,11 +1,11 @@
-#ifndef ANALYSER_UTIL
-#define ANALYSER_UTIL
+#ifndef ANALYSER_UTILITY
+#define ANALYSER_UTILITY
 
 #include "../ast/ASTNodeTypes.hpp"
 #include <unordered_map>
 #include "../symbolutil/SymbolTable.h"
 
-#define propKey pair<TableEntry*, TableEntry*> 
+#define propKey pair<TableEntry *, TableEntry *>
 
 enum variable_type
 {
@@ -53,10 +53,10 @@ struct IdentifierWrap
 class usedVariables
 {
 private:
-
-    struct hash_pair {
+    struct hash_pair
+    {
         template <class T1, class T2>
-        size_t operator()(const pair<T1, T2>& p) const
+        size_t operator()(const pair<T1, T2> &p) const
         {
             auto hash1 = hash<T1>{}(p.first);
             auto hash2 = hash<T2>{}(p.second);
@@ -64,8 +64,8 @@ private:
         }
     };
 
-    unordered_map<TableEntry*, Identifier*> readVars, writeVars;
-    unordered_map<propKey, PropAccess*, hash_pair> readProp, writeProp;
+    unordered_map<TableEntry *, Identifier *> readVars, writeVars;
+    unordered_map<propKey, PropAccess *, hash_pair> readProp, writeProp;
 
 public:
     usedVariables() {}
@@ -80,8 +80,8 @@ public:
 
     void addPropAccess(PropAccess *prop, int type)
     {
-        Identifier* iden1 = prop->getIdentifier1();
-        Identifier* iden2 = prop->getIdentifier2();
+        Identifier *iden1 = prop->getIdentifier1();
+        Identifier *iden2 = prop->getIdentifier2();
         propKey prop_key = make_pair(iden1->getSymbolInfo(), iden2->getSymbolInfo());
 
         if (type & 1)
@@ -92,22 +92,22 @@ public:
 
     void merge(usedVariables usedVars1)
     {
-        for (pair<TableEntry*, Identifier*> iden: usedVars1.readVars)
+        for (pair<TableEntry *, Identifier *> iden : usedVars1.readVars)
             this->readVars.insert({iden.first, iden.second});
 
-        for (pair<TableEntry*, Identifier*> iden : usedVars1.writeVars)
+        for (pair<TableEntry *, Identifier *> iden : usedVars1.writeVars)
             this->writeVars.insert({iden.first, iden.second});
 
-        for (pair<propKey, PropAccess*> iden: usedVars1.readProp)
+        for (pair<propKey, PropAccess *> iden : usedVars1.readProp)
             this->readProp.insert({iden.first, iden.second});
 
-        for (pair<propKey, PropAccess*> iden : usedVars1.writeProp)
+        for (pair<propKey, PropAccess *> iden : usedVars1.writeProp)
             this->writeProp.insert({iden.first, iden.second});
     }
 
     void removeVariable(Identifier *iden, int type)
     {
-        TableEntry* symbInfo = iden->getSymbolInfo();
+        TableEntry *symbInfo = iden->getSymbolInfo();
         if (type & 1)
         {
             if (readVars.find(symbInfo) != readVars.end())
@@ -123,10 +123,10 @@ public:
 
     bool isUsedVar(Identifier *iden, int type = READ_WRITE)
     {
-        TableEntry* symbInfo = iden->getSymbolInfo();
-        if(type == READ)
+        TableEntry *symbInfo = iden->getSymbolInfo();
+        if (type == READ)
             return (readVars.find(symbInfo) != readVars.end());
-        else if(type == WRITE)
+        else if (type == WRITE)
             return (writeVars.find(symbInfo) != writeVars.end());
         else
             return ((readVars.find(symbInfo) != readVars.end()) || (writeVars.find(symbInfo) != writeVars.end()));
@@ -135,23 +135,24 @@ public:
     list<Identifier *> getVariables(int type = READ_WRITE)
     {
         list<Identifier *> result;
-        if(type & 1)
+        if (type & 1)
         {
-            for (pair<TableEntry*, Identifier*> iden : readVars)
+            for (pair<TableEntry *, Identifier *> iden : readVars)
                 result.push_back(iden.second);
         }
-        if(type & 2)
+        if (type & 2)
         {
-            for (pair<TableEntry*, Identifier*> iden : writeVars)
+            for (pair<TableEntry *, Identifier *> iden : writeVars)
                 result.push_back(iden.second);
         }
         return result;
     }
 
-    bool hasVariables(int type = READ_WRITE){
-        if(type == READ)
+    bool hasVariables(int type = READ_WRITE)
+    {
+        if (type == READ)
             return (readVars.size() > 0);
-        else if(type == WRITE)
+        else if (type == WRITE)
             return (writeVars.size() > 0);
         else
             return ((writeVars.size() > 0) || (readVars.size() > 0));
@@ -159,13 +160,13 @@ public:
 
     bool isUsedPropAcess(PropAccess *propId, int type = READ_WRITE)
     {
-        Identifier* iden1 = propId->getIdentifier1();
-        Identifier* iden2 = propId->getIdentifier2();
+        Identifier *iden1 = propId->getIdentifier1();
+        Identifier *iden2 = propId->getIdentifier2();
         propKey prop_key = make_pair(iden1->getSymbolInfo(), iden2->getSymbolInfo());
 
-        if(type == READ)
+        if (type == READ)
             return (readProp.find(prop_key) != readProp.end());
-        else if(type == WRITE)
+        else if (type == WRITE)
             return (writeProp.find(prop_key) != writeProp.end());
         else
             return ((readProp.find(prop_key) != readProp.end()) || (writeProp.find(prop_key) != writeProp.end()));
@@ -173,18 +174,20 @@ public:
 
     bool isUsedProp(PropAccess *propId, int type = READ_WRITE)
     {
-        Identifier* iden2 = propId->getIdentifier2();
-        TableEntry* symbInfo = iden2->getSymbolInfo();
+        Identifier *iden2 = propId->getIdentifier2();
+        TableEntry *symbInfo = iden2->getSymbolInfo();
 
-        if(type & 1)
+        if (type & 1)
         {
-            for (pair<propKey, PropAccess*> iden : readProp)
-                if(iden.first.second == symbInfo) return true;
+            for (pair<propKey, PropAccess *> iden : readProp)
+                if (iden.first.second == symbInfo)
+                    return true;
         }
-        if(type & 2)
+        if (type & 2)
         {
-            for (pair<propKey, PropAccess*> iden : writeProp)
-                if(iden.first.second == symbInfo) return true;
+            for (pair<propKey, PropAccess *> iden : writeProp)
+                if (iden.first.second == symbInfo)
+                    return true;
         }
         return false;
     }
@@ -192,20 +195,21 @@ public:
     list<PropAccess *> getPropAcess(int type = READ_WRITE)
     {
         list<PropAccess *> result;
-        if(type & 1)
+        if (type & 1)
         {
-            for (pair<propKey, PropAccess*> iden : readProp)
+            for (pair<propKey, PropAccess *> iden : readProp)
                 result.push_back(iden.second);
         }
-        if(type & 2)
+        if (type & 2)
         {
-            for (pair<propKey, PropAccess*> iden : writeProp)
+            for (pair<propKey, PropAccess *> iden : writeProp)
                 result.push_back(iden.second);
         }
         return result;
     }
 
-    void clear(){
+    void clear()
+    {
         readVars.clear();
         writeVars.clear();
 
@@ -214,133 +218,174 @@ public:
     }
 };
 
-class printAST{
+class analyserUtils
+{
+public:
+    static usedVariables getVarsExpr(Expression *expr)
+    {
+        usedVariables result;
+
+        if (expr->isIdentifierExpr())
+        {
+            Identifier *iden = expr->getId();
+            result.addVariable(iden, READ);
+        }
+        else if (expr->isPropIdExpr())
+        {
+            PropAccess *propExpr = expr->getPropId();
+            result.addPropAccess(propExpr, READ);
+        }
+        else if (expr->isUnary())
+        {
+            if (expr->getOperatorType() == OPERATOR_NOT)
+                result = getVarsExpr(expr->getUnaryExpr());
+            else if ((expr->getOperatorType() == OPERATOR_INC) || (expr->getOperatorType() == OPERATOR_DEC))
+            {
+                Expression *uExpr = expr->getUnaryExpr();
+                if (uExpr->isIdentifierExpr())
+                    result.addVariable(uExpr->getId(), READ_WRITE);
+                else if (uExpr->isPropIdExpr())
+                    result.addPropAccess(uExpr->getPropId(), READ_WRITE);
+            }
+        }
+        else if (expr->isLogical() || expr->isArithmetic() || expr->isRelational())
+        {
+            result = getVarsExpr(expr->getLeft());
+            result.merge(getVarsExpr(expr->getRight()));
+        }
+        return result;
+    }
+};
+
+class printAST
+{
     void printTabs()
     {
         int temp = tabSpace;
-        while(temp--)
-            cout<<'\t';
+        while (temp--)
+            cout << '\t';
     }
 
-    public:
+public:
     int tabSpace = 0;
 
-    void printFunction(Function* func)
+    void printFunction(Function *func)
     {
         printTabs();
-        cout<<"Function "<<string(func->getIdentifier()->getIdentifier())<<'\n';
+        cout << "Function " << string(func->getIdentifier()->getIdentifier()) << '\n';
         tabSpace++;
         printBlock(func->getBlockStatement());
         tabSpace--;
     }
 
-    void printBlock(blockStatement* stmt)
+    void printBlock(blockStatement *stmt)
     {
         printTabs();
-        cout<<"{\n";
+        cout << "{\n";
         tabSpace++;
 
-        for(statement* body: stmt->returnStatements())
+        for (statement *body : stmt->returnStatements())
             printStatement(body);
-        
+
         tabSpace--;
         printTabs();
-        cout<<"}\n";
+        cout << "}\n";
     }
 
-    void printStatement(statement* stmt)
+    void printStatement(statement *stmt)
     {
-        if(stmt == nullptr) return;
+        if (stmt == nullptr)
+            return;
 
         switch (stmt->getTypeofNode())
         {
         case NODE_DECL:
             printTabs();
-            cout<<"Declaration\n";
+            cout << "Declaration\n";
             break;
-        
+
         case NODE_ASSIGN:
             printTabs();
-            cout<<"Assignment\n";
+            cout << "Assignment\n";
             break;
-        
+
         case NODE_REDUCTIONCALLSTMT:
             printTabs();
-            cout<<"Reduction\n";
+            cout << "Reduction\n";
             break;
 
         case NODE_PROCCALLSTMT:
             printTabs();
-            cout<<"Procedure Call\n";
+            cout << "Procedure Call\n";
             break;
 
         case NODE_UNARYSTMT:
             printTabs();
-            cout<<"Unary statment\n";
+            cout << "Unary statment\n";
             break;
 
         case NODE_BLOCKSTMT:
-            printBlock((blockStatement*) stmt);
+            printBlock((blockStatement *)stmt);
             break;
 
         case NODE_WHILESTMT:
             printTabs();
-            cout<<"While\n";
+            cout << "While\n";
             tabSpace++;
-            printStatement(((whileStmt*) stmt)->getBody());
+            printStatement(((whileStmt *)stmt)->getBody());
             tabSpace--;
             break;
 
         case NODE_DOWHILESTMT:
             printTabs();
-            cout<<"Do While\n";
+            cout << "Do While\n";
             tabSpace++;
-            printStatement(((dowhileStmt*) stmt)->getBody());
+            printStatement(((dowhileStmt *)stmt)->getBody());
             tabSpace--;
             break;
 
         case NODE_FORALLSTMT:
             printTabs();
-            cout<<"For all\n";
+            cout << "For all\n";
             tabSpace++;
-            printStatement(((forallStmt*) stmt)->getBody());
+            printStatement(((forallStmt *)stmt)->getBody());
             tabSpace--;
             break;
 
         case NODE_FIXEDPTSTMT:
             printTabs();
-            cout<<"Fixed Point\n";
+            cout << "Fixed Point\n";
             tabSpace++;
-            printStatement(((fixedPointStmt*) stmt)->getBody());
+            printStatement(((fixedPointStmt *)stmt)->getBody());
             tabSpace--;
             break;
 
         case NODE_ITRBFS:
             printTabs();
-            cout<<"ITRBFS\n";
+            cout << "ITRBFS\n";
             tabSpace++;
-            printStatement(((iterateBFS*) stmt)->getBody());
+            printStatement(((iterateBFS *)stmt)->getBody());
             tabSpace--;
-            if(((iterateBFS*) stmt)->getRBFS())
+            if (((iterateBFS *)stmt)->getRBFS())
             {
-                cout<<"ITRBFS Reverse\n";
+                cout << "ITRBFS Reverse\n";
                 tabSpace++;
-                printStatement(((iterateBFS*) stmt)->getRBFS()->getBody());
+                printStatement(((iterateBFS *)stmt)->getRBFS()->getBody());
                 tabSpace--;
             }
             break;
 
         case NODE_IFSTMT:
             printTabs();
-            cout<<"If statment\n";
+            cout << "If statment\n";
             tabSpace++;
-            printStatement(((ifStmt*) stmt)->getIfBody());
+            printStatement(((ifStmt *)stmt)->getIfBody());
             tabSpace--;
-            if(((ifStmt*) stmt)->getElseBody())
+            if (((ifStmt *)stmt)->getElseBody())
             {
-                cout<<"Else statment\n";
+                cout << "Else statment\n";
                 tabSpace++;
-                printStatement(((ifStmt*) stmt)->getElseBody());
+                printStatement(((ifStmt *)stmt)->getElseBody());
                 tabSpace--;
             }
         default:
@@ -348,41 +393,6 @@ class printAST{
         }
     }
 };
-
-usedVariables getVarsExpr(Expression *expr)
-{
-    usedVariables result;
-
-    if (expr->isIdentifierExpr())
-    {
-        Identifier *iden = expr->getId();
-        result.addVariable(iden, READ);
-    }
-    else if (expr->isPropIdExpr())
-    {
-        PropAccess *propExpr = expr->getPropId();
-        result.addPropAccess(propExpr, READ);
-    }
-    else if (expr->isUnary())
-    {
-        if (expr->getOperatorType() == OPERATOR_NOT)
-            result = getVarsExpr(expr->getUnaryExpr());
-        else if ((expr->getOperatorType() == OPERATOR_INC) || (expr->getOperatorType() == OPERATOR_DEC))
-        {
-            Expression *uExpr = expr->getUnaryExpr();
-            if (uExpr->isIdentifierExpr())
-                result.addVariable(uExpr->getId(), READ_WRITE);
-            else if (uExpr->isPropIdExpr())
-                result.addPropAccess(uExpr->getPropId(), READ_WRITE);
-        }
-    }
-    else if (expr->isLogical() || expr->isArithmetic() || expr->isRelational())
-    {
-        result = getVarsExpr(expr->getLeft());
-        result.merge(getVarsExpr(expr->getRight()));
-    }
-    return result;
-}
 
 /*
 usedVariables getVarsBlock(statement *inp_stmt)
@@ -436,7 +446,7 @@ usedVariables getDeclBlock(statement *inp_stmt)
 {
     list<statement *> stmtList = inp_stmt->returnStatements();
     usedVariables result;
-    
+
     for (statement *stmt: stmtList)
     {
         if (inp_stmt->getTypeOfNode() == NODE_DECL)

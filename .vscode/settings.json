@@ -29,6 +29,9 @@
         "deque": "cpp",
         "vector": "cpp",
         "memory": "cpp",
-        "istream": "cpp"
+        "istream": "cpp",
+        "array": "cpp",
+        "tuple": "cpp",
+        "type_traits": "cpp"
     }
 }
