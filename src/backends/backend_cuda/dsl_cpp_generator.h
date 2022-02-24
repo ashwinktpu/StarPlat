@@ -83,14 +83,17 @@ class dsl_cpp_generator {
   void generateBFSAbstraction(iterateBFS* bfsAbstraction, bool isMainFile);
   void generateRevBFSAbstraction(iterateBFS* bfsAbstraction,
                                  bool isMainFile);  // reverse
-  void generateExpr(Expression* expr, bool isMainFile);
+
+  void generateExpr(Expression* expr, bool isMainFile, bool isAtomic=false);
+  void generate_exprArL(Expression* expr, bool isMainFile, bool isAtomic=false);
+
   void generate_exprRelational(Expression* expr, bool isMainFile);
   void generate_exprInfinity(Expression* expr, bool isMainFile);
   void generate_exprLiteral(Expression* expr, bool isMainFile);
   void generate_exprIdentifier(Identifier* id, bool isMainFile);
   void generate_exprPropId(PropAccess* propId, bool isMainFile);
   void generate_exprProcCall(Expression* expr, bool isMainFile);
-  void generate_exprArL(Expression* expr, bool isMainFile);
+
   void generateForAll_header();
   void generateForAllSignature(forallStmt* forAll, bool isKernel);
   // void includeIfToBlock(forallStmt* forAll);

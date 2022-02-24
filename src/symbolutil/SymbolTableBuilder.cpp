@@ -135,8 +135,8 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
              }
 
              if(backend.compare("cuda")== 0  && assign->lhs_isProp()){  // This flags device assingments OUTSIDE for
-              std::cout<< "varName1: " << assign->getPropId()->getIdentifier1()->getIdentifier() << '\n';
-              std::cout<< "varName2: " << assign->getPropId()->getIdentifier2()->getIdentifier() << '\n';
+              //~ std::cout<< "varName1: " << assign->getPropId()->getIdentifier1()->getIdentifier() << '\n';
+              //~ std::cout<< "varName2: " << assign->getPropId()->getIdentifier2()->getIdentifier() << '\n';
               std::cout<<"ANAME1:"<< assign->getParent()->getTypeofNode() << '\n';
               std::cout<< "ANAME2:"<< assign->getParent()->getParent()->getTypeofNode() << '\n';
               //~ std::cout<< "ANAME3:"<< assign->getParent()->getParent()->getParent()->getTypeofNode() << '\n';
@@ -296,11 +296,12 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
              count++;
           }
 
-          if(flag && (backend.compare("omp")==0))  //|| backend.compare("cuda")==0)
+          if(flag && (backend.compare("omp")==0)  )  //|| backend.compare("cuda")==0
 
           {
+            std::cout<< "IN ITR BFS" << '\n';
             iterateBFS* itrbFS=(iterateBFS*)(*itrIBFS);
-            Identifier* id=Identifier::createIdNode("d_level");
+            Identifier* id=Identifier::createIdNode("d_level1");
             declaration* decl=createPropertyDeclaration(id);
             buildForStatements(decl);
             blockStmt->insertToBlock(decl,procPos);
@@ -311,7 +312,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
             PropAccess* propIdNode=PropAccess::createPropAccessNode(itrbFS->getRootNode(),id);
             Expression* expr=Expression::nodeForIntegerConstant(-1);
             assignment* assignmentNode=assignment::prop_assignExpr(propIdNode,expr);
-            //~ blockStmt->insertToBlock(assignmentNode,bfsPos+1);
+            blockStmt->insertToBlock(assignmentNode,bfsPos+1);
 
          }
 

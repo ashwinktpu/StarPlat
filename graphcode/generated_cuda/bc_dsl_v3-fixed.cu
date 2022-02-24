@@ -1,5 +1,5 @@
 #include "bc_dsl_v3.h"
-
+///usr/local/cuda-9.2/bin/nvcc -o "bc_dsl_v3-fixed".out "bc_dsl_v3-fixed.cu"  -std=c++14 -rdc=true -arch=sm_70
 void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
 {
   // CSR BEGIN
@@ -75,12 +75,13 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
   std::set<int>::iterator itr;
   for(itr=sourceSet.begin();itr!=sourceSet.end();itr++)
   {
-    int src = *itr;
+    unsigned src = *itr;
     initKernel<double> <<<numBlocks,numThreads>>>(V,d_delta,0);
 
     initKernel<double> <<<numBlocks,numThreads>>>(V,d_sigma,0);
 
-    initIndex<unsigned,double,int,double><<<1,1>>>(V,d_sigma,src, 1.0);
+    initIndex<double><<<1,1>>>(V,d_sigma,src, 1.0);
+
 
     //EXTRA vars for ITBFS AND REVBFS
     bool finished;
@@ -91,6 +92,8 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
     int* d_level;           cudaMalloc(&d_level,sizeof(int) *(V));
 
     initKernel<int> <<<numBlocks,numThreads>>>(V,d_level,-1);
+    initIndex<int><<<1,1>>>(V,d_level,src, 0);
+
     long k =0 ;// For DEBUG
     do {
       finished = true;
@@ -170,10 +173,16 @@ int main(int argc , char ** argv)
     //~ cudaEventCreate(&stop);
     //~ float milliseconds = 0;
     //~ cudaEventRecord(start,0);
-
-    double* BC;
-    BC = (double *)malloc( (G.num_nodes())*sizeof(double));
+    unsigned V = G.num_nodes();
+    unsigned E = G.num_nodes();
+    double* BC = (double *)malloc(sizeof(double)*V);
     Compute_BC(G,BC,src);
+
+    if(printAns){
+      for (int i = 0; i <V; i++){
+        printf("%d %lf\n", i, BC[i]);
+      }
+    }
     //~ cudaDeviceSynchronize();
 
     //~ cudaEventRecord(stop,0);
