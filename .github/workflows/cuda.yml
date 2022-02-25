@@ -1,0 +1,19 @@
+name: CUDA Branch
+
+on:
+  push:
+    branches: [ cuda ]
+  pull_request:
+    branches: [ cuda ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+        
+    - name: make
+      run: make cuda
+    
