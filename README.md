@@ -1,4 +1,4 @@
-[![CUDA Branch](https://github.com/nibeditabh/GraphDSL/actions/workflows/cuda.yml/badge.svg)](https://github.com/nibeditabh/GraphDSL/actions/workflows/cuda.yml)
+[![CUDA Branch](https://github.com/nibeditabh/GraphDSL/actions/workflows/cuda.yml/badge.svg?branch=cuda)](https://github.com/nibeditabh/GraphDSL/actions/workflows/cuda.yml)
 
 
 # GraphDSL
