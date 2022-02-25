@@ -448,7 +448,7 @@ int main(int argc,char **argv)
 	{
      //TODO: redirect to different backend generator after comparing with the 'b' option
     stBuilder.buildST(frontEndContext.getFuncList());
-	 printf("hiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii");
+	 printf("===========================================\n");
 	cpp_backend.setFileName(fileName);
 	cpp_backend.generate();
 

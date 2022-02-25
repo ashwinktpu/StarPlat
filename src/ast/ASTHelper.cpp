@@ -117,10 +117,11 @@ static ASTNodeList* createNList(ASTNode* node)
 }
 
 static ASTNode* createParamNode(ASTNode* type,ASTNode* id)
-{   Identifier* paramId=(Identifier*)id;
-   // cout<<"PARAMID NODE VALUE "<<paramId->getIdentifier()<<"\n";
-   formalParam* formalParamNode=formalParam::createFormalParam((Type*)type,(Identifier*)id);
-   return formalParamNode;
+{
+  //~ Identifier* paramId=(Identifier*)id;
+  // cout<<"PARAMID NODE VALUE "<<paramId->getIdentifier()<<"\n";
+  formalParam* formalParamNode=formalParam::createFormalParam((Type*)type,(Identifier*)id);
+  return formalParamNode;
 
 }
 
@@ -312,7 +313,7 @@ static ASTNode* createNodeForForAllStmt(ASTNode* iterator,ASTNode* sourceGraph,A
     {
      f=(Expression*)filterExpr;
 
-    //cout<<"CHECK FILTER TYPE"<<f->isRelational()<<"\n";
+    cout<<"CHECK FILTER TYPE"<<f->isRelational()<<"\n";
     }
     forallStmtNode=forallStmt::createforallStmt(id,id1,(proc_callExpr*)extractElemFunc,(statement*)body,(Expression*)filterExpr,isforall);
     return forallStmtNode;
