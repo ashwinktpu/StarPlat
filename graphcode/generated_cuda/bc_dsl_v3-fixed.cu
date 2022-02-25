@@ -122,13 +122,16 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
       hops_from_source--;
       cudaMemcpy(d_hops_from_source, &hops_from_source, sizeof(int)*(1), cudaMemcpyHostToDevice);
     }
-    //ADD TIMER STOP
-    cudaEventRecord(stop,0);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&milliseconds, start, stop);
-    printf("GPU Time: %.6f ms\n", milliseconds);
-
   }
+
+  //ADD TIMER STOP
+  cudaEventRecord(stop,0);
+  cudaEventSynchronize(stop);
+  cudaEventElapsedTime(&milliseconds, start, stop);
+  printf("GPU Time: %.6f ms\n", milliseconds);
+
+  cudaMemcpy(BC,d_BC , sizeof(double) * (V), cudaMemcpyDeviceToHost);
+
 }
 
 // driver program to test above function
@@ -163,6 +166,7 @@ int main(int argc , char ** argv)
   }
 
   srcfile.close();
+  printf("#srces:%d\n",src.size());
   //==========================================
 
 
@@ -178,11 +182,14 @@ int main(int argc , char ** argv)
     double* BC = (double *)malloc(sizeof(double)*V);
     Compute_BC(G,BC,src);
 
-    if(printAns){
-      for (int i = 0; i <V; i++){
-        printf("%d %lf\n", i, BC[i]);
-      }
+    int LIMIT = 9;
+    if(printAns)
+     LIMIT=V;
+
+    for (int i = 0; i < LIMIT; i++){
+      printf("%lf\n", BC[i]);
     }
+
     //~ cudaDeviceSynchronize();
 
     //~ cudaEventRecord(stop,0);

@@ -20,7 +20,7 @@ void dsl_cpp_generator::generateInitkernel(const char* name) {
 //~ initKernel<double> <<<numBlocks,numThreads>>>(V,d_sigma,0);
 void dsl_cpp_generator::generateInitkernelStr(const char* inVarType, const char* inVarName, const char* initVal) {
   char strBuffer[1024];
-  sprintf(strBuffer, "initKernel<%s> <<<numBlocks,numThreads>>>(V,%s,%s);", inVarType, inVarName, initVal);
+  sprintf(strBuffer, "initKernel<%s> <<<numBlocks,threadsPerBlock>>>(V,%s,%s);", inVarType, inVarName, initVal);
   main.pushstr_newL(strBuffer);
 }
 void dsl_cpp_generator::generateInitkernel1(
@@ -35,7 +35,7 @@ void dsl_cpp_generator::generateInitkernel1(
       convertToCppType(inId->getSymbolInfo()->getType()->getInnerTargetType());
   const char* inVarName = inId->getIdentifier();
 
-  sprintf(strBuffer, "initKernel<%s> <<<numBlocks,numThreads>>>(V,d_%s,",
+  sprintf(strBuffer, "initKernel<%s> <<<numBlocks,threadsPerBlock>>>(V,d_%s,",
           inVarType, inVarName);
   main.pushString(strBuffer);
 
@@ -50,7 +50,7 @@ void dsl_cpp_generator::generateInitkernel1(
 
 void dsl_cpp_generator::generateLaunchConfig(const char* name) {
   //~ const unsigned threadsPerBlock = 512;                                  //
-  //~ unsigned numThreads   = V < threadsPerBlock ? V: 512;                  //
+  //~ unsigned numThreads   = V < threadsPerBlock ?  512: V;                  //
   //LAUNCH CONFIG ~ unsigned numBlocks    =
   //(numThreads+threadsPerBlock-1)/threadsPerBlock;//
 
@@ -60,8 +60,8 @@ void dsl_cpp_generator::generateLaunchConfig(const char* name) {
   const char* totalThreads = (strcmp(name, "nodes") == 0) ? "V" : "E";
   sprintf(strBuffer, "const unsigned threadsPerBlock = %u;", threadsPerBlock);
   main.pushstr_newL(strBuffer);
-  sprintf(strBuffer, "unsigned numThreads   = (%s < threadsPerBlock)? %s: %u;",
-          totalThreads, totalThreads, threadsPerBlock);
+  sprintf(strBuffer, "unsigned numThreads   = (%s < threadsPerBlock)? %u: %s;",
+          totalThreads, threadsPerBlock,totalThreads);
   main.pushstr_newL(strBuffer);
   sprintf(strBuffer,
           "unsigned numBlocks    = "
@@ -362,7 +362,7 @@ void dsl_cpp_generator::addCudaBFSIterationLoop(iterateBFS* bfsAbstraction) {
   //main.pushstr_newL("}");
   main.NewLine();
   main.pushstr_newL("//Kernel LAUNCH");
-  main.pushstr_newL("fwd_pass<<<numBlocks,numThreads>>>(V, d_meta, d_data,d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished, d_BC); ///TODO from varList");
+  main.pushstr_newL("fwd_pass<<<numBlocks,threadsPerBlock>>>(V, d_meta, d_data,d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished, d_BC); ///TODO from varList");
   main.NewLine();
 
   addCudaBFSIterKernel(bfsAbstraction);  // KERNEL BODY!!!
@@ -482,7 +482,7 @@ void dsl_cpp_generator::generateBFSAbstraction(iterateBFS* bfsAbstraction,
 
   main.NewLine();
   main.pushstr_newL("//KERNEL Launch");
-  main.pushstr_newL("back_pass<<<numBlocks,numThreads>>>(V, d_meta, d_data, d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished, d_BC); ///TODO from varList");  ///TODO get all propnodes from function body and params
+  main.pushstr_newL("back_pass<<<numBlocks,threadsPerBlock>>>(V, d_meta, d_data, d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished, d_BC); ///TODO from varList");  ///TODO get all propnodes from function body and params
 
   main.NewLine();
   addCudaRevBFSIterKernel(revStmtList);  // KERNEL BODY
@@ -495,7 +495,7 @@ void dsl_cpp_generator::generateBFSAbstraction(iterateBFS* bfsAbstraction,
   generateCudaMemCpyStr("d_hops_from_source", "&hops_from_source", "int", "1", true);
 
   main.pushstr_newL("}");
-  main.pushstr_newL("//accumulate_bc<<<numBlocks,numThreads>>>(V,d_delta, d_BC, d_level, src);");
+  main.pushstr_newL("//accumulate_bc<<<numBlocks,threadsPerBlock>>>(V,d_delta, d_BC, d_level, src);");
   //~ main.NewLine();
 
   //~ main.pushstr_newL("}while(!finished);");
@@ -2285,6 +2285,7 @@ void dsl_cpp_generator::generateCSRArrays(const char* gId) {
 
   main.pushstr_newL("printf(\"#nodes:%d\\n\",V);");
   main.pushstr_newL("printf(\"#edges:\%d\\n\",E);");
+  main.pushstr_newL("printf(\"#srces:\%d\\n\",sourceSet.size()); /// TODO get from var");
 
   sprintf(strBuffer, "int* edgeLen = %s.getEdgeLen();",
           gId);  // assuming DSL  do not contain variables as V and E
