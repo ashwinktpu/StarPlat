@@ -9,6 +9,7 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
 
   printf("#nodes:%d\n",V);
   printf("#edges:%d\n",E);
+
   int* edgeLen = g.getEdgeLen();
 
   int *h_meta;
@@ -47,7 +48,7 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
   // CSR END
   //LAUNCH CONFIG
   const unsigned threadsPerBlock = 512;
-  unsigned numThreads   = (V < threadsPerBlock)? V: 512;
+  unsigned numThreads   = (V < threadsPerBlock)? 512: V;
   unsigned numBlocks    = (numThreads+threadsPerBlock-1)/threadsPerBlock;
 
 
@@ -64,7 +65,7 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
   double* d_BC; cudaMalloc(&d_BC, sizeof(double)*(V)); ///TODO from func
 
   //BEGIN DSL PARSING
-  initKernel<double> <<<numBlocks,numThreads>>>(V,d_BC,0);
+  initKernel<double> <<<numBlocks,threadsPerBlock>>>(V,d_BC,0);
 
   double* d_sigma;
   cudaMalloc(&d_sigma, sizeof(double)*(V));
@@ -77,9 +78,9 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
   for(itr=sourceSet.begin();itr!=sourceSet.end();itr++)
   {
     unsigned src = (unsigned)*itr;
-    initKernel<double> <<<numBlocks,numThreads>>>(V,d_delta,0);
+    initKernel<double> <<<numBlocks,threadsPerBlock>>>(V,d_delta,0);
 
-    initKernel<double> <<<numBlocks,numThreads>>>(V,d_sigma,0);
+    initKernel<double> <<<numBlocks,threadsPerBlock>>>(V,d_sigma,0);
 
     initIndex<double><<<1,1>>>(V,d_sigma,src,1);
 
@@ -91,7 +92,7 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
     int* d_level;           cudaMalloc(&d_level,sizeof(int) *(V));
 
     //EXTRA vars INITIALIZATION
-    initKernel<int> <<<numBlocks,numThreads>>>(V,d_level,-1);
+    initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_level,-1);
     initIndex<int><<<1,1>>>(V,d_level,src, 0);
 
     // long k =0 ;// For DEBUG
@@ -100,7 +101,7 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
       cudaMemcpy(d_finished, &finished, sizeof(bool)*(1), cudaMemcpyHostToDevice);
 
       //Kernel LAUNCH
-      fwd_pass<<<numBlocks,numThreads>>>(V, d_meta, d_data,d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished, d_BC); ///TODO from varList
+      fwd_pass<<<numBlocks,threadsPerBlock>>>(V, d_meta, d_data,d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished, d_BC); ///TODO from varList
 
       incrementDeviceVar<<<1,1>>>(d_hops_from_source);
       cudaDeviceSynchronize(); //MUST - rupesh
@@ -117,12 +118,12 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
     while(hops_from_source > 1) {
 
       //KERNEL Launch
-      back_pass<<<numBlocks,numThreads>>>(V, d_meta, d_data, d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished, d_BC); ///TODO from varList
+      back_pass<<<numBlocks,threadsPerBlock>>>(V, d_meta, d_data, d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished, d_BC); ///TODO from varList
 
       hops_from_source--;
       cudaMemcpy(d_hops_from_source, &hops_from_source, sizeof(int)*(1), cudaMemcpyHostToDevice);
     }
-    //accumulate_bc<<<numBlocks,numThreads>>>(V,d_delta, d_BC, d_level, src);
+    //accumulate_bc<<<numBlocks,threadsPerBlock>>>(V,d_delta, d_BC, d_level, src);
   }
   //TIMER STOP
   cudaEventRecord(stop,0);
@@ -132,7 +133,6 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
 
   cudaMemcpy(BC,d_BC , sizeof(double) * (V), cudaMemcpyDeviceToHost);
 } //end FUN
-
 // driver program to test above function
 int main(int argc , char ** argv)
 {
@@ -164,7 +164,10 @@ int main(int argc , char ** argv)
    src.insert(nodeVal);
   }
 
+
   srcfile.close();
+  printf("#srces:%d\n",src.size()); /// TODO get from var
+
   //==========================================
 
 
@@ -180,10 +183,12 @@ int main(int argc , char ** argv)
     double* BC = (double *)malloc(sizeof(double)*V);
     Compute_BC(G,BC,src);
 
-    if(printAns){
-      for (int i = 0; i <V; i++){
-        printf("%d %lf\n", i, BC[i]);
-      }
+    int  LIMIT = 9;
+    if(printAns)
+     LIMIT=V;
+
+    for (int i = 0; i < LIMIT; i++){
+      printf("%lf\n", BC[i]);
     }
     //~ cudaDeviceSynchronize();
 

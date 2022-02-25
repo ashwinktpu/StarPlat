@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <cuda.h>
-#include "graph.hpp"
-#include "libcuda.cuh"
+#include "../graph.hpp"
+#include "../libcuda.cuh"
 #include <cooperative_groups.h>
 
 void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet);
@@ -37,9 +37,9 @@ __global__ void back_pass(int n, int* d_meta,int* d_data,int* d_weight, double* 
       unsigned w = d_data[i];
       if(d_level[w] == *d_hops_from_source) {
         d_delta[v] = d_delta[v] + (d_sigma[v] / d_sigma[w]) * (1 + d_delta[w]);
-      } // end IF
+      } // end IF  
     } // end FOR
-    grid.sync(); // Device-level syncs across all grids. Ref:https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#grid-synchronization-cg
+    grid.sync(); // Device-level syncs across all grids. Ref:https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#grid-synchronization-cg 
     d_BC[v] = d_BC[v] + d_delta[v]/2.0;
   } // end if d lvl
 } // kernel end
