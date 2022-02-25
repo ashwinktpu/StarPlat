@@ -7,3 +7,4 @@ src/finalcode
 *.out
 src/bin/
 .history/*
+../.history/*

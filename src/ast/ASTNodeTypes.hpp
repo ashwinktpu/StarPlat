@@ -26,7 +26,7 @@ extern vector<Identifier*> graphId;
 
 
 class argument
-{ 
+{
   private:
   Expression* expression;
   assignment* assignExpr;
@@ -41,7 +41,7 @@ class argument
     expressionflag=false;
     assign=false;
   }
-  
+
   void setAssign(assignment* assign)
   {
     assignExpr=assign;
@@ -58,7 +58,7 @@ class argument
   {
     expressionflag=true;
   }
-  
+
   assignment* getAssignExpr()
   {
     return assignExpr;
@@ -84,12 +84,12 @@ class argument
 
 };
 class tempNode
-{ 
+{
    public:
    reductionCall* reducCall=NULL;
    Expression* exprVal=NULL;
 
-   
+
 
 };
 
@@ -116,27 +116,27 @@ class Identifier:public ASTNode
 
 {
   private:
-  
+
   int accessType;
   char* identifier;
   Expression* assignedExpr; /*added to store node/edge property initialized values.
-                             - Used in SymbolTable phase for storing metadata. 
+                             - Used in SymbolTable phase for storing metadata.
                              - This field is more of a code generation utility.  */
   bool redecl; /*added for fixedPoint.(node property parameter)
                 - This field is populated during SymbolTable creation.
                 - it checks if double buffering is required for a node/edge prop.*/
   bool fp_association; /*checks if the identifier as a node/edge property
-                         is used as a dependent for fixedpoint.*/ 
+                         is used as a dependent for fixedpoint.*/
   char* fpId;          /*If the identifier is associated with a fixedpoint,
                          the field stores the fixedpoint id name*/
   TableEntry* idInfo;
-   
-  public: 
- 
+
+  public:
+
   static Identifier* createIdNode(const char* id)
    {
 
-   
+
      Identifier* idNode=new Identifier();
      idNode->identifier=new char[strlen(id)+1];
      strcpy(idNode->identifier,id);
@@ -171,17 +171,17 @@ class Identifier:public ASTNode
    }
 
    Identifier* copy()
-   { 
+   {
      Identifier* copyId;
      copyId = new Identifier();
      copyId->identifier=new char[strlen(identifier)+1];
      strcpy(copyId->identifier,identifier);
      copyId->accessType=0;
      copyId->setTypeofNode(NODE_ID);
-     
+
      return copyId;
    }
-   
+
    void set_redecl()
    {
      redecl=true;
@@ -232,7 +232,7 @@ class PropAccess:public ASTNode
   Identifier* identifier2;
   int accessType;
 
-  public: 
+  public:
   static PropAccess* createPropAccessNode(Identifier* id1, Identifier* id2)
    {
      PropAccess* propAccessNode=new PropAccess();
@@ -263,7 +263,7 @@ class PropAccess:public ASTNode
 
 class statement:public ASTNode
 {
-  protected: 
+  protected:
   string statementType;
 
   public:
@@ -273,36 +273,36 @@ class statement:public ASTNode
     statementType="";
   }
 
-  
+
   statement(string statementTypeSent)
   {
      statementType=statementTypeSent;
 
   }
-  
+
   string getType()
   {
     return statementType;
   }
 
 
-  
-  
-  
+
+
+
   };
-  
+
   class blockStatement:public statement
   {
      private:
      list<statement*> statements;
 
-     public: 
+     public:
      blockStatement()
      {
         statementType="BlockStatement";
         createSymbTab();
      }
-      
+
       static blockStatement* createnewBlock()
       {
         blockStatement* newBlock=new blockStatement();
@@ -312,21 +312,21 @@ class statement:public ASTNode
       }
 
       void addStmtToBlock(statement* stmt)
-          { 
+          {
             statements.push_back(stmt);
             stmt->setParent(this);
             //cout<<stmt->getInt();
-            
-            
-          } 
+
+
+          }
       void addToFront(statement* stmt)
       {
         statements.push_front(stmt);
-      }       
+      }
 
-      void insertToBlock(statement* stmt,int pos) 
-      {    
-           
+      void insertToBlock(statement* stmt,int pos)
+      {
+
            list<statement*> newList;
            list<statement*>::iterator itrt;
            int count=0;
@@ -338,7 +338,7 @@ class statement:public ASTNode
                break;
              }
 
-             newList.push_back(*itrt);  
+             newList.push_back(*itrt);
              count++;
 
            }
@@ -347,9 +347,9 @@ class statement:public ASTNode
            {
              newList.push_back((*itrt));
            }
-          
+
           statements.swap(newList);
-         
+
       }
 
       list<statement*> returnStatements()
@@ -361,7 +361,7 @@ class statement:public ASTNode
   };
 
 class Function:public ASTNode
-{  
+{
   private:
 
   Identifier* functionId;
@@ -385,13 +385,13 @@ class Function:public ASTNode
       return func;
 
   }
-  
+
    void setBlockStatement(blockStatement* blockStmtSent)
    {
      blockstmt=blockStmtSent;
      blockStmtSent->setParent(this);
    }
-   
+
    Identifier* getIdentifier()
    {
       return functionId;
@@ -410,7 +410,7 @@ class Function:public ASTNode
 };
 
 class Type:public ASTNode
-{ 
+{
   private:
   int typeId;
   int rootType;
@@ -418,7 +418,7 @@ class Type:public ASTNode
   Type* innerTargetType;
   Identifier* sourceGraph;
   list<char*> graphPropList;
-  
+
  public:
  Type()
  {
@@ -427,7 +427,7 @@ class Type:public ASTNode
      innerTargetType=NULL;
      sourceGraph=NULL;
  }
-   
+
   static Type* createForPrimitive(int typeIdSent,int rootTypeSent)
   {
      Type* type=new Type();
@@ -444,17 +444,17 @@ class Type:public ASTNode
        type->typeId=typeIdSent;
        type->rootType=rootTypeSent;
        type->TargetGraph=TargetGraphSent;
-       return type;  
+       return type;
   }
 
-  
+
   static Type* createForCollectionType(int typeIdSent,int rootTypeSent, Identifier* TargetGraphSent)
   {
        Type* type=new Type();
        type->typeId=typeIdSent;
        type->rootType=rootTypeSent;
        type->TargetGraph=TargetGraphSent;
-       return type;  
+       return type;
   }
   static Type* createForPropertyType(int typeIdSent,int rootTypeSent, Type* innerTargetTypeSent)
   {
@@ -462,7 +462,7 @@ class Type:public ASTNode
        type->typeId=typeIdSent;
        type->rootType=rootTypeSent;
        type->innerTargetType=innerTargetTypeSent;
-       return type;  
+       return type;
   }
   static Type* createForNodeEdgeType(int typeIdSent,int rootTypeSent)
   {
@@ -473,7 +473,7 @@ class Type:public ASTNode
   }
 
   Type* copy()
-  {  
+  {
      Type* copyType=new Type();
      copyType->typeId=typeId;
      copyType->TargetGraph=(this->TargetGraph==NULL)?NULL:this->TargetGraph->copy();
@@ -493,19 +493,19 @@ class Type:public ASTNode
   bool isNodeEdgeType()
     {
        return check_isNodeEdgeType(typeId);
-         
+
     }
 
    bool isPropType()
    {
      return check_isPropType(typeId);
-   } 
+   }
 
    bool isCollectionType()
    {
      return check_isCollectionType(typeId);
    }
-   
+
    bool isGraphType()
    {
      return check_isGraphType(typeId);
@@ -518,7 +518,7 @@ class Type:public ASTNode
    bool isPropNodeType()
    {
      return check_isPropNodeType(typeId);
-   } 
+   }
 
    bool isPropEdgeType()
    {
@@ -543,11 +543,11 @@ class Type:public ASTNode
    {
      return check_isEdgeType(typeId);
    }
-    
+
   void addSourceGraph(ASTNode* id)
   {
     sourceGraph=(Identifier*)id;
-  }  
+  }
   Type* getInnerTargetType()
   {
     return innerTargetType;
@@ -564,7 +564,7 @@ class Type:public ASTNode
   {
     TargetGraph=id;
   }
-  
+
   void addToPropList(Identifier* id)
   {
     graphPropList.push_back(id->getIdentifier());
@@ -589,25 +589,25 @@ class formalParam:public ASTNode
   {
       type=NULL;
       identifier=NULL;
-      
+
   }
 
   static formalParam* createFormalParam(Type* typeSent,Identifier* identifierSent)
-  {   
+  {
       formalParam* formalPNode=new formalParam();
       formalPNode->type=typeSent;
       formalPNode->identifier=identifierSent;
       formalPNode->setTypeofNode(NODE_FORMALPARAM);
-    
+
       return formalPNode;
-   
+
   }
-  
+
   Type* getType()
   {
       return type;
   }
-  
+
   Identifier* getIdentifier()
   {
       return identifier;
@@ -647,9 +647,9 @@ class formalParam:public ASTNode
       overallType=-1;
       enclosedBrackets=false;
     }
-    
+
     static Expression* nodeForArithmeticExpr(Expression* left,Expression* right,int arithmeticOperator)
-    {   
+    {
       Expression* arithmeticExpr=new Expression();
       arithmeticExpr->left=left;
       arithmeticExpr->right=right;
@@ -662,7 +662,7 @@ class formalParam:public ASTNode
     }
 
     static Expression* nodeForRelationalExpr(Expression* left,Expression* right,int relationalOperator)
-    {   
+    {
       Expression* relationalExpr=new Expression();
       relationalExpr->left=left;
       relationalExpr->right=right;
@@ -676,7 +676,7 @@ class formalParam:public ASTNode
     }
 
     static Expression* nodeForLogicalExpr(Expression* left,Expression* right,int logicalOperator)
-    {   
+    {
       Expression* logicalExpr=new Expression();
       logicalExpr->left=left;
       logicalExpr->right=right;
@@ -685,7 +685,7 @@ class formalParam:public ASTNode
       logicalExpr->overallType=TYPE_BOOL;
       left->parent=logicalExpr;
       right->parent=logicalExpr;
-      
+
 
        return logicalExpr;
 
@@ -698,7 +698,7 @@ class formalParam:public ASTNode
       unaryExpression->operatorType=operatorType;
       unaryExpression->typeofExpr=EXPR_UNARY;
       expr->parent=unaryExpression;
-      
+
       return unaryExpression;
     }
 
@@ -727,9 +727,9 @@ class formalParam:public ASTNode
        return boolExpr;
 
     }
-    
-    
-    
+
+
+
 
      static Expression* nodeForInfinity(bool infinityValue)
     {
@@ -739,7 +739,7 @@ class formalParam:public ASTNode
        return infinityExpr;
 
     }
-    
+
      static Expression* nodeForIdentifier(Identifier* id)
     {
        Expression* idExpr=new Expression();
@@ -769,7 +769,7 @@ class formalParam:public ASTNode
     {
       return (typeofExpr==EXPR_ARITHMETIC);
     }
-     
+
     bool isRelational()
     {
       return (typeofExpr==EXPR_RELATIONAL);
@@ -777,7 +777,7 @@ class formalParam:public ASTNode
     bool isLogical()
     {
       return (typeofExpr==EXPR_LOGICAL);
-    } 
+    }
     bool isUnary()
     {
       return (typeofExpr==EXPR_UNARY);
@@ -813,7 +813,7 @@ class formalParam:public ASTNode
      Expression* getLeft()
      {
        return left;
-     } 
+     }
 
      Expression* getRight()
      {
@@ -840,30 +840,30 @@ class formalParam:public ASTNode
      {
        return integerConstant;
      }
-     
+
      bool getBooleanConstant()
      {
        return booleanConstant;
      }
-     
+
 
      double getFloatConstant()
      {
        return floatConstant;
      }
-     
+
      bool isPositiveInfinity()
      {
-       
+
        return infinityType;
 
      }
 
-     
+
      void setTypeofExpr(int type)
      {
         overallType=type;
-     } 
+     }
 
      int getTypeofExpr()
      {
@@ -874,14 +874,14 @@ class formalParam:public ASTNode
      {
 
        typeofExpr=exprFamily;
-     }  
+     }
 
      int getExpressionFamily()
      {
        return typeofExpr;
      }
-     
-     bool setEnclosedBrackets()
+
+     void setEnclosedBrackets()
      {
        enclosedBrackets=true;
      }
@@ -891,7 +891,7 @@ class formalParam:public ASTNode
        return enclosedBrackets;
      }
 
-   
+
 
 
   };
@@ -909,8 +909,8 @@ class formalParam:public ASTNode
         identifier=NULL;
         exprAssigned=NULL;
         statementType="declaration";
-        
-       
+
+
     }
 
     static declaration* normal_Declaration(Type* typeSent,Identifier* identifierSent)
@@ -964,6 +964,8 @@ class formalParam:public ASTNode
      PropAccess* propId;
      Expression* exprAssigned;
      bool atomicSignal;
+     bool deviceVariable;
+     bool accumulateKernel;
      int lhsType;
 
      public:
@@ -974,7 +976,9 @@ class formalParam:public ASTNode
         exprAssigned=NULL;
          statementType="assignment";
          atomicSignal=false;
-      
+         deviceVariable=false;
+         accumulateKernel=false;
+
     }
 
      static assignment* id_assignExpr(Identifier* identifierSent,Expression* expressionSent)
@@ -989,7 +993,7 @@ class formalParam:public ASTNode
             expressionSent->setParent(assign);
           //  cout<<"TYPEASSIGN="<<assign->getType();
             return assign;
-         
+
 
      }
       static assignment* prop_assignExpr(PropAccess* propId,Expression* expressionSent)
@@ -1002,7 +1006,7 @@ class formalParam:public ASTNode
              propId->setParent(assign);
              expressionSent->setParent(assign);
             return assign;
-         
+
 
      }
 
@@ -1010,7 +1014,7 @@ class formalParam:public ASTNode
      {
        return (lhsType==1);
      }
-     
+
      bool lhs_isProp()
      {
        return (lhsType==2);
@@ -1020,7 +1024,7 @@ class formalParam:public ASTNode
      {
        return identifier;
      }
-     
+
      PropAccess* getPropId()
      {
        return propId;
@@ -1044,6 +1048,21 @@ class formalParam:public ASTNode
        return atomicSignal;
      }
 
+     void flagAsDeviceVariable(){
+        //~ if(exprAssigned->isArithmetic()||exprAssigned->isLogical())
+          deviceVariable=true;
+     }
+     bool isDeviceAssignment(){
+      return deviceVariable;
+     }
+     void flagAccumulateKernel(){
+        //~ if(exprAssigned->isArithmetic()||exprAssigned->isLogical())
+          accumulateKernel=true;
+     }
+     bool isAccumulateKernel(){
+      return accumulateKernel;
+     }
+
   };
 class whileStmt:public statement
 {
@@ -1061,7 +1080,7 @@ class whileStmt:public statement
     }
 
     static whileStmt* create_whileStmt(Expression* iterConditionSent,blockStatement* bodySent)
-    {  
+    {
       whileStmt* new_whileStmt=new whileStmt();
       new_whileStmt->iterCondition=iterConditionSent;
       new_whileStmt->body=bodySent;
@@ -1075,13 +1094,13 @@ class whileStmt:public statement
     {
       return iterCondition;
     }
-   
+
     statement* getBody()
     {
       return body;
     }
 
-  }; 
+  };
   class dowhileStmt:public statement
 {
   private:
@@ -1098,7 +1117,7 @@ class whileStmt:public statement
     }
 
     static dowhileStmt* create_dowhileStmt(Expression* iterConditionSent,blockStatement* bodySent)
-    {  
+    {
       dowhileStmt* new_dowhileStmt=new dowhileStmt();
       new_dowhileStmt->iterCondition=iterConditionSent;
       new_dowhileStmt->body=bodySent;
@@ -1112,7 +1131,7 @@ class whileStmt:public statement
     {
       return iterCondition;
     }
-   
+
     statement* getBody()
     {
       return body;
@@ -1120,29 +1139,29 @@ class whileStmt:public statement
 
   };
 
-  
+
 
 class fixedPointStmt:public statement
   {
-     
+
     private:
     Expression* dependentProp;
     Identifier* fixedPointId;
     statement* body;
-    
+
     public:
     fixedPointStmt()
-    { 
+    {
       dependentProp=NULL;
       fixedPointId=NULL;
       body=NULL;
       statementType="FixedPointStmt";
-     
-     
+
+
     }
 
     static fixedPointStmt* createforfixedPointStmt(Identifier* fixedPointIdSent,Expression* dependentPropSent,statement* body)
-    { 
+    {
       fixedPointStmt* new_fixedPointStmt=new fixedPointStmt();
       new_fixedPointStmt->fixedPointId=fixedPointIdSent;
       new_fixedPointStmt->dependentProp=dependentPropSent;
@@ -1153,12 +1172,12 @@ class fixedPointStmt:public statement
       body->setParent(new_fixedPointStmt);
       return new_fixedPointStmt;
     }
-     
+
      Expression* getDependentProp()
      {
        return dependentProp;
      }
-     
+
      Identifier* getFixedPointId()
      {
        return fixedPointId;
@@ -1189,7 +1208,7 @@ class fixedPointStmt:public statement
     }
 
     static ifStmt* create_ifStmt(Expression* condition,statement* ifBodySent,statement* thenBodySent)
-    {  
+    {
       ifStmt* new_ifStmt=new ifStmt();
       new_ifStmt->condition=condition;
       new_ifStmt->ifBody=ifBodySent;
@@ -1207,7 +1226,7 @@ class fixedPointStmt:public statement
     {
       return condition;
     }
-   
+
     statement* getIfBody()
     {
       return ifBody;
@@ -1217,22 +1236,22 @@ class fixedPointStmt:public statement
       return thenBody;
     }
 
-  }; 
+  };
 
   class iterateReverseBFS:public ASTNode
-  { 
+  {
     private:
     Expression* booleanExpr;
     Expression* filterExpr;
     statement* body;
 
-    public: 
+    public:
     iterateReverseBFS()
     {
       filterExpr=NULL;
       booleanExpr=NULL;
       body=NULL;
-    } 
+    }
 
     static iterateReverseBFS* nodeForRevBFS(Expression* booleanExpr,/*Expression* filterExpr,*/statement* body)
     {
@@ -1248,21 +1267,35 @@ class fixedPointStmt:public statement
       body->setParent(new_revBFS);
       return new_revBFS;
     }
-    
+
     statement* getBody()
     {
       return body;
     }
-   
+
     Expression* getBFSFilter()
     {
       return booleanExpr;
     }
 
+    void addAccumulateAssignment(){
+      blockStatement* block=(blockStatement*)body;
+       //~ int i=0;
+        for(statement* stmt:block->returnStatements())
+         {
+             //~ std::cout<< "i" << i++ << '\n';
+             if(stmt->getTypeofNode()==NODE_ASSIGN){
+               std::cout<< "\t\tON ACC ASST STMT IN REV BFS" << '\n';
+               assignment* assign=(assignment*)stmt;
+               assign->flagAccumulateKernel();
+              }
+         }
+    }
+
   };
 
-  
-  
+
+
 
   class proc_callExpr:public Expression
   {
@@ -1271,7 +1304,7 @@ class fixedPointStmt:public statement
     Identifier* id2;
     Identifier* methodId;
     list<argument*> argList;
-    
+
     public:
     proc_callExpr()
     {
@@ -1281,7 +1314,7 @@ class fixedPointStmt:public statement
       typeofNode=NODE_PROCCALLEXPR;
     }
 
-    
+
     static proc_callExpr* nodeForProc_Call(Identifier* id1,Identifier* id2,Identifier* methodId,list<argument*> argList)
     {
           proc_callExpr* procExpr=new proc_callExpr();
@@ -1299,12 +1332,12 @@ class fixedPointStmt:public statement
     {
       return methodId;
     }
-    
+
     Identifier* getId1()
     {
       return id1;
     }
-    
+
     Identifier* getId2()
     {
       return id2;
@@ -1322,7 +1355,7 @@ class fixedPointStmt:public statement
 
 
   };
-  
+
   class iterateBFS:public statement
   {   private:
       Identifier* iterator;
@@ -1347,7 +1380,7 @@ class fixedPointStmt:public statement
         revBFS=NULL;
         statementType="IterateInBFS";
       }
-    
+
       static iterateBFS* nodeForIterateBFS(Identifier* iterator,Identifier* graphId,proc_callExpr* nodeCall,Identifier* rootNode,Expression* filterExpr,statement* body,iterateReverseBFS* revBFS)
       {
         iterateBFS* new_iterBFS=new iterateBFS();
@@ -1383,7 +1416,7 @@ class fixedPointStmt:public statement
       {
         return body;
       }
-      
+
       iterateReverseBFS* getRBFS()
       {
         return revBFS;
@@ -1394,8 +1427,11 @@ class fixedPointStmt:public statement
         return nodeCall;
       }
 
+
+
+
   };
-  
+
   class unary_stmt:public statement
   {
     private:
@@ -1408,7 +1444,7 @@ class fixedPointStmt:public statement
       statementType="UnaryStatement";
       typeofNode=NODE_UNARYSTMT;
     }
-  
+
      static unary_stmt* nodeForUnaryStmt(Expression* unaryExpr)
     {
       unary_stmt* unary_stmtNode=new unary_stmt();
@@ -1424,7 +1460,7 @@ class fixedPointStmt:public statement
 
   };
 
-  
+
   class proc_callStmt:public statement
   {
     private:
@@ -1436,7 +1472,7 @@ class fixedPointStmt:public statement
       procCall=NULL;
       statementType="ProcCallStatement";
       typeofNode=NODE_PROCCALLSTMT;
-      
+
     }
 
     static proc_callStmt* nodeForCallStmt(Expression* procCall)
@@ -1451,11 +1487,11 @@ class fixedPointStmt:public statement
     {
       return procCall;
     }
- 
+
 };
   class forallStmt:public statement
   {
-     
+
     private:
     Identifier* iterator;
     Identifier* sourceGraph;
@@ -1468,10 +1504,10 @@ class fixedPointStmt:public statement
     bool isforall;
     map<int,list<Identifier*>> reduction_map;
     set<int> reduc_keys;
-    
+
     public:
     forallStmt()
-    { 
+    {
       iterator=NULL;
       sourceGraph=NULL;
       extractElemFunc=NULL;
@@ -1484,7 +1520,7 @@ class fixedPointStmt:public statement
     }
 
     static forallStmt* createforallStmt(Identifier* iterator,Identifier* sourceGraph,proc_callExpr* extractElemFunc,statement* body,Expression* filterExpr,bool isforall)
-    { 
+    {
       forallStmt* new_forallStmt=new forallStmt();
       new_forallStmt->iterator=iterator;
       new_forallStmt->sourceGraph=sourceGraph;
@@ -1517,7 +1553,7 @@ class fixedPointStmt:public statement
       body->setParent(new_forallStmt);
       return new_forallStmt;
     }
-   
+
     static forallStmt* propId_createforForStmt(Identifier* iterator,PropAccess* source,statement* body,bool isforall)
     {
       forallStmt* new_forallStmt=new forallStmt();
@@ -1533,11 +1569,11 @@ class fixedPointStmt:public statement
     {
       return isforall;
     }
-    
+
     /* disable parallelization of for
        for specific instances*/
-    void disableForall() 
-    {                     
+    void disableForall()
+    {
       isforall=false;
     }
 
@@ -1560,7 +1596,7 @@ class fixedPointStmt:public statement
     {
       return source;
     }
-   
+
     Identifier* getSourceGraph()
     {
       return sourceGraph;
@@ -1570,12 +1606,12 @@ class fixedPointStmt:public statement
     {
       return (!isSourceId);
     }
-    
+
     bool isSourceProcCall()
     {
       return (extractElemFunc!=NULL);
     }
-    
+
     bool hasFilterExpr()
     {
       return (filterExpr!=NULL);
@@ -1603,14 +1639,14 @@ class fixedPointStmt:public statement
     set<int> get_reduceKeys()
     {
       return reduc_keys;
-    } 
-    
+    }
+
     list<Identifier*> get_reduceIds(int key)
     {
       return reduction_map[key];
     }
-    
-   
+
+
 
     void addAtomicSignalToStatements()
     {
@@ -1619,6 +1655,7 @@ class fixedPointStmt:public statement
          {
            if(stmt->getTypeofNode()==NODE_ASSIGN)
              {
+               std::cout<< "\t\tON: ATOMIC ASST" << '\n';
                assignment* assign=(assignment*)stmt;
                assign->addAtomicSignal();
              }
@@ -1626,6 +1663,24 @@ class fixedPointStmt:public statement
 
     }
 
+    void addDeviceAssignment(){
+      blockStatement* block=(blockStatement*)body;
+        for(statement* stmt:block->returnStatements())
+         {
+           if(stmt->getTypeofNode()==NODE_ASSIGN)
+             {
+               std::cout<< "\t\tON: DEV ASST" << '\n';
+               assignment* assign=(assignment*)stmt;
+               assign->flagAsDeviceVariable();
+             }
+
+             //~ if(stmt->getTypeofNode()==NODE_ASSIGN){
+               //~ std::cout<< "ON ACC ASST" << '\n';
+               //~ assignment* assign=(assignment*)stmt;
+               //~ assign->flagAccumulateKernel();
+              //~ }
+         }
+    }
 
 };
   class reductionCall:public ASTNode
@@ -1673,7 +1728,7 @@ class reductionCallStmt:public statement
      bool is_reduceCall;
     // Expression* exprVal;
      int lhsType;
-     
+
      public:
      reductionCallStmt()
      {
@@ -1693,7 +1748,7 @@ class reductionCallStmt:public statement
        reducCallStmtNode->lhsType=1;
        return reducCallStmtNode;
      }
-    
+
      static reductionCallStmt* propId_reducCallStmt(PropAccess* propId,reductionCall* reducCall)
      {
        reductionCallStmt* reducCallStmtNode=new reductionCallStmt();
@@ -1724,9 +1779,9 @@ class reductionCallStmt:public statement
          return reducCallStmtNode;
 
      }
-      
+
      static reductionCallStmt* leftList_reducCallStmt(list<ASTNode*> llist,reductionCall* reducCall,list<ASTNode*> exprListSent)
-     { 
+     {
       // cout<<"REDUC CALL TYPE "<<(reducCall->getReductionType()==REDUCE_MIN)<<"\n";
        reductionCallStmt* reducCallStmtNode=new reductionCallStmt();
        reducCallStmtNode->leftList=llist;
@@ -1743,7 +1798,7 @@ class reductionCallStmt:public statement
         }
        return reducCallStmtNode;
      }
-    
+
     int getLhsType()
       {
         return lhsType;
@@ -1752,12 +1807,12 @@ class reductionCallStmt:public statement
     bool isLeftIdentifier()
     {
       return (id!=NULL);
-    }  
+    }
 
     reductionCall* getReducCall()
     {
       return reducCall;
-    }  
+    }
 
     Identifier* getLeftId()
     {
@@ -1767,7 +1822,7 @@ class reductionCallStmt:public statement
     PropAccess* getPropAccess()
     {
        return propAccessId;
-        
+
     }
      bool isListInvolved()
      {
@@ -1797,7 +1852,7 @@ class reductionCallStmt:public statement
     {
       ASTNode* node=leftList.front();
       return (node->getTypeofNode()==NODE_ID);
-      
+
     }
     bool isTargetPropId()
     {
@@ -1834,7 +1889,7 @@ class reductionCallStmt:public statement
       if(reducCall!=NULL)
         return true;
 
-      return false;  
+      return false;
     }
 
 
