@@ -1,10 +1,12 @@
+[![CUDA Branch](https://github.com/nibeditabh/GraphDSL/actions/workflows/cuda.yml/badge.svg)](https://github.com/nibeditabh/GraphDSL/actions/workflows/cuda.yml)
+
+
 # GraphDSL
 
-Graph DSL for basic graph algorithms (such as <b>BC, SSSP, TC and PR </b>).It contains the following steps :-
+Graph DSL for basic graph algorithms (such as **SSSP, BC, PR, and TC**) as Phase1 (static).
+It contains the following steps :-
 
-1.Generating the grammar using Lex and YACC <br>
-2.Generating IR. <br>
-3.Generate code from IR. <br>
-4.Optomize the IR. <br>
-
- 
+1. Generating the grammar using Lex and YACC 
+2. Generating IR. 
+3. Generate code from IR. 
+4. Optomize the IR. 
