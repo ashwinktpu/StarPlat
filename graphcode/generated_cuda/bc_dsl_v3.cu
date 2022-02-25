@@ -9,7 +9,7 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
 
   printf("#nodes:%d\n",V);
   printf("#edges:%d\n",E);
-
+  printf("#srces:%d\n",sourceSet.size()); /// TODO get from var
   int* edgeLen = g.getEdgeLen();
 
   int *h_meta;
@@ -133,7 +133,8 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
 
   cudaMemcpy(BC,d_BC , sizeof(double) * (V), cudaMemcpyDeviceToHost);
 } //end FUN
-// driver program to test above function
+
+// Driver program to test above function
 int main(int argc , char ** argv)
 {
   graph G(argv[1]);
