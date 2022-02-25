@@ -2285,7 +2285,7 @@ void dsl_cpp_generator::generateCSRArrays(const char* gId) {
 
   main.pushstr_newL("printf(\"#nodes:%d\\n\",V);");
   main.pushstr_newL("printf(\"#edges:\%d\\n\",E);");
-  main.pushstr_newL("printf(\"#srces:\%d\\n\",sourceSet.size()); /// TODO get from var");
+  //~ main.pushstr_newL("printf(\"#srces:\%d\\n\",sourceSet.size()); /// TODO get from var");
 
   sprintf(strBuffer, "int* edgeLen = %s.getEdgeLen();",
           gId);  // assuming DSL  do not contain variables as V and E

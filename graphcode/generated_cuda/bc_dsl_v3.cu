@@ -9,7 +9,6 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
 
   printf("#nodes:%d\n",V);
   printf("#edges:%d\n",E);
-  printf("#srces:%d\n",sourceSet.size()); /// TODO get from var
   int* edgeLen = g.getEdgeLen();
 
   int *h_meta;
@@ -134,7 +133,7 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
   cudaMemcpy(BC,d_BC , sizeof(double) * (V), cudaMemcpyDeviceToHost);
 } //end FUN
 
-// Driver program to test above function
+// driver program to test above function
 int main(int argc , char ** argv)
 {
   graph G(argv[1]);
@@ -165,10 +164,8 @@ int main(int argc , char ** argv)
    src.insert(nodeVal);
   }
 
-
   srcfile.close();
-  printf("#srces:%d\n",src.size()); /// TODO get from var
-
+  printf("#srces:%d\n",src.size());
   //==========================================
 
 
@@ -184,13 +181,14 @@ int main(int argc , char ** argv)
     double* BC = (double *)malloc(sizeof(double)*V);
     Compute_BC(G,BC,src);
 
-    int  LIMIT = 9;
+    int LIMIT = 9;
     if(printAns)
      LIMIT=V;
 
     for (int i = 0; i < LIMIT; i++){
       printf("%lf\n", BC[i]);
     }
+
     //~ cudaDeviceSynchronize();
 
     //~ cudaEventRecord(stop,0);
