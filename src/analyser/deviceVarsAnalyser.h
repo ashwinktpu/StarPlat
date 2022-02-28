@@ -204,6 +204,9 @@ class deviceVarsAnalyser
   lattice analyseAssignment(assignment* stmt, lattice&);
   lattice analyseDeclaration(declaration*, lattice&);
   lattice analyseForAll(forallStmt*, lattice&);
+  lattice analyseWhile(whileStmt*, lattice&);
+  lattice analyseDoWhile(dowhileStmt*, lattice&);
+  lattice analyseFor(forallStmt*, lattice&);
 
   void printStatement(statement* , int);
   void printBlock(blockStatement* , int);
