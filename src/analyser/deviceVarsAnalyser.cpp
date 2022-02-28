@@ -21,25 +21,29 @@ usedVariables deviceVarsAnalyser::getVarsDoWhile(dowhileStmt *stmt)
 
 usedVariables seperatePropAccess(usedVariables inp)
 {
-  list<PropAccess*> ReadPropId = inp.getPropAcess(READ);
-  list<PropAccess*> WritePropId = inp.getPropAcess(WRITE);
+  list<PropAccess *> ReadPropId = inp.getPropAcess(READ);
+  list<PropAccess *> WritePropId = inp.getPropAcess(WRITE);
 
   usedVariables out;
 
-  for(Identifier* iden: inp.getVariables(READ)){
+  for (Identifier *iden : inp.getVariables(READ))
+  {
     out.addVariable(iden, READ);
   }
 
-  for(Identifier* iden: inp.getVariables(WRITE)){
+  for (Identifier *iden : inp.getVariables(WRITE))
+  {
     out.addVariable(iden, WRITE);
   }
 
-  for(PropAccess* prop: inp.getPropAcess(READ)){
+  for (PropAccess *prop : inp.getPropAcess(READ))
+  {
     out.addVariable(prop->getIdentifier1(), READ);
     out.addVariable(prop->getIdentifier2(), READ);
   }
 
-  for(PropAccess* prop: inp.getPropAcess(WRITE)){
+  for (PropAccess *prop : inp.getPropAcess(WRITE))
+  {
     out.addVariable(prop->getIdentifier1(), READ);
     out.addVariable(prop->getIdentifier2(), WRITE);
   }
@@ -125,9 +129,9 @@ usedVariables deviceVarsAnalyser::getVarsForAll(forallStmt *stmt)
   usedVariables currVars = getVarsStatement(stmt->getBody());
   currVars.removeVariable(stmt->getIterator(), READ_WRITE);
 
-  if(stmt->hasFilterExpr())
+  if (stmt->hasFilterExpr())
     currVars.merge(seperatePropAccess(analyserUtils::getVarsExpr(stmt->getfilterExpr())));
-  
+
   return currVars;
 }
 
@@ -144,12 +148,13 @@ usedVariables deviceVarsAnalyser::getVarsBlock(blockStatement *blockStmt)
       declaration *decl = (declaration *)stmt;
       declVars.push_back(decl->getdeclId());
 
-      if(decl->isInitialized())
+      if (decl->isInitialized())
       {
         usedVariables exprVars = analyserUtils::getVarsExpr(decl->getExpressionAssigned());
         exprVars = seperatePropAccess(exprVars);
 
-        for(Identifier* dVars: declVars){
+        for (Identifier *dVars : declVars)
+        {
           exprVars.removeVariable(dVars, READ_WRITE);
         }
         currVars.merge(exprVars);
@@ -158,7 +163,8 @@ usedVariables deviceVarsAnalyser::getVarsBlock(blockStatement *blockStmt)
     else
     {
       usedVariables stmtVars = getVarsStatement(stmt);
-      for(Identifier* dVars: declVars){
+      for (Identifier *dVars : declVars)
+      {
         stmtVars.removeVariable(dVars, READ_WRITE);
       }
 
@@ -174,51 +180,53 @@ usedVariables deviceVarsAnalyser::getVarsStatement(statement *stmt)
   switch (stmt->getTypeofNode())
   {
   case NODE_BLOCKSTMT:
-    return getVarsBlock((blockStatement*) stmt);
+    return getVarsBlock((blockStatement *)stmt);
 
   case NODE_ASSIGN:
-    return getVarsAssignment((assignment*) stmt);
+    return getVarsAssignment((assignment *)stmt);
 
   case NODE_UNARYSTMT:
-    return getVarsUnary((unary_stmt*) stmt);
+    return getVarsUnary((unary_stmt *)stmt);
 
   case NODE_IFSTMT:
     return getVarsIf((ifStmt *)stmt);
 
-  /*case NODE_ITRBFS:
-    return getVarsBFS((iterateBFS *)stmt);
+    /*case NODE_ITRBFS:
+      return getVarsBFS((iterateBFS *)stmt);
 
-  case NODE_REDUCTIONCALLSTMT:
-    return getVarsReduction((reductionCallStmt *)stmt);
+    case NODE_REDUCTIONCALLSTMT:
+      return getVarsReduction((reductionCallStmt *)stmt);
 
-  case NODE_WHILESTMT:
-    return getVarsWhile((whileStmt *)stmt);
+    case NODE_WHILESTMT:
+      return getVarsWhile((whileStmt *)stmt);
 
-  case NODE_DOWHILESTMT:
-    return getVarsDoWhile((dowhileStmt *)stmt);
+    case NODE_DOWHILESTMT:
+      return getVarsDoWhile((dowhileStmt *)stmt);
 
-  case NODE_FIXEDPTSTMT:
-    return getVarsFixedPoint((fixedPointStmt *)stmt);*/
+    case NODE_FIXEDPTSTMT:
+      return getVarsFixedPoint((fixedPointStmt *)stmt);*/
   }
 
   return usedVariables();
 }
 
-//Statement Analyser
-//Current assuming filter expression gets evaluated in GPU
+// Statement Analyser
+// Current assuming filter expression gets evaluated in GPU
 
 lattice deviceVarsAnalyser::analyseForAll(forallStmt *stmt, lattice &inMap)
 {
-  ASTNodeWrap* wrapNode = getWrapNode(stmt, inMap);
+  ASTNodeWrap *wrapNode = getWrapNode(stmt, inMap);
   wrapNode->inMap = inMap;
 
   lattice outMap = inMap;
 
   usedVariables vars = getVarsForAll(stmt);
-  for(Identifier* iden: vars.getVariables(READ)){
+  for (Identifier *iden : vars.getVariables(READ))
+  {
     outMap.meet(iden, lattice::GPU_READ);
   }
-  for(Identifier* iden: vars.getVariables(WRITE)){
+  for (Identifier *iden : vars.getVariables(WRITE))
+  {
     outMap.meet(iden, lattice::GPU_WRITE);
   }
 
@@ -228,8 +236,8 @@ lattice deviceVarsAnalyser::analyseForAll(forallStmt *stmt, lattice &inMap)
 
 lattice deviceVarsAnalyser::analyseDeclaration(declaration *stmt, lattice &inMap)
 {
-  ASTNodeWrap* wrapNode = getWrapNode(stmt, inMap);
-  
+  ASTNodeWrap *wrapNode = getWrapNode(stmt, inMap);
+
   lattice outMap = inMap;
   outMap.addVariable(stmt->getdeclId(), lattice::CPU_ONLY);
 
@@ -239,16 +247,18 @@ lattice deviceVarsAnalyser::analyseDeclaration(declaration *stmt, lattice &inMap
 
 lattice deviceVarsAnalyser::analyseAssignment(assignment *stmt, lattice &inMap)
 {
-  ASTNodeWrap* wrapNode = getWrapNode(stmt, inMap);
+  ASTNodeWrap *wrapNode = getWrapNode(stmt, inMap);
   usedVariables usedVars = getVarsAssignment(stmt);
 
   wrapNode->inMap = inMap;
 
   lattice outMap = wrapNode->inMap;
-  for(Identifier* iden: usedVars.getVariables(READ)){
-    outMap.meet(iden, lattice::CPU_READ);  
+  for (Identifier *iden : usedVars.getVariables(READ))
+  {
+    outMap.meet(iden, lattice::CPU_READ);
   }
-  for(Identifier* iden: usedVars.getVariables(WRITE)){
+  for (Identifier *iden : usedVars.getVariables(WRITE))
+  {
     outMap.meet(iden, lattice::CPU_WRITE);
   }
 
@@ -256,55 +266,167 @@ lattice deviceVarsAnalyser::analyseAssignment(assignment *stmt, lattice &inMap)
   return outMap;
 }
 
+lattice deviceVarsAnalyser::analyseWhile(whileStmt *stmt, lattice &inMap)
+{
+  ASTNodeWrap *wrapNode = getWrapNode(stmt, inMap);
+  wrapNode->inMap = inMap;
+
+  Expression *cond = stmt->getCondition();
+  usedVariables exprVars = seperatePropAccess(analyserUtils::getVarsExpr(cond));
+
+  lattice condOut = inMap;
+  for (Identifier *iden : exprVars.getVariables(READ))
+  {
+    condOut.meet(iden, lattice::CPU_READ);
+  }
+  for (Identifier *iden : exprVars.getVariables(WRITE))
+  {
+    condOut.meet(iden, lattice::CPU_WRITE);
+  }
+
+  do
+  {
+    wrapNode->outMap = condOut;
+    lattice bodyOut = deviceVarsAnalyser::analyseStatement(stmt->getBody(), condOut);
+
+    condOut = (wrapNode->inMap) ^ (bodyOut);
+    for (Identifier *iden : exprVars.getVariables(READ))
+    {
+      condOut.meet(iden, lattice::CPU_READ);
+    }
+    for (Identifier *iden : exprVars.getVariables(WRITE))
+    {
+      condOut.meet(iden, lattice::CPU_WRITE);
+    }
+
+  } while ((wrapNode->outMap != condOut));
+
+  return wrapNode->outMap;
+}
+
+lattice deviceVarsAnalyser::analyseDoWhile(dowhileStmt *stmt, lattice &inMap)
+{
+  ASTNodeList *wrapNode = getWrapNode(stmt, inMap);
+  wrapNode->inMap = inMap;
+
+  Expression *cond = stmt->getCondition();
+  usedVariables exprVars = seperatePropAccess(analyserUtils::getVarsExpr(cond));
+  lattice currMap = wrapNode->outMap;
+
+  do
+  {
+    wrapNode->outMap = currMap;
+
+    currMap = wrapNode->outMap ^ wrapNode->inMap;
+    currMap = deviceVarsAnalyser::analyseStatement(stmt->getBody(), currMap);
+
+    ASTNodeWrap *condWrap = getWrapNode(stmt->getCondition(), currMap);
+    condWrap->inMap = currMap;
+
+    for (Identifier *iden : exprVars.getVariables(READ))
+    {
+      currMap.meet(iden, lattice::CPU_READ);
+    }
+    for (Identifier *iden : exprVars.getVariables(WRITE))
+    {
+      currMap.meet(iden, lattice::CPU_WRITE);
+    }
+    condWrap->outMap = currMap;
+
+  } while (wrapNode->outMap != currMap);
+}
+
+// TODO: Handle source field and source procedure call
+lattice deviceVarsAnalyser::analyseFor(forallStmt *stmt, lattice &inMap)
+{
+  ASTNodeWrap *wrapNode = getWrapNode(stmt, inMap);
+  wrapNode->inMap = inMap;
+
+  lattice exprMap = inMap;
+  Expression *filterExpr = stmt->getfilterExpr();
+
+  if (filterExpr != nullptr)
+  {
+    ASTNodeWrap *exprNode = getWrapNode(filterExpr, inMap);
+    exprNode->inMap = exprMap;
+
+    usedVariables exprVars = seperatePropAccess(analyserUtils::getVarsExpr(filterExpr));
+    for (Identifier *iden : exprVars.getVariables(READ))
+    {
+      exprMap.meet(iden, lattice::CPU_READ);
+    }
+    for (Identifier *iden : exprVars.getVariables(WRITE))
+    {
+      exprMap.meet(iden, lattice::CPU_WRITE);
+    }
+    exprNode->outMap = exprMap;
+  }
+  lattice currMap = wrapNode->outMap;
+
+  do
+  {
+    wrapNode->outMap = currMap;
+
+    currMap = exprMap ^ wrapNode->outMap;
+    currMap = deviceVarsAnalyser::analyseStatement(stmt->getBody(), currMap);
+
+  } while (wrapNode->outMap != currMap);
+
+  return wrapNode->outMap;
+}
+
 lattice deviceVarsAnalyser::analyseIfElse(ifStmt *stmt, lattice &inMap)
 {
-  cout<<"In if else"<<endl;
+  // cout<<"In if else"<<endl;
 
-  Expression* cond = stmt->getCondition();
-  ASTNodeWrap* wrapNode = getWrapNode(cond, inMap);
+  Expression *cond = stmt->getCondition();
+  ASTNodeWrap *wrapNode = getWrapNode(cond, inMap);
   wrapNode->inMap = inMap;
 
   lattice condOut = inMap;
   usedVariables exprVars = seperatePropAccess(analyserUtils::getVarsExpr(cond));
 
-  for(Identifier* iden: exprVars.getVariables(READ)){
+  for (Identifier *iden : exprVars.getVariables(READ))
+  {
     condOut.meet(iden, lattice::CPU_READ);
   }
-  for(Identifier* iden: exprVars.getVariables(WRITE)){
+  for (Identifier *iden : exprVars.getVariables(WRITE))
+  {
     condOut.meet(iden, lattice::CPU_WRITE);
   }
 
   wrapNode->outMap = condOut;
 
   lattice ifOut = analyseStatement(stmt->getIfBody(), condOut);
-  ASTNodeWrap* stmtWrap;
+  ASTNodeWrap *stmtWrap;
 
-  if(stmt->getElseBody() != nullptr)
+  if (stmt->getElseBody() != nullptr)
   {
     lattice elseOut = analyseStatement(stmt->getElseBody(), condOut);
     stmtWrap = getWrapNode(stmt, ifOut ^ elseOut);
   }
   else
     stmtWrap = getWrapNode(stmt, ifOut ^ condOut);
-  
+
   stmtWrap->outMap = stmtWrap->inMap;
   return stmtWrap->outMap;
 }
 
 lattice deviceVarsAnalyser::analyseUnary(unary_stmt *stmt, lattice &inMap)
 {
-  Expression* unaryVar = stmt->getUnaryExpr()->getUnaryExpr();
+  Expression *unaryVar = stmt->getUnaryExpr()->getUnaryExpr();
 
   ASTNodeWrap *wrapNode = getWrapNode(stmt, inMap);
   wrapNode->inMap = inMap;
 
   lattice outMap = inMap;
-  if(unaryVar->isIdentifierExpr()){
+  if (unaryVar->isIdentifierExpr())
+  {
     outMap.meet(unaryVar->getId(), lattice::CPU_WRITE);
   }
-  else if(unaryVar->isPropIdExpr())
+  else if (unaryVar->isPropIdExpr())
   {
-    PropAccess* propId = unaryVar->getPropId();
+    PropAccess *propId = unaryVar->getPropId();
     outMap.meet(propId->getIdentifier1(), lattice::CPU_READ);
     outMap.meet(propId->getIdentifier2(), lattice::CPU_WRITE);
   }
@@ -338,7 +460,6 @@ lattice deviceVarsAnalyser::analyseReduction(reductionCallStmt *stmt, lattice &i
 
 }*/
 
-
 lattice deviceVarsAnalyser::analyseStatement(statement *stmt, lattice &inMap)
 {
   switch (stmt->getTypeofNode())
@@ -349,10 +470,10 @@ lattice deviceVarsAnalyser::analyseStatement(statement *stmt, lattice &inMap)
     return analyseAssignment((assignment *)stmt, inMap);
   case NODE_FORALLSTMT:
   {
-    forallStmt* forStmt = (forallStmt*) stmt;
+    forallStmt *forStmt = (forallStmt *)stmt;
 
-    if(forStmt->isForall())
-      return analyseForAll((forallStmt*)stmt, inMap);
+    if (forStmt->isForall())
+      return analyseForAll((forallStmt *)stmt, inMap);
     /*else
       return analyseFor((forallStmt*)stmt, inMap);*/
   }
@@ -362,21 +483,21 @@ lattice deviceVarsAnalyser::analyseStatement(statement *stmt, lattice &inMap)
     return analyseUnary((unary_stmt *)stmt, inMap);
   case NODE_IFSTMT:
     return analyseIfElse((ifStmt *)stmt, inMap);
-  
-  /*
-  case NODE_WHILESTMT:
-    return analyseWhile((whileStmt *)stmt, inMap);
-  case NODE_PROCCALLSTMT:
-    // TODO : Add proc call statment
-    return inMap;
-  case NODE_REDUCTIONCALLSTMT:
-    return analyseReduction((reductionCallStmt *)stmt, inMap);
-  case NODE_ITRBFS:
-    return analyseItrBFS((iterateBFS *)stmt, inMap);
-  case NODE_DOWHILESTMT:
-    return analyseDoWhile((dowhileStmt *)stmt, inMap);
-  case NODE_FIXEDPTSTMT:
-    return analyseFixedPoint((fixedPointStmt *)stmt, inMap);*/
+
+    /*
+    case NODE_WHILESTMT:
+      return analyseWhile((whileStmt *)stmt, inMap);
+    case NODE_PROCCALLSTMT:
+      // TODO : Add proc call statment
+      return inMap;
+    case NODE_REDUCTIONCALLSTMT:
+      return analyseReduction((reductionCallStmt *)stmt, inMap);
+    case NODE_ITRBFS:
+      return analyseItrBFS((iterateBFS *)stmt, inMap);
+    case NODE_DOWHILESTMT:
+      return analyseDoWhile((dowhileStmt *)stmt, inMap);
+    case NODE_FIXEDPTSTMT:
+      return analyseFixedPoint((fixedPointStmt *)stmt, inMap);*/
   }
 
   return inMap;
@@ -394,7 +515,7 @@ lattice deviceVarsAnalyser::analyseBlock(blockStatement *stmt, lattice &inMap)
 
   for (statement *bstmt : currStmts)
   {
-    //printf("%p %d\n", bstmt, bstmt->getTypeofNode());
+    // printf("%p %d\n", bstmt, bstmt->getTypeofNode());
     lastOut = analyseStatement(bstmt, lastOut);
     if (bstmt->getTypeofNode() == NODE_DECL)
       declaredVars.push_back(((declaration *)bstmt)->getdeclId());
@@ -408,89 +529,89 @@ lattice deviceVarsAnalyser::analyseBlock(blockStatement *stmt, lattice &inMap)
 
 void printTabs(int tabSpace)
 {
-  while(tabSpace--)
-    cout<<'\t';
+  while (tabSpace--)
+    cout << '\t';
 }
 
 void deviceVarsAnalyser::printBlock(blockStatement *stmt, int tabSpace)
 {
   printTabs(tabSpace);
-  cout<<"Block Begin\n";
+  cout << "Block Begin\n";
   tabSpace++;
-  for (statement *bstmt : stmt->returnStatements()){
+  for (statement *bstmt : stmt->returnStatements())
+  {
     printStatement(bstmt, tabSpace);
   }
   tabSpace--;
   printTabs(tabSpace);
-  cout<<"Block End\n";
+  cout << "Block End\n";
 }
-
 
 void deviceVarsAnalyser::printDeclaration(declaration *stmt, int tabSpace)
 {
-  ASTNodeWrap* wrapNode = getWrapNode(stmt);
+  ASTNodeWrap *wrapNode = getWrapNode(stmt);
   printTabs(tabSpace);
-  cout<<"Declaration: ";
+  cout << "Declaration: ";
   (wrapNode->outMap).print();
 }
 
 void deviceVarsAnalyser::printAssignment(assignment *stmt, int tabSpace)
 {
-  ASTNodeWrap* wrapNode = getWrapNode(stmt);
+  ASTNodeWrap *wrapNode = getWrapNode(stmt);
   printTabs(tabSpace);
-  cout<<"Assignment: ";
+  cout << "Assignment: ";
   (wrapNode->outMap).print();
 }
 
 void deviceVarsAnalyser::printIfElse(ifStmt *stmt, int tabSpace)
 {
   printTabs(tabSpace);
-  cout<<"If Statement\n";
+  cout << "If Statement\n";
 
   tabSpace++;
   printTabs(tabSpace);
-  cout<<"Condition: ";
+  cout << "Condition: ";
 
-  Expression* cond = stmt->getCondition();
-  ASTNodeWrap* wrapNode = getWrapNode(cond);
+  Expression *cond = stmt->getCondition();
+  ASTNodeWrap *wrapNode = getWrapNode(cond);
   (wrapNode->outMap).print();
-  
+
   printTabs(tabSpace);
-  cout<<"If Body\n";
+  cout << "If Body\n";
   tabSpace++;
   printStatement(stmt->getIfBody(), tabSpace);
   tabSpace--;
 
-  if(stmt->getElseBody() != nullptr)
+  if (stmt->getElseBody() != nullptr)
   {
     printTabs(tabSpace);
-    cout<<"Else Body\n";
+    cout << "Else Body\n";
     tabSpace++;
     printStatement(stmt->getElseBody(), tabSpace);
     tabSpace--;
   }
-  
-  ASTNodeWrap* stmtWrap = getWrapNode(stmt);
+
+  ASTNodeWrap *stmtWrap = getWrapNode(stmt);
 
   printTabs(tabSpace);
-  cout<<"Merge point: ";
+  cout << "Merge point: ";
   (stmtWrap->outMap).print();
   tabSpace--;
 }
 
 void deviceVarsAnalyser::printUnary(unary_stmt *stmt, int tabSpace)
 {
-  ASTNodeWrap* wrapNode = getWrapNode(stmt);
+  ASTNodeWrap *wrapNode = getWrapNode(stmt);
   printTabs(tabSpace);
-  cout<<"Unary statment: ";
+  cout << "Unary statment: ";
   (wrapNode->outMap).print();
 }
 
-void deviceVarsAnalyser::printForAll(forallStmt* stmt, int tabSpace)
+void deviceVarsAnalyser::printForAll(forallStmt *stmt, int tabSpace)
 {
-  ASTNodeWrap* wrapNode = getWrapNode(stmt);
+  ASTNodeWrap *wrapNode = getWrapNode(stmt);
   printTabs(tabSpace);
-  cout<<"For All stmt: ";
+  cout << "For All stmt: ";
   (wrapNode->outMap).print();
 }
 
@@ -506,9 +627,9 @@ void deviceVarsAnalyser::printStatement(statement *stmt, int tabSpace)
     break;
   case NODE_FORALLSTMT:
   {
-    forallStmt* forStmt = (forallStmt*) stmt;
-    if(forStmt->isForall())
-      printForAll((forallStmt*)stmt, tabSpace);
+    forallStmt *forStmt = (forallStmt *)stmt;
+    if (forStmt->isForall())
+      printForAll((forallStmt *)stmt, tabSpace);
     break;
   }
   case NODE_BLOCKSTMT:
@@ -521,10 +642,7 @@ void deviceVarsAnalyser::printStatement(statement *stmt, int tabSpace)
     printIfElse((ifStmt *)stmt, tabSpace);
     break;
   }
-
 }
-
-
 
 void deviceVarsAnalyser::analyseFunc(ASTNode *proc)
 {
