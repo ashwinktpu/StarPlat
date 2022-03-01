@@ -44,6 +44,10 @@ void Compute_SSSP(graph g,int src)
     num_iter++;
     vector < map<int,int> > send_data(np);
     vector < map<int,int> > receive_data(np);
+    vector < map<int,float> > send_data_float(np);
+    vector < map<int,float> > receive_data_float(np);
+    vector < map<int,double> > send_data_double(np);
+    vector < map<int,double> > receive_data_double(np);
     std::map<int,int>::iterator itr;
     for (int v = startv; v <= endv; v++) 
     {
@@ -99,6 +103,10 @@ void Compute_SSSP(graph g,int src)
     MPI_Barrier(MPI_COMM_WORLD);
     send_data.clear();
     receive_data.clear();
+    send_data_float.clear();
+    receive_data_float.clear();
+    send_data_double.clear();
+    receive_data_double.clear();
   }
 
   gettimeofday(&end, NULL);
