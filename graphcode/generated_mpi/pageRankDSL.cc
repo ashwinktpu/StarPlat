@@ -74,9 +74,10 @@ void Compute_PR(graph g,float beta,float delta,int maxIter,
   startv = my_rank*part_size;
   endv = startv+part_size-1;
   float num_nodes = g.ori_num_nodes();
+  pageRank = new float[part_size];
   for (int t = 0; t < part_size; t ++) 
   {
-    pageRank[t] = 1 / num_nodes;
+    pageRank[t] = 1.000000 / num_nodes;
   }
   int iterCount = 0;
   float diff =  0.0 ;
@@ -129,7 +130,7 @@ void Compute_PR(graph g,float beta,float delta,int maxIter,
           int local_index_nbr_1 = receive_data[t][x+3];
           int y_ = x/4;
           int z_ = x/4;
-          float pageRank_nbr = receive_data_float[y_+0];
+          float pageRank_nbr = receive_data_float[t][y_+0];
           sum[v-startv]  = sum[v-startv]  + pageRank_nbr / (local_index_nbr_1 - local_index_nbr);
         }
       }

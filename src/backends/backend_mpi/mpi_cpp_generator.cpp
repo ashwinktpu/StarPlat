@@ -11,6 +11,7 @@ reduction_details* red_details = NULL;
 make_par* mp = NULL;
 bool make_decl_par = false;
 bool comm_needed_gbl = false;
+bool convertTypeCheck = false;
 
 void mpi_cpp_generator::addIncludeToFile(char* includeName,dslCodePad& file,bool isCppLib)
 {  //cout<<"ENTERED TO THIS ADD INCLUDE FILE"<<"\n";
@@ -1101,13 +1102,13 @@ void mpi_cpp_generator::generatePropAccessForSend(PropAccess* stmt,int send, Ide
         generate_exprPropIdReceive(newProp);
         std::string typeStr(convertToCppType(t));
         if(typeStr == "int") {
-            sprintf(strBuffer," = receive_data[x+%d];", count_int);
+            sprintf(strBuffer," = receive_data[t][x+%d];", count_int);
             count_int++;
         } else if(typeStr == "float") {
-            sprintf(strBuffer," = receive_data_float[y_+%d];", count_float);
+            sprintf(strBuffer," = receive_data_float[t][y_+%d];", count_float);
             count_float++;
         } else if(typeStr == "double") {
-            sprintf(strBuffer," = receive_data_double[z_+%d];", count_double);
+            sprintf(strBuffer," = receive_data_double[t][z_+%d];", count_double);
             count_double++;
         }
         main.pushstr_newL(strBuffer);
@@ -1121,13 +1122,13 @@ void mpi_cpp_generator::generatePropAccessForSend(PropAccess* stmt,int send, Ide
         generate_exprPropIdReceive(stmt);
         std::string typeStr(convertToCppType(t));
         if(typeStr == "int") {
-            sprintf(strBuffer," = receive_data[x+%d];", count_int);
+            sprintf(strBuffer," = receive_data[t][x+%d];", count_int);
             count_int++;
         } else if(typeStr == "float") {
-            sprintf(strBuffer," = receive_data_float[y_+%d];", count_float);
+            sprintf(strBuffer," = receive_data_float[t][y_+%d];", count_float);
             count_float++;
         } else if(typeStr == "double") {
-            sprintf(strBuffer," = receive_data_double[z_+%d];", count_double);
+            sprintf(strBuffer," = receive_data_double[t][z_+%d];", count_double);
             count_double++;
         }
         main.pushstr_newL(strBuffer);
@@ -1313,6 +1314,21 @@ void mpi_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt)
           char strBuffer[1024];
           list<argument*> argList=procedure->getArgList();
           list<argument*>::iterator itr;
+          for(itr=argList.begin();itr!=argList.end();itr++)
+          { 
+            assignment* assign=(*itr)->getAssignExpr();
+            Identifier* lhsId=assign->getId();
+            Expression* exprAssigned=assign->getExpr();
+            // BC = new float[g.num_nodes()];
+            // TODO
+            // cout<< "TYYYPEEE "<< convertToCppType(lhsId->getSymbolInfo()->getType())<< endl;
+            convertTypeCheck = true;
+            sprintf(strBuffer,"%s = new %s[part_size]",lhsId->getIdentifier(), convertToCppType(lhsId->getSymbolInfo()->getType()));
+            convertTypeCheck = false;
+            main.pushString(strBuffer);
+            main.pushstr_newL(";");
+            
+          }
           if(comm_needed_gbl) {
             sprintf(strBuffer,"for (%s %s = 0; %s < part_size; %s ++) ","int","t","t","t");
           } else {
@@ -1321,17 +1337,17 @@ void mpi_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt)
           main.pushstr_newL(strBuffer);
           main.pushstr_newL("{");
           for(itr=argList.begin();itr!=argList.end();itr++)
-              { 
-                assignment* assign=(*itr)->getAssignExpr();
-                Identifier* lhsId=assign->getId();
-                Expression* exprAssigned=assign->getExpr();
-                sprintf(strBuffer,"%s[%s] = ",lhsId->getIdentifier(),"t");
-                main.pushString(strBuffer);
-                generateExpr(exprAssigned);
+          { 
+            assignment* assign=(*itr)->getAssignExpr();
+            Identifier* lhsId=assign->getId();
+            Expression* exprAssigned=assign->getExpr();
+            sprintf(strBuffer,"%s[%s] = ",lhsId->getIdentifier(),"t");
+            main.pushString(strBuffer);
+            generateExpr(exprAssigned);
 
-                main.pushstr_newL(";");
-                
-              }
+            main.pushstr_newL(";");
+            
+          }
              
         main.pushstr_newL("}");
 
@@ -1362,7 +1378,11 @@ void mpi_cpp_generator::generatePropertyDefination(Type* type,char* Id)
       type->setTargetGraph(id);
     }
      char strBuffer[100];
-     sprintf(strBuffer,"%s.%s()",type->getTargetGraph()->getIdentifier(),"num_nodes");
+     if(comm_needed_gbl) {
+       sprintf(strBuffer,"part_size");
+     } else {
+       sprintf(strBuffer,"%s.%s()",type->getTargetGraph()->getIdentifier(),"num_nodes");
+     }
      main.pushString(strBuffer);
      main.pushString("]");
      main.pushstr_newL(";");
@@ -1385,7 +1405,11 @@ void mpi_cpp_generator::generatePropertyDefination(Type* type,char* Id)
       type->setTargetGraph(id);
     }
      char strBuffer[100];
-     sprintf(strBuffer,"%s.%s()",type->getTargetGraph()->getIdentifier(),"num_nodes");
+     if(comm_needed_gbl) {
+       sprintf(strBuffer,"part_size");
+     } else {
+       sprintf(strBuffer,"%s.%s()",type->getTargetGraph()->getIdentifier(),"num_nodes");
+     }
      main.pushString(strBuffer);
      main.pushString("]");
      main.pushstr_newL(";");
@@ -1409,7 +1433,12 @@ void mpi_cpp_generator::generatePropertyDefination(Type* type,char* Id)
       type->setTargetGraph(id);
     }
      char strBuffer[100];
-     sprintf(strBuffer,"%s.%s()",type->getTargetGraph()->getIdentifier(),"num_nodes");
+    //  sprintf(strBuffer,"%s.%s()",type->getTargetGraph()->getIdentifier(),"num_nodes");
+     if(comm_needed_gbl) {
+       sprintf(strBuffer,"part_size");
+     } else {
+       sprintf(strBuffer,"%s.%s()",type->getTargetGraph()->getIdentifier(),"num_nodes");
+     }
      main.pushString(strBuffer);
      main.pushString("]");
      main.pushstr_newL(";");
@@ -1432,7 +1461,12 @@ void mpi_cpp_generator::generatePropertyDefination(Type* type,char* Id)
       type->setTargetGraph(id);
     }
      char strBuffer[100];
-     sprintf(strBuffer,"%s.%s()",type->getTargetGraph()->getIdentifier(),"num_nodes");
+    //  sprintf(strBuffer,"%s.%s()",type->getTargetGraph()->getIdentifier(),"num_nodes");
+     if(comm_needed_gbl) {
+       sprintf(strBuffer,"part_size");
+     } else {
+       sprintf(strBuffer,"%s.%s()",type->getTargetGraph()->getIdentifier(),"num_nodes");
+     }
      main.pushString(strBuffer);
      main.pushString("]");
      main.pushstr_newL(";");
@@ -3636,6 +3670,25 @@ const char* mpi_cpp_generator::convertToCppType(Type* type)
   else if(type->isPropType())
   {
     Type* targetType=type->getInnerTargetType();
+    if(convertTypeCheck) {
+      int typeId=targetType->gettypeId();
+      cout<<"TYPEID IN CPP"<<typeId<<"\n";
+      switch(typeId)
+      {
+        case TYPE_INT:
+          return "int";
+        case TYPE_BOOL:
+          return "bool";
+        case TYPE_LONG:
+          return "long";
+        case TYPE_FLOAT:
+          return "float";
+        case TYPE_DOUBLE:
+          return "double";
+        default:
+         assert(false);          
+      }
+    }
     if(targetType->isPrimitiveType())
     { 
       int typeId=targetType->gettypeId();

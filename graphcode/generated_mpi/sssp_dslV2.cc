@@ -28,6 +28,8 @@ void Compute_SSSP(graph g,int src)
   int dest_pro;
   int* dist=new int[g.num_nodes()];
   bool* modified=new bool[g.num_nodes()];
+  dist = new int[part_size];
+  modified = new bool[part_size];
   for (int t = 0; t < g.num_nodes(); t ++) 
   {
     dist[t] = INT_MAX;

@@ -1,7 +1,7 @@
 function Compute_PR(Graph g,float beta,float delta,int maxIter,propNode<float> pageRank)
 {
  float num_nodes = g.num_nodes();
- g.attachNodeProperty(pageRank=1/num_nodes);
+ g.attachNodeProperty(pageRank=1.0/num_nodes);
  int iterCount=0;
  float diff;
  do
