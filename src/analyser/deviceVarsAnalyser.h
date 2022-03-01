@@ -9,6 +9,7 @@ class lattice
 {  
 public:
   enum PointType{
+    NOT_INITIALIZED,
     CPU_GPU_SHARED,
     GPU_ONLY,
     CPU_ONLY,
@@ -21,8 +22,14 @@ public:
     GPU_WRITE,
   };
 
+  enum LatticeType{
+    CPU_Preferenced,
+    GPU_Preferenced,
+  };
+
 private:
   unordered_map<TableEntry*, PointType> typeMap;
+  LatticeType type;
 
 public:
   lattice(){}
@@ -127,7 +134,7 @@ public:
     }
   }
 
-  void addVariable(Identifier* iden, PointType type = CPU_ONLY)
+  void addVariable(Identifier* iden, PointType type = NOT_INITIALIZED)
   {
     TableEntry* symbInfo = iden->getSymbolInfo();
     typeMap.insert({symbInfo, type});
@@ -155,38 +162,36 @@ public:
     }
     cout<<endl;
   }
+
+  void setType(LatticeType type){
+    this->type = type;
+  }
 };
 
+class ASTNodeWrap
+{
+  public:
+  list<ASTNode*> predecessor, successor;
+  lattice inMap, outMap;
+  ASTNode* currStmt;
+};
 
 class deviceVarsAnalyser
 {
   private:
-  class ASTNodeWrap
-  {
-    public:
-    list<ASTNode*> predecessor, successor;
-    lattice inMap, outMap;
-    ASTNode* currStmt;
-  };
-
   unordered_map<ASTNode*, ASTNodeWrap*> latticeMap;
 
-  ASTNodeWrap* getWrapNode(ASTNode* node,const lattice &inLattice)
+  ASTNodeWrap* initWrapNode(ASTNode* node, list<Identifier*> &vars)
   {
-    if(latticeMap.find(node) == latticeMap.end())
-    {
-      ASTNodeWrap* wrapNode = new ASTNodeWrap();
-      wrapNode->currStmt = node;
-      wrapNode->inMap = inLattice;
+    ASTNodeWrap* wrapNode = new ASTNodeWrap();
+    wrapNode->inMap = lattice(vars);
+    wrapNode->outMap = lattice(vars);
+    wrapNode->currStmt = node;
 
-      latticeMap.insert({node, wrapNode});
-    }
-
-    return latticeMap.at(node);
+    return wrapNode;
   }
 
-  ASTNodeWrap* getWrapNode(ASTNode* node)
-  {
+  ASTNodeWrap* getWrapNode(ASTNode* node){
     return latticeMap.at(node);
   }
 
@@ -207,6 +212,17 @@ class deviceVarsAnalyser
   lattice analyseWhile(whileStmt*, lattice&);
   lattice analyseDoWhile(dowhileStmt*, lattice&);
   lattice analyseFor(forallStmt*, lattice&);
+
+  bool initBlock(blockStatement* blockStmt, list<Identifier*> &);
+  bool initStatement(statement* stmt, list<Identifier*> &);
+  bool initUnary(unary_stmt* blockStmt, list<Identifier*> &);
+  bool initIfElse(ifStmt* stmt, list<Identifier*> &);
+  bool initAssignment(assignment* stmt, list<Identifier*> &);
+  bool initDeclaration(declaration*, list<Identifier*> &);
+  bool initForAll(forallStmt*, list<Identifier*> &);
+  bool initWhile(whileStmt*, list<Identifier*> &);
+  bool initDoWhile(dowhileStmt*, list<Identifier*> &);
+  bool initFor(forallStmt*, list<Identifier*> &);
 
   void printStatement(statement* , int);
   void printBlock(blockStatement* , int);
