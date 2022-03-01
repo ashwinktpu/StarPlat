@@ -167,4 +167,5 @@ bool checkPropAccess(PropAccess* stmt,Identifier* remote);
 static const char* INTALLOCATION = "new int";
 static const char* BOOLALLOCATION = "new bool";
 static const char* FLOATALLOCATION = "new float";
+static const char* DOUBLEALLOCATION = "new float";
 #endif

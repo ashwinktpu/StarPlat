@@ -8,7 +8,7 @@ void Compute_BC(graph g,float* BC,std::vector<int> sourceSet)
   mpi::communicator world;
   my_rank = world.rank();
   np = world.size();
-  int max_degree,num_nodes;
+  int max_degree;
   int *index,*rev_index, *weight,*edgeList;
   int *local_index,*local_rev_index, *local_weight,*local_edgeList;
   int dest_pro;
@@ -25,10 +25,8 @@ void Compute_BC(graph g,float* BC,std::vector<int> sourceSet)
     edgeList = g.getEdgeList();
     index = g.getIndexofNodes();
     rev_index = g.rev_indexofNodes;
-    num_nodes = g.num_nodes();
     part_size = g.num_nodes()/np;
     MPI_Bcast (&max_degree,1,MPI_INT,my_rank,MPI_COMM_WORLD);
-    MPI_Bcast (&num_nodes,1,MPI_INT,my_rank,MPI_COMM_WORLD);
     MPI_Bcast (&part_size,1,MPI_INT,my_rank,MPI_COMM_WORLD);
     local_index = new int[part_size+1];
     local_rev_index = new int[part_size+1];
@@ -50,9 +48,9 @@ void Compute_BC(graph g,float* BC,std::vector<int> sourceSet)
       MPI_Send (rev_index+pos,part_size+1,MPI_INT,i,1,MPI_COMM_WORLD);
       int start = index[pos];
       int end = index[pos+part_size];
-      int count_ = end - start;
-      MPI_Send (weight+start,count_,MPI_INT,i,2,MPI_COMM_WORLD);
-      MPI_Send (edgeList+start,count_,MPI_INT,i,3,MPI_COMM_WORLD);
+      int count_int = end - start;
+      MPI_Send (weight+start,count_int,MPI_INT,i,2,MPI_COMM_WORLD);
+      MPI_Send (edgeList+start,count_int,MPI_INT,i,3,MPI_COMM_WORLD);
     }
     delete [] weight;
     delete [] edgeList;
@@ -61,7 +59,6 @@ void Compute_BC(graph g,float* BC,std::vector<int> sourceSet)
   else
   {
     MPI_Bcast (&max_degree,1,MPI_INT,0,MPI_COMM_WORLD); 
-    MPI_Bcast (&num_nodes,1,MPI_INT,0,MPI_COMM_WORLD);
     MPI_Bcast (&part_size,1,MPI_INT,0,MPI_COMM_WORLD);
     local_index = new int[part_size+1];
     MPI_Recv (local_index,part_size+1,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
@@ -73,7 +70,9 @@ void Compute_BC(graph g,float* BC,std::vector<int> sourceSet)
     local_edgeList = new int[num_ele];
     MPI_Recv (local_edgeList,num_ele,MPI_INT,0,3,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
   }
-  for (int t = 0; t < g.num_nodes(); t ++) 
+  startv = my_rank*part_size;
+  endv = startv+part_size-1;
+  for (int t = 0; t < part_size; t ++) 
   {
     BC[t] = 0;
   }
@@ -82,16 +81,17 @@ void Compute_BC(graph g,float* BC,std::vector<int> sourceSet)
   for (int i = 0; i < sourceSet.size(); i++)
   {
     int src = sourceSet[i];
-    double* sigmafloat* delta=new float[g.num_nodes()];
-    for (int t = 0; t < g.num_nodes(); t ++) 
+    double* sigma=new float[g.num_nodes()];
+    float* delta=new float[g.num_nodes()];
+    for (int t = 0; t < part_size; t ++) 
     {
       delta[t] = 0;
     }
-    for (int t = 0; t < g.num_nodes(); t ++) 
+    for (int t = 0; t < part_size; t ++) 
     {
       sigma[t] = 0;
     }
-    sigma[src] = 1;
+    sigma[src-startv] = 1;
     int phase = 0 ;
     vector <int> active;
     vector<int> active_next;
@@ -108,8 +108,12 @@ void Compute_BC(graph g,float* BC,std::vector<int> sourceSet)
     }
     while(is_finished(startv,endv,active))
     {
-      vector < vector <float> > send_data(np);
-      vector < vector <float> > receive_data(np);
+      vector < vector <int> > send_data(np);
+      vector < vector <int> > receive_data(np);
+      vector < vector <float> > send_data_float(np);
+      vector < vector <float> > receive_data_float(np);
+      vector < vector <double> > send_data_double(np);
+      vector < vector <double> > receive_data_double(np);
       while (active.size() > 0)
       {
         int v = active.back();
@@ -131,7 +135,7 @@ void Compute_BC(graph g,float* BC,std::vector<int> sourceSet)
               if (d[w-startv] == d[v-startv] + 1)
                 {
                   p[w-startv].push_back(v);
-                  sigma[w] = sigma[w-startv] + sigma[v-startv];
+                  sigma[w-startv] = sigma[w-startv] + sigma[v-startv];
                 }
               }
               else
@@ -140,7 +144,7 @@ void Compute_BC(graph g,float* BC,std::vector<int> sourceSet)
                 send_data[dest_pro].push_back(d[v-startv]);
                 send_data[dest_pro].push_back(w);
                 send_data[dest_pro].push_back(v);
-                send_data[dest_pro].push_back(sigma[v-startv]);
+                send_data_double[dest_pro].push_back(sigma[v-startv]);
               }
             }
           }
@@ -150,12 +154,14 @@ void Compute_BC(graph g,float* BC,std::vector<int> sourceSet)
         {
           if(t != my_rank)
           {
-            for (int x=0; x < receive_data[t].size();x+=4)
+            for (int x=0; x < receive_data[t].size();x+=3)
             {
               int d_v = receive_data[t][x];
               int w = receive_data[t][x+1];
               int v = receive_data[t][x+2];
-              double sigma_v = receive_data[t][x+3];
+              int y_ = x/3;
+              int z_ = x/3;
+              double sigma_v = receive_data_double[z_+0];
               if (d[w-startv] < 0 )
               {
                 active_next.push_back(w);
@@ -174,19 +180,27 @@ void Compute_BC(graph g,float* BC,std::vector<int> sourceSet)
         MPI_Barrier(MPI_COMM_WORLD);
         send_data.clear();
         receive_data.clear();
+        send_data_float.clear();
+        receive_data_float.clear();
+        send_data_double.clear();
+        receive_data_double.clear();
         phase = phase + 1 ;
       }
       phase = phase -1 ;
-      bool* modified = new bool[g.num_nodes()];
-      for (int t = 0; t < g.num_nodes(); t++)
+      bool* modified = new bool[part_size];
+      for (int t = 0; t < part_size; t++)
       {
         modified[t] = false;
       }
       MPI_Barrier(MPI_COMM_WORLD);
       while (phase > 0)
       {
-        vector <vector <float> > send_data(np);
-        vector <vector <float> > receive_data(np);
+        vector <vector <int> > send_data(np);
+        vector <vector <int> > receive_data(np);
+        vector <vector <float> > send_data_float(np);
+        vector <vector <float> > receive_data_float(np);
+        vector <vector <double> > send_data_double(np);
+        vector <vector <double> > receive_data_double(np);
         for(int v=startv; v<=endv; v++)
         {
           if(d[v-startv] == phase)
@@ -199,7 +213,7 @@ void Compute_BC(graph g,float* BC,std::vector<int> sourceSet)
               int w = local_edgeList[local_index[local_v]-begin+j];
               if(w >= startv && w <= endv)
               {
-                delta[v] = delta[v-startv] + ( sigma[v-startv] / sigma[w-startv])  * ( 1 + delta[w-startv]) ;
+                delta[v-startv] = delta[v-startv] + ( sigma[v-startv] / sigma[w-startv])  * ( 1 + delta[w-startv]) ;
               }
             }
           }
@@ -213,8 +227,8 @@ void Compute_BC(graph g,float* BC,std::vector<int> sourceSet)
                 dest_pro = w / part_size;
                 send_data[dest_pro].push_back(v);
                 send_data[dest_pro].push_back(w);
-                send_data[dest_pro].push_back(delta[v-startv]);
-                send_data[dest_pro].push_back(sigma[v-startv]);
+                send_data_float[dest_pro].push_back(delta[v-startv]);
+                send_data_double[dest_pro].push_back(sigma[v-startv]);
               }
             }
           }
@@ -224,28 +238,34 @@ void Compute_BC(graph g,float* BC,std::vector<int> sourceSet)
         {
           if(t != my_rank)
           {
-            for (int x=0; x < receive_data[t].size();x+=4)
+            for (int x=0; x < receive_data[t].size();x+=2)
             {
               int w = receive_data[t][x];
               int v = receive_data[t][x+1];
-              float delta_w = receive_data[t][x+2];
-              double sigma_w = receive_data[t][x+3];
+              int y_ = x/2;
+              int z_ = x/2;
+              float delta_w = receive_data_float[y_+0];
+              double sigma_w = receive_data_double[z_+0];
               delta[v-startv] = delta[v-startv] + ( sigma[v-startv] / sigma_w)  * ( 1 + delta_w) ;
             }
           }
         }
         for (int v=startv;v<=endv;v++)
         {
-          if( v != src && modified[v] == true)
+          if( v != src && modified[v-startv] == true)
           {
-            modified[v] = false;
-            BC[v] = BC[v-startv] + delta[v-startv];
+            modified[v - startv] = false;
+            BC[v-startv] = BC[v-startv] + delta[v-startv];
           }
         }
         phase--;
         MPI_Barrier(MPI_COMM_WORLD);
         send_data.clear();
         receive_data.clear();
+        send_data_float.clear();
+        receive_data_float.clear();
+        send_data_double.clear();
+        receive_data_double.clear();
       }
     }
 
