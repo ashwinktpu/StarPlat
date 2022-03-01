@@ -166,6 +166,11 @@ public:
   void setType(LatticeType type){
     this->type = type;
   }
+
+  void setVarType(Identifier* iden, PointType type){
+    TableEntry* symbInfo = iden->getSymbolInfo();
+    this->typeMap[symbInfo] = type;
+  }
 };
 
 class ASTNodeWrap
@@ -237,14 +242,14 @@ class deviceVarsAnalyser
   usedVariables getVarsForAll(forallStmt* stmt);
   usedVariables getVarsUnary(unary_stmt* stmt);
   usedVariables getVarsDeclaration(declaration* stmt);
-  //usedVariables getVarsWhile(whileStmt* stmt);
-  //usedVariables getVarsDoWhile(dowhileStmt* stmt);
+  usedVariables getVarsWhile(whileStmt* stmt);
+  usedVariables getVarsDoWhile(dowhileStmt* stmt);
   usedVariables getVarsAssignment(assignment* stmt);
   usedVariables getVarsIf(ifStmt* stmt);
   //usedVariables getVarsFixedPoint(fixedPointStmt* stmt);
   //usedVariables getVarsReduction(reductionCallStmt* stmt);
   //usedVariables getVarsBFS(iterateBFS* stmt);
-  //usedVariables getVarsExpr(Expression* stmt);
+  usedVariables getVarsExpr(Expression* stmt);
   //usedVariables getVarsProcCall(proc_callStmt* stmt);
 };
 
