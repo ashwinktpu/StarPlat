@@ -72,6 +72,7 @@ void Compute_BC(graph g,float* BC,std::vector<int> sourceSet)
   }
   startv = my_rank*part_size;
   endv = startv+part_size-1;
+  BC = new float[part_size];
   for (int t = 0; t < part_size; t ++) 
   {
     BC[t] = 0;
@@ -81,12 +82,14 @@ void Compute_BC(graph g,float* BC,std::vector<int> sourceSet)
   for (int i = 0; i < sourceSet.size(); i++)
   {
     int src = sourceSet[i];
-    double* sigma=new float[g.num_nodes()];
-    float* delta=new float[g.num_nodes()];
+    double* sigma=new double[part_size];
+    float* delta=new float[part_size];
+    delta = new float[part_size];
     for (int t = 0; t < part_size; t ++) 
     {
       delta[t] = 0;
     }
+    sigma = new double[part_size];
     for (int t = 0; t < part_size; t ++) 
     {
       sigma[t] = 0;
@@ -161,7 +164,7 @@ void Compute_BC(graph g,float* BC,std::vector<int> sourceSet)
               int v = receive_data[t][x+2];
               int y_ = x/3;
               int z_ = x/3;
-              double sigma_v = receive_data_double[z_+0];
+              double sigma_v = receive_data_double[t][z_+0];
               if (d[w-startv] < 0 )
               {
                 active_next.push_back(w);
@@ -244,8 +247,8 @@ void Compute_BC(graph g,float* BC,std::vector<int> sourceSet)
               int v = receive_data[t][x+1];
               int y_ = x/2;
               int z_ = x/2;
-              float delta_w = receive_data_float[y_+0];
-              double sigma_w = receive_data_double[z_+0];
+              float delta_w = receive_data_float[t][y_+0];
+              double sigma_w = receive_data_double[t][z_+0];
               delta[v-startv] = delta[v-startv] + ( sigma[v-startv] / sigma_w)  * ( 1 + delta_w) ;
             }
           }
