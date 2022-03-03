@@ -183,7 +183,7 @@ statement* dataRaceAnalyser::ngbrForAnalysis(forallStmt *stmt, Identifier *forAl
     proc_callExpr *procCall = stmt->getExtractElementFunc();
 
     if (stmt->isSourceProcCall() && (procCall->getArgList().size() == 1) 
-        && checkIdEqual(srcGraph, stmt->getSourceGraph()) && checkIdNameEqual(procCall->getMethodId(), "neighbours"))
+        && checkIdEqual(srcGraph, stmt->getSourceGraph()) && checkIdNameEqual(procCall->getMethodId(), "neighbors"))
     {
         Identifier *ngbrItr = stmt->getIterator();
         argument *firstArg = *(procCall->getArgList().begin());
@@ -202,7 +202,6 @@ statement* dataRaceAnalyser::ngbrForAnalysis(forallStmt *stmt, Identifier *forAl
                     if (bstmt->getTypeofNode() == NODE_IFSTMT)
                     {
                         statement *newStmt = relPropUpdateAnalysis((ifStmt *)bstmt, (Identifier *) ngbrItr);
-                        // TODO : Replace the current statment with new statement
                         newBody->addStmtToBlock(newStmt);
                     }
                     else if (bstmt->getTypeofNode() == NODE_UNARYSTMT)
@@ -460,7 +459,7 @@ statement* dataRaceAnalyser::blockReductionAnalysis(blockStatement* blockStmt, I
 
     auto checkExprVars = [&declaredVars, &reducedVars, &forAllItr](Expression *expr) -> bool
     {
-        usedVariables currUsed = getVarsExpr(expr);
+        usedVariables currUsed = analyserUtils::getVarsExpr(expr);
 
         //No reduced variable should be used
         for(Identifier* redVars: reducedVars.getVariables(WRITE)){
@@ -539,7 +538,7 @@ statement* dataRaceAnalyser::forAllAnalysis(forallStmt *stmt)
             if(newStmt->getTypeofNode() == NODE_REDUCTIONCALLSTMT)
             {
                 reductionCallStmt* currStmt = (reductionCallStmt*) newStmt;
-                usedVariables currUsed = getVarsExpr(currStmt->getRightSide());
+                usedVariables currUsed = analyserUtils::getVarsExpr(currStmt->getRightSide());
                 bool flag = true;
 
                 if(currUsed.isUsedVar(currStmt->getLeftId()))   flag = false;

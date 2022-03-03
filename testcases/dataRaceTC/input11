@@ -9,11 +9,11 @@ function test(Graph g)
 
     forall(v in g.nodes())
     {
-        for(ngbr in g.neighbours(v))
+        forall(ngbr in g.neighbours(v))
         {
             int x;
             ngbr.prop--;
-            if(ngbr.prop > (v.prop*10))
+            if(ngbr.prop > v.prop*10)
             {
                 ngbr.prop = v.prop*10;
                 ngbr.prop1 = False;

@@ -1,5 +1,5 @@
-#ifndef GENCPP_INPUT_H
-#define GENCPP_INPUT_H
+#ifndef GENCPP_SSSP_DSL_NEW_H
+#define GENCPP_SSSP_DSL_NEW_H
 #include<stdio.h>
 #include<stdlib.h>
 #include<limits.h>
@@ -7,6 +7,7 @@
 #include<omp.h>
 #include"../graph.hpp"
 
-void test(graph& g);
+void Compute_SSSP(graph& g,int* dist,int* weight,int src
+);
 
 #endif
