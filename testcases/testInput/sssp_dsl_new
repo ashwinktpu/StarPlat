@@ -1,4 +1,4 @@
-function Compute_SSSP (Graph g,propNode<int> dist, propEdge<int> weight, node src)
+function Compute_SSSP_new (Graph g,propNode<int> dist, propEdge<int> weight, node src)
 {    
      propNode <bool> modified;
      g.attachNodeProperty(dist=INF, modified = False);
