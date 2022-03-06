@@ -6,8 +6,7 @@
 #include<map>
 #include<algorithm>
 #include<string.h>
-#include<omp.h>
-//#include "graph_ompv2.hpp"
+#include "graph_ompv2.hpp"
 
 //using namespace std;
 
@@ -17,8 +16,8 @@ class edge
   int32_t source;
   int32_t destination;
   int32_t weight;
- 
- 
+  int32_t id; /* -unique Id for each edge.
+                 -useful in adding properties to edges. */
 };
 
 
@@ -30,6 +29,9 @@ class graph
   int32_t nodesTotal;
   int32_t edgesTotal;
   int32_t* edgeLen;
+  int32_t* diff_edgeLen;
+  int32_t* rev_edgeLen;
+  int32_t* diff_rev_edgeLen;
   char* filePath;
   std::map<int32_t,std::vector<edge>> edges;
  
@@ -42,6 +44,12 @@ class graph
   int32_t* srcList;  /*stores source corresponding to edgeNo.
                        required for iteration over in neighbours */
    std::vector<edge> graph_edge; 
+   int32_t* diff_indexofNodes;
+   int32_t* diff_edgeList; 
+   int32_t* diff_rev_indexofNodes;
+   int32_t* diff_rev_edgeList;
+   int32_t* perNodeCSRSpace;
+   int32_t* perNodeRevCSRSpace;
    int32_t* edgeMap;  
 
   graph(char* file)
@@ -49,7 +57,11 @@ class graph
     filePath=file;
     nodesTotal=0;
     edgesTotal=0;
-    
+    diff_edgeList = NULL;
+    diff_indexofNodes = NULL;
+    diff_rev_indexofNodes = NULL;
+    diff_rev_edgeList = NULL;
+    rev_edgeLen = NULL;
 
   }
 
@@ -71,11 +83,34 @@ class graph
   }
    int num_edges()
   {   
-  
-     return edgesTotal;
+      if(diff_edgeList !=NULL)
+        {
+          return (edgesTotal + diff_indexofNodes[nodesTotal+1]);
+        }
+        else 
+           return edgesTotal;
   }
 
+  edge getEdge(int s, int d)
+    {
+
+      int startEdge=indexofNodes[s];
+      int endEdge=indexofNodes[s+1]-1;
+      edge foundEdge ;
   
+        for ( edge e: getNeighbors(s))
+           {
+             int nbr = e.destination;
+             if(nbr == d)
+                {
+                 return e;
+                }
+             
+           }
+
+          
+    }
+
 
   // library function to check candidate vertex is in the path from root to dest in SPT.
   bool inRouteFromSource(int candidate, int dest, int* parent)
@@ -97,7 +132,7 @@ class graph
 
   bool check_if_nbr(int s, int d)
     {
-      int startEdge=indexofNodes[s];
+      /*int startEdge=indexofNodes[s];
       int endEdge=indexofNodes[s+1]-1;
 
       if(edgeList[startEdge]==d)
@@ -120,10 +155,36 @@ class graph
             startEdge=mid+1;   
           
         
-        }
-
-
+        }*/
       
+      /* int start = 0;
+        int end = edges[s].size()-1;
+        int mid;
+
+         while(start<end)
+        {
+         mid = (start+end)/2;
+
+          if(edges[s][mid].destination==d)
+             return true;
+
+          if(d<edges[s][mid].destination)
+             end=mid-1;
+          else
+            start=mid+1;
+
+
+        }*/
+
+
+
+        for ( edge e: getNeighbors(s))
+           {
+             int nbr = e.destination;
+             if(nbr == d)
+               return true;
+           }
+
       return false;
 
 
@@ -155,12 +216,7 @@ class graph
            else
                j++;      
 
-        }
-
-
-     
-         
-        
+       }
 
 
        return count;
@@ -265,11 +321,18 @@ class graph
         
         edgeLen[mid]=INT_MAX/2;
 
+        printf("src %d dest %d mid %d\n",src, dest, mid);
+
      }
 
 
-   
-   
+   std::vector<update> parseUpdates(char* updateFile)
+    {
+
+        std::vector<update> update_vec = parseUpdateFile(updateFile);  
+        return update_vec;
+       
+    }
 
 
    void parseEdges()
@@ -300,31 +363,23 @@ class graph
         int32_t source;
         int32_t destination;
         int32_t weightVal;
+
            ss>>source; 
-          // printf("SOURCE %lu ",source);
            if(source>nodesTotal)
               nodesTotal=source;
+
             ss>>destination;  
-           // printf("DESTINATION %lu \n",destination);
             if(destination>nodesTotal)
                nodesTotal=destination;  
+
            e.source=source;
            e.destination=destination;
            e.weight=1;
 
            edges[source].push_back(e);
            graph_edge.push_back(e);
-       
 
-           /*edge e1; //TO BE REMOVED 
-           e1.source=destination; //TO BE REMOVED 
-           e1.destination=source; //TO BE REMOVED 
-           edges[destination].push_back(e1); //TO BE REMOVED */
-          
-          
-           ss>>weightVal; //for edgelists having weight too.
-           
-          
+           ss>>weightVal; //for edgelists having weight too.      
            
      }
 
@@ -341,8 +396,8 @@ class graph
      
      parseEdges();
    
-     
-     
+     printf("Here half\n");
+     //printf("HELLO AFTER THIS %d \n",nodesTotal);
      #pragma omp parallel for 
      for(int i=0;i<=nodesTotal;i++)//change to 1-nodesTotal.
      {
@@ -360,10 +415,13 @@ class graph
      }                      
                    
      indexofNodes=new int32_t[nodesTotal+2];
+     rev_indexofNodes=new int32_t[nodesTotal+2];
      edgeList=new int32_t[edgesTotal]; //new int32_t[edgesTotal] ;
      srcList=new int32_t[edgesTotal];
      edgeLen=new int32_t[edgesTotal]; //new int32_t[edgesTotal] ;
      edgeMap =  new int32_t[edgesTotal]; 
+     perNodeCSRSpace = new int32_t[nodesTotal+1];
+     perNodeRevCSRSpace = new int32_t[nodesTotal+1];
      int* edgeMapInter = new int32_t[edgesTotal]; 
      int* vertexInter = new int32_t[edgesTotal];         
      
@@ -390,6 +448,8 @@ class graph
         edge_no++;
       }
 
+      perNodeCSRSpace[i] = 0;
+      perNodeRevCSRSpace[i] = 0;
       
     }
 
@@ -476,10 +536,12 @@ class graph
 
         }
      
+      printf("After this \n");
       free(vertexInter);
       free(edgeMapInter);
-  
-  
+    //change to nodesTotal+1.
+    // printf("hello after this %d %d\n",nodesTotal,edgesTotal);
+    
  }
 
 
@@ -487,9 +549,202 @@ class graph
  /******************************|| Dynamic Graph Libraries ||********************************/
 
 
+ void updateCSR_Del(std::vector<update>& batchUpdate, int k, int size)
+  {
+    int num_nodes = nodesTotal + 1;
+    std::vector<std::pair<int,int>> perNodeUpdateInfo;
+    std::vector<std::pair<int,int>> perNodeUpdateRevInfo;
+    std::vector<update> slicedUpdates;
+    if(rev_edgeLen==NULL)
+       rev_edgeLen = new int[edgesTotal];
+    for(int i=0;i<num_nodes;i++)
+     {
+       perNodeUpdateInfo.push_back({0,0});
+       perNodeUpdateRevInfo.push_back({0,0});
+     }
+
+   // printf("size %d \n", size);
+    /* perNode bookkeeping of updates and deletions */
+
+    for(int i=0;i<size;i++)
+     { 
+       int pos = k+i;
+       update u = batchUpdate[pos];
+       int source = u.source;
+       int destination = u.destination;
+       char type = u.type;
+       if(type == 'a')
+         {
+         perNodeUpdateInfo[source].second++;
+         perNodeUpdateRevInfo[destination].second++;
+         }
+       else
+         {
+         perNodeUpdateInfo[source].first++; 
+         perNodeUpdateRevInfo[destination].first++;
+         }
+           
+         slicedUpdates.push_back(u);
+
+    }
+   
+
+   /* edge weights book-keeping for reverse CSR */
+
+    #pragma omp parallel for
+    for(int i=0;i<edgesTotal;i++)
+       {
+        /* int e = edgeMap[i];
+         int weight = edgeLen[e];*/
+         rev_edgeLen[i] = 1 ;//weight;
+
+       }
+
+    updateCSRDel_omp(num_nodes, edgesTotal, indexofNodes, edgeList, rev_indexofNodes,  srcList, edgeLen, diff_edgeLen,
+                  diff_indexofNodes, diff_edgeList, diff_rev_indexofNodes, diff_rev_edgeList, rev_edgeLen,
+                  diff_rev_edgeLen,perNodeUpdateInfo, perNodeUpdateRevInfo, perNodeCSRSpace, perNodeRevCSRSpace,slicedUpdates) ;
+
+    perNodeUpdateInfo.clear();
+    perNodeUpdateRevInfo.clear();
+
+  }
+
+
+ void updateCSR_Add(std::vector<update>& batchUpdate, int k, int size)
+  {
+    int num_nodes = nodesTotal + 1;
+
+    std::vector<std::pair<int,int>> perNodeUpdateInfo;
+    std::vector<std::pair<int,int>> perNodeUpdateRevInfo;
+    std::vector<update> slicedUpdates;
+    
+    for(int i=0;i<num_nodes;i++)
+     {
+       perNodeUpdateInfo.push_back({0,0});
+       perNodeUpdateRevInfo.push_back({0,0});
+     }
+
+      for(int i=0;i<size;i++)
+     { 
+       int pos = k+i;
+       update u = batchUpdate[pos];
+       int source = u.source;
+       int destination = u.destination;
+       char type = u.type;
+       if(type == 'a')
+         {
+         perNodeUpdateInfo[source].second++;
+         perNodeUpdateRevInfo[destination].second++;
+         }
+       else
+         {
+         perNodeUpdateInfo[source].first++; 
+         perNodeUpdateRevInfo[destination].first++;
+         }
+           
+         slicedUpdates.push_back(u);
+
+    }
+
+    
+  
+    updateCSRAdd_omp(num_nodes, edgesTotal, indexofNodes, edgeList, rev_indexofNodes,  srcList, edgeLen, &diff_edgeLen,
+                  &diff_indexofNodes, &diff_edgeList, &diff_rev_indexofNodes, &diff_rev_edgeList, rev_edgeLen,
+                  &diff_rev_edgeLen,perNodeUpdateInfo, perNodeUpdateRevInfo,perNodeCSRSpace, perNodeRevCSRSpace,slicedUpdates) ;
+
+    perNodeUpdateInfo.clear();
+    perNodeUpdateRevInfo.clear();
+
+  }
+
+
+
+
+std::vector<edge> getNeighbors( int node)
+ {
+   
+   std::vector<edge> out_edges;
+
+   for(int i=indexofNodes[node]; i<indexofNodes[node+1] ; i++)
+     {
+       int nbr = edgeList[i] ;
+       if(nbr!=INT_MAX/2)
+         {
+           edge e ;
+           e.source = node;
+           e.destination = nbr;
+           e.weight = edgeLen[i];
+           e.id = i;
+         //  printf(" weight %d\n", e.weight);
+           out_edges.push_back(e);
+         }
+     }  
+     
+     if(diff_edgeList!=NULL)
+       {
+     for(int j=diff_indexofNodes[node]; j<diff_indexofNodes[node+1] ; j++)
+       {    
+         int nbr = diff_edgeList[j];
+          if(nbr!=INT_MAX/2)
+          {
+            edge e;
+            e.source = node;
+            e.destination = nbr;
+            e.weight = diff_edgeLen[j];
+            e.id = edgesTotal + j ;
+           // printf(" weight %d\n", e.weight);
+            out_edges.push_back(e);
+          }
+
+       }
+   }  
+    
+
+     return out_edges;
+   
+  }
  
 
+ std::vector<edge> getInNeighbors( int node)
+ {
+   
+   std::vector<edge> in_edges;
 
+   for(int i=rev_indexofNodes[node]; i<rev_indexofNodes[node+1] ; i++)
+     {
+       int nbr = srcList[i] ;
+       if(nbr!=INT_MAX/2)
+         {
+           edge e ;
+           e.source = node;
+           e.destination = nbr;
+           e.weight = rev_edgeLen[i];
+           in_edges.push_back(e);
+         }
+     }  
+     
+     if(diff_rev_edgeList!=NULL)
+      {
+     for(int j=diff_rev_indexofNodes[node]; j<diff_rev_indexofNodes[node+1] ; j++)
+       {
+         int nbr = diff_rev_edgeList[j];
+          if(nbr!=INT_MAX/2)
+          {
+            edge e;
+            e.source = node;
+            e.destination = nbr;
+            e.weight = diff_rev_edgeLen[j];
+            in_edges.push_back(e);
+          }
+
+       }
+
+      }
+    
+     return in_edges;
+   
+  }
+ 
 
 
 

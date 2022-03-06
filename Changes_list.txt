@@ -1,0 +1,46 @@
+lexer.l : return, Incremental, Decremental, Static, updates.
+Lrparser.y: 1. function nonterminal rules updated.
+                    2. IfStmt nonterminal rules updated.
+                    3. rightList nonterminal rules updated.
+                    4. forall nonterminal rules updated.
+                    5. ‘updates’ new datatype added.
+                    6.  staticGen/dynamicGen commandline option added.
+ASTHelper.cpp: 1. Functype count updation.
+                            2. func variant node creation.
+                            3. return statement node creation.
+ASTNodeTypes.hpp: 1. New field added to Identifier class.
+                                     2. function class is updated. ( field to decide on lock initialization in initial parts 
+                                                                                          of the function).
+                                     3. return statement’s class definition is added.
+
+MainContext.cpp/MainContext.hpp: 1. currentFunc’s info addition  is achieved through fields and methods.
+
+SymbolTableBuilder.cpp: 1. InitialLockDecl for omp.
+                                              2. push itrBFS to parallelConstruct as well.
+                                              
+SymbolTableBuilder.h: 1. Addition currentFunc field.
+                                          2. change of ‘parallelConstruct’ stack to a vector datastructure.
+
+dsl_cpp_generator.cpp: 1. Added various function_counts’ field.
+                                            2. info regarding the current function type.
+   3. generateWhileStmt logic added.
+   4. return statement generation logic added.
+   5. generateReductionCallStmt logic modified.
+   6. generatePropertyDefination graphid extraction logic slightly modified.
+   
+
+MakeFile: 1. Compilation commands changed.
+
+Generation places where graphId  vector’s content was used:
+
+1.	‘generateAssignment’ call.
+2.	‘generatePropertyDefination’ call.
+3.	‘generatefixedpt_filter’ call.
+4.	
+                       
+                                             
+
+
+
+             
+
