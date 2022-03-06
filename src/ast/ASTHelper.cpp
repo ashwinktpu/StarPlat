@@ -9,11 +9,13 @@ using namespace std;
 /*TO be implemented. It will contain functions that will be called by action part of Parser  for building the nodes of AST*/
 
 
-extern FrontEndContext frontEndContext;                                             
+extern FrontEndContext frontEndContext;  
+
+
 class Util
 {
 
-public:
+public: 
 
 
 static void addFuncToList(ASTNode* func)
@@ -21,6 +23,57 @@ static void addFuncToList(ASTNode* func)
    Function* funcNode=(Function*)func;
  
     frontEndContext.addFuncToList(funcNode);
+}
+
+static void setCurrentFuncType(int funcType)
+{
+    frontEndContext.setCurrentFuncType(funcType);
+}
+
+
+
+
+static void resetTemp(vector<Identifier*>& tempIds)
+{
+  int currentFuncType =  frontEndContext.getCurrentFuncType();
+  for(Identifier* id:tempIds)
+     {
+        graphId[currentFuncType][frontEndContext.getCurrentFuncCount()].push_back(id);
+     }
+  
+
+}
+
+static void storeGraphId(Identifier* id)
+{
+   int currentFuncType = frontEndContext.getCurrentFuncType();
+   if(currentFuncType==GEN_FUNC)
+     {
+         graphId[0][frontEndContext.getCurrentFuncCount()].push_back(id);
+     }
+     else if(currentFuncType==STATIC_FUNC)
+         {
+             graphId[1][frontEndContext.getCurrentFuncCount()].push_back(id);
+                 
+         }
+    else if(currentFuncType==INCREMENTAL_FUNC)
+          {
+              graphId[2][frontEndContext.getCurrentFuncCount()].push_back(id);
+            
+          }
+    else if(currentFuncType==DECREMENTAL_FUNC)
+          {
+              graphId[3][frontEndContext.getCurrentFuncCount()].push_back(id);
+          }   
+
+
+           frontEndContext.incrementCurrentFuncCount();        
+
+}
+
+static int getCurrentFuncType()
+{
+    return frontEndContext.getCurrentFuncType();
 }
 
 static ASTNode* createFuncNode(ASTNode* id,list<formalParam*> formalParamList)
@@ -31,6 +84,34 @@ static ASTNode* createFuncNode(ASTNode* id,list<formalParam*> formalParamList)
   return functionNode;
    
 }
+
+static ASTNode* createStaticFuncNode(ASTNode* id,list<formalParam*> formalParamList)
+{ 
+  Identifier* staticFuncId=(Identifier*)id;
+  
+  Function* staticFuncNode=Function::createStaticFunctionNode(staticFuncId,formalParamList);
+  return staticFuncNode;
+   
+}
+
+static ASTNode* createIncrementalNode(list<formalParam*> formalParamList)
+{ 
+  
+  Function* incrementalNode = Function::createIncrementalNode(formalParamList);
+  return incrementalNode;
+   
+}
+static ASTNode* createDecrementalNode(list<formalParam*> formalParamList)
+{ 
+  
+  Function* decrementalNode = Function::createDecrementalNode(formalParamList);
+  return decrementalNode;
+   
+}
+
+
+
+
 
 static void createNewBlock()
 { 
@@ -258,11 +339,26 @@ static ASTNode* createNodeForBval(bool value)
     cout<<"CHECK PASSED "<<check<<"\n";
     return exprBVal;
 }
+
 static ASTNode* createNodeForINF(bool infinityFlag)
 {
     Expression* exprINFVal=Expression::nodeForInfinity(infinityFlag);
     return exprINFVal;
 }
+
+
+static ASTNode* createReturnStatementNode(ASTNode* returnExpression)
+{
+  statement* returnStmtNode;
+  returnStmtNode = returnStmt::createNodeForReturnStmt((Expression*)returnExpression);
+
+  return returnStmtNode;
+
+}
+
+
+
+
 static ASTNode* createNodeForId(ASTNode* node)
 {  Expression* exprForId;
    if(node->getTypeofNode()==NODE_ID)
@@ -298,7 +394,7 @@ static ASTNode* createNodeForDoWhileStmt(ASTNode* iterCondition,ASTNode* body)
 static ASTNode* createNodeForIfStmt(ASTNode* iterCondition,ASTNode* thenBody,ASTNode* elseBody)
 {
     statement* ifStmtNode;
-    ifStmtNode=ifStmt::create_ifStmt((Expression*)iterCondition,(blockStatement*)thenBody,(blockStatement*)elseBody);
+    ifStmtNode=ifStmt::create_ifStmt((Expression*)iterCondition,(statement*)thenBody,(statement*)elseBody);
     return ifStmtNode;
 }
 static ASTNode* createNodeForForAllStmt(ASTNode* iterator,ASTNode* sourceGraph,ASTNode* extractElemFunc,ASTNode* filterExpr,ASTNode* body,bool isforall)
