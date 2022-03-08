@@ -1,6 +1,6 @@
 #include"sssp_dsl_new.h"
 
-void Compute_SSSP(graph& g,int* dist,int* weight,int src
+void Compute_SSSP_new(graph& g,int* dist,int* weight,int src
 )
 {
   bool* modified=new bool[g.num_nodes()];
@@ -23,7 +23,8 @@ void Compute_SSSP(graph& g,int* dist,int* weight,int src
       #pragma omp for
       for (int v = 0; v < g.num_nodes(); v ++) 
       {
-        if (modified[v] == true ){
+        if (modified[v] == true )
+          {
           for (int edge = g.indexofNodes[v]; edge < g.indexofNodes[v+1]; edge ++) 
           {int nbr = g.edgeList[edge] ;
             int e = edge;
@@ -33,9 +34,8 @@ void Compute_SSSP(graph& g,int* dist,int* weight,int src
             {
               int oldValue = dist[nbr];
               atomicMin(&dist[nbr],dist_new);
-              if(oldValue > dist[nbr])
-              {
-                modified_nxt[nbr] = modified_new;
+              if( oldValue > dist[nbr])
+              {modified_nxt[nbr] = modified_new;
                 finished = false ;
               }
             }

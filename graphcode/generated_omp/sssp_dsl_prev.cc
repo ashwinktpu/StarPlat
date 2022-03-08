@@ -1,6 +1,6 @@
 #include"sssp_dsl_prev.h"
 
-void Compute_SSSP(graph& g,int* dist,int* weight,int src
+void Compute_SSSP_prev(graph& g,int* dist,int* weight,int src
 )
 {
   bool* modified=new bool[g.num_nodes()];
@@ -23,13 +23,17 @@ void Compute_SSSP(graph& g,int* dist,int* weight,int src
       #pragma omp for
       for (int v = 0; v < g.num_nodes(); v ++) 
       {
-        if (modified[v] == true ){
+        if (modified[v] == true )
+          {
           for (int edge = g.indexofNodes[v]; edge < g.indexofNodes[v+1]; edge ++) 
           {int nbr = g.edgeList[edge] ;
             int e = edge;
-            if (dist[nbr] > dist[v] + weight[e] ){
+            if (dist[nbr] > dist[v] + weight[e] )
+              {
               dist[nbr] = dist[v] + weight[e];
               modified[nbr] = true;
+
+              finished = false;
             }
           }
         }

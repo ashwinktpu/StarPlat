@@ -490,6 +490,9 @@ int main(int argc,char **argv)
      //TODO: redirect to different backend generator after comparing with the 'b' option
     stBuilder.buildST(frontEndContext.getFuncList());
 	
+	dataRaceAnalyser analyser;
+	//analyser.analyse();
+
 	if(staticGen)
 	  {
 	  cpp_backend.setFileName(fileName);
@@ -497,11 +500,12 @@ int main(int argc,char **argv)
 	  }
 	else
 	 {
+		 /*
 		 printf("static graphsize %d\n",graphId[2][0].size());
 		 dsl_dyn_cpp_generator cpp_dyn_gen;
 		 cpp_dyn_gen.setFileName(fileName);
 		 cpp_dyn_gen.generate();
-
+		*/
 	 }
 	
 	}
