@@ -7,6 +7,7 @@
 #include<omp.h>
 #include"../graph.hpp"
 
-void test(graph& g);
+void Compute_PR(graph& g,float beta,float delta,int maxIter,
+  float* pageRank);
 
 #endif

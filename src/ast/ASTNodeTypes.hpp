@@ -1857,4 +1857,20 @@ class reductionCallStmt:public statement
 
 
 };
+
+class barrierStmt:public statement
+{
+  private:
+  public:
+  barrierStmt()
+  {
+  }
+
+  static barrierStmt *nodeForBarrier()
+  {
+    barrierStmt* barrierNode=new barrierStmt();
+    return barrierNode;
+  }
+};
+
 #endif

@@ -70,6 +70,7 @@ class dsl_cpp_generator
   bool neighbourIteration(char* methodId);
   bool allGraphIteration(char* methodId);
   bool elementsIteration(char* extractId);
+  void generateBarrier(barrierStmt* barrier);
   
   blockStatement* includeIfToBlock(forallStmt* forAll);
 

@@ -6,7 +6,8 @@
 	#include <stdbool.h>
     #include "includeHeader.hpp"
 	//#include "../analyser/attachPropAnalyser.h"
-	#include "../analyser/dataRaceAnalyser.h"
+	//#include "../analyser/dataRaceAnalyser.h"
+	#include "../analyser/PRAnalyser.h"
 	#include<getopt.h>
 	//#include "../symbolutil/SymbolTableBuilder.cpp"
      
@@ -436,8 +437,11 @@ int main(int argc,char **argv)
 	//attachPropAnalyser propMerge;
 	//propMerge.analyse();
 
-	dataRaceAnalyser dataRaceAnalyse;
-	dataRaceAnalyse.analyse();
+	//dataRaceAnalyser dataRaceAnalyse;
+	//dataRaceAnalyse.analyse();
+
+	PRAnalyser PRAnalyse;
+	PRAnalyse.analyse();
 	
 	cpp_backend.setFileName(fileName);
 	cpp_backend.generate();
