@@ -4,8 +4,8 @@
 	#include <stdlib.h>
 	#include <stdbool.h>
     #include "includeHeader.hpp"
-	//#include "../analyser/attachPropAnalyser.h"
-	#include "../analyser/dataRaceAnalyser.h"
+	#include "../analyser/attachPropAnalyser.h"
+	//#include "../analyser/dataRaceAnalyser.h"
 	//#include "../analyser/deviceVarsAnalyser.h"
 	#include<getopt.h>
 	//#include "../symbolutil/SymbolTableBuilder.cpp"
@@ -490,7 +490,7 @@ int main(int argc,char **argv)
      //TODO: redirect to different backend generator after comparing with the 'b' option
     stBuilder.buildST(frontEndContext.getFuncList());
 	
-	dataRaceAnalyser analyser;
+	attachPropAnalyser analyser;
 	//analyser.analyse();
 
 	if(staticGen)
