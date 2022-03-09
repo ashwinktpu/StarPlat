@@ -26,7 +26,7 @@ bool checkDependancy(statement *stmt, usedVariables &usedVars)
 {
   auto checkExprDependancy = [&usedVars](Expression *expr) -> bool
   {
-    usedVariables exprVars = getVarsExpr(expr);
+    usedVariables exprVars = analyserUtils::getVarsExpr(expr);
     for (Identifier *wVars : exprVars.getVariables(WRITE))
     {
       if (usedVars.isUsedVar(wVars))
@@ -149,7 +149,7 @@ statementRange getRange(statementPos stPos, vector<statement *> stmts)
       assignment *asgn = arg->getAssignExpr();
       Expression *expr = asgn->getExpr();
 
-      usedVars.merge(getVarsExpr(expr));
+      usedVars.merge(analyserUtils::getVarsExpr(expr));
       usedVars.addVariable(asgn->getId(), WRITE);
     }
   }

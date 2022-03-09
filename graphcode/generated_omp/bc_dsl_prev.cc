@@ -1,28 +1,31 @@
-#include"bc_dslV2.h"
+#include"bc_dsl_prev.h"
 
-void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
+void Compute_BC_prev(graph& g,double* BC,std::set<int>& sourceSet)
 {
   #pragma omp parallel for
   for (int t = 0; t < g.num_nodes(); t ++) 
   {
     BC[t] = 0;
   }
+  double* sigma=new double[g.num_nodes()];
+  double* delta=new double[g.num_nodes()];
   std::set<int>::iterator itr;
   for(itr=sourceSet.begin();itr!=sourceSet.end();itr++)
   {
     int src = *itr;
-    double* sigma=new double[g.num_nodes()];
-    int* bfsDist=new int[g.num_nodes()];
-    float* delta=new float[g.num_nodes()];
     #pragma omp parallel for
     for (int t = 0; t < g.num_nodes(); t ++) 
     {
       delta[t] = 0;
       bfsDist[t] = -1;
+    }
+    #pragma omp parallel for
+    for (int t = 0; t < g.num_nodes(); t ++) 
+    {
       sigma[t] = 0;
     }
-    bfsDist[src] = 0;
     sigma[src] = 1;
+    bfsDist[src] = 0;
     std::vector<std::vector<int>> levelNodes(g.num_nodes()) ;
     std::vector<std::vector<int>>  levelNodes_later(omp_get_max_threads()) ;
     std::vector<int>  levelCount(g.num_nodes()) ;
@@ -87,6 +90,7 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
       }
       phase = phase - 1 ;
     }
+    int* bfsDist=new int[g.num_nodes()];
   }
 
 }
