@@ -238,7 +238,10 @@ void dsl_cpp_generator::generateStatement(statement* stmt)
         main.pushstr_newL(";");
         
     }
-
+    if(stmt->getTypeofNode()==NODE_BARRIERSTMT)
+    {
+      generateBarrier();
+    }
 
 }
 
@@ -1595,7 +1598,10 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct)
      main.pushstr_newL("}");
 }
 
-
+void dsl_cpp_generator::generateBarrier()
+{
+  main.pushstr_newL("#pragma omp barrier");
+}
 
 void dsl_cpp_generator::generateBlock(blockStatement* blockStmt,bool includeBrace)
 {  

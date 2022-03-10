@@ -1860,10 +1860,10 @@ class reductionCallStmt:public statement
 
 class barrierStmt:public statement
 {
-  private:
   public:
   barrierStmt()
   {
+    typeofNode=NODE_BARRIERSTMT;
   }
 
   static barrierStmt *nodeForBarrier()

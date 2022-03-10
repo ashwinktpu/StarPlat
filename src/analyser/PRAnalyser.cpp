@@ -95,7 +95,8 @@ void PRAnalyser::analyseForAll(forallStmt *stmt)
                             // TODO: Add a barrier
                             // cout << "barrier needed" << endl;
                             barrierStmt *barrier = barrierStmt::nodeForBarrier();
-                            blockStmt->insertToBlock(barrier, count);
+                            //blockStmt->insertToBlock(barrier, count);
+                            cout << "kekw" << endl;
                         }
                     }
                 }

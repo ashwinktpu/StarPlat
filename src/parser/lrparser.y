@@ -419,7 +419,7 @@ int main(int argc,char **argv)
    }
    else
     {
-		if(!(strcmp(backendTarget,"omp")==0)||(strcmp(backendTarget,"mpi")==0)||(strcmp(backendTarget,"cuda")==0))
+		if((strcmp(backendTarget,"omp")==0)||!(strcmp(backendTarget,"mpi")==0)||(strcmp(backendTarget,"cuda")==0))
 		   {
               // printf("Specified backend target is not implemented in the current version!\n");
 			  fprintf(stderr, "Specified backend target is not implemented in the current version!\n");

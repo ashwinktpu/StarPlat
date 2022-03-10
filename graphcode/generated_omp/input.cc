@@ -9,12 +9,6 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
   {
     pageRank[t] = 1 / num_nodes;
   }
-  float* pR=new float[g.num_nodes()];
-  #pragma omp parallel for
-  for (int t = 0; t < g.num_nodes(); t ++) 
-  {
-    pR[t] = 0;
-  }
   int iterCount = 0;
   float diff = 0.0 ;
   do
@@ -30,7 +24,8 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
       }
       float val = (1 - delta) / num_nodes + delta * sum;
       diff = diff+ val - pageRank[v];
-      pR[v] = val;
+      #pragma omp barrier
+      pageRank[v] = val;
     }
     iterCount++;
   }
