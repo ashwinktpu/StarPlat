@@ -3,8 +3,6 @@
 bool deviceVarsAnalyser::initBlock(blockStatement *blockStmt, list<Identifier *> &vars)
 {
     ASTNodeWrap *blockNode = initWrapNode(blockStatement, vars);
-    blockNode->inMap.setType(lattice::CPU_Preferenced);
-    blockNode->outMap.setType(lattice::CPU_Preferenced);
 
     bool hasForAll = false;
     int localCount = 0;
@@ -69,21 +67,13 @@ bool deviceVarsAnalyser::initStatement(statement *stmt, list<Identifier *> &vars
 bool deviceVarsAnalyser::initUnary(u4nary_stmt *stmt, list<Identifier *> &vars)
 {
     ASTNodeWrap* stmtNode = initWrapNode(stmt, vars);
-    stmtNode->inMap.setType(lattice::CPU_Preferenced);
-    stmtNode->outMap.setType(lattice::CPU_Preferenced);
-
     return false;
 }
 bool deviceVarsAnalyser::initIfElse(ifStmt *stmt, list<Identifier *> &vars)
 {
     ASTNodeWrap* stmtWrap = initWrapNode(stmt, vars);
-    stmtWrap->inMap.setType(lattice::CPU_Preferenced);
-    stmtWrap->outMap.setType(lattice::GPU_Preferenced);
-
     ASTNodeWrap* condWrap = initWrapNode(stmt, vars);
-    stmtWrap->inMap.setType(lattice::CPU_Preferenced);
-    stmtWrap->outMap.setType(lattice::GPU_Preferenced);
-
+   
     bool hasForAll = false;
     hasForAll |= initStatement(stmt->getIfBody());
     if(stmt->getElseBody() != nullptr)
@@ -94,83 +84,52 @@ bool deviceVarsAnalyser::initIfElse(ifStmt *stmt, list<Identifier *> &vars)
 bool deviceVarsAnalyser::initAssignment(assignment *stmt, list<Identifier *> &vars)
 {
     ASTNodeWrap* stmtNode = initWrapNode(stmt, vars);
-    stmtNode->inMap.setType(lattice::CPU_Preferenced);
-    stmtNode->outMap.setType(lattice::CPU_Preferenced);
-
     return false;
 }
 bool deviceVarsAnalyser::initDeclaration(declaration *stmt, list<Identifier *> &vars)
 {
     ASTNodeWrap* stmtNode = initWrapNode(stmt, vars);
-    stmtNode->inMap.setType(lattice::CPU_Preferenced);
-    stmtNode->outMap.setType(lattice::CPU_Preferenced);
-
     stmtNode->outMap.addVariable(stmt->getdeclId(), lattice::NOT_INITIALIZED);
     return false;
 }
 bool deviceVarsAnalyser::initForAll(forallStmt *stmt, list<Identifier *> &vars)
 {
     ASTNodeWrap* stmtNode = initWrapNode(stmt, vars);
-    stmtNode->inMap.setType(lattice::CPU_Preferenced);
-    stmtNode->outMap.setType(lattice::CPU_Preferenced);
-
     return true;
 }
 bool deviceVarsAnalyser::initWhile(whileStmt *stmt, list<Identifier *> &vars)
 {
     ASTNodeWrap* stmtNode = initWrapNode(stmt, vars);
-    stmtNode->inMap.setType(lattice::CPU_Preferenced);
-    stmtNode->outMap.setType(lattice::CPU_Preferenced);
-
     ASTNodeWrap* condNode = initWrapNode(stmt->getCondition(), vars);
     bool hasForAll = initStatement(stmt->getBody());
-
-    if(hasForAll)
-        condNode->inMap.setType(lattice::GPU_Preferenced);
-    else
-        condNode->inMap.setType(lattice::CPU_Preferenced);
-    condNode->outMap.setType(lattice::CPU_Preferenced);
+    condNode->hasForAll = hasForAll;
 
     return hasForAll;
 }
 bool deviceVarsAnalyser::initDoWhile(dowhileStmt *stmt, list<Identifier *> &vars)
 {
     ASTNodeWrap* stmtNode = initWrapNode(stmt, vars);
-    stmtNode->outMap.setType(lattice::CPU_Preferenced);
-
     ASTNodeWrap* condNode = initWrapNode(stmt->getCondition(), vars);
-    condNode->inMap.setType(lattice::CPU_Preferenced);
-    condNode->outMap.setType(lattice::CPU_Preferenced);
-
+ 
     bool hasForAll = initWrapNode(stmt->getBody(), vars);
-    if(hasForAll)
-        stmtNode->inMap.setType(lattice::GPU_Preferenced);
-    else
-        stmtNode->inMap.setType(lattice::CPU_Preferenced);
+    stmtNode->hasForAll = hasForAll;
 
     return hasForAll;
 }
 bool deviceVarsAnalyser::initFor(forallStmt *stmt, list<Identifier *> &vars)
 {
     ASTNodeWrap *stmtNode = initWrapNode(stmt, vars);
-    stmtNode->outMap.setType(lattice::CPU_Preferenced);
 
     if(stmt->hasFilterExpr())
     {
         Expression* filterExpr = stmt->getfilterExpr();
         ASTNodeWrap *condNode = initWrapNode(filterExpr, vars);
-        condNode->inMap.setType(lattice::CPU_Preferenced);
-        condNode->outMap.setType(lattice::CPU_Preferenced);
     }
 
     vars.push_back(stmt->getIterator());
     bool hasForAll = initStatement(stmt->getBody());
     vars.pop_back();
 
-    if(hasForAll)
-        stmtNode->inMap.setType(lattice::GPU_Preferenced);
-    else
-        stmtNode->inMap.setType(lattice::CPU_Preferenced);
-
+    stmtNode->hasForAll = hasForAll;
     return hasForAll;
 }
