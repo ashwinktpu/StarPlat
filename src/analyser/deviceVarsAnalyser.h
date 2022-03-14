@@ -29,7 +29,6 @@ public:
 
 private:
   unordered_map<TableEntry*, PointType> typeMap;
-  LatticeType type;
 
 public:
   lattice(){}
@@ -179,6 +178,7 @@ class ASTNodeWrap
   list<ASTNode*> predecessor, successor;
   lattice inMap, outMap;
   ASTNode* currStmt;
+  bool hasForAll;
 };
 
 class deviceVarsAnalyser
@@ -192,7 +192,6 @@ class deviceVarsAnalyser
     wrapNode->inMap = lattice(vars);
     wrapNode->outMap = lattice(vars);
     wrapNode->currStmt = node;
-
     return wrapNode;
   }
 

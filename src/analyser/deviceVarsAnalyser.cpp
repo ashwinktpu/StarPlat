@@ -13,28 +13,26 @@ lattice deviceVarsAnalyser::analyseForAll(forallStmt *stmt, lattice &inMap)
   ASTNodeWrap *wrapNode = getWrapNode(stmt, inMap);
   wrapNode->inMap = inMap;
 
-  lattice outMap = inMap;
-
+  wrapNode->outMap = wrapNode->inMap;
   usedVariables vars = getVarsForAll(stmt);
   for (Identifier *iden : vars.getVariables(READ))
   {
-    outMap.meet(iden, lattice::GPU_READ);
+    wrapNode->outMap.meet(iden, lattice::GPU_READ);
   }
   for (Identifier *iden : vars.getVariables(WRITE))
   {
-    outMap.meet(iden, lattice::GPU_WRITE);
+    wrapNode->outMap.meet(iden, lattice::GPU_WRITE);
   }
 
-  wrapNode->outMap = outMap;
-  return outMap;
+  return wrapNode->outMap;
 }
 
 lattice deviceVarsAnalyser::analyseDeclaration(declaration *stmt, lattice &inMap)
 {
   ASTNodeWrap *wrapNode = getWrapNode(stmt);
-  wrapNode->inMap ^= inMap;
+  wrapNode->inMap = inMap;
 
-  wrapNode->outMap ^= inMap;
+  wrapNode->outMap = inMap;
   if(stmt->isInitialized())
   {
     Expression* expr = stmt->getExpressionAssigned();
@@ -57,8 +55,8 @@ lattice deviceVarsAnalyser::analyseAssignment(assignment *stmt, lattice &inMap)
   ASTNodeWrap *wrapNode = getWrapNode(stmt);
   usedVariables usedVars = getVarsAssignment(stmt);
 
-  wrapNode->inMap ^= inMap;
-  wrapNode->outMap ^= inMap;
+  wrapNode->inMap = inMap;
+  wrapNode->outMap = inMap;
 
   for (Identifier *iden : usedVars.getVariables(READ))
   {
@@ -75,7 +73,7 @@ lattice deviceVarsAnalyser::analyseAssignment(assignment *stmt, lattice &inMap)
 lattice deviceVarsAnalyser::analyseWhile(whileStmt *stmt, lattice &inMap)
 {
   ASTNodeWrap *wrapNode = getWrapNode(stmt, inMap);
-  wrapNode->inMap ^= inMap;
+  wrapNode->inMap = inMap;
 
   Expression *cond = stmt->getCondition();
   usedVariables exprVars = seperatePropAccess(analyserUtils::getVarsExpr(cond));
