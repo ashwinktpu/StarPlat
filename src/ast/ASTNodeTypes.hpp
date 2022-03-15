@@ -1964,4 +1964,21 @@ class reductionCallStmt:public statement
 
 
 };
+
+class varTransferStmt : public statement
+{
+  public:
+
+  Identifier* transferVar;
+  bool direction;
+  /* 0 -> CPU to GPU
+    1 -> GPU to CPU
+  */
+
+  varTransferStmt(Identifier* iden, bool dir)
+  {
+    this->transferVar = iden;
+    this->direction = dir;
+  } 
+};
 #endif
