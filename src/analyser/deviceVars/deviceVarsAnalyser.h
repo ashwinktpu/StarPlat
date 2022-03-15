@@ -1,7 +1,7 @@
 #ifndef DEVICE_VARS_ANALYSER
 #define DEVICE_VARS_ANALYSER
 
-#include "../ast/ASTNodeTypes.hpp"
+#include "../../ast/ASTNodeTypes.hpp"
 #include "analyserUtil.cpp"
 #include <unordered_map>
 
@@ -170,6 +170,10 @@ public:
     TableEntry* symbInfo = iden->getSymbolInfo();
     this->typeMap[symbInfo] = type;
   }
+
+  unordered_map<TableEntry*, PointType> getLattice(){
+    return typeMap;
+  }
 };
 
 class ASTNodeWrap
@@ -245,11 +249,18 @@ class deviceVarsAnalyser
   usedVariables getVarsDoWhile(dowhileStmt* stmt);
   usedVariables getVarsAssignment(assignment* stmt);
   usedVariables getVarsIf(ifStmt* stmt);
-  //usedVariables getVarsFixedPoint(fixedPointStmt* stmt);
-  //usedVariables getVarsReduction(reductionCallStmt* stmt);
-  //usedVariables getVarsBFS(iterateBFS* stmt);
   usedVariables getVarsExpr(Expression* stmt);
-  //usedVariables getVarsProcCall(proc_callStmt* stmt);
+
+  statement* transferVarsStatement(statement* stmt,blockStatement* parBlock);
+  statement* transferVarsForAll(forallStmt* stmt,blockStatement* parBlock);
+  statement* transferVarsUnary(unary_stmt* stmt,blockStatement* parBlock);
+  statement* transferVarsBlock(blockStatement* stmt,blockStatement* parBlock);
+  statement* transferVarsDeclaration(declaration* stmt,blockStatement* parBlock);
+  statement* transferVarsWhile(whileStmt* stmt,blockStatement* parBlock);
+  statement* transferVarsDoWhile(dowhileStmt* stmt,blockStatement* parBlock);
+  statement* transferVarsAssignment(assignment* stmt,blockStatement* parBlock);
+  statement* transferVarsIf(ifStmt* stmt,blockStatement* parBlock);
+  statement* transferVarsExpr(Expression* stmt,blockStatement* parBlock);
 };
 
 #endif
