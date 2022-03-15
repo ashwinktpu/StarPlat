@@ -32,6 +32,9 @@
         "istream": "cpp",
         "array": "cpp",
         "tuple": "cpp",
-        "type_traits": "cpp"
+        "type_traits": "cpp",
+        "*.tcc": "cpp",
+        "limits": "cpp",
+        "optional": "cpp"
     }
 }

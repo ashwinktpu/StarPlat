@@ -220,8 +220,8 @@ lattice deviceVarsAnalyser::analyseIfElse(ifStmt *stmt, lattice &inMap)
   else
     wrapNode->inMap = ifOut ^ condNode->outMap;
 
-  stmtWrap->outMap = stmtWrap->inMap;
-  return stmtWrap->outMap;
+  wrapNode->outMap = stmtWrap->inMap;
+  return wrapNode->outMap;
 }
 
 lattice deviceVarsAnalyser::analyseUnary(unary_stmt *stmt, lattice &inMap)
