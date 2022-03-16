@@ -1,4 +1,4 @@
-function Compute_SSSP (Graph g,propNode<int> dist, node src)
+function Compute_SSSP (Graph g,propNode<int> dist, propEdge<int> weight, node src)
 {
      
 propNode <bool> modified;
