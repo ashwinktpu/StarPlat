@@ -334,6 +334,18 @@ class graph
        
     }
 
+  std::vector<update> getDeletesFromBatch(int updateIndex, int batchSize, std::vector<update> updateVec)
+  {
+    std::vector<update> deleteVec = getDeletions(updateIndex, batchSize, updateVec);
+    return deleteVec;
+  }  
+  
+  std::vector<update> getAddsFromBatch(int updateIndex, int batchSize, std::vector<update> updateVec)
+  {
+    std::vector<update> addVec = getAdditions(updateIndex, batchSize, updateVec);
+    return addVec;
+    
+  }
 
    void parseEdges()
    {
@@ -549,7 +561,7 @@ class graph
  /******************************|| Dynamic Graph Libraries ||********************************/
 
 
- void updateCSR_Del(std::vector<update>& batchUpdate, int k, int size)
+ void updateCSRDel(std::vector<update>& batchUpdate, int k, int size)
   {
     int num_nodes = nodesTotal + 1;
     std::vector<std::pair<int,int>> perNodeUpdateInfo;
@@ -610,7 +622,7 @@ class graph
   }
 
 
- void updateCSR_Add(std::vector<update>& batchUpdate, int k, int size)
+ void updateCSRAdd(std::vector<update>& batchUpdate, int k, int size)
   {
     int num_nodes = nodesTotal + 1;
 

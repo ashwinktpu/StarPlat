@@ -21,10 +21,10 @@ bin/SymbolTableNew.o: symbolutil/SymbolTableNew.cpp  symbolutil/SymbolTable.h
 
 
 
-bin/dsl_dyn_cpp_generator.o:  backends/backend_omp/dsl_dyn_cpp_generator.cpp  backends/dslCodePad.h
+bin/dsl_dyn_cpp_generator.o:  backends/backend_omp/dsl_dyn_cpp_generator.cpp backends/backend_omp/dsl_dyn_cpp_generator.hpp backends/dslCodePad.h
 	$(CC) -c  backends/backend_omp/dsl_dyn_cpp_generator.cpp -o bin/dsl_dyn_cpp_generator.o
 
-bin/dsl_cpp_generator.o:  backends/backend_omp/dsl_cpp_generator.cpp  backends/dslCodePad.h
+bin/dsl_cpp_generator.o:  backends/backend_omp/dsl_cpp_generator.cpp backends/dslCodePad.h
 	$(CC) -c  backends/backend_omp/dsl_cpp_generator.cpp -o bin/dsl_cpp_generator.o
 
 

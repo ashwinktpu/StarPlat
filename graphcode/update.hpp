@@ -68,3 +68,35 @@ class update
      return updates;
     }
 
+    std::vector<update> getDeletions(int updateIndex, int batchSize, std::vector<update>& updateVec)
+     {
+       std::vector<update> deletions ;
+       for(int batchIndex = updateIndex ; batchIndex < (updateIndex+batchSize) && batchIndex < updateVec.size() ; batchIndex++)
+          {   
+            update u = updateVec[batchIndex];
+               if(u.type == 'd')
+                 deletions.push_back(u);
+
+          }
+      
+       return deletions;
+
+     }
+
+   std::vector<update> getAdditions(int updateIndex, int batchSize, std::vector<update> updateVec)
+     {
+       std::vector<update> additions ;
+       for(int batchIndex = updateIndex ; batchIndex < (updateIndex+batchSize) && batchIndex < updateVec.size() ; batchIndex++)
+          {   
+            update u = updateVec[batchIndex];
+               if(u.type == 'a')
+                 additions.push_back(u);
+
+          }
+      
+       return additions;
+
+     }
+
+
+

@@ -54,8 +54,10 @@ int FrontEndContext::getCurrentFuncType()
           genFuncCount++;
      else if(funcType==INCREMENTAL_FUNC)
           inFuncCount++;
-     else
-        decFuncCount++;             
+     else if(funcType==DECREMENTAL_FUNC)
+           decFuncCount++;  
+     else if(funcType == DYNAMIC_FUNC)
+         dynFuncCount++;                      
 
 
 
@@ -71,10 +73,12 @@ int FrontEndContext::getCurrentFuncType()
                 count = staticFuncCount;
           else if(funcType == INCREMENTAL_FUNC)
                  count = inFuncCount;         
-          else
-              count = decFuncCount;
+          else if(funcType == DECREMENTAL_FUNC)
+                 count = decFuncCount;
+          else if(funcType == DYNAMIC_FUNC)
+              count = dynFuncCount;       
 
         return count;
-
-
       }
+
+  

@@ -114,6 +114,7 @@ enum FUNCTYPE
   STATIC_FUNC,
   INCREMENTAL_FUNC,
   DECREMENTAL_FUNC,
+  DYNAMIC_FUNC,
   
 };
 
@@ -142,6 +143,9 @@ enum NODETYPE
   NODE_REDUCTIONCALLSTMT,
   NODE_UNARYSTMT,
   NODE_RETURN,
+  NODE_BATCHBLOCKSTMT,
+  NODE_ONADDBLOCK,
+  NODE_ONDELETEBLOCK
 };
 
 
@@ -162,4 +166,14 @@ enum EXPR
    EXPR_PROCCALL,
    EXPR_DEPENDENT,
 };
+static const char *currentBatch = "currentBatch";
+static const char *attachNodeCall = "attachNodeProperty";
+static const char *attachEdgeCall = "attachEdgeProperty" ;
+static const char* nbrCall = "neighbors" ;
+static const char* edgeCall   = "get_edge" ;
+static const char* countOutNbrCall = "count_outNbrs";
+static const char* isAnEdgeCall = "is_an_edge"; 
+static const char* nodesToCall = "nodes_to";
+static const char* nodesCall = "nodes";
+
 #endif

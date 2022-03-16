@@ -50,6 +50,13 @@ NEGATE [-]
 "Incremental"   {printf("incremental"); return T_INCREMENTAL;}
 "Decremental"   {printf("decremental"); return T_DECREMENTAL;}
 "Static"        {printf("static"); return T_STATIC;}
+"Dynamic"       {printf("dynamic"); return T_DYNAMIC ;}
+"Batch"         {printf("batch"); return T_BATCH ;} 
+"OnDelete"      {printf("Ondelete") ; return T_ONDELETE;}
+"OnAdd"      {printf("Onadd") ; return T_ONADD;}
+ 
+
+
 "+="					{ printf ("ADD_ASSIGN "); return T_ADD_ASSIGN;}
 "-="					{ printf ("SUB_ASSIGN"); return T_SUB_ASSIGN;}
 "*="					{ printf ( "MUL_ASSIGN"); return T_MUL_ASSIGN;}

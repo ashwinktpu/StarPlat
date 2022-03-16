@@ -256,7 +256,6 @@ void dsl_cpp_generator::generateStatement(statement* stmt)
          main.pushstr_newL(";");
        }
 
-
 }
 
 void dsl_cpp_generator::generateReductionCallStmt(reductionCallStmt* stmt)
@@ -476,12 +475,19 @@ void dsl_cpp_generator::generateReductionCallStmt(reductionCallStmt* stmt)
                       main.pushstr_newL(";");  
                    }
                 } 
-                if(affected_Id->getSymbolInfo()->getId()->get_fp_association())
+
+
+                if(node->getTypeofNode()==NODE_PROPACCESS && affected_Id->getSymbolInfo()->getId()->get_fp_association() )
+                  {
+                    generateFixedPointUpdate((PropAccess*)node);
+                  } 
+                
+               /* if(affected_Id->getSymbolInfo()->getId()->get_fp_association())
                   {
                     char* fpId=affected_Id->getSymbolInfo()->getId()->get_fpId();
                     sprintf(strBuffer,"%s = %s ;",fpId,"false");
                     main.pushstr_newL(strBuffer);
-                  } 
+                  } */
 
             }
 
@@ -585,8 +591,67 @@ void dsl_cpp_generator::findTargetGraph(vector<Identifier*> graphTypes,Type* typ
 }
 
 
+bool dsl_cpp_generator::checkFixedPointAssociation(PropAccess* propId)
+{
+  char strBuffer[1024];
+    Identifier* id2 = propId->getIdentifier2();
+    Expression* fpExpr = id2->getSymbolInfo()->getId()->get_dependentExpr();
+    Identifier* depPropId = NULL;
+    if(fpExpr->getExpressionFamily()==EXPR_UNARY)
+              {
+                if(fpExpr->getUnaryExpr()->getExpressionFamily()==EXPR_ID)
+                  {
+                     depPropId = fpExpr->getUnaryExpr()->getId();
+                  }
+              }
+          else if(fpExpr->getExpressionFamily() == EXPR_ID)
+             {
+                 depPropId = fpExpr->getId();
+             }
+       
+     if(fixedPointEnv != NULL)
+        {
+           Expression* dependentPropExpr = fixedPointEnv->getDependentProp();
+           Identifier* dependentPropId = NULL; 
+          if(dependentPropExpr->getExpressionFamily()==EXPR_UNARY)
+              {
+                if(dependentPropExpr->getUnaryExpr()->getExpressionFamily()==EXPR_ID)
+                  {
+                     dependentPropId = dependentPropExpr->getUnaryExpr()->getId();
+                  }
+              }
+          else if(dependentPropExpr->getExpressionFamily() == EXPR_ID)
+             {
+                 dependentPropId = dependentPropExpr->getId();
+             }
+             
+          
+            string fpStmtProp(depPropId->getIdentifier());
+            string dependentPropString(dependentPropId->getIdentifier());
+            if(fpStmtProp == dependentPropString)
+             {
+               return true;
+             }
+        }
+
+        return false;
+}
+
+void dsl_cpp_generator::generateFixedPointUpdate(PropAccess* propId)
+  {
+     char strBuffer[1024];
+     Identifier* id2 = propId->getIdentifier2();
+     if(checkFixedPointAssociation(propId))
+        {
+           sprintf(strBuffer,"%s = %s ;",id2->getSymbolInfo()->getId()->get_fpId(),"false");
+           main.pushstr_newL(strBuffer);
+        }
+
+  }
+
 void dsl_cpp_generator::generateAssignmentStmt(assignment* asmt)
 {  
+   char strBuffer[1024];
    Expression* exprAssigned = asmt->getExpr();
    vector<Identifier*> graphIds = graphId[curFuncType][curFuncCount()];
 
@@ -623,11 +688,9 @@ void dsl_cpp_generator::generateAssignmentStmt(assignment* asmt)
              main.pushstr_newL("#pragma omp atomic");
            
       }
-     main.pushString(propId->getIdentifier2()->getIdentifier());
-     main.push('[');
-     main.pushString(propId->getIdentifier1()->getIdentifier());
-     main.push(']');
-     
+
+      generate_exprPropId(propId);
+
   }
    
    if(!asmt->hasPropCopy())
@@ -635,9 +698,19 @@ void dsl_cpp_generator::generateAssignmentStmt(assignment* asmt)
    main.pushString(" = ");
    generateExpr(asmt->getExpr());
    main.pushstr_newL(";");
-   }
-   
-   
+   if(asmt->lhs_isProp())
+      {
+        PropAccess* propId = asmt->getPropId();
+         /* this is executed when there is an update on property associated with fixedpoint */
+        Identifier* id2 = propId->getIdentifier2();
+        if(id2->getSymbolInfo()!=NULL && id2->getSymbolInfo()->getId()->get_fp_association())
+          {
+              generateFixedPointUpdate(propId);
+          }
+
+      }
+
+   }   
 
 }
 
@@ -647,9 +720,12 @@ void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt)
    proc_callExpr* procedure=proc_callStmt->getProcCallExpr();
   // cout<<"FUNCTION NAME"<<procedure->getMethodId()->getIdentifier();
    string methodID(procedure->getMethodId()->getIdentifier());
-   string IDCoded("attachNodeProperty");
-   int x=methodID.compare(IDCoded);
-   if(x==0)
+   string nodeCall("attachNodeProperty");
+   string edgeCall("attachEdgeProperty");
+   int compareVal = methodID.compare(nodeCall);
+   int compareVal1 = methodID.compare(edgeCall);
+
+   if(compareVal == 0)
        {  
          // cout<<"MADE IT TILL HERE";
           char strBuffer[1024];
@@ -657,6 +733,40 @@ void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt)
           list<argument*>::iterator itr;
           main.pushstr_newL("#pragma omp parallel for");
           sprintf(strBuffer,"for (%s %s = 0; %s < %s.%s(); %s ++) ","int","t","t",procedure->getId1()->getIdentifier(),"num_nodes","t");
+          main.pushstr_newL(strBuffer);
+          main.pushstr_newL("{");
+          for(itr=argList.begin();itr!=argList.end();itr++)
+              { 
+                assignment* assign=(*itr)->getAssignExpr();
+                Identifier* lhsId=assign->getId();
+                Expression* exprAssigned = assign->getExpr();
+                sprintf(strBuffer,"%s[%s] = ",lhsId->getIdentifier(),"t");
+                main.pushString(strBuffer);
+                generateExpr(exprAssigned);
+
+                main.pushstr_newL(";");
+
+                if(lhsId->getSymbolInfo()->getId()->require_redecl())
+                   {
+                     sprintf(strBuffer,"%s_nxt[%s] = ",lhsId->getIdentifier(),"t");
+                     main.pushString(strBuffer);
+                     generateExpr(exprAssigned);
+                     main.pushstr_newL(";");
+                   }
+                
+              }
+             
+        main.pushstr_newL("}");
+
+       }
+       else if(compareVal1 == 0)
+          {
+          
+          char strBuffer[1024];
+          list<argument*> argList=procedure->getArgList();
+          list<argument*>::iterator itr;
+          main.pushstr_newL("#pragma omp parallel for");
+          sprintf(strBuffer,"for (%s %s = 0; %s < %s.%s(); %s ++) ","int","t","t",procedure->getId1()->getIdentifier(),"num_edges","t");
           main.pushstr_newL(strBuffer);
           main.pushstr_newL("{");
           for(itr=argList.begin();itr!=argList.end();itr++)
@@ -682,14 +792,20 @@ void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt)
              
         main.pushstr_newL("}");
 
-       }
+            }
+       else {
+              generate_exprProcCall(procedure);
+              main.pushstr_newL(";");
+              main.NewLine();
+            }
 }
 
 void dsl_cpp_generator::generatePropertyDefination(Type* type,char* Id)
 { 
   Type* targetType=type->getInnerTargetType();
   vector<Identifier*> graphIds = graphId[curFuncType][curFuncCount()];
-
+  printf("currentFuncType %d\n",curFuncType);
+  printf("currentFuncCount %d graphIds[0] %d\n",curFuncCount(), graphIds.size());
 
   if(targetType->gettypeId()==TYPE_INT)
   {
@@ -706,18 +822,24 @@ void dsl_cpp_generator::generatePropertyDefination(Type* type,char* Id)
     else
     { 
       
-      Identifier* id=graphIds[0];
+      Identifier* id = graphIds[0];
      
       type->setTargetGraph(id);
     }
      char strBuffer[100];
-     sprintf(strBuffer,"%s.%s()",type->getTargetGraph()->getIdentifier(),"num_nodes");
+     if(type->gettypeId() == TYPE_PROPNODE)
+       sprintf(strBuffer,"%s.%s()",type->getTargetGraph()->getIdentifier(),"num_nodes");
+     else
+       sprintf(strBuffer,"%s.%s()",type->getTargetGraph()->getIdentifier(),"num_edges");
+        
      main.pushString(strBuffer);
      main.pushString("]");
      main.pushstr_newL(";");
   }
-  if(targetType->gettypeId()==TYPE_BOOL)
+  if(targetType->gettypeId() == TYPE_BOOL)
   {
+
+ 
      main.pushString("=");
      main.pushString(BOOLALLOCATION);
      main.pushString("[");
@@ -727,14 +849,18 @@ void dsl_cpp_generator::generatePropertyDefination(Type* type,char* Id)
       cerr<<"TargetGraph can't match";
     }
     else
-    { 
-      
-      Identifier* id=graphIds[0];
-     
+    {    
+      Identifier* id = graphIds[0];
+      printf("Inside Boolean Target \n");
       type->setTargetGraph(id);
     }
      char strBuffer[100];
-     sprintf(strBuffer,"%s.%s()",type->getTargetGraph()->getIdentifier(),"num_nodes");
+
+     if(type->gettypeId() == TYPE_PROPNODE)
+       sprintf(strBuffer,"%s.%s()",type->getTargetGraph()->getIdentifier(),"num_nodes");
+     else
+        sprintf(strBuffer,"%s.%s()",type->getTargetGraph()->getIdentifier(),"num_edges");
+
      main.pushString(strBuffer);
      main.pushString("]");
      main.pushstr_newL(";");
@@ -758,7 +884,11 @@ void dsl_cpp_generator::generatePropertyDefination(Type* type,char* Id)
       type->setTargetGraph(id);
     }
      char strBuffer[100];
-     sprintf(strBuffer,"%s.%s()",type->getTargetGraph()->getIdentifier(),"num_nodes");
+     if(type->gettypeId() == TYPE_PROPNODE)
+       sprintf(strBuffer,"%s.%s()",type->getTargetGraph()->getIdentifier(),"num_nodes");
+     else
+       sprintf(strBuffer,"%s.%s()",type->getTargetGraph()->getIdentifier(),"num_edges");
+
      main.pushString(strBuffer);
      main.pushString("]");
      main.pushstr_newL(";");
@@ -782,7 +912,11 @@ void dsl_cpp_generator::generatePropertyDefination(Type* type,char* Id)
       type->setTargetGraph(id);
     }
      char strBuffer[100];
-     sprintf(strBuffer,"%s.%s()",type->getTargetGraph()->getIdentifier(),"num_nodes");
+     if(TYPE_PROPNODE)
+       sprintf(strBuffer,"%s.%s()",type->getTargetGraph()->getIdentifier(),"num_nodes");
+     else
+       sprintf(strBuffer,"%s.%s()",type->getTargetGraph()->getIdentifier(),"num_edges");
+
      main.pushString(strBuffer);
      main.pushString("]");
      main.pushstr_newL(";");
@@ -1032,34 +1166,56 @@ blockStatement* dsl_cpp_generator::includeIfToBlock(forallStmt* forAll)
   
 }
 
+void dsl_cpp_generator::checkAndGenerateFixedPtFilter(forallStmt* forAll)
+{
+
+       Expression* filterExpr = NULL;
+        if(forAll->hasFilterExpr())
+         filterExpr = forAll->getfilterExpr();
+        else
+          filterExpr = forAll->getAssocExpr(); 
+        if(fixedPointEnv!=NULL)  
+           generatefixedpt_filter(filterExpr);
+   
+
+
+}
+
 void dsl_cpp_generator::generateForAll(forallStmt* forAll)
 { 
    proc_callExpr* extractElemFunc=forAll->getExtractElementFunc();
    PropAccess* sourceField=forAll->getPropSource();
    Identifier* sourceId = forAll->getSource();
-   //Identifier* extractId;
-    Identifier* collectionId;
-    if(sourceField!=NULL)
+   Identifier* collectionId;
+
+   if(sourceField!=NULL)
       {
         collectionId=sourceField->getIdentifier1();
         
       }
-    if(sourceId!=NULL)
+   if(sourceId!=NULL)
      {
         collectionId=sourceId;
        
      }  
+
     Identifier* iteratorMethodId;
     if(extractElemFunc!=NULL)
      iteratorMethodId=extractElemFunc->getMethodId();
     statement* body=forAll->getBody();
      char strBuffer[1024];
+
   if(forAll->isForall())
   { 
-    if(forAll->hasFilterExpr())
-     {
-        Expression* filterExpr=forAll->getfilterExpr();
-        Expression* lhs=filterExpr->getLeft();
+    if(forAll->hasFilterExpr() || forAll->hasFilterExprAssoc())
+     {  
+        Expression* filterExpr = NULL;
+        if(forAll->hasFilterExpr())
+           filterExpr = forAll->getfilterExpr();
+        else
+           filterExpr = forAll->getAssocExpr();   
+
+        Expression* lhs = filterExpr->getLeft();
         Identifier* filterId=lhs->isIdentifierExpr()?lhs->getId():NULL;
         TableEntry* tableEntry=filterId!=NULL?filterId->getSymbolInfo():NULL;
          if(tableEntry!=NULL&&tableEntry->getId()->get_fp_association())
@@ -1071,23 +1227,22 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll)
              else
              {
                 generateForAll_header(forAll);
-             }
-
-          
+             }    
      }
      else
       generateForAll_header(forAll);
+
+     // parallelConstruct.push_back(forAll);
   }
 
   generateForAllSignature(forAll);
+
 
   if(forAll->hasFilterExpr())
   { 
 
     blockStatement* changedBody=includeIfToBlock(forAll);
-   // cout<<"CHANGED BODY TYPE"<<(changedBody->getTypeofNode()==NODE_BLOCKSTMT);
     forAll->setBody(changedBody);
-   // cout<<"FORALL BODY TYPE"<<(forAll->getBody()->getTypeofNode()==NODE_BLOCKSTMT);
   }
    
   if(extractElemFunc!=NULL)
@@ -1138,12 +1293,11 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll)
      
   }
 
-  if(forAll->isForall()&&forAll->hasFilterExpr())
-       { 
-        Expression* filterExpr=forAll->getfilterExpr();
-        generatefixedpt_filter(filterExpr);
-      
-       } 
+ if(forAll->isForall() && (forAll->hasFilterExpr() || forAll->hasFilterExprAssoc()))
+     { 
+
+           checkAndGenerateFixedPtFilter(forAll);   
+     }
    
     forallStack.pop_back();
    
@@ -1191,16 +1345,16 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll)
     }
 
     
-    if(forAll->isForall()&&forAll->hasFilterExpr())
+  if(forAll->isForall() && (forAll->hasFilterExpr() || forAll->hasFilterExprAssoc()))
      { 
-        Expression* filterExpr=forAll->getfilterExpr();
-        generatefixedpt_filter(filterExpr);
+         
+       checkAndGenerateFixedPtFilter(forAll);
       
      }
 
 
   }
-   
+
   
 } 
 
@@ -1217,8 +1371,8 @@ void dsl_cpp_generator::generatefixedpt_filter(Expression* filterExpr)
 
   if(lhs->isIdentifierExpr())
     {
-      Identifier* filterId=lhs->getId();
-      TableEntry* tableEntry=filterId->getSymbolInfo();
+      Identifier* filterId = lhs->getId();
+      TableEntry* tableEntry = filterId->getSymbolInfo();
       if(tableEntry->getId()->get_fp_association())
         {    
           
@@ -1306,6 +1460,11 @@ void dsl_cpp_generator:: generateVariableDecl(declaration* declStmt)
       
       
      }
+
+      if(insideBatchBlock)   /* the properties are malloced, so they need 
+                                    to be freed to manage memory.*/
+             freeIdStore.push_back(declStmt->getdeclId());
+             
    }
    else if(type->isPrimitiveType())
    { 
@@ -1343,13 +1502,30 @@ void dsl_cpp_generator:: generateVariableDecl(declaration* declStmt)
           if(declStmt->isInitialized())
            {
               main.pushString(" = ");
-             generateExpr(declStmt->getExpressionAssigned());
-             main.pushstr_newL(";");
+              generateExpr(declStmt->getExpressionAssigned());
+              main.pushstr_newL(";");
            }
+         
+
         }
+    else if(type->isCollectionType())
+         {
+           if(type->gettypeId() == TYPE_UPDATES)
+             {
+                main.pushstr_space(convertToCppType(type));
+                main.pushString(declStmt->getdeclId()->getIdentifier());
+                if(declStmt->isInitialized())
+                   {
+                      main.pushString(" = ");
+                      generateExpr(declStmt->getExpressionAssigned());
+                      main.pushstr_newL(";");
 
+                   }  
 
-
+                if(insideBatchBlock)
+                   freeIdStore.push_back(declStmt->getdeclId());   
+             }
+         }   
 }
 
 void dsl_cpp_generator::generate_exprLiteral(Expression* expr)
@@ -1625,14 +1801,14 @@ void dsl_cpp_generator::getEdgeTranslation(Expression* expr)
               {
               if(elementFuncId=="neighbors")
                {
-                if(curFuncType == INCREMENTAL_FUNC || curFuncType == DECREMENTAL_FUNC) 
+                if(curFuncType == INCREMENTAL_FUNC || curFuncType == DECREMENTAL_FUNC || curFuncType == DYNAMIC_FUNC) 
                   sprintf(strBuffer,"%s_edge",sourceNode->getIdentifier());
                 else
                   sprintf(strBuffer,"edge");  
                }
               else 
                 {
-                  if(curFuncType == INCREMENTAL_FUNC || curFuncType == DECREMENTAL_FUNC) 
+                  if(curFuncType == INCREMENTAL_FUNC || curFuncType == DECREMENTAL_FUNC || curFuncType == DYNAMIC_FUNC) 
                      sprintf(strBuffer,"%s_inedge",sourceNode->getIdentifier());
                   else
                    sprintf(strBuffer,"edge");     
@@ -1647,7 +1823,7 @@ void dsl_cpp_generator::getEdgeTranslation(Expression* expr)
    if(count < 0)
      {
         vector<Identifier*> graphVar = graphId[curFuncType][curFuncCount()];
-       if(curFuncType == INCREMENTAL_FUNC || curFuncType == DECREMENTAL_FUNC) 
+       if(curFuncType == INCREMENTAL_FUNC || curFuncType == DECREMENTAL_FUNC || curFuncType == DYNAMIC_FUNC) 
          {
        
         sprintf(strBuffer,"%s.getEdge(%s,%s)",graphVar[0]->getIdentifier(),srcId->getIdentifier(),destId->getIdentifier());
@@ -1665,6 +1841,31 @@ void dsl_cpp_generator::getEdgeTranslation(Expression* expr)
 
 
 }
+
+void dsl_cpp_generator::generateArgList(list<argument*> argList)
+ {
+
+  char strBuffer[1024]; 
+  main.pushString("(") ;
+  int argListSize = argList.size();
+  int commaCounts = 0;
+  list<argument*>::iterator itr;
+  for(itr=argList.begin();itr!=argList.end();itr++)
+  {
+    commaCounts++;
+    argument* arg = *itr;
+    Identifier* id = arg->getExpr()->getId();
+    sprintf(strBuffer, "%s", id->getIdentifier());
+    main.pushString(strBuffer);
+    
+    if(commaCounts < argListSize)
+       main.pushString(",");
+
+  }
+
+  main.pushString(")");
+
+ }
 
 void dsl_cpp_generator::generate_exprProcCall(Expression* expr)
 {
@@ -1724,10 +1925,22 @@ void dsl_cpp_generator::generate_exprPropId(PropAccess* propId) //This needs to 
   Identifier* id1=propId->getIdentifier1();
   Identifier* id2=propId->getIdentifier2();
   ASTNode* propParent=propId->getParent();
-  bool relatedToReduction = propParent!=NULL?propParent->getTypeofNode()==NODE_REDUCTIONCALLSTMT:false;
-  if(id2->getSymbolInfo()!=NULL&&id2->getSymbolInfo()->getId()->get_fp_association()&&relatedToReduction)
+
+ 
+
+  if(id2->getSymbolInfo()!=NULL&&id2->getSymbolInfo()->getId()->get_fp_association())
     {
-      sprintf(strBuffer,"%s_nxt[%s]",id2->getIdentifier(),id1->getIdentifier());
+       bool relatedToUpdation = propParent!=NULL?((propParent->getTypeofNode() == NODE_REDUCTIONCALLSTMT|| propParent->getTypeofNode() == NODE_ASSIGN) && checkFixedPointAssociation(propId)):false;
+       if(relatedToUpdation)
+           {
+             sprintf(strBuffer,"%s_nxt[%s]",id2->getIdentifier(),id1->getIdentifier());
+          // printf("Inside this checked !\n");
+           }
+       else
+          {
+            sprintf(strBuffer,"%s[%s]",id2->getIdentifier(),id1->getIdentifier());
+          }    
+      
     }
     else
     {
@@ -1738,10 +1951,12 @@ void dsl_cpp_generator::generate_exprPropId(PropAccess* propId) //This needs to 
 }
 
 void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct)
-{ char strBuffer[1024];
-  Expression* convergeExpr=fixedPointConstruct->getDependentProp();
-  Identifier* fixedPointId=fixedPointConstruct->getFixedPointId();
-  statement* blockStmt=fixedPointConstruct->getBody();
+{ 
+  char strBuffer[1024];
+  Expression* convergeExpr = fixedPointConstruct->getDependentProp();
+  Identifier* fixedPointId = fixedPointConstruct->getFixedPointId();
+  statement* blockStmt = fixedPointConstruct->getBody();
+  fixedPointEnv = fixedPointConstruct ;
   assert(convergeExpr->getExpressionFamily()==EXPR_UNARY||convergeExpr->getExpressionFamily()==EXPR_ID);
   main.pushString("while ( ");
   main.push('!');
@@ -1761,7 +1976,7 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct)
   {
     if(convergeExpr->getUnaryExpr()->getExpressionFamily()==EXPR_ID)
     {
-      dependentId=convergeExpr->getUnaryExpr()->getId();
+      dependentId = convergeExpr->getUnaryExpr()->getId();
       isNot=true;
     }
   }
@@ -1805,6 +2020,7 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct)
       }
      }*/
      main.pushstr_newL("}");
+     fixedPointEnv = NULL;
 }
 
 
@@ -1842,8 +2058,11 @@ int dsl_cpp_generator::curFuncCount()
   else if(curFuncType == INCREMENTAL_FUNC)
       count = inFuncCount;
 
-  else
+  else if(curFuncType == DECREMENTAL_FUNC)
       count = decFuncCount;
+
+  else if(curFuncType == DYNAMIC_FUNC)
+      count = dynFuncCount;    
 
   return count; 
 
@@ -1857,11 +2076,23 @@ void dsl_cpp_generator::incFuncCount(int funcType)
        staticFuncCount++;
   else if(funcType == INCREMENTAL_FUNC)
          inFuncCount++;
+  else if(funcType == DECREMENTAL_FUNC)
+         decFuncCount++;  
   else
-      decFuncCount++;            
+     dynFuncCount++;                 
 
 }
 
+
+void dsl_cpp_generator::setCurrentFunc(Function* func)
+ {
+    currentFunc = func;
+ }
+
+Function* dsl_cpp_generator::getCurrentFunc()
+ {
+     return currentFunc;
+ } 
 
 void dsl_cpp_generator::generateFunc(ASTNode* proc)
 {  
@@ -1870,6 +2101,7 @@ void dsl_cpp_generator::generateFunc(ASTNode* proc)
    generateFuncHeader(func,false);
    generateFuncHeader(func,true);
    curFuncType = func->getFuncType();
+   currentFunc = func;
 
    //including locks before hand in the body of function.
     main.pushstr_newL("{");
@@ -1962,7 +2194,7 @@ const char* dsl_cpp_generator:: convertToCppType(Type* type)
   }
   else if(type->isNodeEdgeType())
   {  
-     if(type->isEdgeType() && (curFuncType == INCREMENTAL_FUNC || curFuncType == DECREMENTAL_FUNC))
+     if(type->isEdgeType() && (curFuncType == INCREMENTAL_FUNC || curFuncType == DECREMENTAL_FUNC || curFuncType == DYNAMIC_FUNC))
        return "edge";
      else  
        return "int"; //need to be modified.
@@ -1993,19 +2225,11 @@ const char* dsl_cpp_generator:: convertToCppType(Type* type)
   return "NA";
 }
 
-void dsl_cpp_generator:: generateFuncHeader(Function* proc,bool isMainFile)
-{ 
-  //cout<<"INSIDE THIS VIEW US"<<"\n";
- 
-  dslCodePad& targetFile=isMainFile?main:header;
-  targetFile.pushString("void ");
-  targetFile.pushString(proc->getIdentifier()->getIdentifier());
-  targetFile.push('(');
-  
+void dsl_cpp_generator::generateParamList(list<formalParam*> paramList, dslCodePad& targetFile)
+{
   int maximum_arginline=4;
   int arg_currNo=0;
-  int argumentTotal=proc->getParamList().size();
-  list<formalParam*> paramList=proc->getParamList();
+  int argumentTotal = paramList.size();
   list<formalParam*>::iterator itr;
   for(itr=paramList.begin();itr!=paramList.end();itr++)
   {
@@ -2035,6 +2259,60 @@ void dsl_cpp_generator:: generateFuncHeader(Function* proc,bool isMainFile)
      // if(argumentTotal==0)
          
   }
+
+   
+
+
+}
+
+void dsl_cpp_generator:: generateFuncHeader(Function* proc,bool isMainFile)
+{ 
+ 
+  dslCodePad& targetFile = isMainFile?main:header;
+
+  if(proc->containsReturn())
+      targetFile.pushString("auto ");
+  else  
+     targetFile.pushString("void ");
+
+  targetFile.pushString(proc->getIdentifier()->getIdentifier());
+  targetFile.push('(');
+
+  generateParamList(proc->getParamList(), targetFile);
+  
+ /* int maximum_arginline=4;
+  int arg_currNo=0;
+  int argumentTotal=proc->getParamList().size();
+  list<formalParam*> paramList=proc->getParamList();
+  list<formalParam*>::iterator itr;
+  for(itr=paramList.begin();itr!=paramList.end();itr++)
+  {
+      arg_currNo++;
+      argumentTotal--;
+
+      Type* type=(*itr)->getType();
+      targetFile.pushString(convertToCppType(type));
+      /*if(type->isPropType())
+      {
+          targetFile.pushString("* ");
+      }
+      else 
+      {*/
+         // targetFile.pushString(" ");
+         // targetFile.space();
+      //}   
+    /*  targetFile.pushString(/*createParamName(*//*(*itr)->getIdentifier()->getIdentifier());
+    /*  if(argumentTotal>0)
+         targetFile.pushString(",");
+
+      if(arg_currNo==maximum_arginline)
+      {
+         targetFile.NewLine();  
+         arg_currNo=0;  
+      } 
+     // if(argumentTotal==0)
+         
+  }*/
 
    targetFile.pushString(")");
    if(!isMainFile)
