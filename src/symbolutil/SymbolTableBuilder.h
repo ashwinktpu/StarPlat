@@ -2,7 +2,6 @@
 #define SYMBOLTABLEBUILDER_H
 
 
-
 #include "../ast/ASTNodeTypes.hpp"
 #include "../maincontext/MainContext.hpp"
 #include <cassert>
@@ -22,10 +21,15 @@ class SymbolTableBuilder
 
  public:
  vector<ASTNode*> parallelConstruct;
+ ASTNode* batchBlockEnv;
+ ASTNode* preprocessEnv;
+
  SymbolTableBuilder()
  {
      currVarSymbT=NULL;
      currPropSymbT=NULL;
+     batchBlockEnv = NULL;
+     preprocessEnv = NULL;
  }
 
  void init_curr_SymbolTable(ASTNode* node);

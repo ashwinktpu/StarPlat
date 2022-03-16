@@ -138,6 +138,8 @@ class Identifier:public ASTNode
   TableEntry* idInfo;
   Expression* dependentExpr; /*the expression in fixedPoint of which the current
                                identifier is a part of*/
+  Identifier* updates_association; /* for update.source/destination, get the updates to
+                                      which this update belongs to.*/                             
    
   public: 
  
@@ -240,6 +242,16 @@ class Identifier:public ASTNode
    {
      return dependentExpr;
    }
+
+   void setUpdateAssociation(Identifier* updateId_sent)
+    {
+      updates_association = updateId_sent;
+    }
+
+   Identifier* getUpdateAssociation()
+     {
+       return updates_association;
+     }
 
 };
 
@@ -382,7 +394,8 @@ class Function:public ASTNode
   list<formalParam*> paramList;
   blockStatement* blockstmt;
   bool initialLockDecl; /* If omp_locks required in some part of function body,
-                           set this to initialize the omp_locks in 1st part of func body*/ 
+                           set this to initialize the omp_locks in 1st part of func body*/
+  bool hasReturn;                          
   int funcType ;
 
 
@@ -416,6 +429,20 @@ class Function:public ASTNode
     staticFunc->setTypeofNode(NODE_FUNC);
     staticFunc->setFuncType(STATIC_FUNC);
     return staticFunc;
+ 
+
+  }
+
+
+  static Function*  createDynamicFunctionNode(Identifier* funcId,list<formalParam*> paramList)
+  {
+   
+    Function* dynamicFunc = new Function();
+    dynamicFunc->functionId = funcId;
+    dynamicFunc->paramList = paramList;
+    dynamicFunc->setTypeofNode(NODE_FUNC);
+    dynamicFunc->setFuncType(DYNAMIC_FUNC);
+    return dynamicFunc;
  
 
   }
@@ -483,8 +510,21 @@ class Function:public ASTNode
 
    bool getInitialLockDecl()
       {
-        return initialLockDecl;
-      }  
+        return initialLockDecl ;
+      } 
+
+   void flagReturn()
+     {
+
+        hasReturn = true ;
+
+     }    
+
+  bool containsReturn()
+     {
+
+       return hasReturn ;
+     }   
 
 
 };
@@ -708,6 +748,7 @@ class formalParam:public ASTNode
     long integerConstant;
     double floatConstant;
     bool booleanConstant;
+    char charConstant;
     bool infinityType;
     int operatorType;
     int typeofExpr;
@@ -776,11 +817,20 @@ class formalParam:public ASTNode
       Expression* unaryExpression=new Expression();
       unaryExpression->unaryExpr=expr;
       unaryExpression->operatorType=operatorType;
-      unaryExpression->typeofExpr=EXPR_UNARY;
+      unaryExpression->typeofExpr = EXPR_UNARY;
       expr->parent=unaryExpression;
       
       return unaryExpression;
     }
+
+
+    /*static Expression* nodeForChar(char charVal)
+      {
+        Expression* charValExpr = new Expression();
+        charValExpr->charConstant = charVal;
+        charValExpr->typeofExpr = EXPR_CHARCONSTANT;
+        return charValExpr;
+      }*/
 
     static Expression* nodeForIntegerConstant(long integerValue)
     {
@@ -801,9 +851,9 @@ class formalParam:public ASTNode
     }
      static Expression* nodeForBooleanConstant(bool boolValue)
     {
-       Expression* boolExpr=new Expression();
+       Expression* boolExpr = new Expression();
        boolExpr->booleanConstant=boolValue;
-       boolExpr->typeofExpr=EXPR_BOOLCONSTANT;
+       boolExpr->typeofExpr = EXPR_BOOLCONSTANT;
        return boolExpr;
 
     }
@@ -931,6 +981,13 @@ class formalParam:public ASTNode
      {
        return floatConstant;
      }
+
+     /* char getCharConstant()
+       {
+
+          return charConstant;
+
+       }*/
      
      bool isPositiveInfinity()
      {
@@ -1001,6 +1058,66 @@ class formalParam:public ASTNode
 
 
    };
+
+
+
+
+  
+
+  class batchBlock:public statement
+  {
+    private:
+    blockStatement* statements;
+    Identifier* updateId; /* contains the update Id over which this batchblock operates on */
+    Expression* batchSizeExpr;
+
+    public:
+    batchBlock()
+      {
+        statements = NULL;
+        batchSizeExpr = NULL;
+        updateId = NULL;
+      }
+
+    static batchBlock* createNodeForBatchBlock(Identifier* updatesIdSent, Expression* batchSizeExprSent, statement* statements_sent)
+        {
+            batchBlock* batchBlockNode = new batchBlock();
+            batchBlockNode->statements = (blockStatement*)statements_sent;
+            batchBlockNode->batchSizeExpr = batchSizeExprSent;
+            batchBlockNode->updateId = updatesIdSent; 
+            batchBlockNode->setTypeofNode(NODE_BATCHBLOCKSTMT);
+            updatesIdSent->setParent(batchBlockNode);
+            batchSizeExprSent->setParent(batchBlockNode);
+            statements_sent->setParent(batchBlockNode);
+            return batchBlockNode;
+        }
+
+
+    blockStatement* getStatements()
+     {
+       return statements;
+     }
+
+    Expression* getBatchSizeExpr()
+     {
+      
+      return batchSizeExpr;
+
+     }   
+     
+     /*void setUpdateId(Identifier* updateIdSent)
+      {
+        updateId = updateIdSent;
+      }*/
+
+      Identifier* getUpdateId()
+       {
+         return updateId;
+       }
+
+
+  
+  } ;
 
   class declaration:public statement
   {
@@ -1441,6 +1558,120 @@ class fixedPointStmt:public statement
 
 
   };
+
+
+  
+  class onDeleteBlock:public statement
+  {
+
+    private:
+    Identifier* itertorId;
+    Identifier* updateId;
+    proc_callExpr* updateFunc;
+    blockStatement* statements;
+
+    public:
+    onDeleteBlock()
+      {
+
+        itertorId = NULL;
+        updateId = NULL;
+        updateFunc = NULL;
+        statements = NULL;
+      }
+
+    static onDeleteBlock* createNodeForOnDeleteBlock(Identifier* iteratorSent, Identifier* sourceId, proc_callExpr* sourceFunc,statement* statements_sent)
+        {
+            onDeleteBlock* onDeleteNode = new onDeleteBlock();
+            onDeleteNode->itertorId = iteratorSent;
+            onDeleteNode->updateId = sourceId;
+            onDeleteNode->updateFunc = sourceFunc;
+            onDeleteNode->statements = (blockStatement*)statements_sent;
+            onDeleteNode->setTypeofNode(NODE_ONDELETEBLOCK);
+            statements_sent->setParent(onDeleteNode);
+            iteratorSent->setParent(onDeleteNode);
+            sourceId->setParent(onDeleteNode);
+            sourceFunc->setParent(onDeleteNode);
+            return onDeleteNode;
+        }
+
+    blockStatement* getStatements()
+     {
+       return statements;
+     }   
+
+     Identifier* getIteratorId()
+     {
+       return itertorId;
+     }  
+
+     Identifier* getUpdateId()
+     {
+       return updateId;
+     }
+    
+    proc_callExpr* getUpdateFunc()
+    {
+      return updateFunc;
+    }
+ 
+
+  };
+
+  class onAddBlock:public statement
+  {
+
+    private:
+    Identifier* itertorId;
+    Identifier* updateId;
+    proc_callExpr* updateFunc;
+    blockStatement* statements;
+
+    public:
+    onAddBlock()
+      {
+        itertorId = NULL;
+        updateId = NULL;
+        updateFunc = NULL;
+        statements = NULL;
+      }
+
+    static onAddBlock* createNodeForOnAddBlock(Identifier* iteratorSent, Identifier* sourceId, proc_callExpr* sourceFunc, statement* statements_sent)
+        {
+            onAddBlock* onAddNode = new onAddBlock();
+            onAddNode->statements = (blockStatement*)statements_sent;
+            onAddNode->itertorId = iteratorSent;
+            onAddNode->updateId = sourceId;
+            onAddNode->updateFunc = sourceFunc;
+            onAddNode->setTypeofNode(NODE_ONADDBLOCK);
+            statements_sent->setParent(onAddNode);
+            iteratorSent->setParent(onAddNode);
+            sourceId->setParent(onAddNode);
+            sourceFunc->setParent(onAddNode);
+            return onAddNode;
+        }
+
+    blockStatement* getStatements()
+     {
+       return statements;
+     }  
+
+     Identifier* getIteratorId()
+     {
+       return itertorId;
+     }  
+
+     Identifier* getUpdateId()
+     {
+       return updateId;
+     }
+    
+    proc_callExpr* getUpdateFunc()
+    {
+      return updateFunc;
+    }
+
+  };
   
   class iterateBFS:public statement
   {   private:
@@ -1587,19 +1818,22 @@ class fixedPointStmt:public statement
     bool isforall;
     map<int,list<Identifier*>> reduction_map;
     set<int> reduc_keys;
+    bool filterExprAssoc;
+    Expression* assocExpr;
     
     public:
     forallStmt()
     { 
-      iterator=NULL;
-      sourceGraph=NULL;
-      extractElemFunc=NULL;
-      body=NULL;
-      filterExpr=NULL;
-      statementType="ForAllStmt";
-      typeofNode=NODE_FORALLSTMT;
-      isforall=false;
-      isSourceId=false;
+      iterator = NULL;
+      sourceGraph = NULL;
+      extractElemFunc = NULL;
+      body = NULL;
+      filterExpr = NULL;
+      statementType ="ForAllStmt";
+      typeofNode = NODE_FORALLSTMT;
+      isforall = false;
+      isSourceId = false;
+      filterExprAssoc = false; 
     }
 
     static forallStmt* createforallStmt(Identifier* iterator,Identifier* sourceGraph,proc_callExpr* extractElemFunc,statement* body,Expression* filterExpr,bool isforall)
@@ -1700,6 +1934,25 @@ class fixedPointStmt:public statement
       return (filterExpr!=NULL);
     }
 
+    void setAssocExpr(Expression* filterExprSent)
+     {
+       assocExpr = filterExprSent;
+     }
+
+     Expression* getAssocExpr()
+       {
+          return assocExpr;
+       }
+
+     void setFilterExprAssoc()
+     {
+       filterExprAssoc = true;
+     }
+    
+     bool hasFilterExprAssoc()
+      {
+        return filterExprAssoc;
+      }
     statement* getBody()
     {
       return body;

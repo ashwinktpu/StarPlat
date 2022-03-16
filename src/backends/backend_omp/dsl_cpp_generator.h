@@ -20,19 +20,31 @@ class dsl_cpp_generator
   int staticFuncCount;
   int inFuncCount;
   int decFuncCount;
+  int dynFuncCount;
   int curFuncType;
+  Function* currentFunc;
   vector<pair<Identifier*,proc_callExpr*>> forallStack;
+  fixedPointStmt* fixedPointEnv;
+  vector<Identifier*> freeIdStore;
+  bool insidePreprocessEnv;
+  bool insideBatchBlock ;
+  
  
   public:
   dsl_cpp_generator()
   {
     headerFile=NULL;
     bodyFile=NULL;
+    fixedPointEnv = NULL;
     fileName=new char[1024];
     genFuncCount = 0;
     staticFuncCount = 0;
     inFuncCount = 0;
     decFuncCount = 0;
+    dynFuncCount = 0;
+    insideBatchBlock = false;
+    insidePreprocessEnv = false;
+
  }
 
   void setFileName(char* f);
@@ -48,7 +60,7 @@ class dsl_cpp_generator
   void generateFuncHeader(Function* proc,bool isMainFile);
   void generateProcCall(proc_callStmt* procCall);
   void generateVariableDecl(declaration* decl);
-  void generateStatement(statement* stmt);
+  virtual void generateStatement(statement* stmt);
   void generateAssignmentStmt(assignment* assignStmt);
   void generateWhileStmt(whileStmt* whilestmt);
   virtual void generateForAll(forallStmt* forAll);
@@ -68,17 +80,19 @@ class dsl_cpp_generator
   void generate_exprIdentifier(Identifier* id);
   virtual void generate_exprPropId(PropAccess* propId) ;
   void generate_exprPropIdReceive(PropAccess* propId);
-  void generate_exprProcCall(Expression* expr);
+  virtual void generate_exprProcCall(Expression* expr);
   void generate_exprArL(Expression* expr);
   void generate_exprUnary(Expression* expr);
   void generateForAll_header(forallStmt* forAll);
   void getEdgeTranslation(Expression* expr); //translation of edge assignment.
   virtual void generateForAllSignature(forallStmt* forAll);
   void generatefixedpt_filter(Expression* filterExpr);
+  void generateParamList(list<formalParam*> paramList,dslCodePad& targetFile);
   //void includeIfToBlock(forallStmt* forAll);
   bool neighbourIteration(char* methodId);
   bool allGraphIteration(char* methodId);
   bool elementsIteration(char* extractId);
+  void generateArgList(list<argument*> argList);    
   
   blockStatement* includeIfToBlock(forallStmt* forAll);
 
@@ -90,6 +104,11 @@ class dsl_cpp_generator
   void incFuncCount(int funcType);
   int curFuncCount();
   void getDefaultValueforTypes(int type);
+  void setCurrentFunc(Function* func);
+  Function* getCurrentFunc();
+  void generateFixedPointUpdate(PropAccess* propId);
+  bool checkFixedPointAssociation(PropAccess* propId);
+  void checkAndGenerateFixedPtFilter(forallStmt* forAll);
 
 
 

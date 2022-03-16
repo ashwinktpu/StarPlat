@@ -23,6 +23,7 @@ static void addFuncToList(ASTNode* func)
    Function* funcNode=(Function*)func;
  
     frontEndContext.addFuncToList(funcNode);
+    frontEndContext.incrementCurrentFuncCount(); 
 }
 
 static void setCurrentFuncType(int funcType)
@@ -36,8 +37,10 @@ static void setCurrentFuncType(int funcType)
 static void resetTemp(vector<Identifier*>& tempIds)
 {
   int currentFuncType =  frontEndContext.getCurrentFuncType();
+  printf("currentFuncType check!!%d\n",currentFuncType);
   for(Identifier* id:tempIds)
-     {
+     {  
+         printf("tempID %s funccount %d\n",id->getIdentifier(),frontEndContext.getCurrentFuncCount());
         graphId[currentFuncType][frontEndContext.getCurrentFuncCount()].push_back(id);
      }
   
@@ -65,9 +68,13 @@ static void storeGraphId(Identifier* id)
           {
               graphId[3][frontEndContext.getCurrentFuncCount()].push_back(id);
           }   
+    else if(currentFuncType == DYNAMIC_FUNC)
+          {
+               graphId[4][frontEndContext.getCurrentFuncCount()].push_back(id);
+          }      
 
 
-           frontEndContext.incrementCurrentFuncCount();        
+          //        
 
 }
 
@@ -91,6 +98,17 @@ static ASTNode* createStaticFuncNode(ASTNode* id,list<formalParam*> formalParamL
   
   Function* staticFuncNode=Function::createStaticFunctionNode(staticFuncId,formalParamList);
   return staticFuncNode;
+   
+}
+
+
+
+static ASTNode* createDynamicFuncNode(ASTNode* id,list<formalParam*> formalParamList)
+{ 
+  Identifier* dynFuncId=(Identifier*)id;
+  
+  Function* dynFuncNode=Function::createDynamicFunctionNode(dynFuncId,formalParamList);
+  return dynFuncNode;
    
 }
 
@@ -342,9 +360,17 @@ static ASTNode* createNodeForBval(bool value)
 
 static ASTNode* createNodeForINF(bool infinityFlag)
 {
-    Expression* exprINFVal=Expression::nodeForInfinity(infinityFlag);
+    Expression* exprINFVal = Expression::nodeForInfinity(infinityFlag);
     return exprINFVal;
 }
+
+/*static ASTNode* createNodeForChar(char charVal)
+   {
+     Expression* exprCharVal = Expression::nodeForChar(charVal);
+     return exprCharVal;
+
+
+   }*/
 
 
 static ASTNode* createReturnStatementNode(ASTNode* returnExpression)
@@ -356,6 +382,29 @@ static ASTNode* createReturnStatementNode(ASTNode* returnExpression)
 
 }
 
+static ASTNode* createBatchBlockStmt(ASTNode* updatesId, ASTNode* batchSizeExpr, ASTNode* blockStmts)
+{
+   statement* batchBlockStmtNode;  
+   batchBlockStmtNode = batchBlock::createNodeForBatchBlock((Identifier*) updatesId, (Expression*)batchSizeExpr,(statement*)blockStmts);
+  return batchBlockStmtNode; 
+ 
+}
+
+static ASTNode* createOnAddBlock(ASTNode* updateIterator, ASTNode* updateSource, ASTNode* updateFunc, ASTNode* blockStmts)
+{
+   statement* onAddBlockNode;
+   onAddBlockNode = onAddBlock::createNodeForOnAddBlock((Identifier*)updateIterator, (Identifier*)updateSource, (proc_callExpr*)updateFunc,(statement*)blockStmts);
+
+   return onAddBlockNode;
+}
+
+static ASTNode* createOnDeleteBlock(ASTNode* updateIterator, ASTNode* updateSource, ASTNode* updateFunc, ASTNode* blockStmts)
+ {
+   statement* onDeleteBlockNode;
+   onDeleteBlockNode = onDeleteBlock::createNodeForOnDeleteBlock((Identifier*)updateIterator, (Identifier*)updateSource, (proc_callExpr*)updateFunc,(statement*)blockStmts);
+
+   return onDeleteBlockNode;
+}
 
 
 
