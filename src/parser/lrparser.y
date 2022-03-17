@@ -419,7 +419,7 @@ int main(int argc,char **argv)
    }
    else
     {
-		if((strcmp(backendTarget,"omp")==0)||!(strcmp(backendTarget,"mpi")==0)||(strcmp(backendTarget,"cuda")==0))
+		if((!strcmp(backendTarget,"omp")==0)||(strcmp(backendTarget,"mpi")==0)||(strcmp(backendTarget,"cuda")==0))
 		   {
               // printf("Specified backend target is not implemented in the current version!\n");
 			  fprintf(stderr, "Specified backend target is not implemented in the current version!\n");
@@ -441,7 +441,7 @@ int main(int argc,char **argv)
 	//dataRaceAnalyse.analyse();
 
 	PRAnalyser PRAnalyse;
-	PRAnalyse.analyse();
+	//PRAnalyse.analyse();
 	
 	cpp_backend.setFileName(fileName);
 	cpp_backend.generate();
