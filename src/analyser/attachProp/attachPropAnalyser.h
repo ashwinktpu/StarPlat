@@ -1,7 +1,7 @@
 #ifndef ATTACH_PROP_ANALYSER
 #define ATTACH_PROP_ANALYSER
 
-#include "../ast/ASTNodeTypes.hpp"
+#include "../../ast/ASTNodeTypes.hpp"
 
 class attachPropAnalyser
 {

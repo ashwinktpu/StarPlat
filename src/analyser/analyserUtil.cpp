@@ -1,7 +1,7 @@
 #ifndef ANALYSER_UTILITY
 #define ANALYSER_UTILITY
 
-#include "../ast/ASTNodeTypes.hpp"
+#include "../../ast/ASTNodeTypes.hpp"
 #include <unordered_map>
 #include "../symbolutil/SymbolTable.h"
 

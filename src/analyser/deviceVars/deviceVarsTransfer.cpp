@@ -1,4 +1,5 @@
 #include "deviceVarsAnalyser.h"
+#include "../../ast/ASTHelper.cpp"
 
 list<statement*> transferStatements(lattice &inp, lattice &out)
 {
@@ -64,7 +65,15 @@ statement* deviceVarsAnalyser::transferVarsStatement(statement* stmt, blockState
     return stmt;
 }
 
-statement* deviceVarsAnalyser::transferVarsForAll(forallStmt* stmt, blockStatement* parBlock);
+statement* deviceVarsAnalyser::transferVarsForAll(forallStmt* stmt, blockStatement* parBlock)
+{
+    ASTNodeWrap* wrapNode = getWrapNode(stmt);
+    list<statement*> transferStmts = transferStatements(wrapNode->inMap, wrapNode->outMap);
+    for(statement* stmt: transferStmts)
+        parBlock->addStmtToBlock(stmt);
+    
+    return stmt;
+}
 statement* deviceVarsAnalyser::transferVarsUnary(unary_stmt* stmt, blockStatement* parBlock)
 {
     ASTNodeWrap* wrapNode = getWrapNode(stmt);
@@ -92,6 +101,18 @@ statement* deviceVarsAnalyser::transferVarsDeclaration(declaration* stmt, blockS
     for(statement* bstmt: transferStmts)
         parBlock->addStmtToBlock(bstmt);
     
+    /*if(gpuUsedVars.isUsedVar(stmt->getdeclId()))
+    {
+        Identifier* tempIden = Util::createIdentifierNode(getTempVar());
+        Type* idenType = Util::createPrimitiveTypeNode(TYPE_BOOL);
+
+        TableEntry* e = new TableEntry(tempIden->copy(), idenType);
+        tempIden->setSymbolInfo(e);
+
+        declaration* tempDecl = Util::createAssignedDeclNode(idenType,tempIden,boolFalse);
+        parBlock->addStmtToBlock(tempDecl);
+    }*/
+
     return stmt;
 }
 statement* deviceVarsAnalyser::transferVarsWhile(whileStmt* stmt, blockStatement* parBlock)
@@ -104,7 +125,7 @@ statement* deviceVarsAnalyser::transferVarsWhile(whileStmt* stmt, blockStatement
     }
 
     blockStatement* newBody = (blockStatement*) transferVarsStatement(stmt->getBody(), parBlock);
-    lattice bodyOut = getWrapNode(stmt->getBody())->outMap;
+    lattice bodyOut = wrapNode->outMap;
 
     //TODO: Check the merge of results
     for(statement* bstmt: transferStatements(bodyOut, condNode->outMap)){
@@ -113,7 +134,49 @@ statement* deviceVarsAnalyser::transferVarsWhile(whileStmt* stmt, blockStatement
 
     return whileStmt::create_whileStmt(stmt->getCondition(), newBody);
 }
-statement* deviceVarsAnalyser::transferVarsDoWhile(dowhileStmt* stmt, blockStatement* parBlock);
+statement* deviceVarsAnalyser::transferVarsDoWhile(dowhileStmt* stmt, blockStatement* parBlock)
+{
+    ASTNodeWrap* wrapNode = getWrapNode(stmt);
+    ASTNodeWrap* condNode = getWrapNode(stmt->getCondition());
+
+    blockStatement* newBody = (blockStatement*) transferVarsStatement(stmt->getBody(), parBlock);
+    {
+        Identifier* tempIden = Util::createIdentifierNode(getTempVar());
+        Type* idenType = Util::createPrimitiveTypeNode(TYPE_BOOL);
+
+        TableEntry* e = new TableEntry(tempIden->copy(), idenType);
+        tempIden->setSymbolInfo(e);
+
+        ASTNode* boolFalse = Util::createNodeForBval(false);
+        ASTNode* boolTrue = Util::createNodeForBval(true);
+
+        Identifier* ifAssign = tempIden->copy();
+        ifAssign->setSymbolInfo(e);
+        assignment* tempAssign = (assignment*) Util::createAssignmentNode(ifAssign, boolTrue);
+        newBody->addToFront(tempAssign);
+
+        declaration* tempDecl = Util::createAssignedDeclNode(idenType,tempIden,boolFalse);
+        parBlock->addStmtToBlock(tempDecl);
+
+        blockStatement* ifBody = blockStatement::createnewBlock();
+        for(statement* bstmt: transferStatements(condNode->outMap, wrapNode->outMap)){
+            ifBody->addStmtToBlock(bstmt);
+        }
+
+        Identifier* ifCond = tempIden->copy();
+        ifCond->setSymbolInfo(e);
+
+        ifStmt* varTransfer = Util::createNodeForIfStmt(Util::createNodeForId(ifCond), ifBody, NULL);
+        newBody->addToFront(varTransfer);
+    }
+
+    for(statement* bstmt: transferStatements(wrapNode->inMap, wrapNode->outMap)){
+        parBlock->addStmtToBlock(bstmt);
+    }
+
+    return dowhileStmt::create_dowhileStmt(stmt->getCondition(), newBody);
+}
+
 statement* deviceVarsAnalyser::transferVarsAssignment(assignment* stmt, blockStatement* parBlock)
 {
     ASTNodeWrap* wrapNode = getWrapNode(stmt);

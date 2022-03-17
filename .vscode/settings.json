@@ -35,6 +35,12 @@
         "type_traits": "cpp",
         "*.tcc": "cpp",
         "limits": "cpp",
-        "optional": "cpp"
+        "optional": "cpp",
+        "atomic": "cpp",
+        "string_view": "cpp",
+        "system_error": "cpp",
+        "fstream": "cpp",
+        "sstream": "cpp",
+        "streambuf": "cpp"
     }
 }

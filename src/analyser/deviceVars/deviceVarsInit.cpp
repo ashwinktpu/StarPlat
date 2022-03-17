@@ -94,6 +94,9 @@ bool deviceVarsAnalyser::initDeclaration(declaration *stmt, list<Identifier *> &
 }
 bool deviceVarsAnalyser::initForAll(forallStmt *stmt, list<Identifier *> &vars)
 {
+    usedVariables usedVars = getVarsForAll(stmt);
+    gpuUsedVars.merge(usedVars);
+    
     ASTNodeWrap* stmtNode = initWrapNode(stmt, vars);
     return true;
 }
