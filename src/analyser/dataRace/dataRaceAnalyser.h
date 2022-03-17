@@ -1,7 +1,7 @@
 #ifndef DR_ANALYSER
 #define DR_ANALYSER
 
-#include "../ast/ASTNodeTypes.hpp"
+#include "../../ast/ASTNodeTypes.hpp"
 
 class dataRaceAnalyser
 {

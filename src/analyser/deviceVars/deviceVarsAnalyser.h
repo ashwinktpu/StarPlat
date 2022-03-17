@@ -2,7 +2,7 @@
 #define DEVICE_VARS_ANALYSER
 
 #include "../../ast/ASTNodeTypes.hpp"
-#include "analyserUtil.cpp"
+#include "../analyserUtil.cpp"
 #include <unordered_map>
 
 class lattice
@@ -189,6 +189,8 @@ class deviceVarsAnalyser
 {
   private:
   unordered_map<ASTNode*, ASTNodeWrap*> latticeMap;
+  usedVariables gpuUsedVars;
+  int tempVar = 0;
 
   ASTNodeWrap* initWrapNode(ASTNode* node, list<Identifier*> &vars)
   {
@@ -201,6 +203,12 @@ class deviceVarsAnalyser
 
   ASTNodeWrap* getWrapNode(ASTNode* node){
     return latticeMap.at(node);
+  }
+
+  char* getTempVar()
+  {
+    string var = "tempVar_" + to_string(tempVar++);
+    return var.c_str();
   }
 
   public:

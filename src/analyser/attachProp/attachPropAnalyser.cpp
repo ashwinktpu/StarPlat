@@ -4,8 +4,8 @@
 #include <cassert>
 #include <unordered_map>
 #include <unordered_set>
-#include "analyserUtil.cpp"
-#include "../ast/ASTHelper.cpp"
+#include "../analyserUtil.cpp"
+#include "../../ast/ASTHelper.cpp"
 
 struct statementPos
 {
