@@ -1,14 +1,14 @@
 EXPENDABLES_WINDOWS = bin\MainContext.o bin\ASTHelper.o bin\SymbolTableBuilder.o bin\SymbolTableNew.o bin\y.tab.o bin\lex.yy.o parser\y.tab.c parser\lex.yy.c bin\dsl_cpp_generator.o bin\attachPropAnalyser.o
-EXPENDABLES = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c bin/dsl_cpp_generator.o bin/PRAnalyser.o
-ANALYSER = bin/PRAnalyser.o
+EXPENDABLES = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c bin/dsl_cpp_generator.o bin/pushPullAnalyser.o
+ANALYSER = bin/pushPullAnalyser.o
 
 CC = g++  
 
 all: finalcode clean
 windows: finalcode clean_windows
 
-finalcode: bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o bin/PRAnalyser.o
-	$(CC) bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o bin/PRAnalyser.o -o finalcode
+finalcode: bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o bin/pushPullAnalyser.o
+	$(CC) bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o bin/pushPullAnalyser.o -o finalcode
 
 bin/MainContext.o: maincontext/MainContext.cpp
 	$(CC) -c maincontext/MainContext.cpp -o bin/MainContext.o
@@ -36,8 +36,14 @@ bin/dataRaceAnalyser.o: analyser/dataRaceAnalyser.cpp analyser/dataRaceAnalyser.
 bin/PRAnalyser.o: analyser/PRAnalyser.cpp analyser/PRAnalyser.h
 	$(CC) -c analyser/PRAnalyser.cpp -o bin/PRAnalyser.o
 
+bin/pushPullAnalyser.o: analyser/pushPullAnalyser.cpp analyser/pushPullAnalyser.h
+	$(CC) -c analyser/pushPullAnalyser.cpp -o bin/pushPullAnalyser.o
+
 bin/analyserUtil.o: analyser/analyserUtil.hpp
 	$(CC) -c analyser/analyserUtil.hpp -o bin/analyserUtil.o
+
+bin/temp.o: analyser/temp.cpp analyser/pushPullAnalyser.h
+	$(CC) -c analyser/temp.cpp -o bin/temp.o
 
 #bin/dsl_cpp_generator.o: backends/backend_mpi/mpi_cpp_generator.cpp backends/dslCodePad.h
 #	$(CC) -c backends/backend_mpi/mpi_cpp_generator.cpp -o bin/dsl_cpp_generator.o

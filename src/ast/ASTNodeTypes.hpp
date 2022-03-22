@@ -364,6 +364,23 @@ class statement:public ASTNode
       void clearStatements(){
         statements.clear();
       }
+
+      void replaceStatement(statement *stmt1, statement *stmt2)
+      {
+        list<statement*> newList;
+        list<statement*>::iterator itrt;
+        for(itrt = statements.begin(); itrt != statements.end(); itrt++)
+        {
+          if(stmt1 == *itrt)
+            break;
+          newList.push_back(*itrt);
+        }
+        newList.push_back(stmt2);
+        itrt++;
+        for( ; itrt != statements.end(); itrt++)
+          newList.push_back((*itrt));
+        statements.swap(newList);
+      }
   };
 
 class Function:public ASTNode
@@ -971,6 +988,8 @@ class formalParam:public ASTNode
      Expression* exprAssigned;
      bool isPropCopy ;
      bool atomicSignal;
+     bool deviceVariable;
+     bool accumulateKernel;
      int lhsType;
 
      public:
@@ -982,6 +1001,9 @@ class formalParam:public ASTNode
         statementType="assignment";
         atomicSignal=false;
         isPropCopy = false;
+        
+         deviceVariable=false;
+         accumulateKernel=false;
       
     }
 
@@ -1061,6 +1083,21 @@ class formalParam:public ASTNode
        {
          return isPropCopy ;
        }
+
+       void flagAsDeviceVariable(){
+        //~ if(exprAssigned->isArithmetic()||exprAssigned->isLogical())
+          deviceVariable=true;
+     }
+     bool isDeviceAssignment(){
+      return deviceVariable;
+     }
+     void flagAccumulateKernel(){
+        //~ if(exprAssigned->isArithmetic()||exprAssigned->isLogical())
+          accumulateKernel=true;
+     }
+     bool isAccumulateKernel(){
+      return accumulateKernel;
+     }
 
   };
 class whileStmt:public statement

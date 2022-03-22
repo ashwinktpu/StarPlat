@@ -1,4 +1,4 @@
-#include "PPAnalyser.h"
+#include "pushPullAnalyser.h"
 #include "../ast/ASTHelper.cpp"
 #include "../symbolutil/SymbolTable.h"
 #include "analyserUtil.hpp"
@@ -13,12 +13,18 @@ bool checkIdNameEqual(Identifier *id1, char *c)
     return (strcmp(id1->getIdentifier(), c) == 0);
 }
 
-void PPAnalyser::checkSSSPUpdate(statement *stmt, Identifier *v, Identifier *nbr, Identifier *modified)
+blockStatement *PPAnalyser::checkSSSPUpdate(statement *stmt, Identifier *v, Identifier *nbr, Identifier *modified, Identifier *g)
 {
+    //cout << "checking SSSP" << endl;
+    bool valid_edge = false;
+    bool change = false;
+    blockStatement *newBlockStmt = blockStatement::createnewBlock();
+    Identifier *e = new Identifier;
     switch(stmt->getTypeofNode())
     {
         case NODE_BLOCKSTMT:
         {
+            blockStatement *blockStmt = (blockStatement *)stmt;
             for (statement *bstmt: blockStmt->returnStatements())
             {
                 switch(bstmt->getTypeofNode())
@@ -31,75 +37,196 @@ void PPAnalyser::checkSSSPUpdate(statement *stmt, Identifier *v, Identifier *nbr
                         {
                             Identifier *declId = declStmt->getdeclId();
                             Expression *declExpr = declStmt->getExpressionAssigned();
-                            if (declExpr->getType() == EXPR_PROCCALL)
+                            if (declExpr->getExpressionFamily() == EXPR_PROCCALL)
                             {
                                 proc_callExpr *procExpr = (proc_callExpr *)declExpr;
-                                if (checkIdEqual(procExpr->getId1()->getIdentifier(), srcGraph) && procExpr->getArgList().size() == 2)
+                                if (checkIdEqual(procExpr->getId1(), g) && procExpr->getArgList().size() == 2)
                                 {
-                                    cout << "edge ok" << endl;
+                                    //cout << "edge ok" << endl;
+                                    e = declId;
+                                    valid_edge = 1;
+                                    newBlockStmt->addStmtToBlock(bstmt);
                                 }
                             }
                         }
                     }
                     case NODE_REDUCTIONCALLSTMT:
-                    
-                }
-            }
-        }
-    }
-}
-
-void PPAnalyser::analyseForallIn(statement *stmt, Identifier *srcGraph, Identifier *faId, Identifier *uId)
-{
-    forallStmt *inFstmt = (forallStmt *)stmt;
-    if (!inFstmt->hasFilterExpr())
-    {
-        Identifier *inFaId = inFstmt->getIterator(), *inSrcGraph = inFstmt->getSourceGraph();
-        if (checkIdNameEqual(inFstmt->getExtractElementFunc()->getMethodId(), "neighbors")
-            && inFstmt->checkIdEqual(inSrcGraph, srcGraph))
-        {
-            proc_callExpr *extractElemFunc = inFstmt->getExtractElemFunc();
-            if (extractElemFunc->getArgList().size() == 1)
-            {
-                checkSSSPUpdate(inFstmt->getBody(), faId, inFaId, uId);
-            }
-        }
-    }
-}
-
-void PPAnalyser::analyseForallOut(statement *stmt, Identifier *uId)
-{
-    forallStmt *fstmt = (forallStmt *)stmt;
-    Identifier *faId = fstmt->getIterator();
-    Identifier *srcGraph = fstmt->getSourceGraph();
-    if (fstmt->isForall() && checkIdNameEqual(fstmt->getExtractElemFunc()->getMethodId(), "nodes") && fstmt->hasFilterExpr())
-    {
-        Expression *filterExpr = fstmt->getFilterExpr();
-        if (filterExpr->getOperatorType() == OPERATOR_EQ)
-        {
-            if (filterExpr->getLeft()->getType() == EXPR_PROPID)
-            {
-                PropAccess *filterLeft = (PropAccess *)filterExpr->getLeft();
-                if (checkIdEqual(faId, filterLeft->getIdentifier1() && checkIdEqual(filterLeft->getIdentifier2(), uId)))
-                {
-                    if (filterExpr->getRight()->getType() == EXPR_BOOLCONSTANT)
                     {
-                        statement *body = fstmt->getBody();
-                        switch(body->getTypeofNode())
+                        if (!valid_edge)
+                            break;
+                        //cout << "reduction call statement reeeeeeeee" << endl;;
+                        reductionCallStmt *redStmt = (reductionCallStmt *)bstmt;
+                        if (redStmt->isListInvolved())
                         {
-                            case NODE_BLOCKSTMT:
-                            case NODE_FORALLSTMT:
-                                analyseForallIn(body, srcGraph);
+                            list<ASTNode *> leftList = redStmt->getLeftList(), rightList = redStmt->getRightList();
+                            if (leftList.size() == 2)
+                            {
+                                //cout << "2 member list" << endl;
+                                ASTNode *first = leftList.front(), *second = leftList.back();
+                                if (first->getTypeofNode() == NODE_PROPACCESS && second->getTypeofNode() == NODE_PROPACCESS)
+                                {
+                                    PropAccess *propRedLNode1 = (PropAccess *)first, *propRedLNode2 = (PropAccess *)second;
+                                    if (checkIdEqual(propRedLNode1->getIdentifier1(), nbr) && checkIdEqual(propRedLNode2->getIdentifier1(), nbr)
+                                        && checkIdEqual(propRedLNode2->getIdentifier2(), modified))
+                                    {
+                                        //cout << "LHS is okay" << endl;
+                                        Identifier *dist = propRedLNode1->getIdentifier2();
+                                        ASTNode *firstExpr = rightList.front();
+                                        reductionCall *redCallStmt = (reductionCall *)redStmt->getReducCall();
+                                        if (redCallStmt->getargList().size() == 2 && redCallStmt->getReductionType() == REDUCE_MIN)
+                                        {
+                                            //cout << "reduction shape seems okay" << endl;
+                                            argument *arg1 = redCallStmt->getargList().front(), *arg2 = redCallStmt->getargList().back();
+                                            //cout << arg1->isExpr() << " " << arg2->isExpr() << endl;
+                                            if (arg1->isExpr() && arg1->getExpr()->getExpressionFamily() == EXPR_PROPID && arg2->isExpr() && arg2->getExpr()->getExpressionFamily() == EXPR_ARITHMETIC)
+                                            {
+                                                //cout << "kinda okay reduction" << endl;
+                                                PropAccess *prop1 = arg1->getExpr()->getPropId();
+                                                if (checkIdEqual(prop1->getIdentifier1(), nbr) && checkIdEqual(prop1->getIdentifier2(), dist))
+                                                {
+                                                    //cout << "reduction call is okay" << endl;
+                                                    //cout << arg2->getExpr()->getExpressionFamily() << endl;
+                                                    Expression *expr2L = arg2->getExpr()->getLeft(), *expr2R = arg2->getExpr()->getRight();
+                                                    if (expr2L->getExpressionFamily() == EXPR_PROPID && expr2R->getExpressionFamily() == EXPR_PROPID)
+                                                    {
+                                                        //cout << "yeah shape really okay" << endl;
+                                                        PropAccess *prop2L = expr2L->getPropId(), *prop2R = expr2R->getPropId();
+                                                        if (checkIdEqual(prop2L->getIdentifier1(), v) && checkIdEqual(prop2L->getIdentifier2(), dist) && checkIdEqual(prop2R->getIdentifier1(), e) && checkIdNameEqual(prop2R->getIdentifier2(), "weight"))
+                                                        {
+                                                            if (firstExpr->getTypeofNode() == NODE_EXPR && ((Expression *)firstExpr)->getExpressionFamily() == EXPR_BOOLCONSTANT)
+                                                            {
+                                                                cout << "this is a valid sssp loop" << endl;
+                                                                Expression *ifCondn = Expression::nodeForRelationalExpr(Expression::nodeForPropAccess(PropAccess::createPropAccessNode(v, dist)), Expression::nodeForArithmeticExpr(Expression::nodeForPropAccess(PropAccess::createPropAccessNode(nbr, dist)), Expression::nodeForPropAccess(PropAccess::createPropAccessNode(e, Identifier::createIdNode("weight"))), OPERATOR_ADD), OPERATOR_GT);
+                                                                assignment *assn1 = assignment::prop_assignExpr(PropAccess::createPropAccessNode(v, dist), Expression::nodeForArithmeticExpr(Expression::nodeForPropAccess(PropAccess::createPropAccessNode(nbr, dist)), Expression::nodeForPropAccess(PropAccess::createPropAccessNode(e, Identifier::createIdNode("weight"))), OPERATOR_ADD));
+                                                                assignment *assn2 = assignment::prop_assignExpr(PropAccess::createPropAccessNode(v, modified), Expression::nodeForBooleanConstant(((Expression *)firstExpr)->getBooleanConstant()));
+                                                                blockStatement *ifBlock = blockStatement::createnewBlock();
+                                                                ifBlock->addStmtToBlock(assn1);
+                                                                ifBlock->addStmtToBlock(assn2);
+                                                                ifStmt *ifstmt = ifStmt::create_ifStmt(ifCondn, ifBlock, NULL);
+                                                                newBlockStmt->addStmtToBlock(ifstmt);
+                                                                change = true;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
         }
     }
+    if (change)
+        return newBlockStmt;
+    else
+        return NULL;
 }
 
-void PPAnalyser::analyseFPLoop(statement *stmt)
+forallStmt *PPAnalyser::analyseForallIn(statement *stmt, Identifier *srcGraph, Identifier *v, Identifier *modified, int boolConstant)
 {
+    //cout << "checking inner forall" << endl;
+    forallStmt *inFstmt = (forallStmt *)stmt;
+    if (!inFstmt->hasFilterExpr())
+    {
+        Identifier *nbr = inFstmt->getIterator(), *inSrcGraph = inFstmt->getSourceGraph();
+        if (checkIdNameEqual(inFstmt->getExtractElementFunc()->getMethodId(), "neighbors")
+            && checkIdEqual(inSrcGraph, srcGraph))
+        {
+            proc_callExpr *extractElemFunc = inFstmt->getExtractElementFunc();
+            if (extractElemFunc->getArgList().size() == 1)
+            {
+                blockStatement *updatedBlock = checkSSSPUpdate(inFstmt->getBody(), v, nbr, modified, srcGraph);
+                if (updatedBlock != NULL)
+                {
+                    cout << "SSSP was changed" << endl;
+                    list<argument *> argList;
+                    argument *arg1 = new argument;
+                    arg1->setExpression(Expression::nodeForIdentifier(v));
+                    arg1->setExpressionFlag();
+                    argList.push_back(arg1);
+                    Expression *filterExpr = Expression::nodeForRelationalExpr(Expression::nodeForPropAccess(PropAccess::createPropAccessNode(nbr, modified)), Expression::nodeForBooleanConstant(boolConstant), OPERATOR_EQ);
+                    forallStmt *newFstmt = forallStmt::createforallStmt(v, srcGraph, proc_callExpr::nodeForProc_Call(NULL, NULL, Identifier::createIdNode("nodes_to"), argList), updatedBlock, filterExpr, inFstmt->isForall());
+                    return newFstmt;
+                }
+            }
+        }
+    }
+    return NULL;
+}
+
+forallStmt *PPAnalyser::analyseForallOut(statement *stmt, Identifier *modified)
+{
+    //cout << "checking outer forall" << endl;
+    forallStmt *fstmt = (forallStmt *)stmt;
+    //cout << "lol" << endl;
+    Identifier *v = fstmt->getIterator();
+    Identifier *srcGraph = fstmt->getSourceGraph();
+    if (fstmt->isForall() && checkIdNameEqual(fstmt->getExtractElementFunc()->getMethodId(), "nodes") && fstmt->hasFilterExpr())
+    {
+        Expression *filterExpr = fstmt->getfilterExpr();
+        if (filterExpr->getOperatorType() == OPERATOR_EQ)
+        {
+            if (filterExpr->getLeft()->getExpressionFamily() == EXPR_PROPID)
+            {
+                //cout << "prop equal expression correct" << endl;
+                PropAccess *filterLeft = filterExpr->getLeft()->getPropId();
+                //cout << "prop is " << filterLeft->getIdentifier1()->getIdentifier() << " " << filterLeft->getIdentifier2()->getIdentifier() << endl;
+                if (checkIdEqual(v, filterLeft->getIdentifier1()) && checkIdEqual(filterLeft->getIdentifier2(), modified))
+                {
+                    //cout << "ids correct" << endl;
+                    if (filterExpr->getRight()->getExpressionFamily() == EXPR_BOOLCONSTANT)
+                    {
+                        statement *body = fstmt->getBody();
+                        forallStmt *updatedForall = new forallStmt;
+                        switch(body->getTypeofNode())
+                        {
+                            case NODE_BLOCKSTMT:
+                                //cout << "hereeee1" << endl;
+                                for (statement *bodyStmt: ((blockStatement *)body)->returnStatements())
+                                    switch (bodyStmt->getTypeofNode())
+                                    {
+                                        case NODE_FORALLSTMT:
+                                            //cout << "this caase" << endl;
+                                            updatedForall = analyseForallIn(bodyStmt, srcGraph, v, modified, filterExpr->getRight()->getBooleanConstant());
+                                            if (updatedForall != NULL)
+                                            {   
+                                                cout << "infor changed 1" << endl;
+                                                list<argument *> argList;
+                                                blockStatement *newBlock = blockStatement::createnewBlock();
+                                                newBlock->addStmtToBlock(updatedForall);
+                                                forallStmt *newForallStmt = forallStmt::createforallStmt(v, srcGraph, proc_callExpr::nodeForProc_Call(NULL, NULL, Identifier::createIdNode("nodes"), argList), newBlock, NULL, 1);
+                                                return newForallStmt;
+                                            }
+                                            break;
+                                    }
+                                break;
+                            case NODE_FORALLSTMT:
+                                //cout << "hi" << endl;
+                                updatedForall = analyseForallIn(body, srcGraph, v, modified, filterExpr->getRight()->getBooleanConstant());
+                                if (updatedForall != NULL)
+                                {   
+                                    cout << "infor changed 2" << endl;
+                                    list<argument *> argList;
+                                    forallStmt *newForallStmt = forallStmt::createforallStmt(v, srcGraph, proc_callExpr::nodeForProc_Call(NULL, NULL, Identifier::createIdNode("nodes"), argList), updatedForall, NULL, 1);
+                                    return newForallStmt;    
+                                }
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return NULL;
+}
+
+fixedPointStmt *PPAnalyser::analyseFPLoop(statement *stmt)
+{
+    //cout << "checking FP loop" << endl;
     fixedPointStmt *fpStmt = (fixedPointStmt *)stmt;
 
     statement *body = fpStmt->getBody();
@@ -107,21 +234,48 @@ void PPAnalyser::analyseFPLoop(statement *stmt)
     Identifier *fpId = fpStmt->getFixedPointId();
     if (expr->isUnary())
     {
-        Identifier *uId = expr->getUnaryExpr()->getIdentifier();
+        Identifier *modified = expr->getUnaryExpr()->getId();
+        //cout << modified->getIdentifier() << endl;
         if (expr->getOperatorType() == OPERATOR_NOT)
         {
-            switch (stmt->getTypeofNode())
+            //cout << "success" << endl;
+            statement *body = fpStmt->getBody();
+            //cout << body->getTypeofNode() << endl;
+            switch (body->getTypeofNode())
             {
                 case NODE_BLOCKSTMT:
+                    for (statement *bodyStmt: ((blockStatement *)body)->returnStatements())
+                        switch (bodyStmt->getTypeofNode())
+                        {
+                            case NODE_FORALLSTMT:
+                                //cout << "this caase" << endl;
+                                forallStmt *updatedForall = analyseForallOut(bodyStmt, modified);
+                                cout << (updatedForall != NULL) << "kekek" << endl;
+                                if (updatedForall != NULL)
+                                {
+                                    cout << "outfor changed" << endl;
+                                    blockStatement *newBlock = blockStatement::createnewBlock();
+                                    newBlock->addStmtToBlock(updatedForall);
+                                    return fixedPointStmt::createforfixedPointStmt(fpId, expr, newBlock);
+                                }
+                        }
                 case NODE_FORALLSTMT:
-                    analyseForallOut(stmt, uId);
+                    //cout << "this case" << endl;
+                    forallStmt *updatedForall = analyseForallOut(stmt, modified);
+                    if (updatedForall != NULL)
+                    {
+                        cout << "outfor changed" << endl;
+                        return fixedPointStmt::createforfixedPointStmt(fpId, expr, updatedForall);
+                    }
             }
         }
     }
+    return NULL;
 }
 
 void PPAnalyser::analyseBlock(statement* stmt)
 {
+    //cout << "analysing block" << endl;
     blockStatement *blockStmt = (blockStatement *)stmt;
     for (statement *stmt: blockStmt->returnStatements())
     {
@@ -132,18 +286,15 @@ void PPAnalyser::analyseBlock(statement* stmt)
                 analyseBlock(stmt);
                 break;
             }
-            case NODE_FORALLSTMT:
-            {
-            }
-            case NODE_DOWHILESTMT:
-            {
-            }
-            case NODE_WHILESTMT:
-            {
-            }
             case NODE_FIXEDPTSTMT:
             {
-                analyseFPLoop(stmt);
+                //cout << "FP" << endl;
+                fixedPointStmt *fpStmt = analyseFPLoop(stmt);
+                if (fpStmt != NULL)
+                {
+                    cout << "replacing fp" << endl;
+                    blockStmt->replaceStatement(stmt, fpStmt);
+                }
                 break;
             }
         }
@@ -152,6 +303,7 @@ void PPAnalyser::analyseBlock(statement* stmt)
 
 void PPAnalyser::analyseFunc(ASTNode *proc)
 {
+    //cout << "analysing func" << endl;
     Function *func = (Function *)proc;
     analyseBlock(func->getBlockStatement());
     return;

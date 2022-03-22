@@ -7,7 +7,8 @@
     #include "includeHeader.hpp"
 	//#include "../analyser/attachPropAnalyser.h"
 	//#include "../analyser/dataRaceAnalyser.h"
-	#include "../analyser/PRAnalyser.h"
+	//#include "../analyser/PRAnalyser.h"
+	#include "../analyser/pushPullAnalyser.h"
 	#include<getopt.h>
 	//#include "../symbolutil/SymbolTableBuilder.cpp"
      
@@ -419,7 +420,7 @@ int main(int argc,char **argv)
    }
    else
     {
-		if((!strcmp(backendTarget,"omp")==0)||(strcmp(backendTarget,"mpi")==0)||(strcmp(backendTarget,"cuda")==0))
+		if(!(strcmp(backendTarget,"omp")==0)||(strcmp(backendTarget,"mpi")==0)||(strcmp(backendTarget,"cuda")==0))
 		   {
               // printf("Specified backend target is not implemented in the current version!\n");
 			  fprintf(stderr, "Specified backend target is not implemented in the current version!\n");
@@ -440,8 +441,11 @@ int main(int argc,char **argv)
 	//dataRaceAnalyser dataRaceAnalyse;
 	//dataRaceAnalyse.analyse();
 
-	PRAnalyser PRAnalyse;
+	//PRAnalyser PRAnalyse;
 	//PRAnalyse.analyse();
+
+	PPAnalyser PPAnalyse;
+	// PPAnalyse.analyse();
 	
 	cpp_backend.setFileName(fileName);
 	cpp_backend.generate();

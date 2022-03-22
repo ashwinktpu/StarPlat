@@ -1545,6 +1545,8 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct)
   generateStatement(fixedPointConstruct->getBody());
   else
     generateBlock((blockStatement*)fixedPointConstruct->getBody(),false);
+    cout << "is this function even working" << endl;
+  main.pushstr_newL("kek");
   Identifier* dependentId=NULL;
   bool isNot=false;
   assert(convergeExpr->getExpressionFamily()==EXPR_UNARY||convergeExpr->getExpressionFamily()==EXPR_ID);

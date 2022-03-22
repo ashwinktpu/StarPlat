@@ -1,5 +1,5 @@
-#ifndef GENCPP_INPUT_H
-#define GENCPP_INPUT_H
+#ifndef GENCPP_INPUT2_H
+#define GENCPP_INPUT2_H
 #include<stdio.h>
 #include<stdlib.h>
 #include<limits.h>
@@ -7,6 +7,6 @@
 #include<omp.h>
 #include"../graph.hpp"
 
-void Compute_SSSP(graph& g,int src);
+void Compute_SSSP(graph& g);
 
 #endif

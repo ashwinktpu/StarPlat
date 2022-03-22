@@ -76,7 +76,6 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
 
  void SymbolTableBuilder::buildForProc(Function* func)
  {  
-    
      init_curr_SymbolTable(func);
      list<formalParam*> paramList=func->getParamList();
      list<formalParam*>::iterator itr;
@@ -206,7 +205,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                the forall is checked for its existence inside 
                another forall which is to be generated with 
                omp parallel pragma, and then disable the parallel loop*/
-            if(backend.compare("omp")==0)
+            if((backend.compare("omp")==0) || (backend.compare("cuda")==0))
              {  
                  if(parallelConstruct.size()>0)
                   {  
@@ -235,7 +234,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                }
 
               buildForStatements(forAll->getBody());  
-               if(backend.compare("omp")==0&&forAll->isForall())
+               if(((backend.compare("omp")==0)||(backend.compare("cuda")==0))&&forAll->isForall())
                     {  
                         parallelConstruct.pop();
                     } 
@@ -283,7 +282,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
              count++;
           }
 
-          if(flag&&backend.compare("omp")==0)
+          if(flag&&((backend.compare("omp")==0)||(backend.compare("cuda")==0)))
           { 
             iterateBFS* itrbFS=(iterateBFS*)(*itrIBFS);  
             Identifier* id=Identifier::createIdNode("bfsDist");
@@ -352,7 +351,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
            {
                checkForExpressions((Expression*)*itr1);
            } 
-           
+        
            reductionCall* reduceExpr=reducStmt->getReducCall();
            checkReductionExpr(reduceExpr);
            }

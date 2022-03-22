@@ -11,9 +11,10 @@ class PPAnalyser
     void analyse();
     void analyseFunc(ASTNode *);
     void analyseBlock(statement *);
-    void analyseForallOut(statement *, Identifier *);
-    void analyseForallIn(statement *, Identifier *, Identifier *, Identifier *);
-    void checkSSSPUpdate(statement *, Identifier *, Identifier *, Identifier *);
+    fixedPointStmt *analyseFPLoop(statement *);
+    forallStmt *analyseForallOut(statement *, Identifier *);
+    forallStmt *analyseForallIn(statement *, Identifier *, Identifier *, Identifier *, int);
+    blockStatement *checkSSSPUpdate(statement *, Identifier *, Identifier *, Identifier *, Identifier *);
 
 };
 
