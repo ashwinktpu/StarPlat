@@ -1,5 +1,4 @@
 %{
-	
 	#include <stdio.h>
 	#include <string.h>
 	#include <stdlib.h>
@@ -19,11 +18,12 @@
 	char mytext[100];
 	char var[100];
 	int num = 0;
-	vector<Identifier*> graphId;
+	vector<map<int,vector<Identifier*>>> graphId(4);
 	extern char *yytext;
 	//extern SymbolTable* symbTab;
 	FrontEndContext frontEndContext;
 	char* backendTarget ;
+    vector<Identifier*> tempIds; //stores graph vars in current function's param list.
     //symbTab=new SymbolTable();
 	//symbolTableList.push_back(new SymbolTable());
 %}
@@ -49,10 +49,11 @@
 %token T_ADD_ASSIGN T_SUB_ASSIGN T_MUL_ASSIGN T_DIV_ASSIGN T_MOD_ASSIGN T_AND_ASSIGN T_XOR_ASSIGN
 %token T_OR_ASSIGN T_RIGHT_OP T_LEFT_OP T_INC_OP T_DEC_OP T_PTR_OP T_AND_OP T_OR_OP T_LE_OP T_GE_OP T_EQ_OP T_NE_OP
 %token T_AND T_OR T_SUM T_AVG T_COUNT T_PRODUCT T_MAX T_MIN
-%token T_GRAPH T_DIR_GRAPH  T_NODE T_EDGE 
+%token T_GRAPH T_DIR_GRAPH  T_NODE T_EDGE T_UPDATES
 %token T_NP  T_EP
 %token T_LIST T_SET_NODES T_SET_EDGES  T_FROM
 %token T_BFS T_REVERSE
+%token T_INCREMENTAL T_DECREMENTAL T_STATIC
 
 
 %token <text> ID
@@ -62,7 +63,7 @@
 
 %type <node> function_def function_data function_body param
 %type <pList> paramList
-%type <node> statement blockstatements assignment declaration proc_call control_flow reduction
+%type <node> statement blockstatements assignment declaration proc_call control_flow reduction return_stmt
 %type <node> type1 type2
 %type <node> primitive graph collections property
 %type <node> id leftSide rhs expression oid val boolean_expr unary_expr tid 
@@ -96,16 +97,36 @@ program:
         | program function_def {/* printf("LIST SIZE %d",frontEndContext.getFuncList().size())  ;*/ };
 
 function_def: function_data  function_body  { 
-	                                           Function* func=(Function*)$1;
-                                               blockStatement* block=(blockStatement*)$2;
+	                                          Function* func=(Function*)$1;
+                                              blockStatement* block=(blockStatement*)$2;
                                               func->setBlockStatement(block);
 											   Util::addFuncToList(func);
-											    };
+											};
 
 function_data: T_FUNC id '(' paramList ')' { 
 										   $$=Util::createFuncNode($2,$4->PList);
-
+                                           Util::setCurrentFuncType(GEN_FUNC);
+										   Util::resetTemp(tempIds);
+										   tempIds.clear();
 	                                      };
+			   | T_STATIC id '(' paramList ')' { 
+										   $$=Util::createStaticFuncNode($2,$4->PList);
+                                            Util::setCurrentFuncType(STATIC_FUNC);
+											Util::resetTemp(tempIds);
+											tempIds.clear();
+	                                      };
+	           | T_INCREMENTAL '(' paramList ')' { 
+										   $$=Util::createIncrementalNode($3->PList);
+                                            Util::setCurrentFuncType(INCREMENTAL_FUNC);
+											Util::resetTemp(tempIds);
+											tempIds.clear();
+	                                      };	
+			   | T_DECREMENTAL '(' paramList ')' { 
+										   $$=Util::createDecrementalNode($3->PList);
+                                            Util::setCurrentFuncType(DECREMENTAL_FUNC);
+											Util::resetTemp(tempIds);
+											tempIds.clear();
+	                                      };						  								  							  
 
 paramList: param {$$=Util::createPList($1);};
                | param ',' paramList {$$=Util::addToPList($3,$1); 
@@ -116,8 +137,11 @@ param : type1 id {  //Identifier* id=(Identifier*)Util::createIdentifierNode($2)
 	                     Identifier* id=(Identifier*)$2;
 						 
 						 if(type->isGraphType())
-						    graphId.push_back(id);
-					
+						    {
+							 tempIds.push_back(id);
+						   
+							}
+					printf("\n");
                     $$=Util::createParamNode($1,$2); } ;
                | type2 id { // Identifier* id=(Identifier*)Util::createIdentifierNode($2);
 			  
@@ -146,6 +170,7 @@ statement: declaration ';'{$$=$1;};
 	| bfs_abstraction {$$=$1; };
 	| blockstatements {$$=$1;};
 	| unary_expr ';' {$$=Util::createNodeForUnaryStatements($1);};
+	| return_stmt ';' {$$ = $1 ;};
 
 
 blockstatements : block_begin statements block_end { $$=Util::finishBlock();};
@@ -154,13 +179,16 @@ block_begin:'{' { Util::createNewBlock(); }
 
 block_end:'}'
 
+return_stmt : T_RETURN expression {$$ = Util::createReturnStatementNode($2);}
+               
 
 declaration : type1 id   {
 	                     Type* type=(Type*)$1;
 	                     Identifier* id=(Identifier*)$2;
 						 
 						 if(type->isGraphType())
-						    graphId.push_back(id);
+						    Util::storeGraphId(id);
+
                          $$=Util::createNormalDeclNode($1,$2);};
 	| type1 id '=' rhs  {//Identifier* id=(Identifier*)Util::createIdentifierNode($2);
 	                    
@@ -191,6 +219,8 @@ collections : T_LIST { $$=Util::createCollectionTypeNode(TYPE_LIST,NULL);};
 			                     $$=Util::createCollectionTypeNode(TYPE_SETN,$3);};
                 | T_SET_EDGES '<' id '>' {// Identifier* id=(Identifier*)Util::createIdentifierNode($3);
 					                    $$=Util::createCollectionTypeNode(TYPE_SETE,$3);};
+				| T_UPDATES '<' id '>'   { $$=Util::createCollectionTypeNode(TYPE_UPDATES,$3);}
+
 
 type2 : T_NODE {$$=Util::createNodeEdgeTypeNode(TYPE_NODE) ;};
        | T_EDGE {$$=Util::createNodeEdgeTypeNode(TYPE_EDGE);};
@@ -253,6 +283,7 @@ iteration_cf : T_FIXEDPOINT T_UNTIL '(' id ':' expression ')' blockstatements { 
 		   | T_DO blockstatements T_WHILE '(' boolean_expr ')' ';' {$$=Util::createNodeForDoWhileStmt($5,$2);  };
 		| T_FORALL '(' id T_IN id '.' proc_call filterExpr')'  blockstatements { 
 																				$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,true);};
+		| T_FORALL '(' id T_IN leftSide ')' blockstatements	{ $$=Util::createNodeForForStmt($3,$5,$7,true);};																	
 		| T_FOR '(' id T_IN leftSide ')' blockstatements { $$=Util::createNodeForForStmt($3,$5,$7,false);};
 		| T_FOR '(' id T_IN id '.' proc_call  filterExpr')' blockstatements {$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,false);};
 
@@ -261,8 +292,8 @@ filterExpr  :         { $$=NULL;};
 
 boolean_expr : expression { $$=$1 ;};
 
-selection_cf : T_IF '(' boolean_expr ')' blockstatements { $$=Util::createNodeForIfStmt($3,$5,NULL); };
-	           | T_IF '(' boolean_expr ')' blockstatements T_ELSE blockstatements  {$$=Util::createNodeForIfStmt($3,$5,$7); };
+selection_cf : T_IF '(' boolean_expr ')' statement { $$=Util::createNodeForIfStmt($3,$5,NULL); }; 
+	           | T_IF '(' boolean_expr ')' statement T_ELSE statement  {$$=Util::createNodeForIfStmt($3,$5,$7); };
 
 
 reduction : leftSide '=' reductionCall { $$=Util::createNodeForReductionStmt($1,$3) ;}
@@ -282,7 +313,11 @@ leftList :  leftSide ',' leftList { $$=Util::addToNList($3,$1);
 		 | leftSide { $$=Util::createNList($1);};
 
 rightList : val ',' rightList { $$=Util::addToNList($3,$1);};
+          | leftSide ',' rightList { ASTNode* node = Util::createNodeForId($1);
+			                         $$=Util::addToNList($3,node);};
           | val    { $$=Util::createNList($1);};
+		  | leftSide  { ASTNode* node = Util::createNodeForId($1);
+			            $$=Util::createNList(node);};
 
             /*reductionCall ',' val { $$=new tempNode();
 	                                $$->reducCall=(reductionCall*)$1;
@@ -382,12 +417,16 @@ int main(int argc,char **argv)
     dsl_cpp_generator cpp_backend;
     SymbolTableBuilder stBuilder;
      FILE    *fd;
-     
+    
+
+
   int opt;
   char* fileName=NULL;
-  //char* backendTarget=NULL;
   backendTarget = NULL;
-  while ((opt = getopt(argc, argv, ":f:b:")) != -1) 
+  bool staticGen = false;
+  bool dynamicGen = false;
+
+  while ((opt = getopt(argc, argv, "sdf:b:")) != -1) 
   {
      switch (opt) 
      {
@@ -397,6 +436,12 @@ int main(int argc,char **argv)
       case 'b':
         backendTarget = optarg;
         break;
+      case 's':
+	    staticGen = true;
+		break;
+	  case 'd':
+	    dynamicGen = true;
+        break;		
       case '?':
         fprintf(stderr,"Unknown option: %c\n", optopt);
 		exit(-1);
@@ -410,6 +455,8 @@ int main(int argc,char **argv)
    
    printf("fileName %s\n",fileName);
    printf("Backend Target %s\n",backendTarget);
+
+   
    if(fileName==NULL||backendTarget==NULL)
    {
 	   if(fileName==NULL)
@@ -422,19 +469,33 @@ int main(int argc,char **argv)
     {
 		if(!(strcmp(backendTarget,"omp")==0)||(strcmp(backendTarget,"mpi")==0)||(strcmp(backendTarget,"cuda")==0))
 		   {
-              // printf("Specified backend target is not implemented in the current version!\n");
 			  fprintf(stderr, "Specified backend target is not implemented in the current version!\n");
 			   exit(-1);
 		   }
 	}
+
+   if(!(staticGen || dynamicGen))
+      {
+		fprintf(stderr, "Type of graph(static/dynamic) not specified!\n");
+		exit(-1);
+	  }
+	  
+     
+
+
    yyin= fopen(fileName,"r");
    int error=yyparse();
-	printf("error val %d\n",error);
+   printf("error val %d\n",error);
+
+
 	if(error!=1)
 	{
      //TODO: redirect to different backend generator after comparing with the 'b' option
     stBuilder.buildST(frontEndContext.getFuncList());
 	
+	if(staticGen)
+	  {
+
 	//attachPropAnalyser propMerge;
 	//propMerge.analyse();
 
@@ -447,14 +508,23 @@ int main(int argc,char **argv)
 	PPAnalyser PPAnalyse;
 	// PPAnalyse.analyse();
 	
-	cpp_backend.setFileName(fileName);
-	cpp_backend.generate();
+	  cpp_backend.setFileName(fileName);
+	  cpp_backend.generate();
+	  }
+	else
+	 {
+		 printf("static graphsize %d\n",graphId[2][0].size());
+		 dsl_dyn_cpp_generator cpp_dyn_gen;
+		 cpp_dyn_gen.setFileName(fileName);
+		 cpp_dyn_gen.generate();
+
+	 }
 	
 	}
 
 	printf("finished successfully\n");
    
-   /* to generate code, ./finalcode -f "filename" -b "backendname"*/
+   /* to generate code, ./finalcode -s/-d -f "filename" -b "backendname"*/
 	return 0;   
 	 
 }

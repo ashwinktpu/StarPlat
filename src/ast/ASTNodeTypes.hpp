@@ -9,6 +9,7 @@
 #include<stack>
 #include<map>
 #include<set>
+#include<queue>
 #include "../maincontext/enum_def.hpp"
 
 
@@ -22,11 +23,14 @@ class formalParam;
 class Type;
 class blockStatement;
 class Identifier;
-extern vector<Identifier*> graphId;
-
+extern vector<map<int,vector<Identifier*>>> graphId; 
+                                                      /*store the graph variables 
+                                                       referenced in current function,
+                                                       where the graphId vector is 
+                                                       separated across different function type*/
 
 class argument
-{ 
+{  
   private:
   Expression* expression;
   assignment* assignExpr;
@@ -113,29 +117,32 @@ class ASTNodeList
 
 
 class Identifier:public ASTNode
-
 {
   private:
   
   int accessType;
   char* identifier;
+
   Expression* assignedExpr; /*added to store node/edge property initialized values.
                              - Used in SymbolTable phase for storing metadata. 
                              - This field is more of a code generation utility.  */
-  bool redecl; /*added for fixedPoint.(node property parameter)
+  bool redecl; /* added for fixedPoint.(node property parameter)
                 - This field is populated during SymbolTable creation.
                 - it checks if double buffering is required for a node/edge prop.*/
+ 
   bool fp_association; /*checks if the identifier as a node/edge property
-                         is used as a dependent for fixedpoint.*/ 
+                         is used as a dependent for fixedpoint.*/
+
   char* fpId;          /*If the identifier is associated with a fixedpoint,
                          the field stores the fixedpoint id name*/
   TableEntry* idInfo;
+  Expression* dependentExpr; /*the expression in fixedPoint of which the current
+                               identifier is a part of*/
    
   public: 
  
   static Identifier* createIdNode(const char* id)
    {
-
    
      Identifier* idNode=new Identifier();
      idNode->identifier=new char[strlen(id)+1];
@@ -145,6 +152,7 @@ class Identifier:public ASTNode
      idNode->redecl=false;
      idNode->fp_association = false;
      idNode->assignedExpr = NULL;
+     idNode->dependentExpr = NULL;
    // std::cout<<"IDENTIFIER = "<<idNode->getIdentifier()<<" "<<strlen(idNode->getIdentifier());
      return idNode;
 
@@ -222,10 +230,20 @@ class Identifier:public ASTNode
      return assignedExpr;
    }
 
+   void set_dependentExpr(Expression* dependExpr) //Expression in fixedPoint of which the identifier
+                                                  // is part of
+   {
+     dependentExpr = dependExpr;
+   }
+
+   Expression* get_dependentExpr()
+   {
+     return dependentExpr;
+   }
+
 };
 
 class PropAccess:public ASTNode
-
 {
   private:
   Identifier* identifier1;
@@ -284,10 +302,6 @@ class statement:public ASTNode
   {
     return statementType;
   }
-
-
-  
-  
   
   };
   
@@ -390,12 +404,19 @@ class Function:public ASTNode
   Identifier* functionId;
   list<formalParam*> paramList;
   blockStatement* blockstmt;
+  bool initialLockDecl; /* If omp_locks required in some part of function body,
+                           set this to initialize the omp_locks in 1st part of func body*/ 
+  int funcType ;
+
 
   public:
 
   Function()
-  { functionId=NULL;
+  { 
+    functionId=NULL;
     blockstmt=NULL;
+    funcType = 0;
+    initialLockDecl = false;
     createSymbTab();
   }
 
@@ -405,8 +426,51 @@ class Function:public ASTNode
       func->functionId=funcId;
       func->paramList=paramList;
       func->setTypeofNode(NODE_FUNC);
+      func->setFuncType(GEN_FUNC);
       return func;
 
+  }
+  static Function*  createStaticFunctionNode(Identifier* funcId,list<formalParam*> paramList)
+  {
+   
+    Function* staticFunc = new Function();
+    staticFunc->functionId = funcId;
+    staticFunc->paramList = paramList;
+    staticFunc->setTypeofNode(NODE_FUNC);
+    staticFunc->setFuncType(STATIC_FUNC);
+    return staticFunc;
+ 
+
+  }
+
+  static Function*  createIncrementalNode(list<formalParam*> paramList)
+  {
+   
+    Function* incrementalFunc = new Function();
+    incrementalFunc->paramList = paramList;
+    incrementalFunc->setTypeofNode(NODE_FUNC);
+    incrementalFunc->setFuncType(INCREMENTAL_FUNC);
+
+    return incrementalFunc;
+
+  }
+
+  static Function*  createDecrementalNode(list<formalParam*> paramList)
+  {
+   
+    Function* decrementalFunc = new Function();
+    decrementalFunc->paramList = paramList;
+    decrementalFunc->setTypeofNode(NODE_FUNC);
+    decrementalFunc->setFuncType(DECREMENTAL_FUNC);
+
+    return decrementalFunc;
+
+  }
+
+
+  void setFuncType(FUNCTYPE type)
+  {
+    funcType = type;
   }
   
    void setBlockStatement(blockStatement* blockStmtSent)
@@ -429,6 +493,22 @@ class Function:public ASTNode
      return blockstmt;
    }
 
+   int getFuncType()
+   {
+     return funcType;
+   }
+
+   void setInitialLockDecl()
+     { 
+       //printf("INSIDE THIS FOR LOCKSET\n");
+       initialLockDecl = true;
+     }
+
+   bool getInitialLockDecl()
+      {
+        return initialLockDecl;
+      }  
+
 
 };
 
@@ -445,7 +525,7 @@ class Type:public ASTNode
  public:
  Type()
  {
-     typeId=-1;
+     typeId = TYPE_NONE;
      TargetGraph=NULL;
      innerTargetType=NULL;
      sourceGraph=NULL;
@@ -914,10 +994,37 @@ class formalParam:public ASTNode
        return enclosedBrackets;
      }
 
-   
-
-
   };
+
+
+  class returnStmt:public statement
+   {
+     private:
+     Expression* returnExpression;
+
+     public:
+     returnStmt()
+      {
+        returnExpression = NULL;
+      }
+     
+     static returnStmt* createNodeForReturnStmt(Expression* returnExpressionSent)
+        {
+            returnStmt* returnStmtNode = new returnStmt();
+            returnStmtNode->returnExpression = returnExpressionSent;
+            returnStmtNode->setTypeofNode(NODE_RETURN);
+            returnExpressionSent->setParent(returnStmtNode);
+            return returnStmtNode;
+        }
+
+     Expression* getReturnExpression()
+       {
+         return returnExpression;
+       }   
+
+
+   };
+
   class declaration:public statement
   {
     private:

@@ -17,7 +17,9 @@ enum TYPE
  TYPE_NODE,
  TYPE_EDGE,
  TYPE_PROPNODE,
- TYPE_PROPEDGE
+ TYPE_PROPEDGE,
+ TYPE_NONE,
+ TYPE_UPDATES,
 
 };
 
@@ -31,7 +33,7 @@ inline bool check_isPropType(int typeId)
 }
 inline bool check_isCollectionType(int typeId)
 {
-  return ((typeId==TYPE_LIST)||(typeId==TYPE_SETE)||(typeId==TYPE_SETN));
+  return ((typeId == TYPE_LIST)||(typeId==TYPE_SETE)||(typeId==TYPE_SETN)||(typeId == TYPE_UPDATES));
 }
 inline bool check_isGraphType(int typeId)
 {
@@ -106,6 +108,15 @@ enum OPERATOR
 
 };
 
+enum FUNCTYPE
+{
+  GEN_FUNC,
+  STATIC_FUNC,
+  INCREMENTAL_FUNC,
+  DECREMENTAL_FUNC,
+  
+};
+
 enum NODETYPE
 {
   NODE_ID,
@@ -131,6 +142,7 @@ enum NODETYPE
   NODE_REDUCTIONCALLSTMT,
   NODE_UNARYSTMT,
   NODE_BARRIERSTMT,
+  NODE_RETURN,
 };
 
 
