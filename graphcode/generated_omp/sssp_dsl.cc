@@ -21,7 +21,8 @@ void Compute_SSSP(graph& g,int src)
     #pragma omp parallel for
     for (int v = 0; v < g.num_nodes(); v ++) 
     {
-      if (modified[v] == true ){
+      if (modified[v] == true )
+        {
         for (int edge = g.indexofNodes[v]; edge < g.indexofNodes[v+1]; edge ++) 
         {int nbr = g.edgeList[edge] ;
           int e = edge;
@@ -31,9 +32,8 @@ void Compute_SSSP(graph& g,int src)
           {
             int oldValue = dist[nbr];
             atomicMin(&dist[nbr],dist_new);
-            if(oldValue > dist[nbr])
-            {
-              modified_nxt[nbr] = modified_new;
+            if( oldValue > dist[nbr])
+            {modified_nxt[nbr] = modified_new;
               finished = false ;
             }
           }
