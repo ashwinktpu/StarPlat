@@ -1206,6 +1206,10 @@ class whileStmt:public statement
       return body;
     }
 
+    void setBody(statement* bodySent)
+    {
+       body=bodySent;
+    }
   }; 
   class dowhileStmt:public statement
 {
@@ -1243,6 +1247,10 @@ class whileStmt:public statement
       return body;
     }
 
+    void setBody(statement* bodySent)
+    {
+       body=bodySent;
+    }
   };
 
   

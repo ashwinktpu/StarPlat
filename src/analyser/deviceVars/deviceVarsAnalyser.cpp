@@ -146,45 +146,57 @@ lattice deviceVarsAnalyser::analyseDoWhile(dowhileStmt *stmt, lattice &inMap)
 // TODO: Handle source field and source procedure call
 lattice deviceVarsAnalyser::analyseFor(forallStmt *stmt, lattice &inMap)
 {
-  ASTNodeWrap *wrapNode = getWrapNode(stmt, inMap);
+  ASTNodeWrap *wrapNode = getWrapNode(stmt);
   wrapNode->inMap = inMap;
 
-  Expression *filterExpr = stmt->getfilterExpr();
-  ASTNodeWrap *exprNode = getWrapNode(filterExpr);
-  usedVariables exprVars = ((filterExpr != nullptr) ? getVarsExpr(filterExpr) : usedVariables());
-  
+  lattice outTemp = wrapNode->inMap;
+  if(stmt->isSourceProcCall())
+  {
+    // Nothing to Handle
+  }
+  else if(stmt->isSourceField())
+  {
+    Identifier* srcId = stmt->getSource();
+    outTemp.meet(srcId, lattice::CPU_READ);
+  }
+  else
+  {
+    PropAccess* sourceProp = stmt->getPropSource();
+    outTemp.meet(sourceProp->getIdentifier1(), lattice::CPU_READ);
+  }
+
+  if(stmt->hasFilterExpr()){
+    Expression* filterExpr = stmt->getfilterExpr();
+    usedVariables exprVars = getVarsExpr(filterExpr);
+
+    for (Identifier *iden : exprVars.getVariables(READ))
+    {
+      outTemp.meet(iden, lattice::CPU_READ);
+    }
+    for (Identifier *iden : exprVars.getVariables(WRITE))
+    {
+      outTemp.meet(iden, lattice::CPU_WRITE);
+    }
+  }
+  wrapNode->outMap = outTemp;
+
   bool hasChanged;
   do
   {
-    lattice bodyIn;
-    if(filterExpr != nullptr)
-    {
-      exprNode->inMap = wrapNode->inMap ^ wrapNode->outMap;
-      exprNode->outMap = exprNode->inMap;
+    
+    lattice bodyIn = wrapNode->outMap;
+    bodyIn.addVariable(stmt->getIterator(), lattice::CPU_ONLY);
 
-      for (Identifier *iden : exprVars.getVariables(READ))
-      {
-        exprNode->outMap.meet(iden, lattice::CPU_READ);
-      }
-      for (Identifier *iden : exprVars.getVariables(WRITE))
-      {
-        exprNode->outMap.meet(iden, lattice::CPU_WRITE);
-      }
-
-      bodyIn = exprNode->outMap;
-      bodyIn.addVariable(stmt->getIterator(), lattice::CPU_ONLY);
-    }
-    else
-    {
-      bodyIn = wrapNode->inMap ^ wrapNode->outMap;
-      bodyIn.addVariable(stmt->getIterator(), lattice::CPU_ONLY);
-    }
     lattice bodyOut = analyseStatement(stmt->getBody(), bodyIn);
     bodyOut.removeVariable(stmt->getIterator());
 
-    hasChanged = (wrapNode->outMap != bodyOut);
-    wrapNode->outMap = bodyOut;
-
+    if(wrapNode->outMap != (bodyOut ^ outTemp)){
+      wrapNode->outMap = bodyOut ^ outTemp;
+      hasChanged = true;
+    }
+    else
+      hasChanged = false;
+      
   }while(hasChanged);
 
   return wrapNode->outMap;

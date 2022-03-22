@@ -261,6 +261,7 @@ class deviceVarsAnalyser
 
   statement* transferVarsStatement(statement* stmt,blockStatement* parBlock);
   statement* transferVarsForAll(forallStmt* stmt,blockStatement* parBlock);
+  statement* transferVarsFor(forallStmt* stmt,blockStatement* parBlock);
   statement* transferVarsUnary(unary_stmt* stmt,blockStatement* parBlock);
   statement* transferVarsBlock(blockStatement* stmt,blockStatement* parBlock);
   statement* transferVarsDeclaration(declaration* stmt,blockStatement* parBlock);
@@ -268,7 +269,6 @@ class deviceVarsAnalyser
   statement* transferVarsDoWhile(dowhileStmt* stmt,blockStatement* parBlock);
   statement* transferVarsAssignment(assignment* stmt,blockStatement* parBlock);
   statement* transferVarsIf(ifStmt* stmt,blockStatement* parBlock);
-  statement* transferVarsExpr(Expression* stmt,blockStatement* parBlock);
 };
 
 #endif
