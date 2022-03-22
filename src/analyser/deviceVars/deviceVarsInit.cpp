@@ -2,7 +2,7 @@
 
 bool deviceVarsAnalyser::initBlock(blockStatement *blockStmt, list<Identifier *> &vars)
 {
-    ASTNodeWrap *blockNode = initWrapNode(blockStatement, vars);
+    ASTNodeWrap *blockNode = initWrapNode(blockStmt, vars);
 
     bool hasForAll = false;
     int localCount = 0;
@@ -47,9 +47,9 @@ bool deviceVarsAnalyser::initStatement(statement *stmt, list<Identifier *> &vars
     case NODE_IFSTMT:
         return initIfElse((ifStmt *)stmt, vars);
     case NODE_WHILESTMT:
-        return initWhile((whileStmt *)stmt, inMap);
+        return initWhile((whileStmt *)stmt, vars);
     case NODE_DOWHILESTMT:
-        return initDoWhile((dowhileStmt *)stmt, inMap);
+        return initDoWhile((dowhileStmt *)stmt, vars);
 
         /*    case NODE_PROCCALLSTMT:
             // TODO : Add proc call statment
@@ -72,12 +72,12 @@ bool deviceVarsAnalyser::initUnary(u4nary_stmt *stmt, list<Identifier *> &vars)
 bool deviceVarsAnalyser::initIfElse(ifStmt *stmt, list<Identifier *> &vars)
 {
     ASTNodeWrap* stmtWrap = initWrapNode(stmt, vars);
-    ASTNodeWrap* condWrap = initWrapNode(stmt, vars);
+    ASTNodeWrap* condWrap = initWrapNode(stmt->getCondition(), vars);
    
     bool hasForAll = false;
-    hasForAll |= initStatement(stmt->getIfBody());
+    hasForAll |= initStatement(stmt->getIfBody(), vars);
     if(stmt->getElseBody() != nullptr)
-        hasForAll |= initStatement(stmt->getElseBody());
+        hasForAll |= initStatement(stmt->getElseBody(), vars);
 
     return hasForAll;
 }
@@ -123,11 +123,11 @@ bool deviceVarsAnalyser::initFor(forallStmt *stmt, list<Identifier *> &vars)
 {
     ASTNodeWrap *stmtNode = initWrapNode(stmt, vars);
 
-    if(stmt->hasFilterExpr())
+    /*if(stmt->hasFilterExpr())
     {
         Expression* filterExpr = stmt->getfilterExpr();
         ASTNodeWrap *condNode = initWrapNode(filterExpr, vars);
-    }
+    }*/
 
     vars.push_back(stmt->getIterator());
     bool hasForAll = initStatement(stmt->getBody());

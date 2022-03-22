@@ -69,9 +69,26 @@ statement* deviceVarsAnalyser::transferVarsForAll(forallStmt* stmt, blockStateme
 {
     ASTNodeWrap* wrapNode = getWrapNode(stmt);
     list<statement*> transferStmts = transferStatements(wrapNode->inMap, wrapNode->outMap);
-    for(statement* stmt: transferStmts)
-        parBlock->addStmtToBlock(stmt);
+    for(statement* bstmt: transferStmts)
+        parBlock->addStmtToBlock(bstmt);
     
+    return stmt;
+}
+statement* deviceVarsAnalyser::transferVarsFor(forallStmt* stmt, blockStatement* parBlock)
+{
+    ASTNodeWrap* wrapNode = getWrapNode(stmt);
+    list<statement*> transferStmts = transferStatements(wrapNode->inMap, wrapNode->outMap);
+    for(statement* bstmt: transferStmts)
+        parBlock->addStmtToBlock(bstmt);
+    
+    blockStatement* newBody = (blockStatement*) transferVarsStatement(stmt->getBody(), parBlock);
+    lattice bodyOut = getWrapNode(stmt->getBody())->outMap;
+
+    transferStmts = transferStatements(bodyOut, wrapNode->outMap);
+    for(statement* bstmt: transferStmts)
+        newBody->addStmtToBlock(bstmt);
+    
+    stmt->setBody(newBody);
     return stmt;
 }
 statement* deviceVarsAnalyser::transferVarsUnary(unary_stmt* stmt, blockStatement* parBlock)
@@ -132,7 +149,8 @@ statement* deviceVarsAnalyser::transferVarsWhile(whileStmt* stmt, blockStatement
         newBody->addStmtToBlock(bstmt);
     }
 
-    return whileStmt::create_whileStmt(stmt->getCondition(), newBody);
+    stmt->setBody(newBody);
+    return stmt;
 }
 statement* deviceVarsAnalyser::transferVarsDoWhile(dowhileStmt* stmt, blockStatement* parBlock)
 {
@@ -174,7 +192,8 @@ statement* deviceVarsAnalyser::transferVarsDoWhile(dowhileStmt* stmt, blockState
         parBlock->addStmtToBlock(bstmt);
     }
 
-    return dowhileStmt::create_dowhileStmt(stmt->getCondition(), newBody);
+    stmt->setBody(newBody);
+    return stmt;
 }
 
 statement* deviceVarsAnalyser::transferVarsAssignment(assignment* stmt, blockStatement* parBlock)
@@ -223,18 +242,11 @@ statement* deviceVarsAnalyser::transferVarsIf(ifStmt* stmt, blockStatement* parB
             ifBody->addStmtToBlock(bstmt);
         }
         
+        blockStatement* elseBody = (blockStatement*) blockStatement::createnewBlock();
         for(statement* bstmt: transferStatements(condWrap->outMap, wrapNode->outMap))
-        {
-            varTransferStmt* currStmt = (varTransferStmt*) bstmt;
-            Identifier* tIden = currStmt->transferVar;
+            elseBody->addStmtToBlock(bstmt);
 
-            if(currStmt->direction)
-                parBlock->addStmtToBlock(new varTransferStmt(tIden, 0));
-            else
-                parBlock->addStmtToBlock(new varTransferStmt(tIden, 1));
-        }
-
-        newStmt = ifStmt::create_ifStmt(expr, ifBody, nullptr);
+        newStmt = ifStmt::create_ifStmt(expr, ifBody, elseBody);
     }
     return newStmt;
 }
