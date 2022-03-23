@@ -59,7 +59,6 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
   float milliseconds = 0;
   cudaEventRecord(start,0);
 
-  //END CSR 
 
   //DECLAR DEVICE AND HOST vars in params
   float* d_pageRank;

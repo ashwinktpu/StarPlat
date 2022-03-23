@@ -58,13 +58,12 @@ void Compute_TC(graph& g)
   float milliseconds = 0;
   cudaEventRecord(start,0);
 
-  //END CSR 
 
   //DECLAR DEVICE AND HOST vars in params
   double* d_BC; cudaMalloc(&d_BC, sizeof(double)*(V)); ///TODO from func
 
   //BEGIN DSL PARSING 
-  long* triangle_count; cudaMalloc(&triangle_count,sizeof(long)*(1));
+  long* d_triangle_count; cudaMalloc(&d_triangle_count,sizeof(long)*(1));
 
   initIndex<<<1,1>>(1,d_triangle_count,0, DECVAR);
   Compute_TC_kernel<<<numBlocks, numThreads>>>( V, E, d_meta, d_data, d_weight ,g);

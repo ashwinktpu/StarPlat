@@ -88,9 +88,6 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
          SymbolTable* symbTab=type->isPropNodeType()?currPropSymbT:currVarSymbT;
          bool creationFine=create_Symbol(symbTab,id,type);
          id->getSymbolInfo()->setArgument(true);
-
-
-
     }
 
     buildForStatements(func->getBlockStatement());
@@ -274,7 +271,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
              if(!callFlag&&(*itr)->getTypeofNode()==NODE_PROCCALLSTMT)
              {
                  proc_callStmt* proc=(proc_callStmt*)(*itr);
-                 char* methodId=proc->getProcCallExpr()->getMethodId()->getIdentifier();
+                 //~ char* methodId=proc->getProcCallExpr()->getMethodId()->getIdentifier();
                  string IDCoded("attachNodeProperty");
                  int x=IDCoded.compare(IDCoded);
                  if(x==0)
@@ -406,6 +403,8 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
            buildForStatements(doStmt->getBody());
            break;
        }
+     default: // added to supress warnings
+          std::cout<< "DEFAULT NODE-ok?" << '\n';
 
    }
 
