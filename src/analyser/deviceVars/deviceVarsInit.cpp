@@ -64,7 +64,7 @@ bool deviceVarsAnalyser::initStatement(statement *stmt, list<Identifier *> &vars
     }
     return false;
 }
-bool deviceVarsAnalyser::initUnary(u4nary_stmt *stmt, list<Identifier *> &vars)
+bool deviceVarsAnalyser::initUnary(unary_stmt *stmt, list<Identifier *> &vars)
 {
     ASTNodeWrap* stmtNode = initWrapNode(stmt, vars);
     return false;
@@ -113,7 +113,7 @@ bool deviceVarsAnalyser::initWhile(whileStmt *stmt, list<Identifier *> &vars)
     ASTNodeWrap* condNode = initWrapNode(stmt->getCondition(), vars);
     condNode->usedVars = getVarsExpr(stmt->getCondition());
 
-    bool hasForAll = initStatement(stmt->getBody());
+    bool hasForAll = initStatement(stmt->getBody(), vars);
     condNode->hasForAll = hasForAll;
 
     return hasForAll;
@@ -136,7 +136,7 @@ bool deviceVarsAnalyser::initFor(forallStmt *stmt, list<Identifier *> &vars)
         stmtNode->usedVars = getVarsExpr(stmt->getfilterExpr());
 
     vars.push_back(stmt->getIterator());
-    bool hasForAll = initStatement(stmt->getBody());
+    bool hasForAll = initStatement(stmt->getBody(), vars);
     vars.pop_back();
 
     stmtNode->hasForAll = hasForAll;

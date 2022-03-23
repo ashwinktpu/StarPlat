@@ -26,8 +26,9 @@ usedVariables deviceVarsAnalyser::getVarsExpr(Expression *expr)
                 result.addVariable(uExpr->getId(), READ_WRITE);
             else if (uExpr->isPropIdExpr())
             {
-                result.addVariable(uExpr->getIdentifier1(), READ);
-                result.addVariable(uExpr->getIdentifier2(), READ_WRITE);
+                PropAccess* propId = uExpr->getPropId();
+                result.addVariable(propId->getIdentifier1(), READ);
+                result.addVariable(propId->getIdentifier2(), READ_WRITE);
             }
         }
     }
@@ -69,14 +70,14 @@ usedVariables deviceVarsAnalyser::getVarsAssignment(assignment *stmt)
   else if (stmt->lhs_isIdentifier())
     currVars.addVariable(stmt->getId(), WRITE);
 
-  usedVariables exprVars = getVarsExpr(stmt->getExpr()));
+  usedVariables exprVars = getVarsExpr(stmt->getExpr());
   currVars.merge(exprVars);
   return currVars;
 }
 
 usedVariables deviceVarsAnalyser::getVarsIf(ifStmt *stmt)
 {
-  usedVariables currVars = getVarsExpr(stmt->getCondition()));
+  usedVariables currVars = getVarsExpr(stmt->getCondition());
   currVars.merge(getVarsStatement(stmt->getIfBody()));
   if (stmt->getElseBody() != NULL)
     currVars.merge(getVarsStatement(stmt->getElseBody()));
@@ -155,7 +156,7 @@ usedVariables deviceVarsAnalyser::getVarsForAll(forallStmt *stmt)
   }
 
   if (stmt->hasFilterExpr())
-    currVars.merge(getVarsExpr(stmt->getfilterExpr())));
+    currVars.merge(getVarsExpr(stmt->getfilterExpr()));
 
   return currVars;
 }
@@ -177,9 +178,8 @@ usedVariables deviceVarsAnalyser::getVarsBlock(blockStatement *blockStmt)
       {
         usedVariables exprVars = getVarsExpr(decl->getExpressionAssigned());
         for (Identifier *dVars : declVars)
-        {
           exprVars.removeVariable(dVars, READ_WRITE);
-        }
+
         currVars.merge(exprVars);
       }
     }
@@ -187,9 +187,7 @@ usedVariables deviceVarsAnalyser::getVarsBlock(blockStatement *blockStmt)
     {
       usedVariables stmtVars = getVarsStatement(stmt);
       for (Identifier *dVars : declVars)
-      {
         stmtVars.removeVariable(dVars, READ_WRITE);
-      }
 
       currVars.merge(stmtVars);
     }
