@@ -13,7 +13,7 @@ bool checkIdNameEqual(Identifier *id1, char *c)
     return (strcmp(id1->getIdentifier(), c) == 0);
 }
 
-blockStatement *PPAnalyser::checkSSSPUpdate(statement *stmt, Identifier *v, Identifier *nbr, Identifier *modified, Identifier *g)
+blockStatement *PPAnalyser::checkSSSPUpdate(statement *stmt, Identifier *v, Identifier *nbr, Identifier *modified, Identifier *g, Identifier *finished)
 {
     //cout << "checking SSSP" << endl;
     bool valid_edge = false;
@@ -95,13 +95,15 @@ blockStatement *PPAnalyser::checkSSSPUpdate(statement *stmt, Identifier *v, Iden
                                                         {
                                                             if (firstExpr->getTypeofNode() == NODE_EXPR && ((Expression *)firstExpr)->getExpressionFamily() == EXPR_BOOLCONSTANT)
                                                             {
-                                                                cout << "this is a valid sssp loop" << endl;
+                                                                //cout << "this is a valid sssp loop" << endl;
                                                                 Expression *ifCondn = Expression::nodeForRelationalExpr(Expression::nodeForPropAccess(PropAccess::createPropAccessNode(v, dist)), Expression::nodeForArithmeticExpr(Expression::nodeForPropAccess(PropAccess::createPropAccessNode(nbr, dist)), Expression::nodeForPropAccess(PropAccess::createPropAccessNode(e, Identifier::createIdNode("weight"))), OPERATOR_ADD), OPERATOR_GT);
                                                                 assignment *assn1 = assignment::prop_assignExpr(PropAccess::createPropAccessNode(v, dist), Expression::nodeForArithmeticExpr(Expression::nodeForPropAccess(PropAccess::createPropAccessNode(nbr, dist)), Expression::nodeForPropAccess(PropAccess::createPropAccessNode(e, Identifier::createIdNode("weight"))), OPERATOR_ADD));
                                                                 assignment *assn2 = assignment::prop_assignExpr(PropAccess::createPropAccessNode(v, modified), Expression::nodeForBooleanConstant(((Expression *)firstExpr)->getBooleanConstant()));
+                                                                assignment *assn3 = assignment::id_assignExpr(Identifier::createIdNode(finished->getIdentifier()), Expression::nodeForBooleanConstant(false));
                                                                 blockStatement *ifBlock = blockStatement::createnewBlock();
                                                                 ifBlock->addStmtToBlock(assn1);
                                                                 ifBlock->addStmtToBlock(assn2);
+                                                                ifBlock->addStmtToBlock(assn3);
                                                                 ifStmt *ifstmt = ifStmt::create_ifStmt(ifCondn, ifBlock, NULL);
                                                                 newBlockStmt->addStmtToBlock(ifstmt);
                                                                 change = true;
@@ -126,7 +128,7 @@ blockStatement *PPAnalyser::checkSSSPUpdate(statement *stmt, Identifier *v, Iden
         return NULL;
 }
 
-forallStmt *PPAnalyser::analyseForallIn(statement *stmt, Identifier *srcGraph, Identifier *v, Identifier *modified, int boolConstant)
+forallStmt *PPAnalyser::analyseForallIn(statement *stmt, Identifier *srcGraph, Identifier *v, Identifier *modified, int boolConstant, Identifier *finished)
 {
     //cout << "checking inner forall" << endl;
     forallStmt *inFstmt = (forallStmt *)stmt;
@@ -139,10 +141,10 @@ forallStmt *PPAnalyser::analyseForallIn(statement *stmt, Identifier *srcGraph, I
             proc_callExpr *extractElemFunc = inFstmt->getExtractElementFunc();
             if (extractElemFunc->getArgList().size() == 1)
             {
-                blockStatement *updatedBlock = checkSSSPUpdate(inFstmt->getBody(), v, nbr, modified, srcGraph);
+                blockStatement *updatedBlock = checkSSSPUpdate(inFstmt->getBody(), v, nbr, modified, srcGraph, finished);
                 if (updatedBlock != NULL)
                 {
-                    cout << "SSSP was changed" << endl;
+                    //cout << "SSSP was changed" << endl;
                     list<argument *> argList;
                     argument *arg1 = new argument;
                     arg1->setExpression(Expression::nodeForIdentifier(v));
@@ -158,7 +160,7 @@ forallStmt *PPAnalyser::analyseForallIn(statement *stmt, Identifier *srcGraph, I
     return NULL;
 }
 
-forallStmt *PPAnalyser::analyseForallOut(statement *stmt, Identifier *modified)
+forallStmt *PPAnalyser::analyseForallOut(statement *stmt, Identifier *modified, Identifier *finished)
 {
     //cout << "checking outer forall" << endl;
     forallStmt *fstmt = (forallStmt *)stmt;
@@ -191,10 +193,10 @@ forallStmt *PPAnalyser::analyseForallOut(statement *stmt, Identifier *modified)
                                     {
                                         case NODE_FORALLSTMT:
                                             //cout << "this caase" << endl;
-                                            updatedForall = analyseForallIn(bodyStmt, srcGraph, v, modified, filterExpr->getRight()->getBooleanConstant());
+                                            updatedForall = analyseForallIn(bodyStmt, srcGraph, v, modified, filterExpr->getRight()->getBooleanConstant(), finished);
                                             if (updatedForall != NULL)
                                             {   
-                                                cout << "infor changed 1" << endl;
+                                                //cout << "infor changed 1" << endl;
                                                 list<argument *> argList;
                                                 blockStatement *newBlock = blockStatement::createnewBlock();
                                                 newBlock->addStmtToBlock(updatedForall);
@@ -206,10 +208,10 @@ forallStmt *PPAnalyser::analyseForallOut(statement *stmt, Identifier *modified)
                                 break;
                             case NODE_FORALLSTMT:
                                 //cout << "hi" << endl;
-                                updatedForall = analyseForallIn(body, srcGraph, v, modified, filterExpr->getRight()->getBooleanConstant());
+                                updatedForall = analyseForallIn(body, srcGraph, v, modified, filterExpr->getRight()->getBooleanConstant(), finished);
                                 if (updatedForall != NULL)
                                 {   
-                                    cout << "infor changed 2" << endl;
+                                    //cout << "infor changed 2" << endl;
                                     list<argument *> argList;
                                     forallStmt *newForallStmt = forallStmt::createforallStmt(v, srcGraph, proc_callExpr::nodeForProc_Call(NULL, NULL, Identifier::createIdNode("nodes"), argList), updatedForall, NULL, 1);
                                     return newForallStmt;    
@@ -249,11 +251,11 @@ fixedPointStmt *PPAnalyser::analyseFPLoop(statement *stmt)
                         {
                             case NODE_FORALLSTMT:
                                 //cout << "this caase" << endl;
-                                forallStmt *updatedForall = analyseForallOut(bodyStmt, modified);
-                                cout << (updatedForall != NULL) << "kekek" << endl;
+                                forallStmt *updatedForall = analyseForallOut(bodyStmt, modified, fpId);
+                                //cout << (updatedForall != NULL) << "kekek" << endl;
                                 if (updatedForall != NULL)
                                 {
-                                    cout << "outfor changed" << endl;
+                                    //cout << "outfor changed" << endl;
                                     blockStatement *newBlock = blockStatement::createnewBlock();
                                     newBlock->addStmtToBlock(updatedForall);
                                     return fixedPointStmt::createforfixedPointStmt(fpId, expr, newBlock);
@@ -261,10 +263,10 @@ fixedPointStmt *PPAnalyser::analyseFPLoop(statement *stmt)
                         }
                 case NODE_FORALLSTMT:
                     //cout << "this case" << endl;
-                    forallStmt *updatedForall = analyseForallOut(stmt, modified);
+                    forallStmt *updatedForall = analyseForallOut(stmt, modified, fpId);
                     if (updatedForall != NULL)
                     {
-                        cout << "outfor changed" << endl;
+                        //cout << "outfor changed" << endl;
                         return fixedPointStmt::createforfixedPointStmt(fpId, expr, updatedForall);
                     }
             }
@@ -292,7 +294,7 @@ void PPAnalyser::analyseBlock(statement* stmt)
                 fixedPointStmt *fpStmt = analyseFPLoop(stmt);
                 if (fpStmt != NULL)
                 {
-                    cout << "replacing fp" << endl;
+                    //cout << "replacing fp" << endl;
                     blockStmt->replaceStatement(stmt, fpStmt);
                 }
                 break;

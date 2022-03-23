@@ -506,7 +506,7 @@ int main(int argc,char **argv)
 	//PRAnalyse.analyse();
 
 	PPAnalyser PPAnalyse;
-	// PPAnalyse.analyse();
+	PPAnalyse.analyse();
 	
 	  cpp_backend.setFileName(fileName);
 	  cpp_backend.generate();

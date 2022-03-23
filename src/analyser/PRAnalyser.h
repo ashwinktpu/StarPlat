@@ -5,25 +5,30 @@
 
 class BoolProp
 {
-    public:
     bool _bool;
     PropAccess *prop;
+    Identifier *sum;
+    
+    public:
     BoolProp() {}
-    BoolProp(bool b, PropAccess *p) : _bool(b), prop(p) {}
+    BoolProp(bool b, PropAccess *p = NULL, Identifier *s = NULL) : _bool(b), prop(p), sum(s) {}
     bool getBool() { return _bool; }
     PropAccess *getProp() { return prop; }
+    Identifier *getSum() { return sum; }
 };
 
 class PRAnalyser
 {
+    char *backend;
     public:
     PRAnalyser() {}
 
-    void analyse();
+    void analyse(char *);
     void analyseFunc(ASTNode *);
     void analyseBlock(statement *);
-    void analyseForAll(forallStmt *);
-    BoolProp analyseFor(forallStmt *);
+    BoolProp *analyseForAll(forallStmt *);
+    void analyseDoWhile(statement *);
+    BoolProp *analyseFor(forallStmt *);
 };
 
 #endif

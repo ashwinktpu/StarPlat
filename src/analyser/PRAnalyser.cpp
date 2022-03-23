@@ -18,7 +18,7 @@ bool checkPropEqual(PropAccess *prop1, PropAccess *prop2)
     return (strcmp(prop1->getIdentifier2()->getIdentifier(), prop2->getIdentifier2()->getIdentifier()) == 0);
 }
 
-BoolProp PRAnalyser::analyseFor(forallStmt *stmt)
+BoolProp *PRAnalyser::analyseFor(forallStmt *stmt)
 {
     statement *body = stmt->getBody();
     switch (body->getTypeofNode())
@@ -29,7 +29,7 @@ BoolProp PRAnalyser::analyseFor(forallStmt *stmt)
             usedVariables usedVars = getVarsExpr(assignStmt->getExpr());
             list <PropAccess *> usedProps = usedVars.getPropAcess();
             if (usedProps.size() > 0)
-                return BoolProp(true, usedProps.front());
+                return &BoolProp(true, usedProps.front(), assignStmt->getId());
             break;
         }
         case NODE_BLOCKSTMT:
@@ -42,14 +42,14 @@ BoolProp PRAnalyser::analyseFor(forallStmt *stmt)
                     usedVariables usedVars = getVarsExpr(assnStmt->getExpr());
                     list <PropAccess *> usedProps = usedVars.getPropAcess();
                     if (usedProps.size() > 0)
-                        return BoolProp(true, usedProps.front());
+                        return &BoolProp(true, usedProps.front(), assnStmt->getId());
                 }
         }
     }
-    return BoolProp(false, NULL);
+    return &BoolProp(false);
 }
 
-void PRAnalyser::analyseForAll(forallStmt *stmt)
+BoolProp *PRAnalyser::analyseForAll(forallStmt *stmt)
 {
     Identifier *itr = stmt->getIterator();
     Identifier *sourceGraph = stmt->getSourceGraph();
@@ -62,6 +62,8 @@ void PRAnalyser::analyseForAll(forallStmt *stmt)
         PropAccess *read_prop = NULL;
         blockStatement *blockStmt = (blockStatement *)body;
         int count = 1;
+        bool omp_split_loop = true;
+        BoolProp *bp = new BoolProp;
         for (statement *stmt: blockStmt->returnStatements())
         {
             switch (stmt->getTypeofNode())
@@ -75,11 +77,11 @@ void PRAnalyser::analyseForAll(forallStmt *stmt)
                         && (checkIdNameEqual(procCall->getMethodId(), "neighbours")
                             || checkIdNameEqual(procCall->getMethodId(), "nodes_to")))
                     {
-                        BoolProp bp = analyseFor(currStmt);
-                        if (bp.getBool())
+                        bp = analyseFor(currStmt);
+                        if (bp->getBool())
                         {
                             read_flag = true;
-                            read_prop = bp.getProp();
+                            read_prop = bp->getProp();
                         }
                     }
                     break;
@@ -94,13 +96,57 @@ void PRAnalyser::analyseForAll(forallStmt *stmt)
                         {
                             // TODO: Add a barrier
                             // cout << "barrier needed" << endl;
-                            barrierStmt *barrier = barrierStmt::nodeForBarrier();
-                            blockStmt->insertToBlock(barrier, count);
+                            if (strcmpi(backend, "omp") == 0)
+                            {
+                                omp_split_loop = 1;
+                            }
+                            else if (strcmpi(backend, "cuda") == 0)
+                            {
+
+                            }
                         }
                     }
+                    break;
                 }
             }
             ++count;
+        }
+        if (omp_split_loop)
+            return bp;
+    }
+    return NULL;
+}
+
+void PRAnalyser::analyseDoWhile(statement *stmt)
+{
+    blockStatement *blockStmt = (blockStatement *)stmt;
+    for (statement *stmt: blockStmt->returnStatements())
+    {
+        switch (stmt->getTypeofNode())
+        {
+            case NODE_BLOCKSTMT:
+            {
+                analyseBlock(stmt);
+                break;
+            }
+            case NODE_FORALLSTMT:
+            {
+                forallStmt *currStmt = (forallStmt *)stmt;
+                if (currStmt->isForall() && checkIdNameEqual(currStmt->getExtractElementFunc()->getMethodId(), "nodes"))
+                {
+                    bool omp_modify = analyseForAll((forallStmt *)currStmt);
+                    if (omp_modify)
+                    {
+                        blockStatement *newBody = blockStatement::createnewBlock();
+                        
+                    }
+                }
+                else
+                    analyseBlock(currStmt->getBody());
+                break;
+            }
+            default:
+                return;
         }
     }
 }
@@ -117,32 +163,15 @@ void PRAnalyser::analyseBlock(statement *stmt)
                 analyseBlock(stmt);
                 break;
             }
-            case NODE_FORALLSTMT:
-            {
-                forallStmt *currStmt = (forallStmt *)stmt;
-                if (currStmt->isForall() && checkIdNameEqual(currStmt->getExtractElementFunc()->getMethodId(), "nodes"))
-                    analyseForAll((forallStmt *)currStmt);
-                else
-                    analyseBlock(currStmt->getBody());
-                break;
-            }
             case NODE_DOWHILESTMT:
             {
                 dowhileStmt *dowhilestmt = (dowhileStmt *)stmt;
-                analyseBlock(dowhilestmt->getBody());
+                if (dowhilestmt->getBody()->getTypeofNode() == NODE_BLOCKSTMT)
+                    analyseDoWhile(dowhilestmt->getBody());
                 break;
             }
-            case NODE_WHILESTMT:
-            {
-                whileStmt *whilestmt = (whileStmt *)stmt;
-                analyseBlock(whilestmt->getBody());
-                break;
-            }
-            case NODE_FIXEDPTSTMT:
-            {
-                fixedPointStmt *fpStmt = (fixedPointStmt *)stmt;
-                analyseBlock(fpStmt->getBody());
-            }
+            default:
+                return;
         }
     }
 }
@@ -154,8 +183,9 @@ void PRAnalyser::analyseFunc(ASTNode *proc)
     return;
 }
 
-void PRAnalyser::analyse()
+void PRAnalyser::analyse(char *backend_sent)
 {
+    backend = backend_sent;
     list<Function *> funcList = frontEndContext.getFuncList();
     for (Function *func : funcList)
         analyseFunc(func);

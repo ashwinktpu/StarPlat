@@ -23,11 +23,14 @@ void Compute_SSSP(graph& g,int src)
     {
       for (int edge = g.rev_indexofNodes[v]; edge < g.rev_indexofNodes[v+1]; edge ++) 
       {int v = g.srcList[edge] ;
-        if (modified[nbr] == true ){
+        if (modified[nbr] == true )
+          {
           int e = edge;
-          if (dist[v] > dist[nbr] + weight[e] ){
+          if (dist[v] > dist[nbr] + weight[e] )
+            {
             dist[v] = dist[nbr] + weight[e];
             modified[v] = true;
+            finished = false;
           }
         }
       }
