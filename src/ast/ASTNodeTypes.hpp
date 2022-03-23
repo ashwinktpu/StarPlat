@@ -1014,6 +1014,7 @@ class formalParam:public ASTNode
     Type* type;
     Identifier* identifier;
     Expression* exprAssigned;
+    bool inGPU;
 
     public:
     declaration()
@@ -1022,7 +1023,7 @@ class formalParam:public ASTNode
         identifier=NULL;
         exprAssigned=NULL;
         statementType="declaration";
-        
+        inGPU = false;
        
     }
 
@@ -1069,6 +1070,13 @@ class formalParam:public ASTNode
       return (exprAssigned!=NULL);
     }
 
+    void setInGPU(bool inGPU){
+      this->inGPU = inGPU;
+    }
+
+    bool getInGPU(){
+      return inGPU;
+    }
   };
   class assignment:public statement
   {
@@ -1973,7 +1981,7 @@ class reductionCallStmt:public statement
 
 };
 
-class varTransferStmt : public statement
+class varTransferStmt: public statement
 {
   public:
 
