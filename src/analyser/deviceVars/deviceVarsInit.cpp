@@ -73,7 +73,8 @@ bool deviceVarsAnalyser::initIfElse(ifStmt *stmt, list<Identifier *> &vars)
 {
     ASTNodeWrap* stmtWrap = initWrapNode(stmt, vars);
     ASTNodeWrap* condWrap = initWrapNode(stmt->getCondition(), vars);
-   
+    condWrap->usedVars = getVarsExpr(stmt->getCondition());
+
     bool hasForAll = false;
     hasForAll |= initStatement(stmt->getIfBody(), vars);
     if(stmt->getElseBody() != nullptr)
@@ -84,26 +85,34 @@ bool deviceVarsAnalyser::initIfElse(ifStmt *stmt, list<Identifier *> &vars)
 bool deviceVarsAnalyser::initAssignment(assignment *stmt, list<Identifier *> &vars)
 {
     ASTNodeWrap* stmtNode = initWrapNode(stmt, vars);
+    stmtNode->usedVars = getVarsAssignment(stmt);
+
     return false;
 }
 bool deviceVarsAnalyser::initDeclaration(declaration *stmt, list<Identifier *> &vars)
 {
     ASTNodeWrap* stmtNode = initWrapNode(stmt, vars);
     stmtNode->outMap.addVariable(stmt->getdeclId(), lattice::NOT_INITIALIZED);
+    
+    if(stmt->isInitialized())
+        stmtNode->usedVars = getVarsExpr(stmt->getExpressionAssigned());
+
     return false;
 }
 bool deviceVarsAnalyser::initForAll(forallStmt *stmt, list<Identifier *> &vars)
 {
-    usedVariables usedVars = getVarsForAll(stmt);
-    gpuUsedVars.merge(usedVars);
-    
     ASTNodeWrap* stmtNode = initWrapNode(stmt, vars);
+    stmtNode->usedVars = getVarsForAll(stmt);
+
+    gpuUsedVars.merge(stmtNode->usedVars);
     return true;
 }
 bool deviceVarsAnalyser::initWhile(whileStmt *stmt, list<Identifier *> &vars)
 {
     ASTNodeWrap* stmtNode = initWrapNode(stmt, vars);
     ASTNodeWrap* condNode = initWrapNode(stmt->getCondition(), vars);
+    condNode->usedVars = getVarsExpr(stmt->getCondition());
+
     bool hasForAll = initStatement(stmt->getBody());
     condNode->hasForAll = hasForAll;
 
@@ -113,7 +122,8 @@ bool deviceVarsAnalyser::initDoWhile(dowhileStmt *stmt, list<Identifier *> &vars
 {
     ASTNodeWrap* stmtNode = initWrapNode(stmt, vars);
     ASTNodeWrap* condNode = initWrapNode(stmt->getCondition(), vars);
- 
+    condNode->usedVars = getVarsExpr(stmt->getCondition());
+
     bool hasForAll = initWrapNode(stmt->getBody(), vars);
     stmtNode->hasForAll = hasForAll;
 
@@ -122,12 +132,8 @@ bool deviceVarsAnalyser::initDoWhile(dowhileStmt *stmt, list<Identifier *> &vars
 bool deviceVarsAnalyser::initFor(forallStmt *stmt, list<Identifier *> &vars)
 {
     ASTNodeWrap *stmtNode = initWrapNode(stmt, vars);
-
-    /*if(stmt->hasFilterExpr())
-    {
-        Expression* filterExpr = stmt->getfilterExpr();
-        ASTNodeWrap *condNode = initWrapNode(filterExpr, vars);
-    }*/
+    if(stmt->hasFilterExpr())
+        stmtNode->usedVars = getVarsExpr(stmt->getfilterExpr());
 
     vars.push_back(stmt->getIterator());
     bool hasForAll = initStatement(stmt->getBody());

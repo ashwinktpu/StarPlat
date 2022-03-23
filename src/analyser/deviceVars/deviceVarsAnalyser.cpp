@@ -5,7 +5,9 @@
 
 
 // Statement Analyser
+
 // Current assuming filter expression gets evaluated in GPU
+// Required to handle case if we iterate through a set
 
 lattice deviceVarsAnalyser::analyseForAll(forallStmt *stmt, lattice &inMap)
 {
@@ -13,12 +15,11 @@ lattice deviceVarsAnalyser::analyseForAll(forallStmt *stmt, lattice &inMap)
   wrapNode->inMap = inMap;
 
   wrapNode->outMap = wrapNode->inMap;
-  usedVariables vars = getVarsForAll(stmt);
-  for (Identifier *iden : vars.getVariables(READ))
+  for (Identifier *iden : wrapNode->usedVars.getVariables(READ))
   {
     wrapNode->outMap.meet(iden, lattice::GPU_READ);
   }
-  for (Identifier *iden : vars.getVariables(WRITE))
+  for (Identifier *iden : wrapNode->usedVars.getVariables(WRITE))
   {
     wrapNode->outMap.meet(iden, lattice::GPU_WRITE);
   }
@@ -34,13 +35,10 @@ lattice deviceVarsAnalyser::analyseDeclaration(declaration *stmt, lattice &inMap
   wrapNode->outMap = inMap;
   if(stmt->isInitialized())
   {
-    Expression* expr = stmt->getExpressionAssigned();
-    usedVariables usedVars = getVarsExpr(expr);
-
-    for (Identifier *iden : usedVars.getVariables(READ)){
+    for (Identifier *iden : wrapNode->usedVars.getVariables(READ)){
       wrapNode->outMap.meet(iden, lattice::CPU_READ);
     }
-    for (Identifier *iden : usedVars.getVariables(WRITE)){
+    for (Identifier *iden : wrapNode->usedVars.getVariables(WRITE)){
       wrapNode->outMap.meet(iden, lattice::CPU_WRITE);
     }
   }
@@ -52,16 +50,15 @@ lattice deviceVarsAnalyser::analyseDeclaration(declaration *stmt, lattice &inMap
 lattice deviceVarsAnalyser::analyseAssignment(assignment *stmt, lattice &inMap)
 {
   ASTNodeWrap *wrapNode = getWrapNode(stmt);
-  usedVariables usedVars = getVarsAssignment(stmt);
 
   wrapNode->inMap = inMap;
   wrapNode->outMap = inMap;
 
-  for (Identifier *iden : usedVars.getVariables(READ))
+  for (Identifier *iden : wrapNode->usedVars.getVariables(READ))
   {
     wrapNode->outMap.meet(iden, lattice::CPU_READ);
   }
-  for (Identifier *iden : usedVars.getVariables(WRITE))
+  for (Identifier *iden : wrapNode->usedVars.getVariables(WRITE))
   {
     wrapNode->outMap.meet(iden, lattice::CPU_WRITE);
   }
@@ -77,19 +74,17 @@ lattice deviceVarsAnalyser::analyseWhile(whileStmt *stmt, lattice &inMap)
   Expression *cond = stmt->getCondition();
   ASTNodeWrap *condNode = getWrapNode(cond);
   
-  usedVariables exprVars = getVarsExpr(cond);
   bool hasChanged;
-
   do
   {
     condNode->inMap = wrapNode->outMap ^ wrapNode->inMap;
     condNode->outMap = condNode->inMap;
 
-    for (Identifier *iden : exprVars.getVariables(READ))
+    for (Identifier *iden : condNode->usedVars.getVariables(READ))
     {
       condNode->outMap.meet(iden, lattice::CPU_READ);
     }
-    for (Identifier *iden : exprVars.getVariables(WRITE))
+    for (Identifier *iden : condNode->usedVars.getVariables(WRITE))
     {
       condNode->outMap.meet(iden, lattice::CPU_WRITE);
     }
@@ -116,9 +111,7 @@ lattice deviceVarsAnalyser::analyseDoWhile(dowhileStmt *stmt, lattice &inMap)
   Expression *cond = stmt->getCondition();
   ASTNodeWrap *condNode = getWrapNode(cond);
   
-  usedVariables exprVars = getVarsExpr(cond);
   bool hasChanged;
-
   do
   {
     wrapNode->outMap = condNode->outMap ^ wrapNode->inMap;
@@ -128,11 +121,11 @@ lattice deviceVarsAnalyser::analyseDoWhile(dowhileStmt *stmt, lattice &inMap)
 
     lattice prevOut = condNode->outMap;
     condNode->outMap = condNode->inMap;
-    for (Identifier *iden : exprVars.getVariables(READ))
+    for (Identifier *iden : condNode->usedVars.getVariables(READ))
     {
       condNode->outMap.meet(iden, lattice::CPU_READ);
     }
-    for (Identifier *iden : exprVars.getVariables(WRITE))
+    for (Identifier *iden : condNode->usedVars.getVariables(WRITE))
     {
       condNode->outMap.meet(iden, lattice::CPU_WRITE);
     }
@@ -143,7 +136,6 @@ lattice deviceVarsAnalyser::analyseDoWhile(dowhileStmt *stmt, lattice &inMap)
   return condNode->outMap;
 }
 
-// TODO: Handle source field and source procedure call
 lattice deviceVarsAnalyser::analyseFor(forallStmt *stmt, lattice &inMap)
 {
   ASTNodeWrap *wrapNode = getWrapNode(stmt);
@@ -166,14 +158,11 @@ lattice deviceVarsAnalyser::analyseFor(forallStmt *stmt, lattice &inMap)
   }
 
   if(stmt->hasFilterExpr()){
-    Expression* filterExpr = stmt->getfilterExpr();
-    usedVariables exprVars = getVarsExpr(filterExpr);
-
-    for (Identifier *iden : exprVars.getVariables(READ))
+    for (Identifier *iden : wrapNode->usedVars.getVariables(READ))
     {
       outTemp.meet(iden, lattice::CPU_READ);
     }
-    for (Identifier *iden : exprVars.getVariables(WRITE))
+    for (Identifier *iden : wrapNode->usedVars.getVariables(WRITE))
     {
       outTemp.meet(iden, lattice::CPU_WRITE);
     }
@@ -204,7 +193,6 @@ lattice deviceVarsAnalyser::analyseFor(forallStmt *stmt, lattice &inMap)
 
 lattice deviceVarsAnalyser::analyseIfElse(ifStmt *stmt, lattice &inMap)
 {
-  // cout<<"In if else"<<endl;
 
   Expression *cond = stmt->getCondition();
   ASTNodeWrap *wrapNode = getWrapNode(stmt);
@@ -213,12 +201,11 @@ lattice deviceVarsAnalyser::analyseIfElse(ifStmt *stmt, lattice &inMap)
   condNode->inMap = inMap;
   condNode->outMap = condNode->inMap;
 
-  usedVariables exprVars = getVarsExpr(cond);
-  for (Identifier *iden : exprVars.getVariables(READ))
+  for (Identifier *iden : condNode->usedVars.getVariables(READ))
   {
     condNode->outMap.meet(iden, lattice::CPU_READ);
   }
-  for (Identifier *iden : exprVars.getVariables(WRITE))
+  for (Identifier *iden : condNode->usedVars.getVariables(WRITE))
   {
     condNode->outMap.meet(iden, lattice::CPU_WRITE);
   }
@@ -232,7 +219,7 @@ lattice deviceVarsAnalyser::analyseIfElse(ifStmt *stmt, lattice &inMap)
   else
     wrapNode->inMap = ifOut ^ condNode->outMap;
 
-  wrapNode->outMap = stmtWrap->inMap;
+  wrapNode->outMap = wrapNode->inMap;
   return wrapNode->outMap;
 }
 

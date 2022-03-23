@@ -180,6 +180,7 @@ class ASTNodeWrap
 {
   public:
   list<ASTNode*> predecessor, successor;
+  usedVariables usedVars;
   lattice inMap, outMap;
   ASTNode* currStmt;
   bool hasForAll;
