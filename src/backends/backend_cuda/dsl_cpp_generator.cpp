@@ -800,7 +800,7 @@ void dsl_cpp_generator::generateAssignmentStmt(assignment* asmt, bool isMainFile
     //~ if(prefixNeed)
     //~ targetFile.pushString("d_");
     targetFile.pushString(id->getIdentifier());
-    
+
   } else if (asmt->lhs_isProp())  // the check for node and edge property to be
                                   // carried out.
   {
@@ -1179,14 +1179,14 @@ bool dsl_cpp_generator::elementsIteration(char* extractId) {
 
 void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll,
                                                 bool isMainFile) {
-  
+
     cout << "from generateForAllSignature = " << isMainFile;
   dslCodePad& targetFile = isMainFile ? main : header;
 
   char strBuffer[1024];
   Identifier* iterator = forAll->getIterator();
   if (forAll->isSourceProcCall()) {
-    Identifier* sourceGraph = forAll->getSourceGraph();
+    //~ Identifier* sourceGraph = forAll->getSourceGraph();
     proc_callExpr* extractElemFunc = forAll->getExtractElementFunc();
     Identifier* iteratorMethodId = extractElemFunc->getMethodId();
     if (allGraphIteration(iteratorMethodId->getIdentifier())) {
@@ -1209,14 +1209,14 @@ void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll,
     } else if (neighbourIteration(iteratorMethodId->getIdentifier())) {
       //~ // THIS SHOULD NOT BE EXECUTING FOR SIMPLE FOR LOOP BUT IT IS SO .
       //~ // COMMENTED OUT FOR NOW.
-      char* graphId=sourceGraph->getIdentifier();
+      //~ char* graphId=sourceGraph->getIdentifier();
       char* methodId=iteratorMethodId->getIdentifier();
       string s(methodId);
       if(s.compare("neighbors")==0)
       {
         list<argument*>  argList=extractElemFunc->getArgList();
         assert(argList.size()==1);
-        Identifier* nodeNbr=argList.front()->getExpr()->getId();
+        //~ Identifier* nodeNbr=argList.front()->getExpr()->getId();
         sprintf(strBuffer,"for (%s %s = %s[%s]; %s < %s[%s+1]; %s ++)","int","edge","d_meta","v","edge","d_meta","v","edge");
         targetFile.pushstr_newL(strBuffer); targetFile.pushString("{");
         sprintf(strBuffer,"%s %s = %s[%s];","int",iterator->getIdentifier(),"d_data","edge"); //needs to move the addition of
@@ -1294,11 +1294,9 @@ blockStatement* dsl_cpp_generator::includeIfToBlock(forallStmt* forAll) {
         if (expr1->getId()->getSymbolInfo()->getType()->isPropNodeType()) {
           Identifier* iterNode = forAll->getIterator();
           Identifier* nodeProp = expr1->getId();
-          PropAccess* propIdNode =
-              (PropAccess*)Util::createPropIdNode(iterNode, nodeProp);
+          PropAccess* propIdNode = (PropAccess*)Util::createPropIdNode(iterNode, nodeProp);
           Expression* propIdExpr = Expression::nodeForPropAccess(propIdNode);
-          modifiedFilterExpr = (Expression*)Util::createNodeForRelationalExpr(
-              propIdExpr, expr2, filterExpr->getOperatorType());
+          modifiedFilterExpr = (Expression*)Util::createNodeForRelationalExpr(propIdExpr, expr2, filterExpr->getOperatorType());
         }
       }
     }
@@ -1318,14 +1316,14 @@ blockStatement* dsl_cpp_generator::includeIfToBlock(forallStmt* forAll) {
          modifiedFilterExpr = filterExpr;
      }
    */
-
+  }
   ifStmt* ifNode = (ifStmt*)Util::createNodeForIfStmt(modifiedFilterExpr,
                                                       forAll->getBody(), NULL);
   blockStatement* newBlock = new blockStatement();
   newBlock->setTypeofNode(NODE_BLOCKSTMT);
   newBlock->addStmtToBlock(ifNode);
   return newBlock;
-}
+
 }
 
 
@@ -1342,15 +1340,15 @@ void dsl_cpp_generator:: generateCallList(list<formalParam*> paramList, dslCodeP
 
       Type* type=(*itr)->getType();
      /* targetFile.pushString(convertToCppType(type));
-      /*if(type->isPropType())
+      if(type->isPropType())
       {
           targetFile.pushString("* ");
       }
-      else 
+      else
       {*/
          // targetFile.pushString(" ");
          // targetFile.space();
-      //}   
+      //}
       if(type->isPropType())
       {
           targetFile.pushString("d_");
@@ -1361,10 +1359,10 @@ void dsl_cpp_generator:: generateCallList(list<formalParam*> paramList, dslCodeP
 
       if(arg_currNo==maximum_arginline)
       {
-         targetFile.NewLine();  
-         arg_currNo=0;  
-      } 
-         
+         targetFile.NewLine();
+         arg_currNo=0;
+      }
+
   }
 
 }
@@ -1386,11 +1384,11 @@ void dsl_cpp_generator:: generateParamList(list<formalParam*> paramList, dslCode
       {
           targetFile.pushString("* ");
       }
-      else 
+      else
       {*/
           targetFile.pushString(" ");
          // targetFile.space();
-      //}  
+      //}
       if(type->isPropType())
         targetFile.pushString("d_") ;
       targetFile.pushString(/*createParamName(*/(*itr)->getIdentifier()->getIdentifier());
@@ -1399,11 +1397,11 @@ void dsl_cpp_generator:: generateParamList(list<formalParam*> paramList, dslCode
 
       if(arg_currNo==maximum_arginline)
       {
-         targetFile.NewLine();  
-         arg_currNo=0;  
-      } 
+         targetFile.NewLine();
+         arg_currNo=0;
+      }
      // if(argumentTotal==0)
-         
+
   }
 
 }
@@ -1430,15 +1428,14 @@ void dsl_cpp_generator :: addCudaKernel(forallStmt* forAll)
       header.pushString(" ,");
       generateParamList(currentFunc->getParamList(), header);
     }
-  header.pushString(")");
-  header.pushString("{");
+  header.pushstr_newL("){");
 
   sprintf(strBuffer, "unsigned %s = blockIdx.x * blockDim.x + threadIdx.x;", loopVar);
   header.pushstr_newL(strBuffer);
 
   sprintf(strBuffer, "if(%s >= V) return;", loopVar);
   header.pushstr_newL(strBuffer);
-  
+
 
   printf("start of kernel block \n");
   for (statement* stmt : statementList) {
@@ -1510,10 +1507,10 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
     main.NewLine();
     addCudaKernel(forAll);
 
- 
+
 
   }
-  
+
   else{
 
   generateForAllSignature(forAll, false);  // FOR LINE
@@ -1622,8 +1619,8 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
       else
         {
           generateStatement(forAll->getBody(),isMainFile);
-        }  
-      
+        }
+
 
 
 
@@ -1631,7 +1628,7 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
       //~ forAll->getParent()->getParent()->getTypeofNode() == NODE_ITRRBFS)
       //~ targetFile.pushstr_newL("}");
       //~ targetFile.pushstr_newL("}");
-  
+
     } else {
       printf("FOR NORML");
       generateStatement(forAll->getBody(), false);
@@ -1646,7 +1643,7 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
     if (collectionId->getSymbolInfo()->getType()->gettypeId() == TYPE_SETN) {  //FOR SET
       if (body->getTypeofNode() == NODE_BLOCKSTMT) {
         targetFile.pushstr_newL("{");
-        targetFile.pushstr_newL("HERE");
+        targetFile.pushstr_newL("//HERE");
         printf("FOR");
         sprintf(strBuffer, "unsigned %s = (unsigned)*itr;", forAll->getIterator()->getIdentifier());
         targetFile.pushstr_newL(strBuffer);
@@ -1791,7 +1788,7 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
     const char * varName = declStmt->getdeclId()->getIdentifier();
     cout << "varT" << varType << endl;
     cout << "varN" << varName << endl;
-    generateExtraDeviceVariable(varType,varName,"1"); 
+    generateExtraDeviceVariable(varType,varName,"1");
     // targetFile.pushString("* d_");
     /*
     targetFile.pushString(declStmt->getdeclId()->getIdentifier());
@@ -1802,7 +1799,7 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
     */
 
     if (declStmt->isInitialized()) {
-        // targetFile = 
+        // targetFile =
       // targetFile.pushString(" = ");
       /* the following if conditions is for cases where the
          predefined functions are used as initializers
@@ -1813,14 +1810,14 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
             (proc_callExpr*)declStmt->getExpressionAssigned();
         Identifier* methodId = pExpr->getMethodId();
         castIfRequired(type, methodId, main);
-        
+
       }
       sprintf(strBuffer, "initIndex<<<1,1>>(1,d_%s,0, DECVAR);",varName);
         targetFile.pushstr_newL(strBuffer);
        //generateExpr(declStmt->getExpressionAssigned(), isMainFile);
       // targetFile.pushstr_newL(";");
     }
-  
+
     else {
 
       sprintf(strBuffer, "initIndex<<<1,1>>(1,d_%s,0, DECVAR);",varName);
@@ -2278,8 +2275,8 @@ void dsl_cpp_generator::generateCudaMallocParams(list<formalParam*> paramList)
     list<formalParam*>::iterator itr;
   for(itr=paramList.begin();itr!=paramList.end();itr++)
   {
-      
-   Type* type=(*itr)->getType();    
+
+   Type* type=(*itr)->getType();
    if (type->isPropType()) {
     if (type->getInnerTargetType()->isPrimitiveType()) {
       Type* innerType = type->getInnerTargetType();
@@ -2340,11 +2337,11 @@ void dsl_cpp_generator::generateCudaMallocParams(list<formalParam*> paramList)
        * well*/
     }
   }
-    
-         
+
+
   }
 
-  
+
 
 
 
@@ -2354,67 +2351,56 @@ void dsl_cpp_generator::generateCudaMemCpyParams(list<formalParam*> paramList)
   {
 
   list<formalParam*>::iterator itr;
-  for(itr=paramList.begin();itr!=paramList.end();itr++)
-  {
+  for(itr=paramList.begin();itr!=paramList.end();itr++) {
 
+    Type* type=(*itr)->getType();
+    if (type->isPropType()) {
+      if (type->getInnerTargetType()->isPrimitiveType()) {
+        //~ Type* innerType = type->getInnerTargetType();
 
-      
-   Type* type=(*itr)->getType();    
-   if (type->isPropType()) {
-    if (type->getInnerTargetType()->isPrimitiveType()) {
-      Type* innerType = type->getInnerTargetType();
-      
-      char* sizeofProp = NULL;
-      if(type->isPropEdgeType())
-      {
+        const char* sizeofProp = NULL;
+        if(type->isPropEdgeType())
           sizeofProp = "E";
+        else
+          sizeofProp = "V";
+        const char * temp = "d_";
+        char* temp1 = (*itr)->getIdentifier()->getIdentifier();
+        char* temp2 = (char*)malloc(1+strlen(temp) + strlen(temp1));
+        strcpy(temp2,temp);
+        strcat(temp2,temp1);
 
+        generateCudaMemCpyStr((*itr)->getIdentifier()->getIdentifier(), temp2,convertToCppType(type->getInnerTargetType()), sizeofProp, 0 );
+       // generateCudaMalloc(type, (*itr)->getIdentifier()->getIdentifier());
+
+        //~ Type* innerType=type->getInnerTargetType();
+        //~ targetFile.pushString(convertToCppType(innerType)); //convertToCppType
+        //need to be modified. ~ targetFile.pushString("*"); ~ targetFile.space();
+        //~ targetFile.pushString(declStmt->getdeclId()->getIdentifier());
+        //~
+        //generatePropertyDefination(type,declStmt->getdeclId()->getIdentifier(),
+        //isMainFile); ~ printf("added symbol
+        //%s\n",declStmt->getdeclId()->getIdentifier()); ~ printf("value requ
+        //%d\n",declStmt->getdeclId()->getSymbolInfo()->getId()->require_redecl());
+        //~ /* decl with variable name as var_nxt is required for double buffering
+        //~ ex :- In case of fixedpoint */
+        //~ if(declStmt->getdeclId()->getSymbolInfo()->getId()->require_redecl())
+        //~ {
+        //~ targetFile.pushString(convertToCppType(innerType)); //convertToCppType
+        //need to be modified. ~ targetFile.pushString("*"); ~ targetFile.space();
+        //~ sprintf(strBuffer,"%s_nxt",declStmt->getdeclId()->getIdentifier());
+        //~ targetFile.pushString(strBuffer);
+        //~
+        //generatePropertyDefination(type,declStmt->getdeclId()->getIdentifier(),
+        //isMainFile);
+
+        //~ }
+
+        /*placeholder for adding code for declarations that are initialized as
+         * well*/
       }
-      else
-         sizeofProp = "V";
-      char * temp = "d_";
-      char* temp1 = (*itr)->getIdentifier()->getIdentifier();
-      char* temp2 = (char*)malloc(1+strlen(temp) + strlen(temp1));
-      strcpy(temp2,temp);
-      strcat(temp2,temp1);
-    
-      generateCudaMemCpyStr((*itr)->getIdentifier()->getIdentifier(), temp2, 
-        convertToCppType(type->getInnerTargetType()), sizeofProp, 0 );
-     // generateCudaMalloc(type, (*itr)->getIdentifier()->getIdentifier());
-
-      //~ Type* innerType=type->getInnerTargetType();
-      //~ targetFile.pushString(convertToCppType(innerType)); //convertToCppType
-      //need to be modified. ~ targetFile.pushString("*"); ~ targetFile.space();
-      //~ targetFile.pushString(declStmt->getdeclId()->getIdentifier());
-      //~
-      //generatePropertyDefination(type,declStmt->getdeclId()->getIdentifier(),
-      //isMainFile); ~ printf("added symbol
-      //%s\n",declStmt->getdeclId()->getIdentifier()); ~ printf("value requ
-      //%d\n",declStmt->getdeclId()->getSymbolInfo()->getId()->require_redecl());
-      //~ /* decl with variable name as var_nxt is required for double buffering
-      //~ ex :- In case of fixedpoint */
-      //~ if(declStmt->getdeclId()->getSymbolInfo()->getId()->require_redecl())
-      //~ {
-      //~ targetFile.pushString(convertToCppType(innerType)); //convertToCppType
-      //need to be modified. ~ targetFile.pushString("*"); ~ targetFile.space();
-      //~ sprintf(strBuffer,"%s_nxt",declStmt->getdeclId()->getIdentifier());
-      //~ targetFile.pushString(strBuffer);
-      //~
-      //generatePropertyDefination(type,declStmt->getdeclId()->getIdentifier(),
-      //isMainFile);
-
-      //~ }
-
-      /*placeholder for adding code for declarations that are initialized as
-       * well*/
     }
   }
-    
-         
-  }
-
-
-  }
+}
 void dsl_cpp_generator::generateFunc(ASTNode* proc) {
   // dslCodePad &targetFile = isMainFile ? main : header;
 
@@ -2432,14 +2418,13 @@ void dsl_cpp_generator::generateFunc(ASTNode* proc) {
 
   generateFuncBody(func, false);  // GEnerates CSR ..bool is meaningless
 
-  main.pushstr_newL("//END CSR ");
   main.NewLine();
 
   main.pushstr_newL("//DECLAR DEVICE AND HOST vars in params");
   /* function for generation of cudamalloc for property type params*/
   generateCudaMallocParams(func->getParamList());
 
-  
+
   sprintf(strBuffer, "%s* d_%s; cudaMalloc(&d_%s, sizeof(%s)*(V)); ///TODO from func", outVarType, outVarName, outVarName, outVarType);
   main.pushstr_newL(strBuffer);
 

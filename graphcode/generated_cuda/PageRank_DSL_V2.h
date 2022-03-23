@@ -12,7 +12,8 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
   float* pageRank);
 
 __global__ void Compute_PR_kernel(int V, int E, int* d_meta,int* d_data,int* d_weight ,graph& g,float beta,float delta,int maxIter,
-  float* d_pageRank){unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
+  float* d_pageRank){
+  unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
   if(v >= V) return;
   initIndex<<<1,1>>(1,d_sum,0, DECVAR);
   for (int edge = gpu_rev_OA[v]; edge < gpu_rev_OA[v+1]; edge ++)

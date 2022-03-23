@@ -1,22 +1,54 @@
 #ifndef GENCPP_BC_DSL_V2_H
 #define GENCPP_BC_DSL_V2_H
-#include<stdio.h>
-#include<stdlib.h>
-#include<limits.h>
-#include<cuda.h>
-#include"../graph.hpp"
-#include"../libcuda.cuh"
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+#include <cuda.h>
+#include "graph.hpp"
+#include "libcuda.cuh"
+#include <cooperative_groups.h>
 
-__global__ void void Compute_BC_kernel(graph& g,float* BC,std::set<int>& sourceSet)
-{
+void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet);
 
-  graph& g,float* BC,std::set<int>& sourceSetstd::set<int>::iterator itr;
-  for(itr=sourceSet.begin();itr!=sourceSet.end();itr++)
-  for (int edge = gpu_OA[id]; edge < gpu_OA[id+1]; edge ++) 
-  {int w = g.edgeList[edge] ;
-    sigma[w] = sigma[w] + sigma[v];
-    for (int edge = gpu_OA[id]; edge < gpu_OA[id+1]; edge ++) 
-    {int w = g.edgeList[edge] ;
-      delta[v] = delta[v] + (sigma[v] / sigma[w]) * (1 + delta[w]);
+//FOR SIGNATURE of SET
+std::set<int>::iterator itr;
+for(itr=sourceSet.begin();itr!=sourceSet.end();itr++)
+__global__ void fwd_pass(int n, int* d_meta,int* d_data,int* d_weight, double* d_delta, double* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished, double* d_BC) {
+  unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
+  if(v >= n) return;
+  if(d_level[v] == *d_hops_from_source) {
+    for (int edge = d_meta[v]; edge < d_meta[v+1]; edge ++)
+    {int w = d_data[edge];
+      for(unsigned i = d_meta[v], end = d_meta[v+1]; i < end; ++i)
+      {
+        unsigned w = d_data[i];
+        if(d_level[w] == -1) {
+          d_level[w] = *d_hops_from_source + 1;
+          *d_finished = false;
+        }
+        if(d_level[w] == *d_hops_from_source + 1) {
+          atomicAdd(&d_sigma[w],  d_sigma[v]);
+        }
+      }
+    } // end if d lvl
+  } // kernel end
+  __global__ void back_pass(int n, int* d_meta,int* d_data,int* d_weight, double* d_delta, double* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished, double* d_BC) {
+    unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
+    if(v >= n) return;
+    auto grid = cooperative_groups::this_grid();
+    if(d_level[v] == *d_hops_from_source-1) {
+      for (int edge = d_meta[v]; edge < d_meta[v+1]; edge ++)
+      {int w = d_data[edge];
+        for(unsigned i = d_meta[v], end = d_meta[v+1]; i < end; ++i)
+        {
+          unsigned w = d_data[i];
+          if(d_level[w] == *d_hops_from_source) {
+            d_delta[v] = d_delta[v] + (d_sigma[v] / d_sigma[w]) * (1 + d_delta[w]);
+          } // end IF  
+        } // end FOR
+        grid.sync(); // Device-level syncs across all grids. Ref:https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#grid-synchronization-cg 
+        d_BC[v] = d_BC[v] + d_delta[v]/2.0;
+      } // end if d lvl
+    } // kernel end
 
-      #endif
+    #endif

@@ -1,133 +1,135 @@
-#include"bc_dsl_v2.h"
+#include "bc_dsl_v2.h"
 
 void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
 
 {
+  // CSR BEGIN
   unsigned V = g.num_nodes();
   unsigned E = g.num_edges();
 
-  int MAX_VAL = 2147483647 ;
-  int * gpu_edgeList;
-   int * gpu_edgeLen;
-  int * gpu_dist;
-   int * gpu_OA;
-  bool * gpu_modified_prev;
-  bool * gpu_finished;
-  int *gpu_rev_OA;
-  int *gpu_srcList;
-  float  *gpu_node_pr;
+  printf("#nodes:%d\n",V);
+  printf("#edges:%d\n",E);
+  int* edgeLen = g.getEdgeLen();
 
-  cudaMalloc(&gpu_OA, sizeof(int)*(1+V));
-  cudaMalloc(&gpu_edgeList, sizeof(int)*(E));
-  cudaMalloc(&gpu_edgeLen, sizeof(int)*(E));
-  cudaMalloc(&gpu_dist, sizeof(int)*(V));
-  cudaMalloc(&gpu_modified_prev, sizeof(bool)*(V));
-  cudaMalloc(&gpu_modified_next, sizeof(bool)*(V));
-  cudaMalloc(&gpu_finished, sizeof(bool)*(1));
-  cudaMalloc(&gpu_srcList, sizeof(int)*(E));
-  cudaMalloc(&gpu_node_pr, sizeof(flaot)*(V));
+  int *h_meta;
+  int *h_data;
+  int *h_weight;
 
-  unsigned int block_size;
-  unsigned int num_blocks;
-  if( V <= 1024)
+  h_meta = (int *)malloc( (V+1)*sizeof(int));
+  h_data = (int *)malloc( (E)*sizeof(int));
+  h_weight = (int *)malloc( (E)*sizeof(int));
+
+  for(int i=0; i<= V; i++) {
+    int temp = g.indexofNodes[i];
+    h_meta[i] = temp;
+  }
+
+  for(int i=0; i< E; i++) {
+    int temp = g.edgeList[i];
+    h_data[i] = temp;
+    temp = edgeLen[i];
+    h_weight[i] = temp;
+  }
+
+
+  int* d_meta;
+  int* d_data;
+  int* d_weight;
+
+  cudaMalloc(&d_meta, sizeof(int)*(1+V));
+  cudaMalloc(&d_data, sizeof(int)*(E));
+  cudaMalloc(&d_weight, sizeof(int)*(E));
+
+  cudaMemcpy(  d_meta,   h_meta, sizeof(int)*(V+1), cudaMemcpyHostToDevice);
+  cudaMemcpy(  d_data,   h_data, sizeof(int)*(E), cudaMemcpyHostToDevice);
+  cudaMemcpy(d_weight, h_weight, sizeof(int)*(E), cudaMemcpyHostToDevice);
+
+  // CSR END
+  //LAUNCH CONFIG
+  const unsigned threadsPerBlock = 512;
+  unsigned numThreads   = (V < threadsPerBlock)? 512: V;
+  unsigned numBlocks    = (numThreads+threadsPerBlock-1)/threadsPerBlock;
+
+
+  // TIMER START
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
+  float milliseconds = 0;
+  cudaEventRecord(start,0);
+
+
+  //DECLAR DEVICE AND HOST vars in params
+  float* d_BC;
+  cudaMalloc(&d_BC, sizeof(float)*(V));
+
+  double* d_BC; cudaMalloc(&d_BC, sizeof(double)*(V)); ///TODO from func
+
+  //BEGIN DSL PARSING 
+  initKernel<float> <<<numBlocks,threadsPerBlock>>>(V,d_BC,0);
+
   {
-    block_size = V;
-    num_blocks = 1;
-  }
-  else
-  {
-    block_size = 1024;
-    num_blocks = ceil(((float)V) / block_size);
-  }
-  cudaMemcpy(&d_gpu_OA,OA, sizeof(int)*(1+V), cudaMemcpyHostToDevice);
-  cudaMemcpy(&d_gpu_edgeList,edgeList, sizeof(int)*E, cudaMemcpyHostToDevice);
-  cudaMemcpy(&d_gpu_edgeList,edgeList, sizeof(int)*E, cudaMemcpyHostToDevice);
-  cudaMemcpy(&d_gpu_edgeList,edgeList, sizeof(int)*E, cudaMemcpyHostToDevice);
-  cudaMemcpy(&d_gpu_edgeLen,cpu_edgeLen , sizeof(int)*E, cudaMemcpyHostToDevice);
-  cudaMemcpy(&d_gpu_dist,modified , sizeof(bool)*V, cudaMemcpyHostToDevice);
-  cudaMemcpy(&d_gpu_finished,finished , sizeof(bool)*1, cudaMemcpyHostToDevice);
-  cudaMemcpy(&d_gpu_srcList,cpu_srcList, sizeof(int)*(E), cudaMemcpyHostToDevice);
-  Compute_BC_kernel<<<num_blocks, block_size>>>(gpu_OA, gpu_edgeList, V, E ;
-    cudaDeviceSynchronize();
+    //HERE
+    unsigned src = (unsigned)*itr;
+    int* d_sigma;
+    cudaMalloc(&d_sigma, sizeof(int)*(V));
 
+    float* d_delta;
+    cudaMalloc(&d_delta, sizeof(float)*(V));
 
-    for (int t = 0; t < V; g ++) 
-    {
-      BC[t] = 0;
+    initKernel<float> <<<numBlocks,threadsPerBlock>>>(V,d_delta,0);
+
+    initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_sigma,0);
+
+    initIndex<double><<<1,1>>>(V,d_sigma,src,1);
+
+    //EXTRA vars for ITBFS AND REVBFS
+    bool finished;
+    int hops_from_source=0;
+    bool* d_finished;       cudaMalloc(&d_finished,sizeof(bool) *(1));
+    int* d_hops_from_source;cudaMalloc(&d_hops_from_source, sizeof(int));  cudaMemset(d_hops_from_source,0,sizeof(int));
+    int* d_level;           cudaMalloc(&d_level,sizeof(int) *(V));
+
+    //EXTRA vars INITIALIZATION
+    initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_level,-1);
+    initIndex<int><<<1,1>>>(V,d_level,src, 0);
+
+    // long k =0 ;// For DEBUG
+    do {
+      finished = true;
+      cudaMemcpy(d_finished, &finished, sizeof(bool)*(1), cudaMemcpyHostToDevice);
+
+      //Kernel LAUNCH
+      fwd_pass<<<numBlocks,threadsPerBlock>>>(V, d_meta, d_data,d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished, d_BC); ///TODO from varList
+
+      incrementDeviceVar<<<1,1>>>(d_hops_from_source);
+      cudaDeviceSynchronize(); //MUST - rupesh
+      ++hops_from_source; // updating the level to process in the next iteration
+      // k++; //DEBUG
+
+      cudaMemcpy(&finished, d_finished, sizeof(bool)*(1), cudaMemcpyDeviceToHost);
+    }while(!finished);
+
+    hops_from_source--;
+    cudaMemcpy(d_hops_from_source, &hops_from_source, sizeof(int)*(1), cudaMemcpyHostToDevice);
+
+    //BACKWARD PASS
+    while(hops_from_source > 1) {
+
+      //KERNEL Launch
+      back_pass<<<numBlocks,threadsPerBlock>>>(V, d_meta, d_data, d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished, d_BC); ///TODO from varList
+
+      hops_from_source--;
+      cudaMemcpy(d_hops_from_source, &hops_from_source, sizeof(int)*(1), cudaMemcpyHostToDevice);
     }
-    {
-      int src = *itr;
-      double* sigma=new double[g.num_nodes()];
-      int* bfsDist=new int[g.num_nodes()];
-      float* delta=new float[g.num_nodes()];
-      for (int t = 0; t < V; g ++) 
-      {
-        delta[t] = 0;
-        bfsDist[t] = -1;
-      }
-      for (int t = 0; t < V; g ++) 
-      {
-        sigma[t] = 0;
-      }
-      bfsDist[src] = 0;
-      sigma[src] = 1;
-      std::vector<std::vector<int>> levelNodes(g.num_nodes()) ;
-      std::vector<std::vector<int>>  levelNodes_later(omp_get_max_threads()) ;
-      std::vector<int>  levelCount(g.num_nodes()) ;
-      int phase = 0 ;
-      levelNodes[phase].push_back(src) ;
-      int bfsCount = 1 ;
-      levelCount[phase] = bfsCount;
-      while ( bfsCount > 0 )
-      {
-         int prev_count = bfsCount ;
-        bfsCount = 0 ;
-        #pragma omp parallel for
-        for( int l = 0; l < prev_count ; l++)
-        {
-          int v = levelNodes[phase][l] ;
-          for(int edge = g.indexofNodes[v] ; edge < g.indexofNodes[v+1] ; edge++) {
-            int nbr = g.edgeList[edge] ;
-            int dnbr ;
-            if(bfsDist[nbr]<0)
-            {
-              dnbr = __sync_val_compare_and_swap(&bfsDist[nbr],-1,bfsDist[v]+1);
-              if (dnbr < 0)
-              {
-                int num_thread = omp_get_thread_num();
-                 levelNodes_later[num_thread].push_back(nbr) ;
-              }
-            }
-          }
-          if(bfsDist[w]==bfsDist[v]+1)
-          {
-          }
-        }
-      }
-      phase = phase + 1 ;
-      for(int i = 0;i < omp_get_max_threads();i++)
-      {
-         levelNodes[phase].insert(levelNodes[phase].end(),levelNodes_later[i].begin(),levelNodes_later[i].end());
-         bfsCount=bfsCount+levelNodes_later[i].size();
-         levelNodes_later[i].clear();
-      }
-       levelCount[phase] = bfsCount ;
-    }
-    phase = phase -1 ;
-    while (phase > 0)
-    {
-      #pragma omp parallel for
-      for( int l = 0; l < levelCount[phase] ; l++)
-      {
-        int v = levelNodes[phase][l] ;
-        if(bfsDist[w]==bfsDist[v]+1)
-        {
-        }
-      }
-      BC[v] = BC[v] + delta[v];
-    }
-    phase = phase - 1 ;
+    //accumulate_bc<<<numBlocks,threadsPerBlock>>>(V,d_delta, d_BC, d_level, src);
   }
-}
+  //TIMER STOP
+  cudaEventRecord(stop,0);
+  cudaEventSynchronize(stop);
+  cudaEventElapsedTime(&milliseconds, start, stop);
+  printf("GPU Time: %.6f ms\n", milliseconds);
 
-}
+  cudaMemcpy(      BC,     d_BC, sizeof(float)*(V), cudaMemcpyDeviceToHost);
+  cudaMemcpy(BC,d_BC , sizeof(double) * (V), cudaMemcpyDeviceToHost);
+} //end FUN
