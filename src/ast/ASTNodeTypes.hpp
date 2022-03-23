@@ -1214,7 +1214,7 @@ class whileStmt:public statement
       return body;
     }
 
-    void setBody(statement* bodySent)
+    void setBody(blockStatement* bodySent)
     {
        body=bodySent;
     }
@@ -1255,7 +1255,7 @@ class whileStmt:public statement
       return body;
     }
 
-    void setBody(statement* bodySent)
+    void setBody(blockStatement* bodySent)
     {
        body=bodySent;
     }
@@ -1610,6 +1610,7 @@ class fixedPointStmt:public statement
     map<int,list<Identifier*>> reduction_map;
     set<int> reduc_keys;
     
+    list<Identifier*> usedVars;
     public:
     forallStmt()
     { 
@@ -1767,7 +1768,9 @@ class fixedPointStmt:public statement
 
     }
 
-
+    void initUsedVariable(list<Identifier*> usedVars){
+      this->usedVars = usedVars;
+    }
 };
   class reductionCall:public ASTNode
   {
