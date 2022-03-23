@@ -30,6 +30,7 @@ class dsl_cpp_generator {
   bool genCSR;
   char* gName;
   int kernelCount;
+  Function* currentFunc;
 
   //~ vector<vars> varList;
   //~ std::vector <string> vvList;
@@ -48,6 +49,7 @@ class dsl_cpp_generator {
     headerFile = NULL;
     bodyFile = NULL;
     fileName = new char[1024];
+    currentFunc = NULL;
     //~ varList.clear();
   }
 
@@ -56,6 +58,9 @@ class dsl_cpp_generator {
   //~ vvList.clear();
   //~ }
 
+  void generateParamList(list<formalParam*> paramList, dslCodePad& targetFile);
+  void setCurrentFunc(Function* func);
+  Function* getCurrentFunc();
   void setFileName(char* f);
   bool generate();
   void generation_begin();
@@ -83,6 +88,7 @@ class dsl_cpp_generator {
   void generateBFSAbstraction(iterateBFS* bfsAbstraction, bool isMainFile);
   void generateRevBFSAbstraction(iterateBFS* bfsAbstraction,
                                  bool isMainFile);  // reverse
+
 
   void generateExpr(Expression* expr, bool isMainFile, bool isAtomic = false);
   void generate_exprArL(Expression* expr, bool isMainFile, bool isAtomic = false);
@@ -174,6 +180,10 @@ class dsl_cpp_generator {
   void addCudaRevBFSIterKernel(list<statement*>& revStmtList);
   void generateAtomicDeviceAssignmentStmt(assignment* asmt, bool isMainFile);
   void generateDeviceAssignmentStmt(assignment* asmt, bool isMainFile);
+  void addCudaKernel(forallStmt* forAll);
+  void generateCallList(list<formalParam*> paramList, dslCodePad& targetFile);
+  void generateCudaMallocParams(list<formalParam*> paramList);
+  void generateCudaMemCpyParams(list<formalParam*> paramList);
 
   //~ void setGenCSR(bool yes = true) { genCSR = yes; }
   //~ bool isGenCSR() { return genCSR; }

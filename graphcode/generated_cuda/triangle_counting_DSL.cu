@@ -1,35 +1,80 @@
-#include"triangle_counting_DSL.h"
+#include "triangle_counting_DSL.h"
 
 void Compute_TC(graph& g)
 
 {
+  // CSR BEGIN
   unsigned V = g.num_nodes();
   unsigned E = g.num_edges();
 
-  int* gpu_OA;
-  int* gpu_edgeList;
-  int* gpu_edgeList;
+  printf("#nodes:%d\n",V);
+  printf("#edges:%d\n",E);
+  int* edgeLen = g.getEdgeLen();
 
-  cudaMalloc(&gpu_OA, sizeof(int)*(1+V));
-  cudaMalloc(&gpu_edgeList, sizeof(int)*(E));
-  cudaMalloc(&gpu_edgeList, sizeof(int)*(E));
+  int *h_meta;
+  int *h_data;
+  int *h_weight;
 
-  if( V <= 1024)
-  {
-    block_size = V;
-    num_blocks = 1;
+  h_meta = (int *)malloc( (V+1)*sizeof(int));
+  h_data = (int *)malloc( (E)*sizeof(int));
+  h_weight = (int *)malloc( (E)*sizeof(int));
+
+  for(int i=0; i<= V; i++) {
+    int temp = g.indexofNodes[i];
+    h_meta[i] = temp;
   }
-  else
-  {
-    block_size = 1024;
-    num_blocks = ceil(((float)V) / block_size);
+
+  for(int i=0; i< E; i++) {
+    int temp = g.edgeList[i];
+    h_data[i] = temp;
+    temp = edgeLen[i];
+    h_weight[i] = temp;
   }
-  cudaMemcpy(&d_gpu_OA,OA, sizeof(int)*(1+V), cudaMemcpyHostToDevice);
-  cudaMemcpy(&d_gpu_edgeList,edgeList, sizeof(int)*E, cudaMemcpyHostToDevice);
-  Compute_TC_kernel<<<num_blocks, block_size>>>(gpu_OA, gpu_edgeList, V, E ;
-    cudaDeviceSynchronize();
 
 
-    long triangle_count = 0;
+  int* d_meta;
+  int* d_data;
+  int* d_weight;
 
-}
+  cudaMalloc(&d_meta, sizeof(int)*(1+V));
+  cudaMalloc(&d_data, sizeof(int)*(E));
+  cudaMalloc(&d_weight, sizeof(int)*(E));
+
+  cudaMemcpy(  d_meta,   h_meta, sizeof(int)*(V+1), cudaMemcpyHostToDevice);
+  cudaMemcpy(  d_data,   h_data, sizeof(int)*(E), cudaMemcpyHostToDevice);
+  cudaMemcpy(d_weight, h_weight, sizeof(int)*(E), cudaMemcpyHostToDevice);
+
+  // CSR END
+  //LAUNCH CONFIG
+  const unsigned threadsPerBlock = 512;
+  unsigned numThreads   = (V < threadsPerBlock)? 512: V;
+  unsigned numBlocks    = (numThreads+threadsPerBlock-1)/threadsPerBlock;
+
+
+  // TIMER START
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
+  float milliseconds = 0;
+  cudaEventRecord(start,0);
+
+  //END CSR 
+
+  //DECLAR DEVICE AND HOST vars in params
+  double* d_BC; cudaMalloc(&d_BC, sizeof(double)*(V)); ///TODO from func
+
+  //BEGIN DSL PARSING 
+  long* triangle_count; cudaMalloc(&triangle_count,sizeof(long)*(1));
+
+  initIndex<<<1,1>>(1,d_triangle_count,0, DECVAR);
+  Compute_TC_kernel<<<numBlocks, numThreads>>>( V, E, d_meta, d_data, d_weight ,g);
+  cudaDeviceSynchronize();
+
+  //TIMER STOP
+  cudaEventRecord(stop,0);
+  cudaEventSynchronize(stop);
+  cudaEventElapsedTime(&milliseconds, start, stop);
+  printf("GPU Time: %.6f ms\n", milliseconds);
+
+  cudaMemcpy(BC,d_BC , sizeof(double) * (V), cudaMemcpyDeviceToHost);
+} //end FUN
