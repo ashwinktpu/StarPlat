@@ -44,18 +44,50 @@ public:
   }
 
   //TODO : Needs to be changed
-  PointType meet(PointType p1, PointType p2){
-    return max(p1, p2);
+  PointType meet(PointType p1, PointType p2, LatticeType type){
+    if(type == CPU_Preferenced)
+    {
+      switch (p1)
+      {
+      case CPU_GPU_SHARED:
+        return p2;
+      case GPU_ONLY:
+        return (p2 == CPU_ONLY) ? CPU_ONLY : GPU_ONLY;
+      case CPU_ONLY:
+        return CPU_ONLY;
+      }
+    }
+    else
+    {
+      switch (p1)
+      {
+      case CPU_GPU_SHARED:
+        return p2;
+      case CPU_ONLY:
+        return (p2 == GPU_ONLY) ? GPU_ONLY : CPU_ONLY;
+      case GPU_ONLY:
+        return GPU_ONLY;
+      }
+    }
   }
 
-  void operator ^= (lattice &l1)
+  /*void operator ^= (lattice &l1)
   {
     for(pair<TableEntry*, PointType> pr: l1.typeMap)
     {
       if(typeMap.find(pr.first) != typeMap.end())
-        typeMap[pr.first] = meet(typeMap[pr.first], pr.second);
+        typeMap[pr.first] = meet(typeMap[pr.first], pr.second, CPU_Preferenced);
     }
   }
+
+  void operator &= (lattice &l1)
+  {
+    for(pair<TableEntry*, PointType> pr: l1.typeMap)
+    {
+      if(typeMap.find(pr.first) != typeMap.end())
+        typeMap[pr.first] = meet(typeMap[pr.first], pr.second, GPU_Preferenced);
+    }
+  }/**/
 
   lattice operator^ (const lattice &l1)
   {
@@ -63,9 +95,40 @@ public:
     for(pair<TableEntry*, PointType> pr: l1.typeMap)
     {
       if(typeMap.find(pr.first) != typeMap.end())
-        out.typeMap[pr.first] = meet(typeMap[pr.first], pr.second);
+        out.typeMap[pr.first] = meet(typeMap[pr.first], pr.second, CPU_Preferenced);
     }
     return out;
+  }
+
+  lattice operator& (const lattice &l1)
+  {
+    lattice out;
+    for(pair<TableEntry*, PointType> pr: l1.typeMap)
+    {
+      if(typeMap.find(pr.first) != typeMap.end())
+        out.typeMap[pr.first] = meet(typeMap[pr.first], pr.second, GPU_Preferenced);
+    }
+    return out;
+  }
+
+  bool operator== (const lattice &l1)
+  {
+    for(pair<TableEntry*, PointType> pr: typeMap)
+    {
+      if(l1.typeMap.at(pr.first) != pr.second)
+        return false;
+    }
+    return true;
+  }
+
+  bool operator!= (const lattice &l1)
+  {
+    for(pair<TableEntry*, PointType> pr: typeMap)
+    {
+      if(l1.typeMap.at(pr.first) != pr.second)
+        return true;
+    }
+    return false;
   }
 
   void meet(Identifier* iden, AccessType acType)
@@ -162,10 +225,6 @@ public:
     cout<<endl;
   }
 
-  void setType(LatticeType type){
-    this->type = type;
-  }
-
   void setVarType(Identifier* iden, PointType type){
     TableEntry* symbInfo = iden->getSymbolInfo();
     this->typeMap[symbInfo] = type;
@@ -179,7 +238,6 @@ public:
 class ASTNodeWrap
 {
   public:
-  list<ASTNode*> predecessor, successor;
   usedVariables usedVars;
   lattice inMap, outMap;
   ASTNode* currStmt;
@@ -209,7 +267,7 @@ class deviceVarsAnalyser
   char* getTempVar()
   {
     string var = "tempVar_" + to_string(tempVar++);
-    return var.c_str();
+    return const_cast<char*>(var.c_str());
   }
 
   public:
@@ -269,7 +327,7 @@ class deviceVarsAnalyser
   statement* transferVarsWhile(whileStmt* stmt,blockStatement* parBlock);
   statement* transferVarsDoWhile(dowhileStmt* stmt,blockStatement* parBlock);
   statement* transferVarsAssignment(assignment* stmt,blockStatement* parBlock);
-  statement* transferVarsIf(ifStmt* stmt,blockStatement* parBlock);
+  statement* transferVarsIfElse(ifStmt* stmt,blockStatement* parBlock);
 };
 
 #endif

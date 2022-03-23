@@ -2,12 +2,13 @@
 
 #include <string.h>
 #include <unordered_map>
-
-
+#include "../../maincontext/MainContext.hpp"
 // Statement Analyser
 
 // Current assuming filter expression gets evaluated in GPU
 // Required to handle case if we iterate through a set
+
+extern FrontEndContext frontEndContext;  
 
 lattice deviceVarsAnalyser::analyseForAll(forallStmt *stmt, lattice &inMap)
 {
@@ -77,7 +78,7 @@ lattice deviceVarsAnalyser::analyseWhile(whileStmt *stmt, lattice &inMap)
   bool hasChanged;
   do
   {
-    condNode->inMap = wrapNode->outMap ^ wrapNode->inMap;
+    condNode->inMap = (condNode->hasForAll) ? (wrapNode->outMap & wrapNode->inMap) : (wrapNode->outMap ^ wrapNode->inMap);
     condNode->outMap = condNode->inMap;
 
     for (Identifier *iden : condNode->usedVars.getVariables(READ))
@@ -114,7 +115,7 @@ lattice deviceVarsAnalyser::analyseDoWhile(dowhileStmt *stmt, lattice &inMap)
   bool hasChanged;
   do
   {
-    wrapNode->outMap = condNode->outMap ^ wrapNode->inMap;
+    wrapNode->outMap = (wrapNode->hasForAll) ? (condNode->outMap & wrapNode->inMap) : (condNode->outMap ^ wrapNode->inMap);
     lattice bodyOut = analyseStatement(stmt->getBody(), wrapNode->outMap);
     
     condNode->inMap = bodyOut;
@@ -179,8 +180,9 @@ lattice deviceVarsAnalyser::analyseFor(forallStmt *stmt, lattice &inMap)
     lattice bodyOut = analyseStatement(stmt->getBody(), bodyIn);
     bodyOut.removeVariable(stmt->getIterator());
 
-    if(wrapNode->outMap != (bodyOut ^ outTemp)){
-      wrapNode->outMap = bodyOut ^ outTemp;
+    lattice newOutMap = (wrapNode->hasForAll) ? (bodyOut & outTemp) : (bodyOut ^ outTemp);
+    if(wrapNode->outMap != newOutMap){
+      wrapNode->outMap = newOutMap;
       hasChanged = true;
     }
     else
@@ -191,6 +193,7 @@ lattice deviceVarsAnalyser::analyseFor(forallStmt *stmt, lattice &inMap)
   return wrapNode->outMap;
 }
 
+// TODO : Handle case of if body and else body
 lattice deviceVarsAnalyser::analyseIfElse(ifStmt *stmt, lattice &inMap)
 {
 
@@ -315,8 +318,21 @@ void deviceVarsAnalyser::analyseFunc(ASTNode *proc)
 {
   Function *func = (Function *)proc;
 
+  list<Identifier*> localVars;
+  for(formalParam* fParam: func->getParamList()){
+    localVars.push_back(fParam->getIdentifier());
+  }
+  initBlock(func->getBlockStatement(), localVars);
+
   lattice inpLattice;
+  for(Identifier* iden: localVars){
+    inpLattice.addVariable(iden, lattice::CPU_ONLY);
+  }
+
   analyseStatement(func->getBlockStatement(), inpLattice);
+  blockStatement* newBody = (blockStatement*) transferVarsBlock(func->getBlockStatement(), nullptr);
+  func->setBlockStatement(newBody);
+
   printStatement(func->getBlockStatement(), 0);
   return;
 }

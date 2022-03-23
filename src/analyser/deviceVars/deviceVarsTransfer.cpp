@@ -71,6 +71,7 @@ statement* deviceVarsAnalyser::transferVarsForAll(forallStmt* stmt, blockStateme
     for(statement* bstmt: transferStatements(wrapNode->inMap, wrapNode->outMap))
         parBlock->addStmtToBlock(bstmt);
     
+    stmt->initUsedVariable(wrapNode->usedVars.getVariables());
     return stmt;
 }
 statement* deviceVarsAnalyser::transferVarsFor(forallStmt* stmt, blockStatement* parBlock)
@@ -117,18 +118,7 @@ statement* deviceVarsAnalyser::transferVarsDeclaration(declaration* stmt, blockS
     for(statement* bstmt: transferStmts)
         parBlock->addStmtToBlock(bstmt);
     
-    /*if(gpuUsedVars.isUsedVar(stmt->getdeclId()))
-    {
-        Identifier* tempIden = Util::createIdentifierNode(getTempVar());
-        Type* idenType = Util::createPrimitiveTypeNode(TYPE_BOOL);
-
-        TableEntry* e = new TableEntry(tempIden->copy(), idenType);
-        tempIden->setSymbolInfo(e);
-
-        declaration* tempDecl = Util::createAssignedDeclNode(idenType,tempIden,boolFalse);
-        parBlock->addStmtToBlock(tempDecl);
-    }*/
-
+    gpuUsedVars.isUsedVar(stmt->getdeclId()) ? stmt->setInGPU(true) : stmt->setInGPU(false);
     return stmt;
 }
 statement* deviceVarsAnalyser::transferVarsWhile(whileStmt* stmt, blockStatement* parBlock)
@@ -157,8 +147,8 @@ statement* deviceVarsAnalyser::transferVarsDoWhile(dowhileStmt* stmt, blockState
 
     blockStatement* newBody = (blockStatement*) transferVarsStatement(stmt->getBody(), parBlock);
     {
-        Identifier* tempIden = Util::createIdentifierNode(getTempVar());
-        Type* idenType = Util::createPrimitiveTypeNode(TYPE_BOOL);
+        Identifier* tempIden = (Identifier*) Util::createIdentifierNode(getTempVar());
+        Type* idenType = (Type*) Util::createPrimitiveTypeNode(TYPE_BOOL);
 
         TableEntry* e = new TableEntry(tempIden->copy(), idenType);
         tempIden->setSymbolInfo(e);
@@ -171,7 +161,7 @@ statement* deviceVarsAnalyser::transferVarsDoWhile(dowhileStmt* stmt, blockState
         assignment* tempAssign = (assignment*) Util::createAssignmentNode(ifAssign, boolTrue);
         newBody->addToFront(tempAssign);
 
-        declaration* tempDecl = Util::createAssignedDeclNode(idenType,tempIden,boolFalse);
+        declaration* tempDecl = (declaration*) Util::createAssignedDeclNode(idenType,tempIden,boolFalse);
         parBlock->addStmtToBlock(tempDecl);
 
         blockStatement* ifBody = blockStatement::createnewBlock();
@@ -182,7 +172,7 @@ statement* deviceVarsAnalyser::transferVarsDoWhile(dowhileStmt* stmt, blockState
         Identifier* ifCond = tempIden->copy();
         ifCond->setSymbolInfo(e);
 
-        ifStmt* varTransfer = Util::createNodeForIfStmt(Util::createNodeForId(ifCond), ifBody, NULL);
+        ifStmt* varTransfer = (ifStmt*) Util::createNodeForIfStmt(Util::createNodeForId(ifCond), ifBody, NULL);
         newBody->addToFront(varTransfer);
     }
 
@@ -203,7 +193,7 @@ statement* deviceVarsAnalyser::transferVarsAssignment(assignment* stmt, blockSta
     
     return stmt;
 }
-statement* deviceVarsAnalyser::transferVarsIf(ifStmt* stmt, blockStatement* parBlock)
+statement* deviceVarsAnalyser::transferVarsIfElse(ifStmt* stmt, blockStatement* parBlock)
 {
     Expression* expr = stmt->getCondition();
     ASTNodeWrap* condWrap = getWrapNode(expr);
@@ -233,7 +223,7 @@ statement* deviceVarsAnalyser::transferVarsIf(ifStmt* stmt, blockStatement* parB
     }
     else
     {
-        blockStatement* ifBody = (blockStatement*) transferVarsStatement(stmt->getIfBody());
+        blockStatement* ifBody = (blockStatement*) transferVarsStatement(stmt->getIfBody(), parBlock);
         lattice ifOut = getWrapNode(stmt->getIfBody())->outMap;
 
         for(statement* bstmt: transferStatements(ifOut, wrapNode->outMap)){
