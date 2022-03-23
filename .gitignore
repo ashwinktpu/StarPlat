@@ -4,5 +4,6 @@ src/parser/y.tab.h
 src/finalcode
 *.out
 src/bin/
+.history/
 .history/*
 ../.history/*
