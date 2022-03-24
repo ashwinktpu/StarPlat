@@ -65,7 +65,7 @@ void Compute_TC(graph& g)
   //BEGIN DSL PARSING 
   long* d_triangle_count; cudaMalloc(&d_triangle_count,sizeof(long)*(1));
 
-  initIndex<<<1,1>>(1,d_triangle_count,0, DECVAR);
+  initIndex<<<1,1>>>(1,d_triangle_count,0, 0);
   Compute_TC_kernel<<<numBlocks, numThreads>>>( V, E, d_meta, d_data, d_weight ,g);
   cudaDeviceSynchronize();
 
