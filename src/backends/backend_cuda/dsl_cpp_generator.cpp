@@ -759,7 +759,9 @@ void dsl_cpp_generator::generateDoWhileStmt(dowhileStmt* doWhile,
   dslCodePad& targetFile = isMainFile ? main : header;
 
   targetFile.pushstr_newL("do");
+  targetFile.pushString("{");
   generateStatement(doWhile->getBody(), isMainFile);
+  targetFile.pushString("}");
   targetFile.pushString("while(");
   generateExpr(doWhile->getCondition(), isMainFile);
   targetFile.pushString(");");

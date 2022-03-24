@@ -15,11 +15,11 @@ __global__ void Compute_PR_kernel(int V, int E, int* d_meta,int* d_data,int* d_w
   float* d_pageRank){
   unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
   if(v >= V) return;
-  initIndex<<<1,1>>(1,d_sum,0, DECVAR);
+  initIndex<<<1,1>>>(1,d_sum,0, 0);
   for (int edge = gpu_rev_OA[v]; edge < gpu_rev_OA[v+1]; edge ++)
   {int nbr = srcList[edge] ;
     sum = sum + d_pageRank[nbr] / (gpu_OA[nbr+1]-gpu_OA[nbr]);
-    initIndex<<<1,1>>(1,d_val,0, DECVAR);
+    initIndex<<<1,1>>>(1,d_val,0, 0);
     diff = diff+ val - d_pageRank[v];
     d_pageRank_nxt[v] = val;
   } // end if d lvl
