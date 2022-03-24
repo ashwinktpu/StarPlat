@@ -1,5 +1,5 @@
 EXPENDABLES_WINDOWS = bin\MainContext.o bin\ASTHelper.o bin\SymbolTableBuilder.o bin\SymbolTableNew.o bin\y.tab.o bin\lex.yy.o parser\y.tab.c parser\lex.yy.c bin\dsl_cpp_generator.o bin\deviceVarsAnalyser.o
-EXPENDABLES = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c bin/dsl_cpp_generator.o bin/attachPropAnalyser.o
+EXPENDABLES = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c bin/dsl_cpp_generator.o bin/deviceVarsAnalyser.o
 ANALYSER = bin/dataRaceAnalyser.o
 
 CC = g++  
@@ -22,15 +22,11 @@ bin/SymbolTableBuilder.o: symbolutil/SymbolTableBuilder.cpp
 bin/SymbolTableNew.o: symbolutil/SymbolTableNew.cpp  symbolutil/SymbolTable.h
 	$(CC) -c symbolutil/SymbolTableNew.cpp -o bin/SymbolTableNew.o
 
-
-
 bin/dsl_dyn_cpp_generator.o:  backends/backend_omp/dsl_dyn_cpp_generator.cpp  backends/dslCodePad.h
 	$(CC) -c  backends/backend_omp/dsl_dyn_cpp_generator.cpp -o bin/dsl_dyn_cpp_generator.o
 
 bin/dsl_cpp_generator.o:  backends/backend_omp/dsl_cpp_generator.cpp  backends/dslCodePad.h
 	$(CC) -c  backends/backend_omp/dsl_cpp_generator.cpp -o bin/dsl_cpp_generator.o
-
-
 
 bin/attachPropAnalyser.o: analyser/attachPropAnalyser.cpp analyser/attachPropAnalyser.h
 	$(CC) -c analyser/attachPropAnalyser.cpp -o bin/attachPropAnalyser.o
@@ -39,7 +35,7 @@ bin/dataRaceAnalyser.o: analyser/dataRaceAnalyser.cpp analyser/dataRaceAnalyser.
 	$(CC) -c analyser/dataRaceAnalyser.cpp -o bin/dataRaceAnalyser.o
 
 bin/deviceVarsAnalyser.o: analyser/deviceVars/*.cpp analyser/deviceVars/deviceVarsAnalyser.h
-	$(CC) analyser/deviceVars/*.cpp -o bin/deviceVarsAnalyser.o
+	$(CC) -c analyser/deviceVars/*.cpp -o bin/deviceVarsAnalyser.o
 
 bin/analyserUtil.o: analyser/analyserUtil.cpp
 	$(CC) -c analyser/analyserUtil.cpp -o bin/analyserUtil.o
