@@ -1812,15 +1812,16 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
         castIfRequired(type, methodId, main);
 
       }
-      sprintf(strBuffer, "initIndex<<<1,1>>(1,d_%s,0, DECVAR);",varName);
-        targetFile.pushstr_newL(strBuffer);
-       //generateExpr(declStmt->getExpressionAssigned(), isMainFile);
+      
+      sprintf(strBuffer, "initIndex<<<1,1>>>(1,d_%s,0, 0);",varName);
+      targetFile.pushstr_newL(strBuffer);
+      //generateExpr(declStmt->getExpressionAssigned(), isMainFile);
       // targetFile.pushstr_newL(";");
     }
 
     else {
 
-      sprintf(strBuffer, "initIndex<<<1,1>>(1,d_%s,0, DECVAR);",varName);
+      sprintf(strBuffer, "initIndex<<<1,1>>>(1,d_%s,0, 0);",varName);
         targetFile.pushstr_newL(strBuffer);
       //targetFile.pushString(" = ");
       //getDefaultValueforTypes(type->gettypeId());
@@ -2087,8 +2088,8 @@ void dsl_cpp_generator::generate_exprProcCall(Expression* expr,
     Identifier* srcId = argList.front()->getExpr()->getId();
     Identifier* destId = argList.back()->getExpr()->getId();
     Identifier* objectId = proc->getId1();
-    sprintf(strBuffer, "%s.%s(%s, %s)", objectId->getIdentifier(),
-            "check_if_nbr", srcId->getIdentifier(), destId->getIdentifier());
+    sprintf(strBuffer, "%s.%s(%s, %s, %s, %s)", objectId->getIdentifier(),
+            "findNeighborSorted", srcId->getIdentifier(), destId->getIdentifier(),"d_meta","d_data");
     targetFile.pushString(strBuffer);
 
   } else {
