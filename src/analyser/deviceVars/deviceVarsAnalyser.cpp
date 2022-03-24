@@ -2,13 +2,11 @@
 
 #include <string.h>
 #include <unordered_map>
-#include "../../maincontext/MainContext.hpp"
+#include "../../ast/ASTHelper.cpp"
 // Statement Analyser
 
 // Current assuming filter expression gets evaluated in GPU
 // Required to handle case if we iterate through a set
-
-extern FrontEndContext frontEndContext;  
 
 lattice deviceVarsAnalyser::analyseForAll(forallStmt *stmt, lattice &inMap)
 {
