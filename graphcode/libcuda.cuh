@@ -31,7 +31,7 @@ __global__ void accumulate_bc(unsigned n, double* d_delta, double* d_nodeBC, int
 
 //~ initIndex<<<1.1>>>(v,arr,s,val);
 template <typename T>
-__global__ void initIndex(unsigned V, T* init_array, unsigned s, T init_value) {  // intializes an index 1D array with init val
+__global__ void initIndex(int V, T* init_array, int s, T init_value) {  // intializes an index 1D array with init val
   //~ unsigned id = threadIdx.x + blockDim.x * blockIdx.x;
   if (s < V) {  // bound check
     init_array[s] = init_value;
