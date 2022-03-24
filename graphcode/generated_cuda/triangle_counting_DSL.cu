@@ -4,8 +4,8 @@ void Compute_TC(graph& g)
 
 {
   // CSR BEGIN
-  unsigned V = g.num_nodes();
-  unsigned E = g.num_edges();
+  int V = g.num_nodes();
+  int E = g.num_edges();
 
   printf("#nodes:%d\n",V);
   printf("#edges:%d\n",E);

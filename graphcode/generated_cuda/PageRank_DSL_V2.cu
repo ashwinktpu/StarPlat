@@ -5,8 +5,8 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
 
 {
   // CSR BEGIN
-  unsigned V = g.num_nodes();
-  unsigned E = g.num_edges();
+  int V = g.num_nodes();
+  int E = g.num_edges();
 
   printf("#nodes:%d\n",V);
   printf("#edges:%d\n",E);
@@ -69,7 +69,7 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
   //BEGIN DSL PARSING 
   float* d_num_nodes; cudaMalloc(&d_num_nodes,sizeof(float)*(1));
 
-  (float)initIndex<<<1,1>>(1,d_num_nodes,0, DECVAR);
+  (float)initIndex<<<1,1>>>(1,d_num_nodes,0, 0);
   float* d_pageRank_nxt;
   cudaMalloc(&d_pageRank_nxt, sizeof(float)*(V));
 
@@ -77,23 +77,23 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
 
   int* d_iterCount; cudaMalloc(&d_iterCount,sizeof(int)*(1));
 
-  initIndex<<<1,1>>(1,d_iterCount,0, DECVAR);
+  initIndex<<<1,1>>>(1,d_iterCount,0, 0);
   float* d_diff; cudaMalloc(&d_diff,sizeof(float)*(1));
 
-  initIndex<<<1,1>>(1,d_diff,0, DECVAR);
+  initIndex<<<1,1>>>(1,d_diff,0, 0);
   do
-  diff = 0.000000;
-  Compute_PR_kernel<<<numBlocks, numThreads>>>( V, E, d_meta, d_data, d_weight ,g,beta,delta,maxIter,
-    d_pageRank);
-  cudaDeviceSynchronize();
+  {diff = 0.000000;
+    Compute_PR_kernel<<<numBlocks, numThreads>>>( V, E, d_meta, d_data, d_weight ,g,beta,delta,maxIter,
+      d_pageRank);
+    cudaDeviceSynchronize();
 
-  float* d_sum; cudaMalloc(&d_sum,sizeof(float)*(1));
+    float* d_sum; cudaMalloc(&d_sum,sizeof(float)*(1));
 
-  float* d_val; cudaMalloc(&d_val,sizeof(float)*(1));
+    float* d_val; cudaMalloc(&d_val,sizeof(float)*(1));
 
-  pageRank = pageRank_nxt;
-  iterCount++;
-  while((diff > beta) && (iterCount < maxIter));//TIMER STOP
+    pageRank = pageRank_nxt;
+    iterCount++;
+  }while((diff > beta) && (iterCount < maxIter));//TIMER STOP
   cudaEventRecord(stop,0);
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&milliseconds, start, stop);
