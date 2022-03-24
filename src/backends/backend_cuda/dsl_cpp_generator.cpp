@@ -1645,7 +1645,7 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
         targetFile.pushstr_newL("{");
         targetFile.pushstr_newL("//HERE");
         printf("FOR");
-        sprintf(strBuffer, "unsigned %s = (unsigned)*itr;", forAll->getIterator()->getIdentifier());
+        sprintf(strBuffer, "int %s = *itr;", forAll->getIterator()->getIdentifier());
         targetFile.pushstr_newL(strBuffer);
         generateBlock((blockStatement*)body, false);  //FOR BODY for
         targetFile.pushstr_newL("}");
@@ -2580,10 +2580,10 @@ void dsl_cpp_generator::generateCudaMemcpy(const char* dVar, const char* cVar,
 void dsl_cpp_generator::generateCSRArrays(const char* gId) {
   char strBuffer[1024];
 
-  sprintf(strBuffer, "unsigned V = %s.num_nodes();",
+  sprintf(strBuffer, "int V = %s.num_nodes();",
           gId);  // assuming DSL  do not contain variables as V and E
   main.pushstr_newL(strBuffer);
-  sprintf(strBuffer, "unsigned E = %s.num_edges();", gId);
+  sprintf(strBuffer, "int E = %s.num_edges();", gId);
   main.pushstr_newL(strBuffer);
   main.NewLine();
 
