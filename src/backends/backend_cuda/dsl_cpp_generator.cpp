@@ -773,10 +773,10 @@ void dsl_cpp_generator::generateIfStmt(ifStmt* ifstmt, bool isMainFile) {
   Expression* condition = ifstmt->getCondition();
   targetFile.pushString("if (");
   generateExpr(condition, isMainFile);
-  targetFile.pushString(" )");
-  targetFile.pushString(" {");
+  //~ targetFile.pushString(" )");
+  targetFile.pushstr_newL("){ // if begin");
   generateStatement(ifstmt->getIfBody(), isMainFile);
-  targetFile.pushString(" }");
+  targetFile.pushstr_newL("} // if end");
   if (ifstmt->getElseBody() == NULL) return;
   targetFile.pushstr_newL("else");
   generateStatement(ifstmt->getElseBody(), isMainFile);
@@ -1219,8 +1219,10 @@ void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll,
         list<argument*>  argList=extractElemFunc->getArgList();
         assert(argList.size()==1);
         //~ Identifier* nodeNbr=argList.front()->getExpr()->getId();
-        sprintf(strBuffer,"for (%s %s = %s[%s]; %s < %s[%s+1]; %s ++)","int","edge","d_meta","v","edge","d_meta","v","edge");
-        targetFile.pushstr_newL(strBuffer); targetFile.pushString("{");
+        //~ sprintf(strBuffer,"for (int edge = d_meta[v]; %s < %s[%s+1]; %s++) { // ","int","edge","d_meta","v","edge","d_meta","v","edge");
+        sprintf(strBuffer,"for (%s %s = %s[%s]; %s < %s[%s+1]; %s++) { // FOR NBR ITR ","int","edge","d_meta","v","edge","d_meta","v","edge");
+        targetFile.pushstr_newL(strBuffer);
+        //~ targetFile.pushString("{");
         sprintf(strBuffer,"%s %s = %s[%s];","int",iterator->getIdentifier(),"d_data","edge"); //needs to move the addition of
         targetFile.pushstr_newL(strBuffer);
       }
@@ -1229,7 +1231,7 @@ void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll,
         list<argument*> argList=extractElemFunc->getArgList();
         assert(argList.size()==1);
         Identifier* nodeNbr=argList.front()->getExpr()->getId();
-        sprintf(strBuffer,"for (%s %s = %s[%s]; %s < %s[%s+1]; %s ++)","int","edge","gpu_rev_OA",nodeNbr->getIdentifier(),"edge","gpu_rev_OA",nodeNbr->getIdentifier(),"edge");
+        sprintf(strBuffer,"for (%s %s = %s[%s]; %s < %s[%s+1]; %s++)","int","edge","gpu_rev_OA",nodeNbr->getIdentifier(),"edge","gpu_rev_OA",nodeNbr->getIdentifier(),"edge");
         targetFile.pushstr_newL(strBuffer);
         targetFile.pushString("{");
         sprintf(strBuffer,"%s %s = %s[%s] ;","int",iterator->getIdentifier(),"srcList","edge"); //needs to move the addition of
@@ -1462,7 +1464,7 @@ void dsl_cpp_generator :: addCudaKernel(forallStmt* forAll)
                                      //~ if (stmt->getTypeofNode() == NODE_FORALLSTMT) {
   }
 
-  header.pushstr_newL("} // end if d lvl");
+  header.pushstr_newL("} // end FUNC");
 }
 
 void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
@@ -1544,7 +1546,7 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
   }
 
   if (extractElemFunc != NULL) {
-    if (neighbourIteration(iteratorMethodId->getIdentifier())) {
+    if (neighbourIteration(iteratorMethodId->getIdentifier())) { // todo forall neigbour iterion
       cout << "\t ITERATE Neighbour \n";
 
       //~ char* tmpStr = forAll->getSource()->getIdentifier();
@@ -1637,7 +1639,10 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
       }
       else
         {
+          std::cout<< "FOR BODY BEGIN" << '\n';
           generateStatement(forAll->getBody(),isMainFile);
+          targetFile.pushstr_newL("} // FOR END");
+          std::cout<< "FOR BODY END" << '\n';
         }
 
 
