@@ -62,9 +62,9 @@ void Compute_TC(graph& g)
   //DECLAR DEVICE AND HOST vars in params
 
   //BEGIN DSL PARSING 
-  Compute_TC_kernel<<<numBlocks, numThreads>>>( V, E, d_meta, d_data, d_weight ,g);
-  cudaDeviceSynchronize();
+  long triangle_count = 0; // asst in .cu
 
+  Compute_TC_kernel<<<numBlocks, numThreads>>>( V, E, d_meta, d_data, d_weight ,g);
   //TIMER STOP
   cudaEventRecord(stop,0);
   cudaEventSynchronize(stop);

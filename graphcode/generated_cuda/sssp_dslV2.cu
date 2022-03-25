@@ -1,7 +1,6 @@
-#include "PageRank_DSL_V2.h"
+#include "sssp_dslV2.h"
 
-void Compute_PR(graph& g,float beta,float delta,int maxIter,
-  float* pageRank)
+void Compute_SSSP(graph& g,int* dist,int src)
 
 {
   // CSR BEGIN
@@ -61,30 +60,38 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
 
 
   //DECLAR DEVICE AND HOST vars in params
-  float* d_pageRank;
-  cudaMalloc(&d_pageRank, sizeof(float)*(V));
+  int* d_dist;
+  cudaMalloc(&d_dist, sizeof(int)*(V));
 
 
   //BEGIN DSL PARSING 
-  (float)float* d_pageRank_nxt;
-  cudaMalloc(&d_pageRank_nxt, sizeof(float)*(V));
+  bool* d_modified;
+  cudaMalloc(&d_modified, sizeof(bool)*(V));
 
-  initKernel<float> <<<numBlocks,threadsPerBlock>>>(V,d_pageRank,1 / num_nodes);
+  initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_dist,INT_MAX);
 
-  initIndex<<<1,1>>>(1,d_diff,0, 0);
-  do
-  {diff = 0.000000;
-    Compute_PR_kernel<<<numBlocks, numThreads>>>( V, E, d_meta, d_data, d_weight ,g,beta,delta,maxIter,
-      d_pageRank);
-    cudaDeviceSynchronize();
+  initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_modified,false);
 
-    pageRank = pageRank_nxt;
-    iterCount++;
-  }while((diff > beta) && (iterCount < maxIter));//TIMER STOP
+  initIndex<double><<<1,1>>>(V,d_modified,src,true); //InitIndexD
+  initIndex<double><<<1,1>>>(V,d_dist,src,0); //InitIndexD
+  bool finished = false; // asst in .cu
+
+  // FIXED POINT variables
+  bool* d_finished; cudaMalloc(&d_finished,sizeof(bool)*(1));
+  bool* d_modified; cudaMalloc(&d_modified,sizeof(bool)*(V));
+  //BEGIN FIXED POINT
+  while(!finished) {
+    initIndex<bool> <<< 1, 1>>>(1, d_finished,0, true);
+    Compute_SSSP_kernel<<<numBlocks, numThreads>>>( V, E, d_meta, d_data, d_weight ,g,d_dist,src);
+    initKernel<bool><<<num_blocks,block_size>>>(V, gpu_modified_prev, false);
+    modified_nxt[v] = false ;
+  } // END FIXED POINT
+
+  //TIMER STOP
   cudaEventRecord(stop,0);
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&milliseconds, start, stop);
   printf("GPU Time: %.6f ms\n", milliseconds);
 
-  cudaMemcpy(pageRank, d_pageRank, sizeof(float)*(V), cudaMemcpyDeviceToHost);
+  cudaMemcpy(    dist,   d_dist, sizeof(int)*(V), cudaMemcpyDeviceToHost);
 } //end FUN

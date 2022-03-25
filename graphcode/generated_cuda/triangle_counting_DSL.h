@@ -10,22 +10,23 @@
 
 void Compute_TC(graph& g);
 
-__device__ long triangle_count = 0; // DEVICE ASSTMENT
+__device__ long triangle_count = 0; // DEVICE ASSTMENT in .h
+
 __global__ void Compute_TC_kernel(int V, int E, int* d_meta, int* d_data, int* d_weight ,graph& g){
   unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
   if(v >= V) return;
   for (int edge = d_meta[v]; edge < d_meta[v+1]; edge++) { // FOR NBR ITR 
     int u = d_data[edge];
-    if (u < v){ // if begin
+    if (u < v){ // if filter begin 
       for (int edge = d_meta[v]; edge < d_meta[v+1]; edge++) { // FOR NBR ITR 
         int w = d_data[edge];
-        if (w > v){ // if begin
-          if (findNeighborSorted(u, w, d_meta, d_data)){ // if begin
+        if (w > v){ // if filter begin 
+          if (findNeighborSorted(u, w, d_meta, d_data)){ // if filter begin 
             atomicAdd(&triangle_count,1);
-          } // if end
-        } // if end
+          } // if filter end
+        } // if filter end
       } // FOR END
-    } // if end
+    } // if filter end
   } // FOR END
 } // end FUNC
 
