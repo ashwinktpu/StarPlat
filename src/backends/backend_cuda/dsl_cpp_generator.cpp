@@ -1814,7 +1814,7 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
         castIfRequired(type, methodId, main);
 
       }
-      
+
       sprintf(strBuffer, "initIndex<<<1,1>>>(1,d_%s,0, 0);",varName);
       targetFile.pushstr_newL(strBuffer);
       //generateExpr(declStmt->getExpressionAssigned(), isMainFile);
@@ -2407,7 +2407,7 @@ void dsl_cpp_generator::generateCudaMemCpyParams(list<formalParam*> paramList)
 void dsl_cpp_generator::generateFunc(ASTNode* proc) {
   // dslCodePad &targetFile = isMainFile ? main : header;
 
-  char strBuffer[1024];
+  //~ char strBuffer[1024];
   Function* func = (Function*)proc;
   generateFuncHeader(func, false);  //.h or header file | adds prototype of main function and std headers files
   generateFuncHeader(func, true);   // .cu or main file
@@ -2415,8 +2415,8 @@ void dsl_cpp_generator::generateFunc(ASTNode* proc) {
   // to genearte the function body of the algorithm
   // Note that this we can change later point of time if required
 
-  char outVarName[] = "BC";  //inner type
-  char outVarType[] = "double";
+  //~ char outVarName[] = "BC";  //inner type
+  //~ char outVarType[] = "double";
   main.pushstr_newL("{");
 
   generateFuncBody(func, false);  // GEnerates CSR ..bool is meaningless
@@ -2428,8 +2428,8 @@ void dsl_cpp_generator::generateFunc(ASTNode* proc) {
   generateCudaMallocParams(func->getParamList());
 
 
-  sprintf(strBuffer, "%s* d_%s; cudaMalloc(&d_%s, sizeof(%s)*(V)); ///TODO from func", outVarType, outVarName, outVarName, outVarType);
-  main.pushstr_newL(strBuffer);
+  //~ sprintf(strBuffer, "%s* d_%s; cudaMalloc(&d_%s, sizeof(%s)*(V)); ///TODO from func", outVarType, outVarName, outVarName, outVarType);
+  //~ main.pushstr_newL(strBuffer);
 
   main.NewLine();
 
@@ -2451,9 +2451,9 @@ void dsl_cpp_generator::generateFunc(ASTNode* proc) {
   generateStopTimer();
   main.NewLine();
   generateCudaMemCpyParams(func->getParamList());
-  sprintf(strBuffer, "cudaMemcpy(%s,d_%s , sizeof(%s) * (V), cudaMemcpyDeviceToHost);", outVarName, outVarName, outVarType);
+  //~ sprintf(strBuffer, "cudaMemcpy(%s,d_%s , sizeof(%s) * (V), cudaMemcpyDeviceToHost);", outVarName, outVarName, outVarType);
 
-  main.pushstr_newL(strBuffer);
+  //~ main.pushstr_newL(strBuffer);
 
   main.pushstr_newL("} //end FUN");
 
