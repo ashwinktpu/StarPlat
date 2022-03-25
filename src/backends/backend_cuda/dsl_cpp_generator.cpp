@@ -1190,10 +1190,9 @@ bool dsl_cpp_generator::elementsIteration(char* extractId) {
   return (extractString == "elements");
 }
 
-void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll,
-                                                bool isMainFile) {
+void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll, bool isMainFile) {
 
-    cout << "from generateForAllSignature = " << isMainFile;
+  cout << "GenerateForAllSignature = " << isMainFile << endl;
   dslCodePad& targetFile = isMainFile ? main : header;
 
   char strBuffer[1024];
@@ -1285,8 +1284,7 @@ void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll,
         //~ std::cout << "+++++     ++++++++++" << '\n';
         targetFile.pushstr_newL("//FOR SIGNATURE of SET");
         targetFile.pushstr_newL("std::set<int>::iterator itr;");
-        sprintf(strBuffer, "for(itr=%s.begin();itr!=%s.end();itr++)",
-                sourceId->getIdentifier(), sourceId->getIdentifier());
+        sprintf(strBuffer, "for(itr=%s.begin();itr!=%s.end();itr++)",sourceId->getIdentifier(), sourceId->getIdentifier());
         targetFile.pushstr_newL(strBuffer);
       }
     }
@@ -1425,7 +1423,7 @@ void dsl_cpp_generator:: generateParamList(list<formalParam*> paramList, dslCode
 
 
       if(argumentTotal>0)
-         targetFile.pushString(",");
+         targetFile.pushString(", ");
 
       if(arg_currNo==maximum_arginline)
       {
@@ -1460,7 +1458,7 @@ void dsl_cpp_generator :: addCudaKernel(forallStmt* forAll)
       header.pushString(" ,");
       generateParamList(currentFunc->getParamList(), header);
     }
-  header.pushstr_newL("){ // FROM ADD KERNEL");
+  header.pushstr_newL("){ // BEGIN FUN via ADDKERNEL");
 
   sprintf(strBuffer, "unsigned %s = blockIdx.x * blockDim.x + threadIdx.x;", loopVar);
   header.pushstr_newL(strBuffer);
@@ -1525,10 +1523,10 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
     main.pushString("numBlocks, numThreads");
     main.pushString(">>>");
     main.push('(');
-    main.pushString(" V, E, d_meta, d_data, d_weight");
+    main.pushString("V,E,d_meta,d_data,d_weight");
       if(currentFunc->getParamList().size()!=0)
     {
-      main.pushString(" ,");
+      main.pushString(",");
       generateCallList(currentFunc->getParamList(), main);
     }
     main.pushString(")");
@@ -1538,8 +1536,6 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
     //~ main.NewLine();
     //~ main.NewLine();
     addCudaKernel(forAll);
-
-
 
   }
 
@@ -1826,8 +1822,8 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
     // targetFile.pushstr_space(convertToCppType(type));
     const char * varType = convertToCppType(type);
     const char * varName = declStmt->getdeclId()->getIdentifier();
-    cout << "varT" << varType << endl;
-    cout << "varN" << varName << endl;
+    cout << "varT:" << varType << endl;
+    cout << "varN:" << varName << endl;
 
 
     //~ generateExtraDeviceVariable(varType,varName,"1");
@@ -2361,6 +2357,7 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,
           //~ std::cout<< "BEFORE KERNEL" << '\n';
           sprintf(strBuffer, "initIndex<bool> <<< 1, 1>>>(1, d_%s,0, true);", fixPointVar);
           targetFile.pushstr_newL(strBuffer);
+
           if (fixedPointConstruct->getBody()->getTypeofNode() != NODE_BLOCKSTMT)
             generateStatement(fixedPointConstruct->getBody(), isMainFile);
           else
