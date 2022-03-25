@@ -82,7 +82,7 @@ void Compute_SSSP(graph& g,int* dist,int src)
   //BEGIN FIXED POINT
   while(!finished) {
     initIndex<bool> <<< 1, 1>>>(1, d_finished,0, true);
-    Compute_SSSP_kernel<<<numBlocks, numThreads>>>( V, E, d_meta, d_data, d_weight ,g,d_dist,src);
+    Compute_SSSP_kernel<<<numBlocks, numThreads>>>(V,E,d_meta,d_data,d_weight,g,d_dist,src);
     initKernel<bool><<<num_blocks,block_size>>>(V, gpu_modified_prev, false);
     modified_nxt[v] = false ;
   } // END FIXED POINT
