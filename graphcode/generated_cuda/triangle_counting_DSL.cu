@@ -60,12 +60,8 @@ void Compute_TC(graph& g)
 
 
   //DECLAR DEVICE AND HOST vars in params
-  double* d_BC; cudaMalloc(&d_BC, sizeof(double)*(V)); ///TODO from func
 
   //BEGIN DSL PARSING 
-  long* d_triangle_count; cudaMalloc(&d_triangle_count,sizeof(long)*(1));
-
-  initIndex<<<1,1>>>(1,d_triangle_count,0, 0);
   Compute_TC_kernel<<<numBlocks, numThreads>>>( V, E, d_meta, d_data, d_weight ,g);
   cudaDeviceSynchronize();
 
@@ -75,5 +71,4 @@ void Compute_TC(graph& g)
   cudaEventElapsedTime(&milliseconds, start, stop);
   printf("GPU Time: %.6f ms\n", milliseconds);
 
-  cudaMemcpy(BC,d_BC , sizeof(double) * (V), cudaMemcpyDeviceToHost);
 } //end FUN
