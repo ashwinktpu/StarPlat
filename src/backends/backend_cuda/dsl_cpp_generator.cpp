@@ -1355,7 +1355,9 @@ void dsl_cpp_generator:: generateCallList(list<formalParam*> paramList, dslCodeP
       {
           targetFile.pushString("d_");
       }
-      targetFile.pushString(/*createParamName(*/(*itr)->getIdentifier()->getIdentifier());
+
+        targetFile.pushString(/*createParamName(*/(*itr)->getIdentifier()->getIdentifier());
+
       if(argumentTotal>0)
          targetFile.pushString(",");
 
@@ -1381,19 +1383,34 @@ void dsl_cpp_generator:: generateParamList(list<formalParam*> paramList, dslCode
       argumentTotal--;
 
       Type* type=(*itr)->getType();
-      targetFile.pushString(convertToCppType(type));
+
       /*if(type->isPropType())
       {
           targetFile.pushString("* ");
       }
       else
       {*/
-          targetFile.pushString(" ");
+
          // targetFile.space();
       //}
-      if(type->isPropType())
+      //~ if(!type->isGraphType()) {
+        targetFile.pushString(convertToCppType(type));
+      //~ }
+
+
+      //~ if(type->isGraphType()){
+        //~ targetFile.pushString("int* d_meta, int* d_data, int* d_weight");
+      //~ }
+      targetFile.pushString(" ");
+
+      if(type->isPropType()){
         targetFile.pushString("d_") ;
+      }
+
+      //~ if(!type->isGraphType()) // TMP FIX
       targetFile.pushString(/*createParamName(*/(*itr)->getIdentifier()->getIdentifier());
+
+
       if(argumentTotal>0)
          targetFile.pushString(",");
 
@@ -1424,7 +1441,7 @@ void dsl_cpp_generator :: addCudaKernel(forallStmt* forAll)
    header.pushString(getCurrentFunc()->getIdentifier()->getIdentifier());
    header.pushString("_kernel");
 
-  header.pushString("(int V, int E, int* d_meta,int* d_data,int* d_weight");
+  header.pushString("(int V, int E, int* d_meta, int* d_data, int* d_weight");
   if(currentFunc->getParamList().size()!=0)
     {
       header.pushString(" ,");
@@ -1721,7 +1738,12 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
 
   Type* type = declStmt->getType();
   //~ char strBuffer[1024];
-
+  //~ if (type->isPrimitiveType()){
+      //~ header.pushString("__device__ d_");
+      //~ header.pushString(declStmt->getdeclId()->getIdentifier());
+      //~ header.pushstr_newL(";");
+      //~ std::cout<< "PRINT DEVICE VAR ======>" <<  declStmt->getdeclId()->getIdentifier()<< '\n';
+  //~ }
   if (type->isPropType()) {
     if (type->getInnerTargetType()->isPrimitiveType()) {
       Type* innerType = type->getInnerTargetType();
@@ -1754,6 +1776,7 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
       //// does RHS = new int[V]. as most of cuda vars do not need this.
 
       generateCudaMalloc(type, declStmt->getdeclId()->getIdentifier());
+
 
       //~ Type* innerType=type->getInnerTargetType();
       //~ targetFile.pushString(convertToCppType(innerType)); //convertToCppType
@@ -1790,7 +1813,11 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
     const char * varName = declStmt->getdeclId()->getIdentifier();
     cout << "varT" << varType << endl;
     cout << "varN" << varName << endl;
-    generateExtraDeviceVariable(varType,varName,"1");
+
+
+    //~ generateExtraDeviceVariable(varType,varName,"1");
+    //~ generateHeaderDeviceVariable(varType,varName);
+
     // targetFile.pushString("* d_");
     /*
     targetFile.pushString(declStmt->getdeclId()->getIdentifier());
@@ -1799,6 +1826,9 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
     targetFile.pushString(stringBuffer);
     targetFile.pushString(";");
     */
+
+    sprintf(strBuffer, "__device__ %s %s", varType, varName);
+    header.pushString(strBuffer);
 
     if (declStmt->isInitialized()) {
         // targetFile =
@@ -1815,10 +1845,11 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
 
       }
 
-      sprintf(strBuffer, "initIndex<<<1,1>>>(1,d_%s,0, 0);",varName);
-      targetFile.pushstr_newL(strBuffer);
-      //generateExpr(declStmt->getExpressionAssigned(), isMainFile);
-      // targetFile.pushstr_newL(";");
+      //~ sprintf(strBuffer, "initIndex<<<1,1>>>(1,d_%s,0, 0);",varName);
+      //~ targetFile.pushstr_newL(strBuffer);
+      header.pushString(" = ");
+      generateExpr(declStmt->getExpressionAssigned(), false); // PRINTS RHS?
+      header.pushstr_newL("; // DEVICE ASSTMENT");
     }
 
     else {
@@ -2089,9 +2120,8 @@ void dsl_cpp_generator::generate_exprProcCall(Expression* expr,
     assert(argList.size() == 2);
     Identifier* srcId = argList.front()->getExpr()->getId();
     Identifier* destId = argList.back()->getExpr()->getId();
-    Identifier* objectId = proc->getId1();
-    sprintf(strBuffer, "%s.%s(%s, %s, %s, %s)", objectId->getIdentifier(),
-            "findNeighborSorted", srcId->getIdentifier(), destId->getIdentifier(),"d_meta","d_data");
+    //~ Identifier* objectId = proc->getId1();
+    sprintf(strBuffer, "%s(%s, %s, %s, %s)", "findNeighborSorted", srcId->getIdentifier(), destId->getIdentifier(),"d_meta","d_data");
     targetFile.pushString(strBuffer);
 
   } else {
@@ -2559,6 +2589,14 @@ void dsl_cpp_generator::generateExtraDeviceVariable(const char* typeStr, const c
   sprintf(strBuffer, "%s* d_%s; cudaMalloc(&d_%s,sizeof(%s)*(%s));", typeStr, dVar, dVar, typeStr, sizeVal);
   main.pushstr_newL(strBuffer);
   main.NewLine();
+}
+
+void dsl_cpp_generator::generateHeaderDeviceVariable(const char* typeStr, const char* dVar) {
+  //__device__ int triCount;
+  char strBuffer[1024];
+  sprintf(strBuffer, "%s* d_%s ", typeStr, dVar);
+  header.pushstr_newL(strBuffer);
+  //~ main.NewLine();
 }
 
 void dsl_cpp_generator::generateCudaMemcpy(const char* dVar, const char* cVar,
