@@ -47,7 +47,7 @@ class graph
   {
       return edges;
   }
-  
+
    int* getEdgeLen()
   {
     return edgeLen;
@@ -70,7 +70,7 @@ class graph
       if(edgeList[startEdge]==d)
           return true;
       if(edgeList[endEdge]==d)
-         return true;   
+         return true;
 
       int mid;
 
@@ -80,22 +80,22 @@ class graph
 
           if(edgeList[mid]==d)
              return true;
-     
+
           if(d<edgeList[mid])
-             endEdge=mid-1;   
+             endEdge=mid-1;
           else
-            startEdge=mid+1;   
-          
-        
+            startEdge=mid+1;
+
+
         }
-      
+
       return false;
 
 
 
     }
 
-
+/*
     //GPU specific check for neighbours for TC algorithm
     __device__ bool findNeighborSorted (int s, int d, int * gpu_OA, int *gpu_edgeList)   //we can move this to graph.hpp file
     {
@@ -106,148 +106,148 @@ class graph
       if(gpu_edgeList[startEdge]==d)
           return true;
       if(gpu_edgeList[endEdge]==d)
-         return true;   
+         return true;
 
        int mid = (startEdge+endEdge)/2;
 
       while(startEdge<=endEdge)
         {
-       
+
           if(gpu_edgeList[mid]==d)
              return true;
 
           if(d<gpu_edgeList[mid])
              endEdge=mid-1;
           else
-            startEdge=mid+1;   
-          
+            startEdge=mid+1;
+
           mid = (startEdge+endEdge)/2;
 
         }
-      
+
       return false;
 
     }
+*/
 
-  
    void parseGraph()
   {  printf("OH HELLOHIHod \n");
      std::ifstream infile;
      infile.open(filePath);
      std::string line;
-    
-   
 
 
-    
+
+
+
      while (std::getline(infile,line))
      {
-      
+
       // std::stringstream(line);
-      
+
        if (line.length()==0||line[0] < '0' || line[0] >'9') {
-          continue; 
+          continue;
 
 	    	}
-        
-        std::stringstream ss(line);
-        
-        edgesTotal++;
-         
-        //edgesTotal++; //TO BE REMOVED 
 
-        
+        std::stringstream ss(line);
+
+        edgesTotal++;
+
+        //edgesTotal++; //TO BE REMOVED
+
+
         edge e;
-        
-    
+
+
         int32_t source;
         int32_t destination;
         int32_t weightVal;
-           ss>>source; 
+           ss>>source;
           // printf("SOURCE %lu ",source);
            if(source>nodesTotal)
               nodesTotal=source;
-            ss>>destination;  
+            ss>>destination;
            // printf("DESTINATION %lu \n",destination);
             if(destination>nodesTotal)
-               nodesTotal=destination;  
+               nodesTotal=destination;
            e.source=source;
            e.destination=destination;
            e.weight=1;
 
            edges[source].push_back(e);
 
-           /*edge e1; //TO BE REMOVED 
-           e1.source=destination; //TO BE REMOVED 
-           e1.destination=source; //TO BE REMOVED 
+           /*edge e1; //TO BE REMOVED
+           e1.source=destination; //TO BE REMOVED
+           e1.destination=source; //TO BE REMOVED
            edges[destination].push_back(e1); //TO BE REMOVED */
-          
-          
+
+
            ss>>weightVal; //for edgelists having weight too.
-          
+
 
      }
-    
-     
+
+
    //  printf("Here half\n");
     // printf("HELLO AFTER THIS %d \n",nodesTotal);
-    #pragma omp parallel for 
+    #pragma omp parallel for
      for(int i=0;i<=nodesTotal;i++)//change to 1-nodesTotal.
      {
        std::vector<edge>& edgeOfVertex=edges[i];
-     
+
        sort(edgeOfVertex.begin(),edgeOfVertex.end(),
                             [](const edge& e1,const edge& e2) {
                                if(e1.source!=e2.source)
                                   return e1.source<e2.source;
 
-                                return e1.destination<e2.destination;  
+                                return e1.destination<e2.destination;
 
                             });
 
-     }                      
-                   
+     }
+
      indexofNodes=new int32_t[nodesTotal+2];
      rev_indexofNodes=new int32_t[nodesTotal+2];
      edgeList=new int32_t[edgesTotal];
      srcList=new int32_t[edgesTotal];
      edgeLen=new int32_t[edgesTotal];
-    
-    int edge_no=0;
-    
 
-    /* Prefix Sum computation for out neighbours 
+    int edge_no=0;
+
+
+    /* Prefix Sum computation for out neighbours
        Loads indexofNodes and edgeList.
     */
     for(int i=0;i<=nodesTotal;i++) //change to 1-nodesTotal.
     {
       std::vector<edge> edgeofVertex=edges[i];
-      
+
       indexofNodes[i]=edge_no;
-     
+
       std::vector<edge>::iterator itr;
-    
+
       for(itr=edgeofVertex.begin();itr!=edgeofVertex.end();itr++)
-      { 
-       
-       
+      {
+
+
         edgeList[edge_no]=(*itr).destination;
-        
+
         edgeLen[edge_no]=(*itr).weight;
         edge_no++;
       }
-      
+
     }
     indexofNodes[nodesTotal+1]=edge_no;//change to nodesTotal+1.
 
-   
+
      #pragma omp parallel for num_threads(4)
      for(int i=0;i<nodesTotal+1;i++)
        rev_indexofNodes[i] = 0;
-   
 
-        
-    /* Prefix Sum computation for in neighbours 
+
+
+    /* Prefix Sum computation for in neighbours
        Loads rev_indexofNodes and srcList.
     */
 
@@ -265,8 +265,8 @@ class graph
              edge_indexinrevCSR[j] = temp;
            }
 
-      }   
-    
+      }
+
       /* convert to revCSR */
      int prefix_sum = 0;
       for(int i=0;i<=nodesTotal;i++)
@@ -274,7 +274,7 @@ class graph
           int temp = prefix_sum;
           prefix_sum = prefix_sum + rev_indexofNodes[i];
           rev_indexofNodes[i]=temp;
-      
+
         }
         rev_indexofNodes[nodesTotal+1] = prefix_sum;
 
@@ -289,7 +289,7 @@ class graph
                srcList[index_in_srcList] = i;
             }
         }
-        
+
       #pragma omp parallel for num_threads(4)
         for(int i=0;i<=nodesTotal;i++)
         {
@@ -302,10 +302,10 @@ class graph
             vect.clear();
 
         }
-     
+
     //change to nodesTotal+1.
    // printf("hello after this %d %d\n",nodesTotal,edgesTotal);
-    
+
  }
 
 
