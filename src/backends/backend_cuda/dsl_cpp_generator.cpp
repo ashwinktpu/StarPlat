@@ -721,14 +721,24 @@ void dsl_cpp_generator::generateReductionOpStmt(reductionCallStmt* stmt,
   dslCodePad& targetFile = isMainFile ? main : header;
 
   if (stmt->isLeftIdentifier()) {
-    Identifier* id = stmt->getLeftId();
-    targetFile.pushString(id->getIdentifier());
-    targetFile.pushString(" = ");
-    targetFile.pushString(id->getIdentifier());
-    const char* operatorString = getOperatorString(stmt->reduction_op());
-    targetFile.pushstr_space(operatorString);
-    generateExpr(stmt->getRightSide(), isMainFile);
-    targetFile.pushstr_newL(";");
+    //~ Identifier* id = stmt->getLeftId();
+    //~ targetFile.pushString(id->getIdentifier());
+    //~ targetFile.pushString(" = ");
+    //~ targetFile.pushString(id->getIdentifier());
+    //~ const char* operatorString = getOperatorString(stmt->reduction_op());
+    //~ targetFile.pushstr_space(operatorString);
+    //~ generateExpr(stmt->getRightSide(), isMainFile);
+    //~ targetFile.pushstr_newL(";");
+
+       Identifier* id=stmt->getLeftId(); // For Atomic from ashwina
+       targetFile.pushString("atomicAdd"); //TODO need to generalized for other atomics later!
+       targetFile.pushString("(");
+       targetFile.pushString("&");
+       targetFile.pushString(id->getIdentifier());
+       targetFile.pushString(",");
+       generateExpr(stmt->getRightSide(), isMainFile);
+       targetFile.pushString(")");
+       targetFile.pushstr_newL(";");
 
   } else {
     generate_exprPropId(stmt->getPropAccess(), isMainFile);
