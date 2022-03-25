@@ -591,6 +591,7 @@ void dsl_cpp_generator::generateReductionCallStmt(reductionCallStmt* stmt,
         targetFile.pushstr_space(convertToCppType(type->getInnerTargetType()));
       }
       sprintf(strBuffer, "%s_new", stmt->getAssignedId()->getIdentifier());
+      std::cout<< "VAR:" << stmt->getAssignedId()->getIdentifier() << '\n';
       targetFile.pushString(strBuffer);
       list<argument*>::iterator argItr;
       argItr = argList.begin();
@@ -635,8 +636,7 @@ void dsl_cpp_generator::generateReductionCallStmt(reductionCallStmt* stmt,
 
       targetFile.pushString("if(");
 
-      sprintf(strBuffer, "%s[id]!= MAX_VAL && ",
-              stmt->getAssignedId()->getIdentifier());
+      sprintf(strBuffer, "%s[v]!= MAX_VAL && ",stmt->getAssignedId()->getIdentifier());
       targetFile.pushString(strBuffer);
       generate_exprPropId(stmt->getTargetPropId(), isMainFile);
 
@@ -703,10 +703,11 @@ void dsl_cpp_generator::generateReductionCallStmt(reductionCallStmt* stmt,
 
         if (affected_Id->getSymbolInfo()->getId()->get_fp_association()) {
           char* fpId = affected_Id->getSymbolInfo()->getId()->get_fpId();
-          sprintf(strBuffer, "%s[0] = %s ;", fpId, "false");
+          sprintf(strBuffer, "%s = %s ;", fpId, "false");
+          std::cout<< "FPID ========> " << fpId << '\n';
           targetFile.pushstr_newL(strBuffer);
-          targetFile.pushstr_newL("}");  // needs to be removed
-          targetFile.pushstr_newL("}");  // needs to be removed
+          //~ targetFile.pushstr_newL("}");  // needs to be removed
+          //~ targetFile.pushstr_newL("}");  // needs to be removed
         }
       }
       // targetFile.pushstr_newL("}");
@@ -784,9 +785,9 @@ void dsl_cpp_generator::generateIfStmt(ifStmt* ifstmt, bool isMainFile) {
   targetFile.pushString("if (");
   generateExpr(condition, isMainFile);
   //~ targetFile.pushString(" )");
-  targetFile.pushstr_newL("){ // if begin");
+  targetFile.pushstr_newL("){ // if filter begin ");
   generateStatement(ifstmt->getIfBody(), isMainFile);
-  targetFile.pushstr_newL("} // if end");
+  targetFile.pushstr_newL("} // if filter end");
   if (ifstmt->getElseBody() == NULL) return;
   targetFile.pushstr_newL("else");
   generateStatement(ifstmt->getElseBody(), isMainFile);
@@ -941,9 +942,9 @@ void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment* asmt,
   generateExpr(asmt->getExpr(), isMainFile);
 
   if (isDevice)
-    targetFile.pushstr_newL(");");
+    targetFile.pushstr_newL("); //InitIndexD");
   else
-    targetFile.pushstr_newL(";");
+    targetFile.pushstr_newL("; //InitIndex");
 }
 
 void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt,
@@ -1459,7 +1460,7 @@ void dsl_cpp_generator :: addCudaKernel(forallStmt* forAll)
       header.pushString(" ,");
       generateParamList(currentFunc->getParamList(), header);
     }
-  header.pushstr_newL("){");
+  header.pushstr_newL("){ // FROM ADD KERNEL");
 
   sprintf(strBuffer, "unsigned %s = blockIdx.x * blockDim.x + threadIdx.x;", loopVar);
   header.pushstr_newL(strBuffer);
@@ -1533,9 +1534,9 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
     main.pushString(")");
     main.push(';');
     main.NewLine();
-    main.pushString("cudaDeviceSynchronize();");
-    main.NewLine();
-    main.NewLine();
+    //~ main.pushString("// cudaDeviceSynchronize(); //SSSP");
+    //~ main.NewLine();
+    //~ main.NewLine();
     addCudaKernel(forAll);
 
 
@@ -1548,8 +1549,7 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
 
   if (forAll->hasFilterExpr()) {
     blockStatement* changedBody = includeIfToBlock(forAll);
-    cout << "CHANGED BODY \
-    TYPE" << (changedBody->getTypeofNode() == NODE_BLOCKSTMT);
+    cout << "============CHANGED BODY  TYPE==============" << (changedBody->getTypeofNode() == NODE_BLOCKSTMT);
     forAll->setBody(changedBody);
     // cout<<"FORALL BODY
     // TYPE"<<(forAll->getBody()->getTypeofNode()==NODE_BLOCKSTMT);
@@ -1844,6 +1844,9 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
 
     sprintf(strBuffer, "__device__ %s %s", varType, varName);
     header.pushString(strBuffer);
+    /// REPLICATE ON HOST AND DEVICE
+    sprintf(strBuffer, "%s %s", varType, varName);
+    targetFile.pushString(strBuffer);
 
     if (declStmt->isInitialized()) {
         // targetFile =
@@ -1863,8 +1866,18 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
       //~ sprintf(strBuffer, "initIndex<<<1,1>>>(1,d_%s,0, 0);",varName);
       //~ targetFile.pushstr_newL(strBuffer);
       header.pushString(" = ");
-      generateExpr(declStmt->getExpressionAssigned(), false); // PRINTS RHS?
-      header.pushstr_newL("; // DEVICE ASSTMENT");
+      targetFile.pushString(" = ");
+
+      generateExpr(declStmt->getExpressionAssigned(), false); // PRINTS RHS? YES
+
+      generateExpr(declStmt->getExpressionAssigned(), true);
+
+      header.pushstr_newL("; // DEVICE ASSTMENT in .h");
+      header.NewLine();
+
+      targetFile.pushstr_newL("; // asst in .cu");
+      targetFile.NewLine();
+
     }
 
     else {
@@ -2126,8 +2139,7 @@ void dsl_cpp_generator::generate_exprProcCall(Expression* expr,
     assert(argList.size() == 1);
     Identifier* nodeId = argList.front()->getExpr()->getId();
     //~ Identifier* objectId = proc->getId1();
-    sprintf(strBuffer, "(%s[%s+1]-%s[%s])", "gpu_OA", nodeId->getIdentifier(),
-            "gpu_OA", nodeId->getIdentifier());
+    sprintf(strBuffer, "(%s[%s+1]-%s[%s])", "d_meta", nodeId->getIdentifier(),"d_meta", nodeId->getIdentifier());
     targetFile.pushString(strBuffer);
   } else if (methodId == "is_an_edge") {
     char strBuffer[1024];
@@ -2177,31 +2189,31 @@ void dsl_cpp_generator::generate_exprPropId(
   //~ std::cout<< id2->getIdentifier() << id1->getIdentifier() << '\n';
   targetFile.pushString(strBuffer);
 }
-
+/* //// ASHWINA's VERSION
 void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,
                                            bool isMainFile) {
   dslCodePad& targetFile = isMainFile ? main : header;
-
+  std::cout<< "FXPT BLK" << '\n';
+  //~ std::cout<< "\t var1" <<  << '\n';
+  //~ std::cout<< "\t var2" << << '\n';
   char strBuffer[1024];
   Expression* convergeExpr = fixedPointConstruct->getDependentProp();
   Identifier* fixedPointId = fixedPointConstruct->getFixedPointId();
   //~ statement* blockStmt = fixedPointConstruct->getBody();
   assert(convergeExpr->getExpressionFamily() == EXPR_UNARY ||
          convergeExpr->getExpressionFamily() == EXPR_ID);
-  targetFile.pushString("while ( ");
+  targetFile.pushString("while(");
   targetFile.push('!');
   targetFile.pushString(fixedPointId->getIdentifier());
-  targetFile.pushString(
-      "[0]");  // need to be changed later. Currently done for SSSP
-  targetFile.pushstr_newL(" )");
-  targetFile.pushstr_newL("{");
-  sprintf(strBuffer, "%s[0] = %s;", fixedPointId->getIdentifier(),
-          "true");  // needs to be changed. Currently done for SSSP
+  //~ targetFile.pushString("[0]");  // need to be changed later. Currently done for SSSP
+  //~ targetFile.pushstr_newL(" )");
+  targetFile.pushstr_newL(") { // WHILE begin FXPT");
+  sprintf(strBuffer, "%s = %s;", fixedPointId->getIdentifier(),"true");  // needs to be changed. Currently done for SSSP
   targetFile.pushstr_newL(strBuffer);
   if (fixedPointConstruct->getBody()->getTypeofNode() != NODE_BLOCKSTMT)
     generateStatement(fixedPointConstruct->getBody(), isMainFile);
   else
-    generateBlock((blockStatement*)fixedPointConstruct->getBody(), isMainFile);
+    generateBlock((blockStatement*)fixedPointConstruct->getBody(), false, isMainFile);
   Identifier* dependentId = NULL;
   //~ bool isNot = false;
   assert(convergeExpr->getExpressionFamily() == EXPR_UNARY ||
@@ -2212,6 +2224,15 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,
       //~ isNot = true;
     }
   }
+  const char *flagVar   = dependentId->getIdentifier();
+  const char *fixPointVar = fixedPointId->getIdentifier();
+  targetFile.pushstr_newL("// FIXED POINT variables");
+  char devicefixPointVar[80] = "d_";
+  strcat(devicefixPointVar, fixPointVar);
+  generateExtraDeviceVariable("bool",fixPointVar, "1");
+  generateExtraDeviceVariable("bool",flagVar, "V");
+
+
   if (convergeExpr->getExpressionFamily() == EXPR_ID)
     dependentId = convergeExpr->getId();
   if (dependentId != NULL) {
@@ -2221,17 +2242,17 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,
 
         if (graphId.size() > 1) {
           cerr << "GRAPH AMBIGUILTY";
-        } else
+        } else {
           // sprintf(strBuffer,"for (%s %s = 0; %s < %s.%s(); %s ++)
           // ","int","v","v",graphId[0]->getIdentifier(),"num_nodes","v");
           // targetFile.pushstr_newL(strBuffer);
           // targetFile.pushstr_space("{");
           targetFile.pushstr_newL(
               " initKernel<bool> <<< 1, 1>>>(1, gpu_finished, true);");
-        targetFile.pushstr_newL(
-            " Compute_SSSP_kernel<<<num_blocks , "
-            "block_size>>>(gpu_OA,gpu_edgeList, gpu_edgeLen ,gpu_dist,src, V "
-            ",MAX_VAL , gpu_modified_prev, gpu_modified_next, gpu_finished);");
+        //~ targetFile.pushstr_newL(
+            //~ " Compute_SSSP_kernel<<<num_blocks , "
+            //~ "block_size>>>(d_meta,d_data, d_weight ,gpu_dist,src, V "
+            //~ ",MAX_VAL , gpu_modified_prev, gpu_modified_next, gpu_finished);");
         targetFile.pushstr_newL(
             " initKernel<bool><<<num_blocks,block_size>>>(V, "
             "gpu_modified_prev, false);");
@@ -2257,28 +2278,124 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,
                 "v", initializer->getBooleanConstant() ? "true" : "false");
         targetFile.pushstr_newL(strBuffer);
         // targetFile.pushstr_newL("}");
-        /*
-      if(isNot)------chopped out.
-       {
-        sprintf(strBuffer,"%s = !%s_fp
-      ;",fixedPointId->getIdentifier(),dependentId->getIdentifier());
-        main.pushstr_newL(strBuffer);
-         }
-         else
-         {
-           sprintf(strBuffer,"%s = %s_fp
-      ;",fixedPointId->getIdentifier(),dependentId->getIdentifier());
-           main.pushString(strBuffer);
-         }--------chopped out.
-         */
+
+      //~ if(isNot)
+       //~ {
+        //~ sprintf(strBuffer,"%s = !%s_fp;",fixedPointId->getIdentifier(),dependentId->getIdentifier());
+        //~ main.pushstr_newL(strBuffer);
+         //~ }
+         //~ else
+         //~ {
+           //~ sprintf(strBuffer,"%s = %s_fp    ;",fixedPointId->getIdentifier(),dependentId->getIdentifier());
+           //~ main.pushString(strBuffer);
+         //~ }
+
+       }
       }
     }
   }
-  // targetFile.pushstr_newL("}");
+  targetFile.pushstr_newL("}");
+}
+**/
+void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,
+                                           bool isMainFile) {
+  dslCodePad& targetFile = isMainFile ? main : header;
+
+  std::cout<< "IN FIX PT" << '\n';
+  char strBuffer[1024];
+  Expression* convergeExpr = fixedPointConstruct->getDependentProp();
+  Identifier* fixedPointId = fixedPointConstruct->getFixedPointId();
+
+
+  //~ statement* blockStmt = fixedPointConstruct->getBody();
+  assert(convergeExpr->getExpressionFamily() == EXPR_UNARY ||
+         convergeExpr->getExpressionFamily() == EXPR_ID);
+
+
+  Identifier* dependentId = NULL;
+  //~ bool isNot = false;
+  assert(convergeExpr->getExpressionFamily() == EXPR_UNARY ||
+         convergeExpr->getExpressionFamily() == EXPR_ID);
+  if (convergeExpr->getExpressionFamily() == EXPR_UNARY) {
+    if (convergeExpr->getUnaryExpr()->getExpressionFamily() == EXPR_ID) {
+      dependentId = convergeExpr->getUnaryExpr()->getId();
+      //~ isNot = true;
+    }
+  }
+  const char *flagVar   = dependentId->getIdentifier();
+  const char *fixPointVar = fixedPointId->getIdentifier();
+  targetFile.pushstr_newL("// FIXED POINT variables");
+  char devicefixPointVar[80] = "d_";
+  strcat(devicefixPointVar, fixPointVar);
+  generateExtraDeviceVariable("bool",fixPointVar, "1");
+  generateExtraDeviceVariable("bool",flagVar, "V");
+
+  //~ generateExtraDeviceVariable("bool",devicefixPointVar, "1");
+
+
+  if (convergeExpr->getExpressionFamily() == EXPR_ID)
+    dependentId = convergeExpr->getId();
+  if (dependentId != NULL) {
+     //~ std::cout<< "GENERATING FIX PT" << '\n';
+    if (dependentId->getSymbolInfo()->getType()->isPropType()) {
+      if (dependentId->getSymbolInfo()->getType()->isPropNodeType()) {
+        //~ Type* type = dependentId->getSymbolInfo()->getType();
+
+        //~ if (graphId.size() > 1) {
+          //~ cerr << "GRAPH AMBIGUILTY";
+        //~ }
+          targetFile.pushstr_newL("//BEGIN FIXED POINT");
+          sprintf(strBuffer, "while(!%s) {", fixPointVar);
+          targetFile.pushstr_newL(strBuffer);
+
+
+        assert(graphId.size() == 1);
+        /// FIXED POINT BODY IN KERNEL
+        //~ if (fixedPointConstruct->getBody()->getTypeofNode() != NODE_BLOCKSTMT)
+          //~ generateStatement(fixedPointConstruct->getBody(), isMainFile);
+        //~ else
+          //~ generateBlock((blockStatement*)fixedPointConstruct->getBody(), isMainFile);
+
+          //~ targetFile.pushString("Fpt var:"); targetFile.pushstr_newL(fixPointVar);
+          //~ targetFile.pushString("Flg var:");targetFile.pushstr_newL(flagVar);
+          //~ std::cout<< "BEFORE KERNEL" << '\n';
+          sprintf(strBuffer, "initIndex<bool> <<< 1, 1>>>(1, d_%s,0, true);", fixPointVar);
+          targetFile.pushstr_newL(strBuffer);
+          if (fixedPointConstruct->getBody()->getTypeofNode() != NODE_BLOCKSTMT)
+            generateStatement(fixedPointConstruct->getBody(), isMainFile);
+          else
+           generateBlock((blockStatement*)fixedPointConstruct->getBody(), false, isMainFile);
+
+
+        //~ targetFile.pushstr_newL( "Compute_SSSP_kernel<<<num_blocks,block_size>>>(gpu_OA,gpu_edgeList, gpu_edgeLen ,gpu_dist,src, V " ",MAX_VAL , gpu_modified_prev, gpu_modified_next, gpu_finished);");
+
+        targetFile.pushstr_newL("initKernel<bool><<<num_blocks,block_size>>>(V, gpu_modified_prev, false);");
+        //~ targetFile.pushstr_newL(
+            //~ " cudaMemcpy(finished, gpu_finished,  sizeof(bool) *(1), "
+            //~ "cudaMemcpyDeviceToHost);");
+        //~ sprintf(strBuffer, "%s* %s = %s_nxt ;", "bool", "tempModPtr",
+                //~ dependentId->getIdentifier());
+        //~ targetFile.pushstr_newL(strBuffer);
+
+        //~ sprintf(strBuffer, "%s_nxt = %s_prev ;", dependentId->getIdentifier(),dependentId->getIdentifier());
+        //~ targetFile.pushstr_newL(strBuffer);
+        //~ sprintf(strBuffer, "%s_prev = %s ;", dependentId->getIdentifier(),"tempModPtr");
+        //~ targetFile.pushstr_newL(strBuffer);
+
+        Expression* initializer = dependentId->getSymbolInfo()->getId()->get_assignedExpr();
+        assert(initializer->isBooleanLiteral());
+        sprintf(strBuffer, "%s_nxt[%s] = %s ;", dependentId->getIdentifier(),"v", initializer->getBooleanConstant() ? "true" : "false");
+        targetFile.pushstr_newL(strBuffer);
+
+      }
+    }
+  }
+  targetFile.pushstr_newL("} // END FIXED POINT");
+  targetFile.NewLine();
 }
 
-void dsl_cpp_generator::generateBlock(blockStatement* blockStmt,
-                                      bool includeBrace, bool isMainFile) {
+
+void dsl_cpp_generator::generateBlock(blockStatement* blockStmt,bool includeBrace, bool isMainFile) {
   //~ cout << "i am inside generateBlock for the first time and the value of bool="
   //~ << isMainFile;
   dslCodePad& targetFile = isMainFile ? main : header;
@@ -2603,7 +2720,7 @@ void dsl_cpp_generator::generateExtraDeviceVariable(const char* typeStr, const c
   char strBuffer[1024];
   sprintf(strBuffer, "%s* d_%s; cudaMalloc(&d_%s,sizeof(%s)*(%s));", typeStr, dVar, dVar, typeStr, sizeVal);
   main.pushstr_newL(strBuffer);
-  main.NewLine();
+  //~ main.NewLine();
 }
 
 void dsl_cpp_generator::generateHeaderDeviceVariable(const char* typeStr, const char* dVar) {
@@ -2754,14 +2871,14 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
 
     //~ sprintf(strBuffer,"int MAX_VAL = 2147483647 ;");
     //~ main.pushstr_newL(strBuffer);
-    //~ sprintf(strBuffer,"int * gpu_edgeList;");
+    //~ sprintf(strBuffer,"int * d_data;");
     //~ main.pushstr_newL(strBuffer);
-    //~ sprintf(strBuffer," int * gpu_edgeLen;");
+    //~ sprintf(strBuffer," int * d_weight;");
     //~ main.pushstr_newL(strBuffer);
     //~ sprintf(strBuffer,"int * gpu_dist;");
     //~ main.pushstr_newL(strBuffer);
 
-    //~ sprintf(strBuffer," int * gpu_OA;");
+    //~ sprintf(strBuffer," int * d_meta;");
     //~ main.pushstr_newL(strBuffer);
 
     //~ sprintf(strBuffer,"bool * gpu_modified_prev;");
@@ -2781,9 +2898,9 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
 
     //~ main.NewLine();
 
-    //~ generateCudaMallocStr("gpu_OA"  ,"int","(1+V)");
-    //~ generateCudaMallocStr("gpu_edgeList"  ,"int","(E)" );
-    //~ generateCudaMallocStr("gpu_edgeLen","int","(E)");
+    //~ generateCudaMallocStr("d_meta"  ,"int","(1+V)");
+    //~ generateCudaMallocStr("d_data"  ,"int","(E)" );
+    //~ generateCudaMallocStr("d_weight","int","(E)");
     //~ generateCudaMallocStr("gpu_dist","int","(V)");
     //~ generateCudaMallocStr("gpu_modified_prev","bool","(V)");
     //~ generateCudaMallocStr("gpu_modified_next","bool","(V)");
@@ -2810,14 +2927,14 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
     //~ main.pushstr_newL("num_blocks = ceil(((float)V) / block_size);");
     //~ main.pushstr_newL("}");
 
-    //~ generateCudaMemcpy("gpu_OA", "OA","int", "(1+V)",false,
-    //"cudaMemcpyHostToDevice"); ~ generateCudaMemcpy("gpu_edgeList",
+    //~ generateCudaMemcpy("d_meta", "OA","int", "(1+V)",false,
+    //"cudaMemcpyHostToDevice"); ~ generateCudaMemcpy("d_data",
     //"edgeList","int", "E",false, "cudaMemcpyHostToDevice");
 
-    //~ generateCudaMemcpy("gpu_edgeList", "edgeList","int", "E",false,
-    //"cudaMemcpyHostToDevice"); ~ generateCudaMemcpy("gpu_edgeList",
+    //~ generateCudaMemcpy("d_data", "edgeList","int", "E",false,
+    //"cudaMemcpyHostToDevice"); ~ generateCudaMemcpy("d_data",
     //"edgeList","int", "E",false, "cudaMemcpyHostToDevice"); ~
-    //generateCudaMemcpy("gpu_edgeLen", "cpu_edgeLen ","int", "E",false,
+    //generateCudaMemcpy("d_weight", "cpu_edgeLen ","int", "E",false,
     //"cudaMemcpyHostToDevice"); ~ generateCudaMemcpy("gpu_dist", "modified
     //","bool", "V",false, "cudaMemcpyHostToDevice"); ~
     //generateCudaMemcpy("gpu_finished", "finished ","bool", "1",false,
