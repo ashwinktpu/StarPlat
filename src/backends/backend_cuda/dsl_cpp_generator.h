@@ -184,7 +184,7 @@ class dsl_cpp_generator {
   void generateCallList(list<formalParam*> paramList, dslCodePad& targetFile);
   void generateCudaMallocParams(list<formalParam*> paramList);
   void generateCudaMemCpyParams(list<formalParam*> paramList);
-
+  void generateHeaderDeviceVariable(const char* typeStr, const char* dVar);
   //~ void setGenCSR(bool yes = true) { genCSR = yes; }
   //~ bool isGenCSR() { return genCSR; }
   //~ void setGName(const char* str) {

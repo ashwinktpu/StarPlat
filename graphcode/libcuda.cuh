@@ -48,6 +48,36 @@ __global__ void decrementDeviceVar(T* d_var) {
   *d_var = *d_var - 1;
 }
 
+
+//GPU specific check for neighbours for TC algorithm
+__device__ bool findNeighborSorted(int s, int d, int *d_meta, int *d_data)  //we can move this to graph.hpp file
+{
+  int startEdge = d_meta[s];
+  int endEdge = d_meta[s + 1] - 1;
+
+  if (d_data[startEdge] == d)
+    return true;
+  if (d_data[endEdge] == d)
+    return true;
+
+  int mid = (startEdge + endEdge) / 2;
+
+  while (startEdge <= endEdge) {
+    if (d_data[mid] == d)
+      return true;
+
+    if (d < d_data[mid])
+      endEdge = mid - 1;
+    else
+      startEdge = mid + 1;
+
+    mid = (startEdge + endEdge) / 2;
+  }
+
+  return false;
+}
+
+
 #define cudaCheckError()                                                               \
   {                                                                                    \
     cudaError_t e = cudaGetLastError();                                                \
