@@ -3,8 +3,8 @@ function Compute_BC(Graph g, propNode <float> BC, SetN<g> sourceSet)
   g.attachNodeProperty(BC=0);
 
   for (src in sourceSet) {
-    propNode <int> sigma;
-    propNode<float> delta;
+    propNode <double> sigma;
+    propNode <float> delta;
 
     g.attachNodeProperty(delta=0);
     g.attachNodeProperty(sigma=0);
