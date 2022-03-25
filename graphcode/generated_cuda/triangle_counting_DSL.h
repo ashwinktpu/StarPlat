@@ -10,14 +10,15 @@
 
 void Compute_TC(graph& g);
 
-__global__ void Compute_TC_kernel(int V, int E, int* d_meta,int* d_data,int* d_weight ,graph& g){
+__device__ long triangle_count = 0; // DEVICE ASSTMENT
+__global__ void Compute_TC_kernel(int V, int E, int* d_meta, int* d_data, int* d_weight ,graph& g){
   unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
   if(v >= V) return;
   for (int edge = d_meta[v]; edge < d_meta[v+1]; edge ++)
   {int u = d_data[edge];
     if (u < v ) {for (int edge = d_meta[v]; edge < d_meta[v+1]; edge ++)
       {int w = d_data[edge];
-        if (w > v ) {if (g.findNeighborSorted(u, w, d_meta, d_data) ) {triangle_count = triangle_count+ 1;
+        if (w > v ) {if (findNeighborSorted(u, w, d_meta, d_data) ) {triangle_count = triangle_count+ 1;
            } } }} // end if d lvl
 
         #endif
