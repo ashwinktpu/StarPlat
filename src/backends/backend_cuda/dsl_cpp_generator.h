@@ -82,8 +82,7 @@ class dsl_cpp_generator {
   void generateIfStmt(ifStmt* ifstmt, bool isMainFile);
   void generateDoWhileStmt(dowhileStmt* doWhile, bool isMainFile);
   void generateBFS();
-  void generateBlock(blockStatement* blockStmt, bool includeBrace = true,
-                     bool isMainFile = true);
+  void generateBlock(blockStatement* blockStmt, bool includeBrace = true,bool isMainFile = true);
   void generateReductionStmt(reductionCallStmt* reductnStmt, bool isMainFile);
   void generateBFSAbstraction(iterateBFS* bfsAbstraction, bool isMainFile);
   void generateRevBFSAbstraction(iterateBFS* bfsAbstraction,
