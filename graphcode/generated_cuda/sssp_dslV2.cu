@@ -73,8 +73,8 @@ void Compute_SSSP(graph& g,int* dist,int src)
 
   initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_modified,false);
 
-  initIndex<double><<<1,1>>>(V,d_modified,src,true.0); //InitIndexDevice
-  initIndex<double><<<1,1>>>(V,d_dist,src,0.0); //InitIndexDevice
+  initIndex<bool><<<1,1>>>(V,d_modified,src,(bool)true); //InitIndexDevice
+  initIndex<int><<<1,1>>>(V,d_dist,src,(int)0); //InitIndexDevice
   bool finished = false; // asst in .cu
 
   // FIXED POINT variables
