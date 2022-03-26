@@ -851,6 +851,7 @@ void dsl_cpp_generator::generateAssignmentStmt(assignment* asmt, bool isMainFile
   generateExpr(asmt->getExpr(), isMainFile);
   targetFile.pushstr_newL(";");
 }
+
 void dsl_cpp_generator::generateAtomicDeviceAssignmentStmt(assignment* asmt,
                                                            bool isMainFile) {
   dslCodePad& targetFile = isMainFile ? main : header;
@@ -919,12 +920,22 @@ void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment* asmt,
       isDevice = true;
       //~ src.dist = 0; ===>  initIndex<int><<<1,1>>>(V,d_dist,src, 0);
       //                                  1              2     3   4
-      sprintf(strBuffer, "initIndex<double><<<1,1>>>(V,d_%s,%s,",  //get the type from id
+      Type *typeB = propId->getIdentifier2()->getSymbolInfo()->getType()->getInnerTargetType();
+      //~ Type *typeA = propId->getIdentifier1()->getSymbolInfo()->getType();
+
+      //~ targetFile.pushstr_newL(convertToCppType(typeB));
+      //~ targetFile.pushstr_newL(convertToCppType(typeA));
+
+      const char *varType = convertToCppType(typeB); //DONE: get the type from id
+      sprintf(strBuffer, "initIndex<%s><<<1,1>>>(V,d_%s,%s,(%s)",
+              varType,
               propId->getIdentifier2()->getIdentifier(),
-              propId->getIdentifier1()->getIdentifier());
+              propId->getIdentifier1()->getIdentifier(),
+              varType
+              );
       std::cout << "\tDEVICE ASST" << '\n';
 
-      //~ Type *typeB = propId->getIdentifier2()->getSymbolInfo()->getType();
+      //~ Type *typeB = propId->getIdentifier2()->getSymbolInfo()->getType()->getInnerTargetType();
       //~ Type *typeA = propId->getIdentifier1()->getSymbolInfo()->getType();
 
       //~ targetFile.pushstr_newL(convertToCppType(typeB));
@@ -957,7 +968,7 @@ void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment* asmt,
   generateExpr(asmt->getExpr(), isMainFile);
 
   if (isDevice)
-    targetFile.pushstr_newL(".0); //InitIndexDevice");
+    targetFile.pushstr_newL("); //InitIndexDevice");
   else
     targetFile.pushstr_newL("; //InitIndex");
 }
