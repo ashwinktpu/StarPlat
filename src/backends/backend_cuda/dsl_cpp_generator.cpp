@@ -749,7 +749,7 @@ void dsl_cpp_generator::generateReductionOpStmt(reductionCallStmt* stmt,
        //~ if(strcmp("long",typVar)==0)
         //~ sprintf(strBuffer, "atomicAdd(& %s, (long %s int)",id->getIdentifier(), typVar);
        //~ else
-        sprintf(strBuffer, "atomicAdd(& %s, (%s)",id->getIdentifier(), typVar);
+       sprintf(strBuffer, "atomicAdd(& %s, (%s)",id->getIdentifier(), typVar);
        targetFile.pushString(strBuffer);
        generateExpr(stmt->getRightSide(), isMainFile);
        targetFile.pushstr_newL(");");
