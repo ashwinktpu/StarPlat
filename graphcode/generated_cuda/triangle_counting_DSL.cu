@@ -64,7 +64,7 @@ void Compute_TC(graph& g)
   //BEGIN DSL PARSING 
   long triangle_count = 0; // asst in .cu
 
-  Compute_TC_kernel<<<numBlocks, numThreads>>>( V, E, d_meta, d_data, d_weight ,g);
+  Compute_TC_kernel<<<numBlocks, numThreads>>>(V,E,d_meta,d_data,d_weight,g);
   //TIMER STOP
   cudaEventRecord(stop,0);
   cudaEventSynchronize(stop);
