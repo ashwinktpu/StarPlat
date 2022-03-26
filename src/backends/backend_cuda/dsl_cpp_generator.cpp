@@ -2435,7 +2435,7 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,
         generateCudaMemCpyStr("&finished", devicefixPointVar, fixPointVarType, "1", false);
 
         //~ targetFile.pushstr_newL("cudaMemcpy(finished, finished,  sizeof(bool) *(1), cudaMemcpyDeviceToHost);");
-        sprintf(strBuffer, "%s* %s = %s ;", modifiedVarType, "tempModPtr",modifiedVarNext);
+        sprintf(strBuffer, "%s %s = %s ;", modifiedVarType, "tempModPtr",modifiedVarNext);
         targetFile.pushstr_newL(strBuffer);
 
         //~ sprintf(strBuffer, "%s* %s = %s_nxt ;", "bool", "tempModPtr",dependentId->getIdentifier());
