@@ -1,3 +1,4 @@
+// FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
 #include "PageRank_DSL_V2.h"
 
 void Compute_PR(graph& g,float beta,float delta,int maxIter,
@@ -66,17 +67,25 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
 
 
   //BEGIN DSL PARSING 
-  (float)float* d_pageRank_nxt;
+  float num_nodes(float) = g.num_nodes( ); // asst in .cu
+
+  float* d_pageRank_nxt;
   cudaMalloc(&d_pageRank_nxt, sizeof(float)*(V));
 
   initKernel<float> <<<numBlocks,threadsPerBlock>>>(V,d_pageRank,1 / num_nodes);
 
-  initIndex<<<1,1>>>(1,d_diff,0, 0);
+  int iterCount = 0; // asst in .cu
+
+  float diffinitIndex<<<1,1>>>(1,d_diff,0, 0);
+  ; // asst in .cu
+
   do
   {diff = 0.000000;
-    Compute_PR_kernel<<<numBlocks, numThreads>>>( V, E, d_meta, d_data, d_weight ,g,beta,delta,maxIter,
+    Compute_PR_kernel<<<numBlocks, numThreads>>>(V,E,d_meta,d_data,d_weight,g,beta,delta,maxIter,
       d_pageRank);
-    cudaDeviceSynchronize();
+    0.000000; // asst in .cu
+
+    (1 - delta) / num_nodes + delta * sum; // asst in .cu
 
     pageRank = pageRank_nxt;
     iterCount++;

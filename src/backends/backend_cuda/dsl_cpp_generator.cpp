@@ -1917,11 +1917,7 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
 
       generateExpr(declStmt->getExpressionAssigned(), true);
 
-      header.pushstr_newL("; // DEVICE ASSTMENT in .h");
-      header.NewLine();
 
-      targetFile.pushstr_newL("; // asst in .cu");
-      targetFile.NewLine();
 
     }
 
@@ -1933,6 +1929,11 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
       //getDefaultValueforTypes(type->gettypeId());
      // targetFile.pushstr_newL(";");
     }
+      header.pushstr_newL("; // DEVICE ASSTMENT in .h");
+      header.NewLine();
+
+      main.pushstr_newL("; // asst in .cu");
+      main.NewLine();
 
   }
 
