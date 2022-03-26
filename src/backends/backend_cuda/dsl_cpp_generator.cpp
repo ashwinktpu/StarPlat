@@ -638,7 +638,7 @@ void dsl_cpp_generator::generateReductionCallStmt(reductionCallStmt* stmt,
 
       targetFile.pushString("if(");
 
-      sprintf(strBuffer, "d_%s[v]!= MAX_VAL && ",stmt->getAssignedId()->getIdentifier());
+      sprintf(strBuffer, "d_%s[v]!= INT_MAX && ",stmt->getAssignedId()->getIdentifier());
       targetFile.pushString(strBuffer);
       generate_exprPropId(stmt->getTargetPropId(), isMainFile);
 
@@ -713,8 +713,7 @@ void dsl_cpp_generator::generateReductionCallStmt(reductionCallStmt* stmt,
         }
       }
       // targetFile.pushstr_newL("}");
-      targetFile.pushstr_newL(
-          "}");  // added for testing condition..then atomicmin.
+      targetFile.pushstr_newL("}");  // added for testing condition..then atomicmin.
     }
   }
 }
@@ -797,10 +796,11 @@ void dsl_cpp_generator::generateIfStmt(ifStmt* ifstmt, bool isMainFile) {
 
   dslCodePad& targetFile = isMainFile ? main : header;
   Expression* condition = ifstmt->getCondition();
-  targetFile.pushString("if (");
+  targetFile.pushString("if ("); std::cout<< "=======IF FILTER" << '\n';
   generateExpr(condition, isMainFile);
   //~ targetFile.pushString(" )");
   targetFile.pushstr_newL("){ // if filter begin ");
+
   generateStatement(ifstmt->getIfBody(), isMainFile);
   targetFile.pushstr_newL("} // if filter end");
   if (ifstmt->getElseBody() == NULL) return;
@@ -2110,10 +2110,10 @@ void dsl_cpp_generator::generateExpr(Expression* expr, bool isMainFile, bool isA
     //~ std::cout<< "------>PROP RL"  << '\n';
     generate_exprRelational(expr, isMainFile);
   } else if (expr->isProcCallExpr()) {
-    //~ std::cout<< "------>PROP PRO CAL"  << '\n';
+    std::cout<< "------>PROP PRO CAL"  << '\n';
     generate_exprProcCall(expr, isMainFile);
   } else if (expr->isUnary()) {
-    //~ std::cout<< "------>PROP UNARY"  << '\n';
+    std::cout<< "------>PROP UNARY"  << '\n';
     generate_exprUnary(expr, isMainFile);
   } else {
     assert(false);
@@ -2222,7 +2222,7 @@ void dsl_cpp_generator::generate_exprPropId(
   if (id2->getSymbolInfo() != NULL &&
       id2->getSymbolInfo()->getId()->get_fp_association() &&
       relatedToReduction) {
-    sprintf(strBuffer, "%s_nxt[%s]", id2->getIdentifier(),
+    sprintf(strBuffer, "d_%s_next[%s]", id2->getIdentifier(),
             id1->getIdentifier());
   } else {
     if (!isMainFile)
@@ -2369,7 +2369,7 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,
   const char *modifiedVar   = dependentId->getIdentifier();
   const char *fixPointVar = fixedPointId->getIdentifier();
 
-  const char *modifiedVarType = convertToCppType(dependentId->getSymbolInfo()->getType());
+  const char *modifiedVarType = convertToCppType(dependentId->getSymbolInfo()->getType()->getInnerTargetType());
   const char *fixPointVarType = convertToCppType(fixedPointId->getSymbolInfo()->getType());
 
   targetFile.pushstr_newL("// FIXED POINT variables");
@@ -2403,6 +2403,7 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,
           //~ cerr << "GRAPH AMBIGUILTY";
         //~ }
           targetFile.pushstr_newL("//BEGIN FIXED POINT");
+          targetFile.pushstr_newL("int k=0; // #fixpt-Iterations");
           sprintf(strBuffer, "while(!%s) {", fixPointVar);
           targetFile.pushstr_newL(strBuffer);
 
@@ -2418,7 +2419,7 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,
           //~ targetFile.pushString("Flg var:");targetFile.pushstr_newL(flagVar);
           //~ std::cout<< "BEFORE KERNEL" << '\n';
 
-          sprintf(strBuffer, "initIndex<%s> <<< 1, 1>>>(1, %s,0, true);", fixPointVarType, fixPointVar);
+          sprintf(strBuffer, "initIndex<%s> <<<1,1>>>(1,%s,0,true);", fixPointVarType, devicefixPointVar);
           targetFile.pushstr_newL(strBuffer);
 
           if (fixedPointConstruct->getBody()->getTypeofNode() != NODE_BLOCKSTMT)
@@ -2429,13 +2430,13 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,
 
         //~ targetFile.pushstr_newL( "Compute_SSSP_kernel<<<num_blocks,block_size>>>(gpu_OA,gpu_edgeList, gpu_edgeLen ,gpu_dist,src, V " ",MAX_VAL , gpu_modified_prev, gpu_modified_next, gpu_finished);");
 
-        sprintf(strBuffer,"initKernel<%s><<<numBlocks,threadsPerBlock>>>(V, %s, false);", fixPointVarType, modifiedVarPrev);
+        sprintf(strBuffer,"initKernel<%s> <<<numBlocks,threadsPerBlock>>>(V, %s, false);", fixPointVarType, modifiedVarPrev);
         targetFile.pushstr_newL(strBuffer);
 
         generateCudaMemCpyStr("&finished", devicefixPointVar, fixPointVarType, "1", false);
 
         //~ targetFile.pushstr_newL("cudaMemcpy(finished, finished,  sizeof(bool) *(1), cudaMemcpyDeviceToHost);");
-        sprintf(strBuffer, "%s %s = %s ;", modifiedVarType, "tempModPtr",modifiedVarNext);
+        sprintf(strBuffer, "%s* %s = %s ; // SWAP next and prev ptrs", modifiedVarType, "tempModPtr",modifiedVarNext);
         targetFile.pushstr_newL(strBuffer);
 
         //~ sprintf(strBuffer, "%s* %s = %s_nxt ;", "bool", "tempModPtr",dependentId->getIdentifier());
@@ -2445,6 +2446,7 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,
         targetFile.pushstr_newL(strBuffer);
         sprintf(strBuffer, "%s = %s;", modifiedVarPrev,"tempModPtr");
         targetFile.pushstr_newL(strBuffer);
+        targetFile.pushstr_newL("k++;");
 
         Expression* initializer = dependentId->getSymbolInfo()->getId()->get_assignedExpr();
         assert(initializer->isBooleanLiteral());
