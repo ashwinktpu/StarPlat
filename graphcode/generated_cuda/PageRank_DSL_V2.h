@@ -1,39 +1,37 @@
+// FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
 #ifndef GENCPP_PAGERANK_DSL_V2_H
 #define GENCPP_PAGERANK_DSL_V2_H
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
 #include <cuda.h>
-#include "graph.hpp"
-#include "libcuda.cuh"
+#include "../graph.hpp"
+#include "../libcuda.cuh"
 #include <cooperative_groups.h>
 
 void Compute_PR(graph& g,float beta,float delta,int maxIter,
   float* pageRank);
 
-__device__ d_num_nodes;
-float* d_num_nodes 
-=g.num_nodes( ); // DEVICE ASSTMENT
-__device__ d_iterCount;
-int* d_iterCount 
-=0; // DEVICE ASSTMENT
-__device__ d_diff;
-float* d_diff 
-__global__ void Compute_PR_kernel(int V, int E, int* d_meta, int* d_data, int* d_weight ,graph& g,float beta,float delta,int maxIter,
-  float* d_pageRank){
+__device__ float num_nodes = g.num_nodes( ); // DEVICE ASSTMENT in .h
+
+__device__ int iterCount = 0; // DEVICE ASSTMENT in .h
+
+__device__ float diff; // DEVICE ASSTMENT in .h
+
+__global__ void Compute_PR_kernel(int V, int E, int* d_meta, int* d_data, int* d_weight ,graph& g, float beta, float delta, int maxIter, 
+  float* d_pageRank){ // BEGIN KER FUN via ADDKERNEL
   unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
   if(v >= V) return;
-  __device__ d_sum;
-  float* d_sum 
-  =0.000000; // DEVICE ASSTMENT
-  for (int edge = gpu_rev_OA[v]; edge < gpu_rev_OA[v+1]; edge ++)
-  {int nbr = srcList[edge] ;
-    sum = sum + d_pageRank[nbr] / (gpu_OA[nbr+1]-gpu_OA[nbr]);
-    __device__ d_val;
-    float* d_val 
-    =(1 - delta) / num_nodes + delta * sum; // DEVICE ASSTMENT
-    diff = diff+ val - d_pageRank[v];
-    d_pageRank_nxt[v] = val;
-  } // end if d lvl
+  __device__ float sumfloat sum =  = 0.000000; // DEVICE ASSTMENT in .h
 
-  #endif
+  for (int edge = gpu_rev_OA[v]; edge < gpu_rev_OA[v+1]; edge++)
+  {int nbr = srcList[edge] ;
+    sum = sum + d_pageRank[nbr] / (d_meta[nbr+1]-d_meta[nbr]);
+  } //  end FOR NBR ITR. TMP FIX!
+  __device__ float valfloat val =  = (1 - delta) / num_nodes + delta * sum; // DEVICE ASSTMENT in .h
+
+  atomicAdd(& diff, (float)val - d_pageRank[v]);
+  d_pageRank_nxt[v] = val;
+} // end KER FUNC
+
+#endif
