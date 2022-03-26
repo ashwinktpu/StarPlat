@@ -26,6 +26,8 @@ bool deviceVarsAnalyser::initBlock(blockStatement *blockStmt, list<Identifier *>
 
 bool deviceVarsAnalyser::initStatement(statement *stmt, list<Identifier *> &vars)
 {
+    printf("Initializing %p %d\n", stmt, stmt->getTypeofNode());
+
     switch (stmt->getTypeofNode())
     {
     case NODE_DECL:

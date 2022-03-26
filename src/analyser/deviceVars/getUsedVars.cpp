@@ -136,18 +136,18 @@ usedVariables deviceVarsAnalyser::getVarsForAll(forallStmt *stmt)
   usedVariables currVars = getVarsStatement(stmt->getBody());
   currVars.removeVariable(stmt->getIterator(), READ_WRITE);
 
-  if(stmt->isSourceField())
-  {
-      Identifier *iden = stmt->getSource();
-      currVars.addVariable(iden, READ);
-  }
-  else if(stmt->isSourceProcCall())
+  if(stmt->isSourceProcCall())
   {
       proc_callExpr *expr = stmt->getExtractElementFunc();
         for(argument* arg: expr->getArgList()){
             if(arg->getExpr() != nullptr) 
                 currVars.merge(getVarsExpr(arg->getExpr()));
         }
+  }
+  else if(!stmt->isSourceField())
+  {
+      Identifier *iden = stmt->getSource();
+      currVars.addVariable(iden, READ);
   }
   else
   {
