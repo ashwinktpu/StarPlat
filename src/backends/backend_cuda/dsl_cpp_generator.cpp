@@ -104,7 +104,8 @@ void dsl_cpp_generator::addIncludeToFile(
 
 void dsl_cpp_generator::generation_begin() {
   char temp[1024];
-  header.pushString("FOR BC COMPILE WITH: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true ");
+  header.pushstr_newL("// FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after");
+  main.pushstr_newL("// FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after");
   header.pushString("#ifndef GENCPP_");
   header.pushUpper(fileName);
   header.pushstr_newL("_H");

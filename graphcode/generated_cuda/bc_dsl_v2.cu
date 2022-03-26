@@ -1,4 +1,4 @@
-#include "bc_dsl_v2.h"
+// FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after#include "bc_dsl_v2.h"
 
 void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
 
