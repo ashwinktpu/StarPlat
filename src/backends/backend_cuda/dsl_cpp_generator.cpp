@@ -6,7 +6,7 @@ void dsl_cpp_generator::generateInitkernel(const char* name) {
   char strBuffer[1024];
   header.pushstr_newL("template <typename T>");
   sprintf(strBuffer,
-          "__global__ void initKernel(unsigned %s, T* d_array, T initVal) {",
+          "__gl+++obal__ void initKernel(unsigned %s, T* d_array, T initVal) {",
           name);
   header.pushstr_newL(strBuffer);
   header.pushstr_newL("unsigned id = threadIdx.x + blockDim.x * blockIdx.x;");
@@ -638,7 +638,7 @@ void dsl_cpp_generator::generateReductionCallStmt(reductionCallStmt* stmt,
 
       targetFile.pushString("if(");
 
-      sprintf(strBuffer, "%s[v]!= MAX_VAL && ",stmt->getAssignedId()->getIdentifier());
+      sprintf(strBuffer, "d_%s[v]!= MAX_VAL && ",stmt->getAssignedId()->getIdentifier());
       targetFile.pushString(strBuffer);
       generate_exprPropId(stmt->getTargetPropId(), isMainFile);
 
@@ -1457,10 +1457,8 @@ void dsl_cpp_generator :: addCudaKernel(forallStmt* forAll)
   const char* loopVar = "v";
   char strBuffer[1024];
 
-  statement* body = forAll->getBody();
-  assert(body->getTypeofNode() == NODE_BLOCKSTMT);
-  blockStatement* block = (blockStatement*)body;
-  list<statement*> statementList = block->returnStatements();
+
+
   Function* currentFunc = getCurrentFunc();
 
    header.pushString("__global__ void ");
@@ -1473,7 +1471,7 @@ void dsl_cpp_generator :: addCudaKernel(forallStmt* forAll)
       header.pushString(" ,");
       generateParamList(currentFunc->getParamList(), header);
     }
-  header.pushstr_newL("){ // BEGIN FUN via ADDKERNEL");
+  header.pushstr_newL("){ // BEGIN KER FUN via ADDKERNEL");
 
   sprintf(strBuffer, "unsigned %s = blockIdx.x * blockDim.x + threadIdx.x;", loopVar);
   header.pushstr_newL(strBuffer);
@@ -1481,14 +1479,28 @@ void dsl_cpp_generator :: addCudaKernel(forallStmt* forAll)
   sprintf(strBuffer, "if(%s >= V) return;", loopVar);
   header.pushstr_newL(strBuffer);
 
+if (forAll->hasFilterExpr()) {
+
+    blockStatement* changedBody = includeIfToBlock(forAll);
+    cout << "============CHANGED BODY  TYPE==============" << (changedBody->getTypeofNode() == NODE_BLOCKSTMT);
+    forAll->setBody(changedBody);
+    // cout<<"FORALL BODY
+    // TYPE"<<(forAll->getBody()->getTypeofNode()==NODE_BLOCKSTMT);
+  }
+
+  statement* body = forAll->getBody();
+  assert(body->getTypeofNode() == NODE_BLOCKSTMT);
+  blockStatement* block = (blockStatement*)body;
+  list<statement*>statementList = block->returnStatements();
 
   printf("start of kernel block \n");
+
   for (statement* stmt : statementList) {
     generateStatement(stmt, false);  //false. All these stmts should be inside kernel
                                      //~ if (stmt->getTypeofNode() == NODE_FORALLSTMT) {
   }
 
-  header.pushstr_newL("} // end FUNC");
+  header.pushstr_newL("} // end KER FUNC");
 }
 
 void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
@@ -1510,7 +1522,7 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
     iteratorMethodId = extractElemFunc->getMethodId();
   statement* body = forAll->getBody();
   char strBuffer[1024];
-  if (forAll->isForall()) {
+  if (forAll->isForall()) { // IS FORALL
 
     /*
     if (forAll->hasFilterExpr()) {
@@ -1550,11 +1562,21 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
     //~ main.pushString("// cudaDeviceSynchronize(); //SSSP");
     //~ main.NewLine();
     //~ main.NewLine();
+
+  //~ if (forAll->hasFilterExpr()) {
+    //~ blockStatement* changedBody = includeIfToBlock(forAll);
+    //~ cout << "============CHANGED BODY  TYPE==============" << (changedBody->getTypeofNode() == NODE_BLOCKSTMT);
+    //~ forAll->setBody(changedBody);
+    //~ // cout<<"FORALL BODY
+    //~ // TYPE"<<(forAll->getBody()->getTypeofNode()==NODE_BLOCKSTMT);
+  //~ }
+
+
     addCudaKernel(forAll);
 
   }
 
-  else{
+  else{ // IS FOR
 
   generateForAllSignature(forAll, false);  // FOR LINE
 
@@ -1976,8 +1998,7 @@ void dsl_cpp_generator::generate_exprInfinity(Expression* expr,
   } else
 
   {
-    sprintf(valBuffer, "%s",
-            expr->isPositiveInfinity() ? "INT_MAX" : "INT_MIN");
+    sprintf(valBuffer, "%s",expr->isPositiveInfinity() ? "INT_MAX" : "INT_MIN");
   }
 
   targetFile.pushString(valBuffer);
