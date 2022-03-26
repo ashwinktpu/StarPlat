@@ -63,7 +63,8 @@ void deviceVarsAnalyser::printIfElse(ifStmt *stmt, int tabSpace)
     printStatement(stmt->getElseBody(), tabSpace);
     tabSpace--;
   }
-
+  
+  //printf("%p %d \n", stmt, stmt->getTypeofNode());
   ASTNodeWrap *stmtWrap = getWrapNode(stmt);
 
   printTabs(tabSpace);

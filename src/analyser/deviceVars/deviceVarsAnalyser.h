@@ -1,12 +1,12 @@
 #ifndef DEVICE_VARS_ANALYSER
 #define DEVICE_VARS_ANALYSER
 
+#include <unordered_map>
 #include "../../ast/ASTNodeTypes.hpp"
 #include "../analyserUtil.cpp"
-#include <unordered_map>
 
 class lattice
-{  
+{ 
 public:
   enum PointType{
     NOT_INITIALIZED,
@@ -257,6 +257,8 @@ class deviceVarsAnalyser
     wrapNode->inMap = lattice(vars);
     wrapNode->outMap = lattice(vars);
     wrapNode->currStmt = node;
+
+    latticeMap.insert(make_pair(node, wrapNode));
     return wrapNode;
   }
 

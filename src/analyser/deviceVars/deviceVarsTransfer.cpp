@@ -1,4 +1,5 @@
 #include "deviceVarsAnalyser.h"
+#include <unordered_map>
 #include "../../ast/ASTHelper.cpp"
 
 list<statement*> transferStatements(lattice &inp, lattice &out)
@@ -35,6 +36,8 @@ list<statement*> transferStatements(lattice &inp, lattice &out)
 
 statement* deviceVarsAnalyser::transferVarsStatement(statement* stmt, blockStatement* parBlock)
 {
+    printf("Transfering %p %d\n", stmt, stmt->getTypeofNode());
+    
     switch (stmt->getTypeofNode())
     {
     case NODE_DECL:

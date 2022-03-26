@@ -2,11 +2,14 @@
 
 #include <string.h>
 #include <unordered_map>
-#include "../../ast/ASTHelper.cpp"
+#include <list>
+#include "../../maincontext/MainContext.hpp"
 // Statement Analyser
 
 // Current assuming filter expression gets evaluated in GPU
 // Required to handle case if we iterate through a set
+
+extern FrontEndContext frontEndContext;
 
 lattice deviceVarsAnalyser::analyseForAll(forallStmt *stmt, lattice &inMap)
 {
@@ -247,6 +250,7 @@ lattice deviceVarsAnalyser::analyseUnary(unary_stmt *stmt, lattice &inMap)
 
 lattice deviceVarsAnalyser::analyseStatement(statement *stmt, lattice &inMap)
 {
+  printf("Analysing %p %d\n", stmt, stmt->getTypeofNode());
   switch (stmt->getTypeofNode())
   {
   case NODE_DECL:
@@ -292,7 +296,6 @@ lattice deviceVarsAnalyser::analyseStatement(statement *stmt, lattice &inMap)
 lattice deviceVarsAnalyser::analyseBlock(blockStatement *stmt, lattice &inMap)
 {
   list<statement *> currStmts = stmt->returnStatements();
-
   ASTNodeWrap *wrapNode = getWrapNode(stmt);
   wrapNode->inMap = inMap;
 
@@ -301,6 +304,7 @@ lattice deviceVarsAnalyser::analyseBlock(blockStatement *stmt, lattice &inMap)
 
   for (statement *bstmt : currStmts)
   {
+    //printf("%p %d\n", bstmt, bstmt->getTypeofNode());
     lastOut = analyseStatement(bstmt, lastOut);
     if (bstmt->getTypeofNode() == NODE_DECL)
       declaredVars.push_back(((declaration *)bstmt)->getdeclId());
@@ -320,7 +324,7 @@ void deviceVarsAnalyser::analyseFunc(ASTNode *proc)
   for(formalParam* fParam: func->getParamList()){
     localVars.push_back(fParam->getIdentifier());
   }
-  initBlock(func->getBlockStatement(), localVars);
+  initStatement(func->getBlockStatement(), localVars);
 
   lattice inpLattice;
   for(Identifier* iden: localVars){
@@ -328,10 +332,10 @@ void deviceVarsAnalyser::analyseFunc(ASTNode *proc)
   }
 
   analyseStatement(func->getBlockStatement(), inpLattice);
-  blockStatement* newBody = (blockStatement*) transferVarsBlock(func->getBlockStatement(), nullptr);
-  func->setBlockStatement(newBody);
 
   printStatement(func->getBlockStatement(), 0);
+  blockStatement* newBody = (blockStatement*) transferVarsBlock(func->getBlockStatement(), nullptr);
+  func->setBlockStatement(newBody);
   return;
 }
 
