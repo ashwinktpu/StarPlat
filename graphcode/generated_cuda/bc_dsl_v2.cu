@@ -4,8 +4,8 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
 
 {
   // CSR BEGIN
-  unsigned V = g.num_nodes();
-  unsigned E = g.num_edges();
+  int V = g.num_nodes();
+  int E = g.num_edges();
 
   printf("#nodes:%d\n",V);
   printf("#edges:%d\n",E);
@@ -63,73 +63,69 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
   float* d_BC;
   cudaMalloc(&d_BC, sizeof(float)*(V));
 
-  double* d_BC; cudaMalloc(&d_BC, sizeof(double)*(V)); ///TODO from func
 
   //BEGIN DSL PARSING 
   initKernel<float> <<<numBlocks,threadsPerBlock>>>(V,d_BC,0);
 
-  {
-    //HERE
-    unsigned src = (unsigned)*itr;
-    int* d_sigma;
-    cudaMalloc(&d_sigma, sizeof(int)*(V));
+  int src = *itr;
+  double* d_sigma;
+  cudaMalloc(&d_sigma, sizeof(double)*(V));
 
-    float* d_delta;
-    cudaMalloc(&d_delta, sizeof(float)*(V));
+  float* d_delta;
+  cudaMalloc(&d_delta, sizeof(float)*(V));
 
-    initKernel<float> <<<numBlocks,threadsPerBlock>>>(V,d_delta,0);
+  initKernel<float> <<<numBlocks,threadsPerBlock>>>(V,d_delta,0);
 
-    initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_sigma,0);
+  initKernel<double> <<<numBlocks,threadsPerBlock>>>(V,d_sigma,0);
 
-    initIndex<double><<<1,1>>>(V,d_sigma,src,1);
+  initIndex<double><<<1,1>>>(V,d_sigma,src,1); //InitIndexD
 
-    //EXTRA vars for ITBFS AND REVBFS
-    bool finished;
-    int hops_from_source=0;
-    bool* d_finished;       cudaMalloc(&d_finished,sizeof(bool) *(1));
-    int* d_hops_from_source;cudaMalloc(&d_hops_from_source, sizeof(int));  cudaMemset(d_hops_from_source,0,sizeof(int));
-    int* d_level;           cudaMalloc(&d_level,sizeof(int) *(V));
+  //EXTRA vars for ITBFS AND REVBFS
+  bool finished;
+  int hops_from_source=0;
+  bool* d_finished;       cudaMalloc(&d_finished,sizeof(bool) *(1));
+  int* d_hops_from_source;cudaMalloc(&d_hops_from_source, sizeof(int));  cudaMemset(d_hops_from_source,0,sizeof(int));
+  int* d_level;           cudaMalloc(&d_level,sizeof(int) *(V));
 
-    //EXTRA vars INITIALIZATION
-    initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_level,-1);
-    initIndex<int><<<1,1>>>(V,d_level,src, 0);
+  //EXTRA vars INITIALIZATION
+  initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_level,-1);
+  initIndex<int><<<1,1>>>(V,d_level,src, 0);
 
-    // long k =0 ;// For DEBUG
-    do {
-      finished = true;
-      cudaMemcpy(d_finished, &finished, sizeof(bool)*(1), cudaMemcpyHostToDevice);
+  // long k =0 ;// For DEBUG
+  do {
+    finished = true;
+    cudaMemcpy(d_finished, &finished, sizeof(bool)*(1), cudaMemcpyHostToDevice);
 
-      //Kernel LAUNCH
-      fwd_pass<<<numBlocks,threadsPerBlock>>>(V, d_meta, d_data,d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished, d_BC); ///TODO from varList
+    //Kernel LAUNCH
+    fwd_pass<<<numBlocks,threadsPerBlock>>>(V, d_meta, d_data,d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished, d_BC); ///TODO from varList
 
-      incrementDeviceVar<<<1,1>>>(d_hops_from_source);
-      cudaDeviceSynchronize(); //MUST - rupesh
-      ++hops_from_source; // updating the level to process in the next iteration
-      // k++; //DEBUG
+    incrementDeviceVar<<<1,1>>>(d_hops_from_source);
+    cudaDeviceSynchronize(); //MUST - rupesh
+    ++hops_from_source; // updating the level to process in the next iteration
+    // k++; //DEBUG
 
-      cudaMemcpy(&finished, d_finished, sizeof(bool)*(1), cudaMemcpyDeviceToHost);
-    }while(!finished);
+    cudaMemcpy(&finished, d_finished, sizeof(bool)*(1), cudaMemcpyDeviceToHost);
+  }while(!finished);
+
+  hops_from_source--;
+  cudaMemcpy(d_hops_from_source, &hops_from_source, sizeof(int)*(1), cudaMemcpyHostToDevice);
+
+  //BACKWARD PASS
+  while(hops_from_source > 1) {
+
+    //KERNEL Launch
+    back_pass<<<numBlocks,threadsPerBlock>>>(V, d_meta, d_data, d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished, d_BC); ///TODO from varList
 
     hops_from_source--;
     cudaMemcpy(d_hops_from_source, &hops_from_source, sizeof(int)*(1), cudaMemcpyHostToDevice);
-
-    //BACKWARD PASS
-    while(hops_from_source > 1) {
-
-      //KERNEL Launch
-      back_pass<<<numBlocks,threadsPerBlock>>>(V, d_meta, d_data, d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished, d_BC); ///TODO from varList
-
-      hops_from_source--;
-      cudaMemcpy(d_hops_from_source, &hops_from_source, sizeof(int)*(1), cudaMemcpyHostToDevice);
-    }
-    //accumulate_bc<<<numBlocks,threadsPerBlock>>>(V,d_delta, d_BC, d_level, src);
   }
-  //TIMER STOP
-  cudaEventRecord(stop,0);
-  cudaEventSynchronize(stop);
-  cudaEventElapsedTime(&milliseconds, start, stop);
-  printf("GPU Time: %.6f ms\n", milliseconds);
+  //accumulate_bc<<<numBlocks,threadsPerBlock>>>(V,d_delta, d_BC, d_level, src);
+}
+//TIMER STOP
+cudaEventRecord(stop,0);
+cudaEventSynchronize(stop);
+cudaEventElapsedTime(&milliseconds, start, stop);
+printf("GPU Time: %.6f ms\n", milliseconds);
 
-  cudaMemcpy(      BC,     d_BC, sizeof(float)*(V), cudaMemcpyDeviceToHost);
-  cudaMemcpy(BC,d_BC , sizeof(double) * (V), cudaMemcpyDeviceToHost);
+cudaMemcpy(      BC,     d_BC, sizeof(float)*(V), cudaMemcpyDeviceToHost);
 } //end FUN

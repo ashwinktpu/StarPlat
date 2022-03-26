@@ -1570,14 +1570,14 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
         nbrVar = nodeNbr->getIdentifier();
         //~ std::cout<< "nbr?:" <<  nbrVar<< '\n';
 
-        sprintf(strBuffer, "for(unsigned i = d_meta[%s], end = d_meta[%s+1]; i < end; ++i)", nbrVar, nbrVar);
-        targetFile.pushstr_newL(strBuffer);
+        //~ sprintf(strBuffer, "for(unsigned i = d_meta[%s], end = d_meta[%s+1]; i < end; ++i)", nbrVar, nbrVar);
+        //~ targetFile.pushstr_newL(strBuffer);
 
-        // HAS ALL THE STMTS IN FOR
-        targetFile.pushstr_newL("{");
+        //~ // HAS ALL THE STMTS IN FOR
+        //~ targetFile.pushstr_newL("{"); // uncomment after fixing NBR FOR brackets } issues.
 
-        sprintf(strBuffer, "unsigned %s = d_data[i];", wItr);
-        targetFile.pushstr_newL(strBuffer);
+        //~ sprintf(strBuffer, "unsigned %s = d_data[i];", wItr);
+        //~ targetFile.pushstr_newL(strBuffer);
 
         sprintf(strBuffer, "if(d_level[%s] == -1) {", wItr);
         targetFile.pushstr_newL(strBuffer);
@@ -1618,13 +1618,13 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
         Identifier* nodeNbr = argList.front()->getExpr()->getId();
         nbrVar = nodeNbr->getIdentifier();
         std::cout << "V?:" << nbrVar << '\n';
-        sprintf(strBuffer, "for(unsigned i = d_meta[%s], end = d_meta[%s+1]; i < end; ++i)", nbrVar, nbrVar);
-        targetFile.pushstr_newL(strBuffer);
+        //~ sprintf(strBuffer, "for(int i = d_meta[%s], end = d_meta[%s+1]; i < end; ++i)", nbrVar, nbrVar);
+        //~ targetFile.pushstr_newL(strBuffer);
 
         // HAS ALL THE STMTS IN FOR
-        targetFile.pushstr_newL("{");
-        sprintf(strBuffer, "unsigned %s = d_data[i];", wItr);
-        targetFile.pushstr_newL(strBuffer);
+        //~ targetFile.pushstr_newL("{"); // uncomment after fixing NBR FOR brackets } issues.
+        //~ sprintf(strBuffer, "int %s = d_data[i];", wItr);
+        //~ targetFile.pushstr_newL(strBuffer);
         sprintf(strBuffer, "if(d_level[%s] == *d_hops_from_source) {", wItr);
         targetFile.pushstr_newL(strBuffer);
         generateBlock((blockStatement*)forAll->getBody(), false, false);
@@ -1672,8 +1672,8 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
   } else {
     if (collectionId->getSymbolInfo()->getType()->gettypeId() == TYPE_SETN) {  //FOR SET
       if (body->getTypeofNode() == NODE_BLOCKSTMT) {
-        targetFile.pushstr_newL("{");
-        targetFile.pushstr_newL("//HERE");
+        //~ targetFile.pushstr_newL("{");       // uncomment after fixing NBR FOR brackets } issues.
+        //~ targetFile.pushstr_newL("//HERE");
         printf("FOR");
         sprintf(strBuffer, "int %s = *itr;", forAll->getIterator()->getIdentifier());
         targetFile.pushstr_newL(strBuffer);
