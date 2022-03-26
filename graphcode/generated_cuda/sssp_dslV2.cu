@@ -1,3 +1,4 @@
+// FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
 #include "sssp_dslV2.h"
 
 void Compute_SSSP(graph& g,int* dist,int src)
@@ -72,8 +73,8 @@ void Compute_SSSP(graph& g,int* dist,int src)
 
   initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_modified,false);
 
-  initIndex<double><<<1,1>>>(V,d_modified,src,true); //InitIndexD
-  initIndex<double><<<1,1>>>(V,d_dist,src,0); //InitIndexD
+  initIndex<double><<<1,1>>>(V,d_modified,src,true.0); //InitIndexDevice
+  initIndex<double><<<1,1>>>(V,d_dist,src,0.0); //InitIndexDevice
   bool finished = false; // asst in .cu
 
   // FIXED POINT variables
@@ -84,6 +85,10 @@ void Compute_SSSP(graph& g,int* dist,int src)
     initIndex<bool> <<< 1, 1>>>(1, d_finished,0, true);
     Compute_SSSP_kernel<<<numBlocks, numThreads>>>(V,E,d_meta,d_data,d_weight,g,d_dist,src);
     initKernel<bool><<<num_blocks,block_size>>>(V, gpu_modified_prev, false);
+     cudaMemcpy(finished, gpu_finished,  sizeof(bool) *(1), cudaMemcpyDeviceToHost);
+    bool* tempModPtr = modified_nxt ;
+    modified_nxt = modified_prev ;
+    modified_prev = tempModPtr ;
     modified_nxt[v] = false ;
   } // END FIXED POINT
 

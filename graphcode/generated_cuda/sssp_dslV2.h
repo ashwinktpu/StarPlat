@@ -1,18 +1,19 @@
+// FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
 #ifndef GENCPP_SSSP_DSLV2_H
 #define GENCPP_SSSP_DSLV2_H
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
 #include <cuda.h>
-#include "graph.hpp"
-#include "libcuda.cuh"
+#include "../graph.hpp"
+#include "../libcuda.cuh"
 #include <cooperative_groups.h>
 
 void Compute_SSSP(graph& g,int* dist,int src);
 
 __device__ bool finished = false; // DEVICE ASSTMENT in .h
 
-__global__ void Compute_SSSP_kernel(int V, int E, int* d_meta, int* d_data, int* d_weight ,graph& g, int* d_dist, int src){ // FROM ADD KERNEL
+__global__ void Compute_SSSP_kernel(int V, int E, int* d_meta, int* d_data, int* d_weight ,graph& g, int* d_dist, int src){ // BEGIN FUN via ADDKERNEL
   unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
   if(v >= V) return;
   for (int edge = d_meta[v]; edge < d_meta[v+1]; edge++) { // FOR NBR ITR 
@@ -26,7 +27,7 @@ __global__ void Compute_SSSP_kernel(int V, int E, int* d_meta, int* d_data, int*
       modified_nxt[nbr] = modified_new;
       finished = false ;
     }
-  } // FOR END
+  } //  end FOR NBR ITR. TMP FIX!
 } // end FUNC
 
 #endif
