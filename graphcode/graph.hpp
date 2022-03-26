@@ -131,7 +131,8 @@ class graph
 */
 
    void parseGraph()
-  {  printf("OH HELLOHIHod \n");
+  {
+    //printf("OH HELLOHIHod \n");
      std::ifstream infile;
      infile.open(filePath);
      std::string line;

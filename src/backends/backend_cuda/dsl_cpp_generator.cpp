@@ -2383,17 +2383,17 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,
         //~ targetFile.pushstr_newL( "Compute_SSSP_kernel<<<num_blocks,block_size>>>(gpu_OA,gpu_edgeList, gpu_edgeLen ,gpu_dist,src, V " ",MAX_VAL , gpu_modified_prev, gpu_modified_next, gpu_finished);");
 
         targetFile.pushstr_newL("initKernel<bool><<<num_blocks,block_size>>>(V, gpu_modified_prev, false);");
-        //~ targetFile.pushstr_newL(
-            //~ " cudaMemcpy(finished, gpu_finished,  sizeof(bool) *(1), "
-            //~ "cudaMemcpyDeviceToHost);");
-        //~ sprintf(strBuffer, "%s* %s = %s_nxt ;", "bool", "tempModPtr",
-                //~ dependentId->getIdentifier());
-        //~ targetFile.pushstr_newL(strBuffer);
+        targetFile.pushstr_newL(
+            " cudaMemcpy(finished, gpu_finished,  sizeof(bool) *(1), "
+            "cudaMemcpyDeviceToHost);");
+        sprintf(strBuffer, "%s* %s = %s_nxt ;", "bool", "tempModPtr",
+                dependentId->getIdentifier());
+        targetFile.pushstr_newL(strBuffer);
 
-        //~ sprintf(strBuffer, "%s_nxt = %s_prev ;", dependentId->getIdentifier(),dependentId->getIdentifier());
-        //~ targetFile.pushstr_newL(strBuffer);
-        //~ sprintf(strBuffer, "%s_prev = %s ;", dependentId->getIdentifier(),"tempModPtr");
-        //~ targetFile.pushstr_newL(strBuffer);
+        sprintf(strBuffer, "%s_nxt = %s_prev ;", dependentId->getIdentifier(),dependentId->getIdentifier());
+        targetFile.pushstr_newL(strBuffer);
+        sprintf(strBuffer, "%s_prev = %s ;", dependentId->getIdentifier(),"tempModPtr");
+        targetFile.pushstr_newL(strBuffer);
 
         Expression* initializer = dependentId->getSymbolInfo()->getId()->get_assignedExpr();
         assert(initializer->isBooleanLiteral());
