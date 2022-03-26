@@ -721,6 +721,8 @@ void dsl_cpp_generator::generateReductionOpStmt(reductionCallStmt* stmt,
                                                 bool isMainFile) {
   dslCodePad& targetFile = isMainFile ? main : header;
 
+  char strBuffer[1024];
+
   if (stmt->isLeftIdentifier()) {
     //~ Identifier* id = stmt->getLeftId();
     //~ targetFile.pushString(id->getIdentifier());
@@ -732,14 +734,25 @@ void dsl_cpp_generator::generateReductionOpStmt(reductionCallStmt* stmt,
     //~ targetFile.pushstr_newL(";");
 
        Identifier* id=stmt->getLeftId(); // For Atomic from ashwina
-       targetFile.pushString("atomicAdd"); //TODO need to generalized for other atomics later!
-       targetFile.pushString("(");
-       targetFile.pushString("&");
-       targetFile.pushString(id->getIdentifier());
-       targetFile.pushString(",");
+       //~ targetFile.pushString("atomicAdd"); //TODO need to generalized for other atomics later!
+       //~ targetFile.pushString("(");
+       //~ targetFile.pushString("&");
+       //~ targetFile.pushString(id->getIdentifier());
+       //~ targetFile.pushString(",");
+       //~ generateExpr(stmt->getRightSide(), isMainFile);
+       //~ targetFile.pushString(")");
+       //~ targetFile.pushstr_newL(";");
+
+       // SAMPLE: atomicAdd(&triangle_count,(long)1);
+       //TODO need to generalized for other atomics (sub mul div min max) later!
+       const char *typVar = convertToCppType(id->getSymbolInfo()->getType());
+       //~ if(strcmp("long",typVar)==0)
+        //~ sprintf(strBuffer, "atomicAdd(& %s, (long %s int)",id->getIdentifier(), typVar);
+       //~ else
+        sprintf(strBuffer, "atomicAdd(& %s, (%s)",id->getIdentifier(), typVar);
+       targetFile.pushString(strBuffer);
        generateExpr(stmt->getRightSide(), isMainFile);
-       targetFile.pushString(")");
-       targetFile.pushstr_newL(";");
+       targetFile.pushstr_newL(");");
 
   } else {
     generate_exprPropId(stmt->getPropAccess(), isMainFile);
