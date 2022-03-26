@@ -119,9 +119,9 @@ void dsl_cpp_generator::generation_begin() {
   header.pushString("#include ");
   addIncludeToFile("cuda.h", header, true);
   header.pushString("#include ");
-  addIncludeToFile("graph.hpp", header, false);
+  addIncludeToFile("../graph.hpp", header, false);
   header.pushString("#include ");
-  addIncludeToFile("libcuda.cuh", header, false);
+  addIncludeToFile("../libcuda.cuh", header, false);
 
   header.pushstr_newL("#include <cooperative_groups.h>");
   //~ header.pushstr_newL("#include <cooperative_groups.h>");
