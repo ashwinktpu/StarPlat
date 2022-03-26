@@ -1,4 +1,8 @@
 //~ nvcc bcManualv4.cu -o bcManualv4-sm60.out -arch=sm_60 -I.
+// 3 working somesh
+// 4 with all double
+// 5 changing for generation optimization
+// 6 - g.sync // Need to change this to comply with DSL types: sigma->double,  detla,bc->float
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,10 +17,7 @@
 #include <string>
 
 #include<cooperative_groups.h>
-// 3 working somesh
-// 4 with all double
-// 5 changing for generation optimization
-// 6 - g.sync
+
 #define cudaCheckError() {                                             \
  cudaError_t e=cudaGetLastError();                                     \
  if(e!=cudaSuccess) {                                                  \
@@ -319,10 +320,10 @@ int main(int argc , char ** argv)
     //~ float milliseconds = 0;
     //~ cudaEventRecord(start,0);
 
-    //~ float* BC;
-    //~ BC = (float *)malloc( (G.num_nodes())*sizeof(float));
-    double* BC;
-    BC = (double *)malloc( (G.num_nodes())*sizeof(double));
+    float* BC;
+    BC = (float *)malloc( (G.num_nodes())*sizeof(float));
+    //~ double* BC;
+    //~ BC = (double *)malloc( (G.num_nodes())*sizeof(double));
     Compute_BC(G,BC,src);
     cudaDeviceSynchronize();
 
