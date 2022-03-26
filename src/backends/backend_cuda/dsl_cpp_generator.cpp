@@ -104,6 +104,7 @@ void dsl_cpp_generator::addIncludeToFile(
 
 void dsl_cpp_generator::generation_begin() {
   char temp[1024];
+  header.pushString("FOR BC COMPILE WITH: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true ");
   header.pushString("#ifndef GENCPP_");
   header.pushUpper(fileName);
   header.pushstr_newL("_H");
@@ -250,7 +251,7 @@ void dsl_cpp_generator::addCudaRevBFSIterKernel(list<statement*>& statementList)
   //~ assert(body->getTypeofNode() == NODE_BLOCKSTMT);
   //~ blockStatement* block = (blockStatement*)body;
   //~ list<statement*> statementList = block->returnStatements();
-  sprintf(strBuffer, "__global__ void back_pass(int n, int* d_meta,int* d_data,int* d_weight, double* d_delta, double* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished, double* d_BC) {");
+  sprintf(strBuffer, "__global__ void back_pass(int n, int* d_meta,int* d_data,int* d_weight, float* d_delta, double* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished, float* d_BC) {");
   header.pushstr_newL(strBuffer);
 
   sprintf(strBuffer, "unsigned %s = blockIdx.x * blockDim.x + threadIdx.x;", loopVar);
@@ -298,7 +299,7 @@ void dsl_cpp_generator::addCudaBFSIterKernel(iterateBFS* bfsAbstraction) {
   blockStatement* block = (blockStatement*)body;
   list<statement*> statementList = block->returnStatements();
 
-  header.pushstr_newL("__global__ void fwd_pass(int n, int* d_meta,int* d_data,int* d_weight, double* d_delta, double* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished, double* d_BC) {");
+  header.pushstr_newL("__global__ void fwd_pass(int n, int* d_meta,int* d_data,int* d_weight, float* d_delta, double* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished, float* d_BC) {");
 
   sprintf(strBuffer, "unsigned %s = blockIdx.x * blockDim.x + threadIdx.x;", loopVar);
   header.pushstr_newL(strBuffer);
@@ -955,7 +956,7 @@ void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment* asmt,
   generateExpr(asmt->getExpr(), isMainFile);
 
   if (isDevice)
-    targetFile.pushstr_newL("); //InitIndexD");
+    targetFile.pushstr_newL(".0); //InitIndexDevice");
   else
     targetFile.pushstr_newL("; //InitIndex");
 }
@@ -1295,10 +1296,10 @@ void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll, bool isMainF
     if (sourceId != NULL) {
       if (sourceId->getSymbolInfo()->getType()->gettypeId() == TYPE_SETN) {  //FOR SET
         //~ std::cout << "+++++     ++++++++++" << '\n';
-        targetFile.pushstr_newL("//FOR SIGNATURE of SET");
-        targetFile.pushstr_newL("std::set<int>::iterator itr;");
-        sprintf(strBuffer, "for(itr=%s.begin();itr!=%s.end();itr++)",sourceId->getIdentifier(), sourceId->getIdentifier());
-        targetFile.pushstr_newL(strBuffer);
+        main.pushstr_newL("//FOR SIGNATURE of SET - Assumes set for on .cu only");
+        main.pushstr_newL("std::set<int>::iterator itr;");
+        sprintf(strBuffer, "for(itr=%s.begin();itr!=%s.end();itr++) ",sourceId->getIdentifier(), sourceId->getIdentifier());
+        main.pushstr_newL(strBuffer);
       }
     }
   }
@@ -1658,9 +1659,10 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
       }
       else
         {
-          std::cout<< "FOR BODY BEGIN" << '\n';
+          //~ std::cout<< "FOR BODY BEGIN" << '\n';
+          //~ targetFile.pushstr_newL("{ // FOR BEGIN ITR BEGIN");
           generateStatement(forAll->getBody(),isMainFile);
-          targetFile.pushstr_newL("} // FOR END");
+          targetFile.pushstr_newL("} //  end FOR NBR ITR. TMP FIX!");
           std::cout<< "FOR BODY END" << '\n';
         }
 
@@ -1685,7 +1687,7 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
   } else {
     if (collectionId->getSymbolInfo()->getType()->gettypeId() == TYPE_SETN) {  //FOR SET
       if (body->getTypeofNode() == NODE_BLOCKSTMT) {
-        //~ targetFile.pushstr_newL("{");       // uncomment after fixing NBR FOR brackets } issues.
+        targetFile.pushstr_newL("{");       // uncomment after fixing NBR FOR brackets } issues.
         //~ targetFile.pushstr_newL("//HERE");
         printf("FOR");
         sprintf(strBuffer, "int %s = *itr;", forAll->getIterator()->getIdentifier());
