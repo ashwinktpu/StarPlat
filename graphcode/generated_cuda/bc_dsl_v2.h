@@ -4,16 +4,13 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <cuda.h>
-#include "graph.hpp"
-#include "libcuda.cuh"
+#include "../graph.hpp"
+#include "../libcuda.cuh"
 #include <cooperative_groups.h>
 
 void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet);
 
-//FOR SIGNATURE of SET
-std::set<int>::iterator itr;
-for(itr=sourceSet.begin();itr!=sourceSet.end();itr++)
-__global__ void fwd_pass(int n, int* d_meta,int* d_data,int* d_weight, double* d_delta, double* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished, double* d_BC) {
+__global__ void fwd_pass(int n, int* d_meta,int* d_data,int* d_weight, float* d_delta, double* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished, float* d_BC) {
   unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
   if(v >= n) return;
   if(d_level[v] == *d_hops_from_source) {
@@ -29,7 +26,7 @@ __global__ void fwd_pass(int n, int* d_meta,int* d_data,int* d_weight, double* d
     }
   } // end if d lvl
 } // kernel end
-__global__ void back_pass(int n, int* d_meta,int* d_data,int* d_weight, double* d_delta, double* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished, double* d_BC) {
+__global__ void back_pass(int n, int* d_meta,int* d_data,int* d_weight, float* d_delta, double* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished, float* d_BC) {
   unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
   if(v >= n) return;
   auto grid = cooperative_groups::this_grid();
