@@ -2366,14 +2366,28 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,
       //~ isNot = true;
     }
   }
-  const char *flagVar   = dependentId->getIdentifier();
+  const char *modifiedVar   = dependentId->getIdentifier();
   const char *fixPointVar = fixedPointId->getIdentifier();
+
+  const char *modifiedVarType = convertToCppType(dependentId->getSymbolInfo()->getType());
+  const char *fixPointVarType = convertToCppType(fixedPointId->getSymbolInfo()->getType());
+
   targetFile.pushstr_newL("// FIXED POINT variables");
+  char modifiedVarPrev[80] = "d_";
+  char modifiedVarNext[80] = "d_" ;
+
+  strcat(modifiedVarPrev, modifiedVar);strcat(modifiedVarPrev, "_prev");
+  strcat(modifiedVarNext, modifiedVar);strcat(modifiedVarNext, "_next");
+
   char devicefixPointVar[80] = "d_";
   strcat(devicefixPointVar, fixPointVar);
-  generateExtraDeviceVariable("bool",fixPointVar, "1");
-  generateExtraDeviceVariable("bool",flagVar, "V");
 
+  generateExtraDeviceVariable(fixPointVarType,fixPointVar, "1");
+
+  generateExtraDeviceVariableNoD(modifiedVarType,modifiedVarPrev, "V");
+  generateExtraDeviceVariableNoD(modifiedVarType,modifiedVarNext, "V");
+
+  targetFile.NewLine();
   //~ generateExtraDeviceVariable("bool",devicefixPointVar, "1");
 
 
@@ -2403,7 +2417,8 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,
           //~ targetFile.pushString("Fpt var:"); targetFile.pushstr_newL(fixPointVar);
           //~ targetFile.pushString("Flg var:");targetFile.pushstr_newL(flagVar);
           //~ std::cout<< "BEFORE KERNEL" << '\n';
-          sprintf(strBuffer, "initIndex<bool> <<< 1, 1>>>(1, d_%s,0, true);", fixPointVar);
+
+          sprintf(strBuffer, "initIndex<%s> <<< 1, 1>>>(1, %s,0, true);", fixPointVarType, fixPointVar);
           targetFile.pushstr_newL(strBuffer);
 
           if (fixedPointConstruct->getBody()->getTypeofNode() != NODE_BLOCKSTMT)
@@ -2414,23 +2429,27 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,
 
         //~ targetFile.pushstr_newL( "Compute_SSSP_kernel<<<num_blocks,block_size>>>(gpu_OA,gpu_edgeList, gpu_edgeLen ,gpu_dist,src, V " ",MAX_VAL , gpu_modified_prev, gpu_modified_next, gpu_finished);");
 
-        targetFile.pushstr_newL("initKernel<bool><<<num_blocks,block_size>>>(V, gpu_modified_prev, false);");
-        targetFile.pushstr_newL(
-            " cudaMemcpy(finished, gpu_finished,  sizeof(bool) *(1), "
-            "cudaMemcpyDeviceToHost);");
-        sprintf(strBuffer, "%s* %s = %s_nxt ;", "bool", "tempModPtr",
-                dependentId->getIdentifier());
+        sprintf(strBuffer,"initKernel<%s><<<numBlocks,threadsPerBlock>>>(V, %s, false);", fixPointVarType, modifiedVarPrev);
         targetFile.pushstr_newL(strBuffer);
 
-        sprintf(strBuffer, "%s_nxt = %s_prev ;", dependentId->getIdentifier(),dependentId->getIdentifier());
+        generateCudaMemCpyStr("&finished", devicefixPointVar, fixPointVarType, "1", false);
+
+        //~ targetFile.pushstr_newL("cudaMemcpy(finished, finished,  sizeof(bool) *(1), cudaMemcpyDeviceToHost);");
+        sprintf(strBuffer, "%s* %s = %s ;", modifiedVarType, "tempModPtr",modifiedVarNext);
         targetFile.pushstr_newL(strBuffer);
-        sprintf(strBuffer, "%s_prev = %s ;", dependentId->getIdentifier(),"tempModPtr");
+
+        //~ sprintf(strBuffer, "%s* %s = %s_nxt ;", "bool", "tempModPtr",dependentId->getIdentifier());
+        //~ targetFile.pushstr_newL(strBuffer);
+
+        sprintf(strBuffer, "%s = %s;", modifiedVarNext, modifiedVarPrev);
+        targetFile.pushstr_newL(strBuffer);
+        sprintf(strBuffer, "%s = %s;", modifiedVarPrev,"tempModPtr");
         targetFile.pushstr_newL(strBuffer);
 
         Expression* initializer = dependentId->getSymbolInfo()->getId()->get_assignedExpr();
         assert(initializer->isBooleanLiteral());
-        sprintf(strBuffer, "%s_nxt[%s] = %s ;", dependentId->getIdentifier(),"v", initializer->getBooleanConstant() ? "true" : "false");
-        targetFile.pushstr_newL(strBuffer);
+        //~ sprintf(strBuffer, "%s[%s] = %s ;", modifiedVarNext,"v", initializer->getBooleanConstant() ? "true" : "false");
+        //~ targetFile.pushstr_newL(strBuffer);
 
       }
     }
@@ -2764,6 +2783,16 @@ void dsl_cpp_generator::generateExtraDeviceVariable(const char* typeStr, const c
   // 1       2                                 2           1      3
   char strBuffer[1024];
   sprintf(strBuffer, "%s* d_%s; cudaMalloc(&d_%s,sizeof(%s)*(%s));", typeStr, dVar, dVar, typeStr, sizeVal);
+  main.pushstr_newL(strBuffer);
+  //~ main.NewLine();
+}
+
+//~ bool* d_finished;cudaMalloc(&d_finished,sizeof(bool) *(V));
+void dsl_cpp_generator::generateExtraDeviceVariableNoD(const char* typeStr, const char* dVar, const char* sizeVal) {
+  //bool* d_finished;       cudaMalloc(&d_finished,sizeof(bool) *(1));
+  // 1       2                                 2           1      3
+  char strBuffer[1024];
+  sprintf(strBuffer, "%s* %s; cudaMalloc(&%s,sizeof(%s)*(%s));", typeStr, dVar, dVar, typeStr, sizeVal);
   main.pushstr_newL(strBuffer);
   //~ main.NewLine();
 }
