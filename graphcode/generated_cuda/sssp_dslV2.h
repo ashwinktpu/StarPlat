@@ -22,10 +22,10 @@ __global__ void Compute_SSSP_kernel(int V, int E, int* d_meta, int* d_data, int*
       int e = edge;
        int dist_new = d_dist[v] + d_weight[e];
       bool modified_new = true;
-      if(d_dist[v]!= MAX_VAL && d_dist[nbr] > dist_new)
+      if(d_dist[v]!= INT_MAX && d_dist[nbr] > dist_new)
       {
         atomicMin(&d_dist[nbr],dist_new);
-        modified_nxt[nbr] = modified_new;
+        d_modified_next[nbr] = modified_new;
         finished = false ;
       }
     } //  end FOR NBR ITR. TMP FIX!

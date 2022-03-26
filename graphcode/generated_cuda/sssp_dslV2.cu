@@ -79,18 +79,20 @@ void Compute_SSSP(graph& g,int* dist,int src)
 
   // FIXED POINT variables
   bool* d_finished; cudaMalloc(&d_finished,sizeof(bool)*(1));
-  bool** d_modified_prev; cudaMalloc(&d_modified_prev,sizeof(bool*)*(V));
-  bool** d_modified_next; cudaMalloc(&d_modified_next,sizeof(bool*)*(V));
+  bool* d_modified_prev; cudaMalloc(&d_modified_prev,sizeof(bool)*(V));
+  bool* d_modified_next; cudaMalloc(&d_modified_next,sizeof(bool)*(V));
 
   //BEGIN FIXED POINT
+  int k=0; // #fixpt-Iterations
   while(!finished) {
-    initIndex<bool> <<< 1, 1>>>(1, finished,0, true);
+    initIndex<bool> <<<1,1>>>(1,d_finished,0,true);
     Compute_SSSP_kernel<<<numBlocks, numThreads>>>(V,E,d_meta,d_data,d_weight,g,d_dist,src);
-    initKernel<bool><<<numBlocks,threadsPerBlock>>>(V, d_modified_prev, false);
+    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_prev, false);
     cudaMemcpy(&finished, d_finished, sizeof(bool)*(1), cudaMemcpyDeviceToHost);
-    bool** tempModPtr = d_modified_next ;
+    bool* tempModPtr = d_modified_next ; // SWAP next and prev ptrs
     d_modified_next = d_modified_prev;
     d_modified_prev = tempModPtr;
+    k++;
   } // END FIXED POINT
 
   //TIMER STOP
