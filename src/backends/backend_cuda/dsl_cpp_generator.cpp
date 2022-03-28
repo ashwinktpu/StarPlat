@@ -2504,7 +2504,35 @@ void dsl_cpp_generator::generateStartTimer() {
 
 void dsl_cpp_generator::generateCudaMallocParams(list<formalParam*> paramList)
 {
-    list<formalParam*>::iterator itr;
+  
+  char strBuffer[1024];
+  char buffer[1024];
+  bool isPrintType = true;
+  
+  for(auto itr=varList.begin();itr!=varList.end();itr++){
+    cout << (*itr)->getIdentifier() << endl; 
+    /*Type* type=(*itr)->getType();
+    Identifier* id=(*itr)->getIdentifier();
+    
+    if(type->isGraphType()){
+      strcat(strBuffer, "int V, int E");      
+    }
+    else if (type->isPropType() && type->getInnerTargetType()->isPrimitiveType()){
+      //sprintf(strBuffer, "%s", );
+      const char* parType;
+      parType = convertToCppType(type->getInnerTargetType());
+      const char* parName;
+      parName = (*itr)->getIdentifier();
+      sprintf(buffer, "%s* d_%s", parType,parName);
+      strcat(strBuffer, buffer);      
+    }
+  */ 
+  }
+  
+  cout << "VARLIST\n========\n"<< varList.size() << endl;
+  cout << "VARLIST\n========" << endl;
+  list<formalParam*>::iterator itr;
+
   for(itr=paramList.begin();itr!=paramList.end();itr++)
   {
 
@@ -3107,11 +3135,13 @@ void dsl_cpp_generator::generateFuncHeader(Function* proc, bool isMainFile) {
       //~ vv->result =false ;
       //~ varList.push_back(*vv);
       //~ varList.push_back({"double *", str,false});
+      Identifier* id = (*itr)->getIdentifier();
       if (type->isGraphType()) {
         std::cout << "========== SET TRUE" << '\n';
         genCSR = true;
         //~ gId = parName;
       }
+      varList.push_back(id); cout << "PUSHED =======> " << parName << endl;
       //~ varList.push_back({"int*","d_meta", false})  ;
       //~ varList.push_back({"int*","d_data", false})  ;
       //~ varList.push_back({"int*","d_weight", false});
