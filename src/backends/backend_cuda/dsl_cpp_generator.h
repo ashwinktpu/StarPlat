@@ -32,10 +32,8 @@ class dsl_cpp_generator {
   int kernelCount;
   Function* currentFunc;
 
-  //~ vector<vars> varList;
-  //~ std::vector <string> vvList;
-  //~ vector<string> varList;
-  std::vector<std::pair<string, string>> variableList;
+  list<Identifier*> varList;
+  //vector<formalParam*> varList;
   bool isHeader;
 
  public:
