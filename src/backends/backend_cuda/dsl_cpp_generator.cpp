@@ -2511,9 +2511,15 @@ void dsl_cpp_generator::generateCudaMallocParams(list<formalParam*> paramList)
   
   for(auto itr=varList.begin();itr!=varList.end();itr++){
     cout << (*itr)->getIdentifier() << endl; 
-    /*Type* type=(*itr)->getType();
+    /*
+    //id*
+    Type* type=(*itr)->getSymbolInfo()->getType();
+    Identifier* id=(*itr);
+
+    //formalparam*
+    Type* type = 
     Identifier* id=(*itr)->getIdentifier();
-    
+
     if(type->isGraphType()){
       strcat(strBuffer, "int V, int E");      
     }
