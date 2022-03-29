@@ -1491,7 +1491,6 @@ void dsl_cpp_generator :: addCudaKernel(forallStmt* forAll)
   header.pushstr_newL(strBuffer);
 
 if (forAll->hasFilterExpr()) {
-
     blockStatement* changedBody = includeIfToBlock(forAll);
     cout << "============CHANGED BODY  TYPE==============" << (changedBody->getTypeofNode() == NODE_BLOCKSTMT);
     forAll->setBody(changedBody);
@@ -2504,24 +2503,24 @@ void dsl_cpp_generator::generateStartTimer() {
 
 void dsl_cpp_generator::generateCudaMallocParams(list<formalParam*> paramList)
 {
-  
+
   char strBuffer[1024];
   char buffer[1024];
   bool isPrintType = true;
-  
-  for(auto itr=varList.begin();itr!=varList.end();itr++){
-    cout << (*itr)->getIdentifier() << endl; 
+  std::cout<< "varListSize:" << varList.size() << '\n';
+  //~ for(auto itr=varList.begin();itr!=varList.end();itr++){
+    //cout << (*itr)->getIdentifier() << endl;
     /*
     //id*
     Type* type=(*itr)->getSymbolInfo()->getType();
     Identifier* id=(*itr);
 
     //formalparam*
-    Type* type = 
+    Type* type =
     Identifier* id=(*itr)->getIdentifier();
 
     if(type->isGraphType()){
-      strcat(strBuffer, "int V, int E");      
+      strcat(strBuffer, "int V, int E");
     }
     else if (type->isPropType() && type->getInnerTargetType()->isPrimitiveType()){
       //sprintf(strBuffer, "%s", );
@@ -2530,11 +2529,11 @@ void dsl_cpp_generator::generateCudaMallocParams(list<formalParam*> paramList)
       const char* parName;
       parName = (*itr)->getIdentifier();
       sprintf(buffer, "%s* d_%s", parType,parName);
-      strcat(strBuffer, buffer);      
+      strcat(strBuffer, buffer);
     }
-  */ 
-  }
-  
+  */
+  //~ }
+
   cout << "VARLIST\n========\n"<< varList.size() << endl;
   cout << "VARLIST\n========" << endl;
   list<formalParam*>::iterator itr;
@@ -3147,7 +3146,8 @@ void dsl_cpp_generator::generateFuncHeader(Function* proc, bool isMainFile) {
         genCSR = true;
         //~ gId = parName;
       }
-      varList.push_back(id); cout << "PUSHED =======> " << parName << endl;
+
+      //varList.push_back(id); cout << "PUSHED =======> " << parName << endl;
       //~ varList.push_back({"int*","d_meta", false})  ;
       //~ varList.push_back({"int*","d_data", false})  ;
       //~ varList.push_back({"int*","d_weight", false});

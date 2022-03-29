@@ -1,6 +1,6 @@
 EXPENDABLES = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c bin/dsl_cpp_generator.o
 
-CC = g++ -g -std=c++11 -Wall -Wreturn-type -fsanitize=address
+CC = g++ -g -std=c++11 -Wall -Wreturn-type #-fsanitize=address
 
 all: finalcode clean
 
