@@ -1998,6 +1998,7 @@ class varTransferStmt: public statement
   {
     this->transferVar = iden;
     this->direction = dir;
+    setTypeofNode(NODE_TRANSFERSTMT);
   } 
 };
 #endif
