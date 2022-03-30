@@ -1,4 +1,5 @@
 #include "SymbolTableBuilder.h"
+#include "../ast/ASTHelper.cpp"
 
 bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
  {   // cout<<"ID VALUE IN SEARCH"<<id->getIdentifier()<<"\n";
@@ -285,7 +286,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                }
 
               init_curr_SymbolTable(forAll);
-
+    
               Type* type = (Type*) Util::createNodeEdgeTypeNode(TYPE_NODE);
               bool creatsFine=create_Symbol(currVarSymbT,forAll->getIterator(),type);
 
