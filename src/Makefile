@@ -6,7 +6,6 @@ CC = g++
 CFLAGS  = -g 
 
 all: finalcode
-windows: finalcode clean_windows
 
 PROGRAMS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o
 A_PROGRAM = bin/deviceVarsAnalyser.o bin/analyserUtil.o

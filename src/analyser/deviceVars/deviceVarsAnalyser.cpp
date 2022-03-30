@@ -64,7 +64,7 @@ lattice deviceVarsAnalyser::analyseAssignment(assignment *stmt, lattice &inMap)
   {
     wrapNode->outMap.meet(iden, lattice::CPU_WRITE);
   }
-
+ // cout<<"hello"<<endl;
   return wrapNode->outMap;
 }
 
@@ -182,13 +182,14 @@ lattice deviceVarsAnalyser::analyseFor(forallStmt *stmt, lattice &inMap)
     bodyOut.removeVariable(stmt->getIterator());
 
     lattice newOutMap = (wrapNode->hasForAll) ? (bodyOut & outTemp) : (bodyOut ^ outTemp);
+
     if(wrapNode->outMap != newOutMap){
       wrapNode->outMap = newOutMap;
       hasChanged = true;
     }
     else
       hasChanged = false;
-      
+
   }while(hasChanged);
 
   return wrapNode->outMap;
@@ -332,10 +333,12 @@ void deviceVarsAnalyser::analyseFunc(ASTNode *proc)
   }
 
   analyseStatement(func->getBlockStatement(), inpLattice);
-
-  printStatement(func->getBlockStatement(), 0);
+  //printStatement(func->getBlockStatement(), 0);
   blockStatement* newBody = (blockStatement*) transferVarsBlock(func->getBlockStatement(), nullptr);
   func->setBlockStatement(newBody);
+
+  printAST().printStatement(func->getBlockStatement());
+
   return;
 }
 

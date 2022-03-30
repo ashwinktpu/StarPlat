@@ -49,6 +49,7 @@ public:
     {
       switch (p1)
       {
+      case NOT_INITIALIZED:
       case CPU_GPU_SHARED:
         return p2;
       case GPU_ONLY:
@@ -61,6 +62,7 @@ public:
     {
       switch (p1)
       {
+      case NOT_INITIALIZED:
       case CPU_GPU_SHARED:
         return p2;
       case CPU_ONLY:
@@ -71,7 +73,7 @@ public:
     }
   }
 
-  /*void operator ^= (lattice &l1)
+  void operator ^= (lattice &l1)
   {
     for(pair<TableEntry*, PointType> pr: l1.typeMap)
     {
@@ -80,6 +82,7 @@ public:
     }
   }
 
+  /*
   void operator &= (lattice &l1)
   {
     for(pair<TableEntry*, PointType> pr: l1.typeMap)
@@ -217,11 +220,14 @@ public:
         type = "CPU_GPU_SHARED";
       else if(pr.second == GPU_ONLY)
         type = "GPU_ONLY";
-      else
+      else if(pr.second == CPU_ONLY)
         type = "CPU_ONLY";
+      else
+        type = "NOT INIT";
 
       cout<<string(pr.first->getId()->getIdentifier())<<": "<<type<<' ';
     }
+
     cout<<endl;
   }
 

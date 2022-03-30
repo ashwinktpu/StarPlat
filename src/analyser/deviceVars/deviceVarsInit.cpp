@@ -126,7 +126,7 @@ bool deviceVarsAnalyser::initDoWhile(dowhileStmt *stmt, list<Identifier *> &vars
     ASTNodeWrap* condNode = initWrapNode(stmt->getCondition(), vars);
     condNode->usedVars = getVarsExpr(stmt->getCondition());
 
-    bool hasForAll = initWrapNode(stmt->getBody(), vars);
+    bool hasForAll = initStatement(stmt->getBody(), vars);
     stmtNode->hasForAll = hasForAll;
 
     return hasForAll;

@@ -1,0 +1,16 @@
+function test(Graph g, node src)
+{
+    int x;
+    bool y;
+
+    forall(v in g.nodes()){
+       x = 100;
+       y = False; 
+    }
+
+    int z = x + y;
+    forall(v in g.nodes()){
+        int temp = x;
+        bool tempB = y;
+    }
+}
