@@ -86,7 +86,8 @@ statement* deviceVarsAnalyser::transferVarsFor(forallStmt* stmt, blockStatement*
 
     blockStatement* newBody = (blockStatement*) transferVarsStatement(stmt->getBody(), parBlock);
     lattice bodyOut = getWrapNode(stmt->getBody())->outMap;
-
+    bodyOut.removeVariable(stmt->getIterator());
+    
     transferStmts = transferStatements(bodyOut, wrapNode->outMap);
     for(statement* bstmt: transferStmts)
         newBody->addStmtToBlock(bstmt);
