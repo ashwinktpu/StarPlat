@@ -15,10 +15,12 @@ void Compute_TC(graph& g)
   int *h_meta;
   int *h_data;
   int *h_weight;
+  int *h_rev_meta;
 
   h_meta = (int *)malloc( (V+1)*sizeof(int));
   h_data = (int *)malloc( (E)*sizeof(int));
   h_weight = (int *)malloc( (E)*sizeof(int));
+  h_rev_meta = (int *)malloc( (V+1)*sizeof(int));
 
   for(int i=0; i<= V; i++) {
     int temp = g.indexofNodes[i];
@@ -32,18 +34,26 @@ void Compute_TC(graph& g)
     h_weight[i] = temp;
   }
 
+  for(int i=0; i<= V; i++) {
+    int temp = g.rev_indexofNodes[i];
+    h_rev_meta[i] = temp;
+  }
+
 
   int* d_meta;
   int* d_data;
   int* d_weight;
+  int* d_rev_meta;
 
   cudaMalloc(&d_meta, sizeof(int)*(1+V));
   cudaMalloc(&d_data, sizeof(int)*(E));
   cudaMalloc(&d_weight, sizeof(int)*(E));
+  cudaMalloc(&d_rev_meta, sizeof(int)*(V+1));
 
   cudaMemcpy(  d_meta,   h_meta, sizeof(int)*(V+1), cudaMemcpyHostToDevice);
   cudaMemcpy(  d_data,   h_data, sizeof(int)*(E), cudaMemcpyHostToDevice);
   cudaMemcpy(d_weight, h_weight, sizeof(int)*(E), cudaMemcpyHostToDevice);
+  cudaMemcpy(d_rev_meta, h_rev_meta, sizeof(int)*(E), cudaMemcpyHostToDevice);
 
   // CSR END
   //LAUNCH CONFIG
@@ -51,6 +61,10 @@ void Compute_TC(graph& g)
   unsigned numThreads   = (V < threadsPerBlock)? 512: V;
   unsigned numBlocks    = (numThreads+threadsPerBlock-1)/threadsPerBlock;
 
+  // For PageRank delta, beta and maxIter values
+  float beta = 0.001;
+  float delta = 0.85;
+  int maxIter = 100;
 
   // TIMER START
   cudaEvent_t start, stop;

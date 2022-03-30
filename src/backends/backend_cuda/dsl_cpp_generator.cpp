@@ -2,6 +2,8 @@
 #include <cassert>
 #include "dsl_cpp_generator.h"
 
+bool flag_for_device_var = 0;  //temporary fix to accomodate device variable and 
+
 void dsl_cpp_generator::generateInitkernel(const char* name) {
   char strBuffer[1024];
   header.pushstr_newL("template <typename T>");
@@ -69,6 +71,12 @@ void dsl_cpp_generator::generateLaunchConfig(const char* name) {
   main.pushstr_newL(strBuffer);
   main.NewLine();
   // main.pushstr_newL("}");
+
+  //For only PageRank we have to put the values for certain parameters like delta and beta
+  main.pushstr_newL("// For PageRank delta, beta and maxIter values");
+  main.pushstr_newL("float beta = 0.001;");
+  main.pushstr_newL("float delta = 0.85;");
+  main.pushstr_newL("int maxIter = 100;");
 }
 
 void dsl_cpp_generator::generateCudaMemCpyStr(const char* sVarName,
@@ -508,6 +516,7 @@ void dsl_cpp_generator::generateBFSAbstraction(iterateBFS* bfsAbstraction,
 }
 
 void dsl_cpp_generator::generateStatement(statement* stmt, bool isMainFile) {
+
   if (stmt->getTypeofNode() == NODE_BLOCKSTMT) {
     generateBlock((blockStatement*)stmt, false, isMainFile);
   }
@@ -782,7 +791,7 @@ void dsl_cpp_generator::generateReductionStmt(reductionCallStmt* stmt,
 void dsl_cpp_generator::generateDoWhileStmt(dowhileStmt* doWhile,
                                             bool isMainFile) {
   dslCodePad& targetFile = isMainFile ? main : header;
-
+  flag_for_device_var = 1;  //done for PR fix
   targetFile.pushstr_newL("do");
   targetFile.pushString("{");
   generateStatement(doWhile->getBody(), isMainFile);
@@ -911,8 +920,9 @@ void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment* asmt,
     Identifier* id = asmt->getId();
 
     targetFile.pushString(id->getIdentifier());
-  } else if (asmt->lhs_isProp())  // the check for node and edge property to be
-                                  // carried out.
+  } 
+  else if (asmt->lhs_isProp())  // the check for node and edge property to be
+                                // carried out.
   {
     PropAccess* propId = asmt->getPropId();
 
@@ -951,7 +961,8 @@ void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment* asmt,
       //~ targetFile.pushString(propId->getIdentifier1()->getIdentifier());
       //~ convertToCppType(propId->getIdentifier1()->getSymbolInfo()->getType());
       targetFile.pushString(strBuffer);
-    } else {
+    }
+     else {
       targetFile.pushString("d_");  /// IMPORTANT
       targetFile.pushString(propId->getIdentifier2()->getIdentifier());
       targetFile.push('[');
@@ -1267,7 +1278,7 @@ void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll, bool isMainF
         list<argument*> argList=extractElemFunc->getArgList();
         assert(argList.size()==1);
         Identifier* nodeNbr=argList.front()->getExpr()->getId();
-        sprintf(strBuffer,"for (%s %s = %s[%s]; %s < %s[%s+1]; %s++)","int","edge","gpu_rev_OA",nodeNbr->getIdentifier(),"edge","gpu_rev_OA",nodeNbr->getIdentifier(),"edge");
+        sprintf(strBuffer,"for (%s %s = %s[%s]; %s < %s[%s+1]; %s++)","int","edge","d_rev_meta",nodeNbr->getIdentifier(),"edge","d_rev_meta",nodeNbr->getIdentifier(),"edge");
         targetFile.pushstr_newL(strBuffer);
         targetFile.pushString("{");
         sprintf(strBuffer,"%s %s = %s[%s] ;","int",iterator->getIdentifier(),"srcList","edge"); //needs to move the addition of
@@ -1865,6 +1876,7 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
     }
   }
 
+ //needs to handle carefully for PR code generation
   else if (type->isPrimitiveType()) {
      char strBuffer[1024];
     // targetFile.pushstr_space(convertToCppType(type));
@@ -1885,12 +1897,13 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
     targetFile.pushString(stringBuffer);
     targetFile.pushString(";");
     */
-
-    sprintf(strBuffer, "__device__ %s %s", varType, varName);
-    header.pushString(strBuffer);
+    if (flag_for_device_var ==0){
+     sprintf(strBuffer, "__device__ %s %s", varType, varName);
+     header.pushString(strBuffer);
+    }
     /// REPLICATE ON HOST AND DEVICE
-    sprintf(strBuffer, "%s %s", varType, varName);
-    targetFile.pushString(strBuffer);
+     sprintf(strBuffer, "%s %s", varType, varName);
+     targetFile.pushString(strBuffer);
 
     if (declStmt->isInitialized()) {
         // targetFile =
@@ -1898,10 +1911,8 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
       /* the following if conditions is for cases where the
          predefined functions are used as initializers
          but the variable's type doesnot match*/
-      if (declStmt->getExpressionAssigned()->getExpressionFamily() ==
-          EXPR_PROCCALL) {
-        proc_callExpr* pExpr =
-            (proc_callExpr*)declStmt->getExpressionAssigned();
+      if (declStmt->getExpressionAssigned()->getExpressionFamily() == EXPR_PROCCALL) {
+        proc_callExpr* pExpr = (proc_callExpr*)declStmt->getExpressionAssigned();
         Identifier* methodId = pExpr->getMethodId();
         castIfRequired(type, methodId, main);
 
@@ -1909,19 +1920,22 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
 
       //~ sprintf(strBuffer, "initIndex<<<1,1>>>(1,d_%s,0, 0);",varName);
       //~ targetFile.pushstr_newL(strBuffer);
-      header.pushString(" = ");
+      if (flag_for_device_var ==0){ // fix to fix the issues of PR __device__
+        header.pushString(" = ");
+      }
       targetFile.pushString(" = ");
 
       generateExpr(declStmt->getExpressionAssigned(), false); // PRINTS RHS? YES
-
-      generateExpr(declStmt->getExpressionAssigned(), true);
+      if(flag_for_device_var ==0){
+        generateExpr(declStmt->getExpressionAssigned(), true);
+      }
 
 
 
     }
 
     else {
-
+      main.NewLine();
       sprintf(strBuffer, "initIndex<<<1,1>>>(1,d_%s,0, 0);",varName);
         targetFile.pushstr_newL(strBuffer);
       //targetFile.pushString(" = ");
@@ -1931,8 +1945,8 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
       header.pushstr_newL("; // DEVICE ASSTMENT in .h");
       header.NewLine();
 
-      main.pushstr_newL("; // asst in .cu");
-      main.NewLine();
+     main.pushstr_newL("; // asst in .cu");
+     main.NewLine();
 
   }
 
@@ -2418,7 +2432,7 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,
           //~ targetFile.pushString("Fpt var:"); targetFile.pushstr_newL(fixPointVar);
           //~ targetFile.pushString("Flg var:");targetFile.pushstr_newL(flagVar);
           //~ std::cout<< "BEFORE KERNEL" << '\n';
-
+          main.NewLine();
           sprintf(strBuffer, "initIndex<%s> <<<1,1>>>(1,%s,0,true);", fixPointVarType, devicefixPointVar);
           targetFile.pushstr_newL(strBuffer);
 
@@ -2882,11 +2896,13 @@ void dsl_cpp_generator::generateCSRArrays(const char* gId) {
   main.pushstr_newL("int *h_meta;");
   main.pushstr_newL("int *h_data;");
   main.pushstr_newL("int *h_weight;");
+  main.pushstr_newL("int *h_rev_meta;"); //done only to handle PR since other doesn't uses it
   main.NewLine();
 
   main.pushstr_newL("h_meta = (int *)malloc( (V+1)*sizeof(int));");
   main.pushstr_newL("h_data = (int *)malloc( (E)*sizeof(int));");
   main.pushstr_newL("h_weight = (int *)malloc( (E)*sizeof(int));");
+  main.pushstr_newL("h_rev_meta = (int *)malloc( (V+1)*sizeof(int));");
   main.NewLine();
 
   main.pushstr_newL("for(int i=0; i<= V; i++) {");
@@ -2904,6 +2920,16 @@ void dsl_cpp_generator::generateCSRArrays(const char* gId) {
   main.pushstr_newL("h_weight[i] = temp;");
   main.pushstr_newL("}");
   main.NewLine();
+
+  //to handle rev_offset array for pageRank only
+
+  main.pushstr_newL("for(int i=0; i<= V; i++) {");
+  sprintf(strBuffer, "int temp = %s.rev_indexofNodes[i];", gId);
+  main.pushstr_newL(strBuffer);
+  main.pushstr_newL("h_rev_meta[i] = temp;");
+  main.pushstr_newL("}");
+  main.NewLine();
+
 
   //-------------------------------------//
 
@@ -3059,11 +3085,14 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
     main.pushstr_newL(strBuffer);
     sprintf(strBuffer, "int* d_weight;");
     main.pushstr_newL(strBuffer);
+    sprintf(strBuffer, "int* d_rev_meta;");
+    main.pushstr_newL(strBuffer);
     main.NewLine();
 
     generateCudaMallocStr("d_meta", "int", "(1+V)");
     generateCudaMallocStr("d_data", "int", "(E)");
     generateCudaMallocStr("d_weight", "int", "(E)");
+    generateCudaMallocStr("d_rev_meta", "int", "(V+1)");
     main.NewLine();
 
     // h_meta h_data h_weight has to be populated!
@@ -3071,6 +3100,7 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
     generateCudaMemCpyStr("d_meta", "h_meta", "int", "V+1");
     generateCudaMemCpyStr("d_data", "h_data", "int", "E");
     generateCudaMemCpyStr("d_weight", "h_weight", "int", "E");
+    generateCudaMemCpyStr("d_rev_meta", "h_rev_meta", "int", "E");
     main.NewLine();
 
     main.pushstr_newL("// CSR END");
