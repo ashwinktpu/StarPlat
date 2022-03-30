@@ -103,9 +103,25 @@ blockStatement *PPAnalyser::checkSSSPUpdate(statement *stmt, Identifier *v, Iden
                                                                 blockStatement *ifBlock = blockStatement::createnewBlock();
                                                                 ifBlock->addStmtToBlock(assn1);
                                                                 ifBlock->addStmtToBlock(assn2);
-                                                                ifBlock->addStmtToBlock(assn3);
-                                                                ifStmt *ifstmt = ifStmt::create_ifStmt(ifCondn, ifBlock, NULL);
+                                                                ifBlock->addStmtToBlock(assn3); 
+                                                                ifStmt *ifstmt = ifStmt::create_ifStmt(ifCondn, ifBlock, NULL); 
                                                                 newBlockStmt->addStmtToBlock(ifstmt);
+                                                                /*list <ASTNode *> leftList, rightList;
+                                                                leftList.push_back(Expression::nodeForPropAccess(PropAccess::createPropAccessNode(v, dist)));
+                                                                leftList.push_back(Expression::nodeForPropAccess(PropAccess::createPropAccessNode(v, modified)));
+                                                                list <argument *> reducList;
+                                                                argument *arg1 = new argument;
+                                                                argument *arg2 = new argument;
+                                                                arg1->setExpression(Expression::nodeForPropAccess(PropAccess::createPropAccessNode(v, dist)));
+                                                                arg1->setExpressionFlag();
+                                                                reducList.push_back(arg1);
+                                                                arg2->setExpressionFlag();
+                                                                arg2->setExpression(Expression::nodeForArithmeticExpr(Expression::nodeForPropAccess(PropAccess::createPropAccessNode(nbr, dist)), Expression::nodeForPropAccess(PropAccess::createPropAccessNode(e, Identifier::createIdNode("weight"))), OPERATOR_ADD));
+                                                                reducList.push_back(arg2);
+                                                                rightList.push_back(Expression::nodeForBooleanConstant(((Expression *)firstExpr)->getBooleanConstant()));
+                                                                reductionCallStmt *redStmt = reductionCallStmt::leftList_reducCallStmt(leftList, reductionCall::nodeForReductionCall(REDUCE_MIN, reducList), rightList);
+                                                                
+                                                                newBlockStmt->addStmtToBlock(redStmt);*/
                                                                 change = true;
                                                             }
                                                         }
@@ -151,7 +167,7 @@ forallStmt *PPAnalyser::analyseForallIn(statement *stmt, Identifier *srcGraph, I
                     arg1->setExpressionFlag();
                     argList.push_back(arg1);
                     Expression *filterExpr = Expression::nodeForRelationalExpr(Expression::nodeForPropAccess(PropAccess::createPropAccessNode(nbr, modified)), Expression::nodeForBooleanConstant(boolConstant), OPERATOR_EQ);
-                    forallStmt *newFstmt = forallStmt::createforallStmt(v, srcGraph, proc_callExpr::nodeForProc_Call(NULL, NULL, Identifier::createIdNode("nodes_to"), argList), updatedBlock, filterExpr, inFstmt->isForall());
+                    forallStmt *newFstmt = forallStmt::createforallStmt(nbr, srcGraph, proc_callExpr::nodeForProc_Call(NULL, NULL, Identifier::createIdNode("nodes_to"), argList), updatedBlock, filterExpr, inFstmt->isForall());
                     return newFstmt;
                 }
             }

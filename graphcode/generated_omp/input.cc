@@ -22,7 +22,7 @@ void Compute_SSSP(graph& g,int src)
     for (int v = 0; v < g.num_nodes(); v ++) 
     {
       for (int edge = g.rev_indexofNodes[v]; edge < g.rev_indexofNodes[v+1]; edge ++) 
-      {int v = g.srcList[edge] ;
+      {int nbr = g.srcList[edge] ;
         if (modified[nbr] == true )
           {
           int e = edge;
