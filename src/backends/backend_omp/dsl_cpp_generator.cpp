@@ -2118,14 +2118,14 @@ bool dsl_cpp_generator::generate()
   void dsl_cpp_generator::setFileName(char* f) // to be changed to make it more universal.
   {
     //printf("%s \n", f);
-    char *token = strtok(f, "/");
+    char *token = strtok(f, "\\");
 	  char* prevtoken;
    
    
     while (token != NULL)
     {   
 		prevtoken=token;
-    token = strtok(NULL, "/");
+    token = strtok(NULL, "\\");
     }
     fileName=prevtoken;
     printf("OutFile: %s \n", fileName);
