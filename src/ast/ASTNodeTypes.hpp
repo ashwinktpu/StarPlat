@@ -1623,6 +1623,7 @@ class fixedPointStmt:public statement
       typeofNode=NODE_FORALLSTMT;
       isforall=false;
       isSourceId=false;
+      createSymbTab();
     }
 
     static forallStmt* createforallStmt(Identifier* iterator,Identifier* sourceGraph,proc_callExpr* extractElemFunc,statement* body,Expression* filterExpr,bool isforall)
