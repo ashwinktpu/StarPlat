@@ -1,12 +1,12 @@
+// FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
 #include "SSSP_V2.h"
-#include "../graph.hpp"
 
 void Compute_SSSP(graph& g,int* dist,int src)
 
 {
   // CSR BEGIN
-  unsigned V = g.num_nodes();
-  unsigned E = g.num_edges();
+  int V = g.num_nodes();
+  int E = g.num_edges();
 
   printf("#nodes:%d\n",V);
   printf("#edges:%d\n",E);
@@ -59,10 +59,11 @@ void Compute_SSSP(graph& g,int* dist,int src)
   float milliseconds = 0;
   cudaEventRecord(start,0);
 
-  //END CSR 
 
   //DECLAR DEVICE AND HOST vars in params
-  double* d_BC; cudaMalloc(&d_BC, sizeof(double)*(V)); ///TODO from func
+  int* d_dist;
+  cudaMalloc(&d_dist, sizeof(int)*(V));
+
 
   //BEGIN DSL PARSING 
   bool* d_modified;
@@ -72,30 +73,33 @@ void Compute_SSSP(graph& g,int* dist,int src)
 
   initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_modified,false);
 
-  initIndex<double><<<1,1>>>(V,d_modified,src,true);
-  initIndex<double><<<1,1>>>(V,d_dist,src,0);
-  bool finished = false;
-  while ( !finished[0] )
-  {
-    finished[0] = true;
-    {
-      Compute_SSSP_kernel<<<num_blocks, block_size>>>(gpu_OA, gpu_edgeList, V, E );
-      cudaDeviceSynchronize();
+  initIndex<bool><<<1,1>>>(V,d_modified,src,(bool)true); //InitIndexDevice
+  initIndex<int><<<1,1>>>(V,d_dist,src,(int)0); //InitIndexDevice
+  bool finished = false; // asst in .cu
 
-    }
-     initKernel<bool> <<< 1, 1>>>(1, gpu_finished, true);
-     Compute_SSSP_kernel<<<num_blocks , block_size>>>(gpu_OA,gpu_edgeList, gpu_edgeLen ,gpu_dist,src, V ,MAX_VAL , gpu_modified_prev, gpu_modified_next, gpu_finished);
-     initKernel<bool><<<num_blocks,block_size>>>(V, gpu_modified_prev, false);
-     cudaMemcpy(finished, gpu_finished,  sizeof(bool) *(1), cudaMemcpyDeviceToHost);
-    bool* tempModPtr = modified_nxt ;
-    modified_nxt = modified_prev ;
-    modified_prev = tempModPtr ;
-    modified_nxt[v] = false ;
-    //TIMER STOP
-    cudaEventRecord(stop,0);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&milliseconds, start, stop);
-    printf("GPU Time: %.6f ms\n", milliseconds);
+  // FIXED POINT variables
+  bool* d_finished; cudaMalloc(&d_finished,sizeof(bool)*(1));
+  bool* d_modified_prev; cudaMalloc(&d_modified_prev,sizeof(bool)*(V));
+  bool* d_modified_next; cudaMalloc(&d_modified_next,sizeof(bool)*(V));
 
-    cudaMemcpy(BC,d_BC , sizeof(double) * (V), cudaMemcpyDeviceToHost);
-  } //end FUN
+  //BEGIN FIXED POINT
+  int k=0; // #fixpt-Iterations
+  while(!finished) {
+    initIndex<bool> <<<1,1>>>(1,d_finished,0,true);
+    Compute_SSSP_kernel<<<numBlocks, numThreads>>>(V,E,d_meta,d_data,d_weight,g,d_dist,src);
+    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_prev, false);
+    cudaMemcpy(&finished, d_finished, sizeof(bool)*(1), cudaMemcpyDeviceToHost);
+    bool* tempModPtr = d_modified_next ; // SWAP next and prev ptrs
+    d_modified_next = d_modified_prev;
+    d_modified_prev = tempModPtr;
+    k++;
+  } // END FIXED POINT
+
+  //TIMER STOP
+  cudaEventRecord(stop,0);
+  cudaEventSynchronize(stop);
+  cudaEventElapsedTime(&milliseconds, start, stop);
+  printf("GPU Time: %.6f ms\n", milliseconds);
+
+  cudaMemcpy(    dist,   d_dist, sizeof(int)*(V), cudaMemcpyDeviceToHost);
+} //end FUN
