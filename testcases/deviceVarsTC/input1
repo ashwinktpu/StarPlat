@@ -1,22 +1,14 @@
 function test(Graph g, node src)
 {
-    int y;
     int x;
+    x = 100;
+
+    int y;
+    y = 80;
+    y = x + y;
 
     propNode<int> prop;
-    g.attachNodeProp(prop);
+    g.attachNodeProp(prop = 50);
 
-    if(y)
-    {
-        forall(v in g.nodes()){
-            int t = x+1;
-            v.prop = 100;
-        }
-    }
-    else
-    {
-        src.prop = 100;
-    }
-
-    y = x;
+    src.prop = x;
 }
