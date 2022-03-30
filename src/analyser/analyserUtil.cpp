@@ -388,6 +388,20 @@ public:
                 printStatement(((ifStmt *)stmt)->getElseBody());
                 tabSpace--;
             }
+            break;
+        
+        case NODE_TRANSFERSTMT:
+        {
+            varTransferStmt* cstmt = (varTransferStmt*) stmt;
+            printTabs();
+            cout<<"Tranfer statement\n";
+
+            tabSpace++;
+            printTabs();
+            cout<<cstmt->transferVar->getIdentifier()<<' ';
+            cout<<(cstmt->direction ? "GPU to CPU" : "CPU to GPU")<<endl;
+            tabSpace--;
+        }
         default:
             break;
         }

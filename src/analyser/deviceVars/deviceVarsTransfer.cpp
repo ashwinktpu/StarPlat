@@ -83,7 +83,7 @@ statement* deviceVarsAnalyser::transferVarsFor(forallStmt* stmt, blockStatement*
     list<statement*> transferStmts = transferStatements(wrapNode->inMap, wrapNode->outMap);
     for(statement* bstmt: transferStmts)
         parBlock->addStmtToBlock(bstmt);
-    
+
     blockStatement* newBody = (blockStatement*) transferVarsStatement(stmt->getBody(), parBlock);
     lattice bodyOut = getWrapNode(stmt->getBody())->outMap;
 
@@ -129,6 +129,8 @@ statement* deviceVarsAnalyser::transferVarsWhile(whileStmt* stmt, blockStatement
     ASTNodeWrap* wrapNode = getWrapNode(stmt);
     ASTNodeWrap* condNode = getWrapNode(stmt->getCondition());
 
+    //wrapNode->inMap.print();
+    //condNode->outMap.print();
     for(statement* bstmt: transferStatements(wrapNode->inMap, condNode->outMap)){
         parBlock->addStmtToBlock(bstmt);
     }
@@ -190,6 +192,9 @@ statement* deviceVarsAnalyser::transferVarsDoWhile(dowhileStmt* stmt, blockState
 statement* deviceVarsAnalyser::transferVarsAssignment(assignment* stmt, blockStatement* parBlock)
 {
     ASTNodeWrap* wrapNode = getWrapNode(stmt);
+    wrapNode->inMap.print();
+    cout<<"temp"<<endl;
+    wrapNode->outMap.print();
     list<statement*> transferStmts = transferStatements(wrapNode->inMap, wrapNode->outMap);
     for(statement* bstmt: transferStmts)
         parBlock->addStmtToBlock(bstmt);
