@@ -284,7 +284,14 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                    }
                }
 
+              init_curr_SymbolTable(forAll);
+
+              Type* type = (Type*) Util::createNodeEdgeTypeNode(TYPE_NODE);
+              bool creatsFine=create_Symbol(currVarSymbT,forAll->getIterator(),type);
+
               buildForStatements(forAll->getBody());  
+              delete_curr_SymbolTable();
+
                if(backend.compare("omp")==0&&forAll->isForall())
                     {  
                         parallelConstruct.pop_back();
