@@ -8,7 +8,7 @@ function test(Graph g, node src)
     y = x + y;
 
     propNode<int> prop;
-    g.attachNodeProp(prop = 50);
+    g.attachNodeProperty(prop = 50);
 
     src.prop = x;
 }
