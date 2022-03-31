@@ -8,6 +8,11 @@ void test(graph& g,int src)
   y = 80;
   y = x + y;
   int* prop=new int[g.num_nodes()];
+  #pragma omp parallel for
+  for (int t = 0; t < g.num_nodes(); t ++) 
+  {
+    prop[t] = 50;
+  }
   prop[src] = x;
 
 }
