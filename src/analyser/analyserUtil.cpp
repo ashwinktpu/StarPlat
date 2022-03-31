@@ -383,6 +383,7 @@ public:
             tabSpace--;
             if (((ifStmt *)stmt)->getElseBody())
             {
+                printTabs();
                 cout << "Else statment\n";
                 tabSpace++;
                 printStatement(((ifStmt *)stmt)->getElseBody());
