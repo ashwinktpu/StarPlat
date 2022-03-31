@@ -295,6 +295,8 @@ class deviceVarsAnalyser
   lattice analyseWhile(whileStmt*, lattice&);
   lattice analyseDoWhile(dowhileStmt*, lattice&);
   lattice analyseFor(forallStmt*, lattice&);
+  lattice analyseFixedPoint(fixedPointStmt*, lattice&);
+  lattice analyseProcCall(proc_callStmt*, lattice&);
 
   bool initBlock(blockStatement* blockStmt, list<Identifier*> &);
   bool initStatement(statement* stmt, list<Identifier*> &);
@@ -306,6 +308,8 @@ class deviceVarsAnalyser
   bool initWhile(whileStmt*, list<Identifier*> &);
   bool initDoWhile(dowhileStmt*, list<Identifier*> &);
   bool initFor(forallStmt*, list<Identifier*> &);
+  bool initFixedPoint(fixedPointStmt*, list<Identifier*> &);
+  bool initProcCall(proc_callStmt*, list<Identifier*> &);
 
   void printStatement(statement* , int);
   void printBlock(blockStatement* , int);
@@ -336,6 +340,8 @@ class deviceVarsAnalyser
   statement* transferVarsDoWhile(dowhileStmt* stmt,blockStatement* parBlock);
   statement* transferVarsAssignment(assignment* stmt,blockStatement* parBlock);
   statement* transferVarsIfElse(ifStmt* stmt,blockStatement* parBlock);
+  statement* transferVarsFixedPoint(fixedPointStmt* stmt,blockStatement* parBlock);
+  statement* transferVarsProcCall(proc_callStmt* stmt, blockStatement* parBlock);
 };
 
 #endif
