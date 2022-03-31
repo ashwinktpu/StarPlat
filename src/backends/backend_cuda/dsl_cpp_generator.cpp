@@ -1281,7 +1281,7 @@ void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll, bool isMainF
         sprintf(strBuffer,"for (%s %s = %s[%s]; %s < %s[%s+1]; %s++)","int","edge","d_rev_meta",nodeNbr->getIdentifier(),"edge","d_rev_meta",nodeNbr->getIdentifier(),"edge");
         targetFile.pushstr_newL(strBuffer);
         targetFile.pushString("{");
-        sprintf(strBuffer,"%s %s = %s[%s] ;","int",iterator->getIdentifier(),"srcList","edge"); //needs to move the addition of
+        sprintf(strBuffer,"%s %s = %s[%s] ;","int",iterator->getIdentifier(),"d_data","edge"); //needs to move the addition of
          targetFile.pushstr_newL(strBuffer);
       } //statement to  a different method.
     }
@@ -1929,9 +1929,6 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
       if(flag_for_device_var ==0){
         generateExpr(declStmt->getExpressionAssigned(), true);
       }
-
-
-
     }
 
     else {

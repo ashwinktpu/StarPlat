@@ -94,14 +94,12 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
   initIndex<<<1,1>>>(1,d_diff,0, 0);
   ; // asst in .cu
 
-  float val
-  initIndex<<<1,1>>>(1,d_val,0, 0);
-  ; // asst in .cu
-
   do
   {diff = 0.000000;
     Compute_PR_kernel<<<numBlocks, numThreads>>>(V,E,d_meta,d_data,d_weight,g,beta,delta,maxIter,
       d_pageRank);
+    ; // asst in .cu
+
     ; // asst in .cu
 
     pageRank = pageRank_nxt;
