@@ -336,7 +336,7 @@ static ASTNode* createNodeForBval(bool value)
 {
     Expression* exprBVal=Expression::nodeForBooleanConstant(value);
     bool check=(exprBVal->getExpressionFamily()==EXPR_BOOLCONSTANT);
-    cout<<"CHECK PASSED "<<check<<"\n";
+    //cout<<"CHECK PASSED "<<check<<"\n";
     return exprBVal;
 }
 
