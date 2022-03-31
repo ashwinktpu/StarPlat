@@ -41,6 +41,7 @@
         "system_error": "cpp",
         "fstream": "cpp",
         "sstream": "cpp",
-        "streambuf": "cpp"
+        "streambuf": "cpp",
+        "input9": "cpp"
     }
 }
