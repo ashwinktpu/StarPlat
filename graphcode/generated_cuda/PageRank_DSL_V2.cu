@@ -62,10 +62,6 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
   unsigned numThreads   = (V < threadsPerBlock)? 512: V;
   unsigned numBlocks    = (numThreads+threadsPerBlock-1)/threadsPerBlock;
 
-  // For PageRank delta, beta and maxIter values
-  float beta = 0.001;
-  float delta = 0.85;
-  int maxIter = 100;
 
   // TIMER START
   cudaEvent_t start, stop;
@@ -81,8 +77,9 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
 
 
   //BEGIN DSL PARSING 
-  float num_nodes(float) = g.num_nodes( ); // asst in .cu
+  float num_nodes = (float)g.num_nodes( ); // asst in .cu
 
+  float* pageRank_nxt = (float*) malloc(sizeof(float)*V);
   float* d_pageRank_nxt;
   cudaMalloc(&d_pageRank_nxt, sizeof(float)*(V));
 
@@ -90,19 +87,33 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
 
   int iterCount = 0; // asst in .cu
 
-  float diff
-  initIndex<<<1,1>>>(1,d_diff,0, 0);
-  ; // asst in .cu
+  float diff; // asst in .cu
 
   do
   {diff = 0.000000;
-    Compute_PR_kernel<<<numBlocks, numThreads>>>(V,E,d_meta,d_data,d_weight,g,beta,delta,maxIter,
-      d_pageRank);
-    ; // asst in .cu
+    cudaMemcpyToSymbol(::diff, &diff, sizeof(float), 0, cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol(::num_nodes, &num_nodes, sizeof(float), 0, cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol(::delta, &delta, sizeof(float), 0, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_pageRank, pageRank, sizeof(float)*(V), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_pageRank_nxt, pageRank_nxt, sizeof(float)*(V), cudaMemcpyHostToDevice);
+    Compute_PR_kernel<<<numBlocks, numThreads>>>(V,E,d_meta,d_data,d_weight,d_rev_meta,d_pageRank,d_pageRank_nxt);
+    cudaDeviceSynchronize();
+    cudaMemcpyFromSymbol(&diff, ::diff, sizeof(float), 0, cudaMemcpyDeviceToHost);
+    cudaMemcpyFromSymbol(&num_nodes, ::num_nodes, sizeof(float), 0, cudaMemcpyDeviceToHost);
+    cudaMemcpyFromSymbol(&delta, ::delta, sizeof(float), 0, cudaMemcpyDeviceToHost);
+    cudaMemcpy(pageRank, d_pageRank, sizeof(float)*(V), cudaMemcpyDeviceToHost);
+    cudaMemcpy(pageRank_nxt, d_pageRank_nxt, sizeof(float)*(V), cudaMemcpyDeviceToHost);
+
+
 
     ; // asst in .cu
 
-    pageRank = pageRank_nxt;
+    ; // asst in .cu
+
+    for (int node = 0; node < V; node ++) 
+    {
+      pageRank [node] = pageRank_nxt [node] ;
+    }
     iterCount++;
   }while((diff > beta) && (iterCount < maxIter));//TIMER STOP
   cudaEventRecord(stop,0);

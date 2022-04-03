@@ -967,6 +967,7 @@ class formalParam:public ASTNode
      bool deviceVariable;
      bool accumulateKernel;
      int lhsType;
+      bool isPropCopy;
 
      public:
      assignment()
@@ -978,7 +979,7 @@ class formalParam:public ASTNode
          atomicSignal=false;
          deviceVariable=false;
          accumulateKernel=false;
-
+        isPropCopy = false;
     }
 
      static assignment* id_assignExpr(Identifier* identifierSent,Expression* expressionSent)
@@ -1063,6 +1064,13 @@ class formalParam:public ASTNode
       return accumulateKernel;
      }
 
+      void setPropCopy(){
+        isPropCopy = true;
+      }
+
+      bool hasPropCopy(){
+        return isPropCopy;
+      }
   };
 class whileStmt:public statement
 {

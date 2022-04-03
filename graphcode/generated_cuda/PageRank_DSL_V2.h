@@ -12,14 +12,19 @@
 void Compute_PR(graph& g,float beta,float delta,int maxIter,
   float* pageRank);
 
-__device__ float num_nodes = g.num_nodes( ); // DEVICE ASSTMENT in .h
+__device__ float beta ;
+__device__ float delta ;
+__device__ int maxIter ;
 
-__device__ int iterCount = 0; // DEVICE ASSTMENT in .h
 
-__device__ float diff; // DEVICE ASSTMENT in .h
+__device__ float num_nodes ; // DEVICE ASSTMENT in .h
 
-__global__ void Compute_PR_kernel(int V, int E, int* d_meta, int* d_data, int* d_weight ,graph& g, float beta, float delta, int maxIter, 
-  float* d_pageRank){ // BEGIN KER FUN via ADDKERNEL
+__device__ int iterCount ; // DEVICE ASSTMENT in .h
+
+__device__ float diff ; // DEVICE ASSTMENT in .h
+
+__global__ void Compute_PR_kernel(int V, int E, int* d_meta, int* d_data, int* d_weight, int *d_rev_meta,float* d_pageRank,float* d_pageRank_nxt){ // BEGIN KER FUN via ADDKERNEL
+  float num_nodes  = V;
   unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
   if(v >= V) return;
   float sum = 0.000000; // DEVICE ASSTMENT in .h

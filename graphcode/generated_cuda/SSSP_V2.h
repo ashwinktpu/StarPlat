@@ -11,9 +11,12 @@
 
 void Compute_SSSP(graph& g,int* dist,int src);
 
-__device__ bool finished = false; // DEVICE ASSTMENT in .h
 
-__global__ void Compute_SSSP_kernel(int V, int E, int* d_meta, int* d_data, int* d_weight ,graph& g, int* d_dist, int src){ // BEGIN KER FUN via ADDKERNEL
+
+__device__ bool finished ; // DEVICE ASSTMENT in .h
+
+__global__ void Compute_SSSP_kernel(int V, int E, int* d_meta, int* d_data, int* d_weight, int *d_rev_meta,bool *d_modified_next,bool* d_modified,int* d_dist){ // BEGIN KER FUN via ADDKERNEL
+  float num_nodes  = V;
   unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
   if(v >= V) return;
   if (d_modified[v] == true){ // if filter begin 

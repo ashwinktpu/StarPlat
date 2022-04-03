@@ -61,10 +61,6 @@ void Compute_TC(graph& g)
   unsigned numThreads   = (V < threadsPerBlock)? 512: V;
   unsigned numBlocks    = (numThreads+threadsPerBlock-1)/threadsPerBlock;
 
-  // For PageRank delta, beta and maxIter values
-  float beta = 0.001;
-  float delta = 0.85;
-  int maxIter = 100;
 
   // TIMER START
   cudaEvent_t start, stop;
@@ -77,9 +73,15 @@ void Compute_TC(graph& g)
   //DECLAR DEVICE AND HOST vars in params
 
   //BEGIN DSL PARSING 
-  long triangle_count = 0; // asst in .cu
+  int triangle_count = 0; // asst in .cu
 
-  Compute_TC_kernel<<<numBlocks, numThreads>>>(V,E,d_meta,d_data,d_weight,g);
+  cudaMemcpyToSymbol(::triangle_count, &triangle_count, sizeof(int), 0, cudaMemcpyHostToDevice);
+  Compute_TC_kernel<<<numBlocks, numThreads>>>(V,E,d_meta,d_data,d_weight,d_rev_meta);
+  cudaDeviceSynchronize();
+  cudaMemcpyFromSymbol(&triangle_count, ::triangle_count, sizeof(int), 0, cudaMemcpyDeviceToHost);
+
+
+
   //TIMER STOP
   cudaEventRecord(stop,0);
   cudaEventSynchronize(stop);
