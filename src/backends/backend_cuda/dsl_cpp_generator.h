@@ -161,6 +161,7 @@ class dsl_cpp_generator {
   void generateForKernel();
   void generateForKernel(Identifier*);
   void generateCudaIndex(const char* idName);
+  void generateCudaMemCpySymbol(char* var, const char* typeStr, bool direction);
   void generateCudaMalloc(Type* type, const char* identifier);
   void generateCudaMallocStr(const char* dVar, const char* type,
                              const char* sizeOfType);

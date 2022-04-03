@@ -15,10 +15,12 @@ void Compute_SSSP(graph& g,int* dist,int src)
   int *h_meta;
   int *h_data;
   int *h_weight;
+  int *h_rev_meta;
 
   h_meta = (int *)malloc( (V+1)*sizeof(int));
   h_data = (int *)malloc( (E)*sizeof(int));
   h_weight = (int *)malloc( (E)*sizeof(int));
+  h_rev_meta = (int *)malloc( (V+1)*sizeof(int));
 
   for(int i=0; i<= V; i++) {
     int temp = g.indexofNodes[i];
@@ -32,18 +34,26 @@ void Compute_SSSP(graph& g,int* dist,int src)
     h_weight[i] = temp;
   }
 
+  for(int i=0; i<= V; i++) {
+    int temp = g.rev_indexofNodes[i];
+    h_rev_meta[i] = temp;
+  }
+
 
   int* d_meta;
   int* d_data;
   int* d_weight;
+  int* d_rev_meta;
 
   cudaMalloc(&d_meta, sizeof(int)*(1+V));
   cudaMalloc(&d_data, sizeof(int)*(E));
   cudaMalloc(&d_weight, sizeof(int)*(E));
+  cudaMalloc(&d_rev_meta, sizeof(int)*(V+1));
 
   cudaMemcpy(  d_meta,   h_meta, sizeof(int)*(V+1), cudaMemcpyHostToDevice);
   cudaMemcpy(  d_data,   h_data, sizeof(int)*(E), cudaMemcpyHostToDevice);
   cudaMemcpy(d_weight, h_weight, sizeof(int)*(E), cudaMemcpyHostToDevice);
+  cudaMemcpy(d_rev_meta, h_rev_meta, sizeof(int)*(E), cudaMemcpyHostToDevice);
 
   // CSR END
   //LAUNCH CONFIG
@@ -66,6 +76,7 @@ void Compute_SSSP(graph& g,int* dist,int src)
 
 
   //BEGIN DSL PARSING 
+  bool* modified = (bool*) malloc(sizeof(bool)*V);
   bool* d_modified;
   cudaMalloc(&d_modified, sizeof(bool)*(V));
 
@@ -85,8 +96,17 @@ void Compute_SSSP(graph& g,int* dist,int src)
   //BEGIN FIXED POINT
   int k=0; // #fixpt-Iterations
   while(!finished) {
+
     initIndex<bool> <<<1,1>>>(1,d_finished,0,true);
-    Compute_SSSP_kernel<<<numBlocks, numThreads>>>(V,E,d_meta,d_data,d_weight,g,d_dist,src);
+    cudaMemcpy(d_modified, modified, sizeof(bool)*(V), cudaMemcpyHostToDevice);
+    cudaMemcpy(  d_dist,     dist, sizeof(int)*(V), cudaMemcpyHostToDevice);
+    Compute_SSSP_kernel<<<numBlocks, numThreads>>>(V,E,d_meta,d_data,d_weight,d_rev_meta,d_modified_next,d_modified,d_dist);
+    cudaDeviceSynchronize();
+    cudaMemcpy(modified, d_modified, sizeof(bool)*(V), cudaMemcpyDeviceToHost);
+    cudaMemcpy(    dist,   d_dist, sizeof(int)*(V), cudaMemcpyDeviceToHost);
+
+
+
     initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_prev, false);
     cudaMemcpy(&finished, d_finished, sizeof(bool)*(1), cudaMemcpyDeviceToHost);
     bool* tempModPtr = d_modified_next ; // SWAP next and prev ptrs

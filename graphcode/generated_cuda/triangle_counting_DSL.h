@@ -11,9 +11,12 @@
 
 void Compute_TC(graph& g);
 
-__device__ long triangle_count = 0; // DEVICE ASSTMENT in .h
 
-__global__ void Compute_TC_kernel(int V, int E, int* d_meta, int* d_data, int* d_weight ,graph& g){ // BEGIN KER FUN via ADDKERNEL
+
+__device__ int triangle_count ; // DEVICE ASSTMENT in .h
+
+__global__ void Compute_TC_kernel(int V, int E, int* d_meta, int* d_data, int* d_weight, int *d_rev_meta){ // BEGIN KER FUN via ADDKERNEL
+  float num_nodes  = V;
   unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
   if(v >= V) return;
   for (int edge = d_meta[v]; edge < d_meta[v+1]; edge++) { // FOR NBR ITR 
@@ -23,7 +26,7 @@ __global__ void Compute_TC_kernel(int V, int E, int* d_meta, int* d_data, int* d
         int w = d_data[edge];
         if (w > v){ // if filter begin 
           if (findNeighborSorted(u, w, d_meta, d_data)){ // if filter begin 
-            atomicAdd(& triangle_count, (long)1);
+            atomicAdd(& triangle_count, (int)1);
           } // if filter end
         } // if filter end
       } //  end FOR NBR ITR. TMP FIX!

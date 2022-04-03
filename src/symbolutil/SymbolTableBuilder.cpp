@@ -141,8 +141,26 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                 std::cout<< "\t\tSetting device bool" << '\n';
                 assign->flagAsDeviceVariable();
               }
+             }
 
-            }
+            Expression* exprAssigned = assign->getExpr();
+            checkForExpressions(exprAssigned);
+             
+             if(assign->lhs_isIdentifier())
+             {
+                  Identifier* id=assign->getId();
+                  if(id->getSymbolInfo()->getType()->isPropNodeType())
+                    {
+                        if(exprAssigned->isIdentifierExpr())
+                          {
+                              Identifier* rhsPropId = exprAssigned->getId();
+                              if(rhsPropId->getSymbolInfo()->getType()->isPropNodeType()){
+                                 assign->setPropCopy() ; 
+                              }
+                          }
+                    }
+                   
+              }
         break;
        }
        case NODE_FIXEDPTSTMT:

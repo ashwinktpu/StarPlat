@@ -1,6 +1,7 @@
 #include <string.h>
 #include <cassert>
 #include "dsl_cpp_generator.h"
+#include "getUsedVars.cpp"
 
 bool flag_for_device_var = 0;  //temporary fix to accomodate device variable and 
 
@@ -71,12 +72,6 @@ void dsl_cpp_generator::generateLaunchConfig(const char* name) {
   main.pushstr_newL(strBuffer);
   main.NewLine();
   // main.pushstr_newL("}");
-
-  //For only PageRank we have to put the values for certain parameters like delta and beta
-  main.pushstr_newL("// For PageRank delta, beta and maxIter values");
-  main.pushstr_newL("float beta = 0.001;");
-  main.pushstr_newL("float delta = 0.85;");
-  main.pushstr_newL("int maxIter = 100;");
 }
 
 void dsl_cpp_generator::generateCudaMemCpyStr(const char* sVarName,
@@ -134,7 +129,9 @@ void dsl_cpp_generator::generation_begin() {
   addIncludeToFile("../libcuda.cuh", header, false);
 
   header.pushstr_newL("#include <cooperative_groups.h>");
-  //~ header.pushstr_newL("#include <cooperative_groups.h>");
+  //header.pushstr_newL("graph &g = NULL;");  //temporary fix - to fix the PageRank graph g instance
+  
+  
   header.NewLine();
 
   main.pushString("#include ");
@@ -834,9 +831,24 @@ void dsl_cpp_generator::generateAssignmentStmt(assignment* asmt, bool isMainFile
   std::cout << "\tGenerate ASST STMT" << '\n';
   if (asmt->lhs_isIdentifier()) {
     Identifier* id = asmt->getId();
+    Expression* exprAssigned = asmt->getExpr();
+    if(asmt->hasPropCopy()) // prop_copy is of the form (propId = propId)
+       {
+         char strBuffer[1024] ;
+         Identifier* rhsPropId2 = exprAssigned->getId();
+         sprintf(strBuffer,"for (%s %s = 0; %s < %s; %s ++) ","int", "node" ,"node","V","node");
+         targetFile.pushstr_newL(strBuffer);     
+                                                                                        /* the graph associated                          */
+         targetFile.pushstr_newL("{");
+         sprintf(strBuffer,"%s [%s] = %s [%s] ;",id->getIdentifier(), "node",rhsPropId2->getIdentifier(),"node");
+         targetFile.pushstr_newL(strBuffer);
+         targetFile.pushstr_newL("}");
+
+       }
+       else
     //~ if(prefixNeed)
     //~ targetFile.pushString("d_");
-    targetFile.pushString(id->getIdentifier());
+          targetFile.pushString(id->getIdentifier());
 
   } else if (asmt->lhs_isProp())  // the check for node and edge property to be
                                   // carried out.
@@ -856,9 +868,13 @@ void dsl_cpp_generator::generateAssignmentStmt(assignment* asmt, bool isMainFile
     targetFile.pushString(propId->getIdentifier1()->getIdentifier());
     targetFile.push(']');
   }
+
+  if(!asmt->hasPropCopy())
+  {
   targetFile.pushString(" = ");
   generateExpr(asmt->getExpr(), isMainFile);
   targetFile.pushstr_newL(";");
+  }
 }
 
 void dsl_cpp_generator::generateAtomicDeviceAssignmentStmt(assignment* asmt,
@@ -869,7 +885,21 @@ void dsl_cpp_generator::generateAtomicDeviceAssignmentStmt(assignment* asmt,
   std::cout << "\tASST\n";
   if (asmt->lhs_isIdentifier()) {
     Identifier* id = asmt->getId();
+    Expression* exprAssigned = asmt->getExpr();
+    if(asmt->hasPropCopy()) // prop_copy is of the form (propId = propId)
+       {
+         char strBuffer[1024] ;
+         Identifier* rhsPropId2 = exprAssigned->getId();
+         sprintf(strBuffer,"for (%s %s = 0; %s < %s; %s ++) ","int", "node" ,"node","V","node");
+         targetFile.pushstr_newL(strBuffer);     
+                                                                                        /* the graph associated                          */
+         targetFile.pushstr_newL("{");
+         sprintf(strBuffer,"%s [%s] = %s [%s] ;",id->getIdentifier(), "node",rhsPropId2->getIdentifier(),"node");
+         targetFile.pushstr_newL(strBuffer);
+         targetFile.pushstr_newL("}");
 
+       }
+       else
     targetFile.pushString(id->getIdentifier());
   } else if (asmt->lhs_isProp())  // the check for node and edge property to be
                                   // carried out.
@@ -896,18 +926,19 @@ void dsl_cpp_generator::generateAtomicDeviceAssignmentStmt(assignment* asmt,
 
   if (isAtomic)
     targetFile.pushString(", ");
-  else
+  else if(!asmt->hasPropCopy())
     targetFile.pushString(" = ");
 
   //~ std::cout<< "------>BEG EXP"  << '\n';
-  generateExpr(asmt->getExpr(), isMainFile, isAtomic);
+  if(!asmt->hasPropCopy())
+    generateExpr(asmt->getExpr(), isMainFile, isAtomic);
   //~ std::cout<< "------>END EXP"  << '\n';
 
   if (isAtomic)
     targetFile.pushstr_newL(");");
   else if (isResult)
     targetFile.pushstr_newL("/2.0;");
-  else
+  else if(!asmt->hasPropCopy())
     targetFile.pushstr_newL(";");
 }
 void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment* asmt,
@@ -1482,20 +1513,34 @@ void dsl_cpp_generator :: addCudaKernel(forallStmt* forAll)
 
 
   Function* currentFunc = getCurrentFunc();
+  usedVariables usedVars = getVarsForAll(forAll);
+  list<Identifier*> vars = usedVars.getVariables();
 
    header.pushString("__global__ void ");
    header.pushString(getCurrentFunc()->getIdentifier()->getIdentifier());
    header.pushString("_kernel");
 
-  header.pushString("(int V, int E, int* d_meta, int* d_data, int* d_weight");
-  if(currentFunc->getParamList().size()!=0)
+  header.pushString("(int V, int E, int* d_meta, int* d_data, int* d_weight, int *d_rev_meta,bool *d_modified_next");
+  /*if(currentFunc->getParamList().size()!=0)
     {
       header.pushString(" ,");
       generateParamList(currentFunc->getParamList(), header);
+    }*/
+  for(Identifier* iden: vars)
+  {
+    Type* type = iden->getSymbolInfo()->getType();
+    if(type->isPropType())
+    {
+      char strBuffer[1024];
+      sprintf(strBuffer, ",%s d_%s", convertToCppType(type), iden->getIdentifier());
+      header.pushString(/*createParamName(*/strBuffer);
     }
+  }
+
   header.pushstr_newL("){ // BEGIN KER FUN via ADDKERNEL");
 
   sprintf(strBuffer, "unsigned %s = blockIdx.x * blockDim.x + threadIdx.x;", loopVar);
+  header.pushstr_newL("float num_nodes  = V;");
   header.pushstr_newL(strBuffer);
 
   sprintf(strBuffer, "if(%s >= V) return;", loopVar);
@@ -1565,21 +1610,69 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
     }
     */
     printf("Entered here for forall \n");
+
+    usedVariables usedVars = getVarsForAll(forAll);
+    list<Identifier*> vars = usedVars.getVariables();
+
+    for(Identifier* iden: vars){
+        Type* type = iden->getSymbolInfo()->getType();
+
+        if(type->isPrimitiveType())
+          generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), true);
+        else if(type->isPropType())
+        {
+          Type* innerType = type->getInnerTargetType();
+          string dIden = "d_" + string(iden->getIdentifier());
+          generateCudaMemCpyStr(dIden.c_str(), iden->getIdentifier(), convertToCppType(innerType), "V", true);
+        }
+    }
+    /*memcpy to symbol*/
+
     main.pushString(getCurrentFunc()->getIdentifier()->getIdentifier());
     main.pushString("_kernel");
     main.pushString("<<<");
     main.pushString("numBlocks, numThreads");
     main.pushString(">>>");
     main.push('(');
-    main.pushString("V,E,d_meta,d_data,d_weight");
-      if(currentFunc->getParamList().size()!=0)
-    {
-      main.pushString(",");
-      generateCallList(currentFunc->getParamList(), main);
-    }
+    main.pushString("V,E,d_meta,d_data,d_weight,d_rev_meta,d_modified_next");
+    //  if(currentFunc->getParamList().size()!=0)
+     // main.pushString(",");
+      for(Identifier* iden: vars)
+      {
+        Type* type = iden->getSymbolInfo()->getType();
+        if(type->isPropType())
+        {
+          main.pushString(",");
+          main.pushString("d_");
+          main.pushString(/*createParamName(*/iden->getIdentifier());
+        }
+      }
     main.pushString(")");
     main.push(';');
     main.NewLine();
+
+    main.pushString("cudaDeviceSynchronize();");
+    main.NewLine();
+
+    for(Identifier* iden: vars){
+        Type* type = iden->getSymbolInfo()->getType();
+        if(type->isPrimitiveType())
+          generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), false);
+        else if(type->isPropType())
+        {
+          Type* innerType = type->getInnerTargetType();
+          string dIden = "d_" + string(iden->getIdentifier());
+          generateCudaMemCpyStr(iden->getIdentifier(),dIden.c_str(), convertToCppType(innerType), "V", false);
+        }
+    }
+    /*memcpy from symbol*/
+
+    main.NewLine();
+   // main.pushString("cudaMemcpyFromSymbol(&diff_check, diff, sizeof(float));");
+    main.NewLine();
+   // main.pushString("diff = diff_check;");
+    main.NewLine();
+
     //~ main.pushString("// cudaDeviceSynchronize(); //SSSP");
     //~ main.NewLine();
     //~ main.NewLine();
@@ -1816,21 +1909,19 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
   //~ }
   if (type->isPropType()) {
     if (type->getInnerTargetType()->isPrimitiveType()) {
-      Type* innerType = type->getInnerTargetType();
-      main.pushString(convertToCppType(
-          innerType));  // convertToCppType need to be modified.
+
+       Type* innerType = type->getInnerTargetType();
+      char strBuffer[1024];
+      sprintf(strBuffer, "%s* %s = (%s) malloc(sizeof(%s)*V)", convertToCppType(innerType), declStmt->getdeclId()->getIdentifier(), convertToCppType(type),convertToCppType(innerType));
+      main.pushString(strBuffer);
+      main.pushstr_newL(";");
+
+      //for device copy for propnode
+      main.pushString(convertToCppType(innerType));  // convertToCppType need to be modified.
       main.pushString("*");
       main.space();
-      char str[80];
-      strcpy(str, "d_");
-      strcat(str, declStmt->getdeclId()->getIdentifier());
-      //~ variableList.push_back(std::make_pair(str,str));
-      //~ vars v({"int*",str,false});
-      //~ v.varType="int";
-      //~ v.varName="var";
-      //~ v.result =false;
-      //~ vList.push_back(new vars());
-      main.pushString(str);
+      main.pushString("d_");
+      main.pushString(declStmt->getdeclId()->getIdentifier());
       main.pushstr_newL(";");
       //~ cout << "B4 adding: " << str << " Size:" << vvList.size() << '\n';
       //~ vars *v = new vars("int *", str,false);
@@ -1897,13 +1988,14 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
     targetFile.pushString(stringBuffer);
     targetFile.pushString(";");
     */
-    if (flag_for_device_var ==0){
-     sprintf(strBuffer, "__device__ %s %s", varType, varName);
-     header.pushString(strBuffer);
+    if (isMainFile == true){  //to fix the PageRank we are doing this
+          sprintf(strBuffer, "__device__ %s %s ", varType, varName);
+          header.pushString(strBuffer);
     }
     /// REPLICATE ON HOST AND DEVICE
      sprintf(strBuffer, "%s %s", varType, varName);
      targetFile.pushString(strBuffer);
+  
 
     if (declStmt->isInitialized()) {
         // targetFile =
@@ -1911,34 +2003,34 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
       /* the following if conditions is for cases where the
          predefined functions are used as initializers
          but the variable's type doesnot match*/
+      
+
+      //~ sprintf(strBuffer, "initIndex<<<1,1>>>(1,d_%s,0, 0);",varName);
+      //~ targetFile.pushstr_newL(strBuffer);
+     /* if (flag_for_device_var ==0){ // fix to fix the issues of PR __device__
+        header.pushString(" = ");
+      }*/
+      targetFile.pushString(" = ");
       if (declStmt->getExpressionAssigned()->getExpressionFamily() == EXPR_PROCCALL) {
         proc_callExpr* pExpr = (proc_callExpr*)declStmt->getExpressionAssigned();
         Identifier* methodId = pExpr->getMethodId();
         castIfRequired(type, methodId, main);
 
       }
-
-      //~ sprintf(strBuffer, "initIndex<<<1,1>>>(1,d_%s,0, 0);",varName);
-      //~ targetFile.pushstr_newL(strBuffer);
-      if (flag_for_device_var ==0){ // fix to fix the issues of PR __device__
-        header.pushString(" = ");
-      }
-      targetFile.pushString(" = ");
-
-      generateExpr(declStmt->getExpressionAssigned(), false); // PRINTS RHS? YES
-      if(flag_for_device_var ==0){
+      generateExpr(declStmt->getExpressionAssigned(), isMainFile); // PRINTS RHS? YES
+      /*if(flag_for_device_var ==0){
         generateExpr(declStmt->getExpressionAssigned(), true);
-      }
+      }*/
     }
 
-    else {
+    /*else {
       main.NewLine();
       sprintf(strBuffer, "initIndex<<<1,1>>>(1,d_%s,0, 0);",varName);
         targetFile.pushstr_newL(strBuffer);
       //targetFile.pushString(" = ");
       //getDefaultValueforTypes(type->gettypeId());
      // targetFile.pushstr_newL(";");
-    }
+    }/**/
       header.pushstr_newL("; // DEVICE ASSTMENT in .h");
       header.NewLine();
 
@@ -2794,6 +2886,25 @@ const char* dsl_cpp_generator::convertToCppType(Type* type) {
   return "NA";
 }
 
+void dsl_cpp_generator::generateCudaMemCpySymbol(char* var, const char* typeStr, bool direction)
+{
+  char strBuffer[1024];
+  // cudaMalloc(&d_ nodeVal ,sizeof( int ) * V );
+  //                   1             2      3
+  if(direction)
+  {
+  sprintf(strBuffer, "cudaMemcpyToSymbol(::%s, &%s, sizeof(%s), 0, cudaMemcpyHostToDevice);", var, var,
+          typeStr);  // this assumes PropNode type  IS PROPNODE? V : E //else
+                     // might error later
+  }
+   else
+   {
+     sprintf(strBuffer, "cudaMemcpyFromSymbol(&%s, ::%s, sizeof(%s), 0, cudaMemcpyDeviceToHost);", var, var,
+          typeStr);
+   }
+  main.pushstr_newL(strBuffer);
+}
+
 void dsl_cpp_generator::generateCudaMallocStr(const char* dVar,
                                               const char* typeStr,
                                               const char* sizeOfType) {
@@ -3148,7 +3259,6 @@ void dsl_cpp_generator::generateFuncHeader(Function* proc, bool isMainFile) {
 
     Type* type = (*itr)->getType();
     targetFile.pushString(convertToCppType(type));
-
     char* parName = (*itr)->getIdentifier()->getIdentifier();
 
     targetFile.pushString(" ");
@@ -3195,7 +3305,26 @@ void dsl_cpp_generator::generateFuncHeader(Function* proc, bool isMainFile) {
   targetFile.pushString(")");
 
   if (!isMainFile)
+  {
     targetFile.pushString(";");
+    targetFile.NewLine();
+    targetFile.NewLine();
+
+    for(itr = paramList.begin(); itr != paramList.end(); itr++)
+    {
+      Type* type = (*itr)->getType();
+      char* parName = (*itr)->getIdentifier()->getIdentifier();
+
+      if(type->isPrimitiveType())
+      {
+        char strBuffer[1024];
+
+        sprintf(strBuffer, "__device__ %s %s ;", convertToCppType(type), parName);
+        targetFile.pushString(strBuffer);
+        targetFile.NewLine();
+      }
+    }
+  }
   //~ if (!isMainFile) {
   //~ targetFile.NewLine();
   //~ targetFile.pushString("{");
