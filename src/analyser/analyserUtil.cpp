@@ -135,15 +135,27 @@ public:
     list<Identifier *> getVariables(int type = READ_WRITE)
     {
         list<Identifier *> result;
-        if (type & 1)
+
+        if (type == READ)
         {
             for (pair<TableEntry *, Identifier *> iden : readVars)
                 result.push_back(iden.second);
         }
-        if (type & 2)
+        else if (type == WRITE)
         {
             for (pair<TableEntry *, Identifier *> iden : writeVars)
                 result.push_back(iden.second);
+        }
+        else if(type == READ_WRITE)
+        {
+            for (pair<TableEntry *, Identifier *> iden : readVars)
+                result.push_back(iden.second);
+            
+            for (pair<TableEntry *, Identifier *> iden : writeVars)
+            {
+                if(readVars.find(iden.first) == readVars.end())
+                    result.push_back(iden.second);
+            }
         }
         return result;
     }
