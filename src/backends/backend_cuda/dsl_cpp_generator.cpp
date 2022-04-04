@@ -59,12 +59,12 @@ void dsl_cpp_generator::generateLaunchConfig(const char* name) {
 
   char strBuffer[1024];
   main.NewLine();
-  const unsigned threadsPerBlock = 512;
+  const unsigned threadsPerBlock = 1024;
   const char* totalThreads = (strcmp(name, "nodes") == 0) ? "V" : "E";
   sprintf(strBuffer, "const unsigned threadsPerBlock = %u;", threadsPerBlock);
   main.pushstr_newL(strBuffer);
-  sprintf(strBuffer, "unsigned numThreads   = (%s < threadsPerBlock)? %u: %s;",
-          totalThreads, threadsPerBlock,totalThreads);
+  sprintf(strBuffer, "unsigned numThreads   = (%s < threadsPerBlock)? %s: %u;",
+          totalThreads,totalThreads, threadsPerBlock);
   main.pushstr_newL(strBuffer);
   sprintf(strBuffer,
           "unsigned numBlocks    = "
