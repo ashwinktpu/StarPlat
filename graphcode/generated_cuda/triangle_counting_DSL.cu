@@ -57,8 +57,8 @@ void Compute_TC(graph& g)
 
   // CSR END
   //LAUNCH CONFIG
-  const unsigned threadsPerBlock = 512;
-  unsigned numThreads   = (V < threadsPerBlock)? 512: V;
+  const unsigned threadsPerBlock = 1024;
+  unsigned numThreads   = (V < threadsPerBlock)? V: 1024;
   unsigned numBlocks    = (numThreads+threadsPerBlock-1)/threadsPerBlock;
 
 
@@ -76,7 +76,7 @@ void Compute_TC(graph& g)
   int triangle_count = 0; // asst in .cu
 
   cudaMemcpyToSymbol(::triangle_count, &triangle_count, sizeof(int), 0, cudaMemcpyHostToDevice);
-  Compute_TC_kernel<<<numBlocks, numThreads>>>(V,E,d_meta,d_data,d_weight,d_rev_meta);
+  Compute_TC_kernel<<<numBlocks, numThreads>>>(V,E,d_meta,d_data,d_weight,d_rev_meta,d_modified_next);
   cudaDeviceSynchronize();
   cudaMemcpyFromSymbol(&triangle_count, ::triangle_count, sizeof(int), 0, cudaMemcpyDeviceToHost);
 
