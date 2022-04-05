@@ -3,7 +3,7 @@
 #include "dsl_cpp_generator.h"
 #include "getUsedVars.cpp"
 
-bool flag_for_device_var = 0;  //temporary fix to accomodate device variable and 
+bool flag_for_device_var = 0;  //temporary fix to accomodate device variable and
 
 void dsl_cpp_generator::generateInitkernel(const char* name) {
   char strBuffer[1024];
@@ -52,23 +52,20 @@ void dsl_cpp_generator::generateInitkernel1(
 }
 
 void dsl_cpp_generator::generateLaunchConfig(const char* name) {
-  //~ const unsigned threadsPerBlock = 512;                                  //
+  //~ LAUNCH CONFIG
+  //~ const unsigned threadsPerBlock = 512;                                   //
   //~ unsigned numThreads   = V < threadsPerBlock ?  512: V;                  //
-  //LAUNCH CONFIG ~ unsigned numBlocks    =
-  //(numThreads+threadsPerBlock-1)/threadsPerBlock;//
+  //~ unsigned numBlocks    =(numThreads+threadsPerBlock-1)/threadsPerBlock;  //
 
   char strBuffer[1024];
   main.NewLine();
-  const unsigned threadsPerBlock = 1024;
+  const unsigned threadsPerBlock = 512;
   const char* totalThreads = (strcmp(name, "nodes") == 0) ? "V" : "E";
   sprintf(strBuffer, "const unsigned threadsPerBlock = %u;", threadsPerBlock);
   main.pushstr_newL(strBuffer);
-  sprintf(strBuffer, "unsigned numThreads   = (%s < threadsPerBlock)? %s: %u;",
-          totalThreads,totalThreads, threadsPerBlock);
+  sprintf(strBuffer, "unsigned numThreads   = (%s < threadsPerBlock)? %u: %s;",totalThreads,threadsPerBlock,totalThreads );
   main.pushstr_newL(strBuffer);
-  sprintf(strBuffer,
-          "unsigned numBlocks    = "
-          "(numThreads+threadsPerBlock-1)/threadsPerBlock;");
+  sprintf(strBuffer,"unsigned numBlocks = (numThreads+threadsPerBlock-1)/threadsPerBlock;");
   main.pushstr_newL(strBuffer);
   main.NewLine();
   // main.pushstr_newL("}");
@@ -130,8 +127,8 @@ void dsl_cpp_generator::generation_begin() {
 
   header.pushstr_newL("#include <cooperative_groups.h>");
   //header.pushstr_newL("graph &g = NULL;");  //temporary fix - to fix the PageRank graph g instance
-  
-  
+
+
   header.NewLine();
 
   main.pushString("#include ");
@@ -837,7 +834,7 @@ void dsl_cpp_generator::generateAssignmentStmt(assignment* asmt, bool isMainFile
          char strBuffer[1024] ;
          Identifier* rhsPropId2 = exprAssigned->getId();
          sprintf(strBuffer,"for (%s %s = 0; %s < %s; %s ++) ","int", "node" ,"node","V","node");
-         targetFile.pushstr_newL(strBuffer);     
+         targetFile.pushstr_newL(strBuffer);
                                                                                         /* the graph associated                          */
          targetFile.pushstr_newL("{");
          sprintf(strBuffer,"%s [%s] = %s [%s] ;",id->getIdentifier(), "node",rhsPropId2->getIdentifier(),"node");
@@ -891,7 +888,7 @@ void dsl_cpp_generator::generateAtomicDeviceAssignmentStmt(assignment* asmt,
          char strBuffer[1024] ;
          Identifier* rhsPropId2 = exprAssigned->getId();
          sprintf(strBuffer,"for (%s %s = 0; %s < %s; %s ++) ","int", "node" ,"node","V","node");
-         targetFile.pushstr_newL(strBuffer);     
+         targetFile.pushstr_newL(strBuffer);
                                                                                         /* the graph associated                          */
          targetFile.pushstr_newL("{");
          sprintf(strBuffer,"%s [%s] = %s [%s] ;",id->getIdentifier(), "node",rhsPropId2->getIdentifier(),"node");
@@ -951,7 +948,7 @@ void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment* asmt,
     Identifier* id = asmt->getId();
 
     targetFile.pushString(id->getIdentifier());
-  } 
+  }
   else if (asmt->lhs_isProp())  // the check for node and edge property to be
                                 // carried out.
   {
@@ -1995,7 +1992,7 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
     /// REPLICATE ON HOST AND DEVICE
      sprintf(strBuffer, "%s %s", varType, varName);
      targetFile.pushString(strBuffer);
-  
+
 
     if (declStmt->isInitialized()) {
         // targetFile =
@@ -2003,7 +2000,7 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
       /* the following if conditions is for cases where the
          predefined functions are used as initializers
          but the variable's type doesnot match*/
-      
+
 
       //~ sprintf(strBuffer, "initIndex<<<1,1>>>(1,d_%s,0, 0);",varName);
       //~ targetFile.pushstr_newL(strBuffer);
