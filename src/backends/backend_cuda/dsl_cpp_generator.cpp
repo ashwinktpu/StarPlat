@@ -1509,7 +1509,7 @@ void dsl_cpp_generator :: addCudaKernel(forallStmt* forAll)
 
 
 
-  Function* currentFunc = getCurrentFunc();
+  //~ Function* currentFunc = getCurrentFunc();
   usedVariables usedVars = getVarsForAll(forAll);
   list<Identifier*> vars = usedVars.getVariables();
 
@@ -2027,7 +2027,7 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
       //targetFile.pushString(" = ");
       //getDefaultValueforTypes(type->gettypeId());
      // targetFile.pushstr_newL(";");
-    }/**/
+    }*/
       header.pushstr_newL("; // DEVICE ASSTMENT in .h");
       header.NewLine();
 
@@ -2604,10 +2604,10 @@ void dsl_cpp_generator::generateStartTimer() {
 void dsl_cpp_generator::generateCudaMallocParams(list<formalParam*> paramList)
 {
 
-  char strBuffer[1024];
-  char buffer[1024];
-  bool isPrintType = true;
-  std::cout<< "varListSize:" << varList.size() << '\n';
+  //~ char strBuffer[1024];
+  //~ char buffer[1024];
+  //~ bool isPrintType = true;
+  //~ std::cout<< "varListSize:" << varList.size() << '\n';
   //~ for(auto itr=varList.begin();itr!=varList.end();itr++){
     //cout << (*itr)->getIdentifier() << endl;
     /*
@@ -2634,8 +2634,8 @@ void dsl_cpp_generator::generateCudaMallocParams(list<formalParam*> paramList)
   */
   //~ }
 
-  cout << "VARLIST\n========\n"<< varList.size() << endl;
-  cout << "VARLIST\n========" << endl;
+  //~ cout << "VARLIST\n========\n"<< varList.size() << endl;
+  //~ cout << "VARLIST\n========" << endl;
   list<formalParam*>::iterator itr;
 
   for(itr=paramList.begin();itr!=paramList.end();itr++)
@@ -3274,7 +3274,7 @@ void dsl_cpp_generator::generateFuncHeader(Function* proc, bool isMainFile) {
       //~ vv->result =false ;
       //~ varList.push_back(*vv);
       //~ varList.push_back({"double *", str,false});
-      Identifier* id = (*itr)->getIdentifier();
+      //~ Identifier* id = (*itr)->getIdentifier();
       if (type->isGraphType()) {
         std::cout << "========== SET TRUE" << '\n';
         genCSR = true;
