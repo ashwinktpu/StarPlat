@@ -910,7 +910,7 @@ void dsl_cpp_generator::generateAtomicDeviceAssignmentStmt(assignment* asmt,
       isAtomic = true;
       std::cout << "\t  ATOMIC ASST" << '\n';
     }
-    if (asmt->isAccumulateKernel()) {
+    if (asmt->isAccumulateKernel()) { // NOT needed
       isResult = true;
       std::cout << "\t  RESULT BC/2.0 ASST" << '\n';
     }
@@ -934,7 +934,7 @@ void dsl_cpp_generator::generateAtomicDeviceAssignmentStmt(assignment* asmt,
   if (isAtomic)
     targetFile.pushstr_newL(");");
   else if (isResult)
-    targetFile.pushstr_newL("/2.0;");
+    targetFile.pushstr_newL(";"); // No need "/2.0;" for directed graphs
   else if(!asmt->hasPropCopy())
     targetFile.pushstr_newL(";");
 }
