@@ -140,7 +140,7 @@ usedVariables getVarsReduction(reductionCallStmt *stmt)
         }
       }
       getVarsReductionCall(stmt->getReducCall());
-      
+
       for(ASTNode* node: stmt->getRightList())
       {
         if(node->getTypeofNode() == NODE_ID)
@@ -217,7 +217,7 @@ usedVariables getVarsForAll(forallStmt *stmt)
   {
       proc_callExpr *expr = stmt->getExtractElementFunc();
         for(argument* arg: expr->getArgList()){
-            if(arg->getExpr() != nullptr) 
+            if(arg->getExpr() != nullptr)
                 currVars.merge(getVarsExpr(arg->getExpr()));
         }
   }
@@ -294,7 +294,7 @@ usedVariables getVarsStatement(statement *stmt)
 
   case NODE_DOWHILESTMT:
       return getVarsDoWhile((dowhileStmt *)stmt);
-  
+
   case NODE_FORALLSTMT:
       return getVarsForAll((forallStmt *) stmt);
 
@@ -303,9 +303,11 @@ usedVariables getVarsStatement(statement *stmt)
 
     /*case NODE_ITRBFS:
       return getVarsBFS((iterateBFS *)stmt);
-      
+
     case NODE_FIXEDPTSTMT:
       return getVarsFixedPoint((fixedPointStmt *)stmt);*/
+  default:
+    ; // added to fix warning!
   }
 
   return usedVariables();
