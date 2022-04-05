@@ -912,7 +912,7 @@ void dsl_cpp_generator::generateAtomicDeviceAssignmentStmt(assignment* asmt,
     }
     if (asmt->isAccumulateKernel()) { // NOT needed
       isResult = true;
-      std::cout << "\t  RESULT BC/2.0 ASST" << '\n';
+      std::cout << "\t  RESULT NO BC by 2 ASST" << '\n';
     }
     targetFile.pushString("d_");  /// IMPORTANT
     targetFile.pushString(propId->getIdentifier2()->getIdentifier());
@@ -3014,6 +3014,9 @@ void dsl_cpp_generator::generateCSRArrays(const char* gId) {
   sprintf(strBuffer, "int temp = %s.indexofNodes[i];", gId);
   main.pushstr_newL(strBuffer);
   main.pushstr_newL("h_meta[i] = temp;");
+  sprintf(strBuffer, "temp = %s.rev_indexofNodes[i];", gId);
+  main.pushstr_newL(strBuffer);
+  main.pushstr_newL("h_rev_meta[i] = temp;");
   main.pushstr_newL("}");
   main.NewLine();
 
@@ -3026,14 +3029,13 @@ void dsl_cpp_generator::generateCSRArrays(const char* gId) {
   main.pushstr_newL("}");
   main.NewLine();
 
-  //to handle rev_offset array for pageRank only
-
-  main.pushstr_newL("for(int i=0; i<= V; i++) {");
-  sprintf(strBuffer, "int temp = %s.rev_indexofNodes[i];", gId);
-  main.pushstr_newL(strBuffer);
-  main.pushstr_newL("h_rev_meta[i] = temp;");
-  main.pushstr_newL("}");
-  main.NewLine();
+  //to handle rev_offset array for pageRank only // MOVED TO PREV FOR LOOP
+  //~ main.pushstr_newL("for(int i=0; i<= V; i++) {");
+  //~ sprintf(strBuffer, "int temp = %s.rev_indexofNodes[i];", gId);
+  //~ main.pushstr_newL(strBuffer);
+  //~ main.pushstr_newL("h_rev_meta[i] = temp;");
+  //~ main.pushstr_newL("}");
+  //~ main.NewLine();
 
 
   //-------------------------------------//
