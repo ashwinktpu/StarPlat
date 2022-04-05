@@ -1628,7 +1628,7 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
     main.pushString(getCurrentFunc()->getIdentifier()->getIdentifier());
     main.pushString("_kernel");
     main.pushString("<<<");
-    main.pushString("numBlocks, numThreads");
+    main.pushString("numBlocks, threadsPerBlock");
     main.pushString(">>>");
     main.push('(');
     main.pushString("V,E,d_meta,d_data,d_weight,d_rev_meta,d_modified_next");
