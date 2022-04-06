@@ -15,14 +15,18 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
   int *h_meta;
   int *h_data;
   int *h_weight;
+  int *h_rev_meta;
 
   h_meta = (int *)malloc( (V+1)*sizeof(int));
   h_data = (int *)malloc( (E)*sizeof(int));
   h_weight = (int *)malloc( (E)*sizeof(int));
+  h_rev_meta = (int *)malloc( (V+1)*sizeof(int));
 
   for(int i=0; i<= V; i++) {
     int temp = g.indexofNodes[i];
     h_meta[i] = temp;
+    temp = g.rev_indexofNodes[i];
+    h_rev_meta[i] = temp;
   }
 
   for(int i=0; i< E; i++) {
@@ -32,24 +36,32 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
     h_weight[i] = temp;
   }
 
+  for(int i=0; i<= V; i++) {
+    int temp = g.rev_indexofNodes[i];
+    h_rev_meta[i] = temp;
+  }
+
 
   int* d_meta;
   int* d_data;
   int* d_weight;
+  int* d_rev_meta;
 
   cudaMalloc(&d_meta, sizeof(int)*(1+V));
   cudaMalloc(&d_data, sizeof(int)*(E));
   cudaMalloc(&d_weight, sizeof(int)*(E));
+  cudaMalloc(&d_rev_meta, sizeof(int)*(V+1));
 
   cudaMemcpy(  d_meta,   h_meta, sizeof(int)*(V+1), cudaMemcpyHostToDevice);
   cudaMemcpy(  d_data,   h_data, sizeof(int)*(E), cudaMemcpyHostToDevice);
   cudaMemcpy(d_weight, h_weight, sizeof(int)*(E), cudaMemcpyHostToDevice);
+  cudaMemcpy(d_rev_meta, h_rev_meta, sizeof(int)*(E), cudaMemcpyHostToDevice);
 
   // CSR END
   //LAUNCH CONFIG
   const unsigned threadsPerBlock = 512;
   unsigned numThreads   = (V < threadsPerBlock)? 512: V;
-  unsigned numBlocks    = (numThreads+threadsPerBlock-1)/threadsPerBlock;
+  unsigned numBlocks = (numThreads+threadsPerBlock-1)/threadsPerBlock;
 
 
   // TIMER START
@@ -73,9 +85,11 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
   for(itr=sourceSet.begin();itr!=sourceSet.end();itr++) 
   {
     int src = *itr;
+    double* sigma = (double*) malloc(sizeof(double)*V);
     double* d_sigma;
     cudaMalloc(&d_sigma, sizeof(double)*(V));
 
+    float* delta = (float*) malloc(sizeof(float)*V);
     float* d_delta;
     cudaMalloc(&d_delta, sizeof(float)*(V));
 
@@ -83,7 +97,7 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
 
     initKernel<double> <<<numBlocks,threadsPerBlock>>>(V,d_sigma,0);
 
-    initIndex<double><<<1,1>>>(V,d_sigma,src,1.0); //InitIndexDevice
+    initIndex<double><<<1,1>>>(V,d_sigma,src,(double)1); //InitIndexDevice
 
     //EXTRA vars for ITBFS AND REVBFS
     bool finished;

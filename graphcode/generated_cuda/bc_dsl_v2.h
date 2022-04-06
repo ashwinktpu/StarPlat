@@ -11,6 +11,8 @@
 
 void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet);
 
+
+
 __global__ void fwd_pass(int n, int* d_meta,int* d_data,int* d_weight, float* d_delta, double* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished, float* d_BC) {
   unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
   if(v >= n) return;
@@ -39,7 +41,7 @@ __global__ void back_pass(int n, int* d_meta,int* d_data,int* d_weight, float* d
       } // end IF  
     } // end FOR
     grid.sync(); // Device-level syncs across all grids. Ref:https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#grid-synchronization-cg 
-    d_BC[v] = d_BC[v] + d_delta[v]/2.0;
+    d_BC[v] = d_BC[v] + d_delta[v];
   } // end if d lvl
 } // kernel end
 
