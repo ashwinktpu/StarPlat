@@ -38,8 +38,8 @@ void dsl_cpp_generator::generateInitkernel1(
       convertToCppType(inId->getSymbolInfo()->getType()->getInnerTargetType());
   const char* inVarName = inId->getIdentifier();
 
-  sprintf(strBuffer, "initKernel<%s> <<<numBlocks,threadsPerBlock>>>(V,d_%s,",
-          inVarType, inVarName);
+  sprintf(strBuffer, "initKernel<%s> <<<numBlocks,threadsPerBlock>>>(V,d_%s,(%s)",
+          inVarType, inVarName, inVarType);
   main.pushString(strBuffer);
 
   std::cout << "varName:" << inVarName << '\n';
@@ -59,7 +59,7 @@ void dsl_cpp_generator::generateLaunchConfig(const char* name) {
 
   char strBuffer[1024];
   main.NewLine();
-  const unsigned threadsPerBlock = 1024;
+  const unsigned threadsPerBlock = 512;
   const char* totalThreads = (strcmp(name, "nodes") == 0) ? "V" : "E";
   sprintf(strBuffer, "const unsigned threadsPerBlock = %u;", threadsPerBlock);
   main.pushstr_newL(strBuffer);
@@ -68,7 +68,7 @@ void dsl_cpp_generator::generateLaunchConfig(const char* name) {
   main.pushstr_newL(strBuffer);
   sprintf(strBuffer,
           "unsigned numBlocks    = "
-          "(numThreads+threadsPerBlock-1)/threadsPerBlock;");
+          "(%s+threadsPerBlock-1)/threadsPerBlock;", totalThreads);
   main.pushstr_newL(strBuffer);
   main.NewLine();
   // main.pushstr_newL("}");
@@ -890,14 +890,12 @@ void dsl_cpp_generator::generateAtomicDeviceAssignmentStmt(assignment* asmt,
        {
          char strBuffer[1024] ;
          Identifier* rhsPropId2 = exprAssigned->getId();
-         sprintf(strBuffer,"for (%s %s = 0; %s < %s; %s ++) ","int", "node" ,"node","V","node");
-         targetFile.pushstr_newL(strBuffer);     
-                                                                                        /* the graph associated                          */
-         targetFile.pushstr_newL("{");
-         sprintf(strBuffer,"%s [%s] = %s [%s] ;",id->getIdentifier(), "node",rhsPropId2->getIdentifier(),"node");
-         targetFile.pushstr_newL(strBuffer);
-         targetFile.pushstr_newL("}");
+         Type* type = id->getSymbolInfo()->getType();
 
+         sprintf(strBuffer, "cudaMemcpy(d_%s, d_%s, sizeof(%s)*V, cudaMemcpyDeviceToDevice)", id->getIdentifier(),
+                      rhsPropId2->getIdentifier(), convertToCppType(type->getInnerTargetType()));
+         targetFile.pushString(strBuffer);
+         targetFile.pushstr_newL(";");
        }
        else
     targetFile.pushString(id->getIdentifier());
@@ -1312,7 +1310,7 @@ void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll, bool isMainF
         sprintf(strBuffer,"for (%s %s = %s[%s]; %s < %s[%s+1]; %s++)","int","edge","d_rev_meta",nodeNbr->getIdentifier(),"edge","d_rev_meta",nodeNbr->getIdentifier(),"edge");
         targetFile.pushstr_newL(strBuffer);
         targetFile.pushString("{");
-        sprintf(strBuffer,"%s %s = %s[%s] ;","int",iterator->getIdentifier(),"d_data","edge"); //needs to move the addition of
+        sprintf(strBuffer,"%s %s = %s[%s] ;","int",iterator->getIdentifier(),"d_src","edge"); //needs to move the addition of
          targetFile.pushstr_newL(strBuffer);
       } //statement to  a different method.
     }
@@ -1520,7 +1518,7 @@ void dsl_cpp_generator :: addCudaKernel(forallStmt* forAll)
    header.pushString(getCurrentFunc()->getIdentifier()->getIdentifier());
    header.pushString("_kernel");
 
-  header.pushString("(int V, int E, int* d_meta, int* d_data, int* d_weight, int *d_rev_meta,bool *d_modified_next");
+  header.pushString("(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next");
   /*if(currentFunc->getParamList().size()!=0)
     {
       header.pushString(" ,");
@@ -1619,12 +1617,12 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
 
         if(type->isPrimitiveType())
           generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), true);
-        else if(type->isPropType())
+        /*else if(type->isPropType())
         {
           Type* innerType = type->getInnerTargetType();
           string dIden = "d_" + string(iden->getIdentifier());
           generateCudaMemCpyStr(dIden.c_str(), iden->getIdentifier(), convertToCppType(innerType), "V", true);
-        }
+        }*/
     }
     /*memcpy to symbol*/
 
@@ -1634,7 +1632,7 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
     main.pushString("numBlocks, numThreads");
     main.pushString(">>>");
     main.push('(');
-    main.pushString("V,E,d_meta,d_data,d_weight,d_rev_meta,d_modified_next");
+    main.pushString("V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next");
     //  if(currentFunc->getParamList().size()!=0)
      // main.pushString(",");
       for(Identifier* iden: vars)
@@ -1658,12 +1656,12 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
         Type* type = iden->getSymbolInfo()->getType();
         if(type->isPrimitiveType())
           generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), false);
-        else if(type->isPropType())
+        /*else if(type->isPropType())
         {
           Type* innerType = type->getInnerTargetType();
           string dIden = "d_" + string(iden->getIdentifier());
           generateCudaMemCpyStr(iden->getIdentifier(),dIden.c_str(), convertToCppType(innerType), "V", false);
-        }
+        }*/
     }
     /*memcpy from symbol*/
 
@@ -1912,9 +1910,9 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
 
        Type* innerType = type->getInnerTargetType();
       char strBuffer[1024];
-      sprintf(strBuffer, "%s* %s = (%s) malloc(sizeof(%s)*V)", convertToCppType(innerType), declStmt->getdeclId()->getIdentifier(), convertToCppType(type),convertToCppType(innerType));
-      main.pushString(strBuffer);
-      main.pushstr_newL(";");
+      //sprintf(strBuffer, "%s* %s = (%s) malloc(sizeof(%s)*V)", convertToCppType(innerType), declStmt->getdeclId()->getIdentifier(), convertToCppType(type),convertToCppType(innerType));
+      //main.pushString(strBuffer);
+      //main.pushstr_newL(";");
 
       //for device copy for propnode
       main.pushString(convertToCppType(innerType));  // convertToCppType need to be modified.
@@ -2470,27 +2468,27 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,
     }
   }
   const char *modifiedVar   = dependentId->getIdentifier();
-  const char *fixPointVar = fixedPointId->getIdentifier();
+  char *fixPointVar = fixedPointId->getIdentifier();
 
   const char *modifiedVarType = convertToCppType(dependentId->getSymbolInfo()->getType()->getInnerTargetType());
   const char *fixPointVarType = convertToCppType(fixedPointId->getSymbolInfo()->getType());
 
   targetFile.pushstr_newL("// FIXED POINT variables");
-  char modifiedVarPrev[80] = "d_";
+  //char modifiedVarPrev[80] = "d_";
   char modifiedVarNext[80] = "d_" ;
 
-  strcat(modifiedVarPrev, modifiedVar);strcat(modifiedVarPrev, "_prev");
+  //strcat(modifiedVarPrev, modifiedVar);strcat(modifiedVarPrev, "_prev");
   strcat(modifiedVarNext, modifiedVar);strcat(modifiedVarNext, "_next");
 
-  char devicefixPointVar[80] = "d_";
-  strcat(devicefixPointVar, fixPointVar);
+  //char devicefixPointVar[80] = "d_";
+  //strcat(devicefixPointVar, fixPointVar);
 
-  generateExtraDeviceVariable(fixPointVarType,fixPointVar, "1");
+ //generateExtraDeviceVariable(fixPointVarType,fixPointVar, "1");
 
-  generateExtraDeviceVariableNoD(modifiedVarType,modifiedVarPrev, "V");
-  generateExtraDeviceVariableNoD(modifiedVarType,modifiedVarNext, "V");
+  //generateExtraDeviceVariableNoD(modifiedVarType,modifiedVarPrev, "V");
+  //generateExtraDeviceVariableNoD(modifiedVarType,modifiedVarNext, "V");
 
-  targetFile.NewLine();
+  //targetFile.NewLine();
   //~ generateExtraDeviceVariable("bool",devicefixPointVar, "1");
 
 
@@ -2506,6 +2504,9 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,
           //~ cerr << "GRAPH AMBIGUILTY";
         //~ }
           targetFile.pushstr_newL("//BEGIN FIXED POINT");
+          sprintf(strBuffer,"initKernel<%s> <<<numBlocks,threadsPerBlock>>>(V, %s, false);", fixPointVarType, modifiedVarNext);
+          targetFile.pushstr_newL(strBuffer);
+
           targetFile.pushstr_newL("int k=0; // #fixpt-Iterations");
           sprintf(strBuffer, "while(!%s) {", fixPointVar);
           targetFile.pushstr_newL(strBuffer);
@@ -2522,33 +2523,44 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,
           //~ targetFile.pushString("Flg var:");targetFile.pushstr_newL(flagVar);
           //~ std::cout<< "BEFORE KERNEL" << '\n';
           main.NewLine();
-          sprintf(strBuffer, "initIndex<%s> <<<1,1>>>(1,%s,0,true);", fixPointVarType, devicefixPointVar);
-          targetFile.pushstr_newL(strBuffer);
+          //sprintf(strBuffer, "initIndex<%s> <<<1,1>>>(1,%s,0,true);", fixPointVarType, devicefixPointVar);
+          sprintf(strBuffer, "%s = %s", fixPointVar, "true");
+          targetFile.pushString(strBuffer);
+          targetFile.pushstr_newL(";");
+
+          generateCudaMemCpySymbol(fixPointVar, fixPointVarType, true);
+          //targetFile.pushstr_newL(strBuffer);
 
           if (fixedPointConstruct->getBody()->getTypeofNode() != NODE_BLOCKSTMT)
             generateStatement(fixedPointConstruct->getBody(), isMainFile);
           else
            generateBlock((blockStatement*)fixedPointConstruct->getBody(), false, isMainFile);
 
-
+           generateCudaMemCpySymbol(fixPointVar, fixPointVarType, false);
         //~ targetFile.pushstr_newL( "Compute_SSSP_kernel<<<num_blocks,block_size>>>(gpu_OA,gpu_edgeList, gpu_edgeLen ,gpu_dist,src, V " ",MAX_VAL , gpu_modified_prev, gpu_modified_next, gpu_finished);");
 
-        sprintf(strBuffer,"initKernel<%s> <<<numBlocks,threadsPerBlock>>>(V, %s, false);", fixPointVarType, modifiedVarPrev);
+        sprintf(strBuffer, "cudaMemcpy(d_%s, %s, sizeof(%s)*V, cudaMemcpyDeviceToDevice)", modifiedVar,
+                      modifiedVarNext, fixPointVarType);
+         targetFile.pushString(strBuffer);
+         targetFile.pushstr_newL(";");
+
+        sprintf(strBuffer,"initKernel<%s> <<<numBlocks,threadsPerBlock>>>(V, %s, false);", fixPointVarType, modifiedVarNext);
         targetFile.pushstr_newL(strBuffer);
 
-        generateCudaMemCpyStr("&finished", devicefixPointVar, fixPointVarType, "1", false);
+        //generateCudaMemCpyStr("&finished", devicefixPointVar, fixPointVarType, "1", false);
 
         //~ targetFile.pushstr_newL("cudaMemcpy(finished, finished,  sizeof(bool) *(1), cudaMemcpyDeviceToHost);");
-        sprintf(strBuffer, "%s* %s = %s ; // SWAP next and prev ptrs", modifiedVarType, "tempModPtr",modifiedVarNext);
-        targetFile.pushstr_newL(strBuffer);
+        //sprintf(strBuffer, "%s* %s = %s ; // SWAP next and prev ptrs", modifiedVarType, "tempModPtr",modifiedVarNext);
+        //targetFile.pushstr_newL(strBuffer);
 
         //~ sprintf(strBuffer, "%s* %s = %s_nxt ;", "bool", "tempModPtr",dependentId->getIdentifier());
         //~ targetFile.pushstr_newL(strBuffer);
 
-        sprintf(strBuffer, "%s = %s;", modifiedVarNext, modifiedVarPrev);
+        /*sprintf(strBuffer, "%s = %s;", modifiedVarNext, modifiedVarPrev);
         targetFile.pushstr_newL(strBuffer);
         sprintf(strBuffer, "%s = %s;", modifiedVarPrev,"tempModPtr");
-        targetFile.pushstr_newL(strBuffer);
+        targetFile.pushstr_newL(strBuffer);*/
+
         targetFile.pushstr_newL("k++;");
 
         Expression* initializer = dependentId->getSymbolInfo()->getId()->get_assignedExpr();
@@ -3003,12 +3015,14 @@ void dsl_cpp_generator::generateCSRArrays(const char* gId) {
   // These H & D arrays of CSR do not change. Hence hardcoded!
   main.pushstr_newL("int *h_meta;");
   main.pushstr_newL("int *h_data;");
+  main.pushstr_newL("int *h_src;");
   main.pushstr_newL("int *h_weight;");
   main.pushstr_newL("int *h_rev_meta;"); //done only to handle PR since other doesn't uses it
   main.NewLine();
 
   main.pushstr_newL("h_meta = (int *)malloc( (V+1)*sizeof(int));");
   main.pushstr_newL("h_data = (int *)malloc( (E)*sizeof(int));");
+  main.pushstr_newL("h_src = (int *)malloc( (E)*sizeof(int));");
   main.pushstr_newL("h_weight = (int *)malloc( (E)*sizeof(int));");
   main.pushstr_newL("h_rev_meta = (int *)malloc( (V+1)*sizeof(int));");
   main.NewLine();
@@ -3024,6 +3038,9 @@ void dsl_cpp_generator::generateCSRArrays(const char* gId) {
   sprintf(strBuffer, "int temp = %s.edgeList[i];", gId);
   main.pushstr_newL(strBuffer);
   main.pushstr_newL("h_data[i] = temp;");
+  sprintf(strBuffer, "temp = %s.srcList[i];", gId);
+  main.pushstr_newL(strBuffer);
+  main.pushstr_newL("h_src[i] = temp;");
   main.pushstr_newL("temp = edgeLen[i];");
   main.pushstr_newL("h_weight[i] = temp;");
   main.pushstr_newL("}");
@@ -3191,24 +3208,32 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
     main.pushstr_newL(strBuffer);
     sprintf(strBuffer, "int* d_data;");
     main.pushstr_newL(strBuffer);
+    sprintf(strBuffer, "int* d_src;");
+    main.pushstr_newL(strBuffer);
     sprintf(strBuffer, "int* d_weight;");
     main.pushstr_newL(strBuffer);
     sprintf(strBuffer, "int* d_rev_meta;");
+    main.pushstr_newL(strBuffer);
+    sprintf(strBuffer, "bool* d_modified_next;");
     main.pushstr_newL(strBuffer);
     main.NewLine();
 
     generateCudaMallocStr("d_meta", "int", "(1+V)");
     generateCudaMallocStr("d_data", "int", "(E)");
+    generateCudaMallocStr("d_src", "int", "(E)");
     generateCudaMallocStr("d_weight", "int", "(E)");
     generateCudaMallocStr("d_rev_meta", "int", "(V+1)");
+    generateCudaMallocStr("d_modified_next", "bool", "(V)");
+   
     main.NewLine();
 
     // h_meta h_data h_weight has to be populated!
 
     generateCudaMemCpyStr("d_meta", "h_meta", "int", "V+1");
     generateCudaMemCpyStr("d_data", "h_data", "int", "E");
+    generateCudaMemCpyStr("d_src", "h_src", "int", "E");
     generateCudaMemCpyStr("d_weight", "h_weight", "int", "E");
-    generateCudaMemCpyStr("d_rev_meta", "h_rev_meta", "int", "E");
+    generateCudaMemCpyStr("d_rev_meta", "h_rev_meta", "int", "(V+1)");
     main.NewLine();
 
     main.pushstr_newL("// CSR END");
