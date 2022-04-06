@@ -3,7 +3,7 @@
 #include "dsl_cpp_generator.h"
 #include "getUsedVars.cpp"
 
-bool flag_for_device_var = 0;  //temporary fix to accomodate device variable and 
+bool flag_for_device_var = 0;  //temporary fix to accomodate device variable and
 
 void dsl_cpp_generator::generateInitkernel(const char* name) {
   char strBuffer[1024];
@@ -52,10 +52,10 @@ void dsl_cpp_generator::generateInitkernel1(
 }
 
 void dsl_cpp_generator::generateLaunchConfig(const char* name) {
-  //~ const unsigned threadsPerBlock = 512;                                  //
+  //~ LAUNCH CONFIG
+  //~ const unsigned threadsPerBlock = 512;                                   //
   //~ unsigned numThreads   = V < threadsPerBlock ?  512: V;                  //
-  //LAUNCH CONFIG ~ unsigned numBlocks    =
-  //(numThreads+threadsPerBlock-1)/threadsPerBlock;//
+  //~ unsigned numBlocks    =(numThreads+threadsPerBlock-1)/threadsPerBlock;  //
 
   char strBuffer[1024];
   main.NewLine();
@@ -63,8 +63,7 @@ void dsl_cpp_generator::generateLaunchConfig(const char* name) {
   const char* totalThreads = (strcmp(name, "nodes") == 0) ? "V" : "E";
   sprintf(strBuffer, "const unsigned threadsPerBlock = %u;", threadsPerBlock);
   main.pushstr_newL(strBuffer);
-  sprintf(strBuffer, "unsigned numThreads   = (%s < threadsPerBlock)? %s: %u;",
-          totalThreads,totalThreads, threadsPerBlock);
+  sprintf(strBuffer, "unsigned numThreads   = (%s < threadsPerBlock)? %u: %s;",totalThreads,threadsPerBlock,totalThreads );
   main.pushstr_newL(strBuffer);
   sprintf(strBuffer,
           "unsigned numBlocks    = "
@@ -130,8 +129,8 @@ void dsl_cpp_generator::generation_begin() {
 
   header.pushstr_newL("#include <cooperative_groups.h>");
   //header.pushstr_newL("graph &g = NULL;");  //temporary fix - to fix the PageRank graph g instance
-  
-  
+
+
   header.NewLine();
 
   main.pushString("#include ");
@@ -837,7 +836,7 @@ void dsl_cpp_generator::generateAssignmentStmt(assignment* asmt, bool isMainFile
          char strBuffer[1024] ;
          Identifier* rhsPropId2 = exprAssigned->getId();
          sprintf(strBuffer,"for (%s %s = 0; %s < %s; %s ++) ","int", "node" ,"node","V","node");
-         targetFile.pushstr_newL(strBuffer);     
+         targetFile.pushstr_newL(strBuffer);
                                                                                         /* the graph associated                          */
          targetFile.pushstr_newL("{");
          sprintf(strBuffer,"%s [%s] = %s [%s] ;",id->getIdentifier(), "node",rhsPropId2->getIdentifier(),"node");
@@ -911,9 +910,9 @@ void dsl_cpp_generator::generateAtomicDeviceAssignmentStmt(assignment* asmt,
       isAtomic = true;
       std::cout << "\t  ATOMIC ASST" << '\n';
     }
-    if (asmt->isAccumulateKernel()) {
+    if (asmt->isAccumulateKernel()) { // NOT needed
       isResult = true;
-      std::cout << "\t  RESULT BC/2.0 ASST" << '\n';
+      std::cout << "\t  RESULT NO BC by 2 ASST" << '\n';
     }
     targetFile.pushString("d_");  /// IMPORTANT
     targetFile.pushString(propId->getIdentifier2()->getIdentifier());
@@ -935,7 +934,7 @@ void dsl_cpp_generator::generateAtomicDeviceAssignmentStmt(assignment* asmt,
   if (isAtomic)
     targetFile.pushstr_newL(");");
   else if (isResult)
-    targetFile.pushstr_newL("/2.0;");
+    targetFile.pushstr_newL(";"); // No need "/2.0;" for directed graphs
   else if(!asmt->hasPropCopy())
     targetFile.pushstr_newL(";");
 }
@@ -949,7 +948,7 @@ void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment* asmt,
     Identifier* id = asmt->getId();
 
     targetFile.pushString(id->getIdentifier());
-  } 
+  }
   else if (asmt->lhs_isProp())  // the check for node and edge property to be
                                 // carried out.
   {
@@ -1510,7 +1509,7 @@ void dsl_cpp_generator :: addCudaKernel(forallStmt* forAll)
 
 
 
-  Function* currentFunc = getCurrentFunc();
+  //~ Function* currentFunc = getCurrentFunc();
   usedVariables usedVars = getVarsForAll(forAll);
   list<Identifier*> vars = usedVars.getVariables();
 
@@ -1629,7 +1628,7 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
     main.pushString(getCurrentFunc()->getIdentifier()->getIdentifier());
     main.pushString("_kernel");
     main.pushString("<<<");
-    main.pushString("numBlocks, numThreads");
+    main.pushString("numBlocks, threadsPerBlock");
     main.pushString(">>>");
     main.push('(');
     main.pushString("V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next");
@@ -1993,7 +1992,7 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
     /// REPLICATE ON HOST AND DEVICE
      sprintf(strBuffer, "%s %s", varType, varName);
      targetFile.pushString(strBuffer);
-  
+
 
     if (declStmt->isInitialized()) {
         // targetFile =
@@ -2001,7 +2000,7 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
       /* the following if conditions is for cases where the
          predefined functions are used as initializers
          but the variable's type doesnot match*/
-      
+
 
       //~ sprintf(strBuffer, "initIndex<<<1,1>>>(1,d_%s,0, 0);",varName);
       //~ targetFile.pushstr_newL(strBuffer);
@@ -2028,7 +2027,7 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
       //targetFile.pushString(" = ");
       //getDefaultValueforTypes(type->gettypeId());
      // targetFile.pushstr_newL(";");
-    }/**/
+    }*/
       header.pushstr_newL("; // DEVICE ASSTMENT in .h");
       header.NewLine();
 
@@ -2619,10 +2618,10 @@ void dsl_cpp_generator::generateStartTimer() {
 void dsl_cpp_generator::generateCudaMallocParams(list<formalParam*> paramList)
 {
 
-  char strBuffer[1024];
-  char buffer[1024];
-  bool isPrintType = true;
-  std::cout<< "varListSize:" << varList.size() << '\n';
+  //~ char strBuffer[1024];
+  //~ char buffer[1024];
+  //~ bool isPrintType = true;
+  //~ std::cout<< "varListSize:" << varList.size() << '\n';
   //~ for(auto itr=varList.begin();itr!=varList.end();itr++){
     //cout << (*itr)->getIdentifier() << endl;
     /*
@@ -2649,8 +2648,8 @@ void dsl_cpp_generator::generateCudaMallocParams(list<formalParam*> paramList)
   */
   //~ }
 
-  cout << "VARLIST\n========\n"<< varList.size() << endl;
-  cout << "VARLIST\n========" << endl;
+  //~ cout << "VARLIST\n========\n"<< varList.size() << endl;
+  //~ cout << "VARLIST\n========" << endl;
   list<formalParam*>::iterator itr;
 
   for(itr=paramList.begin();itr!=paramList.end();itr++)
@@ -3031,6 +3030,9 @@ void dsl_cpp_generator::generateCSRArrays(const char* gId) {
   sprintf(strBuffer, "int temp = %s.indexofNodes[i];", gId);
   main.pushstr_newL(strBuffer);
   main.pushstr_newL("h_meta[i] = temp;");
+  sprintf(strBuffer, "temp = %s.rev_indexofNodes[i];", gId);
+  main.pushstr_newL(strBuffer);
+  main.pushstr_newL("h_rev_meta[i] = temp;");
   main.pushstr_newL("}");
   main.NewLine();
 
@@ -3046,14 +3048,13 @@ void dsl_cpp_generator::generateCSRArrays(const char* gId) {
   main.pushstr_newL("}");
   main.NewLine();
 
-  //to handle rev_offset array for pageRank only
-
-  main.pushstr_newL("for(int i=0; i<= V; i++) {");
-  sprintf(strBuffer, "int temp = %s.rev_indexofNodes[i];", gId);
-  main.pushstr_newL(strBuffer);
-  main.pushstr_newL("h_rev_meta[i] = temp;");
-  main.pushstr_newL("}");
-  main.NewLine();
+  //to handle rev_offset array for pageRank only // MOVED TO PREV FOR LOOP
+  //~ main.pushstr_newL("for(int i=0; i<= V; i++) {");
+  //~ sprintf(strBuffer, "int temp = %s.rev_indexofNodes[i];", gId);
+  //~ main.pushstr_newL(strBuffer);
+  //~ main.pushstr_newL("h_rev_meta[i] = temp;");
+  //~ main.pushstr_newL("}");
+  //~ main.NewLine();
 
 
   //-------------------------------------//
@@ -3302,7 +3303,7 @@ void dsl_cpp_generator::generateFuncHeader(Function* proc, bool isMainFile) {
       //~ vv->result =false ;
       //~ varList.push_back(*vv);
       //~ varList.push_back({"double *", str,false});
-      Identifier* id = (*itr)->getIdentifier();
+      //~ Identifier* id = (*itr)->getIdentifier();
       if (type->isGraphType()) {
         std::cout << "========== SET TRUE" << '\n';
         genCSR = true;
