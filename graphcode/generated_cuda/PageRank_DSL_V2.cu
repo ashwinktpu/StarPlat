@@ -15,11 +15,13 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
 
   int *h_meta;
   int *h_data;
+  int *h_src;
   int *h_weight;
   int *h_rev_meta;
 
   h_meta = (int *)malloc( (V+1)*sizeof(int));
   h_data = (int *)malloc( (E)*sizeof(int));
+  h_src = (int *)malloc( (E)*sizeof(int));
   h_weight = (int *)malloc( (E)*sizeof(int));
   h_rev_meta = (int *)malloc( (V+1)*sizeof(int));
 
@@ -31,6 +33,8 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
   for(int i=0; i< E; i++) {
     int temp = g.edgeList[i];
     h_data[i] = temp;
+    temp = srcList[i];
+    h_src[i] = temp;
     temp = edgeLen[i];
     h_weight[i] = temp;
   }
@@ -43,24 +47,29 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
 
   int* d_meta;
   int* d_data;
+  int* d_src;
   int* d_weight;
   int* d_rev_meta;
+  bool* d_modified_next;
 
   cudaMalloc(&d_meta, sizeof(int)*(1+V));
   cudaMalloc(&d_data, sizeof(int)*(E));
+  cudaMalloc(&d_src, sizeof(int)*(E));
   cudaMalloc(&d_weight, sizeof(int)*(E));
   cudaMalloc(&d_rev_meta, sizeof(int)*(V+1));
+  cudaMalloc(&d_modified_next, sizeof(bool)*(V));
 
   cudaMemcpy(  d_meta,   h_meta, sizeof(int)*(V+1), cudaMemcpyHostToDevice);
   cudaMemcpy(  d_data,   h_data, sizeof(int)*(E), cudaMemcpyHostToDevice);
+  cudaMemcpy(   d_src,    h_src, sizeof(int)*(E), cudaMemcpyHostToDevice);
   cudaMemcpy(d_weight, h_weight, sizeof(int)*(E), cudaMemcpyHostToDevice);
-  cudaMemcpy(d_rev_meta, h_rev_meta, sizeof(int)*(E), cudaMemcpyHostToDevice);
+  cudaMemcpy(d_rev_meta, h_rev_meta, sizeof(int)*((V+1)), cudaMemcpyHostToDevice);
 
   // CSR END
   //LAUNCH CONFIG
   const unsigned threadsPerBlock = 512;
-  unsigned numThreads   = (V < threadsPerBlock)? 512: V;
-  unsigned numBlocks    = (numThreads+threadsPerBlock-1)/threadsPerBlock;
+  unsigned numThreads   = (V < threadsPerBlock)? V: 512;
+  unsigned numBlocks    = (V+threadsPerBlock-1)/threadsPerBlock;
 
 
   // TIMER START
@@ -79,11 +88,10 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
   //BEGIN DSL PARSING 
   float num_nodes = (float)g.num_nodes( ); // asst in .cu
 
-  float* pageRank_nxt = (float*) malloc(sizeof(float)*V);
   float* d_pageRank_nxt;
   cudaMalloc(&d_pageRank_nxt, sizeof(float)*(V));
 
-  initKernel<float> <<<numBlocks,threadsPerBlock>>>(V,d_pageRank,1 / num_nodes);
+  initKernel<float> <<<numBlocks,threadsPerBlock>>>(V,d_pageRank,(float)1 / num_nodes);
 
   int iterCount = 0; // asst in .cu
 
@@ -92,17 +100,13 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
   do
   {diff = 0.000000;
     cudaMemcpyToSymbol(::diff, &diff, sizeof(float), 0, cudaMemcpyHostToDevice);
-    cudaMemcpyToSymbol(::num_nodes, &num_nodes, sizeof(float), 0, cudaMemcpyHostToDevice);
     cudaMemcpyToSymbol(::delta, &delta, sizeof(float), 0, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_pageRank, pageRank, sizeof(float)*(V), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_pageRank_nxt, pageRank_nxt, sizeof(float)*(V), cudaMemcpyHostToDevice);
-    Compute_PR_kernel<<<numBlocks, numThreads>>>(V,E,d_meta,d_data,d_weight,d_rev_meta,d_pageRank,d_pageRank_nxt);
+    cudaMemcpyToSymbol(::num_nodes, &num_nodes, sizeof(float), 0, cudaMemcpyHostToDevice);
+    Compute_PR_kernel<<<numBlocks, numThreads>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_pageRank,d_pageRank_nxt);
     cudaDeviceSynchronize();
     cudaMemcpyFromSymbol(&diff, ::diff, sizeof(float), 0, cudaMemcpyDeviceToHost);
-    cudaMemcpyFromSymbol(&num_nodes, ::num_nodes, sizeof(float), 0, cudaMemcpyDeviceToHost);
     cudaMemcpyFromSymbol(&delta, ::delta, sizeof(float), 0, cudaMemcpyDeviceToHost);
-    cudaMemcpy(pageRank, d_pageRank, sizeof(float)*(V), cudaMemcpyDeviceToHost);
-    cudaMemcpy(pageRank_nxt, d_pageRank_nxt, sizeof(float)*(V), cudaMemcpyDeviceToHost);
+    cudaMemcpyFromSymbol(&num_nodes, ::num_nodes, sizeof(float), 0, cudaMemcpyDeviceToHost);
 
 
 
@@ -110,10 +114,7 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
 
     ; // asst in .cu
 
-    for (int node = 0; node < V; node ++) 
-    {
-      pageRank [node] = pageRank_nxt [node] ;
-    }
+    cudaMemcpy(d_pageRank, d_pageRank_nxt, sizeof(float)*V, cudaMemcpyDeviceToDevice);
     iterCount++;
   }while((diff > beta) && (iterCount < maxIter));//TIMER STOP
   cudaEventRecord(stop,0);

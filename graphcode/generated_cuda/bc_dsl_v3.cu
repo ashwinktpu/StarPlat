@@ -1,11 +1,12 @@
+// FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
 #include "bc_dsl_v3.h"
 
 void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
 
 {
   // CSR BEGIN
-  unsigned V = g.num_nodes();
-  unsigned E = g.num_edges();
+  int V = g.num_nodes();
+  int E = g.num_edges();
 
   printf("#nodes:%d\n",V);
   printf("#edges:%d\n",E);
@@ -13,11 +14,15 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
 
   int *h_meta;
   int *h_data;
+  int *h_src;
   int *h_weight;
+  int *h_rev_meta;
 
   h_meta = (int *)malloc( (V+1)*sizeof(int));
   h_data = (int *)malloc( (E)*sizeof(int));
+  h_src = (int *)malloc( (E)*sizeof(int));
   h_weight = (int *)malloc( (E)*sizeof(int));
+  h_rev_meta = (int *)malloc( (V+1)*sizeof(int));
 
   for(int i=0; i<= V; i++) {
     int temp = g.indexofNodes[i];
@@ -27,28 +32,43 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
   for(int i=0; i< E; i++) {
     int temp = g.edgeList[i];
     h_data[i] = temp;
+    temp = srcList[i];
+    h_src[i] = temp;
     temp = edgeLen[i];
     h_weight[i] = temp;
+  }
+
+  for(int i=0; i<= V; i++) {
+    int temp = g.rev_indexofNodes[i];
+    h_rev_meta[i] = temp;
   }
 
 
   int* d_meta;
   int* d_data;
+  int* d_src;
   int* d_weight;
+  int* d_rev_meta;
+  bool* d_modified_next;
 
   cudaMalloc(&d_meta, sizeof(int)*(1+V));
   cudaMalloc(&d_data, sizeof(int)*(E));
+  cudaMalloc(&d_src, sizeof(int)*(E));
   cudaMalloc(&d_weight, sizeof(int)*(E));
+  cudaMalloc(&d_rev_meta, sizeof(int)*(V+1));
+  cudaMalloc(&d_modified_next, sizeof(bool)*(V));
 
   cudaMemcpy(  d_meta,   h_meta, sizeof(int)*(V+1), cudaMemcpyHostToDevice);
   cudaMemcpy(  d_data,   h_data, sizeof(int)*(E), cudaMemcpyHostToDevice);
+  cudaMemcpy(   d_src,    h_src, sizeof(int)*(E), cudaMemcpyHostToDevice);
   cudaMemcpy(d_weight, h_weight, sizeof(int)*(E), cudaMemcpyHostToDevice);
+  cudaMemcpy(d_rev_meta, h_rev_meta, sizeof(int)*((V+1)), cudaMemcpyHostToDevice);
 
   // CSR END
   //LAUNCH CONFIG
   const unsigned threadsPerBlock = 512;
-  unsigned numThreads   = (V < threadsPerBlock)? 512: V;
-  unsigned numBlocks    = (numThreads+threadsPerBlock-1)/threadsPerBlock;
+  unsigned numThreads   = (V < threadsPerBlock)? V: 512;
+  unsigned numBlocks    = (V+threadsPerBlock-1)/threadsPerBlock;
 
 
   // TIMER START
@@ -58,13 +78,14 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
   float milliseconds = 0;
   cudaEventRecord(start,0);
 
-  //END CSR
 
   //DECLAR DEVICE AND HOST vars in params
-  double* d_BC; cudaMalloc(&d_BC, sizeof(double)*(V)); ///TODO from func
+  double* d_BC;
+  cudaMalloc(&d_BC, sizeof(double)*(V));
 
-  //BEGIN DSL PARSING
-  initKernel<double> <<<numBlocks,threadsPerBlock>>>(V,d_BC,0);
+
+  //BEGIN DSL PARSING 
+  initKernel<double> <<<numBlocks,threadsPerBlock>>>(V,d_BC,(double)0);
 
   double* d_sigma;
   cudaMalloc(&d_sigma, sizeof(double)*(V));
@@ -72,16 +93,16 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
   double* d_delta;
   cudaMalloc(&d_delta, sizeof(double)*(V));
 
-  //FOR SIGNATURE of SET
+  //FOR SIGNATURE of SET - Assumes set for on .cu only
   std::set<int>::iterator itr;
-  for(itr=sourceSet.begin();itr!=sourceSet.end();itr++)
+  for(itr=sourceSet.begin();itr!=sourceSet.end();itr++) 
   {
-    unsigned src = (unsigned)*itr;
-    initKernel<double> <<<numBlocks,threadsPerBlock>>>(V,d_delta,0);
+    int src = *itr;
+    initKernel<double> <<<numBlocks,threadsPerBlock>>>(V,d_delta,(double)0);
 
-    initKernel<double> <<<numBlocks,threadsPerBlock>>>(V,d_sigma,0);
+    initKernel<double> <<<numBlocks,threadsPerBlock>>>(V,d_sigma,(double)0);
 
-    initIndex<double><<<1,1>>>(V,d_sigma,src,1);
+    initIndex<double><<<1,1>>>(V,d_sigma,src,(double)1); //InitIndexDevice
 
     //EXTRA vars for ITBFS AND REVBFS
     bool finished;
@@ -130,73 +151,5 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
   cudaEventElapsedTime(&milliseconds, start, stop);
   printf("GPU Time: %.6f ms\n", milliseconds);
 
-  cudaMemcpy(BC,d_BC , sizeof(double) * (V), cudaMemcpyDeviceToHost);
+  cudaMemcpy(      BC,     d_BC, sizeof(double)*(V), cudaMemcpyDeviceToHost);
 } //end FUN
-
-// driver program to test above function
-int main(int argc , char ** argv)
-{
-  graph G(argv[1]);
-  G.parseGraph();
-  bool printAns = false;
-
-  std::set<int> src;
-
-  if(argc>3) { // ./a.out inputfile srcFile -p
-      printAns = true;
-  }
-
-  // Check and READ Src file =================
-
-  std::string line;
-  std::ifstream srcfile(argv[2]);
-  if (!srcfile.is_open()) {
-    std::cout << "Unable to open src file :" << argv[1] << std::endl;
-    exit(1);
-  }
-
-
-  int nodeVal;
-  while ( std::getline (srcfile,line) ) {
-   std::stringstream ss(line);
-   ss>> nodeVal;
-   //~ std::cout << "src " << nodeVal << '\n';
-   src.insert(nodeVal);
-  }
-
-  srcfile.close();
-  printf("#srces:%d\n",src.size());
-  //==========================================
-
-
-
-
-    //~ cudaEvent_t start, stop; // should not be here!
-    //~ cudaEventCreate(&start);
-    //~ cudaEventCreate(&stop);
-    //~ float milliseconds = 0;
-    //~ cudaEventRecord(start,0);
-    unsigned V = G.num_nodes();
-    unsigned E = G.num_nodes();
-    double* BC = (double *)malloc(sizeof(double)*V);
-    Compute_BC(G,BC,src);
-
-    int LIMIT = 9;
-    if(printAns)
-     LIMIT=V;
-
-    for (int i = 0; i < LIMIT; i++){
-      printf("%lf\n", BC[i]);
-    }
-
-    //~ cudaDeviceSynchronize();
-
-    //~ cudaEventRecord(stop,0);
-    //~ cudaEventSynchronize(stop);
-    //~ cudaEventElapsedTime(&milliseconds, start, stop);
-    //~ printf("Time taken by function to execute is: %.6f ms\n", milliseconds);
-    cudaCheckError();
-
-  return 0;
-
-}
