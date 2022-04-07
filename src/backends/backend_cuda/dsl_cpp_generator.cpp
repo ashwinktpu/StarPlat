@@ -1908,7 +1908,7 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
     if (type->getInnerTargetType()->isPrimitiveType()) {
 
        Type* innerType = type->getInnerTargetType();
-      char strBuffer[1024];
+      //~ char strBuffer[1024];
       //sprintf(strBuffer, "%s* %s = (%s) malloc(sizeof(%s)*V)", convertToCppType(innerType), declStmt->getdeclId()->getIdentifier(), convertToCppType(type),convertToCppType(innerType));
       //main.pushString(strBuffer);
       //main.pushstr_newL(";");
@@ -2469,7 +2469,7 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,
   const char *modifiedVar   = dependentId->getIdentifier();
   char *fixPointVar = fixedPointId->getIdentifier();
 
-  const char *modifiedVarType = convertToCppType(dependentId->getSymbolInfo()->getType()->getInnerTargetType());
+  //~ const char *modifiedVarType = convertToCppType(dependentId->getSymbolInfo()->getType()->getInnerTargetType()); // BOTH are of type bool
   const char *fixPointVarType = convertToCppType(fixedPointId->getSymbolInfo()->getType());
 
   targetFile.pushstr_newL("// FIXED POINT variables");
@@ -2533,9 +2533,9 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,
           if (fixedPointConstruct->getBody()->getTypeofNode() != NODE_BLOCKSTMT)
             generateStatement(fixedPointConstruct->getBody(), isMainFile);
           else
-           generateBlock((blockStatement*)fixedPointConstruct->getBody(), false, isMainFile);
+            generateBlock((blockStatement*)fixedPointConstruct->getBody(), false, isMainFile);
 
-           generateCudaMemCpySymbol(fixPointVar, fixPointVarType, false);
+          generateCudaMemCpySymbol(fixPointVar, fixPointVarType, false);
         //~ targetFile.pushstr_newL( "Compute_SSSP_kernel<<<num_blocks,block_size>>>(gpu_OA,gpu_edgeList, gpu_edgeLen ,gpu_dist,src, V " ",MAX_VAL , gpu_modified_prev, gpu_modified_next, gpu_finished);");
 
         sprintf(strBuffer, "cudaMemcpy(d_%s, %s, sizeof(%s)*V, cudaMemcpyDeviceToDevice)", modifiedVar,
@@ -3225,7 +3225,7 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
     generateCudaMallocStr("d_weight", "int", "(E)");
     generateCudaMallocStr("d_rev_meta", "int", "(V+1)");
     generateCudaMallocStr("d_modified_next", "bool", "(V)");
-   
+
     main.NewLine();
 
     // h_meta h_data h_weight has to be populated!
