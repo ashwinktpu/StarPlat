@@ -232,6 +232,38 @@ void dsl_cpp_generator::addCudaRevBFSIterationLoop(iterateBFS* bfsAbstraction) {
   //;",bfsAbstraction->getIteratorNode()->getIdentifier()); ~
   //main.pushstr_newL(strBuffer);
 }
+
+void dsl_cpp_generator::generatePropParams(list<formalParam*> paramList, bool isNeedType=true, bool isMainFile=true)
+  {
+
+  list<formalParam*>::iterator itr;
+  dslCodePad& targetFile = isMainFile? main : header;
+  //~ Assumes that there is at least one param already. so prefix with  "," is okay
+  char strBuffer[1024];
+  for(itr=paramList.begin();itr!=paramList.end();itr++) {
+
+    Type* type=(*itr)->getType();
+    if (type->isPropType()) {
+      if (type->getInnerTargetType()->isPrimitiveType()) {
+
+        const char * temp = "d_";
+        char* temp1 = (*itr)->getIdentifier()->getIdentifier();
+        char* temp2 = (char*)malloc(1+strlen(temp) + strlen(temp1));
+        strcpy(temp2,temp);
+        strcat(temp2,temp1);
+
+        if(isNeedType)
+          sprintf(strBuffer,",%s* %s", convertToCppType(type->getInnerTargetType()), temp2);
+        else
+          sprintf(strBuffer,",%s", temp2);
+        //~ generateCudaMemCpyStr((*itr)->getIdentifier()->getIdentifier(), temp2,convertToCppType(type->getInnerTargetType()), sizeofProp, 0 );
+        targetFile.pushString(strBuffer);
+      }
+    }
+  }
+}
+
+
 void dsl_cpp_generator::addCudaRevBFSIterKernel(list<statement*>& statementList) {
   //~ var v
   //~ var w
@@ -256,8 +288,14 @@ void dsl_cpp_generator::addCudaRevBFSIterKernel(list<statement*>& statementList)
   //~ assert(body->getTypeofNode() == NODE_BLOCKSTMT);
   //~ blockStatement* block = (blockStatement*)body;
   //~ list<statement*> statementList = block->returnStatements();
-  sprintf(strBuffer, "__global__ void back_pass(int n, int* d_meta,int* d_data,int* d_weight, float* d_delta, double* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished, float* d_BC) {");
-  header.pushstr_newL(strBuffer);
+  sprintf(strBuffer, "__global__ void back_pass(int n, int* d_meta,int* d_data,int* d_weight, float* d_delta, double* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished");
+  header.pushString(strBuffer);
+
+  generatePropParams(getCurrentFunc()->getParamList(),true,false); // true: typeneed false:inMainfile
+  // float* d_BC i.e ====> type* varName
+
+  header.pushstr_newL(") {");
+
 
   sprintf(strBuffer, "unsigned %s = blockIdx.x * blockDim.x + threadIdx.x;", loopVar);
   header.pushstr_newL(strBuffer);
@@ -275,6 +313,7 @@ void dsl_cpp_generator::addCudaRevBFSIterKernel(list<statement*>& statementList)
 
   header.pushstr_newL("} // end if d lvl");
   header.pushstr_newL("} // kernel end");
+  header.NewLine();
 }
 void dsl_cpp_generator::addCudaBFSIterKernel(iterateBFS* bfsAbstraction) {
   //~ var v
@@ -304,7 +343,11 @@ void dsl_cpp_generator::addCudaBFSIterKernel(iterateBFS* bfsAbstraction) {
   blockStatement* block = (blockStatement*)body;
   list<statement*> statementList = block->returnStatements();
 
-  header.pushstr_newL("__global__ void fwd_pass(int n, int* d_meta,int* d_data,int* d_weight, float* d_delta, double* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished, float* d_BC) {");
+  header.pushString("__global__ void fwd_pass(int n, int* d_meta,int* d_data,int* d_weight, float* d_delta, double* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished");
+
+  generatePropParams(getCurrentFunc()->getParamList(),true,false); // true: typeneed false:inMainfile
+
+  header.pushstr_newL(") {");
 
   sprintf(strBuffer, "unsigned %s = blockIdx.x * blockDim.x + threadIdx.x;", loopVar);
   header.pushstr_newL(strBuffer);
@@ -327,6 +370,7 @@ void dsl_cpp_generator::addCudaBFSIterKernel(iterateBFS* bfsAbstraction) {
 
   header.pushstr_newL("} // end if d lvl");
   header.pushstr_newL("} // kernel end");
+  header.NewLine();
 }
 
 void dsl_cpp_generator::addCudaBFSIterationLoop(iterateBFS* bfsAbstraction) {
@@ -369,7 +413,11 @@ void dsl_cpp_generator::addCudaBFSIterationLoop(iterateBFS* bfsAbstraction) {
   //main.pushstr_newL("}");
   main.NewLine();
   main.pushstr_newL("//Kernel LAUNCH");
-  main.pushstr_newL("fwd_pass<<<numBlocks,threadsPerBlock>>>(V, d_meta, d_data,d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished, d_BC); ///TODO from varList");
+  main.pushString("fwd_pass<<<numBlocks,threadsPerBlock>>>(V, d_meta, d_data,d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished");
+
+  generatePropParams(getCurrentFunc()->getParamList(),false,true); // true: typeneed false:inMainfile
+
+  main.pushstr_newL("); ///DONE from varList");
   main.NewLine();
 
   addCudaBFSIterKernel(bfsAbstraction);  // KERNEL BODY!!!
@@ -489,7 +537,11 @@ void dsl_cpp_generator::generateBFSAbstraction(iterateBFS* bfsAbstraction,
 
   main.NewLine();
   main.pushstr_newL("//KERNEL Launch");
-  main.pushstr_newL("back_pass<<<numBlocks,threadsPerBlock>>>(V, d_meta, d_data, d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished, d_BC); ///TODO from varList");  ///TODO get all propnodes from function body and params
+  main.pushstr_newL("back_pass<<<numBlocks,threadsPerBlock>>>(V, d_meta, d_data, d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished");
+
+  generatePropParams(getCurrentFunc()->getParamList(),false,true); // true: typeneed false:inMainfile
+
+  main.pushstr_newL("); ///DONE from varList");  ///TODO get all propnodes from function body and params
 
   main.NewLine();
   addCudaRevBFSIterKernel(revStmtList);  // KERNEL BODY
@@ -788,13 +840,13 @@ void dsl_cpp_generator::generateDoWhileStmt(dowhileStmt* doWhile,
                                             bool isMainFile) {
   dslCodePad& targetFile = isMainFile ? main : header;
   flag_for_device_var = 1;  //done for PR fix
-  targetFile.pushstr_newL("do");
-  targetFile.pushString("{");
+  targetFile.pushstr_newL("do{");
+  //~ targetFile.pushString("{");
   generateStatement(doWhile->getBody(), isMainFile);
-  targetFile.pushString("}");
-  targetFile.pushString("while(");
+  //~ targetFile.pushString("}");
+  targetFile.pushString("}while(");
   generateExpr(doWhile->getCondition(), isMainFile);
-  targetFile.pushString(");");
+  targetFile.pushstr_newL(");");
 }
 
 void dsl_cpp_generator::generateIfStmt(ifStmt* ifstmt, bool isMainFile) {
@@ -1034,7 +1086,7 @@ void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt,
         generateInitkernel1(assign, isMainFile);
         //~ std::cout << "%%%%%%%%%%" << '\n';
 
-        /// initKernel<double> <<<numBlocks,numThreads>>>(V,d_BC, 0);
+        /// initKernel<double> <<<numBlocks,threadsPerBlock>>>(V,d_BC, 0);
       } else if (argList.size() == 2) {
         //~ std::cout << "===============" << '\n';
         generateInitkernel1(assign, isMainFile);
@@ -2726,6 +2778,9 @@ void dsl_cpp_generator::generateCudaMallocParams(list<formalParam*> paramList)
 
 }
 
+
+
+
 void dsl_cpp_generator::generateCudaMemCpyParams(list<formalParam*> paramList)
   {
 
@@ -2822,6 +2877,7 @@ void dsl_cpp_generator::generateFunc(ASTNode* proc) {
   main.pushstr_newL("//BEGIN DSL PARSING ");
 
   generateBlock(func->getBlockStatement(), false);
+
   // Assuming one function!
   main.pushstr_newL("//TIMER STOP");
   generateStopTimer();

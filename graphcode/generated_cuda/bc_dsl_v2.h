@@ -13,7 +13,7 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet);
 
 
 
-__global__ void fwd_pass(int n, int* d_meta,int* d_data,int* d_weight, float* d_delta, double* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished, float* d_BC) {
+__global__ void fwd_pass(int n, int* d_meta,int* d_data,int* d_weight, float* d_delta, double* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished,float* d_BC) {
   unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
   if(v >= n) return;
   if(d_level[v] == *d_hops_from_source) {
@@ -29,7 +29,8 @@ __global__ void fwd_pass(int n, int* d_meta,int* d_data,int* d_weight, float* d_
     }
   } // end if d lvl
 } // kernel end
-__global__ void back_pass(int n, int* d_meta,int* d_data,int* d_weight, float* d_delta, double* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished, float* d_BC) {
+
+__global__ void back_pass(int n, int* d_meta,int* d_data,int* d_weight, float* d_delta, double* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished,float* d_BC) {
   unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
   if(v >= n) return;
   auto grid = cooperative_groups::this_grid();
@@ -44,5 +45,6 @@ __global__ void back_pass(int n, int* d_meta,int* d_data,int* d_weight, float* d
     d_BC[v] = d_BC[v] + d_delta[v];
   } // end if d lvl
 } // kernel end
+
 
 #endif
