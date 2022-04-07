@@ -14,11 +14,13 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
 
   int *h_meta;
   int *h_data;
+  int *h_src;
   int *h_weight;
   int *h_rev_meta;
 
   h_meta = (int *)malloc( (V+1)*sizeof(int));
   h_data = (int *)malloc( (E)*sizeof(int));
+  h_src = (int *)malloc( (E)*sizeof(int));
   h_weight = (int *)malloc( (E)*sizeof(int));
   h_rev_meta = (int *)malloc( (V+1)*sizeof(int));
 
@@ -32,36 +34,38 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
   for(int i=0; i< E; i++) {
     int temp = g.edgeList[i];
     h_data[i] = temp;
+    temp = g.srcList[i];
+    h_src[i] = temp;
     temp = edgeLen[i];
     h_weight[i] = temp;
-  }
-
-  for(int i=0; i<= V; i++) {
-    int temp = g.rev_indexofNodes[i];
-    h_rev_meta[i] = temp;
   }
 
 
   int* d_meta;
   int* d_data;
+  int* d_src;
   int* d_weight;
   int* d_rev_meta;
+  bool* d_modified_next;
 
   cudaMalloc(&d_meta, sizeof(int)*(1+V));
   cudaMalloc(&d_data, sizeof(int)*(E));
+  cudaMalloc(&d_src, sizeof(int)*(E));
   cudaMalloc(&d_weight, sizeof(int)*(E));
   cudaMalloc(&d_rev_meta, sizeof(int)*(V+1));
+  cudaMalloc(&d_modified_next, sizeof(bool)*(V));
 
   cudaMemcpy(  d_meta,   h_meta, sizeof(int)*(V+1), cudaMemcpyHostToDevice);
   cudaMemcpy(  d_data,   h_data, sizeof(int)*(E), cudaMemcpyHostToDevice);
+  cudaMemcpy(   d_src,    h_src, sizeof(int)*(E), cudaMemcpyHostToDevice);
   cudaMemcpy(d_weight, h_weight, sizeof(int)*(E), cudaMemcpyHostToDevice);
-  cudaMemcpy(d_rev_meta, h_rev_meta, sizeof(int)*(E), cudaMemcpyHostToDevice);
+  cudaMemcpy(d_rev_meta, h_rev_meta, sizeof(int)*((V+1)), cudaMemcpyHostToDevice);
 
   // CSR END
   //LAUNCH CONFIG
   const unsigned threadsPerBlock = 512;
   unsigned numThreads   = (V < threadsPerBlock)? 512: V;
-  unsigned numBlocks = (numThreads+threadsPerBlock-1)/threadsPerBlock;
+  unsigned numBlocks    = (V+threadsPerBlock-1)/threadsPerBlock;
 
 
   // TIMER START
@@ -78,24 +82,22 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
 
 
   //BEGIN DSL PARSING 
-  initKernel<float> <<<numBlocks,threadsPerBlock>>>(V,d_BC,0);
+  initKernel<float> <<<numBlocks,threadsPerBlock>>>(V,d_BC,(float)0);
 
   //FOR SIGNATURE of SET - Assumes set for on .cu only
   std::set<int>::iterator itr;
   for(itr=sourceSet.begin();itr!=sourceSet.end();itr++) 
   {
     int src = *itr;
-    double* sigma = (double*) malloc(sizeof(double)*V);
     double* d_sigma;
     cudaMalloc(&d_sigma, sizeof(double)*(V));
 
-    float* delta = (float*) malloc(sizeof(float)*V);
     float* d_delta;
     cudaMalloc(&d_delta, sizeof(float)*(V));
 
-    initKernel<float> <<<numBlocks,threadsPerBlock>>>(V,d_delta,0);
+    initKernel<float> <<<numBlocks,threadsPerBlock>>>(V,d_delta,(float)0);
 
-    initKernel<double> <<<numBlocks,threadsPerBlock>>>(V,d_sigma,0);
+    initKernel<double> <<<numBlocks,threadsPerBlock>>>(V,d_sigma,(double)0);
 
     initIndex<double><<<1,1>>>(V,d_sigma,src,(double)1); //InitIndexDevice
 
@@ -116,7 +118,7 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
       cudaMemcpy(d_finished, &finished, sizeof(bool)*(1), cudaMemcpyHostToDevice);
 
       //Kernel LAUNCH
-      fwd_pass<<<numBlocks,threadsPerBlock>>>(V, d_meta, d_data,d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished, d_BC); ///TODO from varList
+      fwd_pass<<<numBlocks,threadsPerBlock>>>(V, d_meta, d_data,d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished,d_BC); ///DONE from varList
 
       incrementDeviceVar<<<1,1>>>(d_hops_from_source);
       cudaDeviceSynchronize(); //MUST - rupesh
@@ -133,7 +135,8 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
     while(hops_from_source > 1) {
 
       //KERNEL Launch
-      back_pass<<<numBlocks,threadsPerBlock>>>(V, d_meta, d_data, d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished, d_BC); ///TODO from varList
+      back_pass<<<numBlocks,threadsPerBlock>>>(V, d_meta, d_data, d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished
+        ,d_BC); ///DONE from varList
 
       hops_from_source--;
       cudaMemcpy(d_hops_from_source, &hops_from_source, sizeof(int)*(1), cudaMemcpyHostToDevice);

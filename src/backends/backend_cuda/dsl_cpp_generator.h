@@ -5,18 +5,7 @@
 #include "../../ast/ASTNodeTypes.hpp"
 #include "../../parser/includeHeader.hpp"
 #include "../dslCodePad.h"
-//#include "dslCodePad.h"
-//~ struct vars {
-//~ string varType;
-//~ string varName;
-//~ bool result;
-//~ vars(){}
-//~ vars(string vType,string vName,bool res) {
-//~ varType=vType;
-//~ varName=vName;
-//~ result=res;
-//~ }
-//~ };
+
 
 class dsl_cpp_generator {
  private:
@@ -32,8 +21,7 @@ class dsl_cpp_generator {
   int kernelCount;
   Function* currentFunc;
 
-  list<Identifier*> varList;
-  //vector<formalParam*> varList;
+
   bool isHeader;
 
  public:
@@ -48,13 +36,10 @@ class dsl_cpp_generator {
     bodyFile = NULL;
     fileName = new char[1024];
     currentFunc = NULL;
-    //~ varList.clear();
+
   }
 
-  //~ ~dsl_cpp_generator(){
-  //~ vList.clear();
-  //~ vvList.clear();
-  //~ }
+
 
   void generateParamList(list<formalParam*> paramList, dslCodePad& targetFile);
   void setCurrentFunc(Function* func);
@@ -184,6 +169,7 @@ class dsl_cpp_generator {
   void generateCudaMemCpyParams(list<formalParam*> paramList);
   void generateHeaderDeviceVariable(const char* typeStr, const char* dVar);
   void generateExtraDeviceVariableNoD(const char* typeStr, const char* dVar, const char* sizeVal);
+  void generatePropParams(list<formalParam*> paramList, bool isNeedType,bool isMainFile);
   //~ void setGenCSR(bool yes = true) { genCSR = yes; }
   //~ bool isGenCSR() { return genCSR; }
   //~ void setGName(const char* str) {
