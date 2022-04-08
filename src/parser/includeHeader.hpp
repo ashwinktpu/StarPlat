@@ -13,6 +13,7 @@
 //#include "../symbolutil/SymbolTable.h"
 #include "../symbolutil/SymbolTableBuilder.h"
 
+extern "C" int yyparse (void);
 
 
 #endif
