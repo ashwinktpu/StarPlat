@@ -25,6 +25,7 @@ __global__ void fwd_pass(int n, int* d_meta,int* d_data,int* d_weight, float* d_
       }
       if(d_level[w] == *d_hops_from_source + 1) {
         atomicAdd(&d_sigma[w],  d_sigma[v]);
+
       }
     }
   } // end if d lvl
@@ -39,6 +40,7 @@ __global__ void back_pass(int n, int* d_meta,int* d_data,int* d_weight, float* d
       int w = d_data[edge];
       if(d_level[w] == *d_hops_from_source) {
         d_delta[v] = d_delta[v] + (d_sigma[v] / d_sigma[w]) * (1 + d_delta[w]);
+
       } // end IF  
     } // end FOR
     grid.sync(); // Device-level syncs across all grids. Ref:https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#grid-synchronization-cg 

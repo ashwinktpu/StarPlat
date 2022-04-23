@@ -27,10 +27,15 @@ __global__ void Compute_TC_kernel(int V, int E, int* d_meta, int* d_data, int* d
         if (w > v){ // if filter begin 
           if (findNeighborSorted(u, w, d_meta, d_data)){ // if filter begin 
             atomicAdd(& triangle_count, (int)1);
+
           } // if filter end
+
         } // if filter end
+
       } //  end FOR NBR ITR. TMP FIX!
+
     } // if filter end
+
   } //  end FOR NBR ITR. TMP FIX!
 } // end KER FUNC
 

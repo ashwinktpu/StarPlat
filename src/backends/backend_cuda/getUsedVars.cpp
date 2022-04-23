@@ -272,6 +272,30 @@ usedVariables getVarsBlock(blockStatement *blockStmt)
 
   return currVars;
 }
+/* Function: getDeclaredPropertyVarsOfBlock
+ * Return all the Property variables declared in a the block!
+ * Used for cudaFree those variables
+ * usedVariables may be a misnomer?! for this function.
+ * --rajesh
+ */
+usedVariables getDeclaredPropertyVarsOfBlock(blockStatement *blockStmt)
+{
+  list<statement *> stmtList = blockStmt->returnStatements();
+  list<Identifier *> declVars;
+
+  usedVariables currVars;
+  for (statement *stmt : stmtList)
+  {
+    if (stmt->getTypeofNode() == NODE_DECL) {
+      declaration *decl = (declaration *)stmt;
+      if(decl->getType()->isPropNodeType()) {
+        currVars.addVariable(decl->getdeclId(),READ_WRITE); //2nd arg may be not used by us
+      }
+    }
+  }
+
+  return currVars;
+}
 
 usedVariables getVarsStatement(statement *stmt)
 {

@@ -142,7 +142,13 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
       cudaMemcpy(d_hops_from_source, &hops_from_source, sizeof(int)*(1), cudaMemcpyHostToDevice);
     }
     //accumulate_bc<<<numBlocks,threadsPerBlock>>>(V,d_delta, d_BC, d_level, src);
+
+    //cudaFree up!! all propVars in this BLOCK!
+    cudaFree(d_delta);
+    cudaFree(d_sigma);
+
   }
+
   //TIMER STOP
   cudaEventRecord(stop,0);
   cudaEventSynchronize(stop);
