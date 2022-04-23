@@ -2632,6 +2632,18 @@ void dsl_cpp_generator::generateBlock(blockStatement* blockStmt,bool includeBrac
   //~ << isMainFile;
   dslCodePad& targetFile = isMainFile ? main : header;
 
+  usedVariables usedVars = getDeclaredPropertyVarsOfBlock(blockStmt);
+  list<Identifier*> vars = usedVars.getVariables();
+  std::cout<< "\t==VARSIZE:" << vars.size() << '\n';
+
+  //~ for(Identifier* iden: vars) {
+    //~ Type* type = iden->getSymbolInfo()->getType();
+    //~ char strBuffer[1024];
+    //~ printf("\t===%s d_%s\n", convertToCppType(type), iden->getIdentifier());
+    //~ main.pushstr_newL(strBuffer);
+  //~ }
+
+
   list<statement*> stmtList = blockStmt->returnStatements();
   list<statement*>::iterator itr;
   if (includeBrace) {
@@ -2641,6 +2653,20 @@ void dsl_cpp_generator::generateBlock(blockStatement* blockStmt,bool includeBrac
     statement* stmt = *itr;
     generateStatement(stmt, isMainFile);
   }
+
+  // CUDA FREE
+  char strBuffer[1024];
+
+  if(vars.size()>0) {
+    targetFile.NewLine();
+    targetFile.pushstr_newL("//cudaFree up!! all propVars in this BLOCK!");
+  }
+  for(Identifier* iden: vars) {
+    sprintf(strBuffer,"cudaFree(d_%s);",iden->getIdentifier());
+    targetFile.pushstr_newL(strBuffer);
+  }
+  targetFile.NewLine();
+
   if (includeBrace) {
     targetFile.pushstr_newL("}");
   }
@@ -2875,6 +2901,7 @@ void dsl_cpp_generator::generateFunc(ASTNode* proc) {
   //~ }
 
   main.pushstr_newL("//BEGIN DSL PARSING ");
+
 
   generateBlock(func->getBlockStatement(), false);
 

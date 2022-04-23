@@ -27,20 +27,17 @@ void Compute_TC(graph& g)
   for(int i=0; i<= V; i++) {
     int temp = g.indexofNodes[i];
     h_meta[i] = temp;
+    temp = g.rev_indexofNodes[i];
+    h_rev_meta[i] = temp;
   }
 
   for(int i=0; i< E; i++) {
     int temp = g.edgeList[i];
     h_data[i] = temp;
-    temp = srcList[i];
+    temp = g.srcList[i];
     h_src[i] = temp;
     temp = edgeLen[i];
     h_weight[i] = temp;
-  }
-
-  for(int i=0; i<= V; i++) {
-    int temp = g.rev_indexofNodes[i];
-    h_rev_meta[i] = temp;
   }
 
 
@@ -67,7 +64,7 @@ void Compute_TC(graph& g)
   // CSR END
   //LAUNCH CONFIG
   const unsigned threadsPerBlock = 512;
-  unsigned numThreads   = (V < threadsPerBlock)? V: 512;
+  unsigned numThreads   = (V < threadsPerBlock)? 512: V;
   unsigned numBlocks    = (V+threadsPerBlock-1)/threadsPerBlock;
 
 
@@ -85,9 +82,10 @@ void Compute_TC(graph& g)
   int triangle_count = 0; // asst in .cu
 
   cudaMemcpyToSymbol(::triangle_count, &triangle_count, sizeof(int), 0, cudaMemcpyHostToDevice);
-  Compute_TC_kernel<<<numBlocks, numThreads>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next);
+  Compute_TC_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next);
   cudaDeviceSynchronize();
   cudaMemcpyFromSymbol(&triangle_count, ::triangle_count, sizeof(int), 0, cudaMemcpyDeviceToHost);
+
 
 
 
