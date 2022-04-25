@@ -61,10 +61,10 @@ bin/analyserUtil.o: analyser/analyserUtil.cpp
 #bin/dsl_cpp_generator.o: backends/backend_mpi/mpi_cpp_generator.cpp backends/dslCodePad.h
 #	$(CC) -c backends/backend_mpi/mpi_cpp_generator.cpp -o bin/dsl_cpp_generator.o
 
-bin/y.tab.o: 
+bin/y.tab.o: parser/lexer.l parser/lrparser.y
 	$(MAKE) -C parser
 
-bin/lex.yy.o: 
+bin/lex.yy.o: parser/lexer.l parser/lrparser.y
 	$(MAKE) -C parser
 
 clean: 

@@ -52,17 +52,19 @@ bool deviceVarsAnalyser::initStatement(statement *stmt, list<Identifier *> &vars
         return initWhile((whileStmt *)stmt, vars);
     case NODE_DOWHILESTMT:
         return initDoWhile((dowhileStmt *)stmt, vars);
-
-        /*    case NODE_PROCCALLSTMT:
-            // TODO : Add proc call statment
-            return inMap;
+    case NODE_PROCCALLSTMT:
+        return initProcCall((proc_callStmt *)stmt, vars);
+    case NODE_FIXEDPTSTMT:
+        return initFixedPoint((fixedPointStmt *)stmt, vars);
+    case NODE_REDUCTIONCALLSTMT:
+        return initReduction((reductionCallStmt *)stmt, vars);
+    case NODE_ITRBFS:
+        return initItrBFS((iterateBFS *)stmt, vars);
+        /*S
             case NODE_REDUCTIONCALLSTMT:
             return analyseReduction((reductionCallStmt *)stmt, inMap);
             case NODE_ITRBFS:
-            return analyseItrBFS((iterateBFS *)stmt, inMap);
-
-            case NODE_FIXEDPTSTMT:
-            return analyseFixedPoint((fixedPointStmt *)stmt, inMap);*/
+            return analyseItrBFS((iterateBFS *)stmt, inMap);*/
     }
     return false;
 }
@@ -106,6 +108,7 @@ bool deviceVarsAnalyser::initForAll(forallStmt *stmt, list<Identifier *> &vars)
     ASTNodeWrap* stmtNode = initWrapNode(stmt, vars);
     stmtNode->usedVars = getVarsForAll(stmt);
 
+    stmt->initUsedVariable(stmtNode->usedVars.getVariables());
     gpuUsedVars.merge(stmtNode->usedVars);
     return true;
 }
@@ -131,6 +134,38 @@ bool deviceVarsAnalyser::initDoWhile(dowhileStmt *stmt, list<Identifier *> &vars
 
     return hasForAll;
 }
+bool deviceVarsAnalyser::initFixedPoint(fixedPointStmt* stmt, list<Identifier*> &vars)
+{
+    ASTNodeWrap* stmtNode = initWrapNode(stmt, vars);
+    ASTNodeWrap* condNode = initWrapNode(stmt->getFixedPointId(), vars);
+
+    condNode->usedVars.addVariable(stmt->getFixedPointId(), READ_WRITE);
+    for(Identifier* iden: getVarsExpr(stmt->getDependentProp()).getVariables(READ_WRITE))
+        condNode->usedVars.addVariable(iden, READ_WRITE);
+    
+    bool hasForAll = initStatement(stmt->getBody(), vars);
+    stmtNode->hasForAll = hasForAll;
+
+    return hasForAll;
+}
+//Assuming initialization is done in GPU
+bool deviceVarsAnalyser::initProcCall(proc_callStmt *stmt, list<Identifier*> &vars)
+{
+    ASTNodeWrap* stmtNode = initWrapNode(stmt, vars);
+    proc_callExpr* stmt_expr = stmt->getProcCallExpr();
+
+    for (argument *arg : stmt_expr->getArgList())
+    {
+        if (arg->isAssignExpr())
+        {
+            assignment *asgn = arg->getAssignExpr();
+            stmtNode->usedVars.addVariable(asgn->getId(), WRITE);
+            stmtNode->usedVars.merge(getVarsExpr(asgn->getExpr()));
+        }
+    }
+    gpuUsedVars.merge(stmtNode->usedVars);
+    return false;
+}
 bool deviceVarsAnalyser::initFor(forallStmt *stmt, list<Identifier *> &vars)
 {
     ASTNodeWrap *stmtNode = initWrapNode(stmt, vars);
@@ -143,4 +178,43 @@ bool deviceVarsAnalyser::initFor(forallStmt *stmt, list<Identifier *> &vars)
 
     stmtNode->hasForAll = hasForAll;
     return hasForAll;
+}
+bool deviceVarsAnalyser::initReduction(reductionCallStmt *stmt, list<Identifier*> &vars)
+{
+    ASTNodeWrap* stmtNode = initWrapNode(stmt, vars);
+    stmtNode->usedVars = getVarsReduction(stmt);
+
+    return false;
+}
+//Ignore filter expression for now
+// TODO : itrBFS executed in GPU
+
+bool deviceVarsAnalyser::initItrBFS(iterateBFS *stmt, list<Identifier*> &vars)
+{
+    ASTNodeWrap *stmtNode = initWrapNode(stmt, vars);
+    stmtNode->usedVars = getVarsStatement(stmt->getBody());
+    stmtNode->usedVars.removeVariable(stmt->getIteratorNode(), READ_WRITE);
+
+    stmt->initUsedVariable(stmtNode->usedVars.getVariables());
+    gpuUsedVars.merge(stmtNode->usedVars);
+
+    if(stmt->getRBFS() != nullptr)
+    {
+        iterateReverseBFS* revStmt = stmt->getRBFS();
+        ASTNodeWrap *revNode = initWrapNode(revStmt, vars);
+
+        usedVariables bVars = getVarsExpr(revStmt->getBFSFilter());
+        for(Identifier* iden: vars)
+            bVars.removeVariable(iden, READ_WRITE);
+
+        Identifier* itr = bVars.getVariables(READ_WRITE).front();
+
+        revNode->usedVars = getVarsStatement(revStmt->getBody());
+        revNode->usedVars.removeVariable(itr, READ_WRITE);
+
+        revStmt->initUsedVariable(revNode->usedVars.getVariables());
+        gpuUsedVars.merge(revNode->usedVars);
+    }
+
+    return true;
 }

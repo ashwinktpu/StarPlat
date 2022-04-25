@@ -19,6 +19,10 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
     {
       delta[t] = 0;
       bfsDist[t] = -1;
+    }
+    #pragma omp parallel for
+    for (int t = 0; t < g.num_nodes(); t ++) 
+    {
       sigma[t] = 0;
     }
     bfsDist[src] = 0;

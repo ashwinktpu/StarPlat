@@ -28,6 +28,7 @@ extern vector<map<int,vector<Identifier*>>> graphId;
                                                        referenced in current function,
                                                        where the graphId vector is 
                                                        separated across different function type*/
+class varTransferStmt;
 
 class argument
 {  
@@ -1308,7 +1309,10 @@ class fixedPointStmt:public statement
      {
        return body;
      }
-
+    void setBody(statement* body)
+    {
+      this->body = body;
+    }
 
 };
 
@@ -1366,7 +1370,9 @@ class fixedPointStmt:public statement
     Expression* booleanExpr;
     Expression* filterExpr;
     statement* body;
+    //list<varTransferStmt*> revTransfer;
 
+    list<Identifier*> usedVars;
     public: 
     iterateReverseBFS()
     {
@@ -1399,6 +1405,14 @@ class fixedPointStmt:public statement
     {
       return booleanExpr;
     }
+
+    void initUsedVariable(list<Identifier*> usedVars){
+      this->usedVars = usedVars;
+    }
+    
+    /*void addVarTransfer(varTransferStmt* tstmt){
+      this->revTransfer.push_back(tstmt);
+    }*/
 
   };
 
@@ -1474,7 +1488,7 @@ class fixedPointStmt:public statement
       statement* body;
       iterateReverseBFS* revBFS;
 
-
+      list<Identifier*> usedVars;
       public:
 
       iterateBFS()
@@ -1535,6 +1549,9 @@ class fixedPointStmt:public statement
         return nodeCall;
       }
 
+      void initUsedVariable(list<Identifier*> usedVars){
+      this->usedVars = usedVars;
+    }
   };
   
   class unary_stmt:public statement
