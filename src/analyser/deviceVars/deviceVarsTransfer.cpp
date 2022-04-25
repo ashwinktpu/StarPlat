@@ -63,6 +63,12 @@ statement* deviceVarsAnalyser::transferVarsStatement(statement* stmt, blockState
         return transferVarsWhile((whileStmt *)stmt, parBlock);
     case NODE_DOWHILESTMT:
         return transferVarsDoWhile((dowhileStmt *)stmt, parBlock);
+    case NODE_PROCCALLSTMT:
+        return transferVarsProcCall((proc_callStmt *)stmt, parBlock);
+    case NODE_FIXEDPTSTMT:
+        return transferVarsFixedPoint((fixedPointStmt *)stmt, parBlock);
+    case NODE_ITRBFS:
+        return transferVarsItrBFS((iterateBFS *)stmt, parBlock);
     }
 
     return stmt;
@@ -73,8 +79,7 @@ statement* deviceVarsAnalyser::transferVarsForAll(forallStmt* stmt, blockStateme
     ASTNodeWrap* wrapNode = getWrapNode(stmt);
     for(statement* bstmt: transferStatements(wrapNode->inMap, wrapNode->outMap))
         parBlock->addStmtToBlock(bstmt);
-    
-    stmt->initUsedVariable(wrapNode->usedVars.getVariables());
+
     return stmt;
 }
 statement* deviceVarsAnalyser::transferVarsFor(forallStmt* stmt, blockStatement* parBlock)
@@ -181,7 +186,11 @@ statement* deviceVarsAnalyser::transferVarsDoWhile(dowhileStmt* stmt, blockState
         ifStmt* varTransfer = (ifStmt*) Util::createNodeForIfStmt(Util::createNodeForId(ifCond), ifBody, NULL);
         newBody->addToFront(varTransfer);
     }
-
+    
+    lattice bodyOut = getWrapNode(stmt->getBody())->outMap;
+    for(statement *bstmt: transferStatements(bodyOut, condNode->outMap)){
+        newBody->addStmtToBlock(bstmt);
+    }
     for(statement* bstmt: transferStatements(wrapNode->inMap, wrapNode->outMap)){
         parBlock->addStmtToBlock(bstmt);
     }
@@ -243,4 +252,52 @@ statement* deviceVarsAnalyser::transferVarsIfElse(ifStmt* stmt, blockStatement* 
         newStmt = ifStmt::create_ifStmt(expr, ifBody, elseBody);
     }
     return newStmt;
+}
+
+statement* deviceVarsAnalyser::transferVarsFixedPoint(fixedPointStmt* stmt, blockStatement* parBlock)
+{
+    ASTNodeWrap* wrapNode = getWrapNode(stmt);
+    ASTNodeWrap* condNode = getWrapNode(stmt->getFixedPointId());
+
+    for(statement* bstmt: transferStatements(wrapNode->inMap, condNode->outMap)){
+        parBlock->addStmtToBlock(bstmt);
+    }
+
+    blockStatement* newBody = (blockStatement*) transferVarsStatement(stmt->getBody(), parBlock);
+
+    for(statement* bstmt: transferStatements(wrapNode->outMap, condNode->outMap)){
+        newBody->addStmtToBlock(bstmt);
+    }
+
+    stmt->setBody(newBody);
+    return stmt;
+}
+
+statement* deviceVarsAnalyser::transferVarsProcCall(proc_callStmt *stmt, blockStatement *parBlock)
+{
+    ASTNodeWrap* wrapNode = getWrapNode(stmt);
+    list<statement*> transferStmts = transferStatements(wrapNode->inMap, wrapNode->outMap);
+    for(statement* bstmt: transferStmts)
+        parBlock->addStmtToBlock(bstmt);
+    
+    return stmt;
+}
+
+statement* deviceVarsAnalyser::transferVarsReduction(reductionCallStmt* stmt, blockStatement *parBlock)
+{
+    ASTNodeWrap* wrapNode = getWrapNode(stmt);
+    list<statement*> transferStmts = transferStatements(wrapNode->inMap, wrapNode->outMap);
+    for(statement* bstmt: transferStmts)
+        parBlock->addStmtToBlock(bstmt);
+    
+    return stmt;
+}
+
+statement* deviceVarsAnalyser::transferVarsItrBFS(iterateBFS* stmt, blockStatement *parBlock)
+{
+    ASTNodeWrap* wrapNode = getWrapNode(stmt);
+    for(statement* bstmt: transferStatements(wrapNode->inMap, wrapNode->outMap))
+        parBlock->addStmtToBlock(bstmt);    
+
+    return stmt;
 }

@@ -68,6 +68,39 @@ lattice deviceVarsAnalyser::analyseAssignment(assignment *stmt, lattice &inMap)
   return wrapNode->outMap;
 }
 
+lattice deviceVarsAnalyser::analyseIfElse(ifStmt *stmt, lattice &inMap)
+{
+
+  Expression *cond = stmt->getCondition();
+  ASTNodeWrap *wrapNode = getWrapNode(stmt);
+  ASTNodeWrap *condNode = getWrapNode(cond);
+
+  condNode->inMap = inMap;
+  condNode->outMap = condNode->inMap;
+
+  for (Identifier *iden : condNode->usedVars.getVariables(READ))
+  {
+    condNode->outMap.meet(iden, lattice::CPU_READ);
+  }
+  for (Identifier *iden : condNode->usedVars.getVariables(WRITE))
+  {
+    condNode->outMap.meet(iden, lattice::CPU_WRITE);
+  }
+
+  lattice ifOut = analyseStatement(stmt->getIfBody(), condNode->outMap);
+  if (stmt->getElseBody() != nullptr)
+  {
+    lattice elseOut = analyseStatement(stmt->getElseBody(), condNode->outMap);
+    wrapNode->inMap = ifOut ^ elseOut;
+  }
+  else
+    wrapNode->inMap = ifOut ^ condNode->outMap;
+
+  wrapNode->outMap = wrapNode->inMap;
+  return wrapNode->outMap;
+}
+
+
 lattice deviceVarsAnalyser::analyseWhile(whileStmt *stmt, lattice &inMap)
 {
   ASTNodeWrap *wrapNode = getWrapNode(stmt);
@@ -138,25 +171,82 @@ lattice deviceVarsAnalyser::analyseDoWhile(dowhileStmt *stmt, lattice &inMap)
   return condNode->outMap;
 }
 
+lattice deviceVarsAnalyser::analyseFixedPoint(fixedPointStmt *stmt, lattice &inMap)
+{
+  ASTNodeWrap *wrapNode = getWrapNode(stmt);
+  wrapNode->inMap = inMap;
+
+  Identifier *iden = stmt->getFixedPointId();
+  ASTNodeWrap *condNode = getWrapNode(iden);
+  
+  bool hasChanged;
+  do
+  {
+    condNode->inMap = (wrapNode->hasForAll) ? (wrapNode->outMap & wrapNode->inMap) : (wrapNode->outMap ^ wrapNode->inMap);
+    condNode->outMap = condNode->inMap;
+
+    for (Identifier *iden : condNode->usedVars.getVariables(READ))
+    {
+      condNode->outMap.meet(iden, lattice::CPU_READ);
+    }
+    for (Identifier *iden : condNode->usedVars.getVariables(WRITE))
+    {
+      condNode->outMap.meet(iden, lattice::CPU_WRITE);
+    }
+    
+    lattice bodyOut = analyseStatement(stmt->getBody(), condNode->outMap);
+    if(wrapNode->outMap != bodyOut)
+    {
+      hasChanged = true;
+      wrapNode->outMap = bodyOut;
+    }
+    else 
+      hasChanged = false;
+
+  } while (hasChanged);
+
+  return condNode->outMap;
+}
+
+lattice deviceVarsAnalyser::analyseProcCall(proc_callStmt *stmt, lattice &inMap)
+{
+  ASTNodeWrap *wrapNode = getWrapNode(stmt);
+
+  wrapNode->inMap = inMap;
+  wrapNode->outMap = inMap;
+
+  for (Identifier *iden : wrapNode->usedVars.getVariables(READ))
+  {
+    wrapNode->outMap.meet(iden, lattice::GPU_READ);
+  }
+  for (Identifier *iden : wrapNode->usedVars.getVariables(WRITE))
+  {
+    wrapNode->outMap.meet(iden, lattice::GPU_WRITE);
+  }
+
+  return wrapNode->outMap;
+}
+
 lattice deviceVarsAnalyser::analyseFor(forallStmt *stmt, lattice &inMap)
 {
   ASTNodeWrap *wrapNode = getWrapNode(stmt);
   wrapNode->inMap = inMap;
 
   lattice outTemp = wrapNode->inMap;
+
   if(stmt->isSourceProcCall())
   {
     // Nothing to Handle
   }
   else if(stmt->isSourceField())
   {
-    Identifier* srcId = stmt->getSource();
-    outTemp.meet(srcId, lattice::CPU_READ);
+    PropAccess* sourceProp = stmt->getPropSource();
+    outTemp.meet(sourceProp->getIdentifier1(), lattice::CPU_READ);
   }
   else
   {
-    PropAccess* sourceProp = stmt->getPropSource();
-    outTemp.meet(sourceProp->getIdentifier1(), lattice::CPU_READ);
+    Identifier* srcId = stmt->getSource();
+    outTemp.meet(srcId, lattice::CPU_READ);
   }
 
   if(stmt->hasFilterExpr()){
@@ -169,6 +259,7 @@ lattice deviceVarsAnalyser::analyseFor(forallStmt *stmt, lattice &inMap)
       outTemp.meet(iden, lattice::CPU_WRITE);
     }
   }
+
   wrapNode->outMap = outTemp;
 
   bool hasChanged;
@@ -195,36 +286,31 @@ lattice deviceVarsAnalyser::analyseFor(forallStmt *stmt, lattice &inMap)
   return wrapNode->outMap;
 }
 
-// TODO : Handle case of if body and else body
-lattice deviceVarsAnalyser::analyseIfElse(ifStmt *stmt, lattice &inMap)
+lattice deviceVarsAnalyser::analyseItrBFS(iterateBFS* stmt, lattice &inMap)
 {
-
-  Expression *cond = stmt->getCondition();
   ASTNodeWrap *wrapNode = getWrapNode(stmt);
-  ASTNodeWrap *condNode = getWrapNode(cond);
-
-  condNode->inMap = inMap;
-  condNode->outMap = condNode->inMap;
-
-  for (Identifier *iden : condNode->usedVars.getVariables(READ))
-  {
-    condNode->outMap.meet(iden, lattice::CPU_READ);
-  }
-  for (Identifier *iden : condNode->usedVars.getVariables(WRITE))
-  {
-    condNode->outMap.meet(iden, lattice::CPU_WRITE);
-  }
-
-  lattice ifOut = analyseStatement(stmt->getIfBody(), condNode->outMap);
-  if (stmt->getElseBody() != nullptr)
-  {
-    lattice elseOut = analyseStatement(stmt->getElseBody(), condNode->outMap);
-    wrapNode->inMap = ifOut ^ elseOut;
-  }
-  else
-    wrapNode->inMap = ifOut ^ condNode->outMap;
+  wrapNode->inMap = inMap;
 
   wrapNode->outMap = wrapNode->inMap;
+  for (Identifier *iden : wrapNode->usedVars.getVariables(READ)){
+    wrapNode->outMap.meet(iden, lattice::GPU_READ);
+  }
+  for (Identifier *iden : wrapNode->usedVars.getVariables(WRITE)){
+    wrapNode->outMap.meet(iden, lattice::GPU_WRITE);
+  }
+
+  if(stmt->getRBFS() != nullptr)
+  {
+    ASTNodeWrap *revNode = getWrapNode(stmt->getRBFS());
+
+    for (Identifier *iden : revNode->usedVars.getVariables(READ)){
+      wrapNode->outMap.meet(iden, lattice::GPU_READ);
+    }
+    for (Identifier *iden : revNode->usedVars.getVariables(WRITE)){
+      wrapNode->outMap.meet(iden, lattice::GPU_WRITE);
+    }
+  }
+
   return wrapNode->outMap;
 }
 
@@ -248,7 +334,23 @@ lattice deviceVarsAnalyser::analyseUnary(unary_stmt *stmt, lattice &inMap)
   }
   return wrapNode->outMap;
 }
+lattice deviceVarsAnalyser::analyseReduction(reductionCallStmt *stmt, lattice &inMap)
+{
+  ASTNodeWrap *wrapNode = getWrapNode(stmt);
 
+  wrapNode->inMap = inMap;
+  wrapNode->outMap = inMap;
+
+  for (Identifier *iden : wrapNode->usedVars.getVariables(READ))
+  {
+    wrapNode->outMap.meet(iden, lattice::CPU_READ);
+  }
+  for (Identifier *iden : wrapNode->usedVars.getVariables(WRITE))
+  {
+    wrapNode->outMap.meet(iden, lattice::CPU_WRITE);
+  }
+  return wrapNode->outMap;
+}
 lattice deviceVarsAnalyser::analyseStatement(statement *stmt, lattice &inMap)
 {
   printf("Analysing %p %d\n", stmt, stmt->getTypeofNode());
@@ -277,18 +379,18 @@ lattice deviceVarsAnalyser::analyseStatement(statement *stmt, lattice &inMap)
     return analyseWhile((whileStmt *)stmt, inMap);
   case NODE_DOWHILESTMT:
     return analyseDoWhile((dowhileStmt *)stmt, inMap);
-    
+  case NODE_FIXEDPTSTMT:
+    return analyseFixedPoint((fixedPointStmt *)stmt, inMap);
+  case NODE_PROCCALLSTMT:
+    return analyseProcCall((proc_callStmt*)stmt, inMap);
+  case NODE_REDUCTIONCALLSTMT:
+    return analyseReduction((reductionCallStmt *)stmt, inMap);
+  case NODE_ITRBFS:
+      return analyseItrBFS((iterateBFS *)stmt, inMap);
     /*
-    case NODE_PROCCALLSTMT:
-      // TODO : Add proc call statment
-      return inMap;
     case NODE_REDUCTIONCALLSTMT:
       return analyseReduction((reductionCallStmt *)stmt, inMap);
-    case NODE_ITRBFS:
-      return analyseItrBFS((iterateBFS *)stmt, inMap);
-    
-    case NODE_FIXEDPTSTMT:
-      return analyseFixedPoint((fixedPointStmt *)stmt, inMap);*/
+    */
   }
 
   return inMap;

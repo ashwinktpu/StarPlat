@@ -297,6 +297,8 @@ class deviceVarsAnalyser
   lattice analyseFor(forallStmt*, lattice&);
   lattice analyseFixedPoint(fixedPointStmt*, lattice&);
   lattice analyseProcCall(proc_callStmt*, lattice&);
+  lattice analyseReduction(reductionCallStmt*, lattice&);
+  lattice analyseItrBFS(iterateBFS*, lattice&);
 
   bool initBlock(blockStatement* blockStmt, list<Identifier*> &);
   bool initStatement(statement* stmt, list<Identifier*> &);
@@ -310,6 +312,8 @@ class deviceVarsAnalyser
   bool initFor(forallStmt*, list<Identifier*> &);
   bool initFixedPoint(fixedPointStmt*, list<Identifier*> &);
   bool initProcCall(proc_callStmt*, list<Identifier*> &);
+  bool initReduction(reductionCallStmt*, list<Identifier*> &);
+  bool initItrBFS(iterateBFS*, list<Identifier*> &);
 
   void printStatement(statement* , int);
   void printBlock(blockStatement* , int);
@@ -329,6 +333,7 @@ class deviceVarsAnalyser
   usedVariables getVarsAssignment(assignment* stmt);
   usedVariables getVarsIf(ifStmt* stmt);
   usedVariables getVarsExpr(Expression* stmt);
+  usedVariables getVarsReduction(reductionCallStmt *stmt);
 
   statement* transferVarsStatement(statement* stmt,blockStatement* parBlock);
   statement* transferVarsForAll(forallStmt* stmt,blockStatement* parBlock);
@@ -342,6 +347,8 @@ class deviceVarsAnalyser
   statement* transferVarsIfElse(ifStmt* stmt,blockStatement* parBlock);
   statement* transferVarsFixedPoint(fixedPointStmt* stmt,blockStatement* parBlock);
   statement* transferVarsProcCall(proc_callStmt* stmt, blockStatement* parBlock);
+  statement* transferVarsReduction(reductionCallStmt* stmt, blockStatement* parBlock);
+  statement* transferVarsItrBFS(iterateBFS* stmt, blockStatement* parBlock);
 };
 
 #endif
