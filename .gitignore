@@ -5,3 +5,5 @@ src/parser/Makefile
 src/Makefile
 src/finalcode
 src/backends
+src/finalcode.exe
+src/bin/*.o
