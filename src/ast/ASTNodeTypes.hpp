@@ -2002,19 +2002,34 @@ class reductionCallStmt:public statement
 
 };
 
-class barrierStmt:public statement
+class barrStmt:public statement
 {
+  int typeofBarrier;
   public:
-  barrierStmt()
+  barrStmt()
   {
-    typeofNode=NODE_BARRIERSTMT;
+    typeofNode = NODE_BARRSTMT;
   }
 
-  static barrierStmt *nodeForBarrier()
+  static barrStmt *nodeForBarrier()
   {
-    barrierStmt* barrierNode=new barrierStmt();
+    barrStmt *barrierNode = new barrStmt;
+    barrierNode->typeofBarrier = BARR_BARRIER;
     return barrierNode;
   }
+
+  static barrStmt *nodeForFlush()
+  {
+    barrStmt *flushNode = new barrStmt;
+    flushNode->typeofBarrier = BARR_FLUSH;
+    return flushNode;
+  }
+
+  int getTypeofBarrier()
+  {
+    return typeofBarrier;
+  }
+
 };
 
 #endif

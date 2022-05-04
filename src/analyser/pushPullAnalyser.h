@@ -5,10 +5,11 @@
 
 class PPAnalyser
 {
+    char *backend;
     public:
     PPAnalyser() {}
 
-    void analyse();
+    void analyse(char *);
     void analyseFunc(ASTNode *);
     void analyseBlock(statement *);
     fixedPointStmt *analyseFPLoop(statement *);

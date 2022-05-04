@@ -503,10 +503,12 @@ int main(int argc,char **argv)
 	//dataRaceAnalyse.analyse();
 
 	//PRAnalyser PRAnalyse;
-	//PRAnalyse.analyse();
+	//PRAnalyse.analyse(backendTarget);
 
 	PPAnalyser PPAnalyse;
-	PPAnalyse.analyse();
+	PPAnalyse.analyse(backendTarget);
+
+	cout << "analysis over" << endl;
 	
 	  cpp_backend.setFileName(fileName);
 	  cpp_backend.generate();

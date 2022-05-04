@@ -24,7 +24,7 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
         sum = sum + pageRank[nbr] / (g.indexofNodes[nbr+1]-g.indexofNodes[nbr]);
       }
       float val = (1 - delta) / num_nodes + delta * sum;
-      diff = diff+ val - pageRank[v];
+      diff = diff + val - pageRank[v];
       pageRank_nxt[v] = val;
     }
     #pragma omp parallel for

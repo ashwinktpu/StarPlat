@@ -1,0 +1,13 @@
+src.modified = True;
+  src.dist=0;
+  bool finished =False;
+
+  fixedPoint until (finished) {
+    finished = True;            
+    forall (v in g.nodes()) {
+      forall (nbr in g.neighbors(v)) {
+        edge e = g.get_edge(v, nbr);
+        <v.dist,finished> = <Min (v.dist, nbr.dist + e.weight), False>;   
+      }
+    }
+  }

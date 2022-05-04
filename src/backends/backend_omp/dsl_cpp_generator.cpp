@@ -248,9 +248,9 @@ void dsl_cpp_generator::generateStatement(statement* stmt)
         main.pushstr_newL(";");
         
     }
-    if(stmt->getTypeofNode()==NODE_BARRIERSTMT)
+    if(stmt->getTypeofNode()==NODE_BARRSTMT)
     {
-      generateBarrier();
+      generateBarrier((barrStmt *)stmt);
     }
     if(stmt->getTypeofNode() == NODE_RETURN)
        {
@@ -1812,9 +1812,17 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct)
      main.pushstr_newL("}");
 }
 
-void dsl_cpp_generator::generateBarrier()
+void dsl_cpp_generator::generateBarrier(barrStmt *bStmt)
 {
-  main.pushstr_newL("#pragma omp barrier");
+  switch (bStmt->getTypeofBarrier())
+  {
+    case BARR_BARRIER:
+      main.pushstr_newL("#pragma omp barrier");
+      break;
+    case BARR_FLUSH:
+      main.pushstr_newL("#pragma omp flush");
+      break;
+  }
 }
 
 void dsl_cpp_generator::generateBlock(blockStatement* blockStmt,bool includeBrace)

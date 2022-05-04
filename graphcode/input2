@@ -1,8 +1,11 @@
-function Compute_SSSP (Graph g) 
+function Compute_SSSP (Graph g,propNode<int> dist, node src) 
 {
-    int x;
-    forall (v in g.nodes().filter(v.modified == True))
-    {
-        x = x + 10;
-    }
+  propNode <bool> modified;
+  g.attachNodeProperty(dist = INF, modified = False);
+  src.modified = True;
+  src.dist=0;
+  bool finished = False;
+  fixedPoint until (finished: !modified) {
+      finished = True;
+  }
 }

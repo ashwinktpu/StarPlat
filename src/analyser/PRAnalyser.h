@@ -26,9 +26,9 @@ class PRAnalyser
     void analyse(char *);
     void analyseFunc(ASTNode *);
     void analyseBlock(statement *);
-    BoolProp *analyseForAll(forallStmt *);
-    void analyseDoWhile(statement *);
-    BoolProp *analyseFor(forallStmt *);
+    BoolProp analyseForAll(forallStmt *);
+    blockStatement *analyseDoWhile(statement *);
+    BoolProp analyseFor(forallStmt *);
 };
 
 #endif

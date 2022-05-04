@@ -104,6 +104,10 @@ blockStatement *PPAnalyser::checkSSSPUpdate(statement *stmt, Identifier *v, Iden
                                                                 ifBlock->addStmtToBlock(assn1);
                                                                 ifBlock->addStmtToBlock(assn2);
                                                                 ifBlock->addStmtToBlock(assn3); 
+                                                                if (strcmp(backend, "omp") == 0)
+                                                                {
+                                                                    ifBlock->addStmtToBlock(barrStmt::nodeForFlush());
+                                                                }
                                                                 ifStmt *ifstmt = ifStmt::create_ifStmt(ifCondn, ifBlock, NULL); 
                                                                 newBlockStmt->addStmtToBlock(ifstmt);
                                                                 /*list <ASTNode *> leftList, rightList;
@@ -327,8 +331,9 @@ void PPAnalyser::analyseFunc(ASTNode *proc)
     return;
 }
 
-void PPAnalyser::analyse()
+void PPAnalyser::analyse(char *backend_sent)
 {
+    backend = backend_sent;
     list<Function *> funcList = frontEndContext.getFuncList();
     for (Function *func : funcList)
         analyseFunc(func);
