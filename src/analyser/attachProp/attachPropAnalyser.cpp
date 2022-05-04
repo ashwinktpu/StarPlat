@@ -7,12 +7,14 @@
 #include "../analyserUtil.cpp"
 #include "../../ast/ASTHelper.cpp"
 
+//Stores the statement pointer and the index in it's parent block
 struct statementPos
 {
   statement *stmt;
   int pos;
 };
 
+//Stores the used variables, minimum left index and maximum right index of a statement
 struct statementRange
 {
   statementPos stPos;
@@ -22,6 +24,7 @@ struct statementRange
   usedVariables dependantVars;
 };
 
+//Checks whether there is RAW, WAW, WAR dependency b/w stmt and variables in usedVars
 bool checkDependancy(statement *stmt, usedVariables &usedVars)
 {
   auto checkExprDependancy = [&usedVars](Expression *expr) -> bool
@@ -132,6 +135,7 @@ bool checkDependancy(statement *stmt, usedVariables &usedVars)
   return false;
 }
 
+//Returns the minimum left index and maximum right index upto which a statement can be moved 
 statementRange getRange(statementPos stPos, vector<statement *> stmts)
 {
   int l = stPos.pos;
@@ -266,20 +270,20 @@ void attachPropAnalyser::analyseBlock(blockStatement *blockStmt)
     }
   }
 
+  //Getting the left min and right max of each attachNodeProp statement
   list<statementRange> stmtRanges;
   for (statementPos stPos : nodeAttachList)
   {
     statementRange validRange = getRange(stPos, newStatements);
-    cout<<"Statement Range "<<validRange.l<<' '<<validRange.r<<endl;
     stmtRanges.push_back(validRange);
   }
 
   list<statementPos> newAttachNodeStmt;
   list<statementRange>::iterator itrs, itre;
 
+  //Merging the attachProp statements based on dependancy
   for (itrs = stmtRanges.begin(); itrs != stmtRanges.end();)
   {
-    cout<<"ITERATION"<<endl;
 
     int left = (itrs->stPos).pos;
     int right = itrs->r;
@@ -320,8 +324,9 @@ void attachPropAnalyser::analyseBlock(blockStatement *blockStmt)
     newStatements.insert(newStatements.begin() + itr->pos, itr->stmt);
   }
 
+  //adding the merged statements to block
   blockStmt->clearStatements();
-  for (statementPos stmt : nodePropList)
+  for (statementPos stmt : nodePropList) //Adding property declaration to start of block
     blockStmt->addStmtToBlock(stmt.stmt);
   for (statement *stmt : newStatements)
     blockStmt->addStmtToBlock(stmt);

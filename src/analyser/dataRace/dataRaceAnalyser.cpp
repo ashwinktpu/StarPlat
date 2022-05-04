@@ -1,15 +1,16 @@
 #include "dataRaceAnalyser.h"
 #include "../analyserUtil.cpp"
 #include "../../ast/ASTHelper.cpp"
-#include "../symbolutil/SymbolTable.h"
+#include "../../symbolutil/SymbolTable.h"
 #include <unordered_map>
 
+//Checking whether given two identifiers are equal
 bool checkIdEqual(Identifier *id1, Identifier *id2)
 {
     // TODO : Update with checking TableEntry*
     return (strcmp(id1->getIdentifier(), id2->getIdentifier()) == 0);
 }
-
+//Cheking whether given two property access are equal
 bool checkPropIdEqual(PropAccess* prop1, PropAccess* prop2)
 {
     return (checkIdEqual(prop1->getIdentifier1(), prop2->getIdentifier1())
@@ -20,7 +21,7 @@ bool checkIdNameEqual(Identifier *id1, char *c)
 {
     return (strcmp(id1->getIdentifier(), c) == 0);
 }
-
+//Chenking whether two expression are syntactically equal
 bool checkExprEqual(Expression *expr1, Expression *expr2)
 {
     if(expr1->getExpressionFamily() == expr2->getExpressionFamily())
@@ -75,7 +76,17 @@ bool checkExprEqual(Expression *expr1, Expression *expr2)
     }
     return false;
 }
+/*
+Converting the following case,
+if(ngbr.prop OP expr)
+{
+    ngbr.prop = expr;
+    ((ngbr.propx = constVal) OR (var = constVal))*
+}
 
+to,
+<ngbr.prop, leftList> = <T_MIN(ngbr.prop, expr), rightList>
+*/
 statement* dataRaceAnalyser::relPropUpdateAnalysis(ifStmt *stmt, Identifier *forIterator)
 {
     Expression *cond = stmt->getCondition();
@@ -177,7 +188,7 @@ statement* dataRaceAnalyser::relPropUpdateAnalysis(ifStmt *stmt, Identifier *for
     
     return stmt;
 }
-
+//Analysing neighbour iteration loop which is inside for-all (parallel) loop 
 statement* dataRaceAnalyser::ngbrForAnalysis(forallStmt *stmt, Identifier *forAllIterator, Identifier *srcGraph)
 {
     proc_callExpr *procCall = stmt->getExtractElementFunc();
@@ -230,7 +241,13 @@ statement* dataRaceAnalyser::ngbrForAnalysis(forallStmt *stmt, Identifier *forAl
     }
     return nullptr;
 }
+/*
+Converting the following case,
+globalVar (INC_OP || DEC_OP);
 
+to,
+globalVar OP= 1;
+*/
 statement* dataRaceAnalyser::unaryReductionAnalysis(unary_stmt* stmt)
 {
     Expression* unaryExpr = stmt->getUnaryExpr();
@@ -252,7 +269,13 @@ statement* dataRaceAnalyser::unaryReductionAnalysis(unary_stmt* stmt)
     }
     return stmt;
 }
+/*
+Converting the following case,
+ngbr.prop (INC_OP || DEC_OP);
 
+to,
+ngbr.prop OP= 1;
+*/
 statement* dataRaceAnalyser::unaryPropReductionAnalysis(unary_stmt* stmt, Identifier* propId)
 {
     Expression* unaryExpr = stmt->getUnaryExpr();
@@ -274,8 +297,13 @@ statement* dataRaceAnalyser::unaryPropReductionAnalysis(unary_stmt* stmt, Identi
     }
     return stmt;
 }
+/*
+Converting the following case,
+globalVar = globalVar ARITHMETIC_OP expr;
 
-
+to,
+globalVar OP= expr;
+*/
 statement* dataRaceAnalyser::assignReductionAnalysis(assignment *stmt)
 {
     if (stmt->lhs_isIdentifier())
@@ -349,18 +377,19 @@ statement* dataRaceAnalyser::assignReductionAnalysis(assignment *stmt)
 }
 
 /*
-Assignment
-Declaration
-Unary statement
+Requirements:
+    Only contains Assignment,
+                    Declaration
+                    or Unary statement
 
-var = var op expr
-expr:
-    local variable
-    properties of current iterator
-    constants
-    read only global variables
+    var = var op expr
+    expr requirements:
+        uses local variables
+        uses properties of current iterator
+        uses constants
+        uses global variables which aren't written in current loop
 
-can Reduce:
+Reduction condition:
     op = +,-,*,&&,||
     var is globalVar
     var shouldn't read or written in any of other statements
@@ -509,7 +538,7 @@ statement* dataRaceAnalyser::blockReductionAnalysis(blockStatement* blockStmt, I
     }
     return newBlock;
 }
-
+//Analyse parallel forall loop
 statement* dataRaceAnalyser::forAllAnalysis(forallStmt *stmt)
 {
     proc_callExpr *procCall = stmt->getExtractElementFunc();
@@ -560,7 +589,7 @@ statement* dataRaceAnalyser::forAllAnalysis(forallStmt *stmt)
     }
     return nullptr;
 }
-
+//Analyse all blocks using recursion
 void dataRaceAnalyser::analyseStatement(statement *stmt)
 {
     switch (stmt->getTypeofNode())
@@ -616,14 +645,14 @@ void dataRaceAnalyser::analyseStatement(statement *stmt)
     break;
     }
 }
-
+//Analyse the given function
 void dataRaceAnalyser::analyseFunc(ASTNode *proc)
 {
     Function *func = (Function *)proc;
     analyseStatement(func->getBlockStatement());
     return;
 }
-
+//Analyse all functions
 void dataRaceAnalyser::analyse()
 {
     list<Function *> funcList = frontEndContext.getFuncList();
