@@ -1,4 +1,4 @@
-EXPENDABLES_WINDOWS = bin\MainContext.o bin\ASTHelper.o bin\SymbolTableBuilder.o bin\SymbolTableNew.o bin\y.tab.o bin\lex.yy.o parser\y.tab.c parser\lex.yy.c bin\dsl_cpp_generator.o bin\deviceVarsAnalyser.o
+EXPENDABLES_WINDOWS = bin\MainContext.o bin\ASTHelper.o bin\SymbolTableBuilder.o bin\SymbolTableNew.o bin\y.tab.o bin\lex.yy.o parser\y.tab.c parser\lex.yy.c bin\dsl_cpp_generator.o bin\deviceVarsAnalyser.o bin\analyserUtil.o bin\dv*.o
 EXPENDABLES = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c bin/dsl_cpp_generator.o bin/deviceVarsAnalyser.o
 ANALYSER = bin/dataRaceAnalyser.o
 
@@ -8,7 +8,7 @@ CFLAGS  = -g
 all: finalcode
 
 PROGRAMS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o
-A_PROGRAM = bin/deviceVarsAnalyser.o bin/analyserUtil.o
+A_PROGRAM = bin/attachPropAnalyser.o bin/dataRaceAnalyser.o bin/deviceVarsAnalyser.o bin/analyserUtil.o
 
 finalcode: $(PROGRAMS) $(A_PROGRAM)
 	$(CC) $(CFLAGS) $(PROGRAMS) $(A_PROGRAM) -o finalcode
@@ -31,11 +31,11 @@ bin/dsl_dyn_cpp_generator.o:  backends/backend_omp/dsl_dyn_cpp_generator.cpp  ba
 bin/dsl_cpp_generator.o:  backends/backend_omp/dsl_cpp_generator.cpp  backends/dslCodePad.h
 	$(CC) $(CFLAGS) -c  backends/backend_omp/dsl_cpp_generator.cpp -o bin/dsl_cpp_generator.o
 
-bin/attachPropAnalyser.o: analyser/attachPropAnalyser.cpp analyser/attachPropAnalyser.h
-	$(CC) -c analyser/attachPropAnalyser.cpp -o bin/attachPropAnalyser.o
+bin/attachPropAnalyser.o: analyser/attachProp/attachPropAnalyser.cpp analyser/attachProp/attachPropAnalyser.h
+	$(CC) -c analyser/attachProp/attachPropAnalyser.cpp -o bin/attachPropAnalyser.o
 
-bin/dataRaceAnalyser.o: analyser/dataRaceAnalyser.cpp analyser/dataRaceAnalyser.h
-	$(CC) -c analyser/dataRaceAnalyser.cpp -o bin/dataRaceAnalyser.o
+bin/dataRaceAnalyser.o: analyser/dataRace/dataRaceAnalyser.cpp analyser/dataRace/dataRaceAnalyser.h
+	$(CC) -c analyser/dataRace/dataRaceAnalyser.cpp -o bin/dataRaceAnalyser.o
 
 bin/deviceVarsAnalyser.o: bin/dv1.o bin/dv2.o bin/dv3.o bin/dv4.o bin/dv5.o
 	ld -r bin/dv1.o bin/dv2.o bin/dv3.o bin/dv4.o bin/dv5.o -o bin/deviceVarsAnalyser.o

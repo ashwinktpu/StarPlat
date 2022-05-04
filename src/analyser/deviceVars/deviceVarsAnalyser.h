@@ -8,6 +8,7 @@
 class lattice
 { 
 public:
+  //Location of a variable
   enum PointType{
     NOT_INITIALIZED,
     CPU_GPU_SHARED,
@@ -15,6 +16,7 @@ public:
     CPU_ONLY,
   };
 
+  //Variable access location and type
   enum AccessType{
     CPU_READ,
     GPU_READ,
@@ -43,7 +45,6 @@ public:
       typeMap[pr.first] = pr.second;
   }
 
-  //TODO : Needs to be changed
   PointType meet(PointType p1, PointType p2, LatticeType type){
     if(type == CPU_Preferenced)
     {
@@ -73,6 +74,7 @@ public:
     }
   }
 
+  //CPU preferenced meet
   void operator ^= (lattice &l1)
   {
     for(pair<TableEntry*, PointType> pr: l1.typeMap)
@@ -92,6 +94,7 @@ public:
     }
   }/**/
 
+  //CPU preferenced meet
   lattice operator^ (const lattice &l1)
   {
     lattice out;
@@ -103,6 +106,7 @@ public:
     return out;
   }
 
+  //GPU preferenced meet
   lattice operator& (const lattice &l1)
   {
     lattice out;
@@ -285,6 +289,7 @@ class deviceVarsAnalyser
   void analyse();
   void analyseFunc(ASTNode* proc);
 
+  //Forward datapropogation analysis on each ASTNodeWrap
   lattice analyseStatement(statement* stmt, lattice&);
   lattice analyseBlock(blockStatement* blockStmt, lattice&);
   lattice analyseUnary(unary_stmt* blockStmt, lattice&);
@@ -300,6 +305,7 @@ class deviceVarsAnalyser
   lattice analyseReduction(reductionCallStmt*, lattice&);
   lattice analyseItrBFS(iterateBFS*, lattice&);
 
+  //Initializes ASTNodeWrap for each statment and collects GPU used variables
   bool initBlock(blockStatement* blockStmt, list<Identifier*> &);
   bool initStatement(statement* stmt, list<Identifier*> &);
   bool initUnary(unary_stmt* blockStmt, list<Identifier*> &);
@@ -323,6 +329,7 @@ class deviceVarsAnalyser
   void printDeclaration(declaration*, int);
   void printForAll(forallStmt*, int);
 
+  //Returns the used variables in each statment
   usedVariables getVarsStatement(statement* stmt);
   usedVariables getVarsBlock(blockStatement* stmt);
   usedVariables getVarsForAll(forallStmt* stmt);
@@ -335,6 +342,11 @@ class deviceVarsAnalyser
   usedVariables getVarsExpr(Expression* stmt);
   usedVariables getVarsReduction(reductionCallStmt *stmt);
 
+  /*
+  Adds variable transfers at required position
+  Flags the GPU used variables
+  Initialized the parameters required to transfer to GPU
+  */
   statement* transferVarsStatement(statement* stmt,blockStatement* parBlock);
   statement* transferVarsForAll(forallStmt* stmt,blockStatement* parBlock);
   statement* transferVarsFor(forallStmt* stmt,blockStatement* parBlock);

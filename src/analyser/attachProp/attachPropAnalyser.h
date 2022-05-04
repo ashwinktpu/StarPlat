@@ -9,9 +9,12 @@ class attachPropAnalyser
   attachPropAnalyser(){
   }
 
+  //Analyses all the functions to merge the possible attachNodeProp for-all statements
   void analyse();
+  //Analyses the body of given function
   void analyseFunc(ASTNode* proc);
   void analyseStatement(statement* stmt);
+  //Iterates through all the attachProp statements in the current block and tries to merge them
   void analyseBlock(blockStatement* blockStmt);
 };
 
