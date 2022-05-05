@@ -1,7 +1,7 @@
 #ifndef PR_ANALYSER
 #define PR_ANALYSER
 
-#include "../ast/ASTNodeTypes.hpp"
+#include "../../ast/ASTNodeTypes.hpp"
 
 class BoolProp
 {

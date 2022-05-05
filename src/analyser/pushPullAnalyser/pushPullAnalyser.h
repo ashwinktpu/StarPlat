@@ -1,7 +1,7 @@
 #ifndef PP_ANALYSER
 #define PP_ANALYSER
 
-#include "../ast/ASTNodeTypes.hpp"
+#include "../../ast/ASTNodeTypes.hpp"
 
 class PPAnalyser
 {

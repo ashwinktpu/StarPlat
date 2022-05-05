@@ -33,17 +33,11 @@ bin/dsl_dyn_cpp_generator.o:  backends/backend_omp/dsl_dyn_cpp_generator.cpp  ba
 #bin/dsl_cpp_generator.o:  backends/backend_omp/dsl_cpp_generator.cpp  backends/dslCodePad.h
 #	$(CC) -c  backends/backend_omp/dsl_cpp_generator.cpp -o bin/dsl_cpp_generator.o
 
-bin/attachPropAnalyser.o: analyser/attachPropAnalyser.cpp analyser/attachPropAnalyser.h
-	$(CC) -c analyser/attachPropAnalyser.cpp -o bin/attachPropAnalyser.o
+bin/PRAnalyser.o: analyser/PRAnalyser/PRAnalyser.cpp analyser/PRAnalyser/PRAnalyser.h
+	$(CC) -c analyser/PRAnalyser/PRAnalyser.cpp -o bin/PRAnalyser.o
 
-bin/dataRaceAnalyser.o: analyser/dataRaceAnalyser.cpp analyser/dataRaceAnalyser.h
-	$(CC) -c analyser/dataRaceAnalyser.cpp -o bin/dataRaceAnalyser.o
-
-bin/PRAnalyser.o: analyser/PRAnalyser.cpp analyser/PRAnalyser.h
-	$(CC) -c analyser/PRAnalyser.cpp -o bin/PRAnalyser.o
-
-bin/pushPullAnalyser.o: analyser/pushPullAnalyser.cpp analyser/pushPullAnalyser.h
-	$(CC) -c analyser/pushPullAnalyser.cpp -o bin/pushPullAnalyser.o
+bin/pushPullAnalyser.o: analyser/pushPullAnalyser/pushPullAnalyser.cpp analyser/pushPullAnalyser/pushPullAnalyser.h
+	$(CC) -c analyser/pushPullAnalyser/pushPullAnalyser.cpp -o bin/pushPullAnalyser.o
 
 bin/analyserUtil.o: analyser/analyserUtil.hpp
 	$(CC) -c analyser/analyserUtil.hpp -o bin/analyserUtil.o

@@ -1,7 +1,7 @@
 #include "pushPullAnalyser.h"
-#include "../ast/ASTHelper.cpp"
-#include "../symbolutil/SymbolTable.h"
-#include "analyserUtil.hpp"
+#include "../../ast/ASTHelper.cpp"
+#include "../../symbolutil/SymbolTable.h"
+#include "../analyserUtil.cpp"
 
 bool checkIdEqual(Identifier *id1, Identifier *id2)
 {

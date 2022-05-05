@@ -4,10 +4,8 @@
 	#include <stdlib.h>
 	#include <stdbool.h>
     #include "includeHeader.hpp"
-	//#include "../analyser/attachPropAnalyser.h"
-	//#include "../analyser/dataRaceAnalyser.h"
-	//#include "../analyser/PRAnalyser.h"
-	#include "../analyser/pushPullAnalyser.h"
+	#include "../analyser/PRAnalyser/PRAnalyser.h"
+	#include "../analyser/pushPullAnalyser/pushPullAnalyser.h"
 	#include<getopt.h>
 	//#include "../symbolutil/SymbolTableBuilder.cpp"
      
@@ -496,14 +494,8 @@ int main(int argc,char **argv)
 	if(staticGen)
 	  {
 
-	//attachPropAnalyser propMerge;
-	//propMerge.analyse();
-
-	//dataRaceAnalyser dataRaceAnalyse;
-	//dataRaceAnalyse.analyse();
-
-	//PRAnalyser PRAnalyse;
-	//PRAnalyse.analyse(backendTarget);
+	PRAnalyser PRAnalyse;
+	PRAnalyse.analyse(backendTarget);
 
 	PPAnalyser PPAnalyse;
 	PPAnalyse.analyse(backendTarget);

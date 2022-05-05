@@ -1,7 +1,7 @@
 #include "PRAnalyser.h"
-#include "../ast/ASTHelper.cpp"
-#include "../symbolutil/SymbolTable.h"
-#include "analyserUtil.hpp"
+#include "../../ast/ASTHelper.cpp"
+#include "../../symbolutil/SymbolTable.h"
+#include "../analyserUtil.cpp"
 
 usedVariables getVarsExpr(Expression *expr);
 
