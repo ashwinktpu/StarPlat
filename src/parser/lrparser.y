@@ -4,8 +4,8 @@
 	#include <stdlib.h>
 	#include <stdbool.h>
     #include "includeHeader.hpp"
-	//#include "../attachProp/analyser/attachPropAnalyser.h"
-	//#include "../dataRace/analyser/dataRaceAnalyser.h"
+	#include "../analyser/attachProp/attachPropAnalyser.h"
+	#include "../analyser/dataRace/dataRaceAnalyser.h"
 	#include "../analyser/deviceVars/deviceVarsAnalyser.h"
 	#include<getopt.h>
 	//#include "../symbolutil/SymbolTableBuilder.cpp"
@@ -422,8 +422,9 @@ int main(int argc,char **argv)
   backendTarget = NULL;
   bool staticGen = false;
   bool dynamicGen = false;
+  bool optimize = false;
 
-  while ((opt = getopt(argc, argv, "sdf:b:")) != -1) 
+  while ((opt = getopt(argc, argv, "sdf:b:o")) != -1) 
   {
      switch (opt) 
      {
@@ -438,7 +439,10 @@ int main(int argc,char **argv)
 		break;
 	  case 'd':
 	    dynamicGen = true;
-        break;		
+        break;	
+	  case 'o':
+	  	optimize = true;
+		break;	
       case '?':
         fprintf(stderr,"Unknown option: %c\n", optopt);
 		exit(-1);
@@ -489,13 +493,20 @@ int main(int argc,char **argv)
 	{
      //TODO: redirect to different backend generator after comparing with the 'b' option
     stBuilder.buildST(frontEndContext.getFuncList());
-	
-	deviceVarsAnalyser dvAnalyser;
-	dvAnalyser.analyse();
-
 
 	if(staticGen)
 	  {
+		  if(optimize)
+		  {
+			  attachPropAnalyser apAnalyser;
+			  apAnalyser.analyse();
+
+			  dataRaceAnalyser drAnalyser;
+			  drAnalyser.analyse();
+
+			  deviceVarsAnalyser dvAnalyser;
+			  dvAnalyser.analyse();
+		  }
 	  cpp_backend.setFileName(fileName);
 	  cpp_backend.generate();
 	  }
