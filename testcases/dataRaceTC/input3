@@ -1,0 +1,22 @@
+function test(Graph g)
+{
+    int x = 0;
+    int y = 0;
+    int z = 0;
+    int globalVar = 10;
+
+    propNode<int> prop;
+    g.attachNodeProperty(prop = 10);
+    forall(v in g.nodes())
+    {
+        int l1;
+        int l2;
+        l1 = 100;
+        l2 = 1000;
+
+        v.prop = 100;
+        x = x + (l1++);
+        y = (v.prop++) + y;
+        z = z + globalVar;
+    }
+}

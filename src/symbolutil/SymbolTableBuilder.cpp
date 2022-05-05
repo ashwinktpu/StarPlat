@@ -1,7 +1,8 @@
 #include "SymbolTableBuilder.h"
+#include "../ast/ASTHelper.cpp"
 
 bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
- {  
+ {   // cout<<"ID VALUE IN SEARCH"<<id->getIdentifier()<<"\n";
      assert(id!=NULL);
      assert(id->getIdentifier()!=NULL);
      TableEntry* tableEntry=sTab->findEntryInST(id);
@@ -9,6 +10,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
      {  return false;
          //to be added.
      }
+     // cout<<"FINALLY FOUND IT"<<"\n";
      if(id->getSymbolInfo()!=NULL)
       {
       assert(id->getSymbolInfo()==tableEntry);
@@ -214,7 +216,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                }
                if(depId->getSymbolInfo()!=NULL)
                  {  
-                     printf("Inside fixedptId...\n");
+                     
                      Identifier* tableId = depId->getSymbolInfo()->getId();
                      tableId->set_redecl(); //explained in the ASTNodeTypes
                      tableId->set_fpassociation(); //explained in the ASTNodeTypes
@@ -283,8 +285,15 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                    }
                }
 
+              init_curr_SymbolTable(forAll);
+    
+              Type* type = (Type*) Util::createNodeEdgeTypeNode(TYPE_NODE);
+              bool creatsFine=create_Symbol(currVarSymbT,forAll->getIterator(),type);
+
               buildForStatements(forAll->getBody());  
-               if(((backend.compare("omp")==0)||(backend.compare("cuda")==0))&&forAll->isForall())
+              delete_curr_SymbolTable();
+
+               if(backend.compare("omp")==0&&forAll->isForall())
                     {  
                         parallelConstruct.pop_back();
                     } 
@@ -460,6 +469,12 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
            dowhileStmt* doStmt=(dowhileStmt*)stmt;
            checkForExpressions(doStmt->getCondition());
            buildForStatements(doStmt->getBody());
+           break;
+       }
+       case NODE_UNARYSTMT:
+       {
+           unary_stmt* unaryStmt = (unary_stmt*) stmt;
+           checkForExpressions(unaryStmt->getUnaryExpr());
            break;
        }
       

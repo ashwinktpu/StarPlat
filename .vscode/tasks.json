@@ -18,7 +18,10 @@
 			"problemMatcher": [
 				"$gcc"
 			],
-			"group": "build",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
 			"detail": "compiler: C:\\msys64\\mingw64\\bin\\g++.exe"
 		}
 	]

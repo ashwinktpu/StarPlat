@@ -28,6 +28,7 @@ extern vector<map<int,vector<Identifier*>>> graphId;
                                                        referenced in current function,
                                                        where the graphId vector is 
                                                        separated across different function type*/
+class varTransferStmt;
 
 class argument
 {  
@@ -1031,6 +1032,7 @@ class formalParam:public ASTNode
     Type* type;
     Identifier* identifier;
     Expression* exprAssigned;
+    bool inGPU;
 
     public:
     declaration()
@@ -1039,7 +1041,7 @@ class formalParam:public ASTNode
         identifier=NULL;
         exprAssigned=NULL;
         statementType="declaration";
-        
+        inGPU = false;
        
     }
 
@@ -1086,6 +1088,13 @@ class formalParam:public ASTNode
       return (exprAssigned!=NULL);
     }
 
+    void setInGPU(bool inGPU){
+      this->inGPU = inGPU;
+    }
+
+    bool getInGPU(){
+      return inGPU;
+    }
   };
   class assignment:public statement
   {
@@ -1243,6 +1252,10 @@ class whileStmt:public statement
       return body;
     }
 
+    void setBody(blockStatement* bodySent)
+    {
+       body=bodySent;
+    }
   }; 
   class dowhileStmt:public statement
 {
@@ -1280,6 +1293,10 @@ class whileStmt:public statement
       return body;
     }
 
+    void setBody(blockStatement* bodySent)
+    {
+       body=bodySent;
+    }
   };
 
   
@@ -1329,7 +1346,10 @@ class fixedPointStmt:public statement
      {
        return body;
      }
-
+    void setBody(statement* body)
+    {
+      this->body = body;
+    }
 
 };
 
@@ -1387,7 +1407,9 @@ class fixedPointStmt:public statement
     Expression* booleanExpr;
     Expression* filterExpr;
     statement* body;
+    //list<varTransferStmt*> revTransfer;
 
+    list<Identifier*> usedVars;
     public: 
     iterateReverseBFS()
     {
@@ -1420,6 +1442,14 @@ class fixedPointStmt:public statement
     {
       return booleanExpr;
     }
+
+    void initUsedVariable(list<Identifier*> usedVars){
+      this->usedVars = usedVars;
+    }
+    
+    /*void addVarTransfer(varTransferStmt* tstmt){
+      this->revTransfer.push_back(tstmt);
+    }*/
 
   };
 
@@ -1495,7 +1525,7 @@ class fixedPointStmt:public statement
       statement* body;
       iterateReverseBFS* revBFS;
 
-
+      list<Identifier*> usedVars;
       public:
 
       iterateBFS()
@@ -1556,6 +1586,9 @@ class fixedPointStmt:public statement
         return nodeCall;
       }
 
+      void initUsedVariable(list<Identifier*> usedVars){
+      this->usedVars = usedVars;
+    }
   };
   
   class unary_stmt:public statement
@@ -1631,6 +1664,7 @@ class fixedPointStmt:public statement
     map<int,list<Identifier*>> reduction_map;
     set<int> reduc_keys;
     
+    list<Identifier*> usedVars;
     public:
     forallStmt()
     { 
@@ -1643,6 +1677,7 @@ class fixedPointStmt:public statement
       typeofNode=NODE_FORALLSTMT;
       isforall=false;
       isSourceId=false;
+      createSymbTab();
     }
 
     static forallStmt* createforallStmt(Identifier* iterator,Identifier* sourceGraph,proc_callExpr* extractElemFunc,statement* body,Expression* filterExpr,bool isforall)
@@ -1788,7 +1823,9 @@ class fixedPointStmt:public statement
 
     }
 
-
+    void initUsedVariable(list<Identifier*> usedVars){
+      this->usedVars = usedVars;
+    }
 };
   class reductionCall:public ASTNode
   {
@@ -2032,4 +2069,21 @@ class barrStmt:public statement
 
 };
 
+class varTransferStmt: public statement
+{
+  public:
+
+  Identifier* transferVar;
+  bool direction;
+  /* 0 -> CPU to GPU
+    1 -> GPU to CPU
+  */
+
+  varTransferStmt(Identifier* iden, bool dir)
+  {
+    this->transferVar = iden;
+    this->direction = dir;
+    setTypeofNode(NODE_TRANSFERSTMT);
+  } 
+};
 #endif

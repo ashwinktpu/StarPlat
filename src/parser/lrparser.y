@@ -6,6 +6,9 @@
     #include "includeHeader.hpp"
 	#include "../analyser/PRAnalyser/PRAnalyser.h"
 	#include "../analyser/pushPullAnalyser/pushPullAnalyser.h"
+	#include "../analyser/attachProp/attachPropAnalyser.h"
+	#include "../analyser/dataRace/dataRaceAnalyser.h"
+	#include "../analyser/deviceVars/deviceVarsAnalyser.h"
 	#include<getopt.h>
 	//#include "../symbolutil/SymbolTableBuilder.cpp"
      
@@ -415,16 +418,15 @@ int main(int argc,char **argv)
     dsl_cpp_generator cpp_backend;
     SymbolTableBuilder stBuilder;
      FILE    *fd;
-    
-
-
+     
   int opt;
   char* fileName=NULL;
   backendTarget = NULL;
   bool staticGen = false;
   bool dynamicGen = false;
+  bool optimize = false;
 
-  while ((opt = getopt(argc, argv, "sdf:b:")) != -1) 
+  while ((opt = getopt(argc, argv, "sdf:b:o")) != -1) 
   {
      switch (opt) 
      {
@@ -439,7 +441,10 @@ int main(int argc,char **argv)
 		break;
 	  case 'd':
 	    dynamicGen = true;
-        break;		
+        break;	
+	  case 'o':
+	  	optimize = true;
+		break;	
       case '?':
         fprintf(stderr,"Unknown option: %c\n", optopt);
 		exit(-1);
@@ -502,16 +507,31 @@ int main(int argc,char **argv)
 
 	cout << "analysis over" << endl;
 	
+
+	if(staticGen)
+	  {
+		  if(optimize)
+		  {
+			  attachPropAnalyser apAnalyser;
+			  apAnalyser.analyse();
+
+			  dataRaceAnalyser drAnalyser;
+			  drAnalyser.analyse();
+
+			  deviceVarsAnalyser dvAnalyser;
+			  dvAnalyser.analyse();
+		  }
 	  cpp_backend.setFileName(fileName);
 	  cpp_backend.generate();
 	  }
 	else
 	 {
+		 /*
 		 printf("static graphsize %d\n",graphId[2][0].size());
 		 dsl_dyn_cpp_generator cpp_dyn_gen;
 		 cpp_dyn_gen.setFileName(fileName);
 		 cpp_dyn_gen.generate();
-
+		*/
 	 }
 	
 	}

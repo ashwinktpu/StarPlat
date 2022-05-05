@@ -105,17 +105,21 @@ NEGATE [-]
 
 
  /* Graph Types */
-"Graph" 	{/* printf("Graph Type"); */ return T_GRAPH;}
-"dirGraph" 	{/* printf("Directed Graph Type"); */  return T_DIR_GRAPH;}
-"node" 		{/* printf("Node Type"); */  return T_NODE;}
-"edge" 		{/* printf("Edge Type"); */return T_EDGE;}
-"propNode" {/* printf("Node Property"); */  return T_NP;}
-"propEdge" {/* printf("Edge Property"); */ return T_EP;}
+"Graph" 	{printf("Graph Type"); return T_GRAPH;}
+"dirGraph" 	{printf("Directed Graph Type");  return T_DIR_GRAPH;}
+"node" 		{printf("Node Type");  return T_NODE;}
+"edge" 		{printf("Edge Type");return T_EDGE;}
+"propNode" {printf("Node Property");  return T_NP;}
+"propEdge" {printf("Edge Property"); return T_EP;}
+
+
+
  
  /* Collection Type */
-"SetN" 	{/* printf("Set of Nodes"); */  return T_SET_NODES;}
-"SetE" 	{/* printf("Set of Edges"); */ return T_SET_EDGES;}
-"list" {/* printf("list type"); */ return T_LIST;}
+"SetN" 	{printf("Set of Nodes");  return T_SET_NODES;}
+"SetE" 	{printf("Set of Edges"); return T_SET_EDGES;}
+"list" {printf("list type"); return T_LIST;}
+"updates" {printf("updates type"); return T_UPDATES;}
 
 
  /* Numbers and Identifies */

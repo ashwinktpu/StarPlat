@@ -7,6 +7,6 @@
 #include<omp.h>
 #include"../graph.hpp"
 
-void Compute_SSSP(graph& g,int* dist,int src);
+void test(graph& g,int src);
 
 #endif

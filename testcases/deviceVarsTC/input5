@@ -1,0 +1,12 @@
+function test(Graph g)
+{
+    propNode<int> prop;
+    g.attachNodeProperty(prop =  10);
+
+    while(True)
+    {
+        forall(v in g.nodes()){
+            v.prop++;
+        }
+    }
+}
