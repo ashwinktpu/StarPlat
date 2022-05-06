@@ -128,7 +128,7 @@ bool checkDependancy(statement *stmt, usedVariables &usedVars)
     }
   }
   break;
-
+  //For all other statements return True
   default:
     return true;
   }
@@ -157,16 +157,6 @@ statementRange getRange(statementPos stPos, vector<statement *> stmts)
       usedVars.addVariable(asgn->getId(), WRITE);
     }
   }
-
-  /*cout<<"Read variables"<<endl;
-  for(Identifier* rVars: usedVars.getReadVariables())
-    printf("%p ", rVars->getSymbolInfo());
-  cout<<endl;
-
-  cout<<"Write variables"<<endl;
-  for(Identifier* wVars: usedVars.getWriteVariables())
-    printf("%p ", wVars->getSymbolInfo());
-  cout<<endl;*/
 
   while (l > 0 && !checkDependancy(stmts[l - 1], usedVars))
   {

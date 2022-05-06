@@ -503,9 +503,12 @@ int main(int argc,char **argv)
 
 			  dataRaceAnalyser drAnalyser;
 			  drAnalyser.analyse();
-
-			  deviceVarsAnalyser dvAnalyser;
-			  dvAnalyser.analyse();
+			  
+			  if(strcmp(backendTarget,"cuda")==0)
+			  {
+			  	deviceVarsAnalyser dvAnalyser;
+			  	dvAnalyser.analyse();
+			  }
 		  }
 	  cpp_backend.setFileName(fileName);
 	  cpp_backend.generate();
