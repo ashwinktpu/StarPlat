@@ -498,18 +498,6 @@ int main(int argc,char **argv)
 	
 	if(staticGen)
 	  {
-
-	PRAnalyser PRAnalyse;
-	PRAnalyse.analyse(backendTarget);
-
-	PPAnalyser PPAnalyse;
-	PPAnalyse.analyse(backendTarget);
-
-	cout << "analysis over" << endl;
-	
-
-	if(staticGen)
-	  {
 		  if(optimize)
 		  {
 			  attachPropAnalyser apAnalyser;
@@ -520,6 +508,13 @@ int main(int argc,char **argv)
 
 			  deviceVarsAnalyser dvAnalyser;
 			  dvAnalyser.analyse();
+
+			  PRAnalyser PRAnalyse;
+			  PRAnalyse.analyse(backendTarget);
+
+			  PPAnalyser PPAnalyse;
+			  PPAnalyse.analyse(backendTarget);
+
 		  }
 	  cpp_backend.setFileName(fileName);
 	  cpp_backend.generate();

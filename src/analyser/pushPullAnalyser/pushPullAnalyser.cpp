@@ -3,7 +3,11 @@
 #include "../../symbolutil/SymbolTable.h"
 #include "../analyserUtil.cpp"
 
-bool checkIdEqual(Identifier *id1, Identifier *id2)
+bool checkIdEqual(Identifier *id1, Identifier *id2);
+
+bool checkIdNameEqual(Identifier *id1, char *c);
+
+/*bool checkIdEqual(Identifier *id1, Identifier *id2)
 {
     return (strcmp(id1->getIdentifier(), id2->getIdentifier()) == 0);
 }
@@ -11,7 +15,7 @@ bool checkIdEqual(Identifier *id1, Identifier *id2)
 bool checkIdNameEqual(Identifier *id1, char *c)
 {
     return (strcmp(id1->getIdentifier(), c) == 0);
-}
+}*/
 
 blockStatement *PPAnalyser::checkSSSPUpdate(statement *stmt, Identifier *v, Identifier *nbr, Identifier *modified, Identifier *g, Identifier *finished)
 {
@@ -106,7 +110,7 @@ blockStatement *PPAnalyser::checkSSSPUpdate(statement *stmt, Identifier *v, Iden
                                                                 ifBlock->addStmtToBlock(assn3); 
                                                                 if (strcmp(backend, "omp") == 0)
                                                                 {
-                                                                    ifBlock->addStmtToBlock(barrStmt::nodeForFlush());
+                                                                    //ifBlock->addStmtToBlock(barrStmt::nodeForFlush());
                                                                 }
                                                                 ifStmt *ifstmt = ifStmt::create_ifStmt(ifCondn, ifBlock, NULL); 
                                                                 newBlockStmt->addStmtToBlock(ifstmt);

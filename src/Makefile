@@ -1,6 +1,5 @@
-EXPENDABLES_WINDOWS = bin\MainContext.o bin\ASTHelper.o bin\SymbolTableBuilder.o bin\SymbolTableNew.o bin\y.tab.o bin\lex.yy.o parser\y.tab.c parser\lex.yy.c bin\dsl_cpp_generator.o bin\deviceVarsAnalyser.o bin\analyserUtil.o bin\dv*.o
-EXPENDABLES = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c bin/dsl_cpp_generator.o bin/deviceVarsAnalyser.o
-ANALYSER = bin/dataRaceAnalyser.o
+EXPENDABLES_WINDOWS = bin\MainContext.o bin\ASTHelper.o bin\SymbolTableBuilder.o bin\SymbolTableNew.o bin\y.tab.o bin\lex.yy.o parser\y.tab.c parser\lex.yy.c bin\dsl_cpp_generator.o bin\deviceVarsAnalyser.o bin\dsl_dyn_cpp_generator.o bin\analyserUtil.o bin\dv*.o
+EXPENDABLES = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c bin/dsl_cpp_generator.o bin/dsl_dyn_cpp_generator.o bin/deviceVarsAnalyser.o bin/analyserUtil.o bin/dv*.o bin/attachPropAnalyser.o bin/dataRaceAnalyser.o bin/temp.o bin/pushPullAnalyser.o bin/PRAnalyser.o
 
 CC = g++  
 CFLAGS  = -g 
@@ -8,7 +7,7 @@ CFLAGS  = -g
 all: finalcode
 
 PROGRAMS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o
-A_PROGRAM = bin/attachPropAnalyser.o bin/dataRaceAnalyser.o bin/deviceVarsAnalyser.o bin/analyserUtil.o
+A_PROGRAM = bin/attachPropAnalyser.o bin/dataRaceAnalyser.o bin/deviceVarsAnalyser.o bin/analyserUtil.o bin/PRAnalyser.o bin/pushPullAnalyser.o
 
 finalcode: $(PROGRAMS) $(A_PROGRAM)
 	$(CC) $(CFLAGS) $(PROGRAMS) $(A_PROGRAM) -o finalcode
@@ -55,14 +54,14 @@ bin/dv4.o: analyser/deviceVars/deviceVarsTransfer.cpp analyser/deviceVars/device
 bin/dv5.o: analyser/deviceVars/getUsedVars.cpp analyser/deviceVars/deviceVarsAnalyser.h analyser/analyserUtil.cpp
 	$(CC) $(CFLAGS) -c analyser/deviceVars/getUsedVars.cpp -o bin/dv5.o
 
+bin/pushPullAnalyser.o: analyser/pushPullAnalyser/pushPullAnalyser.cpp analyser/pushPullAnalyser/pushPullAnalyser.h
+	$(CC) -c analyser/pushPullAnalyser/pushPullAnalyser.cpp -o bin/pushPullAnalyser.o
+
+bin/PRAnalyser.o: analyser/PRAnalyser/PRAnalyser.cpp analyser/PRAnalyser/PRAnalyser.h
+	$(CC) -c analyser/PRAnalyser/PRAnalyser.cpp -o bin/PRAnalyser.o
+
 bin/analyserUtil.o: analyser/analyserUtil.cpp
 	$(CC) -c analyser/analyserUtil.cpp -o bin/analyserUtil.o
-
-bin/temp.o: analyser/temp.cpp analyser/pushPullAnalyser.h
-	$(CC) -c analyser/temp.cpp -o bin/temp.o
-
-#bin/dsl_cpp_generator.o: backends/backend_mpi/mpi_cpp_generator.cpp backends/dslCodePad.h
-#	$(CC) -c backends/backend_mpi/mpi_cpp_generator.cpp -o bin/dsl_cpp_generator.o
 
 bin/y.tab.o: parser/lexer.l parser/lrparser.y
 	$(MAKE) -C parser

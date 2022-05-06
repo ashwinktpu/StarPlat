@@ -3,9 +3,11 @@
 #include "../../symbolutil/SymbolTable.h"
 #include "../analyserUtil.cpp"
 
-usedVariables getVarsExpr(Expression *expr);
+bool checkIdEqual(Identifier *id1, Identifier *id2);
 
-bool checkIdEqual(Identifier *id1, Identifier *id2)
+bool checkIdNameEqual(Identifier *id1, char *c);
+
+/*bool checkIdEqual(Identifier *id1, Identifier *id2)
 {
     return id1 != NULL && id2 != NULL && (strcmp(id1->getIdentifier(), id2->getIdentifier()) == 0);
 }
@@ -13,7 +15,7 @@ bool checkIdEqual(Identifier *id1, Identifier *id2)
 bool checkIdNameEqual(Identifier *id1, char *c)
 {
     return (strcmp(id1->getIdentifier(), c) == 0);
-}
+}*/
 
 bool checkPropEqual(PropAccess *prop1, PropAccess *prop2)
 {
@@ -100,7 +102,7 @@ BoolProp PRAnalyser::analyseFor(forallStmt *stmt)
         case NODE_ASSIGN:
         {
             assignment *assignStmt = (assignment *)body;
-            usedVariables usedVars = getVarsExpr(assignStmt->getExpr());
+            usedVariables usedVars = analyserUtils::getVarsExpr(assignStmt->getExpr());
             list <PropAccess *> usedProps = usedVars.getPropAcess();
             if (usedProps.size() > 0)
                 return BoolProp(true, usedProps.front(), assignStmt->getId());
@@ -113,7 +115,7 @@ BoolProp PRAnalyser::analyseFor(forallStmt *stmt)
                 if (stmt->getTypeofNode() == NODE_ASSIGN)
                 {
                     assignment *assnStmt = (assignment *)stmt;
-                    usedVariables usedVars = getVarsExpr(assnStmt->getExpr());
+                    usedVariables usedVars = analyserUtils::getVarsExpr(assnStmt->getExpr());
                     list <PropAccess *> usedProps = usedVars.getPropAcess();
                     if (usedProps.size() > 0)
                         return BoolProp(true, usedProps.front(), assnStmt->getId());
