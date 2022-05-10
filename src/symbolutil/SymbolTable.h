@@ -1,6 +1,7 @@
  #ifndef SYMBOLTABLE_H
 #define SYMBOLTABLE_H
 
+#include <cstddef> //for NULL in gcc 6
 #include<list>
 
 using namespace std;

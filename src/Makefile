@@ -4,11 +4,20 @@ ANALYSER = bin/dataRaceAnalyser.o
 
 CC = g++  
 CFLAGS  = -g 
+CC = g++ -g -std=c++11 -Wall -Wreturn-type #-fsanitize=address
 
 all: finalcode
 
 PROGRAMS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o
 A_PROGRAM = bin/attachPropAnalyser.o bin/dataRaceAnalyser.o bin/deviceVarsAnalyser.o bin/analyserUtil.o
+cuda: bin generator_cuda finalcode_cuda clean
+
+finalcode_cuda: bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o
+	$(CC) bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o -o finalcode
+
+#~ Earlier finalcode
+finalcode: bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o
+	$(CC) bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o  -ll -o finalcode
 
 finalcode: $(PROGRAMS) $(A_PROGRAM)
 	$(CC) $(CFLAGS) $(PROGRAMS) $(A_PROGRAM) -o finalcode
@@ -18,6 +27,8 @@ bin/MainContext.o: maincontext/MainContext.cpp maincontext/MainContext.hpp
 
 bin/ASTHelper.o: ast/ASTHelper.cpp ast/ASTNode.hpp 
 	$(CC) $(CFLAGS) -c ast/ASTHelper.cpp -o bin/ASTHelper.o
+bin/SymbolTableBuilder.o: symbolutil/SymbolTableBuilder.cpp
+	$(CC) -c symbolutil/SymbolTableBuilder.cpp -o bin/SymbolTableBuilder.o
 
 bin/SymbolTableBuilder.o: symbolutil/SymbolTableBuilder.cpp symbolutil/SymbolTableBuilder.h
 	$(CC) $(CFLAGS) -c symbolutil/SymbolTableBuilder.cpp -o bin/SymbolTableBuilder.o
@@ -72,3 +83,21 @@ clean:
 
 clean_windows:
 	del $(EXPENDABLES_WINDOWS)
+bin/dsl_cpp_generator.o: backends/backend_omp/dsl_cpp_generator.cpp backends/dslCodePad.h
+	$(CC) -c backends/backend_omp/dsl_cpp_generator.cpp -o bin/dsl_cpp_generator.o
+
+generator_cuda: backends/backend_cuda/dsl_cpp_generator.cpp backends/dslCodePad.h
+	$(CC) -c backends/backend_cuda/dsl_cpp_generator.cpp -o bin/dsl_cpp_generator.o
+
+bin/y.tab.o:
+	$(MAKE) -C parser
+
+bin/lex.yy.o:
+	$(MAKE) -C parser
+
+bin:
+	mkdir -p bin
+	mkdir -p ../graphcode/generated_cuda
+
+clean:
+	rm -f $(EXPENDABLES)

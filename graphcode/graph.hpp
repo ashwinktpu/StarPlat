@@ -71,7 +71,7 @@ class graph
   {
       return edges;
   }
-  
+
    int* getEdgeLen()
   {
     return edgeLen;
@@ -335,28 +335,71 @@ class graph
     }
 
 
-   void parseEdges()
-   {
+
+    //GPU specific check for neighbours for TC algorithm
+    __device__ bool findNeighborSorted (int s, int d, int * gpu_OA, int *gpu_edgeList)   //we can move this to graph.hpp file
+    {
+      int startEdge=gpu_OA[s];
+      int endEdge=gpu_OA[s+1]-1;
+
+
+      if(gpu_edgeList[startEdge]==d)
+          return true;
+      if(gpu_edgeList[endEdge]==d)
+         return true;
+
+       int mid = (startEdge+endEdge)/2;
+
+      while(startEdge<=endEdge)
+        {
+
+          if(gpu_edgeList[mid]==d)
+             return true;
+
+          if(d<gpu_edgeList[mid])
+             endEdge=mid-1;
+          else
+            startEdge=mid+1;
+
+          mid = (startEdge+endEdge)/2;
+
+        }
+
+      return false;
+
+    }
+
+
+   void parseGraph()
+  {
+    //printf("OH HELLOHIHod \n");
      std::ifstream infile;
      infile.open(filePath);
      std::string line;
+
+
+
+
+
      while (std::getline(infile,line))
      {
-      
+
       // std::stringstream(line);
-      
+
        if (line.length()==0||line[0] < '0' || line[0] >'9') {
-          continue; 
+          continue;
 
 	    	}
-        
+
         std::stringstream ss(line);
-        
+
         edgesTotal++;
          
         //edgesTotal++; //TO BE REMOVED 
 
-        
+        //edgesTotal++; //TO BE REMOVED
+
+
         edge e;
         
     
@@ -408,12 +451,12 @@ class graph
                                if(e1.source!=e2.source)
                                   return e1.source<e2.source;
 
-                                return e1.destination<e2.destination;  
+                                return e1.destination<e2.destination;
 
                             });
 
-     }                      
-                   
+     }
+
      indexofNodes=new int32_t[nodesTotal+2];
      rev_indexofNodes=new int32_t[nodesTotal+2];
      edgeList=new int32_t[edgesTotal]; //new int32_t[edgesTotal] ;
@@ -433,17 +476,17 @@ class graph
     for(int i=0;i<=nodesTotal;i++) //change to 1-nodesTotal.
     {
       std::vector<edge> edgeofVertex=edges[i];
-      
+
       indexofNodes[i]=edge_no;
-     
+
       std::vector<edge>::iterator itr;
-    
+
       for(itr=edgeofVertex.begin();itr!=edgeofVertex.end();itr++)
-      { 
-       
-       
+      {
+
+
         edgeList[edge_no]=(*itr).destination;
-        
+
         edgeLen[edge_no]=(*itr).weight;
         edge_no++;
       }

@@ -15,13 +15,20 @@ class SymbolTableBuilder
  list<SymbolTable*> propSymbolTables;
  SymbolTable* currVarSymbT;
  SymbolTable* currPropSymbT;
+<<<<<<< HEAD
  Function* currentFunc; 
 
+=======
+>>>>>>> origin/cuda
  
  
 
  public:
+<<<<<<< HEAD
  vector<ASTNode*> parallelConstruct;
+=======
+ stack<ASTNode*> parallelConstruct;
+>>>>>>> origin/cuda
  SymbolTableBuilder()
  {
      currVarSymbT=NULL;
@@ -69,4 +76,8 @@ char* getbackendTarget();
 };
 
 
+<<<<<<< HEAD
 #endif
+=======
+#endif
+>>>>>>> origin/cuda

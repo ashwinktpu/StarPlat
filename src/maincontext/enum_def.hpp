@@ -47,7 +47,7 @@ inline bool check_isPrimitiveType(int typeId)
  inline bool check_isPropNodeType(int typeId)
  {
    return typeId==TYPE_PROPNODE;
- } 
+ }
 
  inline bool check_isPropEdgeType(int typeId)
  {
@@ -105,7 +105,6 @@ enum OPERATOR
  OPERATOR_ANDASSIGN,
  OPERATOR_SUBASSIGN,
 
-
 };
 
 enum FUNCTYPE
@@ -117,8 +116,7 @@ enum FUNCTYPE
   
 };
 
-enum NODETYPE
-{
+enum NODETYPE{
   NODE_ID,
   NODE_PROPACCESS,
   NODE_FUNC,
