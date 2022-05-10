@@ -6,7 +6,7 @@ NEGATE [-]
 
 %{
     #include <stdlib.h>
-    #include <stdio.h>  
+    #include <stdio.h>
     #include <string.h>
     #include "includeHeader.hpp"
     #include "y.tab.h"
@@ -44,12 +44,18 @@ NEGATE [-]
 "fixedPoint" {printf("Keyword fixedPoint"); return T_FIXEDPOINT;}
 "until"      {printf("Keyword until");  return T_UNTIL;}
 "iterateInBFS"  {printf("iterateInBFS");  return T_BFS;}
+<<<<<<< HEAD
 "iterateInReverse" {printf("iterateInReverse");  return T_REVERSE;} 
 "from"          {printf("from"); return T_FROM;} 
 "filter"        {printf("filter");  return T_FILTER;} 
 "Incremental"   {printf("incremental"); return T_INCREMENTAL;}
 "Decremental"   {printf("decremental"); return T_DECREMENTAL;}
 "Static"        {printf("static"); return T_STATIC;}
+=======
+"iterateInReverse" {printf("iterateInReverse");  return T_REVERSE;}
+"from"          {printf("from"); return T_FROM;}
+"filter"        {printf("from");  return T_FILTER;}
+>>>>>>> origin/cuda
 "+="					{ printf ("ADD_ASSIGN "); return T_ADD_ASSIGN;}
 "-="					{ printf ("SUB_ASSIGN"); return T_SUB_ASSIGN;}
 "*="					{ printf ( "MUL_ASSIGN"); return T_MUL_ASSIGN;}
@@ -69,6 +75,7 @@ NEGATE [-]
 ">="					{ printf ( "GE_OP");  return T_GE_OP;}
 "=="					{ printf ( "EQ_OP");  return T_EQ_OP;}
 "!="					{ printf ( "NE_OP");  return T_NE_OP;}
+<<<<<<< HEAD
  
 ";"					{ /* printf ( "';'"); */ return ';' ;}
 ("{"|"<%")				{ /* printf ( "'{'"); */  return '{' ;}
@@ -96,15 +103,52 @@ NEGATE [-]
 "|"					{ /* printf ( "'|'"); */ return '|';}
 "?"					{ /* printf ( "'?'"); */  return '?';} 
  
+=======
+
+";"					{ printf ( "';'"); return ';' ;}
+("{"|"<%")				{ printf ( "'{'") ;  return '{' ;}
+("}"|"%>")				{ printf ( "'}'"); return '}';}
+","					{ printf ( "','"); return ',';}
+":"					{ printf ( "':'");  return ':';}
+"="					{ printf ( "'='");  return '=';}
+"("					{ printf ( "'('");  return '(';}
+")"					{ printf ( "')'");  return ')';}
+("["|"<:")				{ printf ( "'['");  return '[';}
+("]"|":>")				{ printf ( "']'");  return ']';}
+"."					{ printf ( "'.'");  return '.';}
+"&"					{ printf ( "'&'");  return '&';}
+"!"					{ printf ( "'!'");  return '!';}
+"~"					{ printf ( "'~'");  return '~';}
+"-"					{ printf ( "'-'");  return '-';}
+"+"					{ printf ( "'+'");  return '+';}
+"*"					{ printf ( "'*'");  return '*';}
+"/"					{ printf ( "'/'"); return '/';}
+"%"					{ printf ( "'%%'");  return '%';}
+"<"					{ printf ( "'<'");  return '<';}
+">"					{ printf ( "'>'");  return '>';}
+
+"^"					{ printf ( "'^'"); return '^';}
+"|"					{ printf ( "'|'"); return '|';}
+"?"					{ printf ( "'?'");  return '?';}
+
+>>>>>>> origin/cuda
 
 "And"     { /* printf ( "And"); */  return T_AND;}
 "Or"      { /* printf ( "Or"); */  return T_OR;}
 
+<<<<<<< HEAD
 "Sum"     { /* printf ( "Sum"); */  return T_SUM;}
 "Count"   { /* printf ( "Count"); */  return T_COUNT;}
 "Product" { /* printf ( "Product"); */ return T_PRODUCT;}
 "Max"     { /* printf ( "Max"); */  return T_MAX;}
 "Min"     { /* printf ( "Min"); */ return T_MIN;} 
+=======
+"Sum"     { printf ( "Sum");  return T_SUM;}
+"Count"   { printf ( "Count");  return T_COUNT;}
+"Product" { printf ( "Product"); return T_PRODUCT;}
+"Max"     { printf ( "Max");  return T_MAX;}
+"Min"     { printf ( "Min"); return T_MIN;}
+>>>>>>> origin/cuda
 
 
  /* Graph Types */
@@ -115,9 +159,12 @@ NEGATE [-]
 "propNode" {printf("Node Property");  return T_NP;}
 "propEdge" {printf("Edge Property"); return T_EP;}
 
+<<<<<<< HEAD
 
 
  
+=======
+>>>>>>> origin/cuda
  /* Collection Type */
 "SetN" 	{printf("Set of Nodes");  return T_SET_NODES;}
 "SetE" 	{printf("Set of Edges"); return T_SET_EDGES;}
@@ -132,8 +179,13 @@ NEGATE [-]
 {NEGATE}*{DIGIT}{DIGIT}*     {  yylval.ival=atoi(yytext);
                             return INT_NUM;}
 
+<<<<<<< HEAD
 [ \n\t]	{ /* printf("\n"); */}  
 {WS}+					{ /* whitespace separates tokens */ } 
+=======
+[ \n\t]	{ printf("\n");}
+{WS}+					{ /* whitespace separates tokens */ }
+>>>>>>> origin/cuda
 
 .    {/* printf("invalid\n"); */}
 

@@ -1,9 +1,14 @@
 %{
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/cuda
 	#include <stdio.h>
 	#include <string.h>
 	#include <stdlib.h>
 	#include <stdbool.h>
     #include "includeHeader.hpp"
+<<<<<<< HEAD
 	#include "../analyser/attachProp/attachPropAnalyser.h"
 	#include "../analyser/dataRace/dataRaceAnalyser.h"
 	#include "../analyser/deviceVars/deviceVarsAnalyser.h"
@@ -11,18 +16,31 @@
 	//#include "../symbolutil/SymbolTableBuilder.cpp"
      
 	void yyerror(char *);
+=======
+	#include<getopt.h>
+	//#include "../symbolutil/SymbolTableBuilder.cpp"
+
+	void yyerror(const char *);
+>>>>>>> origin/cuda
 	int yylex(void);
     extern FILE* yyin;
 
 	char mytext[100];
 	char var[100];
 	int num = 0;
+<<<<<<< HEAD
 	vector<map<int,vector<Identifier*>>> graphId(4);
+=======
+	vector<Identifier*> graphId;
+>>>>>>> origin/cuda
 	extern char *yytext;
 	//extern SymbolTable* symbTab;
 	FrontEndContext frontEndContext;
 	char* backendTarget ;
+<<<<<<< HEAD
     vector<Identifier*> tempIds; //stores graph vars in current function's param list.
+=======
+>>>>>>> origin/cuda
     //symbTab=new SymbolTable();
 	//symbolTableList.push_back(new SymbolTable());
 %}
@@ -48,11 +66,18 @@
 %token T_ADD_ASSIGN T_SUB_ASSIGN T_MUL_ASSIGN T_DIV_ASSIGN T_MOD_ASSIGN T_AND_ASSIGN T_XOR_ASSIGN
 %token T_OR_ASSIGN T_RIGHT_OP T_LEFT_OP T_INC_OP T_DEC_OP T_PTR_OP T_AND_OP T_OR_OP T_LE_OP T_GE_OP T_EQ_OP T_NE_OP
 %token T_AND T_OR T_SUM T_AVG T_COUNT T_PRODUCT T_MAX T_MIN
+<<<<<<< HEAD
 %token T_GRAPH T_DIR_GRAPH  T_NODE T_EDGE T_UPDATES
 %token T_NP  T_EP
 %token T_LIST T_SET_NODES T_SET_EDGES  T_FROM
 %token T_BFS T_REVERSE
 %token T_INCREMENTAL T_DECREMENTAL T_STATIC
+=======
+%token T_GRAPH T_DIR_GRAPH  T_NODE T_EDGE
+%token T_NP  T_EP
+%token T_LIST T_SET_NODES T_SET_EDGES  T_FROM
+%token T_BFS T_REVERSE
+>>>>>>> origin/cuda
 
 
 %token <text> ID
@@ -62,6 +87,7 @@
 
 %type <node> function_def function_data function_body param
 %type <pList> paramList
+<<<<<<< HEAD
 %type <node> statement blockstatements assignment declaration proc_call control_flow reduction return_stmt
 %type <node> type1 type2
 %type <node> primitive graph collections property
@@ -70,6 +96,16 @@
 %type <nodeList> leftList rightList
 %type <node> iteration_cf selection_cf
 %type <node> reductionCall 
+=======
+%type <node> statement blockstatements assignment declaration proc_call control_flow reduction
+%type <node> type1 type2
+%type <node> primitive graph collections property
+%type <node> id leftSide rhs expression oid val boolean_expr unary_expr tid
+%type <node> bfs_abstraction filterExpr reverse_abstraction
+%type <nodeList> leftList rightList
+%type <node> iteration_cf selection_cf
+%type <node> reductionCall
+>>>>>>> origin/cuda
 %type <aList> arg_list
 %type <ival> reduction_calls reduce_op
 
@@ -86,6 +122,7 @@
 %left T_AND_OP
 %left T_EQ_OP  T_NE_OP
 %left '<' '>'  T_LE_OP T_GE_OP
+<<<<<<< HEAD
 %left '+' '-' 
 %left '*' '/' '%'
 
@@ -129,11 +166,37 @@ function_data: T_FUNC id '(' paramList ')' {
 
 paramList: param {$$=Util::createPList($1);};
                | param ',' paramList {$$=Util::addToPList($3,$1); 
+=======
+%left '+' '-'
+%left '*' '/' '%'
+
+
+
+%%
+program:
+        | program function_def {/* printf("LIST SIZE %d",frontEndContext.getFuncList().size())  ;*/ };
+
+function_def: function_data  function_body  {
+	                                           Function* func=(Function*)$1;
+                                               blockStatement* block=(blockStatement*)$2;
+                                              func->setBlockStatement(block);
+											   Util::addFuncToList(func);
+											    };
+
+function_data: T_FUNC id '(' paramList ')' {
+										   $$=Util::createFuncNode($2,$4->PList);
+
+	                                      };
+
+paramList: param {$$=Util::createPList($1);};
+               | param ',' paramList {$$=Util::addToPList($3,$1);
+>>>>>>> origin/cuda
 			                           };
 
 param : type1 id {  //Identifier* id=(Identifier*)Util::createIdentifierNode($2);
                         Type* type=(Type*)$1;
 	                     Identifier* id=(Identifier*)$2;
+<<<<<<< HEAD
 						 
 						 if(type->isGraphType())
 						    {
@@ -145,6 +208,16 @@ param : type1 id {  //Identifier* id=(Identifier*)Util::createIdentifierNode($2)
                | type2 id { // Identifier* id=(Identifier*)Util::createIdentifierNode($2);
 			  
 					
+=======
+
+						 if(type->isGraphType())
+						    graphId.push_back(id);
+					printf("\n");
+                    $$=Util::createParamNode($1,$2); } ;
+               | type2 id { // Identifier* id=(Identifier*)Util::createIdentifierNode($2);
+
+					printf("\n");
+>>>>>>> origin/cuda
                              $$=Util::createParamNode($1,$2);};
 			   | type2 id '(' id ')' { // Identifier* id1=(Identifier*)Util::createIdentifierNode($4);
 			                            //Identifier* id=(Identifier*)Util::createIdentifierNode($2);
@@ -163,13 +236,20 @@ statements :  {};
 
 statement: declaration ';'{$$=$1;};
 	|assignment ';'{$$=$1;};
+<<<<<<< HEAD
 	|proc_call ';' {$$=Util::createNodeForProcCallStmt($1);};
+=======
+	|proc_call ';' {printf("testprocstmt\n");$$=Util::createNodeForProcCallStmt($1);};
+>>>>>>> origin/cuda
 	|control_flow {$$=$1;};
 	|reduction ';'{$$=$1;};
 	| bfs_abstraction {$$=$1; };
 	| blockstatements {$$=$1;};
 	| unary_expr ';' {$$=Util::createNodeForUnaryStatements($1);};
+<<<<<<< HEAD
 	| return_stmt ';' {$$ = $1 ;};
+=======
+>>>>>>> origin/cuda
 
 
 blockstatements : block_begin statements block_end { $$=Util::finishBlock();};
@@ -178,12 +258,16 @@ block_begin:'{' { Util::createNewBlock(); }
 
 block_end:'}'
 
+<<<<<<< HEAD
 return_stmt : T_RETURN expression {$$ = Util::createReturnStatementNode($2);}
                
+=======
+>>>>>>> origin/cuda
 
 declaration : type1 id   {
 	                     Type* type=(Type*)$1;
 	                     Identifier* id=(Identifier*)$2;
+<<<<<<< HEAD
 						 
 						 if(type->isGraphType())
 						    Util::storeGraphId(id);
@@ -197,6 +281,20 @@ declaration : type1 id   {
                          $$=Util::createNormalDeclNode($1,$2); };
 	| type2 id '=' rhs {//Identifier* id=(Identifier*)Util::createIdentifierNode($2);
 	                   
+=======
+
+						 if(type->isGraphType())
+						    graphId.push_back(id);
+                         $$=Util::createNormalDeclNode($1,$2);};
+	| type1 id '=' rhs  {//Identifier* id=(Identifier*)Util::createIdentifierNode($2);
+
+	                    $$=Util::createAssignedDeclNode($1,$2,$4);};
+	| type2 id  {//Identifier* id=(Identifier*)Util::createIdentifierNode($2);
+
+                         $$=Util::createNormalDeclNode($1,$2); };
+	| type2 id '=' rhs {//Identifier* id=(Identifier*)Util::createIdentifierNode($2);
+
+>>>>>>> origin/cuda
 	                    $$=Util::createAssignedDeclNode($1,$2,$4);};
 
 type1: primitive {$$=$1; };
@@ -218,8 +316,11 @@ collections : T_LIST { $$=Util::createCollectionTypeNode(TYPE_LIST,NULL);};
 			                     $$=Util::createCollectionTypeNode(TYPE_SETN,$3);};
                 | T_SET_EDGES '<' id '>' {// Identifier* id=(Identifier*)Util::createIdentifierNode($3);
 					                    $$=Util::createCollectionTypeNode(TYPE_SETE,$3);};
+<<<<<<< HEAD
 				| T_UPDATES '<' id '>'   { $$=Util::createCollectionTypeNode(TYPE_UPDATES,$3);}
 
+=======
+>>>>>>> origin/cuda
 
 type2 : T_NODE {$$=Util::createNodeEdgeTypeNode(TYPE_NODE) ;};
        | T_EDGE {$$=Util::createNodeEdgeTypeNode(TYPE_EDGE);};
@@ -230,7 +331,11 @@ property : T_NP '<' primitive '>' { $$=Util::createPropertyTypeNode(TYPE_PROPNOD
 			  | T_NP '<' collections '>'{  $$=Util::createPropertyTypeNode(TYPE_PROPNODE,$3); };
 			  | T_EP '<' collections '>' {$$=Util::createPropertyTypeNode(TYPE_PROPEDGE,$3);};
 
+<<<<<<< HEAD
 assignment :  leftSide '=' rhs  { $$=Util::createAssignmentNode($1,$3);};
+=======
+assignment :  leftSide '=' rhs  { printf("testassign\n");$$=Util::createAssignmentNode($1,$3);};
+>>>>>>> origin/cuda
 
 rhs : expression { $$=$1;};
 
@@ -250,12 +355,17 @@ expression : proc_call { $$=$1;};
 			 | '!'expression {$$=Util::createNodeForUnaryExpr($2,OPERATOR_NOT);};
 		     | '(' expression ')' { Expression* expr=(Expression*)$2;
 				                     expr->setEnclosedBrackets();
+<<<<<<< HEAD
 			                        $$=expr;};
+=======
+			                        $$=expr;printf("INSIDE EXPR");};
+>>>>>>> origin/cuda
 	         | val {$$=$1;};
 			 | leftSide { $$=Util::createNodeForId($1);};
 			 | unary_expr {$$=$1;};
 
 unary_expr :   expression T_INC_OP {$$=Util::createNodeForUnaryExpr($1,OPERATOR_INC);};
+<<<<<<< HEAD
 			 |  expression T_DEC_OP {$$=Util::createNodeForUnaryExpr($1,OPERATOR_DEC);}; 			 
 
 proc_call : leftSide '(' arg_list ')' { 
@@ -264,6 +374,16 @@ proc_call : leftSide '(' arg_list ')' {
 
 									    };
 		
+=======
+			 |  expression T_DEC_OP {$$=Util::createNodeForUnaryExpr($1,OPERATOR_DEC);};
+
+proc_call : leftSide '(' arg_list ')' {printf("testproc\n");
+
+                                       $$=Util::createNodeForProcCall($1,$3->AList);
+
+									    };
+
+>>>>>>> origin/cuda
 
 
 
@@ -280,9 +400,14 @@ control_flow : selection_cf { $$=$1; };
 iteration_cf : T_FIXEDPOINT T_UNTIL '(' id ':' expression ')' blockstatements { $$=Util::createNodeForFixedPointStmt($4,$6,$8);};
 		   | T_WHILE '(' boolean_expr')' blockstatements {$$=Util::createNodeForWhileStmt($3,$5); };
 		   | T_DO blockstatements T_WHILE '(' boolean_expr ')' ';' {$$=Util::createNodeForDoWhileStmt($5,$2);  };
+<<<<<<< HEAD
 		| T_FORALL '(' id T_IN id '.' proc_call filterExpr')'  blockstatements { 
 																				$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,true);};
 		| T_FORALL '(' id T_IN leftSide ')' blockstatements	{ $$=Util::createNodeForForStmt($3,$5,$7,true);};																	
+=======
+		| T_FORALL '(' id T_IN id '.' proc_call filterExpr')'  blockstatements {
+																				$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,true);};
+>>>>>>> origin/cuda
 		| T_FOR '(' id T_IN leftSide ')' blockstatements { $$=Util::createNodeForForStmt($3,$5,$7,false);};
 		| T_FOR '(' id T_IN id '.' proc_call  filterExpr')' blockstatements {$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,false);};
 
@@ -291,14 +416,23 @@ filterExpr  :         { $$=NULL;};
 
 boolean_expr : expression { $$=$1 ;};
 
+<<<<<<< HEAD
 selection_cf : T_IF '(' boolean_expr ')' statement { $$=Util::createNodeForIfStmt($3,$5,NULL); }; 
 	           | T_IF '(' boolean_expr ')' statement T_ELSE statement  {$$=Util::createNodeForIfStmt($3,$5,$7); };
+=======
+selection_cf : T_IF '(' boolean_expr ')' blockstatements { $$=Util::createNodeForIfStmt($3,$5,NULL); };
+	           | T_IF '(' boolean_expr ')' blockstatements T_ELSE blockstatements  {$$=Util::createNodeForIfStmt($3,$5,$7); };
+>>>>>>> origin/cuda
 
 
 reduction : leftSide '=' reductionCall { $$=Util::createNodeForReductionStmt($1,$3) ;}
 		   |'<' leftList '>' '=' '<' reductionCall ',' rightList '>'  { reductionCall* reduc=(reductionCall*)$6;
 		                                                               $$=Util::createNodeForReductionStmtList($2->ASTNList,reduc,$8->ASTNList);};
+<<<<<<< HEAD
 		   | leftSide reduce_op expression {$$=Util::createNodeForReductionOpStmt($1,$2,$3);}; 															   
+=======
+		   | leftSide reduce_op expression {$$=Util::createNodeForReductionOpStmt($1,$2,$3);};
+>>>>>>> origin/cuda
 
 
 reduce_op : T_ADD_ASSIGN {$$=OPERATOR_ADDASSIGN;};
@@ -312,16 +446,24 @@ leftList :  leftSide ',' leftList { $$=Util::addToNList($3,$1);
 		 | leftSide { $$=Util::createNList($1);};
 
 rightList : val ',' rightList { $$=Util::addToNList($3,$1);};
+<<<<<<< HEAD
           | leftSide ',' rightList { ASTNode* node = Util::createNodeForId($1);
 			                         $$=Util::addToNList($3,node);};
           | val    { $$=Util::createNList($1);};
 		  | leftSide  { ASTNode* node = Util::createNodeForId($1);
 			            $$=Util::createNList(node);};
+=======
+          | val    { $$=Util::createNList($1);};
+>>>>>>> origin/cuda
 
             /*reductionCall ',' val { $$=new tempNode();
 	                                $$->reducCall=(reductionCall*)$1;
                                     $$->exprVal=(Expression*)$3; };
+<<<<<<< HEAD
           | reductionCall { 
+=======
+          | reductionCall {
+>>>>>>> origin/cuda
 			                $$->reducCall=(reductionCall*)$1;} ;*/
 
 reductionCall : reduction_calls '(' arg_list ')' {$$=Util::createNodeforReductionCall($1,$3->AList);} ;
@@ -333,6 +475,7 @@ reduction_calls : T_SUM { $$=REDUCE_SUM;};
 	         | T_MIN {$$=REDUCE_MIN;};
 
 leftSide : id { $$=$1; };
+<<<<<<< HEAD
          | oid {  $$=$1; };
          | tid {$$ = $1; };
 
@@ -341,6 +484,16 @@ arg_list :    {
 				 $$=aList;  };
 		      
 		|assignment ',' arg_list {argument* a1=new argument();
+=======
+         | oid { printf("Here hello \n"); $$=$1; };
+         | tid {$$ = $1; };
+
+arg_list :    {printf("No args\n");
+                 argList* aList=new argList();
+				 $$=aList;  };
+
+		|assignment ',' arg_list {printf("test3\n");argument* a1=new argument();
+>>>>>>> origin/cuda
 		                          assignment* assign=(assignment*)$1;
 		                     a1->setAssign(assign);
 							 a1->setAssignFlag();
@@ -349,9 +502,16 @@ arg_list :    {
 						  $$=Util::addToAList($3,a1);
 						  for(argument* arg:$$->AList)
 						  {
+<<<<<<< HEAD
 							  printf("VALUE OF ARG %d",arg->getAssignExpr());
 						  }
 						  
+=======
+							  //printf("VALUE OF ARG %d",arg->getAssignExpr());//to remove warning in build. remove comment later. --rajz
+                printf("VALUE OF ARG %s",arg->getAssignExpr()->getId()->getIdentifier());
+						  }
+						  printf("test4\n");
+>>>>>>> origin/cuda
                           };
 
 
@@ -367,11 +527,19 @@ arg_list :    {
 						 a1->setExpression(expr);
 						a1->setExpressionFlag();
 						  $$=Util::createAList(a1); };
+<<<<<<< HEAD
 	       | assignment { argument* a1=new argument();
 		                   assignment* assign=(assignment*)$1;
 		                     a1->setAssign(assign);
 							 a1->setAssignFlag();
 						   $$=Util::createAList(a1);
+=======
+	       | assignment { printf("test1\n");argument* a1=new argument();
+		                   assignment* assign=(assignment*)$1;
+		                     a1->setAssign(assign);
+							 a1->setAssignFlag();
+						   $$=Util::createAList(a1);printf("test2\n");
+>>>>>>> origin/cuda
 						   };
 
 
@@ -394,22 +562,36 @@ tid : id '.' id '.' id {// Identifier* id1=(Identifier*)Util::createIdentifierNo
                   // Identifier* id2=(Identifier*)Util::createIdentifierNode($1);
 				   $$=Util::createPropIdNode($1,$3);
 				    };
+<<<<<<< HEAD
 id : ID   { 
 	         $$=Util::createIdentifierNode($1);  
 
             
             };                                                   
           
+=======
+id : ID   {
+	         $$=Util::createIdentifierNode($1);
+
+
+            };
+
+>>>>>>> origin/cuda
 
 
 %%
 
 
+<<<<<<< HEAD
 void yyerror(char *s) {
+=======
+void yyerror(const char *s) {
+>>>>>>> origin/cuda
     fprintf(stderr, "%s\n", s);
 }
 
 
+<<<<<<< HEAD
 int main(int argc,char **argv) 
 {
   
@@ -427,6 +609,38 @@ int main(int argc,char **argv)
   while ((opt = getopt(argc, argv, "sdf:b:o")) != -1) 
   {
      switch (opt) 
+=======
+int main(int argc,char **argv)
+{
+
+    dsl_cpp_generator cpp_backend;
+    SymbolTableBuilder stBuilder;
+     FILE    *fd;
+
+   /* if (argc>1)
+     yyin= fopen(argv[1],"r");
+	else
+	  yyin=stdin;
+	int error=yyparse();
+	printf("error val %d\n",error);
+	if(error!=1)
+	{
+  // printf("%d SIZE OF FUNCLIST",frontEndContext.getFuncList().size());
+  // printf("GRAPH ID %s",graphId[0]->getIdentifier());
+    stBuilder.buildST(frontEndContext.getFuncList());
+	cpp_backend.setFileName(argv[1]);
+	cpp_backend.generate();
+
+	}
+  */
+  int opt;
+  char* fileName=NULL;
+  //char* backendTarget=NULL;
+  backendTarget = NULL;
+  while ((opt = getopt(argc, argv, ":f:b:")) != -1)
+  {
+     switch (opt)
+>>>>>>> origin/cuda
      {
       case 'f':
         fileName = optarg;
@@ -434,6 +648,7 @@ int main(int argc,char **argv)
       case 'b':
         backendTarget = optarg;
         break;
+<<<<<<< HEAD
       case 's':
 	    staticGen = true;
 		break;
@@ -443,6 +658,8 @@ int main(int argc,char **argv)
 	  case 'o':
 	  	optimize = true;
 		break;	
+=======
+>>>>>>> origin/cuda
       case '?':
         fprintf(stderr,"Unknown option: %c\n", optopt);
 		exit(-1);
@@ -453,28 +670,45 @@ int main(int argc,char **argv)
         break;
      }
   }
+<<<<<<< HEAD
    
    printf("fileName %s\n",fileName);
    printf("Backend Target %s\n",backendTarget);
 
    
+=======
+
+   printf("fileName %s\n",fileName);
+   printf("Backend Target %s\n",backendTarget);
+>>>>>>> origin/cuda
    if(fileName==NULL||backendTarget==NULL)
    {
 	   if(fileName==NULL)
 	      fprintf(stderr,"FileName option Error!\n");
 	   if(backendTarget==NULL)
 	      fprintf(stderr,"backendTarget option Error!\n")	;
+<<<<<<< HEAD
 	   exit(-1);	    
    }
    else
     {
 		if(!(strcmp(backendTarget,"omp")==0)||(strcmp(backendTarget,"mpi")==0)||(strcmp(backendTarget,"cuda")==0))
 		   {
+=======
+	   exit(-1);
+   }
+   else
+    {
+		if(!((strcmp(backendTarget,"omp")==0)||(strcmp(backendTarget,"mpi")==0)||(strcmp(backendTarget,"cuda")==0)))
+		   {
+              // printf("Specified backend target is not implemented in the current version!\n");
+>>>>>>> origin/cuda
 			  fprintf(stderr, "Specified backend target is not implemented in the current version!\n");
 			   exit(-1);
 		   }
 	}
 
+<<<<<<< HEAD
    if(!(staticGen || dynamicGen))
       {
 		fprintf(stderr, "Type of graph(static/dynamic) not specified!\n");
@@ -489,10 +723,16 @@ int main(int argc,char **argv)
    printf("error val %d\n",error);
 
 
+=======
+   yyin= fopen(fileName,"r");
+   int error=yyparse();
+	printf("error val %d\n",error);
+>>>>>>> origin/cuda
 	if(error!=1)
 	{
      //TODO: redirect to different backend generator after comparing with the 'b' option
     stBuilder.buildST(frontEndContext.getFuncList());
+<<<<<<< HEAD
 
 	if(staticGen)
 	  {
@@ -531,3 +771,15 @@ int main(int argc,char **argv)
 	return 0;   
 	 
 }
+=======
+	 printf("===========================================\n");
+	cpp_backend.setFileName(fileName);
+	cpp_backend.generate();
+
+	}
+
+   /* to generate code, ./finalcode -f "filename" -b "backendname"*/
+	return 0;
+
+}
+>>>>>>> origin/cuda

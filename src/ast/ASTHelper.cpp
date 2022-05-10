@@ -2,6 +2,7 @@
 #include  "ASTNode.hpp"
 #include  "../maincontext/enum_def.hpp"
 #include<iostream>
+#include<assert.h>
 
 using namespace std;
 
@@ -19,9 +20,9 @@ public:
 
 
 static void addFuncToList(ASTNode* func)
-{ 
+{
    Function* funcNode=(Function*)func;
- 
+
     frontEndContext.addFuncToList(funcNode);
 }
 
@@ -77,12 +78,12 @@ static int getCurrentFuncType()
 }
 
 static ASTNode* createFuncNode(ASTNode* id,list<formalParam*> formalParamList)
-{ 
+{
   Identifier* funcId=(Identifier*)id;
-  
+
   Function* functionNode=Function::createFunctionNode(funcId,formalParamList);
   return functionNode;
-   
+
 }
 
 static ASTNode* createStaticFuncNode(ASTNode* id,list<formalParam*> formalParamList)
@@ -114,35 +115,35 @@ static ASTNode* createDecrementalNode(list<formalParam*> formalParamList)
 
 
 static void createNewBlock()
-{ 
+{
     blockStatement* blockStatementNode=blockStatement::createnewBlock();
     frontEndContext.startBlock(blockStatementNode);
-    
+
 }
 
 
 static ASTNode* finishBlock()
-{   
+{
      blockStatement* blockStatementNode=frontEndContext.getCurrentBlock();
-      
+
     frontEndContext.endBlock();
-    
+
     return blockStatementNode;
-   
+
     }
 static void addToBlock(ASTNode* statementNode)
 {  // cout<<"Inside ADD BLOCK"<<statementNode<<"\n";
     if(statementNode!=NULL)
-    {   
+    {
         statement* nodeForStatement=(statement*)statementNode;
         blockStatement* currentBlock=frontEndContext.getCurrentBlock();
         currentBlock->addStmtToBlock(nodeForStatement);
     }
-    
-    
+
+
 }
 static ASTNode* createIdentifierNode(char* idName)
-{  
+{
     Identifier* idNode;
     idNode=Identifier::createIdNode(idName);
    // cout<<"IDENTIFIER VALUE"<<idNode->getIdentifier()<<"\n";
@@ -152,7 +153,7 @@ static paramList* createPList(ASTNode* fParam)
 {    paramList* pList=new paramList();
      pList->PList.push_back((formalParam*)fParam);
      return pList;
-} 
+}
 
 static paramList* addToPList(paramList* pList,ASTNode* fparam)
 {
@@ -170,7 +171,7 @@ static argList* createAList(argument* arg)
 
 
 static argList* addToAList(argList* aList,argument* arg)
-{  
+{
     aList->AList.push_front(arg);
     return aList;
 
@@ -181,26 +182,27 @@ static argList* addToAList(argList* aList,argument* arg)
 static ASTNodeList* addToNList(ASTNodeList* nodeList,ASTNode* node)
 {
     nodeList->ASTNList.push_front(node);
-    
+
     return nodeList;
-    
+
 }
 
 static ASTNodeList* createNList(ASTNode* node)
 {
     ASTNodeList* nodeList=new ASTNodeList();
     nodeList->ASTNList.push_back(node);
-   
+
     return nodeList;
 
-    
+
 }
 
 static ASTNode* createParamNode(ASTNode* type,ASTNode* id)
-{   Identifier* paramId=(Identifier*)id;
-   // cout<<"PARAMID NODE VALUE "<<paramId->getIdentifier()<<"\n";
-   formalParam* formalParamNode=formalParam::createFormalParam((Type*)type,(Identifier*)id);
-   return formalParamNode;
+{
+  //~ Identifier* paramId=(Identifier*)id;
+  // cout<<"PARAMID NODE VALUE "<<paramId->getIdentifier()<<"\n";
+  formalParam* formalParamNode=formalParam::createFormalParam((Type*)type,(Identifier*)id);
+  return formalParamNode;
 
 }
 
@@ -218,7 +220,7 @@ static ASTNode* createAssignedDeclNode(ASTNode* type,ASTNode* id,ASTNode* exprAs
 static ASTNode* createPrimitiveTypeNode(int typeId)
 {  // cout<<"Inside Func";
     Type* typeNode=Type::createForPrimitive(typeId,1);
-   
+
     return typeNode;
 
 }
@@ -241,7 +243,7 @@ static ASTNode* createPropertyTypeNode(int typeId,ASTNode* innerTargetType)
 
 }
 static ASTNode* createNodeEdgeTypeNode(int typeId)
-{   
+{
     Type* typeNode=Type::createForNodeEdgeType(typeId,5);
     return typeNode;
 
@@ -283,21 +285,21 @@ static ASTNode* createNodeForUnaryStatements(ASTNode* unaryExpr)
 }
 
 static ASTNode* createNodeForProcCall(ASTNode* proc_callId,list<argument*> argList)
-{    
+{
     proc_callExpr* proc_callExprNode;
     if(proc_callId->getTypeofNode()==NODE_ID)
     {
       proc_callExprNode=proc_callExpr::nodeForProc_Call(NULL,NULL,(Identifier*)proc_callId,argList);
-     
-      
+
+
     }
     if(proc_callId->getTypeofNode()==NODE_PROPACCESS)
     {
       PropAccess* propAccessId=(PropAccess*)proc_callId;
-      
+
       proc_callExprNode=proc_callExpr::nodeForProc_Call(propAccessId->getIdentifier1(),NULL,propAccessId->getIdentifier2(),argList);
     }
-    
+
     return proc_callExprNode;
 }
 
@@ -406,8 +408,8 @@ static ASTNode* createNodeForForAllStmt(ASTNode* iterator,ASTNode* sourceGraph,A
     if(filterExpr!=NULL)
     {
      f=(Expression*)filterExpr;
-    
-    //cout<<"CHECK FILTER TYPE"<<f->isRelational()<<"\n";
+
+    cout<<"CHECK FILTER TYPE"<<f->isRelational()<<"\n";
     }
     forallStmtNode=forallStmt::createforallStmt(id,id1,(proc_callExpr*)extractElemFunc,(statement*)body,(Expression*)filterExpr,isforall);
     return forallStmtNode;
