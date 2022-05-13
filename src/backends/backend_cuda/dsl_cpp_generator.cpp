@@ -617,6 +617,20 @@ void dsl_cpp_generator::generateStatement(statement* stmt, bool isMainFile) {
     generateExpr(unaryStmt->getUnaryExpr(), isMainFile);
     main.pushstr_newL(";");
   }
+  if(isOptimized && (stmt->getTypeofNode() == NODE_TRANSFERSTMT)) {
+    varTransferStmt* transferStmt = (varTransferStmt*) stmt;
+    generateTransferStmt(transferStmt); 
+  }
+}
+
+void dsl_cpp_generator::generateTransferStmt(varTransferStmt* stmt)
+{
+  Identifier* transferIden = stmt->transferVar;
+  Type* symbType = transferIden->getSymbolInfo()->getType();
+  bool direction = stmt->direction;
+
+   if(symbType->isPrimitiveType())
+      generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), !direction);
 }
 
 void dsl_cpp_generator::generateAtomicBlock(bool isMainFile) {
@@ -1660,20 +1674,23 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
     */
     printf("Entered here for forall \n");
 
-    usedVariables usedVars = getVarsForAll(forAll);
-    list<Identifier*> vars = usedVars.getVariables();
+    if(!isOptimized)
+    {
+      usedVariables usedVars = getVarsForAll(forAll);
+      list<Identifier*> vars = usedVars.getVariables();
 
-    for(Identifier* iden: vars){
-        Type* type = iden->getSymbolInfo()->getType();
+      for(Identifier* iden: vars){
+          Type* type = iden->getSymbolInfo()->getType();
 
-        if(type->isPrimitiveType())
-          generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), true);
-        /*else if(type->isPropType())
-        {
-          Type* innerType = type->getInnerTargetType();
-          string dIden = "d_" + string(iden->getIdentifier());
-          generateCudaMemCpyStr(dIden.c_str(), iden->getIdentifier(), convertToCppType(innerType), "V", true);
-        }*/
+          if(type->isPrimitiveType())
+            generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), true);
+          /*else if(type->isPropType())
+          {
+            Type* innerType = type->getInnerTargetType();
+            string dIden = "d_" + string(iden->getIdentifier());
+            generateCudaMemCpyStr(dIden.c_str(), iden->getIdentifier(), convertToCppType(innerType), "V", true);
+          }*/
+      }
     }
     /*memcpy to symbol*/
 
@@ -1686,16 +1703,34 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
     main.pushString("V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next");
     //  if(currentFunc->getParamList().size()!=0)
      // main.pushString(",");
-      for(Identifier* iden: vars)
-      {
-        Type* type = iden->getSymbolInfo()->getType();
-        if(type->isPropType())
+     if(!isOptimized)
+     {
+        usedVariables usedVars = getVarsForAll(forAll);
+        list<Identifier*> vars = usedVars.getVariables();
+        for(Identifier* iden: vars)
         {
-          main.pushString(",");
-          main.pushString("d_");
-          main.pushString(/*createParamName(*/iden->getIdentifier());
+          Type* type = iden->getSymbolInfo()->getType();
+          if(type->isPropType())
+          {
+            main.pushString(",");
+            main.pushString("d_");
+            main.pushString(/*createParamName(*/iden->getIdentifier());
+          }
         }
-      }
+     }
+     else
+     {
+       for(Identifier* iden: forAll->getUsedVariables())
+       {
+         Type* type = iden->getSymbolInfo()->getType();
+          if(type->isPropType())
+          {
+            main.pushString(",");
+            main.pushString("d_");
+            main.pushString(/*createParamName(*/iden->getIdentifier());
+          }
+       }
+     }
     main.pushString(")");
     main.push(';');
     main.NewLine();
@@ -1703,18 +1738,23 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
     main.pushString("cudaDeviceSynchronize();");
     main.NewLine();
 
-    for(Identifier* iden: vars){
-        Type* type = iden->getSymbolInfo()->getType();
-        if(type->isPrimitiveType())
-          generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), false);
-        /*else if(type->isPropType())
-        {
-          Type* innerType = type->getInnerTargetType();
-          string dIden = "d_" + string(iden->getIdentifier());
-          generateCudaMemCpyStr(iden->getIdentifier(),dIden.c_str(), convertToCppType(innerType), "V", false);
-        }*/
+    if(!isOptimized)
+    {
+      usedVariables usedVars = getVarsForAll(forAll);
+        list<Identifier*> vars = usedVars.getVariables();
+      for(Identifier* iden: vars){
+          Type* type = iden->getSymbolInfo()->getType();
+          if(type->isPrimitiveType())
+            generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), false);
+          /*else if(type->isPropType())
+          {
+            Type* innerType = type->getInnerTargetType();
+            string dIden = "d_" + string(iden->getIdentifier());
+            generateCudaMemCpyStr(iden->getIdentifier(),dIden.c_str(), convertToCppType(innerType), "V", false);
+          }*/
+      }
+      /*memcpy from symbol*/
     }
-    /*memcpy from symbol*/
 
     main.NewLine();
    // main.pushString("cudaMemcpyFromSymbol(&diff_check, diff, sizeof(float));");
@@ -2038,8 +2078,19 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
     targetFile.pushString(";");
     */
     if (isMainFile == true){  //to fix the PageRank we are doing this
-          sprintf(strBuffer, "__device__ %s %s ", varType, varName);
-          header.pushString(strBuffer);
+          if(isOptimized)
+          {
+              if(declStmt->getInGPU())
+              {
+                sprintf(strBuffer, "__device__ %s %s ", varType, varName);
+                header.pushString(strBuffer);
+              }
+          }
+          else
+          {
+            sprintf(strBuffer, "__device__ %s %s ", varType, varName);
+            header.pushString(strBuffer);
+          }
     }
     /// REPLICATE ON HOST AND DEVICE
      sprintf(strBuffer, "%s %s", varType, varName);

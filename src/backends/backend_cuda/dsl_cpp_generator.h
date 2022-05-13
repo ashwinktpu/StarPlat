@@ -23,6 +23,7 @@ class dsl_cpp_generator {
 
 
   bool isHeader;
+  bool isOptimized;
 
  public:
   dsl_cpp_generator() {
@@ -36,7 +37,7 @@ class dsl_cpp_generator {
     bodyFile = NULL;
     fileName = new char[1024];
     currentFunc = NULL;
-
+    isOptimized = false;
   }
 
 
@@ -119,6 +120,7 @@ class dsl_cpp_generator {
   void generate_exprUnary(Expression* expr, bool isMainFile);
   void generateForAll_header(forallStmt* forAll, bool isMainFile);
   void generatefixedpt_filter(Expression* filterExpr, bool isMainFile);
+  void generateTransferStmt(varTransferStmt* stmt);
 
   bool elementsIteration(char* extractId);
   //~ void generateCudaMalloc(Type* type, const char* identifier);
@@ -179,6 +181,7 @@ class dsl_cpp_generator {
   //~ char* getGName() { return gName; }
   void IncrementKCount() { kernelCount++; }
   int getKCount() { return kernelCount; }
+  void setOptimized() { isOptimized = true; }
 };
 
 static const char* INTALLOCATION = "new int";
