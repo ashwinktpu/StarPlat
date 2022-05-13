@@ -1889,6 +1889,10 @@ class fixedPointStmt:public statement
     void initUsedVariable(list<Identifier*> usedVars){
       this->usedVars = usedVars;
     }
+    list<Identifier*> getUsedVariables(){
+      return this->usedVars;
+    }
+
     void addDeviceAssignment(){
       blockStatement* block=(blockStatement*)body;
         for(statement* stmt:block->returnStatements())
