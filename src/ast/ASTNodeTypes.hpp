@@ -1090,7 +1090,6 @@ class formalParam:public ASTNode
      bool deviceVariable;
      bool accumulateKernel;
      int lhsType;
-      bool isPropCopy;
 
      public:
      assignment()
@@ -1446,71 +1445,6 @@ class fixedPointStmt:public statement
 
   };
 
-
-
-
-  class proc_callExpr:public Expression
-  {
-    private:
-    Identifier* id1;
-    Identifier* id2;
-    Identifier* methodId;
-    list<argument*> argList;
-
-    public:
-    proc_callExpr()
-    {
-      id1=NULL;
-      id2=NULL;
-      methodId=NULL;
-      typeofNode=NODE_PROCCALLEXPR;
-    }
-
-
-    static proc_callExpr* nodeForProc_Call(Identifier* id1,Identifier* id2,Identifier* methodId,list<argument*> argList)
-    {
-          proc_callExpr* procExpr=new proc_callExpr();
-          procExpr->id1=id1;
-          procExpr->id2=id2;
-          procExpr->methodId=methodId;
-          procExpr->argList=argList;
-          procExpr->setExpressionFamily(EXPR_PROCCALL);
-          return procExpr;
-
-
-    }
-
-    Identifier* getMethodId()
-    {
-      return methodId;
-    }
-
-    Identifier* getId1()
-    {
-      return id1;
-    }
-
-    Identifier* getId2()
-    {
-      return id2;
-    }
-
-    list<argument*> getArgList()
-    {
-      return argList;
-    }
-
-    void addToArgList(argument* arg)
-    {
-         argList.push_back(arg);
-    }
-
-
-  };
-
-  
-  
-
   class proc_callExpr:public Expression
   {
     private:
@@ -1790,13 +1724,6 @@ class fixedPointStmt:public statement
        for specific instances*/
     void disableForall() 
     {                     
-      isforall=false;
-    }
-
-    /* disable parallelization of for
-       for specific instances*/
-    void disableForall()
-    {
       isforall=false;
     }
 

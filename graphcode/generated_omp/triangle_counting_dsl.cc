@@ -1,4 +1,4 @@
-#include"triangle_counting_dsl.h"
+#include"triangle_counting_DSL.h"
 
 void Compute_TC(graph& g)
 {
@@ -8,15 +8,12 @@ void Compute_TC(graph& g)
   {
     for (int edge = g.indexofNodes[v]; edge < g.indexofNodes[v+1]; edge ++) 
     {int u = g.edgeList[edge] ;
-      if (u < v )
-        {
+      if (u < v ){
         for (int edge = g.indexofNodes[v]; edge < g.indexofNodes[v+1]; edge ++) 
         {int w = g.edgeList[edge] ;
-          if (w > v )
-            {
-            if (g.check_if_nbr(u, w) )
-              {
-              triangle_count = triangle_count + 1;
+          if (w > v ){
+            if (g.check_if_nbr(u, w) ){
+              triangle_count = triangle_count+ 1;
             }
           }
         }
