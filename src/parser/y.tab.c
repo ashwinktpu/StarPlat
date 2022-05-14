@@ -3141,9 +3141,13 @@ int main(int argc,char **argv)
 
 			  dataRaceAnalyser drAnalyser;
 			  drAnalyser.analyse();
-
-			  deviceVarsAnalyser dvAnalyser;
-			  dvAnalyser.analyse();
+			  
+			  if(strcmp(backendTarget,"cuda")==0)
+			  {
+			  	deviceVarsAnalyser dvAnalyser;
+				//cpp_backend.setOptimized();
+			  	dvAnalyser.analyse();
+			  }
 		  }
 	  cpp_backend.setFileName(fileName);
 	  cpp_backend.generate();
@@ -3166,3 +3170,4 @@ int main(int argc,char **argv)
 	return 0;   
 	 
 }
+

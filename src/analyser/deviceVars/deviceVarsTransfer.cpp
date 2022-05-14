@@ -67,6 +67,8 @@ statement* deviceVarsAnalyser::transferVarsStatement(statement* stmt, blockState
         return transferVarsProcCall((proc_callStmt *)stmt, parBlock);
     case NODE_FIXEDPTSTMT:
         return transferVarsFixedPoint((fixedPointStmt *)stmt, parBlock);
+    case NODE_REDUCTIONCALLSTMT:
+        return transferVarsReduction((reductionCallStmt *)stmt, parBlock);
     case NODE_ITRBFS:
         return transferVarsItrBFS((iterateBFS *)stmt, parBlock);
     }
