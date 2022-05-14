@@ -630,7 +630,7 @@ void dsl_cpp_generator::generateTransferStmt(varTransferStmt* stmt)
   bool direction = stmt->direction;
 
    if(symbType->isPrimitiveType())
-      generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), !direction);
+      generateCudaMemCpySymbol(transferIden->getIdentifier(), convertToCppType(symbType), !direction);
 }
 
 void dsl_cpp_generator::generateAtomicBlock(bool isMainFile) {
