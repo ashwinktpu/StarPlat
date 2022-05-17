@@ -1159,6 +1159,7 @@ void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt,
 void dsl_cpp_generator::generatePropertyDefination(Type* type, char* Id,
                                                    bool isMainFile) {
   dslCodePad& targetFile = isMainFile ? main : header;
+  vector<Identifier*> graphIds = graphId[curFuncType][curFuncCount()];
 
   Type* targetType = type->getInnerTargetType();
   if (targetType->gettypeId() == TYPE_INT) {
@@ -1171,7 +1172,7 @@ void dsl_cpp_generator::generatePropertyDefination(Type* type, char* Id,
     if (graphId.size() > 1) {
       cerr << "TargetGraph can't match";
     } else {
-      Identifier* id = graphId[0];
+      Identifier* id = graphIds[0];
 
       type->setTargetGraph(id);
     }
@@ -1190,7 +1191,7 @@ void dsl_cpp_generator::generatePropertyDefination(Type* type, char* Id,
     if (graphId.size() > 1) {
       cerr << "TargetGraph can't match";
     } else {
-      Identifier* id = graphId[0];
+      Identifier* id = graphIds[0];
 
       type->setTargetGraph(id);
     }
@@ -1210,7 +1211,7 @@ void dsl_cpp_generator::generatePropertyDefination(Type* type, char* Id,
     if (graphId.size() > 1) {
       cerr << "TargetGraph can't match";
     } else {
-      Identifier* id = graphId[0];
+      Identifier* id = graphIds[0];
 
       type->setTargetGraph(id);
     }
@@ -1230,7 +1231,7 @@ void dsl_cpp_generator::generatePropertyDefination(Type* type, char* Id,
     if (graphId.size() > 1) {
       cerr << "TargetGraph can't match";
     } else {
-      Identifier* id = graphId[0];
+      Identifier* id = graphIds[0];
 
       type->setTargetGraph(id);
     }
@@ -2912,6 +2913,39 @@ void dsl_cpp_generator::generateCudaMemCpyParams(list<formalParam*> paramList)
     }
   }
 }
+
+int dsl_cpp_generator::curFuncCount()
+{
+  int count ;
+  if(curFuncType == GEN_FUNC)
+     count = genFuncCount;
+
+  else if(curFuncType == STATIC_FUNC)
+      count = staticFuncCount;
+
+  else if(curFuncType == INCREMENTAL_FUNC)
+      count = inFuncCount;
+
+  else
+      count = decFuncCount;
+
+  return count; 
+
+}
+
+void dsl_cpp_generator::incFuncCount(int funcType)
+{
+  if(funcType == GEN_FUNC)
+     genFuncCount++;
+  else if(funcType == STATIC_FUNC)
+       staticFuncCount++;
+  else if(funcType == INCREMENTAL_FUNC)
+         inFuncCount++;
+  else
+      decFuncCount++;            
+
+}
+
 void dsl_cpp_generator::generateFunc(ASTNode* proc) {
   // dslCodePad &targetFile = isMainFile ? main : header;
 
@@ -2966,6 +3000,8 @@ void dsl_cpp_generator::generateFunc(ASTNode* proc) {
   //~ main.pushstr_newL(strBuffer);
 
   main.pushstr_newL("} //end FUN");
+
+  incFuncCount(func->getFuncType());
 
   return;
 }
