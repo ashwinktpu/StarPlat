@@ -14,18 +14,21 @@ __global__ void del_edges_CSR(int size, update *d_batch,
     {
       if (d_edgeList[i] == v)
       {
-        d_batch[id].type = '0';
+        d_batch[id].type = 'x';
         d_edgeList[i] = INT_MAX;
-        return;
+        break;
       }
     }
     for (int i = d_rev_indexofNodes[v]; i < d_rev_indexofNodes[v + 1]; i++)
     {
       if (d_srcList[i] == u)
       {
-        d_batch[id].type = '0';
+        if (d_batch[id].type == 'x')
+          d_batch[id].type = 'z';
+        else
+          d_batch[id].type = 'y';
         d_srcList[i] = INT_MAX;
-        return;
+        break;
       }
     }
   }
@@ -37,26 +40,35 @@ __global__ void del_edges_diffCSR(int size, update *d_batch,
                                   int32_t *d_diff_rev_indexofNodes, int32_t *d_diff_rev_edgeList)
 {
   unsigned int id = blockDim.x * blockIdx.x + threadIdx.x;
-  if (id < size && d_batch[id].type == 'd')
+  if (id < size)
   {
     int u = d_batch[id].source;
     int v = d_batch[id].destination;
-    for (int i = d_diff_indexofNodes[u]; i < d_diff_indexofNodes[u + 1]; i++)
+    if (d_batch[id].type == 'd' || d_batch[id].type == 'y')
     {
-      if (d_diff_edgeList[i] == v)
+      for (int i = d_diff_indexofNodes[u]; i < d_diff_indexofNodes[u + 1]; i++)
       {
-        d_batch[id].type = '0';
-        d_diff_edgeList[i] = INT_MAX;
-        return;
+        if (d_diff_edgeList[i] == v)
+        {
+          if (d_batch[id].type == 'y')
+            d_batch[id].type = 'z';
+          else
+            d_batch[id].type = 'x';
+          d_diff_edgeList[i] = INT_MAX;
+          break;
+        }
       }
     }
-    for (int i = d_diff_rev_indexofNodes[v]; i < d_diff_rev_indexofNodes[v + 1]; i++)
+    if (d_batch[id].type == 'd' || d_batch[id].type == 'x')
     {
-      if (d_diff_rev_edgeList[i] == u)
+      for (int i = d_diff_rev_indexofNodes[v]; i < d_diff_rev_indexofNodes[v + 1]; i++)
       {
-        d_batch[id].type = '0';
-        d_diff_rev_edgeList[i] = INT_MAX;
-        return;
+        if (d_diff_rev_edgeList[i] == u)
+        {
+          d_batch[id].type = 'z';
+          d_diff_rev_edgeList[i] = INT_MAX;
+          break;
+        }
       }
     }
   }

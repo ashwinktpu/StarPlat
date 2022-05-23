@@ -249,6 +249,21 @@ public:
     return edgeLen;
   }
 
+  int *getDiff_edgeLen()
+  {
+    return diff_edgeLen;
+  }
+
+  int *getRev_edgeLen()
+  {
+    return rev_edgeLen;
+  }
+
+  int *getDiff_rev_edgeLen()
+  {
+    return diff_rev_edgeLen;
+  }
+
   int num_nodes()
   {
     return nodesTotal + 1;
@@ -861,13 +876,13 @@ public:
     cudaMemcpy(srcList, d_srcList, sizeof(int32_t) * (E), cudaMemcpyDeviceToHost);
     cudaMemcpy(rev_edgeLen, d_rev_edgeLen, sizeof(int32_t) * (E), cudaMemcpyDeviceToHost);
     cudaMemcpy(diff_indexofNodes, d_diff_indexofNodes, sizeof(int32_t) * (V + 1), cudaMemcpyDeviceToHost);
-    diff_edgeList = (int32_t*)realloc(diff_edgeList, sizeof(int32_t)*(diffE));
-    diff_edgeLen = (int32_t*)realloc(diff_edgeLen, sizeof(int32_t)*(diffE));
+    diff_edgeList = (int32_t *)realloc(diff_edgeList, sizeof(int32_t) * (diffE));
+    diff_edgeLen = (int32_t *)realloc(diff_edgeLen, sizeof(int32_t) * (diffE));
     cudaMemcpy(diff_edgeList, d_diff_edgeList, sizeof(int32_t) * (diffE), cudaMemcpyDeviceToHost);
     cudaMemcpy(diff_edgeLen, d_diff_edgeLen, sizeof(int32_t) * (diffE), cudaMemcpyDeviceToHost);
     cudaMemcpy(diff_rev_indexofNodes, d_diff_rev_indexofNodes, sizeof(int32_t) * (V + 1), cudaMemcpyDeviceToHost);
-    diff_rev_edgeList = (int32_t*)realloc(diff_rev_edgeList, sizeof(int32_t)*(diffRevE));
-    diff_rev_edgeLen = (int32_t*)realloc(diff_rev_edgeLen, sizeof(int32_t)*(diffRevE));
+    diff_rev_edgeList = (int32_t *)realloc(diff_rev_edgeList, sizeof(int32_t) * (diffRevE));
+    diff_rev_edgeLen = (int32_t *)realloc(diff_rev_edgeLen, sizeof(int32_t) * (diffRevE));
     cudaMemcpy(diff_rev_edgeList, d_diff_rev_edgeList, sizeof(int32_t) * (diffRevE), cudaMemcpyDeviceToHost);
     cudaMemcpy(diff_rev_edgeLen, d_diff_rev_edgeLen, sizeof(int32_t) * (diffRevE), cudaMemcpyDeviceToHost);
 
