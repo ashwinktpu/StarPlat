@@ -33,8 +33,8 @@ bin/SymbolTableNew.o: symbolutil/SymbolTableNew.cpp  symbolutil/SymbolTable.h
 bin/dsl_dyn_cpp_generator.o:  backends/backend_omp/dsl_dyn_cpp_generator.cpp  backends/dslCodePad.h
 	$(CC) -c  backends/backend_omp/dsl_dyn_cpp_generator.cpp -o bin/dsl_dyn_cpp_generator.o
 
-bin/dsl_cpp_generator.o:  backends/backend_omp/dsl_cpp_generator.cpp  backends/dslCodePad.h
-	$(CC) $(CFLAGS) -c  backends/backend_omp/dsl_cpp_generator.cpp -o bin/dsl_cpp_generator.o
+bin/dsl_cpp_generator.o:  backends/backend_cuda/dsl_cpp_generator.cpp  backends/dslCodePad.h
+	$(CC) $(CFLAGS) -c  backends/backend_cuda/dsl_cpp_generator.cpp -o bin/dsl_cpp_generator.o
 
 bin/attachPropAnalyser.o: analyser/attachProp/attachPropAnalyser.cpp analyser/attachProp/attachPropAnalyser.h
 	$(CC) -c analyser/attachProp/attachPropAnalyser.cpp -o bin/attachPropAnalyser.o

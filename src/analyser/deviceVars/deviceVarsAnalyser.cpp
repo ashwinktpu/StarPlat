@@ -217,13 +217,20 @@ lattice deviceVarsAnalyser::analyseProcCall(proc_callStmt *stmt, lattice &inMap)
 
   for (Identifier *iden : wrapNode->usedVars.getVariables(READ))
   {
-    wrapNode->outMap.meet(iden, lattice::GPU_READ);
+    wrapNode->outMap.meet(iden, lattice::CPU_READ);
   }
   for (Identifier *iden : wrapNode->usedVars.getVariables(WRITE))
   {
-    wrapNode->outMap.meet(iden, lattice::GPU_WRITE);
+    wrapNode->outMap.meet(iden, lattice::CPU_WRITE);
   }
-
+  for (argument *arg : stmt_expr->getArgList())
+  {
+      if (arg->isAssignExpr())
+      {
+          assignment *asgn = arg->getAssignExpr();
+          wrapNode->outMap.meet(asgn->getId(), lattice::GPU_WRITE);
+      }
+  }
   return wrapNode->outMap;
 }
 
@@ -423,20 +430,30 @@ void deviceVarsAnalyser::analyseFunc(ASTNode *proc)
 {
   Function *func = (Function *)proc;
 
-  list<Identifier*> localVars;
+  list<Identifier*> paramVars;
   for(formalParam* fParam: func->getParamList()){
-    localVars.push_back(fParam->getIdentifier());
+    paramVars.push_back(fParam->getIdentifier());
   }
-  initStatement(func->getBlockStatement(), localVars);
+  initStatement(func->getBlockStatement(), paramVars);
 
   lattice inpLattice;
-  for(Identifier* iden: localVars){
+  for(Identifier* iden: paramVars){
     inpLattice.addVariable(iden, lattice::CPU_ONLY);
   }
 
-  analyseStatement(func->getBlockStatement(), inpLattice);
+  lattice outLattice = analyseStatement(func->getBlockStatement(), inpLattice);
+  unordered_map<TableEntry*, lattice::PointType> outMap = outLattice.getLattice();
   //printStatement(func->getBlockStatement(), 0);
   blockStatement* newBody = (blockStatement*) transferVarsBlock(func->getBlockStatement(), nullptr);
+  for(Identifier* iden: paramVars)
+  {
+    Type* type = iden->getSymbolInfo()->getType();
+    if(type->isPropNodeType() && (outMap[iden->getSymbolInfo()] == lattice::GPU_ONLY))
+    {
+      varTransferStmt* transferStmt = new varTransferStmt(iden, 0);
+      newBody->addStmtToBlock(transferStmt);
+    }
+  }
   func->setBlockStatement(newBody);
 
   printAST().printStatement(func->getBlockStatement());
