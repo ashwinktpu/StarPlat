@@ -507,7 +507,7 @@ int main(int argc,char **argv)
 			  if(strcmp(backendTarget,"cuda")==0)
 			  {
 			  	deviceVarsAnalyser dvAnalyser;
-				//cpp_backend.setOptimized();
+				cpp_backend.setOptimized();
 			  	dvAnalyser.analyse();
 			  }
 		  }

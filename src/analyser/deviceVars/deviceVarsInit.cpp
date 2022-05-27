@@ -159,11 +159,10 @@ bool deviceVarsAnalyser::initProcCall(proc_callStmt *stmt, list<Identifier *> &v
         if (arg->isAssignExpr())
         {
             assignment *asgn = arg->getAssignExpr();
-            stmtNode->usedVars.addVariable(asgn->getId(), WRITE);
             stmtNode->usedVars.merge(getVarsExpr(asgn->getExpr()));
+            gpuUsedVars.addVariable(asgn->getId(), WRITE);
         }
     }
-    gpuUsedVars.merge(stmtNode->usedVars);
     return false;
 }
 bool deviceVarsAnalyser::initFor(forallStmt *stmt, list<Identifier *> &vars)
