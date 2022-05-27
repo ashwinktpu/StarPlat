@@ -15,6 +15,12 @@ class dsl_cpp_generator {
   FILE* bodyFile;
   char* fileName;
 
+   int genFuncCount;	
+  int staticFuncCount;	
+  int inFuncCount;	
+  int decFuncCount;	
+  int curFuncType;
+
   // added here
   bool genCSR;
   char* gName;
@@ -38,6 +44,11 @@ class dsl_cpp_generator {
     fileName = new char[1024];
     currentFunc = NULL;
     isOptimized = false;
+
+    genFuncCount = 0;	
+    staticFuncCount = 0;	
+    inFuncCount = 0;	
+    decFuncCount = 0;
   }
 
 
@@ -72,6 +83,9 @@ class dsl_cpp_generator {
   void generateRevBFSAbstraction(iterateBFS* bfsAbstraction,
                                  bool isMainFile);  // reverse
 
+
+  void incFuncCount(int funcType);	
+  int curFuncCount();
 
   void generateExpr(Expression* expr, bool isMainFile, bool isAtomic = false);
   void generate_exprArL(Expression* expr, bool isMainFile, bool isAtomic = false);
