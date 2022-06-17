@@ -3,6 +3,8 @@
     "files.associations": {
         "string": "cpp",
         "ostream": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "functional": "cpp",
+        "pagerankdslv2": "cpp"
     }
 }

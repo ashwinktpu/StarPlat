@@ -286,7 +286,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                the forall is checked for its existence inside 
                another forall which is to be generated with 
                omp parallel pragma, and then disable the parallel loop*/
-            if(backend.compare("omp")==0)
+            if(backend.compare("omp")==0 || backend.compare("openACC")==0)
              {  
                  if(parallelConstruct.size()>0)
                   {  
@@ -324,7 +324,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                }
 
               buildForStatements(forAll->getBody());  
-               if(backend.compare("omp")==0&&forAll->isForall())
+               if((backend.compare("omp")==0 || backend.compare("openACC")==0 ) && forAll->isForall())
                     {  
                         parallelConstruct.pop_back();
                     } 
@@ -372,7 +372,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
              count++;
           }
 
-          if(flag&&backend.compare("omp")==0)
+          if(flag&&(backend.compare("omp")==0 || backend.compare("openACC")==0 ))
           { 
             iterateBFS* itrbFS=(iterateBFS*)(*itrIBFS);  
             Identifier* id=Identifier::createIdNode("bfsDist");
@@ -440,7 +440,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
             if(leftList.size() > 2)
                {
                    string backend(backendTarget);
-                   if(backend.compare("omp") == 0)
+                   if(backend.compare("omp") == 0 ||  backend.compare("openACC") == 0 )
                      {
                         currentFunc->setInitialLockDecl();
                      }   
@@ -478,7 +478,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
        {
           iterateBFS* iBFS=(iterateBFS*)stmt;
           string backend(backendTarget);
-            if(backend.compare("omp")==0)
+            if(backend.compare("omp")==0 ||  backend.compare("openACC") == 0 )
              { 
                parallelConstruct.push_back(iBFS);
                
@@ -486,7 +486,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
           
           buildForStatements(iBFS->getBody());
 
-          if(backend.compare("omp")==0)
+          if(backend.compare("omp")==0  ||  backend.compare("openACC") == 0 )
              { 
               parallelConstruct.pop_back();
                
