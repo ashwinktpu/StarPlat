@@ -490,7 +490,7 @@ int main(int argc,char **argv)
    }
    else
     {
-		if(!(strcmp(backendTarget,"omp")==0)||(strcmp(backendTarget,"mpi")==0)||(strcmp(backendTarget,"cuda")==0))
+		if(!((strcmp(backendTarget,"omp")==0)||(strcmp(backendTarget,"mpi")==0)||(strcmp(backendTarget,"cuda")==0) || (strcmp(backendTarget,"openACC")==0)))
 		   {
 			  fprintf(stderr, "Specified backend target is not implemented in the current version!\n");
 			   exit(-1);
@@ -521,14 +521,14 @@ int main(int argc,char **argv)
 	  cpp_backend.setFileName(fileName);
 	  cpp_backend.generate();
 	  }
-	else
+	/*else
 	 {
 		 printf("static graphsize %d\n",graphId[2][0].size());
 		 dsl_dyn_cpp_generator cpp_dyn_gen;
 		 cpp_dyn_gen.setFileName(fileName);
 		 cpp_dyn_gen.generate();
 
-	 }
+	 }*/
 	
 	}
    
