@@ -202,7 +202,7 @@ void add_InitialDeclarations(dslCodePad* main,iterateBFS* bfsAbstraction)
     char strBuffer[1024];
     add_InitialDeclarations(&main,bfsAbstraction);
     char* graphId=bfsAbstraction->getGraphCandidate()->getIdentifier();    //Graph variable identifier
-
+    char* iterNode=bfsAbstraction->getIteratorNode()->getIdentifier();    //Iterator variable as mentioned in DSL
    
    //Copyin graph object 
    sprintf(strBuffer, "#pragma acc data copyin(%s)", graphId);
@@ -224,7 +224,7 @@ void add_InitialDeclarations(dslCodePad* main,iterateBFS* bfsAbstraction)
    blockStatement* block=(blockStatement*)body;
 
     
-    //---------CHECK IF THERE IS FOR (neighbor iteration) INSIDE ITERATEBFS() BODY. IF NOT, GENERATE BFS BODY HERE ON OWN.-----------
+    //---------CHECK IF THERE IS FOR-LOOP (neighbor iteration) INSIDE ITERATEBFS() BODY. IF NOT, GENERATE BFS BODY HERE ON OWN.-----------
     int neighbor_for_flag = 0;
     list<statement*> statementList1=block->returnStatements();
     for(statement* stmt:statementList1)
@@ -235,9 +235,31 @@ void add_InitialDeclarations(dslCodePad* main,iterateBFS* bfsAbstraction)
        }
     }
 
+    //Generate inner for-loop to iterate neighbors, ONLY IF there is no for(neighbors) explicitly mentioned inside iterateBFS() in DSL code
     if (neighbor_for_flag == 0)
-    {
-        main.pushstr_newL("test-for-not-present");
+    {  
+          //Generate inner neighbor traversal for-loop's header
+          sprintf(strBuffer,"for(int nbr_edge = %s.indexofNodes[%s]; nbr_edge < %s.indexofNodes[%s+1]; nbr_edge++", graphId, iterNode, graphId, iterNode);  
+          main.pushstr_newL(strBuffer);
+
+          sprintf(strBuffer,"int nbr_node = %s.edgeList[nbr_edge]", graphId);  //get neighor node from neighbor edge and edgelist
+
+          //Generate if-block to visit all unvisited neighbors (For general BFS)
+          main.pushstr_newL("if(level[nbr_node] == -1)");
+          main.pushstr_newL(strBuffer);
+          main.pushstr_newL("{");
+          
+            sprintf(strBuffer, "level[nbr_node] = dist_from_source + 1;");
+            main.pushstr_newL(strBuffer);
+            main.pushstr_newL("finished=0;");  
+          
+          main.pushstr_newL("}");
+
+          //Generate if-block to generate all the statements within the forall neighbors loop 
+          sprintf(strBuffer, "if(level[node_nbr] == dist_from_source+1)");
+          main.pushstr_newL(strBuffer);
+          main.pushstr_newL("{");
+
     }
     //-------------------------------------------------------------------------------------------------------
 
@@ -247,6 +269,18 @@ void add_InitialDeclarations(dslCodePad* main,iterateBFS* bfsAbstraction)
    {
        generateStatement(stmt);
    }
+
+  //Generate closing "}"s if there is no for(neighbors) explicitly mentioned inside iterateBFS() in DSL code
+  if (neighbor_for_flag == 0)
+  {
+      //Generate closing '}' to close the '{' for the if(level[node_nbr] == dist_from_source+1) generated above
+      main.pushstr_newL("}");
+
+      //Closing bracket TO CLOSE THE FOR LOOP of neighbor iteration.
+      main.pushstr_newL("}");   
+  }
+
+
    main.pushstr_newL("}"); //-----Close if() body inside u-for-loop 
    main.pushstr_newL("}");  //Close outer for loop (u-loop)
    main.pushstr_newL("}");  //Close data region for the for-loop
@@ -859,6 +893,10 @@ void dsl_cpp_generator::generateAssignmentStmt(assignment* asmt)  //When propnod
       { 
         /*if(asmt->getParent()->getParent()->getParent()->getParent()->getTypeofNode()==NODE_ITRBFS)
            if(asmt->getExpr()->isArithmetic()||asmt->getExpr()->isLogical())*/
+
+           //++++++++++++THIS MIGHT NEED TO BE CHANGED TO "#pragma acc atomic write" in future contexts. 
+           //If same memory location is read in rhs and written in lhs, then "#pragma acc atomic update" is to be used
+           //If different memory locations, "#pragma acc atomic write" is to be used.
              main.pushstr_newL("#pragma acc atomic update");
            
       }
@@ -910,8 +948,9 @@ void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt)   //Attac
           char strBuffer[1024];
           list<argument*> argList=procedure->getArgList();
           list<argument*>::iterator itr;
-
-          //--------------------OpenAcc data pragma. SPECIFICALLY FOR SSSP----------------------------------------------
+          
+          /*
+          //--------------------OpenAcc data pragma. HARDCODED SPECIFICALLY FOR SSSP----------------------------------------------
           
           main.NewLine();
           sprintf(strBuffer, "#pragma acc data copyin(%s)", graph_name);    //graphIds[0]->getIdentifier());
@@ -924,7 +963,7 @@ void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt)   //Attac
           main.pushstr_newL("{");
           
          //-------------------------------------------------------------------------------
-
+        */
           /*
           //--------------------OpenAcc data pragma. SPECIFICALLY FOR PR----------------------------------------------
           main.NewLine();
@@ -936,6 +975,43 @@ void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt)   //Attac
           main.pushstr_newL("{");
           //----------------------------------------------------------------------------------
           */
+          
+        //++++++++++++++++++++++Generate data pragma for this attachNodeProperty() procedureCall with all the array names+++++++++++++++++++++++++++++++++++++++++++++++++++
+          main.NewLine();
+          sprintf(strBuffer, "#pragma acc data copyin(%s)", graph_name);    //Copy the graph object to GPU first (shallow-copy)
+          main.pushstr_newL(strBuffer);
+          main.pushstr_newL("{");  //opening bracket for 1st outer data region
+
+          main.pushString("#pragma acc data copyout( ");   //Since we are just setting values to arrays, it it sufficient to copyout
+
+          //Iterate all the arguments inside the attachNodeProperty(--) or attachEdgeProperty(--) procedure calls. (Example: dist=INF)
+          for(itr=argList.begin();itr!=argList.end();itr++)
+          {
+            //To generate comma before every array except the first one
+            if(itr != argList.begin())
+            {
+                main.pushString(", ");
+            } 
+
+            assignment* assign=(*itr)->getAssignExpr();   //Get the Assignment statement AST node
+            Identifier* lhsId=assign->getId();   //Get LHS identifier. Example: dist
+            Expression* exprAssigned = assign->getExpr();   //Get RHS expression assigned. Here Example: INF
+            sprintf(strBuffer,"%s[0: %s.num_nodes()]",lhsId->getIdentifier(), graph_name);   //num_nodes() because this is attachNodePropoperty, need to apply to values of all nodes
+            main.pushString(strBuffer);
+
+            if(lhsId->getSymbolInfo()->getId()->require_redecl())   //If a lhs array requires redclaration: Example: modified requires modified_nxt
+            {
+                  main.pushString(", ");
+                  sprintf(strBuffer,"%s_nxt[0: %s.num_nodes()]",lhsId->getIdentifier(),graph_name);
+                  main.pushString(strBuffer);
+            }
+            
+          }
+          main.pushstr_newL(" )");  //Close bracket for #pragma acc data copyout(----
+
+          main.pushstr_newL("{");  //opening bracket for 2nd data region
+        
+      //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
           main.pushstr_newL("#pragma acc parallel loop");
           sprintf(strBuffer,"for (%s %s = 0; %s < %s.%s(); %s ++) ","int","t","t",procedure->getId1()->getIdentifier(),"num_nodes","t");
@@ -970,13 +1046,13 @@ void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt)   //Attac
 
     }
 
-    else if(compareVal1 == 0)    //If attachedge property
+    else if(compareVal1 == 0)    //If attachedge property, MOSTLY UNTOUCHED FOR OPENACC
     {
       
       char strBuffer[1024];
       list<argument*> argList=procedure->getArgList();
       list<argument*>::iterator itr;
-      main.pushstr_newL("#pragma omp parallel for");
+      main.pushstr_newL("#pragma acc parallel loop");   //changed from omp
       sprintf(strBuffer,"for (%s %s = 0; %s < %s.%s(); %s ++) ","int","t","t",procedure->getId1()->getIdentifier(),"num_edges","t");
       main.pushstr_newL(strBuffer);
       main.pushstr_newL("{");
@@ -1596,7 +1672,7 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll)
 
           generateBlock((blockStatement*)forAll->getBody(),false);
 
-          //Generate closing '}' if current forall is inside a bfs or rbfs loop, to close the '{' for the if(bfs..) generated above
+          //Generate closing '}' if current forall is inside a bfs or rbfs loop, to close the '{' for the if(level[]..) generated above
           if(forAll->getParent()->getParent()->getTypeofNode()==NODE_ITRBFS||forAll->getParent()->getParent()->getTypeofNode()==NODE_ITRRBFS)
             main.pushstr_newL("}");
 
@@ -2293,7 +2369,8 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct)
     
     vector<Identifier*> graph_arr = graphId[curFuncType][curFuncCount()];
     char* graph_name = graph_arr[0]->getIdentifier();  //Graph variable name identifier
-    //OpenAcc data copyin constructs: For general graph data structures //---------------FOR SSSP ONLY-----------------
+  //----------------------------------DATA COPY PRAGMA FOR FOR SSSP ONLY HARDCODED---------------------------------------ANALYSIS TO BE DONE----
+    //OpenAcc data copyin constructs: For general graph data structures
     sprintf(strBuffer,"#pragma acc data copyin(%s)", graph_name);
     main.pushstr_newL(strBuffer);
     main.pushstr_newL("{"); 
@@ -2301,7 +2378,7 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct)
     sprintf(strBuffer, "#pragma acc data copyin( %s.edgeList[0:%s.num_edges()], %s.indexofNodes[:%s.num_nodes()+1], weight[0: %s.num_edges()], modified[0: %s.num_nodes()],  modified_nxt[0:%s.num_nodes()] ) copy(dist[0:%s.num_nodes()])", graph_name, graph_name, graph_name, graph_name, graph_name, graph_name,  graph_name, graph_name); 
     main.pushstr_newL(strBuffer);
     main.pushstr_newL("{");  
-                                                   ///-------------------------------Get Done------------------------
+  //-------------------------------++++++++++++++++++++++-------------------------------------------------------------------
 
     main.pushString("while ( ");
     main.push('!');

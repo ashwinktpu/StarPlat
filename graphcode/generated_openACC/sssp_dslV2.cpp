@@ -8,7 +8,7 @@ void Compute_SSSP(graph& g,int* dist,int* weight,int src
 
   #pragma acc data copyin(g)
   {
-    #pragma acc data copyout( modified[0: g.num_nodes()], modified_nxt[0: g.num_nodes()], dist[0: g.num_nodes()+1] )
+    #pragma acc data copyout( dist[0: g.num_nodes()], modified[0: g.num_nodes()], modified_nxt[0: g.num_nodes()] )
     {
       #pragma acc parallel loop
       for (int t = 0; t < g.num_nodes(); t ++) 
