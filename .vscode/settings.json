@@ -18,6 +18,8 @@
         "string": "cpp",
         "ostream": "cpp",
         "iostream": "cpp",
+        "functional": "cpp",
+        "pagerankdslv2": "cpp"
         "unordered_map": "cpp",
         "list": "cpp",
         "xstring": "cpp",
@@ -43,5 +45,6 @@
         "sstream": "cpp",
         "streambuf": "cpp",
         "input9": "cpp"
+
     }
 }

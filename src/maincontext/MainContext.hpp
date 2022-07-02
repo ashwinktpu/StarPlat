@@ -19,6 +19,8 @@ class FrontEndContext
   int staticFuncCount;
   int inFuncCount;
   int decFuncCount;
+  int dynFuncCount;
+  
 
 
   public:
@@ -28,6 +30,7 @@ class FrontEndContext
     staticFuncCount = 0;
     inFuncCount = 0;
     decFuncCount = 0;
+    dynFuncCount = 0;
   
   }
 
