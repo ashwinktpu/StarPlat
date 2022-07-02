@@ -38,15 +38,15 @@ class dslCodePad
        filePtr=0;
    }
 
-   void insert_indent() 
+   void insert_indent()
     {
         indentation++;
     }
-    void decrease_indent() 
+    void decrease_indent()
     {
         indentation--;
 
-    }   
+    }
 
    void pushString(const char* str)
    {   int length=strlen(str);
@@ -75,7 +75,7 @@ class dslCodePad
            if(islower(str[i]))
               push(toupper(str[i]));
             else
-              push(str[i]);  
+              push(str[i]);
        }
    }
 
@@ -87,7 +87,7 @@ class dslCodePad
    {
        push(' ');
    }
-  
+
    void outputToFile()
    {
      buffer[column++]='\0';
@@ -105,7 +105,7 @@ class dslCodePad
             if(!isspace(c))
                noChar=false;
             if(c=='\n'||i==filePtr)
-             break;   
+             break;
          }
 
          if(noChar)
@@ -114,16 +114,16 @@ class dslCodePad
          {
               fwrite(temporary_buf,pointer,1,outputFile);
          }
-           
+
        }
-         
+
          column=0;
          filePtr=0;
-         
+
 
     }
     void push(const char c)
-      { 
+      {
          buffer[column++]=c;
        /*  if(c=='\n')
           {
@@ -131,18 +131,18 @@ class dslCodePad
               column=0;
           }
 */
-          
+
           if(c =='\n') //to be checked again
           { // printf("INSIDE CCCCCCCCCC");
              if(buffer[0]=='}')
                 indentation--;
-             else if(buffer[0]==')') 
+             else if(buffer[0]==')')
                 indentation--;
             buffer[column++]='\0';
             if(column!=1||buffer[0]!='\n')
             {
               for(int i=0;i<2*indentation;i++)
-                fileBuffer[filePtr++]=' '; 
+                fileBuffer[filePtr++]=' ';
             }
 
             filePtr+=sprintf(&fileBuffer[filePtr],"%s",buffer);
@@ -152,8 +152,8 @@ class dslCodePad
             {
                 if(buffer[i]=='}'||buffer[i]==')')
                   continue;
-                break;  
-            }    
+                break;
+            }
             int indentCount=0;
             for(;i<column;i++)
             {
@@ -164,23 +164,19 @@ class dslCodePad
                 if(buffer[i]=='}')
                    indentCount--;
                 if(buffer[i]==')')
-                   indentCount--;        
+                   indentCount--;
 
-            }  
+            }
 
             if(indentCount>0)
                indentation++;
             else if(indentCount<0)
               indentation--;
 
-           column=0;        
+           column=0;
 
           }
       }
-   
-
-
-
 
 
 };

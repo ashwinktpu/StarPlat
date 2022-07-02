@@ -1,6 +1,7 @@
  #ifndef SYMBOLTABLE_H
 #define SYMBOLTABLE_H
 
+#include <cstddef> //for NULL in gcc 6
 #include<list>
 
 using namespace std;
@@ -16,7 +17,7 @@ class TableEntry
   Type* type;
   bool isArgument;
 
-  TableEntry():id(NULL), type(NULL),isArgument(false){
+  TableEntry():id(nullptr), type(nullptr),isArgument(false){
 
   }
  
@@ -57,7 +58,7 @@ public:
 
 SymbolTable(ASTNode* ownerNode,int symbTabType)
 {
-    parent=NULL;
+    parent=nullptr;
     symbTabOwner=ownerNode;
     sTtype=symbTabType;
     

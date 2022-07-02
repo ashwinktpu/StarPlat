@@ -47,7 +47,7 @@ inline bool check_isPrimitiveType(int typeId)
  inline bool check_isPropNodeType(int typeId)
  {
    return typeId==TYPE_PROPNODE;
- } 
+ }
 
  inline bool check_isPropEdgeType(int typeId)
  {
@@ -105,7 +105,6 @@ enum OPERATOR
  OPERATOR_ANDASSIGN,
  OPERATOR_SUBASSIGN,
 
-
 };
 
 enum FUNCTYPE
@@ -118,8 +117,7 @@ enum FUNCTYPE
   
 };
 
-enum NODETYPE
-{
+enum NODETYPE{
   NODE_ID,
   NODE_PROPACCESS,
   NODE_FUNC,
@@ -146,6 +144,7 @@ enum NODETYPE
   NODE_BATCHBLOCKSTMT,
   NODE_ONADDBLOCK,
   NODE_ONDELETEBLOCK
+  NODE_TRANSFERSTMT,
 };
 
 
@@ -166,6 +165,7 @@ enum EXPR
    EXPR_PROCCALL,
    EXPR_DEPENDENT,
 };
+
 static const char *currentBatch = "currentBatch";
 static const char *attachNodeCall = "attachNodeProperty";
 static const char *attachEdgeCall = "attachEdgeProperty" ;
@@ -177,3 +177,4 @@ static const char* nodesToCall = "nodes_to";
 static const char* nodesCall = "nodes";
 
 #endif
+

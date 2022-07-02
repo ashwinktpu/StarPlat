@@ -1,4 +1,5 @@
 #include "SymbolTableBuilder.h"
+#include "../ast/ASTHelper.cpp"
 
 void performUpdatesAssociation(PropAccess* expr, ASTNode* preprocessEnv)
 {
@@ -41,7 +42,7 @@ void setFilterAssocForForAll(std::vector<ASTNode*> parallelConstruct, Expression
 }
 
 bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
- {  
+ {   // cout<<"ID VALUE IN SEARCH"<<id->getIdentifier()<<"\n";
      assert(id!=NULL);
      assert(id->getIdentifier()!=NULL);
      TableEntry* tableEntry=sTab->findEntryInST(id);
@@ -49,6 +50,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
      {  return false;
          //to be added.
      }
+     // cout<<"FINALLY FOUND IT"<<"\n";
      if(id->getSymbolInfo()!=NULL)
       {
       assert(id->getSymbolInfo()==tableEntry);
@@ -56,7 +58,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
      else
         id->setSymbolInfo(tableEntry);
 
-     return true;  
+     return true;
 
  }
 
@@ -67,7 +69,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
      TableEntry* tableEntry=sTab->findEntryInST(id);
      Type* type = tableEntry->getType();
      for(argument* arg:argList)
-     {  
+     {
          assert(arg->isAssignExpr());
          if(arg->isAssignExpr())
          {
@@ -82,8 +84,8 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
  }
 
   declaration*  createPropertyDeclaration(Identifier* &id)
- {   
-     
+ {
+
      Type* typeNode=Type::createForPrimitive(TYPE_INT,1);
      Type* propType=Type::createForPropertyType(TYPE_PROPNODE,4,typeNode);
      declaration* declNode=declaration::normal_Declaration(propType,id);
@@ -158,7 +160,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
      list<formalParam*> paramList=func->getParamList();
      list<formalParam*>::iterator itr;
      for(itr=paramList.begin();itr!=paramList.end();itr++)
-     {   
+     {
          formalParam* fp=(*itr);
          Type* type=fp->getType();
          Identifier* id=fp->getIdentifier(); 
@@ -178,8 +180,10 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
  }
 
  void SymbolTableBuilder::buildForStatements(statement* stmt)
- {   
-     bool searchSuccess=false;
+ {
+    bool searchSuccess=false;
+    string backend(backendTarget);
+
     switch(stmt->getTypeofNode())
     {
        case NODE_DECL:
@@ -194,25 +198,37 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
            }
              break;
        }
-     
+
        case NODE_ASSIGN:
-       { 
+       {
            assignment* assign=(assignment*)stmt;
-           Expression* exprAssigned = assign->getExpr();
            if(assign->lhs_isIdentifier())
              {
                  Identifier* id=assign->getId();
                   searchSuccess=findSymbolId(id);
+                  //~ std::cout<< "NORMAL ASST:" <<id->getIdentifier()  <<'\n';
              }
              else if(assign->lhs_isProp())
              {
                  PropAccess* propId=assign->getPropId();
                  searchSuccess=findSymbolPropId(propId);
-
-
+                  //~ std::cout<< "PROP ASST" << propId->getIdentifier1()->getIdentifier() << '\n';
              }
 
-             checkForExpressions(exprAssigned);
+             if(backend.compare("cuda")== 0  && assign->lhs_isProp()){  // This flags device assingments OUTSIDE for
+              //~ std::cout<< "varName1: " << assign->getPropId()->getIdentifier1()->getIdentifier() << '\n';
+              //~ std::cout<< "varName2: " << assign->getPropId()->getIdentifier2()->getIdentifier() << '\n';
+              std::cout<<"ANAME1:"<< assign->getParent()->getTypeofNode() << '\n';
+              std::cout<< "ANAME2:"<< assign->getParent()->getParent()->getTypeofNode() << '\n';
+              //~ std::cout<< "ANAME3:"<< assign->getParent()->getParent()->getParent()->getTypeofNode() << '\n';
+              if(assign->getParent()->getParent()->getTypeofNode()==NODE_FUNC || (assign->getParent()->getParent()->getTypeofNode()!=NODE_FUNC && assign->getParent()->getParent()->getParent()->getTypeofNode()==NODE_FUNC)){
+                std::cout<< "\t\tSetting device bool" << '\n';
+                assign->flagAsDeviceVariable();
+              }
+             }
+
+            Expression* exprAssigned = assign->getExpr();
+            checkForExpressions(exprAssigned);
              
              if(assign->lhs_isIdentifier())
              {
@@ -232,8 +248,8 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
              break;
        }
        case NODE_FIXEDPTSTMT:
-       { 
-          fixedPointStmt* fpStmt=(fixedPointStmt*)stmt;
+       {
+           fixedPointStmt* fpStmt=(fixedPointStmt*)stmt;
            Identifier* fixedPointId=fpStmt->getFixedPointId();
            searchSuccess=findSymbolId(fixedPointId);
            checkForExpressions(fpStmt->getDependentProp());
@@ -242,7 +258,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
            
            if(fpStmt->getDependentProp()->isUnary()||fpStmt->getDependentProp()->isIdentifierExpr())
            {  
-               printf("INSIDE FIXEDPTCHECK\n");
+               
                Identifier* depId ;
                if(fpStmt->getDependentProp()->isUnary())
                {
@@ -254,7 +270,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                }
                if(depId->getSymbolInfo()!=NULL)
                  {  
-                     printf("Inside fixedptId...\n");
+                     
                      Identifier* tableId = depId->getSymbolInfo()->getId();
                      tableId->set_redecl(); //explained in the ASTNodeTypes
                      tableId->set_fpassociation(); //explained in the ASTNodeTypes
@@ -263,7 +279,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                  }
            }
            buildForStatements(fpStmt->getBody());
-         
+
          break;
 
        }
@@ -283,18 +299,17 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                 checkForExpressions(forAll->getfilterExpr());
             }
             /* Required for omp backend code generation,
-               the forall is checked for its existence inside 
-               another forall which is to be generated with 
+               the forall is checked for its existence inside
+               another forall which is to be generated with
                omp parallel pragma, and then disable the parallel loop*/
-            if(backend.compare("omp")==0 || backend.compare("openACC")==0)
+
+            if( (backend.compare("omp")==0) || (backend.compare("cuda")==0) || (backend.compare("openACC")==0) )
              {  
                  if(parallelConstruct.size()>0)
                   {  
                       forAll->disableForall();
                       if(forAll->hasFilterExpr())
                          setFilterAssocForForAll(parallelConstruct, forAll->getfilterExpr());
-                              
-                        
                   }
 
                   if(forAll->isForall())
@@ -303,12 +318,29 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                        
                     }
              }
-           
-          
-            if(checkInsideBFSIter(parallelConstruct))
+
+             if(backend.compare("cuda")== 0 ){ // This flags device assingments INSIDE for
+              std::cout<< "FORALL par   NAME1:"<< forAll->getParent()->getTypeofNode() << '\n';
+              if(forAll->getParent()->getParent())
+                std::cout<< "FORALL ParPar NAME2:"<< forAll->getParent()->getParent()->getTypeofNode() << '\n';
+              if(forAll->getParent()->getParent()->getParent())
+                std::cout<< "FORALL ParParPar NAME3:"<< forAll->getParent()->getParent()->getParent()->getTypeofNode() << '\n';
+
+              if(forAll->getParent()->getParent()->getTypeofNode()==NODE_FUNC){      // This flags device assingments OUTSIDE for e.g BC
+                std::cout<< "\t\tTO Set DEVICE BOOL" << '\n';
+                forAll->addDeviceAssignment();
+              }
+              if(forAll->getParent()->getParent()->getTypeofNode()==NODE_ITRRBFS ) {
+                std::cout<< "\t\tTP SET ACC BC BOOL" << '\n';
+                //~ forAll->addDeviceAssignment();
+              }
+            }
+
+
+            if(checkInsideBFSIter(parallelConstruct)) // this assumes all the assignment stmts inside for of ITER BFS are atomic. Possibile bug if more statements!
                {
                  /* the assignment statements(arithmetic & logical) within the block of a for statement that
-                    is itself within a IterateInBFS abstraction are signaled to become atomic while code 
+                    is itself within a IterateInBFS abstraction are signaled to become atomic while code
                     generation. */
                   proc_callExpr* extractElem = forAll->getExtractElementFunc();
                   if(extractElem!=NULL)
@@ -323,13 +355,27 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                    }
                }
 
+              init_curr_SymbolTable(forAll);
+    
+              Type* type = (Type*) Util::createNodeEdgeTypeNode(TYPE_NODE);
+              bool creatsFine=create_Symbol(currVarSymbT,forAll->getIterator(),type);
+
               buildForStatements(forAll->getBody());  
+           //----------------------MERGE CONFLICT OCCURRED HERE (WORKING BRANCH <---- OPENACC)----------------------------------
                if((backend.compare("omp")==0 || backend.compare("openACC")==0 ) && forAll->isForall())
                     {  
                         parallelConstruct.pop_back();
                     } 
 
+              delete_curr_SymbolTable();
+
+
+               if((backend.compare("omp")==0 || backend.compare("cuda")==0) &&forAll->isForall())
+                    {
+                        parallelConstruct.pop_back();
+                    }
               break;
+          //-----------------------------------------------------------------------------------------------------------------
        }
        case NODE_BLOCKSTMT:
        {  blockStatement* blockStmt=(blockStatement*)stmt;
@@ -350,8 +396,14 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
              if(!callFlag&&(*itr)->getTypeofNode()==NODE_PROCCALLSTMT)
              {
                  proc_callStmt* proc=(proc_callStmt*)(*itr);
+              
+              //---------------------MERGE CONFLICT OCCURED HERE (WORKING BRANCH<---OPENACC)----------------------------
                  char* methodId=proc->getProcCallExpr()->getMethodId()->getIdentifier();
                  string IDCoded(attachNodeCall);
+
+                 //~ char* methodId=proc->getProcCallExpr()->getMethodId()->getIdentifier();
+                 string IDCoded("attachNodeProperty");
+              //----------------------------------------------------------------------------------------------------------
                  int x=IDCoded.compare(IDCoded);
                  if(x==0)
                  {
@@ -361,10 +413,10 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                  }
              }
              if((*itr)->getTypeofNode()==NODE_ITRBFS)
-             {  
-               
+             {
+
                 itrIBFS=itr;
-             
+
                 flag=true;
                 bfsPos=count;
              }
@@ -384,7 +436,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
             proc_callExpr* pExpr=proc->getProcCallExpr();
             pExpr->addToArgList(arg);
             PropAccess* propIdNode=PropAccess::createPropAccessNode(itrbFS->getRootNode(),id);
-            Expression* expr=Expression::nodeForIntegerConstant(0);
+            Expression* expr=Expression::nodeForIntegerConstant(-1);
             assignment* assignmentNode=assignment::prop_assignExpr(propIdNode,expr);
             blockStmt->insertToBlock(assignmentNode,bfsPos+1);
 
@@ -407,10 +459,11 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
            buildForStatements(ifstmt->getIfBody());
            if(ifstmt->getElseBody()!=NULL)
             buildForStatements(ifstmt->getElseBody());
-          break;  
+          break;
        }
        case NODE_PROCCALLSTMT:
        {
+           //cout<<"Procedure Call statment"<<endl;
            proc_callStmt* proc_call=(proc_callStmt*)stmt;
            proc_callExpr* pExpr=proc_call->getProcCallExpr();
            checkForExpressions(pExpr);
@@ -452,6 +505,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
            } 
            
            reductionCall* reduceExpr = reducStmt->getReducCall();
+
            checkReductionExpr(reduceExpr);
            }
            else
@@ -485,6 +539,8 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
              }     
           
           buildForStatements(iBFS->getBody());
+          iterateReverseBFS* iRevBFS = iBFS->getRBFS();
+          iRevBFS->addAccumulateAssignment();
 
           if(backend.compare("omp")==0  ||  backend.compare("openACC") == 0 )
              { 
@@ -501,6 +557,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
            buildForStatements(doStmt->getBody());
            break;
        }
+
 
        case NODE_RETURN:
          {
@@ -545,11 +602,20 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
          break;
 
        } 
+       
+      case NODE_UNARYSTMT:
+       {
+           unary_stmt* unaryStmt = (unary_stmt*) stmt;
+           checkForExpressions(unaryStmt->getUnaryExpr());
+          break;
+       }
+     default: // added to supress warnings
+          std::cout<< "DEFAULT NODE-ok?" << '\n';
 
       
    }
 
-   
+
  }
 
  void SymbolTableBuilder::checkReductionExpr(reductionCall* reduce)
@@ -557,12 +623,12 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
     list<argument*> argList=reduce->getargList();
     list<argument*>::iterator itr;
     for(itr=argList.begin();itr!=argList.end();itr++)
-    {   
+    {
         argument* arg=(*itr);
         if(arg->isAssignExpr())
           buildForStatements(arg->getAssignExpr());
         else
-          checkForExpressions(arg->getExpr()); 
+          checkForExpressions(arg->getExpr());
     }
 
 
@@ -582,7 +648,8 @@ bool SymbolTableBuilder::checkForArguments(list<argument*> argList)
                findSymbolId(assign->getId());
              else
                findSymbolPropId(assign->getPropId());
-               
+            
+            checkForExpressions(assign->getExpr());
          }
          if(arg->isExpr())
          {
@@ -653,7 +720,7 @@ bool SymbolTableBuilder::checkForArguments(list<argument*> argList)
          }
          case EXPR_PROPID:
          {  
-             cout<<expr->getPropId()->getIdentifier1()->getIdentifier()<<"\n";
+             // cout<<expr->getPropId()->getIdentifier1()->getIdentifier()<<"\n";
              ifFine=findSymbolPropId(expr->getPropId());
               if(preprocessEnv!=NULL && expr->getPropId()->getIdentifier1()->getSymbolInfo()==NULL)
                {  
@@ -673,7 +740,7 @@ bool SymbolTableBuilder::checkForArguments(list<argument*> argList)
 
              break;
          }
-         
+
 
      }
  }
@@ -688,7 +755,7 @@ bool SymbolTableBuilder::checkForArguments(list<argument*> argList)
  }
 
  bool SymbolTableBuilder::findSymbolId(Identifier* id)
- {  
+ {
     bool success=search_and_connect_toId(currVarSymbT,id);
     if(!success)
     search_and_connect_toId(currPropSymbT,id); //need to optimize on whether to call this function or not.
@@ -723,7 +790,7 @@ bool SymbolTableBuilder::checkForArguments(list<argument*> argList)
  }
 
  void SymbolTableBuilder::delete_curr_SymbolTable()
- { 
+ {
      currVarSymbT=variableSymbolTables.back();
      currPropSymbT=propSymbolTables.back();
 
@@ -732,13 +799,11 @@ bool SymbolTableBuilder::checkForArguments(list<argument*> argList)
  }
 
 void SymbolTableBuilder::buildST(list<Function*> funcList)
-{  
-   
+{     
     list<Function*>::iterator itr;
     for(itr=funcList.begin();itr!=funcList.end();itr++)
        buildForProc((*itr));
-} 
-  
+}
 
- 
+
 

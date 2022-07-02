@@ -6,7 +6,7 @@ NEGATE [-]
 
 %{
     #include <stdlib.h>
-    #include <stdio.h>  
+    #include <stdio.h>
     #include <string.h>
     #include "includeHeader.hpp"
     #include "y.tab.h"
@@ -76,7 +76,7 @@ NEGATE [-]
 ">="					{ printf ( "GE_OP");  return T_GE_OP;}
 "=="					{ printf ( "EQ_OP");  return T_EQ_OP;}
 "!="					{ printf ( "NE_OP");  return T_NE_OP;}
- 
+
 ";"					{ printf ( "';'"); return ';' ;}
 ("{"|"<%")				{ printf ( "'{'") ;  return '{' ;}
 ("}"|"%>")				{ printf ( "'}'"); return '}';}
@@ -93,25 +93,25 @@ NEGATE [-]
 "~"					{ printf ( "'~'");  return '~';}
 "-"					{ printf ( "'-'");  return '-';}
 "+"					{ printf ( "'+'");  return '+';}
-"*"					{ printf ( "'*'");  return '*';} 
+"*"					{ printf ( "'*'");  return '*';}
 "/"					{ printf ( "'/'"); return '/';}
-"%"					{ printf ( "'%'");  return '%';}
+"%"					{ printf ( "'%%'");  return '%';}
 "<"					{ printf ( "'<'");  return '<';}
 ">"					{ printf ( "'>'");  return '>';}
 
 "^"					{ printf ( "'^'"); return '^';}
 "|"					{ printf ( "'|'"); return '|';}
-"?"					{ printf ( "'?'");  return '?';} 
- 
+"?"					{ printf ( "'?'");  return '?';}
 
-"And"     { printf ( "And");  return T_AND;}
-"Or"      { printf ( "Or");  return T_OR;}
+
+"And"     { /* printf ( "And"); */  return T_AND;}
+"Or"      { /* printf ( "Or"); */  return T_OR;}
 
 "Sum"     { printf ( "Sum");  return T_SUM;}
 "Count"   { printf ( "Count");  return T_COUNT;}
 "Product" { printf ( "Product"); return T_PRODUCT;}
 "Max"     { printf ( "Max");  return T_MAX;}
-"Min"     { printf ( "Min"); return T_MIN;} 
+"Min"     { printf ( "Min"); return T_MIN;}
 
 
  /* Graph Types */
@@ -122,9 +122,6 @@ NEGATE [-]
 "propNode" {printf("Node Property");  return T_NP;}
 "propEdge" {printf("Edge Property"); return T_EP;}
 
-
-
- 
  /* Collection Type */
 "SetN" 	{printf("Set of Nodes");  return T_SET_NODES;}
 "SetE" 	{printf("Set of Edges"); return T_SET_EDGES;}
@@ -133,16 +130,16 @@ NEGATE [-]
 
 
  /* Numbers and Identifies */
-{ALPHANUM}          { yylval.text=yytext; /*printf("HELLO ID %s",yytext); printf("\n");*/ return ID;}
+{ALPHANUM}          { yylval.text=yytext; /*printf("HELLO ID %s",yytext); /* printf("\n");*/ return ID;}
 {DIGIT}+"."{DIGIT}* { yylval.fval=atof(yytext);
                         return FLOAT_NUM;}
 {NEGATE}*{DIGIT}{DIGIT}*     {  yylval.ival=atoi(yytext);
                             return INT_NUM;}
 
-[ \n\t]	{ printf("\n");}  
-{WS}+					{ /* whitespace separates tokens */ } 
+[ \n\t]	{ printf("\n");}
+{WS}+					{ /* whitespace separates tokens */ }
 
-.    {printf("invalid\n");}
+.    {/* printf("invalid\n"); */}
 
 
 %%
