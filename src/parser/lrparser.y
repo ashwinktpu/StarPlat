@@ -17,7 +17,7 @@
 	char mytext[100];
 	char var[100];
 	int num = 0;
-	vector<map<int,vector<Identifier*>>> graphId(4);
+	vector<map<int,vector<Identifier*>>> graphId(5);
 	extern char *yytext;
 	//extern SymbolTable* symbTab;
 	FrontEndContext frontEndContext;
@@ -36,6 +36,7 @@
 	bool bval;
     double fval;
     char* text;
+	char cval;
 	ASTNode* node;
 	paramList* pList;
 	argList* aList;
@@ -52,17 +53,19 @@
 %token T_NP  T_EP
 %token T_LIST T_SET_NODES T_SET_EDGES  T_FROM
 %token T_BFS T_REVERSE
-%token T_INCREMENTAL T_DECREMENTAL T_STATIC
+%token T_INCREMENTAL T_DECREMENTAL T_STATIC T_DYNAMIC
+%token T_BATCH T_ONADD T_ONDELETE
 
 
 %token <text> ID
 %token <ival> INT_NUM
 %token <fval> FLOAT_NUM
 %token <bval> BOOL_VAL
+%token <cval> CHAR_VAL
 
 %type <node> function_def function_data function_body param
 %type <pList> paramList
-%type <node> statement blockstatements assignment declaration proc_call control_flow reduction return_stmt
+%type <node> statement blockstatements assignment declaration proc_call control_flow reduction return_stmt batch_blockstmt on_add_blockstmt on_delete_blockstmt
 %type <node> type1 type2
 %type <node> primitive graph collections property
 %type <node> id leftSide rhs expression oid val boolean_expr unary_expr tid 
@@ -125,7 +128,12 @@ function_data: T_FUNC id '(' paramList ')' {
                                             Util::setCurrentFuncType(DECREMENTAL_FUNC);
 											Util::resetTemp(tempIds);
 											tempIds.clear();
-	                                      };						  								  							  
+	                                      };	
+		       | T_DYNAMIC id '(' paramList ')' { $$=Util::createDynamicFuncNode($2,$4->PList);
+                                            Util::setCurrentFuncType(DYNAMIC_FUNC);
+											Util::resetTemp(tempIds);
+											tempIds.clear();
+											};								  					  								  							  
 
 paramList: param {$$=Util::createPList($1);};
                | param ',' paramList {$$=Util::addToPList($3,$1); 
@@ -170,9 +178,18 @@ statement: declaration ';'{$$=$1;};
 	| blockstatements {$$=$1;};
 	| unary_expr ';' {$$=Util::createNodeForUnaryStatements($1);};
 	| return_stmt ';' {$$ = $1 ;};
+	| batch_blockstmt  {$$ = $1;};
+	| on_add_blockstmt {$$ = $1;};
+	| on_delete_blockstmt {$$ = $1;};
 
 
 blockstatements : block_begin statements block_end { $$=Util::finishBlock();};
+
+batch_blockstmt : T_BATCH '(' id ':' expression ')' blockstatements {$$ = Util::createBatchBlockStmt($3, $5, $7);};
+
+on_add_blockstmt : T_ONADD '(' id T_IN id '.' proc_call ')' ':' blockstatements {$$ = Util::createOnAddBlock($3, $5, $7, $10);};
+
+on_delete_blockstmt : T_ONDELETE '(' id T_IN id '.' proc_call ')' ':' blockstatements {$$ = Util::createOnDeleteBlock($3, $5, $7, $10);};
 
 block_begin:'{' { Util::createNewBlock(); }
 
@@ -260,19 +277,29 @@ unary_expr :   expression T_INC_OP {$$=Util::createNodeForUnaryExpr($1,OPERATOR_
 
 proc_call : leftSide '(' arg_list ')' { 
                                        
-                                       $$=Util::createNodeForProcCall($1,$3->AList); 
+                                       $$ = Util::createNodeForProcCall($1,$3->AList); 
 
 									    };
+			| T_INCREMENTAL '(' arg_list ')' { ASTNode* id = Util::createIdentifierNode("Incremental");
+			                                   $$ = Util::createNodeForProcCall(id, $3->AList); 
+
+				                               };
+			| T_DECREMENTAL '(' arg_list ')' { ASTNode* id = Util::createIdentifierNode("Decremental");
+			                                   $$ = Util::createNodeForProcCall(id, $3->AList); 
+
+				                               };								   
+											   					
 		
 
 
 
-val : INT_NUM { $$=Util::createNodeForIval($1); };
-	| FLOAT_NUM {$$=Util::createNodeForFval($1);};
-	| BOOL_VAL { $$=Util::createNodeForBval($1);};
+val : INT_NUM { $$ = Util::createNodeForIval($1); };
+	| FLOAT_NUM {$$ = Util::createNodeForFval($1);};
+	| BOOL_VAL { $$ = Util::createNodeForBval($1);};
 	| T_INF {$$=Util::createNodeForINF(true);};
 	| T_P_INF {$$=Util::createNodeForINF(true);};
 	| T_N_INF {$$=Util::createNodeForINF(false);};
+
 
 control_flow : selection_cf { $$=$1; };
               | iteration_cf { $$=$1; };
@@ -468,7 +495,7 @@ int main(int argc,char **argv)
    }
    else
     {
-		if(!(strcmp(backendTarget,"omp")==0)||(strcmp(backendTarget,"mpi")==0)||(strcmp(backendTarget,"cuda")==0))
+		if(!((strcmp(backendTarget,"omp")==0)||(strcmp(backendTarget,"mpi")==0)||(strcmp(backendTarget,"cuda")==0) || (strcmp(backendTarget,"openACC")==0)))
 		   {
 			  fprintf(stderr, "Specified backend target is not implemented in the current version!\n");
 			   exit(-1);
@@ -514,15 +541,15 @@ int main(int argc,char **argv)
 	  cpp_backend.setFileName(fileName);
 	  cpp_backend.generate();
 	  }
-	else
+	/*else
 	 {
 		 /*
 		 printf("static graphsize %d\n",graphId[2][0].size());
 		 dsl_dyn_cpp_generator cpp_dyn_gen;
 		 cpp_dyn_gen.setFileName(fileName);
 		 cpp_dyn_gen.generate();
-		*/
-	 }
+
+	 }*/
 	
 	}
 
