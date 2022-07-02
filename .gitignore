@@ -1,6 +1,12 @@
 lex.yy.c
 src/parser/y.tab.h
 .vscode/launch.json
-src/parser/Makefile
-src/Makefile
 src/finalcode
+src/backends
+src/finalcode.exe
+src/bin/*.o
+*.out
+src/bin/
+.history/
+.history/*
+../.history/*
