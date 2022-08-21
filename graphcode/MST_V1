@@ -1,0 +1,101 @@
+function Boruvka (Graph g_orig)
+{
+// propNode <bool> modified;
+// g.attachNodeProperty(dist=INF, modified = False);
+// src.modified = True; 
+// src.dist=0;
+// bool finished =False;
+// fixedPoint until (finished:!modified)
+// {
+// forall (v in g.nodes().filter(modified == True) )
+// {
+//      forall (nbr in g.neighbors(v))
+//                         {          
+//                         edge e = g.get_edge(v, nbr);
+//                         <nbr.dist,nbr.modified> = <Min (nbr.dist, v.dist + e.weight), True>;
+//                         }
+// }
+// }          
+
+    Graph g = duplicate(g_orig);
+    propEdge<int> weight;
+    g.attachEdgeProperty(weight=0);
+    
+    // 1. Find min edge per vertex
+    propNode<edge> minedge;
+    g.attachNodeProperty(minedge=-1);
+
+    forall(u in g.nodes())
+	{
+        edge min_edge;
+        unsigned min_weight = UINT_MAX; // TODO: What's the constant?
+        unsigned min_dst = g.numNodes();
+        for(e in g.edges_from(u))
+        {
+            unsigned wt = e.weight;
+            unsigned dst = g.get_destination(e);
+            // TODO: How to compare 2 nodes (dst_id < min_dst_id)?
+            if(wt < min_weight || (wt == min_weight && dst.nodeId < min_dst.nodeId))
+            {
+                min_weight = wt;
+                min_edge = e;
+                min_dst = dst;
+            }
+        }
+        u.minedge = min_edge;
+	}
+    
+    // 2. Remove mirrored edges
+    forall(src1 in g.nodes())
+    {
+        edge edge1 = src1.minedge;
+        // edge1 - (src1, dst1)
+        // edge2 - (dst1, dst2)
+        if(edge1 != nil) // TODO: What's the constant for nil?
+        {
+            node dst1 = g.get_destination(edge1);
+            edge edge2 = dst1.minedge;
+            if(edge2 != nil)
+            {
+                node dst2 = g.get_destination(edge2);
+                // TODO: How does this work?
+                if(src1.nodeId == dst2.nodeId && src1.nodeId > dst1.nodeId)
+                {
+                    dst1.minedge = nil;
+                }
+            }
+        }
+    }
+    
+    // 3. Intialise colours
+    propNode<int> colour;
+    g.attachNodeProperty(colour=-1);
+    forall(u in g.nodes())
+    {
+        edge edg = u.minedge;
+        if(edg == nil) u.color = u.nodeId;
+        else u.color = g.get_destination(edg).nodeId;
+    }
+    
+    // 4. Propagate colours
+    propNode <bool> modified;
+    g.attachNodeProperty(modified = False);
+    fixedPoint until (finished: !modified)
+    {
+        forall(u in g.nodes())
+        {
+            edge edg = u.minedge;
+            if(edg != nil)
+            {
+                node dst = g.get_destination(edg);
+                if(u.color != dst.color)
+                {
+                    u.color = dst.color;
+                    u.modified = True;
+                }
+            }
+        }
+    }
+    
+    // 
+}
