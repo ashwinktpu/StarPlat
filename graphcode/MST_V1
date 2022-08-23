@@ -19,7 +19,9 @@ function Boruvka (Graph g_orig)
 
     Graph g = duplicate(g_orig);
     propEdge<int> weight;
+    propEdge<int> mst_edges;
     g.attachEdgeProperty(weight=0);
+    g.attachEdgeProperty(mst_edges=0);
     
     // 1. Find min edge per vertex
     propNode<edge> minedge;
@@ -67,9 +69,18 @@ function Boruvka (Graph g_orig)
         }
     }
     
+    // Between step
+    // We need to collect MST EDGES 
+    forall(u in g.nodes()) {
+        edge edg = u.minedge;
+        if(edg != nil) {
+            mst_edges[edg] = 1; // TODO : is it correct way to do this?
+        }
+    }
+
     // 3. Intialise colours
-    propNode<int> colour;
-    g.attachNodeProperty(colour=-1);
+    propNode<int> color;
+    g.attachNodeProperty(color=-1);
     forall(u in g.nodes())
     {
         edge edg = u.minedge;
@@ -97,5 +108,57 @@ function Boruvka (Graph g_orig)
         }
     }
     
-    // 
+    // 5. Creating new id's for vertices
+    propNode<int> super_node;
+    g.attachNodeProperty(super_node=0);
+    forall(u in g.nodes())
+    {   
+        if(u.color == u.nodeId && g.out_degree(u) > 0)
+        {
+            u.super_node = 1;
+        }
+    }
+
+    // 6. Perform prefix sum on new_id .. so that u.new_id represents super vertex new id
+    propNode <bool> modified;
+    g.attachNodeProperty(modified = False);
+    propNode<int> new_id;
+    g.attachNodeProperty(new_id=0);
+    fixedPoint until (finished: !modified)
+    {
+        forall(u in g.nodes())
+        {
+            int prev_node_id = u.nodeId - 1;
+            node prev_node = g.getNode(prev_node_id);
+            <u.new_id, u.modified> = <max (u.new_id, prev_node.new_id + u.super_node), True>;
+        }
+    }
+
+    Graph new_g;
+    // 7. Adding nodes into new graph
+    forall(u in g.nodes()) {
+        if(u.nodeId == u.color) {
+            new_g.add_node(u.new_id);
+        }
+    }
+
+    // 8. Adding new edges into new graph
+    forall(u in g.nodes()) {
+        int super_vertex_id = (u.color).new_id;
+        forall(dst in g.neighbors(u))  {
+            // TODO : what is g.nnodes?
+            if(dst != g.nnodes) {
+                if(dst.color != u.color) {
+                    edge e = g.get_edge(u, dst);
+                    int wei = e.weight;
+                    new_g.add_edge(u.color, dst.color);
+                    // TODO : how to add edges weights to this new graph?
+                }
+            }
+        }
+    }
+
+    // 10. Using new graph for next step
+    g = new_g;
+     
 }
