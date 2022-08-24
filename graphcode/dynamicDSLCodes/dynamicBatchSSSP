@@ -111,6 +111,10 @@ Dynamic DynSSSP(Graph g, propNode<int> dist, propNode<int> parent, propEdge<int>
 
           }
 
+
+        g.updateCSRDel(updateBatch); 
+        Decremental(g, dist, parent, modified,deleteBatch);   
+
       OnAdd(u in updateBatch.currentBatch()): 
          {
                int src = u.source;
@@ -121,13 +125,8 @@ Dynamic DynSSSP(Graph g, propNode<int> dist, propNode<int> parent, propEdge<int>
                    dest.modified_add = True;
                    src.modified_add = True;
                  }
-
-                 
-             }  
-
-
-          g.updateCSRDel(updateBatch); 
-          Decremental(g, dist, parent, modified,deleteBatch);
+          }  
+                
           g.updateCSRAdd(updateBatch);      
           Incremental(g, dist, parent, modified_add, addBatch);
 
