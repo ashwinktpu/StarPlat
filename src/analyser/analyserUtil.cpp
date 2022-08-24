@@ -3,7 +3,7 @@
 
 #include "../ast/ASTNodeTypes.hpp"
 #include <unordered_map>
-#include "../symbolutil/SymbolTable.h"
+//#include "../symbolutil/SymbolTable.h"
 
 #define propKey pair<TableEntry *, TableEntry *>
 

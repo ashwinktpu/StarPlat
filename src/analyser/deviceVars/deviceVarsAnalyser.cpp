@@ -1,15 +1,13 @@
 #include "deviceVarsAnalyser.h"
-
 #include <string.h>
-#include <unordered_map>
 #include <list>
-#include "../../maincontext/MainContext.hpp"
+
 // Statement Analyser
 
 // Current assuming filter expression gets evaluated in GPU
 // Required to handle case if we iterate through a set
 
-extern FrontEndContext frontEndContext;
+//extern FrontEndContext frontEndContext;
 
 lattice deviceVarsAnalyser::analyseForAll(forallStmt *stmt, lattice &inMap)
 {
@@ -223,7 +221,8 @@ lattice deviceVarsAnalyser::analyseProcCall(proc_callStmt *stmt, lattice &inMap)
   {
     wrapNode->outMap.meet(iden, lattice::CPU_WRITE);
   }
-  for (argument *arg : stmt_expr->getArgList())
+                          /* stmt_expr */
+  for (argument *arg : stmt->getProcCallExpr()->getArgList())
   {
       if (arg->isAssignExpr())
       {
@@ -461,9 +460,9 @@ void deviceVarsAnalyser::analyseFunc(ASTNode *proc)
   return;
 }
 
-void deviceVarsAnalyser::analyse()
+void deviceVarsAnalyser::analyse(list<Function*> funcList)
 {
-  list<Function *> funcList = frontEndContext.getFuncList();
+  //list<Function *> funcList = frontEndContext.getFuncList();
   for (Function *func : funcList)
     analyseFunc(func);
 }

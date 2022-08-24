@@ -28,6 +28,7 @@ class dsl_cpp_generator
   vector<Identifier*> freeIdStore;
   bool insidePreprocessEnv;
   bool insideBatchBlock ;
+  bool isOptimized;
   
  
   public:
@@ -44,6 +45,7 @@ class dsl_cpp_generator
     dynFuncCount = 0;
     insideBatchBlock = false;
     insidePreprocessEnv = false;
+    isOptimized = false;
 
  }
 
@@ -109,7 +111,7 @@ class dsl_cpp_generator
   void generateFixedPointUpdate(PropAccess* propId);
   bool checkFixedPointAssociation(PropAccess* propId);
   void checkAndGenerateFixedPtFilter(forallStmt* forAll);
-
+  void setOptimized() { isOptimized = true; }
 
 
 };

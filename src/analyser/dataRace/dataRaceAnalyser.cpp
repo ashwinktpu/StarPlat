@@ -653,9 +653,9 @@ void dataRaceAnalyser::analyseFunc(ASTNode *proc)
     return;
 }
 //Analyse all functions
-void dataRaceAnalyser::analyse()
+void dataRaceAnalyser::analyse(list<Function *> funcList)
 {
-    list<Function *> funcList = frontEndContext.getFuncList();
+    // = frontEndContext.getFuncList();
     for (Function *func : funcList)
     {
         analyseFunc(func);

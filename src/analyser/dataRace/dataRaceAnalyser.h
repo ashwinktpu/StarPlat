@@ -8,7 +8,7 @@ class dataRaceAnalyser
   public:
   dataRaceAnalyser(){}
 
-  void analyse();
+  void analyse(list<Function *> funcList);
   void analyseFunc(ASTNode* );
   void analyseStatement(statement* );
   statement* forAllAnalysis(forallStmt* );

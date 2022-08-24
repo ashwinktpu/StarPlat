@@ -375,9 +375,9 @@ void attachPropAnalyser::analyseFunc(ASTNode *proc)
   return;
 }
 
-void attachPropAnalyser::analyse()
+void attachPropAnalyser::analyse(list<Function *> funcList)
 {
-  list<Function *> funcList = frontEndContext.getFuncList();
+  //list<Function *> funcList = frontEndContext.getFuncList();
   for (Function *func : funcList)
   {
     analyseFunc(func);

@@ -2,8 +2,11 @@
 #define DEVICE_VARS_ANALYSER
 
 #include <unordered_map>
-#include "../../ast/ASTNodeTypes.hpp"
+//#include "../../ast/ASTNodeTypes.hpp"
+//#include "../../maincontext/MainContext.hpp"
 #include "../analyserUtil.cpp"
+#include "../../ast/ASTHelper.cpp"
+//#include "../../symbolutil/SymbolTable.h"
 
 class lattice
 { 
@@ -286,7 +289,7 @@ class deviceVarsAnalyser
   deviceVarsAnalyser(){
   }
 
-  void analyse();
+  void analyse(list<Function*> funcList);
   void analyseFunc(ASTNode* proc);
 
   //Forward datapropogation analysis on each ASTNodeWrap

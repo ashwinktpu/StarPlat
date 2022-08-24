@@ -1,6 +1,5 @@
 #include "deviceVarsAnalyser.h"
 #include <unordered_map>
-#include "../../ast/ASTHelper.cpp"
 
 list<statement*> transferStatements(lattice &inp, lattice &out)
 {

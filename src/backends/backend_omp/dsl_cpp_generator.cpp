@@ -1,4 +1,5 @@
 #include "dsl_cpp_generator.h"
+#include "../../ast/ASTHelper.cpp"
 #include<string.h>
 #include<cassert>
 
