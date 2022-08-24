@@ -1,6 +1,7 @@
 #include <string.h>
 #include <cassert>
 #include "dsl_cpp_generator.h"
+#include "../../ast/ASTHelper.cpp"
 #include "getUsedVars.cpp"
 
 bool flag_for_device_var = 0;  //temporary fix to accomodate device variable and

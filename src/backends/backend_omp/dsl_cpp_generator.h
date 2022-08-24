@@ -1,11 +1,12 @@
 #include <cstdio>
 #include "../../ast/ASTNodeTypes.hpp"
-#include "../../parser/includeHeader.hpp"
+
 
 #ifndef DSL_CPP_GENERATOR
 #define DSL_CPP_GENERATOR
 
 #include "../dslCodePad.h"
+//#include "../../ast/ASTHelper.cpp"
 
 class dsl_cpp_generator
 {
@@ -28,7 +29,7 @@ class dsl_cpp_generator
   vector<Identifier*> freeIdStore;
   bool insidePreprocessEnv;
   bool insideBatchBlock ;
-  
+  bool isOptimized;
  
   public:
   dsl_cpp_generator()
@@ -44,6 +45,7 @@ class dsl_cpp_generator
     dynFuncCount = 0;
     insideBatchBlock = false;
     insidePreprocessEnv = false;
+    isOptimized = false;
 
  }
 
@@ -109,6 +111,7 @@ class dsl_cpp_generator
   void generateFixedPointUpdate(PropAccess* propId);
   bool checkFixedPointAssociation(PropAccess* propId);
   void checkAndGenerateFixedPtFilter(forallStmt* forAll);
+  void setOptimized() { isOptimized = true; }
 
 
 

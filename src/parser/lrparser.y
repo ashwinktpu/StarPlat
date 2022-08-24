@@ -526,16 +526,16 @@ int main(int argc,char **argv)
 		  if(optimize)
 		  {
 			  attachPropAnalyser apAnalyser;
-			  apAnalyser.analyse();
+			  apAnalyser.analyse(frontEndContext.getFuncList());
 
 			  dataRaceAnalyser drAnalyser;
-			  drAnalyser.analyse();
+			  drAnalyser.analyse(frontEndContext.getFuncList());
 			  
 			  if(strcmp(backendTarget,"cuda")==0)
 			  {
 			  	deviceVarsAnalyser dvAnalyser;
 				cpp_backend.setOptimized();
-			  	dvAnalyser.analyse();
+			  	dvAnalyser.analyse(frontEndContext.getFuncList());
 			  }
 		  }
 	  cpp_backend.setFileName(fileName);

@@ -400,10 +400,6 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
               //---------------------MERGE CONFLICT OCCURED HERE (WORKING BRANCH<---OPENACC)----------------------------
                  char* methodId=proc->getProcCallExpr()->getMethodId()->getIdentifier();
                  string IDCoded(attachNodeCall);
-
-                 //~ char* methodId=proc->getProcCallExpr()->getMethodId()->getIdentifier();
-                 string IDCoded("attachNodeProperty");
-              //----------------------------------------------------------------------------------------------------------
                  int x=IDCoded.compare(IDCoded);
                  if(x==0)
                  {
