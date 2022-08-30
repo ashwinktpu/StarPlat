@@ -1,164 +1,123 @@
-function Boruvka (Graph g_orig)
+function Boruvka (Graph g)
 {
-// propNode <bool> modified;
-// g.attachNodeProperty(dist=INF, modified = False);
-// src.modified = True; 
-// src.dist=0;
-// bool finished =False;
-// fixedPoint until (finished:!modified)
-// {
-// forall (v in g.nodes().filter(modified == True) )
-// {
-//      forall (nbr in g.neighbors(v))
-//                         {          
-//                         edge e = g.get_edge(v, nbr);
-//                         <nbr.dist,nbr.modified> = <Min (nbr.dist, v.dist + e.weight), True>;
-//                         }
-// }
-// }          
-
-    Graph g = duplicate(g_orig);
-    propEdge<int> weight;
-    propEdge<int> mst_edges;
-    g.attachEdgeProperty(weight=0);
-    g.attachEdgeProperty(mst_edges=0);
-    
-    // 1. Find min edge per vertex
-    propNode<edge> minedge;
-    g.attachNodeProperty(minedge=-1);
-
-    forall(u in g.nodes())
-	{
-        edge min_edge;
-        unsigned min_weight = UINT_MAX; // TODO: What's the constant?
-        unsigned min_dst = g.numNodes();
-        for(e in g.edges_from(u))
-        {
-            unsigned wt = e.weight;
-            unsigned dst = g.get_destination(e);
-            // TODO: How to compare 2 nodes (dst_id < min_dst_id)?
-            if(wt < min_weight || (wt == min_weight && dst.nodeId < min_dst.nodeId))
-            {
-                min_weight = wt;
-                min_edge = e;
-                min_dst = dst;
-            }
-        }
-        u.minedge = min_edge;
-	}
-    
-    // 2. Remove mirrored edges
-    forall(src1 in g.nodes())
-    {
-        edge edge1 = src1.minedge;
-        // edge1 - (src1, dst1)
-        // edge2 - (dst1, dst2)
-        if(edge1 != nil) // TODO: What's the constant for nil?
-        {
-            node dst1 = g.get_destination(edge1);
-            edge edge2 = dst1.minedge;
-            if(edge2 != nil)
-            {
-                node dst2 = g.get_destination(edge2);
-                // TODO: How does this work?
-                if(src1.nodeId == dst2.nodeId && src1.nodeId > dst1.nodeId)
-                {
-                    dst1.minedge = nil;
-                }
-            }
-        }
-    }
-    
-    // Between step
-    // We need to collect MST EDGES 
-    forall(u in g.nodes()) {
-        edge edg = u.minedge;
-        if(edg != nil) {
-            mst_edges[edg] = 1; // TODO : is it correct way to do this?
-        }
-    }
-
-    // 3. Intialise colours
+    // We need to provide id & color(component #) for each node in the graph.
+    propNode<int> nodeId;
     propNode<int> color;
-    g.attachNodeProperty(color=-1);
-    forall(u in g.nodes())
-    {
-        edge edg = u.minedge;
-        if(edg == nil) u.color = u.nodeId;
-        else u.color = g.get_destination(edg).nodeId;
+    
+    g.attachNodeProperty(nodeId = -1);
+    g.attachNodeProperty(color = -1);
+    forall(dummy in g.nodes()){
+        int i = 0;
+        for(v in g.nodes()){
+            v.nodeId = i;
+            v.color = i;
+            i = i + 1;
+        } // TODO: This bracket is missing in the generated code.
     }
     
-    // 4. Propagate colours
-    propNode <bool> modified;
-    g.attachNodeProperty(modified = False);
-    fixedPoint until (finished: !modified)
-    {
-        forall(u in g.nodes())
+    // TODO: While loop should begin here
+    propNode<bool> new_color_changes;
+    g.attachNodeProperty(new_color_changes = False);
+
+    bool no_new_comp = False;
+    fixedPoint until (no_new_comp : !new_color_changes) {
+        // 1a. Find min edge per vertex - O(n) per thread
+        propNode<int> minedge_dst;
+        propNode<int> minedge_wt;
+        g.attachNodeProperty(minedge_dst=0);
+        g.attachNodeProperty(minedge_wt=0);
+        forall(src in g.nodes())
         {
-            edge edg = u.minedge;
-            if(edg != nil)
+            int min_weight = INF;
+            int min_dst = V; // TODO: What is the right way to do this? Instead of hard coding V
+            
+            for(dst in g.neighbors(src))
             {
-                node dst = g.get_destination(edg);
-                if(u.color != dst.color)
+                edge e = g.get_edge(dummy, dummy);
+                int wt = e.weight;
+                if(dst.color != src.color && (min_dst == V || wt < min_weight || (wt == min_weight && dst.color < min_dst.color))){
+                    min_weight = wt;
+                    min_dst = dst;
+                }
+            }
+            src.minedge_dst = min_dst;
+            src.minedge_wt = min_weight;
+        }
+        
+        // 1b. Find min edge per connected component - O(n) per thread
+        propNode<int> minedge_cc_dst;
+        g.attachNodeProperty(minedge_cc_dst=0);
+        forall(src in g.nodes())
+        {
+            if(src.color == src.nodeId){
+                int min_weight = INF;
+                int min_dst = V; // TODO: What is the right way to do this? Instead of hard coding V
+                
+                for(nbr in g.nodes().filter(color == src.color))
                 {
-                    u.color = dst.color;
-                    u.modified = True;
+                    int dst = nbr.minedge_dst;
+                    int wt = nbr.minedge_wt;
+                    if(dst != V){
+                        if(min_dst == V || wt < min_weight || (wt == min_weight && dst.color < min_dst.color)){
+                            min_weight = wt;
+                            min_dst = dst;
+                        }
+                    }
+                }
+
+                if(min_dst == V) {src.minedge_cc_dst = V;}
+                else {src.minedge_cc_dst = min_dst.color;}
+            }
+        }
+
+        // 2. Remove mirrored edges
+        forall(src in g.nodes())
+        {
+            if(src.color == src.nodeId){
+                // edge1 - (src1, dst1)
+                // edge2 - (dst1, dst2)
+                int dst1 = src1.minedge_cc_dst;
+                if(dst1 != V)
+                {
+                    int dst2 = dst1.minedge_cc_dst;
+                    if(dst2 != V)
+                    {
+                        if(src1.color == dst2.color && src1.color > dst1.color)
+                        {
+                            dst1.minedge_cc_dst = V;
+                        }
+                    }
                 }
             }
         }
-    }
-    
-    // 5. Creating new id's for vertices
-    propNode<int> super_node;
-    g.attachNodeProperty(super_node=0);
-    forall(u in g.nodes())
-    {   
-        if(u.color == u.nodeId && g.out_degree(u) > 0)
-        {
-            u.super_node = 1;
-        }
-    }
 
-    // 6. Perform prefix sum on new_id .. so that u.new_id represents super vertex new id
-    propNode <bool> modified;
-    g.attachNodeProperty(modified = False);
-    propNode<int> new_id;
-    g.attachNodeProperty(new_id=0);
-    fixedPoint until (finished: !modified)
-    {
-        forall(u in g.nodes())
-        {
-            int prev_node_id = u.nodeId - 1;
-            node prev_node = g.getNode(prev_node_id);
-            <u.new_id, u.modified> = <max (u.new_id, prev_node.new_id + u.super_node), True>;
-        }
-    }
+        // 3. Collecting MST edges
 
-    Graph new_g;
-    // 7. Adding nodes into new graph
-    forall(u in g.nodes()) {
-        if(u.nodeId == u.color) {
-            new_g.add_node(u.new_id);
-        }
-    }
-
-    // 8. Adding new edges into new graph
-    forall(u in g.nodes()) {
-        int super_vertex_id = (u.color).new_id;
-        forall(dst in g.neighbors(u))  {
-            // TODO : what is g.nnodes?
-            if(dst != g.nnodes) {
-                if(dst.color != u.color) {
-                    edge e = g.get_edge(u, dst);
-                    int wei = e.weight;
-                    new_g.add_edge(u.color, dst.color);
-                    // TODO : how to add edges weights to this new graph?
+        // 4a. Propagating colors to only union-leaders
+        propNode<bool> modified;
+        g.attachNodeProperty(modified = False);
+        bool finished = False;
+        fixedPoint until (finished: !modified) {
+            forall(u in g.nodes()) {
+                if(u.color == u.nodeId){
+                    int min_edge_dst = u.minedge_cc_dst;
+                    if(min_edge_dst != V) {
+                        u.color = min_edge_dst.color;
+                        u.modified = True;
+                        u.new_color_changes = True;
+                    }
                 }
             }
         }
-    }
 
-    // 10. Using new graph for next step
-    g = new_g;
-     
+        // 4b. Propagating colors to all other nodes thru leaders
+        forall(u in g.nodes()) {
+            int lead = u.color;
+            if(lead.color != u.color) {
+                u.color = lead.color;
+                u.modified = True;
+                // u.new_color_changes = True; // TODO : do we need this operation here?
+            }
+        }
+    }   
 }

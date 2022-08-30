@@ -1315,26 +1315,18 @@ void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll, bool isMainF
   char strBuffer[1024];
   Identifier* iterator = forAll->getIterator();
   if (forAll->isSourceProcCall()) {
-    //~ Identifier* sourceGraph = forAll->getSourceGraph();
+    // Identifier* sourceGraph = forAll->getSourceGraph();
     proc_callExpr* extractElemFunc = forAll->getExtractElementFunc();
     Identifier* iteratorMethodId = extractElemFunc->getMethodId();
     if (allGraphIteration(iteratorMethodId->getIdentifier())) {
       // char* graphId=sourceGraph->getIdentifier();
-      // char* methodId=iteratorMethodId->getIdentifier();
-      // string s(methodId);
-      // if(s.compare("nodes")==0)
-      //{
-      // cout<<"INSIDE NODES VALUE"<<"\n";
-      // sprintf(strBuffer,"for (%s %s = 0; %s < %s.%s(); %s ++)
-      // ","int",iterator->getIdentifier(),iterator->getIdentifier(),graphId,"num_nodes",iterator->getIdentifier());
-      //}
-      // else
-      //;
-      // sprintf(strBuffer,"for (%s %s = 0; %s < %s.%s(); %s ++)
-      // ","int",iterator->getIdentifier(),iterator->getIdentifier(),graphId,"num_edges",iterator->getIdentifier());
-
-      // main.pushstr_newL(strBuffer);
-
+      char* methodId=iteratorMethodId->getIdentifier();
+      string s(methodId);
+      if(s.compare("nodes")==0)
+      {
+        sprintf(strBuffer,"for (%s %s = 0; %s < %s; %s++) {", "int",iterator->getIdentifier(),iterator->getIdentifier(),"V", iterator->getIdentifier());
+        targetFile.pushstr_newL(strBuffer);
+      }
     } else if (neighbourIteration(iteratorMethodId->getIdentifier())) {
       //~ // THIS SHOULD NOT BE EXECUTING FOR SIMPLE FOR LOOP BUT IT IS SO .
       //~ // COMMENTED OUT FOR NOW.
@@ -1345,9 +1337,9 @@ void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll, bool isMainF
       {
         list<argument*>  argList=extractElemFunc->getArgList();
         assert(argList.size()==1);
-        //~ Identifier* nodeNbr=argList.front()->getExpr()->getId();
+        Identifier* nodeNbr=argList.front()->getExpr()->getId();
         //~ sprintf(strBuffer,"for (int edge = d_meta[v]; %s < %s[%s+1]; %s++) { // ","int","edge","d_meta","v","edge","d_meta","v","edge");
-        sprintf(strBuffer,"for (%s %s = %s[%s]; %s < %s[%s+1]; %s++) { // FOR NBR ITR ","int","edge","d_meta","v","edge","d_meta","v","edge");
+        sprintf(strBuffer,"for (%s %s = %s[%s]; %s < %s[%s+1]; %s++) { // FOR NBR ITR ","int","edge","d_meta",nodeNbr->getIdentifier(),"edge","d_meta",nodeNbr->getIdentifier(),"edge");
         targetFile.pushstr_newL(strBuffer);
         //~ targetFile.pushString("{");
         sprintf(strBuffer,"%s %s = %s[%s];","int",iterator->getIdentifier(),"d_data","edge"); //needs to move the addition of
@@ -1556,7 +1548,8 @@ void dsl_cpp_generator:: generateParamList(list<formalParam*> paramList, dslCode
 
 void dsl_cpp_generator :: addCudaKernel(forallStmt* forAll)
 {
-  const char* loopVar = "v";
+  Identifier* iterator = forAll->getIterator();
+  const char* loopVar = iterator->getIdentifier();
   char strBuffer[1024];
 
 
