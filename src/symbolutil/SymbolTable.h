@@ -2,6 +2,7 @@
 #define SYMBOLTABLE_H
 
 #include<list>
+#include <cstddef>
 
 using namespace std;
 
