@@ -1050,11 +1050,14 @@ void mpi_cpp_generator::generateIdentifierForSend(Identifier* stmt,int send, Ide
 // TODO change this so that send/recv_data<float> or send/recv_data<int> are used separately
 void mpi_cpp_generator::generatePropAccessForSend(PropAccess* stmt,int send, Identifier* remote,Identifier* replace)
 {
+  
   char strBuffer[1024];
   Identifier* id1 = stmt->getIdentifier1();
   Identifier* id2 = stmt->getIdentifier2();
   string i1(id1->getIdentifier());
   string i2(id2->getIdentifier());
+   cout << "...." << std::endl;
+  assert(remote != NULL);
   string rem(remote->getIdentifier());
   cout<<"Testing........................."<<i1 << rem <<endl;
   if(i1 == rem)
@@ -2369,6 +2372,8 @@ void mpi_cpp_generator::generateForAll(forallStmt* forAll)
               list<argument*>  argList=extractElemFunc->getArgList();
               assert(argList.size()==1);
               Identifier* nodeNbr=argList.front()->getExpr()->getId();
+              assert(nodeNbr != NULL);
+              cout << "Calling add message from neighbor iter" << endl;
                 generate_addMessage((blockStatement*) body,1,nodeNbr,NULL);
             //main.pushstr_newL("test2");
             main.pushstr_newL("}");
@@ -2385,8 +2390,6 @@ void mpi_cpp_generator::generateForAll(forallStmt* forAll)
       main.pushstr_newL("}"); //Closing for-all
         //generate_sendCall(body);
         //generate_receiveCall(body);
-
-
       
     }
     else if(allGraphIteration(iteratorMethodId->getIdentifier()))
@@ -2443,8 +2446,27 @@ void mpi_cpp_generator::generateForAll(forallStmt* forAll)
           generateStatement(stmt);
         }
         main.pushstr_newL("}"); //Closing the forall all graph itertion second part
+	
+	if(red_details!=NULL)
+	{
+		if(red_details->contains_reduction())
+		{
+			int op = red_details->get_reductionOp();
+			Identifier* rv = red_details->get_reductionVar();
+			Type* redVarType;
+			if(rv->getSymbolInfo()->getType() != NULL)
+				redVarType = rv->getSymbolInfo()->getType();
+			//cout<<"reduction var contains type infor\n";
+			if(op == 16)  //Add assign
+			{
+				sprintf(strBuffer,"%s = all_reduce(world, %s, std::plus<%s>());",rv->getIdentifier(),rv->getIdentifier(),convertToCppType(redVarType));
+				main.pushstr_newL(strBuffer);
+			}
+		}
+	}
+
       }
-        
+
     }
     else
     { 
@@ -2851,28 +2873,28 @@ void mpi_cpp_generator:: generateDoWhileStmt(dowhileStmt* stmt)
       main.pushstr_newL("vector < vector <double> > receive_data_double(np);");
       generateBlock((blockStatement*)body,false);
       
-   if(red_details!=NULL)
-   {
-     if(red_details->contains_reduction())
-     {
-       int op = red_details->get_reductionOp();
-       Identifier* rv = red_details->get_reductionVar();
-       Type* redVarType;
-       if(rv->getSymbolInfo()->getType() != NULL)
-        redVarType = rv->getSymbolInfo()->getType();
-        //cout<<"reduction var contains type infor\n";
-       if(op == 16)  //Add assign
-       {
-         sprintf(strBuffer,"%s = all_reduce(world, %s, std::plus<%s>());",rv->getIdentifier(),rv->getIdentifier(),convertToCppType(redVarType));
-         main.pushstr_newL(strBuffer);
-       }
-     }
-   }
-   main.pushstr_space("}");
+      if(red_details!=NULL)
+      {
+	      if(red_details->contains_reduction())
+	      {
+		      int op = red_details->get_reductionOp();
+		      Identifier* rv = red_details->get_reductionVar();
+		      Type* redVarType;
+		      if(rv->getSymbolInfo()->getType() != NULL)
+			      redVarType = rv->getSymbolInfo()->getType();
+		      //cout<<"reduction var contains type infor\n";
+		      if(op == 16)  //Add assign
+		      {
+			      sprintf(strBuffer,"%s = all_reduce(world, %s, std::plus<%s>());",rv->getIdentifier(),rv->getIdentifier(),convertToCppType(redVarType));
+			      main.pushstr_newL(strBuffer);
+		      }
+	      }
+      }
+      main.pushstr_space("}");
 
-   main.pushstr_space("while (");
+      main.pushstr_space("while (");
       generateExpr(iterCond);
-   main.pushstr_newL(");");
+      main.pushstr_newL(");");
 }
 
 void mpi_cpp_generator:: generateVariableDecl(declaration* declStmt)
