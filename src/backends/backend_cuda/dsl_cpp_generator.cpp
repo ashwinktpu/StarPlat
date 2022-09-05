@@ -27,7 +27,7 @@ void dsl_cpp_generator::generateInitkernelStr(const char* inVarType, const char*
   main.pushstr_newL(strBuffer);
 }
 void dsl_cpp_generator::generateInitkernel1(
-    assignment* assign, bool isMainFile) {  // const char* typ,
+    assignment* assign, bool isMainFile, bool isPropEdge = false) {  // const char* typ,
   //~ initKernel<double> <<<numBlocks,numThreads>>>(V,d_BC, 0.0);
   char strBuffer[1024];
 
@@ -38,7 +38,9 @@ void dsl_cpp_generator::generateInitkernel1(
       convertToCppType(inId->getSymbolInfo()->getType()->getInnerTargetType());
   const char* inVarName = inId->getIdentifier();
 
-  sprintf(strBuffer, "initKernel<%s> <<<numBlocks,threadsPerBlock>>>(V,d_%s,(%s)",
+  if(isPropEdge) sprintf(strBuffer, "initKernel<%s> <<<numBlocks_Edge,threadsPerBlock_Edge>>>(E,d_%s,(%s)",
+          inVarType, inVarName, inVarType);
+  else sprintf(strBuffer, "initKernel<%s> <<<numBlocks,threadsPerBlock>>>(V,d_%s,(%s)",
           inVarType, inVarName, inVarType);
   main.pushString(strBuffer);
 
@@ -60,14 +62,23 @@ void dsl_cpp_generator::generateLaunchConfig(const char* name) {
   char strBuffer[1024];
   main.NewLine();
   const unsigned threadsPerBlock = 512;
-  const char* totalThreads = (strcmp(name, "nodes") == 0) ? "V" : "E";
   sprintf(strBuffer, "const unsigned threadsPerBlock = %u;", threadsPerBlock);
   main.pushstr_newL(strBuffer);
+  
+  const char* totalThreads = (strcmp(name, "nodes") == 0) ? "V" : "E";
   sprintf(strBuffer, "unsigned numThreads   = (%s < threadsPerBlock)? %u: %s;",totalThreads,threadsPerBlock,totalThreads );
   main.pushstr_newL(strBuffer);
   sprintf(strBuffer,
           "unsigned numBlocks    = "
           "(%s+threadsPerBlock-1)/threadsPerBlock;", totalThreads);
+  main.pushstr_newL(strBuffer);
+  
+  const char* totalThreads_Edge = "E";
+  sprintf(strBuffer, "unsigned numThreads_Edge   = (%s < threadsPerBlock)? %u: %s;",totalThreads_Edge,threadsPerBlock,totalThreads_Edge);
+  main.pushstr_newL(strBuffer);
+  sprintf(strBuffer,
+          "unsigned numBlocks_Edge    = "
+          "(%s+threadsPerBlock-1)/threadsPerBlock;", totalThreads_Edge);
   main.pushstr_newL(strBuffer);
   main.NewLine();
   // main.pushstr_newL("}");
@@ -1097,6 +1108,20 @@ void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt,
       }
     }
   }
+  
+  string IDCoded1("attachEdgeProperty");
+  int x1 = methodID.compare(IDCoded1);
+  
+  if(x1 == 0){
+    list<argument*> argList = procedure->getArgList();
+    list<argument*>::iterator itr;
+    
+    for (itr = argList.begin(); itr != argList.end(); itr++) {
+      assignment* assign = (*itr)->getAssignExpr();
+      bool isPropEdge = true;
+      generateInitkernel1(assign, isMainFile, isPropEdge);
+    }
+  }
   /*
    if(x==0)
        {
@@ -1545,7 +1570,7 @@ void dsl_cpp_generator:: generateParamList(list<formalParam*> paramList, dslCode
 
 }
 
-
+int cnt_kernels = 1;
 void dsl_cpp_generator :: addCudaKernel(forallStmt* forAll)
 {
   Identifier* iterator = forAll->getIterator();
@@ -1560,7 +1585,9 @@ void dsl_cpp_generator :: addCudaKernel(forallStmt* forAll)
 
    header.pushString("__global__ void ");
    header.pushString(getCurrentFunc()->getIdentifier()->getIdentifier());
-   header.pushString("_kernel");
+   header.pushString("_kernel_");
+   header.pushString(to_string(cnt_kernels).c_str());
+  cnt_kernels++;
 
   header.pushString("(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next");
   /*if(currentFunc->getParamList().size()!=0)
@@ -1671,7 +1698,8 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
     /*memcpy to symbol*/
 
     main.pushString(getCurrentFunc()->getIdentifier()->getIdentifier());
-    main.pushString("_kernel");
+    main.pushString("_kernel_");
+    main.pushString(to_string(cnt_kernels).c_str());
     main.pushString("<<<");
     main.pushString("numBlocks, threadsPerBlock");
     main.pushString(">>>");
@@ -1856,6 +1884,7 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
     } else {
       printf("FOR NORML");
       generateStatement(forAll->getBody(), false);
+      targetFile.pushstr_newL("}");
     }
 
     if (forAll->isForall() && forAll->hasFilterExpr()) {

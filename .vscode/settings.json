@@ -7,6 +7,8 @@
         "xtree": "cpp",
         "list": "cpp",
         "xlocale": "cpp",
-        "xlocnum": "cpp"
+        "xlocnum": "cpp",
+        "__node_handle": "cpp",
+        "functional": "cpp"
     }
 }
