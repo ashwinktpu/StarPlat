@@ -7,3 +7,5 @@ src/bin/
 .history/
 .history/*
 ../.history/*
+.vscode/settings.json
+*.DS_Store
