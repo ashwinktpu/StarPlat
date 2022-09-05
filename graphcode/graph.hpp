@@ -130,64 +130,33 @@ class graph
     }
 */
 
-   void parseGraph()
+  void parseGraph()
   {
-    //printf("OH HELLOHIHod \n");
-     std::ifstream infile;
-     infile.open(filePath);
-     std::string line;
+    std::ifstream infile;
+    infile.open(filePath);
+    std::string line;
 
+    while(std::getline(infile,line))
+    {
+      if(line.length()==0 || line[0] < '0' || line[0] >'9') continue;
 
+      std::stringstream ss(line);
 
+      edgesTotal++;
+      
+      int32_t source, destination, weightVal;
+      ss >> source >> destination >> weightVal;
+      
+      if(source>nodesTotal) nodesTotal=source;
+      if(destination>nodesTotal) nodesTotal=destination;
 
+      edge e;
+      e.source=source;
+      e.destination=destination;
+      e.weight=weightVal;
 
-     while (std::getline(infile,line))
-     {
-
-      // std::stringstream(line);
-
-       if (line.length()==0||line[0] < '0' || line[0] >'9') {
-          continue;
-
-	    	}
-
-        std::stringstream ss(line);
-
-        edgesTotal++;
-
-        //edgesTotal++; //TO BE REMOVED
-
-
-        edge e;
-
-
-        int32_t source;
-        int32_t destination;
-        int32_t weightVal;
-           ss>>source;
-          // printf("SOURCE %lu ",source);
-           if(source>nodesTotal)
-              nodesTotal=source;
-            ss>>destination;
-           // printf("DESTINATION %lu \n",destination);
-            if(destination>nodesTotal)
-               nodesTotal=destination;
-           e.source=source;
-           e.destination=destination;
-           e.weight=1;
-
-           edges[source].push_back(e);
-
-           /*edge e1; //TO BE REMOVED
-           e1.source=destination; //TO BE REMOVED
-           e1.destination=source; //TO BE REMOVED
-           edges[destination].push_back(e1); //TO BE REMOVED */
-
-
-           ss>>weightVal; //for edgelists having weight too.
-            // FIXME
-
-     }
+      edges[source].push_back(e);
+    }
 
 
    //  printf("Here half\n");

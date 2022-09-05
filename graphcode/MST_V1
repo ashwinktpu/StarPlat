@@ -2,7 +2,7 @@ function Boruvka (Graph g)
 {
     // We need to provide id & color(component #) for each node in the graph.
     propNode<int> nodeId;
-    propNode<int> color;
+    propNode<int> color; // Denotes the component of the node
     propEdge<bool> isMSTEdge;
     
     g.attachNodeProperty(nodeId = -1);
@@ -31,30 +31,40 @@ function Boruvka (Graph g)
         {   
             for(dst in g.neighbors(src))
             {
-                edge e = g.get_edge(dummy, dummy);
-                edge minEdge = src.minEdge;
-                node minDst = minEdge.data;
-                if(dst.color != src.color && (minEdge == -1 || e.weight < minEdge.weight || (e.weight == minEdge.weight && dst.color < minDst.color))){
-                    src.minEdge = e;
+                if(src.color != dst.color) // Consider edges across components
+                {
+                    edge e = g.get_edge(dummy, dummy);
+                    edge minEdge = src.minEdge;
+                    if(minEdge == -1) {
+                        src.minEdge = e;
+                    }
+                    if(minEdge != -1){
+                        node minDst = minEdge.data;
+                        if(e.weight < minEdge.weight || (e.weight == minEdge.weight && dst.color < minDst.color)) {
+                            src.minEdge = e;
+                        }
+                    }
                 }
             }
         }
         
         // 1b. Find min edge per connected component - O(n) per thread
         propNode<int> minEdgeOfComp;
-        g.attachNodeProperty(minEdgeOfComp=0);
+        g.attachNodeProperty(minEdgeOfComp=-1);
         forall(src in g.nodes())
         {
             if(src.color == src.nodeId){
-                
                 for(nbr in g.nodes().filter(color == src.color))
                 {
                     edge minEdgeNbr = nbr.minEdge;
                     edge minEdgeOfComp = src.minEdgeOfComp;
-                    node minDst = minEdgeOfComp.data;
-                    node dst = minEdgeNbr.data;
-                    if(minEdgeNbr != -1){
-                        if(minEdgeOfComp == -1 || minEdgeNbr.weight < minEdgeOfComp.weight || (minEdgeNbr.weight == minEdgeOfComp.weight && dst.color < minDst.color)){
+                    if(minEdgeNbr != -1 && minEdgeOfComp == -1){
+                        src.minEdgeOfComp = minEdgeNbr;
+                    }
+                    if(minEdgeNbr != -1 && minEdgeOfComp != -1){
+                        node minDst = minEdgeOfComp.data;
+                        node dst = minEdgeNbr.data;
+                        if(minEdgeNbr.weight < minEdgeOfComp.weight || (minEdgeNbr.weight == minEdgeOfComp.weight && dst.color < minDst.color)){
                             src.minEdgeOfComp = minEdgeNbr;
                         }
                     }
@@ -80,7 +90,8 @@ function Boruvka (Graph g)
                     if(dstMinEdge != -1)
                     {
                         node dstOfDst = dstMinEdge.data;
-                        if(src.color == dstOfDst.color && src.color > dst.color)
+                        node dstOfDstLead = dstOfDst.color;
+                        if(src.color == dstOfDstLead.color && src.color > dstLead.color)
                         {
                             dstLead.minEdgeOfComp = -1;
                         }
@@ -98,7 +109,7 @@ function Boruvka (Graph g)
                 if(u.color == u.nodeId){
                     edge minEdgeOfComp = u.minEdgeOfComp;
                     if(minEdgeOfComp != -1) {
-                        node minDstLead = minEdgeOfComp.data;
+                        node minDst = minEdgeOfComp.data;
                         u.color = minDst.color;
                         u.modified = True;
                         u.newColorChanges = True;
@@ -112,7 +123,6 @@ function Boruvka (Graph g)
             int lead = u.color;
             if(lead.color != u.color) {
                 u.color = lead.color;
-                u.modified = True;
             }
         }
     }   

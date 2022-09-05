@@ -38,7 +38,7 @@ void dsl_cpp_generator::generateInitkernel1(
       convertToCppType(inId->getSymbolInfo()->getType()->getInnerTargetType());
   const char* inVarName = inId->getIdentifier();
 
-  if(isPropEdge) sprintf(strBuffer, "initKernel<%s> <<<numBlocks_Edge,threadsPerBlock_Edge>>>(E,d_%s,(%s)",
+  if(isPropEdge) sprintf(strBuffer, "initKernel<%s> <<<numBlocks_Edge,threadsPerBlock>>>(E,d_%s,(%s)",
           inVarType, inVarName, inVarType);
   else sprintf(strBuffer, "initKernel<%s> <<<numBlocks,threadsPerBlock>>>(V,d_%s,(%s)",
           inVarType, inVarName, inVarType);
@@ -66,16 +66,12 @@ void dsl_cpp_generator::generateLaunchConfig(const char* name) {
   main.pushstr_newL(strBuffer);
   
   const char* totalThreads = (strcmp(name, "nodes") == 0) ? "V" : "E";
-  sprintf(strBuffer, "unsigned numThreads   = (%s < threadsPerBlock)? %u: %s;",totalThreads,threadsPerBlock,totalThreads );
-  main.pushstr_newL(strBuffer);
   sprintf(strBuffer,
           "unsigned numBlocks    = "
           "(%s+threadsPerBlock-1)/threadsPerBlock;", totalThreads);
   main.pushstr_newL(strBuffer);
   
   const char* totalThreads_Edge = "E";
-  sprintf(strBuffer, "unsigned numThreads_Edge   = (%s < threadsPerBlock)? %u: %s;",totalThreads_Edge,threadsPerBlock,totalThreads_Edge);
-  main.pushstr_newL(strBuffer);
   sprintf(strBuffer,
           "unsigned numBlocks_Edge    = "
           "(%s+threadsPerBlock-1)/threadsPerBlock;", totalThreads_Edge);
@@ -2580,7 +2576,7 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,
           sprintf(strBuffer,"initKernel<%s> <<<numBlocks,threadsPerBlock>>>(V, %s, false);", fixPointVarType, modifiedVarNext);
           targetFile.pushstr_newL(strBuffer);
 
-          targetFile.pushstr_newL("int k=0; // #fixpt-Iterations");
+          // targetFile.pushstr_newL("int k=0; // #fixpt-Iterations");
           sprintf(strBuffer, "while(!%s) {", fixPointVar);
           targetFile.pushstr_newL(strBuffer);
 
@@ -2634,7 +2630,7 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,
         sprintf(strBuffer, "%s = %s;", modifiedVarPrev,"tempModPtr");
         targetFile.pushstr_newL(strBuffer);*/
 
-        targetFile.pushstr_newL("k++;");
+        // targetFile.pushstr_newL("k++;");
 
         Expression* initializer = dependentId->getSymbolInfo()->getId()->get_assignedExpr();
         assert(initializer->isBooleanLiteral());
