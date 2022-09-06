@@ -6,7 +6,7 @@ src/backends
 src/finalcode.exe
 src/bin/*.o
 *.out
-src/bin/
+# src/bin/
 .history/
 .history/*
 ../.history/*
