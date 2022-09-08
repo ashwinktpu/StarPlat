@@ -15,8 +15,8 @@ cp -R $PBS_O_WORKDIR/* . # PBS_O_WORKDIR is the directory from which the job was
 module load cuda10.1
 module load gcc640
 nvcc -o "MST_V1_Manual".out "generated_cuda/MST_V1_Manual.cu"  -std=c++14  #-arch=sm_70
-./MST_V1_Manual.out $cleandir/cleanWikipedia.txt 0 > output_MST_V1_Manual.txt
-# ./MST_V1_Manual.out $testing/input1.txt> output_MST_V1_Manual.txt
+./MST_V1_Manual.out $cleandir/cleanWikipedia.txt 0 > output_MST_V1_Manual.txt # 0 - Unweighted Graph
+# ./MST_V1_Manual.out $testing/input1.txt 1 > output_MST_V1_Manual.txt
 
 rm *.out
 # move everything from $tempdir to $PBS_O_WORKDIR

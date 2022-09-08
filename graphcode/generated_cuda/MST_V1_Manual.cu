@@ -102,6 +102,9 @@ void Boruvka(graph& g)
 
   Boruvka_kernel_1<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_color,d_nodeId, d_isMSTEdge);
   cudaDeviceSynchronize();
+  
+  cudaError_t err = cudaGetLastError();
+  if ( err != cudaSuccess ) printf("CUDA Error: %s\n", cudaGetErrorString(err)); 
 
   ; // asst in .cu
 
@@ -126,6 +129,9 @@ void Boruvka(graph& g)
 
     Boruvka_kernel_2<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdge,d_color,d_isMSTEdge);
     cudaDeviceSynchronize();
+    
+    err = cudaGetLastError();
+    if ( err != cudaSuccess ) printf("CUDA Error: %s\n", cudaGetErrorString(err)); 
 
 
 
@@ -136,14 +142,23 @@ void Boruvka(graph& g)
 
     Boruvka_kernel_3<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdgeOfComp,d_nodeId,d_minEdge,d_color,d_isMSTEdge);
     cudaDeviceSynchronize();
+    
+    err = cudaGetLastError();
+    if ( err != cudaSuccess ) printf("CUDA Error: %s\n", cudaGetErrorString(err)); 
 
 
 
     Boruvka_kernel_4<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdgeOfComp,d_nodeId,d_color,d_isMSTEdge);
     cudaDeviceSynchronize();
+    
+    err = cudaGetLastError();
+    if ( err != cudaSuccess ) printf("CUDA Error: %s\n", cudaGetErrorString(err)); 
 
         Boruvka_kernel_20<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdgeOfComp,d_nodeId,d_color,d_isMSTEdge);
     cudaDeviceSynchronize();
+    
+    err = cudaGetLastError();
+    if ( err != cudaSuccess ) printf("CUDA Error: %s\n", cudaGetErrorString(err)); 
 
 
 
@@ -165,7 +180,8 @@ void Boruvka(graph& g)
       Boruvka_kernel_5<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdgeOfComp,d_nodeId,d_color,d_newColorChanges,d_modified,d_isMSTEdge);
       cudaDeviceSynchronize();
 
-
+          err = cudaGetLastError();
+    if ( err != cudaSuccess ) printf("CUDA Error: %s\n", cudaGetErrorString(err)); 
 
 
       cudaMemcpyFromSymbol(&finished, ::finished, sizeof(bool), 0, cudaMemcpyDeviceToHost);
@@ -175,6 +191,9 @@ void Boruvka(graph& g)
 
     Boruvka_kernel_6<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_color,d_isMSTEdge);
     cudaDeviceSynchronize();
+    
+        err = cudaGetLastError();
+    if ( err != cudaSuccess ) printf("CUDA Error: %s\n", cudaGetErrorString(err)); 
 
 
 
