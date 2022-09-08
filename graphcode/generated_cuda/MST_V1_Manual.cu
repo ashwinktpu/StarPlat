@@ -226,9 +226,10 @@ void Boruvka(graph& g)
 
 int main(int argc, char** argv) {
     char* inp = argv[1];
+    bool isWeighted = stoi(argv[2]) ? true : false;
     printf("Taking input from: %s\n", inp);
     graph g(inp);
-    g.parseGraph();
+    g.parseGraph(isWeighted);
     Boruvka(g);
     return 0;
 }

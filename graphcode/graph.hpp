@@ -135,7 +135,7 @@ class graph
     }
 */
 
-  void parseGraph()
+  void parseGraph(bool isWeighted = false)
   {
     std::ifstream infile;
     infile.open(filePath);
@@ -149,8 +149,9 @@ class graph
 
       edgesTotal++;
       
-      int32_t source, destination, weightVal;
-      ss >> source >> destination >> weightVal;
+      int32_t source, destination, weightVal = 1;
+      ss >> source >> destination;
+      if(isWeighted) ss >> weightVal;
       
       if(source>nodesTotal) nodesTotal=source;
       if(destination>nodesTotal) nodesTotal=destination;
