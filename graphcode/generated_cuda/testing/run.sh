@@ -11,8 +11,8 @@ cd $tempdir
 cp -R $PBS_O_WORKDIR/* .
 module load cuda10.1
 module load gcc640
-nvcc -o $tempdir/"MST_V1_Manual".out "../MST_V1_Manual.cu"  -std=c++14  #-arch=sm_70
-./$tempdir/MST_V1_Manual.out < input1.txt > output_MST_V1_Manual.txt
+nvcc -o "MST_V1_Manual".out "../MST_V1_Manual.cu"  -std=c++14  #-arch=sm_70
+./MST_V1_Manual.out < input1.txt > output_MST_V1_Manual.txt
 
 rm *.out
 mv * $PBS_O_WORKDIR/.
