@@ -1,5 +1,5 @@
 // FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
-#include "MST_V1.h"
+#include "MST_V1_Manual.h"
 
 void Boruvka(graph& g)
 
