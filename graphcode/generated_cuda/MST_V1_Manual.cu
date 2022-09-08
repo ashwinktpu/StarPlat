@@ -224,8 +224,9 @@ void Boruvka(graph& g)
 
 } //end FUN
 
-int main(){
-    char* inp = (char*)"input.txt";
+int main(int argc, char** argv) {
+    char* inp = argv[1];
+    printf("Taking input from: %s\n", inp);
     graph g(inp);
     g.parseGraph();
     Boruvka(g);
