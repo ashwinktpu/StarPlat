@@ -41,10 +41,10 @@ void Boruvka(graph& g)
   }
 
 
-      printf("EDGES ARE:\n");
-  for(int i = 0; i < E; i++){
-      printf("%d %d %d\n", h_src[i], h_data[i], h_weight[i]);
-  }
+  //     printf("EDGES ARE:\n");
+  // for(int i = 0; i < E; i++){
+  //     printf("%d %d %d\n", h_src[i], h_data[i], h_weight[i]);
+  // }
 
 
   int* d_meta;
@@ -193,10 +193,10 @@ void Boruvka(graph& g)
     int* h_colors = (int*) malloc((V) * sizeof(int));
     cudaMemcpy(h_colors, d_color, (V) * sizeof(int), cudaMemcpyDeviceToHost);
 
-    for(int i = 0; i < V; i++){
-        printf("%d ", h_colors[i]);
-    }
-    printf("\n");
+    // for(int i = 0; i < V; i++){
+    //     printf("%d ", h_colors[i]);
+    // }
+    // printf("\n");
 
 
   } // END FIXED POINT

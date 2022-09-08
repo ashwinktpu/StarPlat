@@ -53,7 +53,7 @@ __global__ void Boruvka_kernel_2(int V, int E, int* d_meta, int* d_data, int* d_
   } //  end FOR NBR ITR. TMP FIX!
   if(d_minEdge[src] != -1){
       int e = d_minEdge[src];
-      printf("Min Edge for %d: %d %d %d\n", src, d_src[e], d_data[e], d_weight[e]);
+      // printf("Min Edge for %d: %d %d %d\n", src, d_src[e], d_data[e], d_weight[e]);
   }
     
 } // end KER FUNC
