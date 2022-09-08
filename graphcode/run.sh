@@ -12,7 +12,7 @@ cp -R $PBS_O_WORKDIR/* .
 module load cuda10.1
 module load gcc640
 nvcc -o "MST_V1_Manual".out "generated_cuda/MST_V1_Manual.cu"  -std=c++14  #-arch=sm_70
-MST_V1_Manual.out < generated_cuda/testing/input1.txt > output_MST_V1_Manual.txt
+./MST_V1_Manual.out generated_cuda/testing/input1.txt > output_MST_V1_Manual.txt
 
 rm *.out
 cp -R * $PBS_O_WORKDIR/. && rm -r *
