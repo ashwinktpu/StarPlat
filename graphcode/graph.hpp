@@ -35,6 +35,11 @@ class graph
                        required for iteration over out neighbours */
   int32_t* srcList;  /*stores source corresponding to edgeNo.
                        required for iteration over in neighbours */
+                       
+  // TODO:
+  // srcRev, [dstRev], wtRev
+  // src, [dst], wt
+
   graph(char* file)
   {
     filePath=file;

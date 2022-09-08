@@ -19,11 +19,12 @@ function Boruvka (Graph g)
         }
     }
     
-    propNode<bool> newColorChanges;
-    g.attachNodeProperty(newColorChanges = False);
+    // TODO: This is of no use in MST, just using this to simulate while loop
+    propNode<bool> modified;
+    g.attachNodeProperty(modified = False);
 
     bool noNewComp = False;
-    fixedPoint until (noNewComp : !newColorChanges) {
+    fixedPoint until (noNewComp : !modified) {
         // 1a. Find min edge per vertex - O(n) per thread
         propNode<int> minEdge; // TODO: Should be replaced by edge, int is just a hack
         g.attachNodeProperty(minEdge=-1);
@@ -69,11 +70,6 @@ function Boruvka (Graph g)
                         }
                     }
                 }
-                
-                edge minEdgeOfComp = src.minEdgeOfComp;
-                if(minEdgeOfComp != -1){
-                    minEdgeOfComp.isMSTEdge = True;
-                }
             }
         }
 
@@ -99,10 +95,19 @@ function Boruvka (Graph g)
                 }
             }
         }
+        
+        // 3. Collecting MST edges
+        forall(src in g.nodes()){
+            if(src.color == src.nodeId){
+                edge srcMinEdge = src.minEdgeOfComp;
+                if(srcMinEdge != -1)
+                {
+                    srcMinEdge.isMSTEdge = True;
+                }
+            }
+        }
 
-        // 3a. Propagating colors to only union-leaders
-        propNode<bool> modified;
-        g.attachNodeProperty(modified = False);
+        // 4a. Propagating colors to only union-leaders
         bool finished = False;
         fixedPoint until (finished: !modified) {
             forall(u in g.nodes()) {
@@ -111,14 +116,14 @@ function Boruvka (Graph g)
                     if(minEdgeOfComp != -1) {
                         node minDst = minEdgeOfComp.data;
                         u.color = minDst.color;
-                        u.modified = True;
-                        u.newColorChanges = True;
+                        finished = False;
+                        noNewComp = False;
                     }
                 }
             }
         }
 
-        // 3b. Propagating colors to all other nodes thru leaders
+        // 4b. Propagating colors to all other nodes thru leaders
         forall(u in g.nodes()) {
             int lead = u.color;
             if(lead.color != u.color) {

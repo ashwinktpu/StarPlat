@@ -41,6 +41,12 @@ void Boruvka(graph& g)
   }
 
 
+      printf("EDGES ARE:\n");
+  for(int i = 0; i < E; i++){
+      printf("%d %d %d\n", h_src[i], h_data[i], h_weight[i]);
+  }
+
+
   int* d_meta;
   int* d_data;
   int* d_src;
@@ -94,23 +100,21 @@ void Boruvka(graph& g)
 
   initKernel<bool> <<<numBlocks_Edge,threadsPerBlock>>>(E,d_isMSTEdge,(bool)false);
 
-  Boruvka_kernel_1<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_color,d_nodeId);
+  Boruvka_kernel_1<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_color,d_nodeId, d_isMSTEdge);
   cudaDeviceSynchronize();
-
-
 
   ; // asst in .cu
 
-  bool* d_modified;
-  cudaMalloc(&d_modified, sizeof(bool)*(V));
+  bool* d_newColorChanges;
+  cudaMalloc(&d_newColorChanges, sizeof(bool)*(V));
 
-  initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_modified,(bool)false);
+  initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_newColorChanges,(bool)false);
 
   bool noNewComp = false; // asst in .cu
 
   // FIXED POINT variables
   //BEGIN FIXED POINT
-  initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
+//   initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_newColorChanges_next, false);
   while(!noNewComp) {
 
     noNewComp = true;
@@ -120,7 +124,7 @@ void Boruvka(graph& g)
 
     initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_minEdge,(int)-1);
 
-    Boruvka_kernel_2<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdge,d_color);
+    Boruvka_kernel_2<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdge,d_color,d_isMSTEdge);
     cudaDeviceSynchronize();
 
 
@@ -130,20 +134,24 @@ void Boruvka(graph& g)
 
     initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_minEdgeOfComp,(int)-1);
 
-    Boruvka_kernel_3<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdge,d_minEdgeOfComp,d_color,d_nodeId);
+    Boruvka_kernel_3<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdgeOfComp,d_nodeId,d_minEdge,d_color,d_isMSTEdge);
     cudaDeviceSynchronize();
 
 
 
-    Boruvka_kernel_4<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdgeOfComp,d_color,d_nodeId);
+    Boruvka_kernel_4<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdgeOfComp,d_nodeId,d_color,d_isMSTEdge);
+    cudaDeviceSynchronize();
+
+        Boruvka_kernel_20<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdgeOfComp,d_nodeId,d_color,d_isMSTEdge);
     cudaDeviceSynchronize();
 
 
 
-    Boruvka_kernel_5<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdgeOfComp,d_color,d_nodeId);
-    cudaDeviceSynchronize();
 
+    bool* d_modified;
+    cudaMalloc(&d_modified, sizeof(bool)*(V));
 
+    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_modified,(bool)false);
 
     bool finished = false; // asst in .cu
 
@@ -154,12 +162,8 @@ void Boruvka(graph& g)
 
       finished = true;
       cudaMemcpyToSymbol(::finished, &finished, sizeof(bool), 0, cudaMemcpyHostToDevice);
-      cudaMemcpyToSymbol(::noNewComp, &noNewComp, sizeof(bool), 0, cudaMemcpyHostToDevice);
-      cudaMemcpyToSymbol(::finished, &finished, sizeof(bool), 0, cudaMemcpyHostToDevice);
-      Boruvka_kernel_6<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdgeOfComp,d_color,d_nodeId);
+      Boruvka_kernel_5<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdgeOfComp,d_nodeId,d_color,d_newColorChanges,d_modified,d_isMSTEdge);
       cudaDeviceSynchronize();
-      cudaMemcpyFromSymbol(&noNewComp, ::noNewComp, sizeof(bool), 0, cudaMemcpyDeviceToHost);
-      cudaMemcpyFromSymbol(&finished, ::finished, sizeof(bool), 0, cudaMemcpyDeviceToHost);
 
 
 
@@ -169,7 +173,7 @@ void Boruvka(graph& g)
       initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
     } // END FIXED POINT
 
-    Boruvka_kernel_7<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_color);
+    Boruvka_kernel_6<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_color,d_isMSTEdge);
     cudaDeviceSynchronize();
 
 
@@ -178,19 +182,29 @@ void Boruvka(graph& g)
 
 
     //cudaFree up!! all propVars in this BLOCK!
+    cudaFree(d_modified);
     cudaFree(d_minEdgeOfComp);
     cudaFree(d_minEdge);
 
     cudaMemcpyFromSymbol(&noNewComp, ::noNewComp, sizeof(bool), 0, cudaMemcpyDeviceToHost);
-    cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
-    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
+    // cudaMemcpy(d_newColorChanges, d_newColorChanges_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
+    // initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_newColorChanges_next, false);
+
+    int* h_colors = (int*) malloc((V) * sizeof(int));
+    cudaMemcpy(h_colors, d_color, (V) * sizeof(int), cudaMemcpyDeviceToHost);
+
+    for(int i = 0; i < V; i++){
+        printf("%d ", h_colors[i]);
+    }
+    printf("\n");
+
+
   } // END FIXED POINT
 
 
   //cudaFree up!! all propVars in this BLOCK!
+  cudaFree(d_newColorChanges);
   cudaFree(d_color);
-  cudaFree(d_modified);
-  cudaFree(d_isMSTEdge);
   cudaFree(d_nodeId);
 
   //TIMER STOP
@@ -199,4 +213,21 @@ void Boruvka(graph& g)
   cudaEventElapsedTime(&milliseconds, start, stop);
   printf("GPU Time: %.6f ms\n", milliseconds);
 
+  bool* h_isMSTEdge = (bool *)malloc( (E)*sizeof(bool));
+  cudaMemcpy(h_isMSTEdge, d_isMSTEdge, E * sizeof(bool), cudaMemcpyDeviceToHost);
+
+    int mst = 0;
+  for(int i = 0; i < E; i++){
+      if(h_isMSTEdge[i] == true) mst += h_weight[i];
+  }
+  printf("MST Weight: %d\n", mst);
+
 } //end FUN
+
+int main(){
+    char* inp = (char*)"input.txt";
+    graph g(inp);
+    g.parseGraph();
+    Boruvka(g);
+    return 0;
+}
