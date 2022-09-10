@@ -10,12 +10,14 @@ function Boruvka (Graph g)
     g.attachEdgeProperty(isMSTEdge = False);
     
     // Initialize the graph with each node in its own component.
-    forall(dummy in g.nodes()){
+    forall(u in g.nodes()){
         int i = 0;
-        for(v in g.nodes()){
-            v.nodeId = i;
-            v.color = i;
-            i = i + 1;
+        if(u.nodeId == 0){
+            for(v in g.nodes()){
+                v.nodeId = i;
+                v.color = i;
+                i = i + 1;
+            }
         }
     }
     
