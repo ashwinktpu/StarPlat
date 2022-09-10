@@ -199,4 +199,22 @@ void Boruvka(graph& g)
   cudaEventElapsedTime(&milliseconds, start, stop);
   printf("GPU Time: %.6f ms\n", milliseconds);
 
+  cudaMemcpy(h_isMSTEdge, d_isMSTEdge, E * sizeof(bool), cudaMemcpyDeviceToHost);
+
+    int mst = 0;
+  for(int i = 0; i < E; i++){
+      if(h_isMSTEdge[i] == true) mst += h_weight[i];
+  }
+  printf("MST Weight: %d\n", mst);
+
 } //end FUN
+
+int main(int argc, char** argv) {
+    char* inp = argv[1];
+    bool isWeighted = atoi(argv[2]) ? true : false;
+    printf("Taking input from: %s\n", inp);
+    graph g(inp);
+    g.parseGraph(isWeighted);
+    Boruvka(g);
+    return 0;
+}
