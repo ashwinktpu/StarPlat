@@ -198,7 +198,8 @@ void Boruvka(graph& g)
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&milliseconds, start, stop);
   printf("GPU Time: %.6f ms\n", milliseconds);
-
+  
+  bool* h_isMSTEdge = (bool *)malloc( (E)*sizeof(bool));
   cudaMemcpy(h_isMSTEdge, d_isMSTEdge, E * sizeof(bool), cudaMemcpyDeviceToHost);
 
     int mst = 0;
