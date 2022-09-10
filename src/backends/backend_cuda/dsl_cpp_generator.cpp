@@ -1602,7 +1602,7 @@ void dsl_cpp_generator :: addCudaKernel(forallStmt* forAll)
     }
   }
   
-  header.pushString(",bool *d_isMSTEdge"); // Remove this
+  header.pushString(",bool *d_isMSTEdge"); // TODO: Remove isMSTEdge
 
   header.pushstr_newL("){ // BEGIN KER FUN via ADDKERNEL");
 
@@ -1702,7 +1702,7 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
     main.pushString("numBlocks, threadsPerBlock");
     main.pushString(">>>");
     main.push('(');
-    main.pushString("V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_isMSTEdge"); // TODO: Remove isMSTEdge
+    main.pushString("V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next");
     //  if(currentFunc->getParamList().size()!=0)
      // main.pushString(",");
       for(Identifier* iden: vars)
@@ -1715,7 +1715,7 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
           main.pushString(/*createParamName(*/iden->getIdentifier());
         }
       }
-    main.pushString(")");
+    main.pushString(",d_isMSTEdge)"); // TODO: Remove isMSTEdge
     main.push(';');
     main.NewLine();
 
