@@ -41,10 +41,7 @@ testproc
 ')''{'Type: int
 
 '='
-';'Keyword if: if'(''.'
-EQ_OPHere hello 
-
-')''{'For: for'('
+';'For: for'('
 Keyword in 
 '.''('')'No args
 testproc
@@ -61,7 +58,7 @@ testproc
 
 '+'
 ';'testassign
-'}''}''}'COMMENTNode Property'<'Type: bool'>'
+'}''}'COMMENTNode Property'<'Type: bool'>'
 ';''.''('Here hello 
 
 '='
@@ -378,14 +375,10 @@ FORALL ParPar NAME2:2
 		TO Set DEVICE BOOL
 ID VALUE IN SEARCHi
 FINALLY FOUND IT
-u
-ID VALUE IN SEARCHu
-ID VALUE IN SEARCHnodeId
-FINALLY FOUND IT
 ID VALUE IN SEARCHg
 FINALLY FOUND IT
 FORALL par   NAME1:6
-FORALL ParPar NAME2:12
+FORALL ParPar NAME2:18
 FORALL ParParPar NAME3:6
 ID VALUE IN SEARCHv
 ID VALUE IN SEARCHnodeId
@@ -816,8 +809,6 @@ Entered here for forall
 start of kernel block 
 varT:int
 varN:i
-=======IF FILTER
-	==VARSIZE:0
 STMT: For
 isMainFile val 0
 GenerateForAllSignature = 0
