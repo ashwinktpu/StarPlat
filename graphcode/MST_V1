@@ -12,12 +12,10 @@ function Boruvka (Graph g)
     // Initialize the graph with each node in its own component.
     forall(u in g.nodes()){
         int i = 0;
-        if(u.nodeId == 0){
-            for(v in g.nodes()){
-                v.nodeId = i;
-                v.color = i;
-                i = i + 1;
-            }
+        for(v in g.nodes()){
+            v.nodeId = i;
+            v.color = i;
+            i = i + 1;
         }
     }
     
