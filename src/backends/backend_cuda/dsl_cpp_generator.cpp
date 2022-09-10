@@ -1601,6 +1601,8 @@ void dsl_cpp_generator :: addCudaKernel(forallStmt* forAll)
       header.pushString(/*createParamName(*/strBuffer);
     }
   }
+  
+  header.pushString(",bool *d_isMSTEdge"); // Remove this
 
   header.pushstr_newL("){ // BEGIN KER FUN via ADDKERNEL");
 
@@ -1700,7 +1702,7 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
     main.pushString("numBlocks, threadsPerBlock");
     main.pushString(">>>");
     main.push('(');
-    main.pushString("V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next");
+    main.pushString("V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_isMSTEdge"); // TODO: Remove isMSTEdge
     //  if(currentFunc->getParamList().size()!=0)
      // main.pushString(",");
       for(Identifier* iden: vars)
