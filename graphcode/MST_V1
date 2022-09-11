@@ -106,29 +106,100 @@ function Boruvka (Graph g)
                 }
             }
         }
-
-        // 4a. Propagating colors to only union-leaders
-        bool finished = False;
-        fixedPoint until (finished: !modified) {
-            forall(u in g.nodes()) {
-                if(u.color == u.nodeId){
-                    edge minEdgeOfComp = u.minEdgeOfComp;
-                    if(minEdgeOfComp != -1) {
-                        node minDst = minEdgeOfComp.data;
-                        u.color = minDst.color;
-                        finished = False;
-                        noNewComp = False;
-                    }
+        
+        // __global__
+        // void initialize_color(unsigned int nnodes, unsigned int *color, unsigned int *vertex_minedge){
+        //     unsigned id = blockIdx.x * blockDim.x + threadIdx.x;
+        //     if(id >= nnodes) return;
+            
+        //     unsigned edge = vertex_minedge[id];
+        //     if(edge == 0) color[id] = id;
+        //     else color[id] = tex1Dfetch(tex_edgessrcdst, edge);
+        // }
+        
+        // 4. Initialize colors
+        forall(src in g.nodes()){
+            if(src.color == src.nodeId){
+                edge srcMinEdge = src.minEdgeOfComp;
+                if(srcMinEdge != -1)
+                {
+                    noNewComp = False; // If there is atleast one minedge, then there is new component
+                    node dst = srcMinEdge.data;
+                    src.color = dst.color;
                 }
             }
         }
 
-        // 4b. Propagating colors to all other nodes thru leaders
-        forall(u in g.nodes()) {
-            int lead = u.color;
-            if(lead.color != u.color) {
-                u.color = lead.color;
+        // __global__
+        // void propagate_color(unsigned int nnodes, unsigned int *color, unsigned int *changed){
+        //     unsigned id = blockIdx.x * blockDim.x + threadIdx.x;
+        //     if(id >= nnodes) return;
+
+        //     unsigned int my_color = color[id];
+        //     unsigned int other_color = color[my_color];
+
+        //     if(my_color != other_color)
+        //     {
+        //         color[id] = other_color;
+        //         *changed = true;
+        //     }
+        // }
+        
+        // Propagate colors
+        bool finished = False;
+        fixedPoint until (finished: !modified) {
+            forall(u in g.nodes()) {
+                int my_color = u.color;
+                int other_color = my_color.color;
+
+                if(my_color != other_color)
+                {
+                    finished = False;
+                    u.color = other_color;
+                }
             }
         }
+
+        
+        // OLD CODE
+        // propNode<int> colorsNext;
+        // g.attachNodeProperty(colorsNext = -1);
+        // forall(u in g.nodes()){
+        //     u.colorsNext = u.color;
+        // }
+        
+        // // 4a. Propagating colors to only union-leaders
+        // bool finished = False;
+        // fixedPoint until (finished: !modified) {
+        //     forall(u in g.nodes()) {
+        //         if(u.color == u.nodeId){
+        //             edge minEdgeOfComp = u.minEdgeOfComp;
+        //             if(minEdgeOfComp != -1) {
+        //                 node minDst = minEdgeOfComp.data;
+        //                 int myColor = u.colorsNext;
+        //                 int otherColor = minDst.colorsNext;
+
+        //                 if(myColor != otherColor)
+        //                 {
+        //                     u.colorsNext = otherColor;
+        //                     finished = False;
+        //                     noNewComp = False;
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+        
+        // forall(u in g.nodes()){
+        //     u.color = u.colorsNext;
+        // }
+
+        // // 4b. Propagating colors to all other nodes thru leaders
+        // forall(u in g.nodes()) {
+        //     int lead = u.color;
+        //     if(lead.color != u.color){
+        //         u.color = lead.color;
+        //     }
+        // }
     }   
 }
