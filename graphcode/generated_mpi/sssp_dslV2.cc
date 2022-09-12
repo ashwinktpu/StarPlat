@@ -1,6 +1,6 @@
 #include"sssp_dslV2.h"
 
-void Compute_SSSP(graph g,int src)
+void Compute_SSSP(graph g,int* dist,int src)
 {
   int my_rank,np,part_size,startv,endv;
   struct timeval start, end, start1, end1;
@@ -8,39 +8,103 @@ void Compute_SSSP(graph g,int src)
   mpi::communicator world;
   my_rank = world.rank();
   np = world.size();
-
-  gettimeofday(&start1, NULL);
-  g.parseGraph();
-  gettimeofday(&end1, NULL);
-  seconds = (end1.tv_sec - start1.tv_sec);
-  micros = ((seconds * 1000000) + end1.tv_usec) - (start1.tv_usec);
+  int *index,*rev_index, *all_weight,*edgeList, *srcList;
+  int *local_index,*local_rev_index, *weight,*local_edgeList, *local_srcList;
+  int num_nodes, actual_num_nodes;
+  int dest_pro;
   if(my_rank == 0)
   {
-    printf("The graph loading time = %ld secs.\n",seconds);
+    gettimeofday(&start, NULL);
+    g.parseGraph();
+    num_nodes = g.num_nodes();
+    actual_num_nodes = g.ori_num_nodes();
+    all_weight = g.getEdgeLen();
+    edgeList = g.getEdgeList();
+    srcList = g.getSrcList();
+    index = g.getIndexofNodes();
+    rev_index = g.rev_indexofNodes;
+    part_size = g.num_nodes()/np;
+    MPI_Bcast (&num_nodes,1,MPI_INT,my_rank,MPI_COMM_WORLD);
+    MPI_Bcast (&actual_num_nodes,1,MPI_INT,my_rank,MPI_COMM_WORLD);
+    MPI_Bcast (&part_size,1,MPI_INT,my_rank,MPI_COMM_WORLD);
+    local_index = new int[part_size+1];
+    local_rev_index = new int[part_size+1];
+    for(int i=0;i<part_size+1;i++) {
+      local_index[i] = index[i];
+      local_rev_index[i] = rev_index[i];
+    }
+    int num_ele = local_index[part_size]-local_index[0];
+    weight = new int[num_ele];
+    for(int i=0;i<num_ele;i++)
+    weight[i] = all_weight[i];
+    local_edgeList = new int[num_ele];
+    for(int i=0;i<num_ele;i++)
+    local_edgeList[i] = edgeList[i];
+    local_srcList = new int[num_ele];
+    for(int i=0;i<num_ele;i++)
+    local_srcList[i] = srcList[i];
+    for(int i=1;i<np;i++)
+    {
+      int pos = i*part_size;
+      MPI_Send (index+pos,part_size+1,MPI_INT,i,0,MPI_COMM_WORLD);
+      MPI_Send (rev_index+pos,part_size+1,MPI_INT,i,1,MPI_COMM_WORLD);
+      int start = index[pos];
+      int end = index[pos+part_size];
+      int count_int = end - start;
+      MPI_Send (all_weight+start,count_int,MPI_INT,i,2,MPI_COMM_WORLD);
+      MPI_Send (edgeList+start,count_int,MPI_INT,i,3,MPI_COMM_WORLD);
+      MPI_Send (srcList+start,count_int,MPI_INT,i,4,MPI_COMM_WORLD);
+    }
+    delete [] all_weight;
+    delete [] edgeList;
+    delete [] index;
+    delete [] rev_index;
+    delete [] srcList;
+    gettimeofday(&end, NULL);
+    seconds = (end.tv_sec - start.tv_sec);
+    micros = ((seconds * 1000000) + end.tv_usec) - (start.tv_usec);
+    printf("The graph loading & distribution time = %ld secs.\n",seconds);
   }
-  int max_degree = g.max_degree();
-  int *weight = g.getEdgeLen();
-
-  part_size = g.num_nodes()/np;
+  else
+  {
+    MPI_Bcast (&num_nodes,1,MPI_INT,0,MPI_COMM_WORLD); 
+    MPI_Bcast (&actual_num_nodes,1,MPI_INT,0,MPI_COMM_WORLD); 
+    MPI_Bcast (&part_size,1,MPI_INT,0,MPI_COMM_WORLD);
+    local_index = new int[part_size+1];
+    MPI_Recv (local_index,part_size+1,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+    local_rev_index = new int[part_size+1];
+    MPI_Recv (local_rev_index,part_size+1,MPI_INT,0,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+    int num_ele = local_index[part_size]-local_index[0];
+    weight = new int[num_ele];
+    MPI_Recv (weight,num_ele,MPI_INT,0,2,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+    local_edgeList = new int[num_ele];
+    MPI_Recv (local_edgeList,num_ele,MPI_INT,0,3,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+    local_srcList = new int[num_ele];
+    MPI_Recv (local_srcList,num_ele,MPI_INT,0,4,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+    int begin = local_index[0];
+    for (int i = 0; i < part_size+1; i++)
+      local_index[i] = local_index[i] - begin;
+    begin = local_rev_index[0];
+    for (int i = 0; i < part_size+1; i++)
+      local_rev_index[i] = local_rev_index[i] - begin;
+  }
   startv = my_rank*part_size;
-  endv = startv + (part_size-1);
-
-  int dest_pro;
-  int* dist=new int[g.num_nodes()];
-  bool* modified=new bool[g.num_nodes()];
+  endv = startv+part_size-1;
+  MPI_Barrier(MPI_COMM_WORLD);
+  gettimeofday(&start, NULL);
   dist = new int[part_size];
-  modified = new bool[part_size];
-  for (int t = 0; t < g.num_nodes(); t ++) 
+  bool* modified=new bool[part_size];
+  for (int t = 0; t < part_size; t++) 
   {
     dist[t] = INT_MAX;
     modified[t] = false;
   }
-  modified[src] = true;
-  dist[src] = 0;
+  if(src >= startv && src <= endv)
+    modified[src - startv]  = true;
+  if(src >= startv && src <= endv)
+    dist[src - startv]  = 0;
   bool finished = false;
   int num_iter=0;
-  MPI_Barrier(MPI_COMM_WORLD);
-  gettimeofday(&start, NULL);
   while ( is_finished(startv,endv,modified)  )
   {
     num_iter++;
@@ -53,38 +117,37 @@ void Compute_SSSP(graph g,int src)
     std::map<int,int>::iterator itr;
     for (int v = startv; v <= endv; v++) 
     {
-      if ( modified [v] == true )
+      if ( modified [v - startv] == true )
       {
-        modified [v]  = false;
-        for (int edge = g.indexofNodes[v]; edge < g.indexofNodes[v+1]; edge ++) 
+        modified [v - startv]  = false;
+        for (int edge = local_index[v - startv]; edge < local_index[v - startv + 1]; edge ++) 
         {
-          int nbr = g.edgeList[edge] ;
+          int nbr = local_edgeList[edge] ;
           if(nbr >= startv && nbr <=endv)
           {
-            int e = edge;
-             int dist_new = dist[v] + weight[e];
+            int e = edge + startv;
+             int dist_new = dist[v-startv] + weight[e-startv];
             bool modified_new = true;
-            if (dist[nbr] > dist_new)
+            if (dist[nbr-startv] > dist_new)
             {
-              dist[nbr] = dist_new;
-              modified[nbr] = modified_new;
+              dist[nbr-startv] = dist_new;
+              modified[nbr-startv] = modified_new;
             }
           }
           else
           {
             dest_pro = nbr / part_size;
             itr = send_data[dest_pro].find(nbr);
-            int e = edge;
+            int e = edge + startv;
             if (itr != send_data[dest_pro].end())
-              itr->second = min( send_data[dest_pro][nbr], dist[v] + weight[e]);
+              itr->second = min( send_data[dest_pro][nbr], dist[v-startv] + weight[e-startv]);
             else
-              send_data[dest_pro][nbr] = dist[v] + weight[e];
+              send_data[dest_pro][nbr] = dist[v-startv] + weight[e-startv];
           }
         }
       }
     }
     all_to_all(world, send_data, receive_data);
-    int e = edge;
     for(int t=0;t<np;t++)
     {
       if(t != my_rank)
@@ -94,21 +157,27 @@ void Compute_SSSP(graph g,int src)
           int dist_new = x.second;
           bool modified_new = true;
           int nbr = x.first;
-          if (dist[nbr] > dist_new)
+          if (dist[nbr-startv] > dist_new)
           {
-            dist[nbr] = dist_new;
-            modified[nbr] = modified_new;
+            dist[nbr-startv] = dist_new;
+            modified[nbr-startv] = modified_new;
           }
         }
       }
     }
     MPI_Barrier(MPI_COMM_WORLD);
     send_data.clear();
+    vector < map<int,int> >().swap(send_data);
     receive_data.clear();
+    vector < map<int,int> >().swap(receive_data);
     send_data_float.clear();
+    vector < map<int,float> >().swap(send_data_float);
     receive_data_float.clear();
+    vector < map<int,float> >().swap(receive_data_float);
     send_data_double.clear();
+    vector < map<int,double> >().swap(send_data_double);
     receive_data_double.clear();
+    vector < map<int,double> >().swap(receive_data_double);
   }
 
   gettimeofday(&end, NULL);
@@ -119,6 +188,18 @@ void Compute_SSSP(graph g,int src)
     printf("The number of iterations taken = %d\n",num_iter);
     printf("The iteration time = %ld micro secs.\n",micros);
     printf("The iteration time = %ld secs.\n",seconds);
+  }
+  int* final_dist;
+  if (my_rank == 0)
+  {
+      final_dist = new int [num_nodes];
+      gather(world, dist, part_size, final_dist, 0);
+      for (int t = 0; t < actual_num_nodes; t++)
+        cout << "dist[" << t << "] = " << final_dist[t] << endl;
+  }
+  else
+  {
+      gather(world, dist, part_size, final_dist, 0);
   }
   MPI_Finalize();
 }

@@ -26,20 +26,22 @@ void Compute_TC(graph g)
   endv = startv + (part_size-1);
 
   int dest_pro;
+  MPI_Barrier(MPI_COMM_WORLD);
+  gettimeofday(&start, NULL);
   long triangle_count = 0;
   for (int v = startv; v <= endv; v++) 
   {
-    for (int edge = g.indexofNodes[v]; edge < g.indexofNodes[v+1]; edge ++) 
+    for (int edge0 = g.indexofNodes[v]; edge0 < g.indexofNodes[v+1]; edge0++) 
     {
-      int u = g.edgeList[edge] ;
+      int u = g.edgeList[edge0] ;
       if ( u < v )
       {
-        for (int edge = g.indexofNodes[v]; edge < g.indexofNodes[v+1]; edge ++) 
+        for (int edge1 = g.indexofNodes[v]; edge1 < g.indexofNodes[v+1]; edge1++) 
         {
-          int w = g.edgeList[edge] ;
+          int w = g.edgeList[edge1] ;
           if ( w > v )
           {
-            if (g.check_if_nbr( u, w)  ){
+            if (g.check_if_nbr(u, w) ){
               triangle_count += 1;
             }
           }

@@ -1,15 +1,24 @@
 #ifndef GENCPP_SSSP_DSL_H
 #define GENCPP_SSSP_DSL_H
-#include<iostream>
-#include<cstdlib.h>
-#include<climits>
-#include<cstdbool>
-#include<fstream>
-#include<sys/time.h>
-#include"mpi.h"
-#include"../graph.hpp"
+#include <iostream>
+#include <cstdlib>
+#include <climits>
+#include <cstdbool>
+#include <fstream>
+#include <sys/time.h>
+#include <boost/mpi.hpp>
+#include <vector>
+#include <map>
+#include <bits/stdc++.h>
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/mpi/collectives.hpp>
+#include "../graph.hpp"
 
-void Compute_SSSP(graph& g,int src);
+using namespace std;
+namespace mpi = boost::mpi;
+
+void Compute_SSSP(graph g,int src);
 bool is_finished (int startv,int endv,bool* modified)
 {
   int sum = 0,res = 0;

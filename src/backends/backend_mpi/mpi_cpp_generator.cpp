@@ -1,6 +1,7 @@
 #include "mpi_cpp_generator.h"
 #include<string.h>
 #include<cassert>
+#include <map>
 int count_int = 0;
 int count_float = 0;
 int count_double = 0;
@@ -12,6 +13,12 @@ make_par* mp = NULL;
 bool make_decl_par = false;
 bool comm_needed_gbl = false;
 bool convertTypeCheck = false;
+vector <int> all_to_all_types;
+map <string, string> function_argument_propid;
+int for_all_count = 0;
+vector <string> arrays_declared;
+enum{SEND_DATA, SEND_DATA_FLOAT, SEND_DATA_DOUBLE};
+
 
 void mpi_cpp_generator::addIncludeToFile(char* includeName,dslCodePad& file,bool isCppLib)
 {  //cout<<"ENTERED TO THIS ADD INCLUDE FILE"<<"\n";
@@ -64,7 +71,7 @@ void mpi_cpp_generator::generation_begin()
   header.pushstr_space("#include");
   addIncludeToFile("boost/mpi/collectives.hpp",header,true);
   header.pushstr_space("#include");
-  addIncludeToFile("../graph.hpp",header,false);
+  addIncludeToFile("graph.hpp",header,false);
 
   header.NewLine();
   header.pushstr_newL("using namespace std;");
@@ -115,8 +122,18 @@ void add_InitialDeclarations(dslCodePad* main,iterateBFS* bfsAbstraction)
   main->pushstr_newL(strBuffer);
   sprintf(strBuffer,"{");
   main->pushstr_newL(strBuffer);
-  sprintf(strBuffer,"d[%s] = 0;",root->getIdentifier());
-  main->pushstr_newL(strBuffer);
+  if(comm_needed_gbl)
+  {
+    {
+    sprintf(strBuffer,"d[%s - startv] = 0;",root->getIdentifier());
+    main->pushstr_newL(strBuffer);
+  }
+  }
+  else
+  {
+    sprintf(strBuffer,"d[%s] = 0;",root->getIdentifier());
+    main->pushstr_newL(strBuffer);
+  }
   sprintf(strBuffer,"}");
   main->pushstr_newL(strBuffer);
 
@@ -213,13 +230,20 @@ void add_InitialDeclarations(dslCodePad* main,iterateBFS* bfsAbstraction)
     generate_receiveCallBFS(body,2,NULL);
    main.pushstr_newL("active.swap(active_next);");
    main.pushstr_newL("active_next.clear();");
+   main.pushstr_newL("vector <int> ().swap(active_next);");
    main.pushstr_newL("MPI_Barrier(MPI_COMM_WORLD);");
    main.pushstr_newL("send_data.clear();");
+   main.pushstr_newL("vector <vector <int> >().swap(send_data);");
    main.pushstr_newL("receive_data.clear();");
+   main.pushstr_newL("vector <vector <int> >().swap(receive_data);");
    main.pushstr_newL("send_data_float.clear();");
+   main.pushstr_newL("vector <vector <float> >().swap(send_data_float);");
    main.pushstr_newL("receive_data_float.clear();");
+   main.pushstr_newL("vector <vector <float> >().swap(receive_data_float);");
    main.pushstr_newL("send_data_double.clear();");
+   main.pushstr_newL("vector <vector <double> >().swap(send_data_double);");
    main.pushstr_newL("receive_data_double.clear();");
+   main.pushstr_newL("vector <vector <double> >().swap(receive_data_double);");
    main.pushstr_newL("phase = phase + 1 ;");
    //main.pushstr_newL("levelCount[phase] = bfsCount ;");
    //main.pushstr_newL(" levelNodes[phase].assign(levelNodes_later.begin(),levelNodes_later.begin()+bfsCount);");
@@ -303,11 +327,17 @@ void add_InitialDeclarations(dslCodePad* main,iterateBFS* bfsAbstraction)
    main.pushstr_newL("phase--;");
    main.pushstr_newL("MPI_Barrier(MPI_COMM_WORLD);");
    main.pushstr_newL("send_data.clear();");
+   main.pushstr_newL("vector <vector <int> >().swap(send_data);");
    main.pushstr_newL("receive_data.clear();");
+   main.pushstr_newL("vector <vector <int> >().swap(receive_data);");
    main.pushstr_newL("send_data_float.clear();");
+   main.pushstr_newL("vector <vector <float> >().swap(send_data_float);");
    main.pushstr_newL("receive_data_float.clear();");
+   main.pushstr_newL("vector <vector <float> >().swap(receive_data_float);");
    main.pushstr_newL("send_data_double.clear();");
+   main.pushstr_newL("vector <vector <double> >().swap(send_data_double);");
    main.pushstr_newL("receive_data_double.clear();");
+   main.pushstr_newL("vector <vector <double> >().swap(receive_data_double);");
    main.pushstr_newL("}"); //outer while
 
 
@@ -905,6 +935,8 @@ void mpi_cpp_generator::generateExprForSend(Expression* expr,int send, Identifie
        }
 }
 
+
+
 void mpi_cpp_generator::generateProcCallForSend(Expression* expr,int send, Identifier* remote, Identifier* replace)
 {
     char strBuffer[1024];
@@ -912,14 +944,14 @@ void mpi_cpp_generator::generateProcCallForSend(Expression* expr,int send, Ident
   string methodId(proc->getMethodId()->getIdentifier());
   if(methodId=="get_edge")
   {
-    main.pushString("edge"); //To be changed..need to check for a neighbour iteration 
+    main.pushString("edge + startv"); //To be changed..need to check for a neighbour iteration 
                              // and then replace by the iterator.
   }
   else if(methodId=="num_nodes")
   {
     Identifier* id1 = proc->getId1();
-    main.pushString(id1->getIdentifier());
-    main.pushString(".ori_num_nodes()"); //To be changed..need to check for a neighbour iteration 
+    //main.pushString(id1->getIdentifier());
+    main.pushString("actual_num_nodes"); //To be changed..need to check for a neighbour iteration 
                              // and then replace by the iterator.
   }
   else if(methodId == "count_inNbrs")
@@ -1070,10 +1102,13 @@ void mpi_cpp_generator::generatePropAccessForSend(PropAccess* stmt,int send, Ide
       if(typeStr == "int") {
           sprintf(strBuffer,"send_data[dest_pro].push_back(");
           num_messages++;
+          all_to_all_types.push_back(SEND_DATA);
       } else if(typeStr == "float") {
           sprintf(strBuffer,"send_data_float[dest_pro].push_back(");
+          all_to_all_types.push_back(SEND_DATA_FLOAT);
       } else if(typeStr == "double") {
           sprintf(strBuffer,"send_data_double[dest_pro].push_back(");
+          all_to_all_types.push_back(SEND_DATA_DOUBLE);
       }
       main.pushString(strBuffer);
       generate_exprPropId(stmt);
@@ -1276,18 +1311,12 @@ void mpi_cpp_generator::generateAssignmentStmt(assignment* asmt)
    {
      PropAccess* propId=asmt->getPropId();
      
-     //if(asmt->getAtomicSignal())
-      //{ 
-        /*if(asmt->getParent()->getParent()->getParent()->getParent()->getTypeofNode()==NODE_ITRBFS)
-           if(asmt->getExpr()->isArithmetic()||asmt->getExpr()->isLogical())*/
-        //     main.pushstr_newL("#pragma omp atomic");
-           
-      //}
       if(comm_needed_gbl) {
-        main.pushString(propId->getIdentifier2()->getIdentifier());
-        main.push('[');
-        main.pushString(propId->getIdentifier1()->getIdentifier());
-        main.pushString("-startv]");
+        sprintf(strBuffer,"if(%s >= startv && %s <= endv)",propId->getIdentifier1()->getIdentifier(),propId->getIdentifier1()->getIdentifier());
+        main.pushstr_newL(strBuffer);
+        main.insert_indent();
+        sprintf(strBuffer,"%s[%s - startv]",propId->getIdentifier2()->getIdentifier(),propId->getIdentifier1()->getIdentifier());
+        main.pushstr_space(strBuffer);
       } else {
         main.pushString(propId->getIdentifier2()->getIdentifier());
         main.push('[');
@@ -1299,6 +1328,8 @@ void mpi_cpp_generator::generateAssignmentStmt(assignment* asmt)
    main.pushString(" = ");
    generateExpr(asmt->getExpr());
    main.pushstr_newL(";");
+   if (comm_needed_gbl)
+      main.decrease_indent();
 
 
 }
@@ -1325,17 +1356,17 @@ void mpi_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt)
             // BC = new float[g.num_nodes()];
             // TODO
             // cout<< "TYYYPEEE "<< convertToCppType(lhsId->getSymbolInfo()->getType())<< endl;
-            convertTypeCheck = true;
-            sprintf(strBuffer,"%s = new %s[part_size]",lhsId->getIdentifier(), convertToCppType(lhsId->getSymbolInfo()->getType()));
-            convertTypeCheck = false;
-            main.pushString(strBuffer);
-            main.pushstr_newL(";");
+            //convertTypeCheck = true;
+            //sprintf(strBuffer,"%s = new %s[part_size]",lhsId->getIdentifier(), convertToCppType(lhsId->getSymbolInfo()->getType()));
+            //convertTypeCheck = false;
+            //main.pushString(strBuffer);
+            //main.pushstr_newL(";");
             
           }
           if(comm_needed_gbl) {
-            sprintf(strBuffer,"for (%s %s = 0; %s < part_size; %s ++) ","int","t","t","t");
+            sprintf(strBuffer,"for (%s %s = 0; %s < part_size; %s++) ","int","t","t","t");
           } else {
-            sprintf(strBuffer,"for (%s %s = 0; %s < %s.%s(); %s ++) ","int","t","t",procedure->getId1()->getIdentifier(),"num_nodes","t");
+            sprintf(strBuffer,"for (%s %s = 0; %s < %s.%s(); %s++) ","int","t","t",procedure->getId1()->getIdentifier(),"num_nodes","t");
           }
           main.pushstr_newL(strBuffer);
           main.pushstr_newL("{");
@@ -1344,7 +1375,10 @@ void mpi_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt)
             assignment* assign=(*itr)->getAssignExpr();
             Identifier* lhsId=assign->getId();
             Expression* exprAssigned=assign->getExpr();
-            sprintf(strBuffer,"%s[%s] = ",lhsId->getIdentifier(),"t");
+            if (comm_needed_gbl)
+              sprintf(strBuffer,"%s[%s] = ",lhsId->getIdentifier(),"t");
+            else
+              sprintf(strBuffer,"%s[%s] = ",lhsId->getIdentifier(),"t");
             main.pushString(strBuffer);
             generateExpr(exprAssigned);
 
@@ -1530,8 +1564,22 @@ void mpi_cpp_generator::generate_sendCall(statement* body)
 {
     char strBuffer[1024];
     //sprintf(strBuffer,"MPI_Alltoall(send_data,3*max_degree,MPI_INT,recv_data,3*max_degree,MPI_INT,MPI_COMM_WORLD);");
-    //main.pushstr_newL(strBuffer);
-    main.pushstr_newL("all_to_all(world, send_data, receive_data);");
+    //main.pushstr_newL(strBuffer);]
+    if(all_to_all_types.size() > 0)
+    {
+      for (int i = 0; i < all_to_all_types.size(); i++)
+      {
+        if(all_to_all_types[i] == SEND_DATA)
+          main.pushstr_newL("all_to_all(world, send_data, receive_data);");
+        else if (all_to_all_types[i] == SEND_DATA_FLOAT)
+          main.pushstr_newL("all_to_all(world, send_data_float, receive_data_float);");
+        else if (all_to_all_types[i] == SEND_DATA_DOUBLE)
+          main.pushstr_newL("all_to_all(world, send_data_double, receive_data_double);");
+      }
+      all_to_all_types.clear();
+    }
+    else
+      main.pushstr_newL("all_to_all(world, send_data, receive_data);");
 
 }
 
@@ -1594,11 +1642,19 @@ void mpi_cpp_generator::generateForAllSignature(forallStmt* forAll)
        list<argument*>  argList=extractElemFunc->getArgList();
        assert(argList.size()==1);
        Identifier* nodeNbr=argList.front()->getExpr()->getId();
-       sprintf(strBuffer,"for (%s %s = %s.%s[%s]; %s < %s.%s[%s+1]; %s ++) ","int","edge",graphId,"indexofNodes",nodeNbr->getIdentifier(),"edge",graphId,"indexofNodes",nodeNbr->getIdentifier(),"edge");
+       string itr_name = "edge"+to_string(for_all_count);
+       if(comm_needed_gbl)
+           sprintf(strBuffer,"for (%s %s = %s[%s - startv]; %s < %s[%s - startv + 1]; %s++) ","int",itr_name.c_str(),"local_index",nodeNbr->getIdentifier(),itr_name.c_str(),"local_index",nodeNbr->getIdentifier(),itr_name.c_str());
+       else
+          sprintf(strBuffer,"for (%s %s = %s.%s[%s]; %s < %s.%s[%s+1]; %s++) ","int",itr_name.c_str(),graphId,"indexofNodes",nodeNbr->getIdentifier(),itr_name.c_str(),graphId,"indexofNodes",nodeNbr->getIdentifier(),itr_name.c_str());
        main.pushstr_newL(strBuffer);
        main.pushstr_newL("{");
-       sprintf(strBuffer,"%s %s = %s.%s[%s] ;","int",iterator->getIdentifier(),graphId,"edgeList","edge"); //needs to move the addition of
+       if(comm_needed_gbl)
+          sprintf(strBuffer,"%s %s = %s[%s] ;","int",iterator->getIdentifier(),"local_edgeList",itr_name.c_str()); //needs to move the addition of
+       else
+          sprintf(strBuffer,"%s %s = %s.%s[%s] ;","int",iterator->getIdentifier(),graphId,"edgeList",itr_name.c_str()); //needs to move the addition of
        main.pushstr_newL(strBuffer);
+       for_all_count += 1;
        //statement to a different method.
     }
   }
@@ -1673,21 +1729,21 @@ void mpi_cpp_generator::generate_addMessage(statement* stmt,int send,Identifier*
         //generateStatement(stmt);
         cout<< stmt->getTypeofNode() <<endl;
       }
-    }
-    else if(stmt->getTypeofNode()==NODE_REDUCTIONCALLSTMT)
-    { cout<<"IS REDUCTION STMT HI............."<<"\n";
+  }
+  else if(stmt->getTypeofNode()==NODE_REDUCTIONCALLSTMT)
+  { cout<<"IS REDUCTION STMT HI............."<<"\n";
       if (send == 1)
         generateReductionStmtForSend((reductionCallStmt*) stmt,send);  
       else if(send == 3 || send == 2)
         generateInnerReductionStmt((reductionCallStmt*) stmt,send);  
 
-    }
+  }
     
-    else if (stmt->getTypeofNode() == NODE_ASSIGN)
-    {
+  else if (stmt->getTypeofNode() == NODE_ASSIGN)
+  {
       cout<<"it is node assign\n";
       generateAssignmentForSend((assignment*)stmt,send, remote,replace);
-    }
+  }
     else if(stmt->getTypeofNode() == NODE_EXPR)
       generateExprForSend((Expression*)stmt,send,remote,replace);
 
@@ -1894,6 +1950,10 @@ void mpi_cpp_generator::generate_addMessage(statement* stmt,int send,Identifier*
                             main.pushstr_newL("}");
                 } 
       }*/
+    }
+    else if(stmt->getTypeofNode() == NODE_DECL && send == 2)
+    {
+      std::cout << "Declration in add message" << std::endl;
     }
     else
       generateStatement(stmt);
@@ -2269,7 +2329,10 @@ void mpi_cpp_generator::generateForAll(forallStmt* forAll)
             {
               if(id->getSymbolInfo()->getType()->isPropType())
               {
-                sprintf(strBuffer,"[%s]",iterator->getIdentifier());
+                if(comm_needed_gbl)
+                  sprintf(strBuffer,"[%s - startv]",iterator->getIdentifier());
+                else
+                  sprintf(strBuffer,"[%s]",iterator->getIdentifier());
                 main.pushstr_space(strBuffer);
               }
             }
@@ -2292,7 +2355,10 @@ void mpi_cpp_generator::generateForAll(forallStmt* forAll)
             //Expression* exprBool=(Expression*)Util::createNodeForBval(!value);
             //assignment* assign=(assignment*)Util::createAssignmentNode(propId,exprBool);
             generateExpr(expr1);
-            sprintf(strBuffer," [%s]",iterator->getIdentifier());
+            if(comm_needed_gbl)
+              sprintf(strBuffer," [%s - startv]",iterator->getIdentifier());
+            else
+              sprintf(strBuffer," [%s]",iterator->getIdentifier());
             main.pushstr_space(strBuffer);
             main.pushstr_space(" =");
             if(neg == true)
@@ -2526,8 +2592,8 @@ void mpi_cpp_generator::generateForSignature(forallStmt* forAll)
   {
     cout<<"Reached here test\n";
     Identifier* source = forAll->getSource();
-    main.pushstr_newL("MPI_Barrier(MPI_COMM_WORLD);");
-    main.pushstr_newL("gettimeofday(&start, NULL);");
+    //main.pushstr_newL("MPI_Barrier(MPI_COMM_WORLD);");
+    //main.pushstr_newL("gettimeofday(&start, NULL);");
     sprintf(strBuffer,"for (int i = 0; i < %s.size(); i++)",source->getIdentifier());
     main.pushstr_newL(strBuffer);
     main.pushstr_newL("{");
@@ -2571,9 +2637,9 @@ void mpi_cpp_generator::generateForSignature(forallStmt* forAll)
 
        // sprintf(strBuffer,"for (%s %s = %s.%s[%s]; %s < %s.%s[%s+1]; %s ++) ","int","edge",graphId,"indexofNodes",nodeNbr->getIdentifier(),"edge",graphId,"indexofNodes",nodeNbr->getIdentifier(),"edge");
        if(comm_needed_gbl) {
-        sprintf(strBuffer,"int local_v = v - my_rank*part_size;");
-        main.pushstr_newL(strBuffer);
-        sprintf(strBuffer,"for (int j = 0; j < local_index[local_v+1]-local_index[local_v]; j++)");
+        //sprintf(strBuffer,"int local_v = v - startv;");
+        //main.pushstr_newL(strBuffer);
+        sprintf(strBuffer,"for (int j = local_index[%s - startv]; j < local_index[%s - startv + 1]; j++)",nodeNbr->getIdentifier(),nodeNbr->getIdentifier());
         main.pushstr_newL(strBuffer);
        } else {
         sprintf(strBuffer,"for (%s %s = %s.%s[%s]; %s < %s.%s[%s+1]; %s ++) ","int","edge",graphId,"indexofNodes",nodeNbr->getIdentifier(),"edge",graphId,"indexofNodes",nodeNbr->getIdentifier(),"edge");
@@ -2581,9 +2647,11 @@ void mpi_cpp_generator::generateForSignature(forallStmt* forAll)
        }
        main.pushstr_newL("{");
        if(comm_needed_gbl) {
-        sprintf(strBuffer,"int begin = local_index[0];");
-        main.pushstr_newL(strBuffer);
-        sprintf(strBuffer,"%s %s = local_edgeList[local_index[local_v]-begin+j];", "int",iterator->getIdentifier());
+        //sprintf(strBuffer,"int begin = local_index[0];");
+        //main.pushstr_newL(strBuffer);
+        //sprintf(strBuffer,"%s %s = local_edgeList[local_index[local_v]-begin+j];", "int",iterator->getIdentifier());
+        //main.pushstr_newL(strBuffer);
+        sprintf(strBuffer,"%s %s = local_edgeList[j];", "int",iterator->getIdentifier());
         main.pushstr_newL(strBuffer);
        } else {
         sprintf(strBuffer,"%s %s = %s.%s[%s] ;","int",iterator->getIdentifier(),graphId,"edgeList","edge"); //needs to move the addition of
@@ -2695,6 +2763,7 @@ void mpi_cpp_generator::generateFor(forallStmt* forAll)
             main.pushstr_newL("}");
 
             main.pushstr_newL("}"); //Closing neighbor iteration
+            all_to_all_types.push_back(SEND_DATA);
           }
            
           //*******************If for loop present inside iterate in reverse bfs************//
@@ -2734,8 +2803,14 @@ void mpi_cpp_generator::generateFor(forallStmt* forAll)
                 main.pushstr_newL(" )");
                 main.pushstr_newL("{");
 
-            } 
+            }
+            sprintf(strBuffer, "if(d[%s - startv] == d[%s - startv] + 1)",iterator->getIdentifier(),nodeNbr->getIdentifier()) ; 
+            main.pushstr_newL(strBuffer);
+            main.pushstr_newL("{");
+            main.insert_indent();
                  generateBlock((blockStatement*)body,false);
+            main.decrease_indent();
+            main.pushstr_newL("}");
             
             if(forAll->hasFilterExpr())
             {
@@ -2768,6 +2843,7 @@ void mpi_cpp_generator::generateFor(forallStmt* forAll)
               main.pushstr_newL("}");
             main.pushstr_newL("}");
 
+          all_to_all_types.push_back(SEND_DATA);
           
            main.pushstr_newL("}");
              generate_sendCall(body);
@@ -2802,7 +2878,10 @@ void mpi_cpp_generator::generateFor(forallStmt* forAll)
             }
             main.pushstr_newL(strBuffer);
             main.pushstr_newL("{");
-            sprintf(strBuffer,"%s %s = %s.%s[%s] ;","int",iterator->getIdentifier(),graphId,"srcList","edge"); //needs to move the addition of
+            if(comm_needed_gbl)
+              sprintf(strBuffer,"%s %s = %s[%s] ;","int",iterator->getIdentifier(),"local_srcList","edge"); //needs to move the addition of
+            else
+              sprintf(strBuffer,"%s %s = %s.%s[%s] ;","int",iterator->getIdentifier(),graphId,"srcList","edge"); //needs to move the addition of
             main.pushstr_newL(strBuffer);
               sprintf(strBuffer,"if (%s >= startv && %s <= endv)",iterator->getIdentifier(),iterator->getIdentifier());
               main.pushstr_newL(strBuffer);
@@ -2817,7 +2896,10 @@ void mpi_cpp_generator::generateFor(forallStmt* forAll)
             }
             main.pushstr_newL(strBuffer);
               main.pushstr_newL("{");
-                sprintf(strBuffer,"int nbr = %s.edgeList[edge1];",graphId);
+                if(comm_needed_gbl)
+                  sprintf(strBuffer,"int nbr = local_edgeList[edge1];");
+                else
+                  sprintf(strBuffer,"int nbr = %s.edgeList[edge1];",graphId);
                 main.pushstr_newL(strBuffer);
                 main.pushstr_newL("if(!(nbr >= startv && nbr <= endv))");
                 main.pushstr_newL("{");
@@ -2840,6 +2922,7 @@ void mpi_cpp_generator::generateFor(forallStmt* forAll)
                 main.pushstr_newL("}");
               main.pushstr_newL("}");
            // main.pushstr_newL("}");
+           all_to_all_types.push_back(SEND_DATA);
 
           }
         }
@@ -2871,8 +2954,10 @@ void mpi_cpp_generator:: generateDoWhileStmt(dowhileStmt* stmt)
       main.pushstr_newL("vector < vector <float> > receive_data_float(np);");
       main.pushstr_newL("vector < vector <double> > send_data_double(np);");
       main.pushstr_newL("vector < vector <double> > receive_data_double(np);");
+      main.insert_indent();
       generateBlock((blockStatement*)body,false);
       
+      /*
       if(red_details!=NULL)
       {
 	      if(red_details->contains_reduction())
@@ -2890,7 +2975,22 @@ void mpi_cpp_generator:: generateDoWhileStmt(dowhileStmt* stmt)
 		      }
 	      }
       }
-      main.pushstr_space("}");
+      */
+   main.pushstr_newL("send_data.clear();");
+   main.pushstr_newL("vector <vector <int> >().swap(send_data);");
+   main.pushstr_newL("receive_data.clear();");
+   main.pushstr_newL("vector <vector <int> >().swap(receive_data);");
+   main.pushstr_newL("send_data_float.clear();");
+   main.pushstr_newL("vector <vector <float> >().swap(send_data_float);");
+   main.pushstr_newL("receive_data_float.clear();");
+   main.pushstr_newL("vector <vector <float> >().swap(receive_data_float);");
+   main.pushstr_newL("send_data_double.clear();");
+   main.pushstr_newL("vector <vector <double> >().swap(send_data_double);");
+   main.pushstr_newL("receive_data_double.clear();");
+   main.pushstr_newL("vector <vector <double> >().swap(receive_data_double);");
+    
+    main.decrease_indent();
+    main.pushstr_space("}");
 
       main.pushstr_space("while (");
       generateExpr(iterCond);
@@ -3247,6 +3347,53 @@ void mpi_cpp_generator::generate_exprUnary(Expression* expr)
 
 }
 
+void mpi_cpp_generator::generateCheckIfNeighbor()
+{
+    header.pushstr_newL("bool check_if_nbr(int s, int d, int* indexofNodes,int* edgeList)");
+    header.pushstr_newL("{");
+    header.insert_indent();
+      header.pushstr_newL("int startEdge=indexofNodes[s];");
+      header.pushstr_newL("int endEdge=indexofNodes[s+1]-1;");
+
+
+      header.pushstr_newL("if(edgeList[startEdge]==d)");
+      header.insert_indent();
+          header.pushstr_newL("return true;");
+      header.decrease_indent();
+      header.pushstr_newL("if(edgeList[endEdge]==d)");
+      header.insert_indent();
+         header.pushstr_newL("return true;");
+      header.decrease_indent();   
+
+      header.pushstr_newL("int mid = (startEdge+endEdge)/2;");
+
+      header.pushstr_newL("while(startEdge<=endEdge)");
+      header.pushstr_newL("{");
+      header.insert_indent(); 
+          header.pushstr_newL("if(edgeList[mid]==d)");
+          header.insert_indent();
+             header.pushstr_newL("return true;");
+          header.decrease_indent();
+
+          header.pushstr_newL("if(d<edgeList[mid])");
+          header.insert_indent();
+             header.pushstr_newL("endEdge=mid-1;");
+          header.decrease_indent();
+          header.pushstr_newL("else");
+          header.insert_indent();
+            header.pushstr_newL("startEdge=mid+1;");
+          header.decrease_indent();  
+          
+          header.pushstr_newL("mid = (startEdge+endEdge)/2;");
+      header.decrease_indent();
+      header.pushstr_newL("}");
+      
+      header.pushstr_newL("return false;");
+      header.decrease_indent();
+
+    header.pushstr_newL("}");
+}
+
 void mpi_cpp_generator::generate_exprProcCall(Expression* expr)
 {
   char strBuffer[1024];
@@ -3254,14 +3401,14 @@ void mpi_cpp_generator::generate_exprProcCall(Expression* expr)
   string methodId(proc->getMethodId()->getIdentifier());
   if(methodId=="get_edge")
   {
-    main.pushString("edge"); //To be changed..need to check for a neighbour iteration 
+    main.pushString("edge + startv"); //To be changed..need to check for a neighbour iteration 
                              // and then replace by the iterator.
   }
   else if(methodId=="num_nodes")
   {
-    Identifier* id1 = proc->getId1();
-    main.pushString(id1->getIdentifier());
-    main.pushString(".ori_num_nodes()"); //To be changed..need to check for a neighbour iteration 
+    //Identifier* id1 = proc->getId1();
+    //main.pushString(id1->getIdentifier());
+    main.pushString("actual_num_nodes"); //To be changed..need to check for a neighbour iteration 
                              // and then replace by the iterator.
   }
   else if(methodId == "count_inNbrs")
@@ -3293,8 +3440,12 @@ void mpi_cpp_generator::generate_exprProcCall(Expression* expr)
     Identifier* arg;
     list<argument*> argList = proc->getArgList();
     list<argument*> :: iterator itr;
-    sprintf(strBuffer,"%s.check_if_nbr(",id1->getIdentifier());
-    main.pushstr_space(strBuffer);
+    if(comm_needed_gbl)
+      sprintf(strBuffer,"check_if_nbr(");
+    else
+      sprintf(strBuffer,"%s.check_if_nbr(",id1->getIdentifier());
+      
+    main.pushString(strBuffer);
     int argumentTotal = argList.size();
     int arg_currNo=0;
     int maximum_arginline = 4;
@@ -3308,6 +3459,8 @@ void mpi_cpp_generator::generate_exprProcCall(Expression* expr)
           if((*itr)->getExpr()->isIdentifierExpr())
             arg = (*itr)->getExpr()->getId();
             main.pushString(arg->getIdentifier());
+            if(comm_needed_gbl)
+              main.pushString("-startv");
        }
       
       if(argumentTotal>0)
@@ -3321,8 +3474,12 @@ void mpi_cpp_generator::generate_exprProcCall(Expression* expr)
      // if(argumentTotal==0)
          
     }
-    main.pushstr_space(")");
+    if(comm_needed_gbl)
+      main.pushString(", local_index, local_edgeList");
+    main.pushString(")");
 
+    if(comm_needed_gbl)
+      generateCheckIfNeighbor();
   }
 
 }
@@ -3390,7 +3547,7 @@ void mpi_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct)
           header.pushstr_newL("int sum = 0,res = 0;");
           header.pushstr_newL("for(int i = startv;i <= endv; i++)");
             header.pushstr_newL("{");
-            sprintf(strBuffer,"if (%s[i] == 1)",dependentId->getIdentifier());
+            sprintf(strBuffer,"if (%s[i - startv] == 1)",dependentId->getIdentifier());
             header.pushstr_newL(strBuffer);
             header.insert_indent();
             header.pushstr_newL("res=1;");
@@ -3404,8 +3561,8 @@ void mpi_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct)
     }
   }
   main.pushstr_newL("int num_iter=0;");
-  main.pushstr_newL("MPI_Barrier(MPI_COMM_WORLD);");
-  main.pushstr_newL("gettimeofday(&start, NULL);");
+  //main.pushstr_newL("MPI_Barrier(MPI_COMM_WORLD);");
+  //main.pushstr_newL("gettimeofday(&start, NULL);");
   main.pushString("while ( ");
   sprintf(strBuffer,"is_%s(startv,endv,%s)",fixedPointId->getIdentifier(),dependentId->getIdentifier());
   main.pushstr_space(strBuffer);
@@ -3431,11 +3588,17 @@ void mpi_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct)
 
      main.pushstr_newL("MPI_Barrier(MPI_COMM_WORLD);");
      main.pushstr_newL("send_data.clear();");
+     main.pushstr_newL("vector < map<int,int> >().swap(send_data);");
      main.pushstr_newL("receive_data.clear();");
+     main.pushstr_newL("vector < map<int,int> >().swap(receive_data);");
      main.pushstr_newL("send_data_float.clear();");
+     main.pushstr_newL("vector < map<int,float> >().swap(send_data_float);");
     main.pushstr_newL("receive_data_float.clear();");
+    main.pushstr_newL("vector < map<int,float> >().swap(receive_data_float);");
     main.pushstr_newL("send_data_double.clear();");
+    main.pushstr_newL("vector < map<int,double> >().swap(send_data_double);");
     main.pushstr_newL("receive_data_double.clear();");
+    main.pushstr_newL("vector < map<int,double> >().swap(receive_data_double);");
      main.pushstr_newL("}");
 }
 
@@ -3510,6 +3673,14 @@ void mpi_cpp_generator::generateFunc(ASTNode* proc)
           }
         }
       }
+      if(stmt->getTypeofNode() == NODE_FIXEDPTSTMT)
+      {
+        fixedPointStmt* f = (fixedPointStmt*) stmt;
+        statement* body = f->getBody();
+        comm_needed = true;
+      }
+      //if(stmt->getTypeofNode() == NODE_FORALLSTMT)
+      //  comm_needed = true;
     }
     comm_needed_gbl = comm_needed;
     if(comm_needed) {
@@ -3521,9 +3692,9 @@ void mpi_cpp_generator::generateFunc(ASTNode* proc)
       main.pushstr_newL("my_rank = world.rank();");
       main.pushstr_newL("np = world.size();");
 
-      main.pushstr_newL("int max_degree;");
-      main.pushstr_newL("int *index,*rev_index, *weight,*edgeList;");
-      main.pushstr_newL("int *local_index,*local_rev_index, *local_weight,*local_edgeList;");
+      main.pushstr_newL("int *index,*rev_index, *all_weight,*edgeList, *srcList;");
+      main.pushstr_newL("int *local_index,*local_rev_index, *weight,*local_edgeList, *local_srcList;");
+      main.pushstr_newL("int num_nodes, actual_num_nodes;");
       main.pushstr_newL("int dest_pro;");
 
       main.pushstr_newL("if(my_rank == 0)");
@@ -3533,31 +3704,25 @@ void mpi_cpp_generator::generateFunc(ASTNode* proc)
       sprintf(strBuffer,"%s.parseGraph();",graphId[0]->getIdentifier());
       main.pushstr_newL(strBuffer);
 
-      main.pushstr_newL("gettimeofday(&end, NULL);");
-      main.pushstr_newL("seconds = (end.tv_sec - start.tv_sec);");
-      main.pushstr_newL("micros = ((seconds * 1000000) + end.tv_usec) - (start.tv_usec);");
-      main.pushstr_newL("printf(\"The graph loading time = %ld micro secs.\\n\",micros);");
-
-      // main.pushstr_newL("max_degree = g.max_degree();");
-      sprintf(strBuffer,"max_degree = %s.max_degree();",graphId[0]->getIdentifier());
+      sprintf(strBuffer,"num_nodes = %s.num_nodes();",graphId[0]->getIdentifier());
       main.pushstr_newL(strBuffer);
-      // main.pushstr_newL("weight = g.getEdgeLen();");
-      sprintf(strBuffer,"weight = %s.getEdgeLen();",graphId[0]->getIdentifier());
+      sprintf(strBuffer,"actual_num_nodes = %s.ori_num_nodes();",graphId[0]->getIdentifier());
       main.pushstr_newL(strBuffer);
-      // main.pushstr_newL("edgeList = g.getEdgeList();");
+      sprintf(strBuffer,"all_weight = %s.getEdgeLen();",graphId[0]->getIdentifier());
+      main.pushstr_newL(strBuffer);
       sprintf(strBuffer,"edgeList = %s.getEdgeList();",graphId[0]->getIdentifier());
       main.pushstr_newL(strBuffer);
-      // main.pushstr_newL("index = g.getIndexofNodes();");
+      sprintf(strBuffer,"srcList = %s.getSrcList();",graphId[0]->getIdentifier());
+      main.pushstr_newL(strBuffer);
       sprintf(strBuffer,"index = %s.getIndexofNodes();",graphId[0]->getIdentifier());
       main.pushstr_newL(strBuffer);
-      // main.pushstr_newL("rev_index = g.rev_indexofNodes;");
       sprintf(strBuffer,"rev_index = %s.rev_indexofNodes;",graphId[0]->getIdentifier());
       main.pushstr_newL(strBuffer);
-      // main.pushstr_newL("part_size = g.num_nodes()/np;");
       sprintf(strBuffer,"part_size = %s.num_nodes()/np;",graphId[0]->getIdentifier());
       main.pushstr_newL(strBuffer);
 
-      main.pushstr_newL("MPI_Bcast (&max_degree,1,MPI_INT,my_rank,MPI_COMM_WORLD);");
+      main.pushstr_newL("MPI_Bcast (&num_nodes,1,MPI_INT,my_rank,MPI_COMM_WORLD);");
+      main.pushstr_newL("MPI_Bcast (&actual_num_nodes,1,MPI_INT,my_rank,MPI_COMM_WORLD);");
       main.pushstr_newL("MPI_Bcast (&part_size,1,MPI_INT,my_rank,MPI_COMM_WORLD);");
       main.pushstr_newL("local_index = new int[part_size+1];");
       main.pushstr_newL("local_rev_index = new int[part_size+1];");
@@ -3567,12 +3732,15 @@ void mpi_cpp_generator::generateFunc(ASTNode* proc)
           main.pushstr_newL("local_rev_index[i] = rev_index[i];");
       main.pushstr_newL("}");
       main.pushstr_newL("int num_ele = local_index[part_size]-local_index[0];");
-      main.pushstr_newL("local_weight = new int[num_ele];");
+      main.pushstr_newL("weight = new int[num_ele];");
       main.pushstr_newL("for(int i=0;i<num_ele;i++)");
-          main.pushstr_newL("local_weight[i] = weight[i];");
+          main.pushstr_newL("weight[i] = all_weight[i];");
       main.pushstr_newL("local_edgeList = new int[num_ele];");
       main.pushstr_newL("for(int i=0;i<num_ele;i++)");
           main.pushstr_newL("local_edgeList[i] = edgeList[i];");
+      main.pushstr_newL("local_srcList = new int[num_ele];");
+      main.pushstr_newL("for(int i=0;i<num_ele;i++)");
+          main.pushstr_newL("local_srcList[i] = srcList[i];");
       main.pushstr_newL("for(int i=1;i<np;i++)");
       main.pushstr_newL("{");
           main.pushstr_newL("int pos = i*part_size;");
@@ -3581,16 +3749,26 @@ void mpi_cpp_generator::generateFunc(ASTNode* proc)
           main.pushstr_newL("int start = index[pos];");
           main.pushstr_newL("int end = index[pos+part_size];");
           main.pushstr_newL("int count_int = end - start;");
-          main.pushstr_newL("MPI_Send (weight+start,count_int,MPI_INT,i,2,MPI_COMM_WORLD);");
+          main.pushstr_newL("MPI_Send (all_weight+start,count_int,MPI_INT,i,2,MPI_COMM_WORLD);");
           main.pushstr_newL("MPI_Send (edgeList+start,count_int,MPI_INT,i,3,MPI_COMM_WORLD);");
+          main.pushstr_newL("MPI_Send (srcList+start,count_int,MPI_INT,i,4,MPI_COMM_WORLD);");
       main.pushstr_newL("}");
-      main.pushstr_newL("delete [] weight;");
+      main.pushstr_newL("delete [] all_weight;");
       main.pushstr_newL("delete [] edgeList;");
       main.pushstr_newL("delete [] index;");
+      main.pushstr_newL("delete [] rev_index;");
+      main.pushstr_newL("delete [] srcList;");
+
+       main.pushstr_newL("gettimeofday(&end, NULL);");
+      main.pushstr_newL("seconds = (end.tv_sec - start.tv_sec);");
+      main.pushstr_newL("micros = ((seconds * 1000000) + end.tv_usec) - (start.tv_usec);");
+      main.pushstr_newL("printf(\"The graph loading & distribution time = %ld secs.\\n\",seconds);");
       main.pushstr_newL("}");
+
       main.pushstr_newL("else");
       main.pushstr_newL("{");
-      main.pushstr_newL("MPI_Bcast (&max_degree,1,MPI_INT,0,MPI_COMM_WORLD); ");
+      main.pushstr_newL("MPI_Bcast (&num_nodes,1,MPI_INT,0,MPI_COMM_WORLD); ");
+      main.pushstr_newL("MPI_Bcast (&actual_num_nodes,1,MPI_INT,0,MPI_COMM_WORLD); ");
       main.pushstr_newL("MPI_Bcast (&part_size,1,MPI_INT,0,MPI_COMM_WORLD);");
 
       main.pushstr_newL("local_index = new int[part_size+1];");
@@ -3599,13 +3777,31 @@ void mpi_cpp_generator::generateFunc(ASTNode* proc)
       main.pushstr_newL("MPI_Recv (local_rev_index,part_size+1,MPI_INT,0,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);");
 
       main.pushstr_newL("int num_ele = local_index[part_size]-local_index[0];");
-      main.pushstr_newL("local_weight = new int[num_ele];");
-      main.pushstr_newL("MPI_Recv (local_weight,num_ele,MPI_INT,0,2,MPI_COMM_WORLD,MPI_STATUS_IGNORE);");
+      main.pushstr_newL("weight = new int[num_ele];");
+      main.pushstr_newL("MPI_Recv (weight,num_ele,MPI_INT,0,2,MPI_COMM_WORLD,MPI_STATUS_IGNORE);");
       main.pushstr_newL("local_edgeList = new int[num_ele];");
       main.pushstr_newL("MPI_Recv (local_edgeList,num_ele,MPI_INT,0,3,MPI_COMM_WORLD,MPI_STATUS_IGNORE);");
+      main.pushstr_newL("local_srcList = new int[num_ele];");
+      main.pushstr_newL("MPI_Recv (local_srcList,num_ele,MPI_INT,0,4,MPI_COMM_WORLD,MPI_STATUS_IGNORE);");
+      main.pushstr_newL("int begin = local_index[0];");
+      main.pushstr_newL("for (int i = 0; i < part_size+1; i++)");
+      main.insert_indent();
+    	main.pushstr_newL("local_index[i] = local_index[i] - begin;");
+      main.decrease_indent();
+      main.pushstr_newL("begin = local_rev_index[0];");
+      main.pushstr_newL("for (int i = 0; i < part_size+1; i++)");
+      main.insert_indent();
+    	main.pushstr_newL("local_rev_index[i] = local_rev_index[i] - begin;");
+      main.decrease_indent();
       main.pushstr_newL("}");
       main.pushstr_newL("startv = my_rank*part_size;");
       main.pushstr_newL("endv = startv+part_size-1;");
+      main.pushstr_newL("MPI_Barrier(MPI_COMM_WORLD);");
+      main.pushstr_newL("gettimeofday(&start, NULL);");
+      for (auto itr = function_argument_propid.begin(); itr != function_argument_propid.end(); ++itr) {
+        sprintf(strBuffer,"%s = new %s[part_size];",const_cast<char*>(itr->first.c_str()), const_cast<char*>(itr->second.c_str()));
+        main.pushstr_newL(strBuffer);
+      }
     } else {
       // generate code snippet without graph split
       main.pushstr_newL("int my_rank,np,part_size,startv,endv;");
@@ -3645,6 +3841,8 @@ void mpi_cpp_generator::generateFunc(ASTNode* proc)
       main.pushstr_newL("endv = startv + (part_size-1);");
       main.pushstr_newL("");
       main.pushstr_newL("int dest_pro;");
+      main.pushstr_newL("MPI_Barrier(MPI_COMM_WORLD);");
+      main.pushstr_newL("gettimeofday(&start, NULL);");
     }
    
    generateBlock(func->getBlockStatement(),false);
@@ -3660,6 +3858,41 @@ void mpi_cpp_generator::generateFunc(ASTNode* proc)
       main.pushstr_newL("printf(\"The iteration time = %ld micro secs.\\n\",micros);");
       main.pushstr_newL("printf(\"The iteration time = %ld secs.\\n\",seconds);");
    main.pushstr_newL("}");
+
+   //For Final Gather of result
+   for (auto itr = function_argument_propid.begin(); itr != function_argument_propid.end(); ++itr) 
+   {
+        //sprintf(strBuffer,"%s = new %s[part_size];",const_cast<char*>(itr->first.c_str()), const_cast<char*>(itr->second.c_str()));
+        //main.pushstr_newL(strBuffer);
+        string var = "final_"+itr->first;
+        string type = itr->second+"*";
+        sprintf(strBuffer,"%s %s;",type.c_str(),var.c_str());
+        main.pushstr_newL(strBuffer);
+        main.pushstr_newL("if (my_rank == 0)");
+        main.pushstr_newL("{");
+          main.insert_indent();
+          sprintf(strBuffer,"%s = new %s [num_nodes];",var.c_str(), itr->second.c_str());
+          main.pushstr_newL(strBuffer);
+          sprintf(strBuffer,"gather(world, %s, part_size, %s, 0);",itr->first.c_str(), var.c_str());
+          main.pushstr_newL(strBuffer);
+          main.pushstr_newL("for (int t = 0; t < actual_num_nodes; t++)");
+          main.insert_indent();
+            sprintf(strBuffer,"cout << \"%s[\" << t << \"] = \" << %s[t] << endl;",itr->first.c_str(), var.c_str());
+            main.pushstr_newL(strBuffer);
+          main.decrease_indent();
+        main.decrease_indent();
+        main.pushstr_newL("}");
+
+        main.pushstr_newL("else");
+        main.pushstr_newL("{");
+        main.insert_indent();
+          sprintf(strBuffer,"gather(world, %s, part_size, %s, 0);",itr->first.c_str(), var.c_str());
+          main.pushstr_newL(strBuffer);
+        main.decrease_indent();
+        main.pushstr_newL("}");
+
+
+   }
    main.pushstr_newL("MPI_Finalize();");
    main.push('}');
 } 
@@ -3781,6 +4014,32 @@ void mpi_cpp_generator:: generateFuncHeader(Function* proc,bool isMainFile)
 
       Type* type=(*itr)->getType();
       targetFile.pushString(convertToCppType(type));
+      string prop_type(convertToCppType(type));
+      if(prop_type == "int*")
+      {
+        string arg_name((*itr)->getIdentifier()->getIdentifier());
+        function_argument_propid.insert(make_pair(arg_name,"int"));
+      }
+      else if(prop_type == "float*")
+      {
+        string arg_name((*itr)->getIdentifier()->getIdentifier());
+        function_argument_propid.insert(make_pair(arg_name,"float"));
+      }
+      else if(prop_type == "bool*")
+      {
+        string arg_name((*itr)->getIdentifier()->getIdentifier());
+        function_argument_propid.insert(make_pair(arg_name,"bool"));
+      }
+      else if(prop_type == "double*")
+      {
+        string arg_name((*itr)->getIdentifier()->getIdentifier());
+        function_argument_propid.insert(make_pair(arg_name,"double"));
+      }
+      else if(prop_type == "long*")
+      {
+        string arg_name((*itr)->getIdentifier()->getIdentifier());
+        function_argument_propid.insert(make_pair(arg_name,"long"));
+      }
       /*if(type->isPropType())
       {
           targetFile.pushString("* ");
