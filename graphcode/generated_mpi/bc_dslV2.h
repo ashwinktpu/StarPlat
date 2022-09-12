@@ -13,7 +13,7 @@
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/mpi/collectives.hpp>
-#include "../graph.hpp"
+#include "graph.hpp"
 
 using namespace std;
 namespace mpi = boost::mpi;
