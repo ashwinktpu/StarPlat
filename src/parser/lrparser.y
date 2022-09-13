@@ -502,16 +502,22 @@ int main(int argc,char **argv)
 		   }
 	}
 
-   if(!(staticGen || dynamicGen))
-      {
+   if(!(staticGen || dynamicGen)) {
 		fprintf(stderr, "Type of graph(static/dynamic) not specified!\n");
 		exit(-1);
-	  }
+     }
 	  
      
 
 
    yyin= fopen(fileName,"r");
+   
+   if(!yyin) {
+	printf("file doesn't exists!\n");
+	exit(-1);
+   }
+   
+   
    int error=yyparse();
    printf("error val %d\n",error);
 
