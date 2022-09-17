@@ -11,22 +11,22 @@ void Compute_PR(graph g,float beta,float delta,int maxIter,
   np = world.size();
   int *index,*rev_index, *all_weight,*edgeList, *srcList;
   int *local_index,*local_rev_index, *weight,*local_edgeList, *local_srcList;
-  int num_nodes, actual_num_nodes;
+  int _num_nodes, _actual_num_nodes;
   int dest_pro;
   if(my_rank == 0)
   {
     gettimeofday(&start, NULL);
     g.parseGraph();
-    num_nodes = g.num_nodes();
-    actual_num_nodes = g.ori_num_nodes();
+    _num_nodes = g.num_nodes();
+    _actual_num_nodes = g.ori_num_nodes();
     all_weight = g.getEdgeLen();
     edgeList = g.getEdgeList();
     srcList = g.getSrcList();
     index = g.getIndexofNodes();
     rev_index = g.rev_indexofNodes;
     part_size = g.num_nodes()/np;
-    MPI_Bcast (&num_nodes,1,MPI_INT,my_rank,MPI_COMM_WORLD);
-    MPI_Bcast (&actual_num_nodes,1,MPI_INT,my_rank,MPI_COMM_WORLD);
+    MPI_Bcast (&_num_nodes,1,MPI_INT,my_rank,MPI_COMM_WORLD);
+    MPI_Bcast (&_actual_num_nodes,1,MPI_INT,my_rank,MPI_COMM_WORLD);
     MPI_Bcast (&part_size,1,MPI_INT,my_rank,MPI_COMM_WORLD);
     local_index = new int[part_size+1];
     local_rev_index = new int[part_size+1];
@@ -68,8 +68,8 @@ void Compute_PR(graph g,float beta,float delta,int maxIter,
   }
   else
   {
-    MPI_Bcast (&num_nodes,1,MPI_INT,0,MPI_COMM_WORLD); 
-    MPI_Bcast (&actual_num_nodes,1,MPI_INT,0,MPI_COMM_WORLD); 
+    MPI_Bcast (&_num_nodes,1,MPI_INT,0,MPI_COMM_WORLD); 
+    MPI_Bcast (&_actual_num_nodes,1,MPI_INT,0,MPI_COMM_WORLD); 
     MPI_Bcast (&part_size,1,MPI_INT,0,MPI_COMM_WORLD);
     local_index = new int[part_size+1];
     MPI_Recv (local_index,part_size+1,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
@@ -94,7 +94,7 @@ void Compute_PR(graph g,float beta,float delta,int maxIter,
   MPI_Barrier(MPI_COMM_WORLD);
   gettimeofday(&start, NULL);
   pageRank = new float[part_size];
-  float num_nodes = actual_num_nodes;
+  float num_nodes = _actual_num_nodes;
   for (int t = 0; t < part_size; t++) 
   {
     pageRank[t] = 1.000000 / num_nodes;
@@ -133,7 +133,7 @@ void Compute_PR(graph g,float beta,float delta,int maxIter,
         send_data[dest_pro].push_back(nbr);
         send_data[dest_pro].push_back(local_index[v-startv]);
         send_data[dest_pro].push_back(local_index[v-startv+1]);
-        send_data_float[dest_pro].push_back(pageRank[nbr-startv]);
+        send_data_float[dest_pro].push_back(pageRank[v-startv]);
       }
     }
   }
@@ -190,9 +190,9 @@ printf("The iteration time = %ld secs.\n",seconds);
 float* final_pageRank;
 if (my_rank == 0)
 {
-  final_pageRank = new float [num_nodes];
+  final_pageRank = new float [_num_nodes];
   gather(world, pageRank, part_size, final_pageRank, 0);
-  for (int t = 0; t < actual_num_nodes; t++)
+  for (int t = 0; t < _actual_num_nodes; t++)
     cout << "pageRank[" << t << "] = " << final_pageRank[t] << endl;
 }
 else

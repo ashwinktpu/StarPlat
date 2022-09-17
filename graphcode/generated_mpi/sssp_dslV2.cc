@@ -10,22 +10,22 @@ void Compute_SSSP(graph g,int* dist,int src)
   np = world.size();
   int *index,*rev_index, *all_weight,*edgeList, *srcList;
   int *local_index,*local_rev_index, *weight,*local_edgeList, *local_srcList;
-  int num_nodes, actual_num_nodes;
+  int _num_nodes, _actual_num_nodes;
   int dest_pro;
   if(my_rank == 0)
   {
     gettimeofday(&start, NULL);
     g.parseGraph();
-    num_nodes = g.num_nodes();
-    actual_num_nodes = g.ori_num_nodes();
+    _num_nodes = g.num_nodes();
+    _actual_num_nodes = g.ori_num_nodes();
     all_weight = g.getEdgeLen();
     edgeList = g.getEdgeList();
     srcList = g.getSrcList();
     index = g.getIndexofNodes();
     rev_index = g.rev_indexofNodes;
     part_size = g.num_nodes()/np;
-    MPI_Bcast (&num_nodes,1,MPI_INT,my_rank,MPI_COMM_WORLD);
-    MPI_Bcast (&actual_num_nodes,1,MPI_INT,my_rank,MPI_COMM_WORLD);
+    MPI_Bcast (&_num_nodes,1,MPI_INT,my_rank,MPI_COMM_WORLD);
+    MPI_Bcast (&_actual_num_nodes,1,MPI_INT,my_rank,MPI_COMM_WORLD);
     MPI_Bcast (&part_size,1,MPI_INT,my_rank,MPI_COMM_WORLD);
     local_index = new int[part_size+1];
     local_rev_index = new int[part_size+1];
@@ -67,8 +67,8 @@ void Compute_SSSP(graph g,int* dist,int src)
   }
   else
   {
-    MPI_Bcast (&num_nodes,1,MPI_INT,0,MPI_COMM_WORLD); 
-    MPI_Bcast (&actual_num_nodes,1,MPI_INT,0,MPI_COMM_WORLD); 
+    MPI_Bcast (&_num_nodes,1,MPI_INT,0,MPI_COMM_WORLD); 
+    MPI_Bcast (&_actual_num_nodes,1,MPI_INT,0,MPI_COMM_WORLD); 
     MPI_Bcast (&part_size,1,MPI_INT,0,MPI_COMM_WORLD);
     local_index = new int[part_size+1];
     MPI_Recv (local_index,part_size+1,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
@@ -120,9 +120,9 @@ void Compute_SSSP(graph g,int* dist,int src)
       if ( modified [v - startv] == true )
       {
         modified [v - startv]  = false;
-        for (int edge = local_index[v - startv]; edge < local_index[v - startv + 1]; edge ++) 
+        for (int edge0 = local_index[v - startv]; edge0 < local_index[v - startv + 1]; edge0++) 
         {
-          int nbr = local_edgeList[edge] ;
+          int nbr = local_edgeList[edge0] ;
           if(nbr >= startv && nbr <=endv)
           {
             int e = edge + startv;
@@ -192,9 +192,9 @@ void Compute_SSSP(graph g,int* dist,int src)
   int* final_dist;
   if (my_rank == 0)
   {
-      final_dist = new int [num_nodes];
+      final_dist = new int [_num_nodes];
       gather(world, dist, part_size, final_dist, 0);
-      for (int t = 0; t < actual_num_nodes; t++)
+      for (int t = 0; t < _actual_num_nodes; t++)
         cout << "dist[" << t << "] = " << final_dist[t] << endl;
   }
   else

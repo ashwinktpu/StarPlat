@@ -17,6 +17,7 @@ vector <int> all_to_all_types;
 map <string, string> function_argument_propid;
 int for_all_count = 0;
 vector <string> arrays_declared;
+bool nodes_to = false;
 enum{SEND_DATA, SEND_DATA_FLOAT, SEND_DATA_DOUBLE};
 
 
@@ -951,7 +952,7 @@ void mpi_cpp_generator::generateProcCallForSend(Expression* expr,int send, Ident
   {
     Identifier* id1 = proc->getId1();
     //main.pushString(id1->getIdentifier());
-    main.pushString("actual_num_nodes"); //To be changed..need to check for a neighbour iteration 
+    main.pushString("_actual_num_nodes"); //To be changed..need to check for a neighbour iteration 
                              // and then replace by the iterator.
   }
   else if(methodId == "count_inNbrs")
@@ -1111,7 +1112,11 @@ void mpi_cpp_generator::generatePropAccessForSend(PropAccess* stmt,int send, Ide
           all_to_all_types.push_back(SEND_DATA_DOUBLE);
       }
       main.pushString(strBuffer);
-      generate_exprPropId(stmt);
+      
+      if(nodes_to)
+        generate_exprPropId_Pull(stmt, replace);
+      else
+        generate_exprPropId(stmt);
       main.pushstr_newL(");");
     }
     else if(send == 3)
@@ -2205,6 +2210,7 @@ bool checkExpr(Expression* expr,Identifier* remote)
 
 bool communication_needed(blockStatement* blockStmt, Identifier* nbr)
 {
+   return true;
    cout <<"Checking communication needed or not\n";
    list<statement*> stmtList=blockStmt->returnStatements();
    list<statement*> ::iterator itr;
@@ -2918,7 +2924,10 @@ void mpi_cpp_generator::generateFor(forallStmt* forAll)
                   sprintf(strBuffer,"send_data[dest_pro].push_back(local_index[%s-startv+1]);",nodeNbr->getIdentifier());
                   main.pushstr_newL(strBuffer);
                   num_messages++;
+                  nodes_to = true;
                   generate_addMessage((blockStatement*)body,1,iterator,nodeNbr);
+                  nodes_to = false;
+                  //generate_addMessage((blockStatement*)body,1,nodeNbr, iterator);
                 main.pushstr_newL("}");
               main.pushstr_newL("}");
            // main.pushstr_newL("}");
@@ -3408,7 +3417,7 @@ void mpi_cpp_generator::generate_exprProcCall(Expression* expr)
   {
     //Identifier* id1 = proc->getId1();
     //main.pushString(id1->getIdentifier());
-    main.pushString("actual_num_nodes"); //To be changed..need to check for a neighbour iteration 
+    main.pushString("_actual_num_nodes"); //To be changed..need to check for a neighbour iteration 
                              // and then replace by the iterator.
   }
   else if(methodId == "count_inNbrs")
@@ -3493,6 +3502,21 @@ void mpi_cpp_generator::generate_exprPropId(PropAccess* propId) //This needs to 
   // DONE see if comm_needed_gbl true.. then based on that do this
   if(comm_needed_gbl) {
     sprintf(strBuffer,"%s[%s-startv]",id2->getIdentifier(),id1->getIdentifier());
+  } else {
+    sprintf(strBuffer,"%s[%s]",id2->getIdentifier(),id1->getIdentifier());
+  }
+  main.pushString(strBuffer);
+}
+
+//***************Function to translate property id***************//
+void mpi_cpp_generator::generate_exprPropId_Pull(PropAccess* propId, Identifier* replace_id) //This needs to be made more generic.
+{ char strBuffer[1024];
+  //PropAccess* propId=(PropAccess*)expr->getPropId();
+  Identifier* id1=propId->getIdentifier1();
+  Identifier* id2=propId->getIdentifier2();
+  // DONE see if comm_needed_gbl true.. then based on that do this
+  if(comm_needed_gbl) {
+    sprintf(strBuffer,"%s[%s-startv]",id2->getIdentifier(),replace_id->getIdentifier());
   } else {
     sprintf(strBuffer,"%s[%s]",id2->getIdentifier(),id1->getIdentifier());
   }
@@ -3679,8 +3703,8 @@ void mpi_cpp_generator::generateFunc(ASTNode* proc)
         statement* body = f->getBody();
         comm_needed = true;
       }
-      //if(stmt->getTypeofNode() == NODE_FORALLSTMT)
-      //  comm_needed = true;
+      if(stmt->getTypeofNode() == NODE_FORALLSTMT)
+        comm_needed = true;
     }
     comm_needed_gbl = comm_needed;
     if(comm_needed) {
@@ -3694,7 +3718,7 @@ void mpi_cpp_generator::generateFunc(ASTNode* proc)
 
       main.pushstr_newL("int *index,*rev_index, *all_weight,*edgeList, *srcList;");
       main.pushstr_newL("int *local_index,*local_rev_index, *weight,*local_edgeList, *local_srcList;");
-      main.pushstr_newL("int num_nodes, actual_num_nodes;");
+      main.pushstr_newL("int _num_nodes, _actual_num_nodes;");
       main.pushstr_newL("int dest_pro;");
 
       main.pushstr_newL("if(my_rank == 0)");
@@ -3704,9 +3728,9 @@ void mpi_cpp_generator::generateFunc(ASTNode* proc)
       sprintf(strBuffer,"%s.parseGraph();",graphId[0]->getIdentifier());
       main.pushstr_newL(strBuffer);
 
-      sprintf(strBuffer,"num_nodes = %s.num_nodes();",graphId[0]->getIdentifier());
+      sprintf(strBuffer,"_num_nodes = %s.num_nodes();",graphId[0]->getIdentifier());
       main.pushstr_newL(strBuffer);
-      sprintf(strBuffer,"actual_num_nodes = %s.ori_num_nodes();",graphId[0]->getIdentifier());
+      sprintf(strBuffer,"_actual_num_nodes = %s.ori_num_nodes();",graphId[0]->getIdentifier());
       main.pushstr_newL(strBuffer);
       sprintf(strBuffer,"all_weight = %s.getEdgeLen();",graphId[0]->getIdentifier());
       main.pushstr_newL(strBuffer);
@@ -3721,8 +3745,8 @@ void mpi_cpp_generator::generateFunc(ASTNode* proc)
       sprintf(strBuffer,"part_size = %s.num_nodes()/np;",graphId[0]->getIdentifier());
       main.pushstr_newL(strBuffer);
 
-      main.pushstr_newL("MPI_Bcast (&num_nodes,1,MPI_INT,my_rank,MPI_COMM_WORLD);");
-      main.pushstr_newL("MPI_Bcast (&actual_num_nodes,1,MPI_INT,my_rank,MPI_COMM_WORLD);");
+      main.pushstr_newL("MPI_Bcast (&_num_nodes,1,MPI_INT,my_rank,MPI_COMM_WORLD);");
+      main.pushstr_newL("MPI_Bcast (&_actual_num_nodes,1,MPI_INT,my_rank,MPI_COMM_WORLD);");
       main.pushstr_newL("MPI_Bcast (&part_size,1,MPI_INT,my_rank,MPI_COMM_WORLD);");
       main.pushstr_newL("local_index = new int[part_size+1];");
       main.pushstr_newL("local_rev_index = new int[part_size+1];");
@@ -3767,8 +3791,8 @@ void mpi_cpp_generator::generateFunc(ASTNode* proc)
 
       main.pushstr_newL("else");
       main.pushstr_newL("{");
-      main.pushstr_newL("MPI_Bcast (&num_nodes,1,MPI_INT,0,MPI_COMM_WORLD); ");
-      main.pushstr_newL("MPI_Bcast (&actual_num_nodes,1,MPI_INT,0,MPI_COMM_WORLD); ");
+      main.pushstr_newL("MPI_Bcast (&_num_nodes,1,MPI_INT,0,MPI_COMM_WORLD); ");
+      main.pushstr_newL("MPI_Bcast (&_actual_num_nodes,1,MPI_INT,0,MPI_COMM_WORLD); ");
       main.pushstr_newL("MPI_Bcast (&part_size,1,MPI_INT,0,MPI_COMM_WORLD);");
 
       main.pushstr_newL("local_index = new int[part_size+1];");
@@ -3871,11 +3895,11 @@ void mpi_cpp_generator::generateFunc(ASTNode* proc)
         main.pushstr_newL("if (my_rank == 0)");
         main.pushstr_newL("{");
           main.insert_indent();
-          sprintf(strBuffer,"%s = new %s [num_nodes];",var.c_str(), itr->second.c_str());
+          sprintf(strBuffer,"%s = new %s [_num_nodes];",var.c_str(), itr->second.c_str());
           main.pushstr_newL(strBuffer);
           sprintf(strBuffer,"gather(world, %s, part_size, %s, 0);",itr->first.c_str(), var.c_str());
           main.pushstr_newL(strBuffer);
-          main.pushstr_newL("for (int t = 0; t < actual_num_nodes; t++)");
+          main.pushstr_newL("for (int t = 0; t < _actual_num_nodes; t++)");
           main.insert_indent();
             sprintf(strBuffer,"cout << \"%s[\" << t << \"] = \" << %s[t] << endl;",itr->first.c_str(), var.c_str());
             main.pushstr_newL(strBuffer);
