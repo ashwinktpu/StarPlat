@@ -66,6 +66,7 @@ class mpi_cpp_generator
   void generate_exprLiteral(Expression* expr);
   void generate_exprIdentifier(Identifier* id);
   void generate_exprPropId(PropAccess* propId) ;
+  void generate_exprPropId_Pull(PropAccess* propId, Identifier* replace_id);
   void generate_exprPropIdReceive(PropAccess* propId) ;
   void generateCheckIfNeighbor();
   void generate_exprProcCall(Expression* expr);

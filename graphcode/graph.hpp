@@ -5,19 +5,30 @@
 #include<set>
 #include<map>
 #include<algorithm>
+<<<<<<< HEAD
 #include<string.h>
 #include "graph_ompv2.hpp"
+=======
+#include<string>
+#include "omp.h"
+>>>>>>> c6ab7c7 (added sample graph, graph.hpp)
 
 //using namespace std;
 
 class edge
 {
   public:
+<<<<<<< HEAD
   int32_t source;
   int32_t destination;
   int32_t weight;
   int32_t id; /* -unique Id for each edge.
                  -useful in adding properties to edges. */
+=======
+  int source;
+  int destination;
+  int weight;
+>>>>>>> c6ab7c7 (added sample graph, graph.hpp)
 };
 
 
@@ -26,6 +37,7 @@ class edge
 class graph
 {
   private:
+<<<<<<< HEAD
   int32_t nodesTotal;
   int32_t edgesTotal;
   int32_t* edgeLen;
@@ -53,15 +65,41 @@ class graph
    int32_t* edgeMap;  
 
   graph(char* file)
+=======
+  int original_nodesTotal;
+  int padded_nodesTotal;
+  int edgesTotal;
+  int degree_max;
+  int np;
+
+  char* filePath;
+  std::map<int,std::vector<edge>> edges;
+
+  public:
+  int* indexofNodes;
+  int* edgeList;
+  int* edgeLen;
+  int* rev_indexofNodes; /*stores destination corresponding to edgeNo.
+                       required for iteration over out neighbours */
+  int* srcList;  /*stores source corresponding to edgeNo.
+                       required for iteration over in neighbours */
+  graph(char* file,int n)
+>>>>>>> c6ab7c7 (added sample graph, graph.hpp)
   {
     filePath=file;
-    nodesTotal=0;
+    original_nodesTotal=0;
     edgesTotal=0;
+<<<<<<< HEAD
     diff_edgeList = NULL;
     diff_indexofNodes = NULL;
     diff_rev_indexofNodes = NULL;
     diff_rev_edgeList = NULL;
     rev_edgeLen = NULL;
+=======
+    degree_max=0;
+    padded_nodesTotal=0;
+    np = n;
+>>>>>>> c6ab7c7 (added sample graph, graph.hpp)
 
   }
 
@@ -71,16 +109,21 @@ class graph
   {
       return edges;
   }
+<<<<<<< HEAD
 
    int* getEdgeLen()
+=======
+  
+  int* getEdgeLen()
+>>>>>>> c6ab7c7 (added sample graph, graph.hpp)
   {
     return edgeLen;
   }
-
-    int num_nodes()
+  int* getEdgeList()
   {
-      return nodesTotal+1; //change it to nodesToTal
+    return edgeList;
   }
+<<<<<<< HEAD
    int num_edges()
   {   
       if(diff_edgeList !=NULL)
@@ -89,8 +132,40 @@ class graph
         }
         else 
            return edgesTotal;
+=======
+  int* getSrcList()
+  {
+    return srcList;
+  }
+  int* getIndexofNodes()
+  {
+    return indexofNodes;
   }
 
+  int num_nodes()
+  {
+      return padded_nodesTotal;
+  }
+  int ori_num_nodes()
+  {
+      return original_nodesTotal;
+  }
+  int num_edges()
+  {
+      return edgesTotal;
+>>>>>>> c6ab7c7 (added sample graph, graph.hpp)
+  }
+  int max_degree()
+  {
+      return degree_max;
+  }
+#if 1
+   bool check_if_nbr(int s, int d)
+    {
+      int startEdge=indexofNodes[s];
+      int endEdge=indexofNodes[s+1]-1;
+
+<<<<<<< HEAD
   edge getEdge(int s, int d)
     {
 
@@ -134,12 +209,15 @@ class graph
     {
       /*int startEdge=indexofNodes[s];
       int endEdge=indexofNodes[s+1]-1;
+=======
+>>>>>>> c6ab7c7 (added sample graph, graph.hpp)
 
       if(edgeList[startEdge]==d)
           return true;
       if(edgeList[endEdge]==d)
          return true;   
 
+<<<<<<< HEAD
       int mid;
 
       while(startEdge<=endEdge)
@@ -360,10 +438,13 @@ class graph
       if(gpu_edgeList[endEdge]==d)
          return true;
 
+=======
+>>>>>>> c6ab7c7 (added sample graph, graph.hpp)
        int mid = (startEdge+endEdge)/2;
 
       while(startEdge<=endEdge)
         {
+<<<<<<< HEAD
 
           if(gpu_edgeList[mid]==d)
              return true;
@@ -433,10 +514,72 @@ class graph
 
            edges[source].push_back(e);
            graph_edge.push_back(e);
+=======
+       
+          if(edgeList[mid]==d)
+             return true;
+
+          if(d<edgeList[mid])
+             endEdge=mid-1;
+          else
+            startEdge=mid+1;   
+          
+          mid = (startEdge+endEdge)/2;
+
+        }
+      
+      return false;
+
+    }
+#endif
+   void parseGraph()
+  { 
+     std::ifstream infile;
+     infile.open(filePath);
+     if(!infile)
+     {
+     	std::cout <<"Cannot open the file"<<std::endl;
+     	exit(0);
+     }
+     std::string line;
+     std::stringstream ss;
+     while (getline(infile, line)) 
+     {
+       
+       if (line[0] < '0' || line[0] >'9') {
+          continue; 
+
+	    	}
+      
+        ss.clear();
+        ss<<line;
+        edgesTotal++;
+        
+         
+        
+        edge e;
+        int source;
+        int destination;
+        if(ss>>source && ss>>destination)
+        {  
+           if(source >  original_nodesTotal)
+              original_nodesTotal = source;
+            if(destination > original_nodesTotal)
+               original_nodesTotal = destination;  
+           e.source = source;
+           e.destination = destination;
+           e.weight = 1;
+
+           edges[source].push_back(e);
+          
+        }
+             
+>>>>>>> c6ab7c7 (added sample graph, graph.hpp)
 
            ss>>weightVal; //for edgelists having weight too.      
            
      }
+<<<<<<< HEAD
 
      infile.close();
     
@@ -458,6 +601,24 @@ class graph
      {
        std::vector<edge>& edgeOfVertex=edges[i];
      
+=======
+     original_nodesTotal+=1;
+     if(original_nodesTotal % np == 0)
+     {
+        padded_nodesTotal = original_nodesTotal;
+     }
+     else
+     {
+        padded_nodesTotal = original_nodesTotal + np -(original_nodesTotal%np);
+     }
+   // #pragma omp parallel for 
+     for(int i=0;i<padded_nodesTotal;i++)
+     {
+       std::vector<edge> edgeOfVertex=edges[i];
+     	//std::cout<<i << " "<<edges[i].size()<<std::endl;
+     	if(edges[i].size() > degree_max)
+     		degree_max = edges[i].size();
+>>>>>>> c6ab7c7 (added sample graph, graph.hpp)
        sort(edgeOfVertex.begin(),edgeOfVertex.end(),
                             [](const edge& e1,const edge& e2) {
                                if(e1.source!=e2.source)
@@ -467,6 +628,7 @@ class graph
 
                             });
 
+<<<<<<< HEAD
      }
 
      indexofNodes=new int32_t[nodesTotal+2];
@@ -486,6 +648,20 @@ class graph
        Loads indexofNodes and edgeList.
     */
     for(int i=0;i<=nodesTotal;i++) //change to 1-nodesTotal.
+=======
+     }                      
+                   
+     indexofNodes=new int[padded_nodesTotal+1];
+     edgeList=new int[edgesTotal];
+     edgeLen=new int[edgesTotal];
+     rev_indexofNodes=new int[padded_nodesTotal+1];
+     srcList=new int32_t[edgesTotal];
+
+    
+    int edge_no=0;
+    
+    for(int i=0;i<padded_nodesTotal;i++)
+>>>>>>> c6ab7c7 (added sample graph, graph.hpp)
     {
       std::vector<edge> edgeofVertex=edges[i];
 
@@ -507,6 +683,7 @@ class graph
       perNodeRevCSRSpace[i] = 0;
       
     }
+<<<<<<< HEAD
 
   
     indexofNodes[nodesTotal+1]=edge_no;//change to nodesTotal+1.
@@ -514,6 +691,23 @@ class graph
    
      #pragma omp parallel for num_threads(4)
      for(int i=0;i<nodesTotal+1;i++)
+=======
+    indexofNodes[padded_nodesTotal]=edge_no;
+    for(int i=0;i<padded_nodesTotal;i++)
+    {
+          std::vector<int> vect;
+          vect.insert(vect.begin(),edgeList+indexofNodes[i],edgeList+indexofNodes[i+1]);
+          std::sort(vect.begin(),vect.end());
+          for(int j=0;j<vect.size();j++)
+            edgeList[j+indexofNodes[i]]=vect[j];
+
+            vect.clear();
+
+    }
+
+         #pragma omp parallel for
+    for(int i=0;i<padded_nodesTotal+1;i++)
+>>>>>>> c6ab7c7 (added sample graph, graph.hpp)
        rev_indexofNodes[i] = 0;
    
 
@@ -523,10 +717,17 @@ class graph
     */
 
     /* count indegrees first */
+<<<<<<< HEAD
    int32_t* edge_indexinrevCSR = new int32_t[edgesTotal];
              
     #pragma omp parallel for num_threads(4)
     for(int i=0;i<=nodesTotal;i++)
+=======
+    int32_t* edge_indexinrevCSR = new int32_t[edgesTotal];
+
+    #pragma omp parallel for
+    for(int i=0;i<padded_nodesTotal;i++)
+>>>>>>> c6ab7c7 (added sample graph, graph.hpp)
       {
 
        for(int j=indexofNodes[i];j<indexofNodes[i+1];j++)
@@ -537,27 +738,43 @@ class graph
            }
 
       }   
+<<<<<<< HEAD
     
       /* convert to revCSR */
       int prefix_sum = 0;
       for(int i=0;i<=nodesTotal;i++)
+=======
+
+      /* convert to revCSR */
+      int prefix_sum = 0;
+      for(int i=0;i<padded_nodesTotal;i++)
+>>>>>>> c6ab7c7 (added sample graph, graph.hpp)
         {
           int temp = prefix_sum;
           prefix_sum = prefix_sum + rev_indexofNodes[i];
           rev_indexofNodes[i]=temp;
       
         }
+<<<<<<< HEAD
         rev_indexofNodes[nodesTotal+1] = prefix_sum;
 
     /* store the sources in srcList */
       #pragma omp parallel for num_threads(4)
       for(int i=0;i<=nodesTotal;i++)
+=======
+        rev_indexofNodes[padded_nodesTotal] = prefix_sum;
+
+    /* store the sources in srcList */
+      #pragma omp parallel for 
+      for(int i=0;i<padded_nodesTotal;i++)
+>>>>>>> c6ab7c7 (added sample graph, graph.hpp)
         {
           for(int j=indexofNodes[i];j<indexofNodes[i+1];j++)
             {
                int dest = edgeList[j];
                int index_in_srcList=rev_indexofNodes[dest]+edge_indexinrevCSR[j];
                srcList[index_in_srcList] = i;
+<<<<<<< HEAD
                edgeMapInter[index_in_srcList] = j ;// RevCSR to CSR edge mapping.
                vertexInter[index_in_srcList] = srcList[index_in_srcList]; /*store the original content of srcList
                                                                            before sorting srcList.
@@ -567,12 +784,20 @@ class graph
         
       #pragma omp parallel for num_threads(4)
         for(int i=0;i<=nodesTotal;i++)
+=======
+            }
+        }
+        
+       #pragma omp parallel for num_threads(4)
+        for(int i=0;i<padded_nodesTotal;i++)
+>>>>>>> c6ab7c7 (added sample graph, graph.hpp)
         {
           std::vector<int> vect;
           vect.insert(vect.begin(),srcList+rev_indexofNodes[i],srcList+rev_indexofNodes[i+1]);
           std::sort(vect.begin(),vect.end());
           for(int j=0;j<vect.size();j++)
             srcList[j+rev_indexofNodes[i]]=vect[j];
+<<<<<<< HEAD
           int srcListIndex;  
 
           for(int j=0;j<vect.size();j++)
@@ -803,4 +1028,13 @@ std::vector<edge> getNeighbors( int node)
 
 
 
+=======
+
+            vect.clear();
+
+        }
+ }
+
+
+>>>>>>> c6ab7c7 (added sample graph, graph.hpp)
 };

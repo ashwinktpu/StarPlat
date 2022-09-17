@@ -10,22 +10,22 @@ void Compute_BC(graph g,float* BC,std::vector<int> sourceSet)
   np = world.size();
   int *index,*rev_index, *all_weight,*edgeList, *srcList;
   int *local_index,*local_rev_index, *weight,*local_edgeList, *local_srcList;
-  int num_nodes, actual_num_nodes;
+  int _num_nodes, _actual_num_nodes;
   int dest_pro;
   if(my_rank == 0)
   {
     gettimeofday(&start, NULL);
     g.parseGraph();
-    num_nodes = g.num_nodes();
-    actual_num_nodes = g.ori_num_nodes();
+    _num_nodes = g.num_nodes();
+    _actual_num_nodes = g.ori_num_nodes();
     all_weight = g.getEdgeLen();
     edgeList = g.getEdgeList();
     srcList = g.getSrcList();
     index = g.getIndexofNodes();
     rev_index = g.rev_indexofNodes;
     part_size = g.num_nodes()/np;
-    MPI_Bcast (&num_nodes,1,MPI_INT,my_rank,MPI_COMM_WORLD);
-    MPI_Bcast (&actual_num_nodes,1,MPI_INT,my_rank,MPI_COMM_WORLD);
+    MPI_Bcast (&_num_nodes,1,MPI_INT,my_rank,MPI_COMM_WORLD);
+    MPI_Bcast (&_actual_num_nodes,1,MPI_INT,my_rank,MPI_COMM_WORLD);
     MPI_Bcast (&part_size,1,MPI_INT,my_rank,MPI_COMM_WORLD);
     local_index = new int[part_size+1];
     local_rev_index = new int[part_size+1];
@@ -67,8 +67,8 @@ void Compute_BC(graph g,float* BC,std::vector<int> sourceSet)
   }
   else
   {
-    MPI_Bcast (&num_nodes,1,MPI_INT,0,MPI_COMM_WORLD); 
-    MPI_Bcast (&actual_num_nodes,1,MPI_INT,0,MPI_COMM_WORLD); 
+    MPI_Bcast (&_num_nodes,1,MPI_INT,0,MPI_COMM_WORLD); 
+    MPI_Bcast (&_actual_num_nodes,1,MPI_INT,0,MPI_COMM_WORLD); 
     MPI_Bcast (&part_size,1,MPI_INT,0,MPI_COMM_WORLD);
     local_index = new int[part_size+1];
     MPI_Recv (local_index,part_size+1,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
@@ -318,9 +318,9 @@ void Compute_BC(graph g,float* BC,std::vector<int> sourceSet)
     float* final_BC;
     if (my_rank == 0)
     {
-        final_BC = new float [num_nodes];
+        final_BC = new float [_num_nodes];
         gather(world, BC, part_size, final_BC, 0);
-        for (int t = 0; t < actual_num_nodes; t++)
+        for (int t = 0; t < _actual_num_nodes; t++)
           cout << "BC[" << t << "] = " << final_BC[t] << endl;
     }
     else
