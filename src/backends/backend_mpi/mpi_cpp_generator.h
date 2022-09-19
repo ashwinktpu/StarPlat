@@ -43,6 +43,7 @@ class mpi_cpp_generator
   void generateAssignmentStmt(assignment* assignStmt);
   void generateWhileStmt(whileStmt* whilestmt);
   void generateForAll(forallStmt* forAll);
+  void generateForAllFilter(forallStmt* forAll);
   void generateFor(forallStmt* forStmt);
   void generateFixedPoint(fixedPointStmt* fixedPoint);
   void generateIfStmt(ifStmt* ifstmt);
