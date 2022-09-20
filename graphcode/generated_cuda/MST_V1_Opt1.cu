@@ -101,15 +101,15 @@ void Boruvka(graph& g)
   
   float time = 0;
   
-  cudaEventRecord(start, 0);  
+  // cudaEventRecord(start, 0);  
   Boruvka_kernel_1<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_color,d_nodeId,d_isMSTEdge);
   cudaDeviceSynchronize();
-  cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
-  printf("Boruvka_kernel_1 %.3f\n", time);
+  // cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
+  // printf("Boruvka_kernel_1 %.3f\n", time);
 
   ; // asst in .cu
 
-  cudaEventRecord(start, 0);
+  // cudaEventRecord(start, 0);
   bool* d_modified;
   cudaMalloc(&d_modified, sizeof(bool)*(V));
   
@@ -120,37 +120,37 @@ void Boruvka(graph& g)
   // FIXED POINT variables
   //BEGIN FIXED POINT
   initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-  cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
-  printf("d_modified malloc and init %.3f\n", time);
+  // cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
+  // printf("d_modified malloc and init %.3f\n", time);
  
   while(!noNewComp) {
-    cudaEventRecord(start, 0);
+    // cudaEventRecord(start, 0);
     noNewComp = true;
     cudaMemcpyToSymbol(::noNewComp, &noNewComp, sizeof(bool), 0, cudaMemcpyHostToDevice);
     int* d_minEdge;
     cudaMalloc(&d_minEdge, sizeof(int)*(V));
 
     initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_minEdge,(int)-1);
-    cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
-    printf("d_minEdge malloc and init %.3f\n", time);
+    // cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
+    // printf("d_minEdge malloc and init %.3f\n", time);
 
 
-    cudaEventRecord(start, 0);
+    // cudaEventRecord(start, 0);
     Boruvka_kernel_2<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdge,d_color,d_isMSTEdge);
     cudaDeviceSynchronize();
-    cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
-    printf("Boruvka Kernel 2 %.3f\n", time);
+    // cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
+    // printf("Boruvka Kernel 2 %.3f\n", time);
 
 
-    cudaEventRecord(start, 0);
+    // cudaEventRecord(start, 0);
     int* d_minEdgeOfComp;
     cudaMalloc(&d_minEdgeOfComp, sizeof(int)*(V));
 
     initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_minEdgeOfComp,(int)-1);
-    cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
-    printf("minEdgeOfComp malloc and init %.3f\n", time);
+    // cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
+    // printf("minEdgeOfComp malloc and init %.3f\n", time);
 
-    cudaEventRecord(start, 0);
+    // cudaEventRecord(start, 0);
     bool finishedMinEdge = false; // asst in .cu
     
     // FIXED POINT variables
@@ -167,28 +167,28 @@ void Boruvka(graph& g)
       cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
       initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
     } // END FIXED POINT
-    cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
-    printf("Boruvka Kernel 3 %.3f\n", time);
+    // cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
+    // printf("Boruvka Kernel 3 %.3f\n", time);
 
-    cudaEventRecord(start, 0);
+    // cudaEventRecord(start, 0);
     Boruvka_kernel_4<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdgeOfComp,d_color,d_nodeId,d_isMSTEdge);
     cudaDeviceSynchronize();
-    cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
-    printf("Boruvka Kernel 4 %.3f\n", time);
+    // cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
+    // printf("Boruvka Kernel 4 %.3f\n", time);
 
-    cudaEventRecord(start, 0);
+    // cudaEventRecord(start, 0);
     Boruvka_kernel_5<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdgeOfComp,d_color,d_nodeId,d_isMSTEdge);
     cudaDeviceSynchronize();
-    cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
-    printf("Boruvka Kernel 5 %.3f\n", time);
+    // cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
+    // printf("Boruvka Kernel 5 %.3f\n", time);
 
-    cudaEventRecord(start, 0);
+    // cudaEventRecord(start, 0);
     cudaMemcpyToSymbol(::noNewComp, &noNewComp, sizeof(bool), 0, cudaMemcpyHostToDevice);
     Boruvka_kernel_6<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdgeOfComp,d_color,d_nodeId,d_isMSTEdge);
     cudaDeviceSynchronize();
     cudaMemcpyFromSymbol(&noNewComp, ::noNewComp, sizeof(bool), 0, cudaMemcpyDeviceToHost);
-    cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
-    printf("Boruvka Kernel 6 %.3f\n", time);
+    // cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
+    // printf("Boruvka Kernel 6 %.3f\n", time);
 
 
     bool finished = false; // asst in .cu
@@ -198,20 +198,20 @@ void Boruvka(graph& g)
     initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
     while(!finished) {
 
-      cudaEventRecord(start, 0);
+      // cudaEventRecord(start, 0);
       finished = true;
       cudaMemcpyToSymbol(::finished, &finished, sizeof(bool), 0, cudaMemcpyHostToDevice);
       cudaMemcpyToSymbol(::finished, &finished, sizeof(bool), 0, cudaMemcpyHostToDevice);
-      cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
-      printf("Single Iteration Symbol copy %.3f\n", time);     
+      // cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
+      // printf("Single Iteration Symbol copy %.3f\n", time);     
 
-      cudaEventRecord(start, 0);
+      // cudaEventRecord(start, 0);
       Boruvka_kernel_7<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_color,d_isMSTEdge);
       cudaDeviceSynchronize();
-      cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
-      printf("Single Iteration Propagate colors %.3f\n", time);
+      // cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
+      // printf("Single Iteration Propagate colors %.3f\n", time);
      
-      cudaEventRecord(start, 0);
+      // cudaEventRecord(start, 0);
       cudaMemcpyFromSymbol(&finished, ::finished, sizeof(bool), 0, cudaMemcpyDeviceToHost);
 
 
@@ -223,12 +223,12 @@ void Boruvka(graph& g)
 
       cudaMemcpyFromSymbol(&finished, ::finished, sizeof(bool), 0, cudaMemcpyDeviceToHost);
       cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
-      cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
-      printf("Single Iteration Symbol copy %.3f\n", time);
+      // cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
+      // printf("Single Iteration Symbol copy %.3f\n", time);
   
     } // END FIXED POINT
 
-    cudaEventRecord(start, 0);
+    // cudaEventRecord(start, 0);
     //cudaFree up!! all propVars in this BLOCK!
     cudaFree(d_minEdgeOfComp);
     cudaFree(d_minEdge);
@@ -236,8 +236,8 @@ void Boruvka(graph& g)
     cudaMemcpyFromSymbol(&noNewComp, ::noNewComp, sizeof(bool), 0, cudaMemcpyDeviceToHost);
     cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
     initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-    cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
-    printf("Memcpy and initKernel %.3f\n", time);  
+    // cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
+    // printf("Memcpy and initKernel %.3f\n", time);  
   } // END FIXED POINT
 
   //TIMER STOP
