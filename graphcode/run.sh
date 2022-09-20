@@ -15,8 +15,18 @@ cp -R $PBS_O_WORKDIR/* . # PBS_O_WORKDIR is the directory from which the job was
 module load cuda10.1
 module load gcc640
 nvcc -o "MST_V1_Manual".out "generated_cuda/MST_V1.cu"  -std=c++14  #-arch=sm_70
-./MST_V1_Manual.out $cleandir/dir-ud/wikiud.txt 0 > output_MST_V1_Manual.txt # 0 - Unweighted Graph
-# ./MST_V1_Manual.out input1.txt 0 > output_MST_V1_Manual.txt
+time (./MST_V1_Manual.out $cleandir/GermanyRoadud.txt 0 > output_MST_V1_Manual.txt) # 0 - Unweighted Graph
+time (./MST_V1_Manual.out $cleandir/cleancom-orkutud.txt 0 >> output_MST_V1_Manual.txt) # 0 - Unweighted Graph
+time (./MST_V1_Manual.out $cleandir/livud.txt 0 >> output_MST_V1_Manual.txt) # 0 - Unweighted Graph
+time (./MST_V1_Manual.out $cleandir/rmatud.txt 0 >> output_MST_V1_Manual.txt) # 0 - Unweighted Graph
+time (./MST_V1_Manual.out $cleandir/u10m_80mud.txt 0 >> output_MST_V1_Manual.txt) # 0 - Unweighted Graph
+time (./MST_V1_Manual.out $cleandir/USAud.txt 0 >> output_MST_V1_Manual.txt) # 0 - Unweighted Graph
+time (./MST_V1_Manual.out $cleandir/livjournalud.txt 0 >> output_MST_V1_Manual.txt) # 0 - Unweighted Graph
+time (./MST_V1_Manual.out $cleandir/pokecud.txt 0 >> output_MST_V1_Manual.txt) # 0 - Unweighted Graph
+time (./MST_V1_Manual.out $cleandir/sinaweiboud.txt 0 >> output_MST_V1_Manual.txt) # 0 - Unweighted Graph
+time (./MST_V1_Manual.out $cleandir/twitud.txt 0 >> output_MST_V1_Manual.txt) # 0 - Unweighted Graph
+time (./MST_V1_Manual.out $cleandir/wikiud.txt 0 >> output_MST_V1_Manual.txt) # 0 - Unweighted Graph
+#./MST_V1_Manual.out input1.txt 0 > output_MST_V1_Manual.txt
 
 rm *.out
 # move everything from $tempdir to $PBS_O_WORKDIR
