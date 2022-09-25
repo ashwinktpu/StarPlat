@@ -22,7 +22,7 @@ void Compute_TC(graph g)
     edgeList = g.getEdgeList();
     srcList = g.getSrcList();
     index = g.getIndexofNodes();
-    rev_index = g.rev_indexofNodes;
+    rev_index = g.getRevIndexofNodes();
     part_size = g.num_nodes()/np;
     MPI_Bcast (&_num_nodes,1,MPI_INT,my_rank,MPI_COMM_WORLD);
     MPI_Bcast (&_actual_num_nodes,1,MPI_INT,my_rank,MPI_COMM_WORLD);
@@ -35,14 +35,16 @@ void Compute_TC(graph g)
     }
     int num_ele = local_index[part_size]-local_index[0];
     weight = new int[num_ele];
-    for(int i=0;i<num_ele;i++)
-    weight[i] = all_weight[i];
     local_edgeList = new int[num_ele];
     for(int i=0;i<num_ele;i++)
-    local_edgeList[i] = edgeList[i];
+    {
+        weight[i] = all_weight[i];
+        local_edgeList[i] = edgeList[i];
+    }
+    num_ele = local_rev_index[part_size]-local_rev_index[0];
     local_srcList = new int[num_ele];
     for(int i=0;i<num_ele;i++)
-    local_srcList[i] = srcList[i];
+      local_srcList[i] = srcList[i];
     for(int i=1;i<np;i++)
     {
       int pos = i*part_size;
@@ -53,6 +55,9 @@ void Compute_TC(graph g)
       int count_int = end - start;
       MPI_Send (all_weight+start,count_int,MPI_INT,i,2,MPI_COMM_WORLD);
       MPI_Send (edgeList+start,count_int,MPI_INT,i,3,MPI_COMM_WORLD);
+      start = rev_index[pos];
+      end = rev_index[pos+part_size];
+      count_int = end - start;
       MPI_Send (srcList+start,count_int,MPI_INT,i,4,MPI_COMM_WORLD);
     }
     delete [] all_weight;
@@ -79,6 +84,7 @@ void Compute_TC(graph g)
     MPI_Recv (weight,num_ele,MPI_INT,0,2,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
     local_edgeList = new int[num_ele];
     MPI_Recv (local_edgeList,num_ele,MPI_INT,0,3,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+    num_ele = local_rev_index[part_size]-local_rev_index[0];
     local_srcList = new int[num_ele];
     MPI_Recv (local_srcList,num_ele,MPI_INT,0,4,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
     int begin = local_index[0];
@@ -182,5 +188,10 @@ void Compute_TC(graph g)
     printf("The iteration time = %ld micro secs.\n",micros);
     printf("The iteration time = %ld secs.\n",seconds);
   }
+  delete [] local_index;
+  delete [] local_rev_index;
+  delete [] weight;
+  delete [] local_edgeList;
+  delete [] local_srcList;
   MPI_Finalize();
 }
