@@ -21,6 +21,7 @@ bool nodes_to = false;
 bool is_an_edge = false;
 bool neighbour_check = false;
 bool outer_loop_forall = true;
+string present_iterator;
 enum{SEND_DATA, SEND_DATA_FLOAT, SEND_DATA_DOUBLE};
 
 
@@ -951,7 +952,9 @@ void mpi_cpp_generator::generateProcCallForSend(Expression* expr,int send, Ident
   string methodId(proc->getMethodId()->getIdentifier());
   if(methodId=="get_edge")
   {
-    main.pushString("edge + startv"); //To be changed..need to check for a neighbour iteration 
+    sprintf(strBuffer, "%s + startv", present_iterator.c_str());
+    main.pushString(strBuffer);
+    //main.pushString("edge + startv"); //To be changed..need to check for a neighbour iteration 
                              // and then replace by the iterator.
   }
   else if(methodId=="num_nodes")
@@ -1649,6 +1652,7 @@ void mpi_cpp_generator::generateForAllSignature(forallStmt* forAll)
         sprintf(strBuffer,"for (%s %s = 0; %s < %s.%s(); %s ++) ","int",iterator->getIdentifier(),iterator->getIdentifier(),graphId,"num_edges",iterator->getIdentifier());
         main.pushstr_newL(strBuffer);
       }
+      present_iterator = iterator->getIdentifier();
 
     }
     else if(neighbourIteration(iteratorMethodId->getIdentifier()))
@@ -1677,6 +1681,7 @@ void mpi_cpp_generator::generateForAllSignature(forallStmt* forAll)
          main.pushstr_newL(strBuffer);
        }
        for_all_count += 1;
+       present_iterator = itr_name;
        //statement to a different method.
     }
   }
@@ -2535,7 +2540,7 @@ void mpi_cpp_generator::generateForAll(forallStmt* forAll)
               main.pushstr_newL("{");
 
             }
-
+          
           generateBlock((blockStatement*)body,false);
           
           if(forAll->getParent()->getParent()->getTypeofNode()==NODE_ITRBFS||forAll->getParent()->getParent()->getTypeofNode()==NODE_ITRRBFS)
@@ -3583,15 +3588,16 @@ void mpi_cpp_generator::generate_exprProcCall(Expression* expr)
   string methodId(proc->getMethodId()->getIdentifier());
   if(methodId=="get_edge")
   {
-    main.pushString("edge + startv"); //To be changed..need to check for a neighbour iteration 
+    sprintf(strBuffer, "%s + startv", present_iterator.c_str());
+    main.pushString(strBuffer);
+    //main.pushString("edge + startv"); //To be changed..need to check for a neighbour iteration 
                              // and then replace by the iterator.
   }
   else if(methodId=="num_nodes")
   {
     //Identifier* id1 = proc->getId1();
     //main.pushString(id1->getIdentifier());
-    main.pushString("_actual_num_nodes"); //To be changed..need to check for a neighbour iteration 
-                             // and then replace by the iterator.
+    main.pushString("_actual_num_nodes");
   }
   else if(methodId == "count_inNbrs")
   {
@@ -3948,7 +3954,7 @@ void mpi_cpp_generator::generateFunc(ASTNode* proc)
       main.pushstr_newL(strBuffer);
       sprintf(strBuffer,"index = %s.getIndexofNodes();",graphId[0]->getIdentifier());
       main.pushstr_newL(strBuffer);
-      sprintf(strBuffer,"rev_index = %s.rev_indexofNodes;",graphId[0]->getIdentifier());
+      sprintf(strBuffer,"rev_index = %s.getRevIndexofNodes();",graphId[0]->getIdentifier());
       main.pushstr_newL(strBuffer);
       sprintf(strBuffer,"part_size = %s.num_nodes()/np;",graphId[0]->getIdentifier());
       main.pushstr_newL(strBuffer);
@@ -3965,14 +3971,21 @@ void mpi_cpp_generator::generateFunc(ASTNode* proc)
       main.pushstr_newL("}");
       main.pushstr_newL("int num_ele = local_index[part_size]-local_index[0];");
       main.pushstr_newL("weight = new int[num_ele];");
-      main.pushstr_newL("for(int i=0;i<num_ele;i++)");
-          main.pushstr_newL("weight[i] = all_weight[i];");
       main.pushstr_newL("local_edgeList = new int[num_ele];");
       main.pushstr_newL("for(int i=0;i<num_ele;i++)");
+      main.pushstr_newL("{");
+      main.insert_indent();
+          main.pushstr_newL("weight[i] = all_weight[i];");
           main.pushstr_newL("local_edgeList[i] = edgeList[i];");
+      main.decrease_indent();
+      main.pushstr_newL("}");
+
+      main.pushstr_newL("num_ele = local_rev_index[part_size]-local_rev_index[0];");
       main.pushstr_newL("local_srcList = new int[num_ele];");
       main.pushstr_newL("for(int i=0;i<num_ele;i++)");
+      main.insert_indent();
           main.pushstr_newL("local_srcList[i] = srcList[i];");
+      main.decrease_indent();
       main.pushstr_newL("for(int i=1;i<np;i++)");
       main.pushstr_newL("{");
           main.pushstr_newL("int pos = i*part_size;");
@@ -3983,6 +3996,10 @@ void mpi_cpp_generator::generateFunc(ASTNode* proc)
           main.pushstr_newL("int count_int = end - start;");
           main.pushstr_newL("MPI_Send (all_weight+start,count_int,MPI_INT,i,2,MPI_COMM_WORLD);");
           main.pushstr_newL("MPI_Send (edgeList+start,count_int,MPI_INT,i,3,MPI_COMM_WORLD);");
+          
+          main.pushstr_newL("start = rev_index[pos];");
+          main.pushstr_newL("end = rev_index[pos+part_size];");
+          main.pushstr_newL("count_int = end - start;");
           main.pushstr_newL("MPI_Send (srcList+start,count_int,MPI_INT,i,4,MPI_COMM_WORLD);");
       main.pushstr_newL("}");
       main.pushstr_newL("delete [] all_weight;");
@@ -4013,6 +4030,8 @@ void mpi_cpp_generator::generateFunc(ASTNode* proc)
       main.pushstr_newL("MPI_Recv (weight,num_ele,MPI_INT,0,2,MPI_COMM_WORLD,MPI_STATUS_IGNORE);");
       main.pushstr_newL("local_edgeList = new int[num_ele];");
       main.pushstr_newL("MPI_Recv (local_edgeList,num_ele,MPI_INT,0,3,MPI_COMM_WORLD,MPI_STATUS_IGNORE);");
+
+      main.pushstr_newL("num_ele = local_rev_index[part_size]-local_rev_index[0];");
       main.pushstr_newL("local_srcList = new int[num_ele];");
       main.pushstr_newL("MPI_Recv (local_srcList,num_ele,MPI_INT,0,4,MPI_COMM_WORLD,MPI_STATUS_IGNORE);");
       main.pushstr_newL("int begin = local_index[0];");
@@ -4125,6 +4144,11 @@ void mpi_cpp_generator::generateFunc(ASTNode* proc)
 
 
    }
+   main.pushstr_newL("delete [] local_index;");
+   main.pushstr_newL("delete [] local_rev_index;");
+   main.pushstr_newL("delete [] weight;");
+   main.pushstr_newL("delete [] local_edgeList;");
+   main.pushstr_newL("delete [] local_srcList;");
    main.pushstr_newL("MPI_Finalize();");
    main.push('}');
 } 

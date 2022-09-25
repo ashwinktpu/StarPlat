@@ -5,30 +5,21 @@
 #include<set>
 #include<map>
 #include<algorithm>
-<<<<<<< HEAD
 #include<string.h>
 #include "graph_ompv2.hpp"
-=======
-#include<string>
-#include "omp.h"
->>>>>>> c6ab7c7 (added sample graph, graph.hpp)
 
 //using namespace std;
+using namespace std;
+namespace mpi = boost::mpi;
 
 class edge
 {
   public:
-<<<<<<< HEAD
   int32_t source;
   int32_t destination;
   int32_t weight;
   int32_t id; /* -unique Id for each edge.
                  -useful in adding properties to edges. */
-=======
-  int source;
-  int destination;
-  int weight;
->>>>>>> c6ab7c7 (added sample graph, graph.hpp)
 };
 
 
@@ -83,8 +74,12 @@ class graph
                        required for iteration over out neighbours */
   int* srcList;  /*stores source corresponding to edgeNo.
                        required for iteration over in neighbours */
+<<<<<<< HEAD
   graph(char* file,int n)
 >>>>>>> c6ab7c7 (added sample graph, graph.hpp)
+=======
+  graph(char* file)
+>>>>>>> a657a04 (fixes)
   {
     filePath=file;
     original_nodesTotal=0;
@@ -98,8 +93,16 @@ class graph
 =======
     degree_max=0;
     padded_nodesTotal=0;
+<<<<<<< HEAD
     np = n;
 >>>>>>> c6ab7c7 (added sample graph, graph.hpp)
+=======
+    //np = n;
+    mpi::communicator world;
+    int my_rank = world.rank();
+    np = world.size();
+    //std::cout << "World size: " <<np << std::endl;
+>>>>>>> a657a04 (fixes)
 
   }
 
@@ -141,6 +144,10 @@ class graph
   {
     return indexofNodes;
   }
+  int* getRevIndexofNodes()
+  {
+    return rev_indexofNodes;
+  }
 
   int num_nodes()
   {
@@ -159,7 +166,7 @@ class graph
   {
       return degree_max;
   }
-#if 1
+#if 0
    bool check_if_nbr(int s, int d)
     {
       int startEdge=indexofNodes[s];
@@ -702,6 +709,7 @@ class graph
             edgeList[j+indexofNodes[i]]=vect[j];
 
             vect.clear();
+            std::vector<int>().swap(vect);
 
     }
 
@@ -1031,8 +1039,11 @@ std::vector<edge> getNeighbors( int node)
 =======
 
             vect.clear();
+            std::vector<int>().swap(vect);
 
         }
+        delete [] edge_indexinrevCSR;
+        std::map<int,std::vector<edge>>().swap(edges);
  }
 
 
