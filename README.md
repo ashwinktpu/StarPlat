@@ -4,6 +4,9 @@
 
 [![CUDA Branch](https://github.com/nibeditabh/GraphDSL/actions/workflows/cuda.yml/badge.svg?branch=cuda)](https://github.com/nibeditabh/GraphDSL/actions/workflows/cuda.yml)
 
+[![Working Branch](https://github.com/nibeditabh/GraphDSL/actions/workflows/working-branch.yml/badge.svg?branch=WorkingBranch)](https://github.com/nibeditabh/GraphDSL/actions/workflows/working-branch.yml)
+
+
 Graph DSL for basic graph algorithms (such as **SSSP, BC, PR, and TC**) as Phase1 (static).
 It contains the following steps :-
 
