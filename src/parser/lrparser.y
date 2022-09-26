@@ -440,7 +440,12 @@ void yyerror(char *s) {
 int main(int argc,char **argv) 
 {
   
-    dsl_cpp_generator cpp_backend;
+  if(argc<4){
+    std::cout<< "Usage: " << argv[0] << " -f <dsl.sp>  -b [cuda|omp|mpi|acc]" << '\n';
+    exit(-1);
+  }
+  
+    //dsl_cpp_generator cpp_backend;
     SymbolTableBuilder stBuilder;
      FILE    *fd;
      
@@ -495,7 +500,7 @@ int main(int argc,char **argv)
    }
    else
     {
-		if(!((strcmp(backendTarget,"omp")==0)||(strcmp(backendTarget,"mpi")==0)||(strcmp(backendTarget,"cuda")==0) || (strcmp(backendTarget,"openACC")==0)))
+		if(!((strcmp(backendTarget,"omp")==0)||(strcmp(backendTarget,"mpi")==0)||(strcmp(backendTarget,"cuda")==0) || (strcmp(backendTarget,"acc")==0)))
 		   {
 			  fprintf(stderr, "Specified backend target is not implemented in the current version!\n");
 			   exit(-1);
@@ -529,6 +534,7 @@ int main(int argc,char **argv)
 
 	if(staticGen)
 	  {
+		  /*
 		  if(optimize)
 		  {
 			  attachPropAnalyser apAnalyser;
@@ -540,12 +546,45 @@ int main(int argc,char **argv)
 			  if(strcmp(backendTarget,"cuda")==0)
 			  {
 			  	deviceVarsAnalyser dvAnalyser;
-				cpp_backend.setOptimized();
+				//cpp_backend.setOptimized();
 			  	dvAnalyser.analyse(frontEndContext.getFuncList());
 			  }
 		  }
-	  cpp_backend.setFileName(fileName);
-	  cpp_backend.generate();
+		  */
+	  //cpp_backend.setFileName(fileName);
+	  //cpp_backend.generate();
+     if (strcmp(backendTarget, "cuda") == 0) {
+        spcuda::dsl_cpp_generator cpp_backend;
+        cpp_backend.setFileName(fileName);
+	//~ cpp_backend.setOptimized();
+	
+	if (optimize) {
+	  attachPropAnalyser apAnalyser;
+	  apAnalyser.analyse(frontEndContext.getFuncList());
+
+	  dataRaceAnalyser drAnalyser;
+	  drAnalyser.analyse(frontEndContext.getFuncList());
+
+	  deviceVarsAnalyser dvAnalyser;
+	  //cpp_backend.setOptimized();
+	  dvAnalyser.analyse(frontEndContext.getFuncList());
+	}
+		  
+        cpp_backend.generate();
+      } 
+      //else if (strcmp(backendTarget, "omp") == 0) {
+      //  spomp::dsl_cpp_generator cpp_backend;
+      //  cpp_backend.setFileName(fileName);
+      //  cpp_backend.generate();
+      //} 
+	else if (strcmp(backendTarget, "acc") == 0) {
+        spacc::dsl_cpp_generator cpp_backend;
+        cpp_backend.setFileName(fileName);
+        cpp_backend.generate();
+      }
+      else
+	std::cout<< "invalid backend" << '\n';
+	
 	  }
 	/*else
 	 {

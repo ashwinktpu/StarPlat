@@ -1,38 +1,43 @@
-EXPENDABLES_WINDOWS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c bin/dsl_cpp_generator.o bin/deviceVarsAnalyser.o bin/analyserUtil.o bin/dv*.o
-EXPENDABLES = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c bin/dsl_cpp_generator.o bin/deviceVarsAnalyser.o
+EXPENDABLES_WINDOWS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c bin/deviceVarsAnalyser.o bin/analyserUtil.o bin/dv*.o
+EXPENDABLES = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c  bin/deviceVarsAnalyser.o
 ANALYSER = bin/dataRaceAnalyser.o
-PROGRAMS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o
+PROGRAMS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/cu_dsl_cpp_generator.o  bin/ac_dsl_cpp_generator.o 
+#bin/ac_dsl_cpp_generator.o 
+#bin/om_dsl_cpp_generator.o
 A_PROGRAM = bin/attachPropAnalyser.o bin/dataRaceAnalyser.o bin/deviceVarsAnalyser.o bin/analyserUtil.o
 
 CFLAGS  = -g 
 CC = g++ -g -std=c++11 -Wall -Wreturn-type #-fsanitize=address
 
-all: finalcode
+all: starplat
 
-openACC: generator_openACC finalcode_openACC clean
+#~ openACC: generator_openACC starplat_openACC clean
 
-finalcode_openACC: bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o $(A_PROGRAM)
-	$(CC) bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o $(A_PROGRAM) -o finalcode
-
-generator_openACC: backends/backend_openACC/dsl_cpp_generator.cpp backends/dslCodePad.h
-	$(CC) -c backends/backend_openACC/dsl_cpp_generator.cpp -o bin/dsl_cpp_generator.o
+#~ starplat_openACC: bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o $(A_PROGRAM)
+#~ 	$(CC) bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o $(A_PROGRAM) -o starplat
 
 
-cuda: generator_cuda finalcode_cuda clean_windows
 
-finalcode_cuda: bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o $(A_PROGRAM)
-	$(CC) bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o $(A_PROGRAM) -o finalcode
+#~ cuda: generator_cuda starplat_cuda clean_windows
 
-generator_cuda: backends/backend_cuda/dsl_cpp_generator.cpp backends/dslCodePad.h
-	$(CC) -c backends/backend_cuda/dsl_cpp_generator.cpp -o bin/dsl_cpp_generator.o
+#~ starplat_cuda: bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o $(A_PROGRAM)
+#~ 	$(CC) bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o $(A_PROGRAM) -o starplat
+
+#CUDA
+bin/cu_dsl_cpp_generator.o: backends/backend_cuda/dsl_cpp_generator.cpp backends/dslCodePad.h
+	$(CC) -c backends/backend_cuda/dsl_cpp_generator.cpp -o bin/cu_dsl_cpp_generator.o
+
+#openACC
+bin/ac_dsl_cpp_generator.o: backends/backend_openACC/dsl_cpp_generator.cpp backends/dslCodePad.h
+	$(CC) -c backends/backend_openACC/dsl_cpp_generator.cpp -o bin/ac_dsl_cpp_generator.o
 
 
-finalcode: $(PROGRAMS) $(A_PROGRAM)
-	$(CC)  $(PROGRAMS) $(A_PROGRAM) -o finalcode
+starplat: bin $(PROGRAMS) $(A_PROGRAM) 
+	$(CC)  $(PROGRAMS) $(A_PROGRAM) -o StarPlat
 
 
-bin/SymbolTableBuilder.o: symbolutil/SymbolTableBuilder.cpp
-	$(CC) -c symbolutil/SymbolTableBuilder.cpp -o bin/SymbolTableBuilder.o
+#~ bin/SymbolTableBuilder.o: symbolutil/SymbolTableBuilder.cpp
+#~ 	$(CC) -c symbolutil/SymbolTableBuilder.cpp -o bin/SymbolTableBuilder.o
 
 bin/MainContext.o: maincontext/MainContext.cpp maincontext/MainContext.hpp
 	$(CC) $(CFLAGS) -c maincontext/MainContext.cpp -o bin/MainContext.o
@@ -43,8 +48,8 @@ bin/ASTHelper.o: ast/ASTHelper.cpp ast/ASTNode.hpp
 bin/SymbolTableBuilder.o: symbolutil/SymbolTableBuilder.cpp symbolutil/SymbolTableBuilder.h
 	$(CC) $(CFLAGS) -c symbolutil/SymbolTableBuilder.cpp -o bin/SymbolTableBuilder.o
 
-bin/dsl_cpp_generator.o: backends/backend_omp/dsl_cpp_generator.cpp backends/dslCodePad.h
-	$(CC) -c backends/backend_omp/dsl_cpp_generator.cpp -o bin/dsl_cpp_generator.o
+#~ bin/dsl_cpp_generator.o: backends/backend_omp/dsl_cpp_generator.cpp backends/dslCodePad.h
+#~ 	$(CC) -c backends/backend_omp/dsl_cpp_generator.cpp -o bin/dsl_cpp_generator.o
 
 
 bin/SymbolTableNew.o: symbolutil/SymbolTableNew.cpp  symbolutil/SymbolTable.h 
@@ -55,7 +60,7 @@ bin/attachPropAnalyser.o: analyser/attachProp/attachPropAnalyser.cpp analyser/at
 	$(CC) -c analyser/attachProp/attachPropAnalyser.cpp -o bin/attachPropAnalyser.o
 
 bin/dataRaceAnalyser.o: analyser/dataRace/dataRaceAnalyser.cpp analyser/dataRace/dataRaceAnalyser.h
-	$(CC) -c analyser/dataRace/dataRaceAnalyser.cpp -o bin/dataRaceAnalyser.o
+	$(CC) -c analyser/dataRace/dataRaceAnalyser.cpp -o bin/dataRaceAnalyser.o                       
 
 bin/deviceVarsAnalyser.o: bin/dv1.o bin/dv2.o bin/dv3.o bin/dv4.o bin/dv5.o
 	ld -r bin/dv1.o bin/dv2.o bin/dv3.o bin/dv4.o bin/dv5.o -o bin/deviceVarsAnalyser.o 
@@ -87,9 +92,13 @@ bin/y.tab.o: parser/lexer.l parser/lrparser.y
 bin/lex.yy.o: parser/lexer.l parser/lrparser.y
 	$(MAKE) -C parser
 
+bin:
+	mkdir -p bin
+
 clean_windows:
 	rm -f $(EXPENDABLES_WINDOWS)
 
 clean:
-	rm -f $(EXPENDABLES)
-
+#~ 	rm -f $(EXPENDABLES)
+	rm bin/*.o StarPlat StarPlat.exe
+	rmdir bin

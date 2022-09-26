@@ -4,7 +4,8 @@
 #include<cassert>
 
 
-
+//~ using namespace spacc;
+namespace spacc{
 
 void dsl_cpp_generator::addIncludeToFile(char* includeName,dslCodePad& file,bool isCppLib)
 {  //cout<<"ENTERED TO THIS ADD INCLUDE FILE"<<"\n";
@@ -2855,3 +2856,4 @@ bool dsl_cpp_generator::generate()
 
   }
 
+}
