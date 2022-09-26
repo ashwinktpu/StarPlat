@@ -573,12 +573,12 @@ int main(int argc,char **argv)
 		  
         cpp_backend.generate();
       } 
-      //else if (strcmp(backendTarget, "omp") == 0) {
-      //  spomp::dsl_cpp_generator cpp_backend;
-      //  cpp_backend.setFileName(fileName);
-      //  cpp_backend.generate();
-      //} 
-	else if (strcmp(backendTarget, "acc") == 0) {
+      else if (strcmp(backendTarget, "omp") == 0) {
+        spomp::dsl_cpp_generator cpp_backend;
+        cpp_backend.setFileName(fileName);
+        cpp_backend.generate();
+      } 
+      else if (strcmp(backendTarget, "acc") == 0) {
         spacc::dsl_cpp_generator cpp_backend;
         cpp_backend.setFileName(fileName);
         cpp_backend.generate();
