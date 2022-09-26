@@ -3,7 +3,7 @@
 
 #include "dsl_cpp_generator.h"
 
-class dsl_dyn_cpp_generator:public dsl_cpp_generator
+class dsl_dyn_cpp_generator:public spomp::dsl_cpp_generator
 {   
 
  private:
