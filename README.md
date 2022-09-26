@@ -11,7 +11,7 @@
 | -------------  | ------------- |
 | Working | [![CUDA Branch](https://github.com/nibeditabh/GraphDSL/actions/workflows/cuda.yml/badge.svg?branch=cuda)](https://github.com/nibeditabh/GraphDSL/actions/workflows/cuda.yml) |
 | CUDA    | [![Working Branch](https://github.com/nibeditabh/GraphDSL/actions/workflows/working-branch.yml/badge.svg?branch=WorkingBranch)](https://github.com/nibeditabh/GraphDSL/actions/workflows/working-branch.yml) |
-
+| Sample  | [CUBuild]|
 
 # How to build.
 
@@ -61,3 +61,7 @@ It contains the following steps :-
 2. Generating IR. 
 3. Generate code from IR. 
 4. Optomize the IR. 
+
+
+[WBBuild]: https://github.com/nibeditabh/GraphDSL/actions/workflows/working-branch.yml/badge.svg?branch=WorkingBranch
+[CUBuild]: https://github.com/nibeditabh/GraphDSL/actions/workflows/cuda.yml/badge.svg?branch=cuda
