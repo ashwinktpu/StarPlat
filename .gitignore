@@ -1,6 +1,6 @@
 lex.yy.c
 src/parser/y.tab.h
-.vscode/launch.json
+.vscode/
 src/finalcode
 src/backends
 src/finalcode.exe
@@ -10,3 +10,6 @@ src/bin/
 .history/
 .history/*
 ../.history/*
+StarPlat
+StarPlat.exe
+
