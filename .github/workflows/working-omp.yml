@@ -17,9 +17,10 @@ jobs:
     - name: make
       run: cd src && make
       
+    - name: list files
+      run: ls -al
+      
     - name: Generate
-      run:  |
-      ls -la
-      ./StarPlat -s -f ../graphcode/sssp_dslV2 -b omp
+      run:  ./StarPlat -s -f ../graphcode/sssp_dslV2 -b omp
       
 
