@@ -1,4 +1,4 @@
-name: OMPGen
+name: OMP-CUDA
 
 on:
   push:
@@ -20,7 +20,12 @@ jobs:
     - name: list files
       run: ls -al
       
-    - name: Generate
-      run:  ./StarPlat -s -f ../graphcode/sssp_dslV2 -b omp
+      # OMP Generation
+    - name: Generate OMP
+      run:  ./src/StarPlat -s -f ./graphcode/sssp_dslV2 -b omp
+      
+      # CUDA Generation
+    - name: Generate CUDA
+      run:  ./src/StarPlat -s -f ./graphcode/sssp_dslV2 -b cuda
       
 
