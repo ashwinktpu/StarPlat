@@ -1,0 +1,19 @@
+name: WorkingBranch
+
+on:
+  push:
+    branches: [ WorkingBranch ]
+  pull_request:
+    branches: [ WorkingBranch ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+        
+    - name: make
+      run: cd src && make
+
