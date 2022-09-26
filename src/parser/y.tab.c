@@ -2969,7 +2969,8 @@ int main(int argc,char **argv)
 {
   
   if(argc<4){
-    std::cout<< "Usage: " << argv[0] << " -f <dsl.sp>  -b [cuda|omp|mpi|acc]" << '\n';
+    std::cout<< "Usage: " << argv[0] << " -f <dsl.sp> -b [cuda|omp|mpi|acc] [-s|-d]" << '\n';
+    std::cout<< "E.g. : " << argv[0] << " -f ../graphcode/sssp_dslV2 -b omp" << '\n';
     exit(-1);
   }
   
@@ -3100,12 +3101,12 @@ int main(int argc,char **argv)
 		  
         cpp_backend.generate();
       } 
-      //else if (strcmp(backendTarget, "omp") == 0) {
-      //  spomp::dsl_cpp_generator cpp_backend;
-      //  cpp_backend.setFileName(fileName);
-      //  cpp_backend.generate();
-      //} 
-	else if (strcmp(backendTarget, "acc") == 0) {
+      else if (strcmp(backendTarget, "omp") == 0) {
+        spomp::dsl_cpp_generator cpp_backend;
+        cpp_backend.setFileName(fileName);
+        cpp_backend.generate();
+      } 
+      else if (strcmp(backendTarget, "acc") == 0) {
         spacc::dsl_cpp_generator cpp_backend;
         cpp_backend.setFileName(fileName);
         cpp_backend.generate();

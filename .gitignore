@@ -1,5 +1,6 @@
 lex.yy.c
 src/parser/y.tab.h
+src/parser/y.tab.c
 .vscode/
 src/finalcode
 src/backends
