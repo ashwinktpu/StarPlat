@@ -1,0 +1,19 @@
+name: OMP Branch
+
+on:
+  push:
+    branches: [ openmp ]
+  pull_request:
+    branches: [ openmp ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+        
+    - name: make
+      run: cd src && make 
+
