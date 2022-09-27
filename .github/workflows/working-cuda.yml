@@ -20,9 +20,12 @@ jobs:
     - name: list files
       run: ls -al
       
-      
       # CUDA Generation
     - name: Generate CUDA
       run:  ./src/StarPlat -s -f ./graphcode/sssp_dslV2 -b cuda
+      
+     # List Generated files
+    - name: List generated Files
+      run:  cat ./graphcode/generated_cuda/sssp_dslV2.*
       
 
