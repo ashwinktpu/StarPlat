@@ -305,6 +305,8 @@ usedVariables getVarsStatement(statement *stmt)
       
     case NODE_FIXEDPTSTMT:
       return getVarsFixedPoint((fixedPointStmt *)stmt);*/
+  default:
+    std::cout<< "DEFAULT CASE. NO ACTION TAKEN" << '\n';
   }
 
   return usedVariables();

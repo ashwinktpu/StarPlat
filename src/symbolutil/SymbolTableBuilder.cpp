@@ -28,7 +28,7 @@ void setFilterAssocForForAll(std::vector<ASTNode*> parallelConstruct, Expression
 {
   forallStmt* forStmt = NULL;
 
-  for(int i=0 ; i < parallelConstruct.size() ; i++)
+  for(size_t i=0 ; i < parallelConstruct.size() ; i++)
      {
          if(parallelConstruct[i]->getTypeofNode() == NODE_FORALLSTMT)
            {

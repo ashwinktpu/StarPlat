@@ -163,7 +163,7 @@ statementRange getRange(statementPos stPos, vector<statement *> stmts)
     l--;
   }
 
-  while (r <= stmts.size() && !checkDependancy(stmts[r - 1], usedVars))
+  while ((unsigned)r <= stmts.size() && !checkDependancy(stmts[r - 1], usedVars))
   {
     r++;
   }

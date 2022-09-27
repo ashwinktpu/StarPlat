@@ -160,7 +160,7 @@ static void addToBlock(ASTNode* statementNode)
 
 
 }
-static ASTNode* createIdentifierNode(char* idName)
+static ASTNode* createIdentifierNode(const char* idName)
 {
     Identifier* idNode;
     idNode=Identifier::createIdNode(idName);

@@ -17,7 +17,7 @@ bool checkPropIdEqual(PropAccess* prop1, PropAccess* prop2)
             && checkIdEqual(prop1->getIdentifier2(), prop2->getIdentifier2()));
 }
 
-bool checkIdNameEqual(Identifier *id1, char *c)
+bool checkIdNameEqual(Identifier *id1, const char *c)
 {
     return (strcmp(id1->getIdentifier(), c) == 0);
 }
