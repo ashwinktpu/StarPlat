@@ -34,22 +34,23 @@ make
 
 
 # Step 4.0 Copy and Paste the main function to generate file .cu or .cc file
-# Below is the E.g. how to compile SSSP file afte generation
+# Below is the E.g. how to compile SSSP file after generation
+# Additional equired files: graph.hpp libcuda.hxx present in one level up
 
 # Step 4.1 Compile and run CUDA algorithms
-nvcc -std=c++14 ../graphcode/generated_cuda/sssp_dslV2.cu -I . -o ssspCuda.out
+nvcc -std=c++14 ../graphcode/generated_cuda/sssp_dslV2.cu -I .. -o ssspCuda.out
 ./ssspCuda.out ../dataset/inputfile.txt
 
 # Step 4.2 Compile and run OMP algorithms
-g++ -fopenmp -std=c++14 ../graphcode/generated_omp/sssp_dslV2.cu -I . -o ssspOmp.out
+g++ -fopenmp -std=c++14 ../graphcode/generated_omp/sssp_dslV2.cu -I .. -o ssspOmp.out
 ./ssspOmp.out ../dataset/inputfile.txt
 
 # Step 4.3 Compile and run MPI algorithms
-mpcxx -fopenmp -std=c++14 ../graphcode/generated_mpi/sssp_dslV2.cu -I . -o ssspMpi.out
+mpcxx -fopenmp -std=c++14 ../graphcode/generated_mpi/sssp_dslV2.cu -I .. -I boost_1_74_0/ -o ssspMpi.out
 ./ssspMpi.out ../dataset/inputfile.txt
 
 # Step 4.4 Compile and run ACC algorithm
-pgc++ -std=c++14 ../graphcode/generated_OpenACC/sssp_dslV2.cu -I . -o ssspAcc.out
+pgc++ -std=c++14 ../graphcode/generated_OpenACC/sssp_dslV2.cu -I .. -o ssspAcc.out
 ./ssspAcc.out ../dataset/inputfile.txt
 
 ```
