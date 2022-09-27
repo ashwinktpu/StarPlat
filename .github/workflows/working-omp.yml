@@ -23,6 +23,8 @@ jobs:
       # OMP Generation
     - name: Generate OMP
       run:  ./src/StarPlat -s -f ./graphcode/sssp_dslV2 -b omp
-
+      
+    - name: List Generated files
+      run: cat ./graphcode/generated_omp/sssp_dslV2.*
       
 
