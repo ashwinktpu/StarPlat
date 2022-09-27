@@ -18,5 +18,5 @@ jobs:
       run: cd src && make cuda
       
     - name: Generation
-      run:  ./StarPlat -s -f ../graphcode/sssp_dslV2 -b cuda
+      run:  ./src/StarPlat -s -f ../graphcode/sssp_dslV2 -b cuda
 
