@@ -75,6 +75,8 @@ public:
         return GPU_ONLY;
       }
     }
+    //~ std::cout<< "SHOULD NEVER BE REACHED" << '\n';
+    return (PointType());
   }
 
   //CPU preferenced meet
@@ -95,7 +97,7 @@ public:
       if(typeMap.find(pr.first) != typeMap.end())
         typeMap[pr.first] = meet(typeMap[pr.first], pr.second, GPU_Preferenced);
     }
-  }/**/
+  }*/
 
   //CPU preferenced meet
   lattice operator^ (const lattice &l1)

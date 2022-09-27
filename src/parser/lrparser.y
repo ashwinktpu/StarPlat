@@ -10,7 +10,7 @@
 	#include<getopt.h>
 	//#include "../symbolutil/SymbolTableBuilder.cpp"
      
-	void yyerror(char *);
+	void yyerror(const char *);
 	int yylex(void);
     extern FILE* yyin;
 
@@ -434,7 +434,7 @@ id : ID   {
 %%
 
 
-void yyerror(char *s) {
+void yyerror(const char *s) {
     fprintf(stderr, "%s\n", s);
 }
 

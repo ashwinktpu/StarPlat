@@ -869,7 +869,7 @@ void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll) {
 
     }
         
-    /*
+    
     if(elementsIteration(extractId->getIdentifier()))
       {
         Identifier* collectionName=forAll->getPropSource()->getIdentifier1();
@@ -1574,7 +1574,7 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct) 
             sprintf(strBuffer,"%s_nxt[%s] = %s ;",dependentId->getIdentifier(),"v",initializer->getBooleanConstant()?"true":"false");
             main.pushstr_newL(strBuffer);
             main.pushstr_newL("}");
-          /* if(isNot)------chopped out.
+           if(isNot)------chopped out.
            {
             sprintf(strBuffer,"%s = !%s_fp ;",fixedPointId->getIdentifier(),dependentId->getIdentifier());
             main.pushstr_newL(strBuffer);
@@ -1824,8 +1824,8 @@ void dsl_cpp_generator::generateFuncHeader(Function* proc, bool isMainFile) {
   // targetFile.pushString(" ");
   // targetFile.space();
   //}
-  /*  targetFile.pushString(/*createParamName(*/ /*(*itr)->getIdentifier()->getIdentifier());
-    /*  if(argumentTotal>0)
+  /*  targetFile.pushString( /*createParamName(*/ /*(*itr)->getIdentifier()->getIdentifier());
+      if(argumentTotal>0)
          targetFile.pushString(",");
 
       if(arg_currNo==maximum_arginline)

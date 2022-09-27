@@ -7,7 +7,7 @@ PROGRAMS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/Symbol
 A_PROGRAM = bin/attachPropAnalyser.o bin/dataRaceAnalyser.o bin/deviceVarsAnalyser.o bin/analyserUtil.o
 
 CFLAGS  = -g 
-CC = g++ -g -std=c++11 -Wreturn-type #-fsanitize=address
+CC = g++ -std=c++11 #-Wall # -Wno-unused-variable #-fsanitize=address
 
 all: starplat
 
@@ -25,15 +25,15 @@ all: starplat
 
 #CUDA
 bin/cu_dsl_cpp_generator.o: backends/backend_cuda/dsl_cpp_generator.cpp backends/dslCodePad.h
-	$(CC) -c backends/backend_cuda/dsl_cpp_generator.cpp -o bin/cu_dsl_cpp_generator.o
+	$(CC) $(CFLAGS) -c backends/backend_cuda/dsl_cpp_generator.cpp -o bin/cu_dsl_cpp_generator.o
 
 #openACC
 bin/ac_dsl_cpp_generator.o: backends/backend_openACC/dsl_cpp_generator.cpp backends/dslCodePad.h
-	$(CC) -c backends/backend_openACC/dsl_cpp_generator.cpp -o bin/ac_dsl_cpp_generator.o
+	$(CC) $(CFLAGS) -c backends/backend_openACC/dsl_cpp_generator.cpp -o bin/ac_dsl_cpp_generator.o
 	
 #omp
 bin/om_dsl_cpp_generator.o: backends/backend_omp/dsl_cpp_generator.cpp backends/dslCodePad.h
-	$(CC) -c backends/backend_omp/dsl_cpp_generator.cpp -o bin/om_dsl_cpp_generator.o
+	$(CC) $(CFLAGS) -c backends/backend_omp/dsl_cpp_generator.cpp -o bin/om_dsl_cpp_generator.o
 
 
 starplat: bin $(PROGRAMS) $(A_PROGRAM) 
@@ -61,31 +61,31 @@ bin/SymbolTableNew.o: symbolutil/SymbolTableNew.cpp  symbolutil/SymbolTable.h
 
 
 bin/attachPropAnalyser.o: analyser/attachProp/attachPropAnalyser.cpp analyser/attachProp/attachPropAnalyser.h
-	$(CC) -c analyser/attachProp/attachPropAnalyser.cpp -o bin/attachPropAnalyser.o
+	$(CC) $(CFLAGS) -c analyser/attachProp/attachPropAnalyser.cpp -o bin/attachPropAnalyser.o
 
 bin/dataRaceAnalyser.o: analyser/dataRace/dataRaceAnalyser.cpp analyser/dataRace/dataRaceAnalyser.h
-	$(CC) -c analyser/dataRace/dataRaceAnalyser.cpp -o bin/dataRaceAnalyser.o                       
+	$(CC) $(CFLAGS) -c analyser/dataRace/dataRaceAnalyser.cpp -o bin/dataRaceAnalyser.o                       
 
 bin/deviceVarsAnalyser.o: bin/dv1.o bin/dv2.o bin/dv3.o bin/dv4.o bin/dv5.o
 	ld -r bin/dv1.o bin/dv2.o bin/dv3.o bin/dv4.o bin/dv5.o -o bin/deviceVarsAnalyser.o 
 
 bin/dv1.o: analyser/deviceVars/deviceVarsAnalyser.cpp analyser/deviceVars/deviceVarsAnalyser.h analyser/analyserUtil.cpp
-	$(CC)  -c analyser/deviceVars/deviceVarsAnalyser.cpp -o bin/dv1.o
+	$(CC) $(CFLAGS) -c analyser/deviceVars/deviceVarsAnalyser.cpp -o bin/dv1.o
 
 bin/dv2.o: analyser/deviceVars/deviceVarsInit.cpp analyser/deviceVars/deviceVarsAnalyser.h analyser/analyserUtil.cpp
-	$(CC)  -c analyser/deviceVars/deviceVarsInit.cpp -o bin/dv2.o
+	$(CC) $(CFLAGS) -c analyser/deviceVars/deviceVarsInit.cpp -o bin/dv2.o
 
 bin/dv3.o: analyser/deviceVars/deviceVarsPrint.cpp analyser/deviceVars/deviceVarsAnalyser.h analyser/analyserUtil.cpp
-	$(CC)  -c analyser/deviceVars/deviceVarsPrint.cpp -o bin/dv3.o
+	$(CC) $(CFLAGS) -c analyser/deviceVars/deviceVarsPrint.cpp -o bin/dv3.o
 
 bin/dv4.o: analyser/deviceVars/deviceVarsTransfer.cpp analyser/deviceVars/deviceVarsAnalyser.h analyser/analyserUtil.cpp
 	$(CC)  -c analyser/deviceVars/deviceVarsTransfer.cpp -o bin/dv4.o
 
 bin/dv5.o: analyser/deviceVars/getUsedVars.cpp analyser/deviceVars/deviceVarsAnalyser.h analyser/analyserUtil.cpp
-	$(CC) -c analyser/deviceVars/getUsedVars.cpp -o bin/dv5.o
+	$(CC) $(CFLAGS) -c analyser/deviceVars/getUsedVars.cpp -o bin/dv5.o
 
 bin/analyserUtil.o: analyser/analyserUtil.cpp
-	$(CC) -c analyser/analyserUtil.cpp -o bin/analyserUtil.o
+	$(CC) $(CFLAGS) -c analyser/analyserUtil.cpp -o bin/analyserUtil.o
 
 #bin/dsl_cpp_generator.o: backends/backend_mpi/mpi_cpp_generator.cpp backends/dslCodePad.h
 #	$(CC) -c backends/backend_mpi/mpi_cpp_generator.cpp -o bin/dsl_cpp_generator.o
