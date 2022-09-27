@@ -1019,7 +1019,7 @@ class formalParam:public ASTNode
        return typeofExpr;
      }
      
-     bool setEnclosedBrackets()
+     void setEnclosedBrackets()
      {
        enclosedBrackets=true;
      }

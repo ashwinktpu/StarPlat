@@ -1,6 +1,7 @@
 #include"sssp_dslV2.h"
 
-void Compute_SSSP(graph& g,int* dist,int src)
+void Compute_SSSP(graph& g,int* dist,int* weight,int src
+)
 {
   bool* modified=new bool[g.num_nodes()];
   bool* modified_nxt=new bool[g.num_nodes()];

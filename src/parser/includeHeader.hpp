@@ -15,7 +15,7 @@
 
 /* UNCOMMENT IT TO GENERATE FOR OPENMP BACKEND */
 #include "../backends/backend_omp/dsl_cpp_generator.h"
-#include "../backends/backend_omp/dsl_dyn_cpp_generator.hpp"*/
+#include "../backends/backend_omp/dsl_dyn_cpp_generator.hpp"
 
 
 /* UNCOMMENT IT TO GENERATE FOR CUDA BACKEND */

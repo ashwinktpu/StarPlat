@@ -67,7 +67,7 @@ void checkForExpressions(Expression* expr);
 bool checkHeaderSymbols(Identifier* src,PropAccess* propId,forallStmt* forall);
 bool findSymbolId(Identifier* id);
 bool findSymbolPropId(PropAccess* propId);
-bool checkForArguments(list<argument*> arglist);
+void checkForArguments(list<argument*> arglist);
 char* getbackendTarget();
 
 };
