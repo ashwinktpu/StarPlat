@@ -374,10 +374,12 @@ arg_list :    {
 		                 //a1->assignExpr=(assignment*)$1;
 						 // a1->assign=true;
 						  $$=Util::addToAList($3,a1);
+						  /*
 						  for(argument* arg:$$->AList)
 						  {
-							  printf("VALUE OF ARG %d",arg->getAssignExpr());
+							  printf("VALUE OF ARG %d",arg->getAssignExpr()); //rm for warnings
 						  }
+						  */ 
 						  
                           };
 
@@ -575,6 +577,7 @@ int main(int argc,char **argv)
       } 
       else if (strcmp(backendTarget, "omp") == 0) {
         spomp::dsl_cpp_generator cpp_backend;
+	std::cout<< "size:" << frontEndContext.getFuncList().size() << '\n';
         cpp_backend.setFileName(fileName);
         cpp_backend.generate();
       } 

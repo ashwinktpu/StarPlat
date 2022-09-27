@@ -7,7 +7,7 @@ PROGRAMS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/Symbol
 A_PROGRAM = bin/attachPropAnalyser.o bin/dataRaceAnalyser.o bin/deviceVarsAnalyser.o bin/analyserUtil.o
 
 CFLAGS  = -g 
-CC = g++ -g -std=c++11 -Wall -Wreturn-type #-fsanitize=address
+CC = g++ -g -std=c++11 -Wreturn-type #-fsanitize=address
 
 all: starplat
 

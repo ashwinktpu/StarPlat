@@ -7,7 +7,7 @@
 //~ using namespace spacc;
 namespace spacc{
 
-void dsl_cpp_generator::addIncludeToFile(char* includeName,dslCodePad& file,bool isCppLib)
+void dsl_cpp_generator::addIncludeToFile(const char* includeName,dslCodePad& file,bool isCppLib)
 {  //cout<<"ENTERED TO THIS ADD INCLUDE FILE"<<"\n";
     if(!isCppLib)
       file.push('"');
@@ -1097,7 +1097,7 @@ void dsl_cpp_generator::generatePropertyDefination(Type* type,char* Id)
   Type* targetType=type->getInnerTargetType();
   vector<Identifier*> graphIds = graphId[curFuncType][curFuncCount()];
   printf("currentFuncType %d\n",curFuncType);
-  printf("currentFuncCount %d graphIds[0] %d\n",curFuncCount(), graphIds.size());
+  printf("currentFuncCount %d graphIds[0] %ld\n",curFuncCount(), graphIds.size());
 
   if(targetType->gettypeId()==TYPE_INT)
   {
@@ -1973,8 +1973,7 @@ void dsl_cpp_generator::generate_exprLiteral(Expression* expr)
  void dsl_cpp_generator::generate_exprInfinity(Expression* expr)
  {
               char valBuffer[1024];
-              if(expr->getTypeofExpr()!=NULL)
-                   {
+              
                      int typeClass=expr->getTypeofExpr();
                      switch(typeClass)
                      {
@@ -1996,13 +1995,7 @@ void dsl_cpp_generator::generate_exprLiteral(Expression* expr)
 
 
                       }
-                          
-                   }
-                   else
-                 
-                   {
-                 sprintf(valBuffer,"%s",expr->isPositiveInfinity()?"INT_MAX":"INT_MIN");
-                   }    
+                  
                  
                  main.pushString(valBuffer);
 

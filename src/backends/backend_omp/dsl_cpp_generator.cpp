@@ -7,7 +7,7 @@
 
 namespace spomp {
 
-void dsl_cpp_generator::addIncludeToFile(char* includeName, dslCodePad& file, bool isCppLib) {  //cout<<"ENTERED TO THIS ADD INCLUDE FILE"<<"\n";
+void dsl_cpp_generator::addIncludeToFile(const char* includeName, dslCodePad& file, bool isCppLib) {  //cout<<"ENTERED TO THIS ADD INCLUDE FILE"<<"\n";
   if (!isCppLib)
     file.push('"');
   else
@@ -653,7 +653,7 @@ void dsl_cpp_generator::generatePropertyDefination(Type* type, char* Id) {
   Type* targetType = type->getInnerTargetType();
   vector<Identifier*> graphIds = graphId[curFuncType][curFuncCount()];
   printf("currentFuncType %d\n", curFuncType);
-  printf("currentFuncCount %d graphIds[0] %d\n", curFuncCount(), graphIds.size());
+  printf("currentFuncCount %d graphIds[0] %ld\n", curFuncCount(), graphIds.size());
 
   if (targetType->gettypeId() == TYPE_INT) {
     main.pushString("=");
@@ -1883,14 +1883,16 @@ void dsl_cpp_generator::closeOutputFile() {
 }
 
 bool dsl_cpp_generator::generate() {
-  //cout<<"FRONTEND VALUES"<<frontEndContext.getFuncList().front()->getBlockStatement()->returnStatements().size();    //openFileforOutput();
+  cout<<"FRONTEND VALUES "<<frontEndContext.getFuncList().front()->getBlockStatement()->returnStatements().size();    //openFileforOutput();
   if (!openFileforOutput())
     return false;
   generation_begin();
 
   list<Function*> funcList = frontEndContext.getFuncList();
+  std::cout<< "Funclist siz" << funcList.size() << '\n';
   for (Function* func : funcList) {
     generateFunc(func);
+    std::cout<< "in FUN" << '\n';
   }
 
   generation_end();
@@ -1903,12 +1905,12 @@ bool dsl_cpp_generator::generate() {
 void dsl_cpp_generator::setFileName(char* f)  // to be changed to make it more universal.
 {
   //printf("%s \n", f);
-  char* token = strtok(f, "\\");
+  char* token = strtok(f, "/");
   char* prevtoken;
 
   while (token != NULL) {
     prevtoken = token;
-    token = strtok(NULL, "\\");
+    token = strtok(NULL, "/");
   }
   fileName = prevtoken;
   printf("OutFile: %s \n", fileName);
