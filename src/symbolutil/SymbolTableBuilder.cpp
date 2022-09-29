@@ -355,22 +355,23 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                    }
                }
 
-              init_curr_SymbolTable(forAll);
+              //~ init_curr_SymbolTable(forAll);
     
-              Type* type = (Type*) Util::createNodeEdgeTypeNode(TYPE_NODE);
-              bool creatsFine=create_Symbol(currVarSymbT,forAll->getIterator(),type);
+              //~ Type* type = (Type*) Util::createNodeEdgeTypeNode(TYPE_NODE);
+              //~ bool creatsFine=create_Symbol(currVarSymbT,forAll->getIterator(),type);
 
               buildForStatements(forAll->getBody());  
+              
            //----------------------MERGE CONFLICT OCCURRED HERE (WORKING BRANCH <---- OPENACC)----------------------------------
-               if((backend.compare("omp")==0 || backend.compare("openACC")==0 ) && forAll->isForall())
-                    {  
-                        parallelConstruct.pop_back();
-                    } 
+               //~ if((backend.compare("omp")==0 || backend.compare("openACC")==0 ) && forAll->isForall())
+                    //~ {  
+                        //~ parallelConstruct.pop_back();
+                    //~ } 
 
-              delete_curr_SymbolTable();
+              //~ delete_curr_SymbolTable();
 
 
-               if((backend.compare("omp")==0 || backend.compare("cuda")==0) &&forAll->isForall())
+               if((backend.compare("omp")==0 || backend.compare("cuda")==0 || backend.compare("openACC")==0 ) &&forAll->isForall())
                     {
                         parallelConstruct.pop_back();
                     }
