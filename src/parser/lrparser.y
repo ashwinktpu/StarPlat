@@ -443,8 +443,8 @@ int main(int argc,char **argv)
 {
   
   if(argc<4){
-    std::cout<< "Usage: " << argv[0] << " -f <dsl.sp> -b [cuda|omp|mpi|acc] [-s|-d]" << '\n';
-    std::cout<< "E.g. : " << argv[0] << " -f ../graphcode/sssp_dslV2 -b omp" << '\n';
+    std::cout<< "Usage: " << argv[0] << " [-s|-d] -f <dsl.sp> -b [cuda|omp|mpi|acc] " << '\n';
+    std::cout<< "E.g. : " << argv[0] << " -s -f ../graphcode/sssp_dslV2 -b omp " << '\n';
     exit(-1);
   }
   
