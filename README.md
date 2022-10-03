@@ -48,6 +48,24 @@ module load openmpi316
 #mv ../job$tpdir $PBS_O_WORKDIR/.
 
 ```
+### Sample main() for generated CC  (SSSP)
+
+```
+int main(int argc, char* argv[])
+{
+
+  mpi::environment env(argc, argv);
+  graph G1(argv[1]);
+  int src=0;
+  int* dist;
+  Compute_SSSP(G1,dist,src);
+
+  return 0;
+}
+
+```
+
+
 ### Aqua Cheats
 ```
 $ qsub script.cmd : To run/subscribe script on specified queue
