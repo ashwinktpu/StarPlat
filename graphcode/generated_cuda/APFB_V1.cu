@@ -127,6 +127,13 @@ void APFB(graph& g,int nc)
     cudaMalloc(&d_predeccesor, sizeof(int)*(V));
 
     initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_predeccesor,(int)-1);
+    
+    bool* h_pred1 = (bool *)malloc((V)*sizeof(int));
+    cudaMemcpy(h_pred1, d_predeccesor, V * sizeof(int), cudaMemcpyDeviceToHost);
+
+    for(int i = 0; i < V; i++){
+      printf("h_pred1[%d]: %d\n", i, h_pred1[i]);
+    }
 
     bool noNewVertices = false; // asst in .cu
 
