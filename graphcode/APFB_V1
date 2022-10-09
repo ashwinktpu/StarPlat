@@ -1,0 +1,114 @@
+function APFB (Graph g, int nc)
+{
+    // NOTE:
+    // 1. All the edges are from columns to rows.
+    // 2. Make sure there are no self loops.
+    // 3. Coloumns [0, nc)
+    // 4. Rows [nc, V) V is # vertices
+    // 5. APFB not APsB (Lines 9, 10 in Algo 1 removed)
+    // 6. rmatch and cmatch can be -1 so take care of that before using the output
+    
+    // TODO: This is just to simulate while loop
+    propNode<bool> modified;
+    g.attachNodeProperty(modified = False);
+    
+    propNode<int> rmatch;
+    propNode<int> cmatch;
+    g.attachNodeProperty(rmatch = -1);
+    g.attachNodeProperty(cmatch = -1);
+    
+    // Algorithm 1
+    bool noNewPaths = False;
+    fixedPoint until (noNewPaths : !modified) {
+        int L0 = 0;
+        int bfsLevel = L0;
+        
+        // Initialize BFS Array
+        propNode<int> bfsArray;
+        int NOT_VISITED = L0 - 1;
+        g.attachNodeProperty(bfsArray = NOT_VISITED);
+        forall(c in g.nodes()){
+            if(c < nc){
+                if(c.cmatch == -1){
+                    c.bfsArray = L0;
+                }
+            }
+        }
+        
+        // TODO: Not sure whether this is the right initialisation for predeccesor
+        propNode<int> predeccesor;
+        g.attachNodeProperty(predeccesor = -1); 
+        bool noNewVertices = False;
+        fixedPoint until (noNewVertices : !modified) {
+            // <BFS> Starts Here
+            forall(col_vertex in g.nodes()){
+                if(col_vertex < nc){
+                    if(col_vertex.bfsArray == bfsLevel){
+                        for(neigh_row in g.neighbours(col_vertex)){
+                            int col_match = neigh_row.rmatch;
+                            if(col_match > -1){
+                                if(col_match.bfsArray == NOT_VISITED){
+                                    noNewVertices = False;
+                                    col_match.bfsArray = bfsLevel + 1;
+                                    neigh_row.predeccesor = col_vertex;
+                                }
+                            }
+                            if(col_match <= -1){
+                                // REVIEW: Can col_match be <= -2
+                                if(col_match == -1){
+                                    neigh_row.rmatch = -2;
+                                    neigh_row.predeccesor = col_vertex;
+                                    noNewPaths = False;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            // <BFS> Ends
+            bfsLevel = bfsLevel + 1;
+        }
+        
+        propNode<bool> compress;
+        g.attachNodeProperty(compress = False);
+        forall(r in g.nodes()){
+            if(r >= nc && r.rmatch == -2){
+                compress = True;
+            }
+        }
+        
+        // <ALTERNATE> Starts Here
+        bool compressed = False;
+        fixedPoint until(compressed : !modified) {
+            forall(row_vertex in g.nodes()){
+                if(row_vertex >= nc){
+                    int matched_col = row_vertex.predeccesor;
+                    int matched_row = matched_col.cmatch;
+                    
+                    if(matched_row.predeccesor != matched_col){
+                        matched_row.cmatch = row_vertex;
+                        row_vertex.rmatch = matched_col;
+                        if(matched_row != -1){
+                            matched_row.compress = True;
+                            compressed = False;
+                        }
+                    }
+                }
+            }
+        }
+        // <ALTERNATE> Ends Here
+        
+        // <FIX MATCHING> Starts Here
+        forall(r in g.nodes()){
+            if(r >= nc){
+                int rm = r.rmatch;
+                if(rm != -1){
+                    if(rm.cmatch != r){
+                        r.rmatch = -1;
+                    }
+                }
+            }
+        }
+        // <FIX MATCHING> Ends Here
+    }
+}
