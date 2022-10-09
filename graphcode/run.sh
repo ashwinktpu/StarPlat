@@ -1,7 +1,7 @@
 #!/bin/bash
 #PBS -e errorLogAPFB.err
 #PBS -o logAPFB.log
-#PBS -q rupesh_gpuq
+
 #PBS -l select=1:ncpus=1:ngpus=1
 
 # rmatud.txt  sinaweiboud.txt  u10m_80mud.txt  wikiud.txt
