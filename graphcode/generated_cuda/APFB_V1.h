@@ -36,14 +36,14 @@ __global__ void APFB_kernel_1(int V, int E, int* d_meta, int* d_data, int* d_src
 } // end KER FUNC
 __device__ bool noNewVertices ; // DEVICE ASSTMENT in .h
 
-__global__ void APFB_kernel_2(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_bfsArray,int* d_rmatch,int* d_predeccesor){ // BEGIN KER FUN via ADDKERNEL
+__global__ void APFB_kernel_2(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_rmatch,int* d_bfsArray,int* d_predeccesor){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned col_vertex = blockIdx.x * blockDim.x + threadIdx.x;
   if(col_vertex >= V) return;
   if (col_vertex < nc){ // if filter begin 
     if (d_bfsArray[col_vertex] == bfsLevel){ // if filter begin 
       for (int edge = d_meta[col_vertex]; edge < d_meta[col_vertex+1]; edge++) { // FOR NBR ITR 
-        int nr = d_data[edge];
+        int neigh_row = d_data[edge];
         int col_match = d_rmatch[neigh_row]; // DEVICE ASSTMENT in .h
 
         if (col_match > -1){ // if filter begin 
@@ -76,7 +76,7 @@ __global__ void APFB_kernel_3(int V, int E, int* d_meta, int* d_data, int* d_src
   unsigned r = blockIdx.x * blockDim.x + threadIdx.x;
   if(r >= V) return;
   if (r >= nc && d_rmatch[r] == -2){ // if filter begin 
-    compress = true;
+    d_compress[r] = true;
 
   } // if filter end
 } // end KER FUNC
@@ -104,7 +104,7 @@ __global__ void APFB_kernel_4(int V, int E, int* d_meta, int* d_data, int* d_src
 
   } // if filter end
 } // end KER FUNC
-__global__ void APFB_kernel_5(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_rmatch,int* d_cmatch){ // BEGIN KER FUN via ADDKERNEL
+__global__ void APFB_kernel_5(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_cmatch,int* d_rmatch){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned r = blockIdx.x * blockDim.x + threadIdx.x;
   if(r >= V) return;
