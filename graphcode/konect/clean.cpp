@@ -11,9 +11,6 @@ void parseGraph(char* input, char* output, int leftSize, bool isWeighted = false
     
     string line;
 
-    getline(infile, line);
-    getline(infile, line);
-
     while(getline(infile,line))
     {
       if(line.length()==0 || line[0] < '0' || line[0] >'9') continue;
