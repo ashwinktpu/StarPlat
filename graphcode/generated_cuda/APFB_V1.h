@@ -74,7 +74,7 @@ __global__ void APFB_kernel_3(int V, int E, int* d_meta, int* d_data, int* d_src
   if(r >= V) return;
   if (r >= nc && d_rmatch[r] == -2){ // if filter begin 
     d_compress[r] = true;
-
+    printf("Compress %d", r);
   } // if filter end
 } // end KER FUNC
 __device__ bool compressed ; // DEVICE ASSTMENT in .h
