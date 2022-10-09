@@ -189,7 +189,7 @@ void APFB(graph& g,int nc)
       cudaMemcpyToSymbol(::compressed, &compressed, sizeof(bool), 0, cudaMemcpyHostToDevice);
       cudaMemcpyToSymbol(::nc, &nc, sizeof(int), 0, cudaMemcpyHostToDevice);
       cudaMemcpyToSymbol(::compressed, &compressed, sizeof(bool), 0, cudaMemcpyHostToDevice);
-      APFB_kernel_4<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_predeccesor,d_cmatch,d_compress,d_compress_next,d_rmatch);
+      APFB_kernel_4<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_predeccesor,d_compress,d_cmatch,d_compress_next,d_rmatch);
       cudaDeviceSynchronize();
       cudaMemcpyFromSymbol(&nc, ::nc, sizeof(int), 0, cudaMemcpyDeviceToHost);
       cudaMemcpyFromSymbol(&compressed, ::compressed, sizeof(bool), 0, cudaMemcpyDeviceToHost);
@@ -216,7 +216,7 @@ void APFB(graph& g,int nc)
     } // END FIXED POINT
 
     cudaMemcpyToSymbol(::nc, &nc, sizeof(int), 0, cudaMemcpyHostToDevice);
-    APFB_kernel_6<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_rmatch,d_cmatch);
+    APFB_kernel_6<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_cmatch,d_rmatch);
     cudaDeviceSynchronize();
     cudaMemcpyFromSymbol(&nc, ::nc, sizeof(int), 0, cudaMemcpyDeviceToHost);
 
@@ -235,7 +235,6 @@ void APFB(graph& g,int nc)
     cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
     initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
   } // END FIXED POINT
-
 
   int* h_rmatch = (int *)malloc((V)*sizeof(int));
   int* h_cmatch = (int *)malloc((V)*sizeof(int));
