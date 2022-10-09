@@ -36,7 +36,7 @@ __device__ int bfsLevel ; // DEVICE ASSTMENT in .h
 
 __device__ bool noNewVertices ; // DEVICE ASSTMENT in .h
 
-__global__ void APFB_kernel_2(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_bfsArray,int* d_rmatch,int* d_predeccesor){ // BEGIN KER FUN via ADDKERNEL
+__global__ void APFB_kernel_2(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_rmatch,int* d_bfsArray,int* d_predeccesor){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned col_vertex = blockIdx.x * blockDim.x + threadIdx.x;
   if(col_vertex >= V) return;
@@ -55,13 +55,10 @@ __global__ void APFB_kernel_2(int V, int E, int* d_meta, int* d_data, int* d_src
           } // if filter end
 
         } // if filter end
-        if (col_match <= -1){ // if filter begin 
-          if (col_match == -1){ // if filter begin 
-            d_rmatch[neigh_row] = -2;
-            d_predeccesor[neigh_row] = col_vertex;
-            noNewPaths = false;
-
-          } // if filter end
+        if (col_match == -1){ // if filter begin 
+          d_rmatch[neigh_row] = -2;
+          d_predeccesor[neigh_row] = col_vertex;
+          noNewPaths = false;
 
         } // if filter end
 
@@ -131,10 +128,10 @@ __global__ void APFB_kernel_6(int V, int E, int* d_meta, int* d_data, int* d_src
   unsigned r = blockIdx.x * blockDim.x + threadIdx.x;
   if(r >= V) return;
   if (r >= nc){ // if filter begin 
-    int rm = d_rmatch[r]; // DEVICE ASSTMENT in .h
+    int c = d_rmatch[r]; // DEVICE ASSTMENT in .h
 
-    if (rm > -1){ // if filter begin 
-      if (d_cmatch[rm] != r){ // if filter begin 
+    if (c > -1){ // if filter begin 
+      if (d_cmatch[c] != r){ // if filter begin 
         d_rmatch[r] = -1;
 
       } // if filter end

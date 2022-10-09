@@ -17,7 +17,6 @@ function APFB (Graph g, int nc)
     g.attachNodeProperty(rmatch = -1);
     g.attachNodeProperty(cmatch = -1);
     
-    // Algorithm 1
     bool noNewPaths = False;
     fixedPoint until (noNewPaths : !modified) {
         int L0 = 0;
@@ -54,13 +53,10 @@ function APFB (Graph g, int nc)
                                     neigh_row.predeccesor = col_vertex;
                                 }
                             }
-                            if(col_match <= -1){
-                                // REVIEW: Can col_match be <= -2
-                                if(col_match == -1){
-                                    neigh_row.rmatch = -2;
-                                    neigh_row.predeccesor = col_vertex;
-                                    noNewPaths = False;
-                                }
+                            if(col_match == -1){
+                                neigh_row.rmatch = -2;
+                                neigh_row.predeccesor = col_vertex;
+                                noNewPaths = False;
                             }
                         }
                     }
@@ -119,9 +115,9 @@ function APFB (Graph g, int nc)
         // <FIX MATCHING> Starts Here
         forall(r in g.nodes()){
             if(r >= nc){
-                int rm = r.rmatch;
-                if(rm > -1){
-                    if(rm.cmatch != r){
+                int c = r.rmatch;
+                if(c > -1){
+                    if(c.cmatch != r){
                         r.rmatch = -1;
                     }
                 }
