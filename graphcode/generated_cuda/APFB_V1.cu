@@ -208,6 +208,12 @@ void APFB(graph& g,int nc)
 
     ; // asst in .cu
 
+    bool* h_pred = (bool *)malloc((V)*sizeof(int));
+    cudaMemcpy(h_pred, d_predeccesor, V * sizeof(int), cudaMemcpyDeviceToHost);
+
+    for(int i = 0; i < V; i++){
+      printf("h_pred[%d]: %d\n", i, h_pred[i]);
+    }
 
     //cudaFree up!! all propVars in this BLOCK!
     cudaFree(d_compress);
