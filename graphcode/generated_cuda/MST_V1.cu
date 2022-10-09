@@ -94,134 +94,134 @@ void Boruvka(graph& g)
 
   initKernel<bool> <<<numBlocks_Edge,threadsPerBlock>>>(E,d_isMSTEdge,(bool)false);
 
-  Boruvka_kernel_1<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_color,d_nodeId,d_isMSTEdge);
-  cudaDeviceSynchronize();
-
-
-
-  bool* d_modified;
-  cudaMalloc(&d_modified, sizeof(bool)*(V));
-
-  initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_modified,(bool)false);
-
-  bool noNewComp = false; // asst in .cu
-
-  // FIXED POINT variables
-  //BEGIN FIXED POINT
-  initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-  while(!noNewComp) {
-
-    noNewComp = true;
-    cudaMemcpyToSymbol(::noNewComp, &noNewComp, sizeof(bool), 0, cudaMemcpyHostToDevice);
-    int* d_minEdge;
-    cudaMalloc(&d_minEdge, sizeof(int)*(V));
-
-    initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_minEdge,(int)-1);
-
-    Boruvka_kernel_2<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdge,d_color,d_isMSTEdge);
+  Boruvka_kernel_1<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_color,d_nodeId;
     cudaDeviceSynchronize();
 
 
 
-    int* d_minEdgeOfComp;
-    cudaMalloc(&d_minEdgeOfComp, sizeof(int)*(V));
+    bool* d_modified;
+    cudaMalloc(&d_modified, sizeof(bool)*(V));
 
-    initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_minEdgeOfComp,(int)-1);
+    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_modified,(bool)false);
 
-    bool finishedMinEdge = false; // asst in .cu
+    bool noNewComp = false; // asst in .cu
 
     // FIXED POINT variables
     //BEGIN FIXED POINT
     initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-    while(!finishedMinEdge) {
+    while(!noNewComp) {
 
-      finishedMinEdge = true;
-      cudaMemcpyToSymbol(::finishedMinEdge, &finishedMinEdge, sizeof(bool), 0, cudaMemcpyHostToDevice);
-      cudaMemcpyToSymbol(::finishedMinEdge, &finishedMinEdge, sizeof(bool), 0, cudaMemcpyHostToDevice);
-      Boruvka_kernel_3<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdge,d_minEdgeOfComp,d_color,d_isMSTEdge);
-      cudaDeviceSynchronize();
-      cudaMemcpyFromSymbol(&finishedMinEdge, ::finishedMinEdge, sizeof(bool), 0, cudaMemcpyDeviceToHost);
+      noNewComp = true;
+      cudaMemcpyToSymbol(::noNewComp, &noNewComp, sizeof(bool), 0, cudaMemcpyHostToDevice);
+      int* d_minEdge;
+      cudaMalloc(&d_minEdge, sizeof(int)*(V));
 
+      initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_minEdge,(int)-1);
 
-
-      ; // asst in .cu
-
-      ; // asst in .cu
-
-      ; // asst in .cu
-
-      ; // asst in .cu
-
-
-      cudaMemcpyFromSymbol(&finishedMinEdge, ::finishedMinEdge, sizeof(bool), 0, cudaMemcpyDeviceToHost);
-      cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
-      initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-    } // END FIXED POINT
-
-    Boruvka_kernel_4<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdgeOfComp,d_nodeId,d_color,d_isMSTEdge);
-    cudaDeviceSynchronize();
+      Boruvka_kernel_2<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdge,d_color;
+        cudaDeviceSynchronize();
 
 
 
-    Boruvka_kernel_5<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdgeOfComp,d_nodeId,d_color,d_isMSTEdge);
-    cudaDeviceSynchronize();
+        int* d_minEdgeOfComp;
+        cudaMalloc(&d_minEdgeOfComp, sizeof(int)*(V));
+
+        initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_minEdgeOfComp,(int)-1);
+
+        bool finishedMinEdge = false; // asst in .cu
+
+        // FIXED POINT variables
+        //BEGIN FIXED POINT
+        initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
+        while(!finishedMinEdge) {
+
+          finishedMinEdge = true;
+          cudaMemcpyToSymbol(::finishedMinEdge, &finishedMinEdge, sizeof(bool), 0, cudaMemcpyHostToDevice);
+          cudaMemcpyToSymbol(::finishedMinEdge, &finishedMinEdge, sizeof(bool), 0, cudaMemcpyHostToDevice);
+          Boruvka_kernel_3<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdge,d_color,d_minEdgeOfComp;
+            cudaDeviceSynchronize();
+            cudaMemcpyFromSymbol(&finishedMinEdge, ::finishedMinEdge, sizeof(bool), 0, cudaMemcpyDeviceToHost);
 
 
 
-    cudaMemcpyToSymbol(::noNewComp, &noNewComp, sizeof(bool), 0, cudaMemcpyHostToDevice);
-    Boruvka_kernel_6<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdgeOfComp,d_nodeId,d_color,d_isMSTEdge);
-    cudaDeviceSynchronize();
-    cudaMemcpyFromSymbol(&noNewComp, ::noNewComp, sizeof(bool), 0, cudaMemcpyDeviceToHost);
+            ; // asst in .cu
+
+            ; // asst in .cu
+
+            ; // asst in .cu
+
+            ; // asst in .cu
+
+
+            cudaMemcpyFromSymbol(&finishedMinEdge, ::finishedMinEdge, sizeof(bool), 0, cudaMemcpyDeviceToHost);
+            cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
+            initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
+          } // END FIXED POINT
+
+          Boruvka_kernel_4<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_nodeId,d_color,d_minEdgeOfComp;
+            cudaDeviceSynchronize();
 
 
 
-    bool finished = false; // asst in .cu
-
-    // FIXED POINT variables
-    //BEGIN FIXED POINT
-    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-    while(!finished) {
-
-      finished = true;
-      cudaMemcpyToSymbol(::finished, &finished, sizeof(bool), 0, cudaMemcpyHostToDevice);
-      cudaMemcpyToSymbol(::finished, &finished, sizeof(bool), 0, cudaMemcpyHostToDevice);
-      Boruvka_kernel_7<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_color,d_isMSTEdge);
-      cudaDeviceSynchronize();
-      cudaMemcpyFromSymbol(&finished, ::finished, sizeof(bool), 0, cudaMemcpyDeviceToHost);
+            Boruvka_kernel_5<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_nodeId,d_color,d_minEdgeOfComp;
+              cudaDeviceSynchronize();
 
 
 
-      ; // asst in .cu
-
-      ; // asst in .cu
-
-
-      cudaMemcpyFromSymbol(&finished, ::finished, sizeof(bool), 0, cudaMemcpyDeviceToHost);
-      cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
-      initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-    } // END FIXED POINT
+              cudaMemcpyToSymbol(::noNewComp, &noNewComp, sizeof(bool), 0, cudaMemcpyHostToDevice);
+              Boruvka_kernel_6<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_nodeId,d_color,d_minEdgeOfComp;
+                cudaDeviceSynchronize();
+                cudaMemcpyFromSymbol(&noNewComp, ::noNewComp, sizeof(bool), 0, cudaMemcpyDeviceToHost);
 
 
-    //cudaFree up!! all propVars in this BLOCK!
-    cudaFree(d_minEdgeOfComp);
-    cudaFree(d_minEdge);
 
-    cudaMemcpyFromSymbol(&noNewComp, ::noNewComp, sizeof(bool), 0, cudaMemcpyDeviceToHost);
-    cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
-    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-  } // END FIXED POINT
+                bool finished = false; // asst in .cu
+
+                // FIXED POINT variables
+                //BEGIN FIXED POINT
+                initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
+                while(!finished) {
+
+                  finished = true;
+                  cudaMemcpyToSymbol(::finished, &finished, sizeof(bool), 0, cudaMemcpyHostToDevice);
+                  cudaMemcpyToSymbol(::finished, &finished, sizeof(bool), 0, cudaMemcpyHostToDevice);
+                  Boruvka_kernel_7<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_color;
+                    cudaDeviceSynchronize();
+                    cudaMemcpyFromSymbol(&finished, ::finished, sizeof(bool), 0, cudaMemcpyDeviceToHost);
 
 
-  //cudaFree up!! all propVars in this BLOCK!
-  cudaFree(d_modified);
-  cudaFree(d_isMSTEdge);
-  cudaFree(d_color);
-  cudaFree(d_nodeId);
 
-  //TIMER STOP
-  cudaEventRecord(stop,0);
-  cudaEventSynchronize(stop);
-  cudaEventElapsedTime(&milliseconds, start, stop);
-  printf("GPU Time: %.6f ms\n", milliseconds);
+                    ; // asst in .cu
 
-} //end FUN
+                    ; // asst in .cu
+
+
+                    cudaMemcpyFromSymbol(&finished, ::finished, sizeof(bool), 0, cudaMemcpyDeviceToHost);
+                    cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
+                    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
+                  } // END FIXED POINT
+
+
+                  //cudaFree up!! all propVars in this BLOCK!
+                  cudaFree(d_minEdgeOfComp);
+                  cudaFree(d_minEdge);
+
+                  cudaMemcpyFromSymbol(&noNewComp, ::noNewComp, sizeof(bool), 0, cudaMemcpyDeviceToHost);
+                  cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
+                  initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
+                } // END FIXED POINT
+
+
+                //cudaFree up!! all propVars in this BLOCK!
+                cudaFree(d_modified);
+                cudaFree(d_color);
+                cudaFree(d_isMSTEdge);
+                cudaFree(d_nodeId);
+
+                //TIMER STOP
+                cudaEventRecord(stop,0);
+                cudaEventSynchronize(stop);
+                cudaEventElapsedTime(&milliseconds, start, stop);
+                printf("GPU Time: %.6f ms\n", milliseconds);
+
+              } //end FUN

@@ -13,7 +13,7 @@ void Boruvka(graph& g);
 
 
 
-__global__ void Boruvka_kernel_1(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_color,int* d_nodeId,bool *d_isMSTEdge){ // BEGIN KER FUN via ADDKERNEL
+__global__ void Boruvka_kernel_1(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_color,int* d_nodeId){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned u = blockIdx.x * blockDim.x + threadIdx.x;
   if(u >= V) return;
@@ -22,7 +22,7 @@ __global__ void Boruvka_kernel_1(int V, int E, int* d_meta, int* d_data, int* d_
 } // end KER FUNC
 __device__ bool noNewComp ; // DEVICE ASSTMENT in .h
 
-__global__ void Boruvka_kernel_2(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_minEdge,int* d_color,bool *d_isMSTEdge){ // BEGIN KER FUN via ADDKERNEL
+__global__ void Boruvka_kernel_2(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_minEdge,int* d_color){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
   if(src >= V) return;
@@ -50,7 +50,7 @@ __global__ void Boruvka_kernel_2(int V, int E, int* d_meta, int* d_data, int* d_
 } // end KER FUNC
 __device__ bool finishedMinEdge ; // DEVICE ASSTMENT in .h
 
-__global__ void Boruvka_kernel_3(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_minEdge,int* d_minEdgeOfComp,int* d_color,bool *d_isMSTEdge){ // BEGIN KER FUN via ADDKERNEL
+__global__ void Boruvka_kernel_3(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_minEdge,int* d_color,int* d_minEdgeOfComp){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned u = blockIdx.x * blockDim.x + threadIdx.x;
   if(u >= V) return;
@@ -80,7 +80,7 @@ __global__ void Boruvka_kernel_3(int V, int E, int* d_meta, int* d_data, int* d_
 
   } // if filter end
 } // end KER FUNC
-__global__ void Boruvka_kernel_4(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_minEdgeOfComp,int* d_nodeId,int* d_color,bool *d_isMSTEdge){ // BEGIN KER FUN via ADDKERNEL
+__global__ void Boruvka_kernel_4(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_nodeId,int* d_color,int* d_minEdgeOfComp){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
   if(src >= V) return;
@@ -104,7 +104,7 @@ __global__ void Boruvka_kernel_4(int V, int E, int* d_meta, int* d_data, int* d_
 
   } // if filter end
 } // end KER FUNC
-__global__ void Boruvka_kernel_5(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_minEdgeOfComp,int* d_nodeId,int* d_color,bool *d_isMSTEdge){ // BEGIN KER FUN via ADDKERNEL
+__global__ void Boruvka_kernel_5(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_nodeId,int* d_color,int* d_minEdgeOfComp){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
   if(src >= V) return;
@@ -117,7 +117,7 @@ __global__ void Boruvka_kernel_5(int V, int E, int* d_meta, int* d_data, int* d_
 
   } // if filter end
 } // end KER FUNC
-__global__ void Boruvka_kernel_6(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_minEdgeOfComp,int* d_nodeId,int* d_color,bool *d_isMSTEdge){ // BEGIN KER FUN via ADDKERNEL
+__global__ void Boruvka_kernel_6(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_nodeId,int* d_color,int* d_minEdgeOfComp){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
   if(src >= V) return;
@@ -134,7 +134,7 @@ __global__ void Boruvka_kernel_6(int V, int E, int* d_meta, int* d_data, int* d_
 } // end KER FUNC
 __device__ bool finished ; // DEVICE ASSTMENT in .h
 
-__global__ void Boruvka_kernel_7(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_color,bool *d_isMSTEdge){ // BEGIN KER FUN via ADDKERNEL
+__global__ void Boruvka_kernel_7(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_color){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned u = blockIdx.x * blockDim.x + threadIdx.x;
   if(u >= V) return;
