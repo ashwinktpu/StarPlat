@@ -117,7 +117,7 @@ function APFB (Graph g, int nc)
         forall(r in g.nodes()){
             if(r >= nc){
                 int c = r.rmatch;
-                if(c > -1){
+                if(c >= 0){
                     if(c.cmatch != r){
                         r.rmatch = -1;
                     }
