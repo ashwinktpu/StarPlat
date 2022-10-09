@@ -9,6 +9,8 @@ int main(int argc, char** argv) {
     bool isWeighted = atoi(argv[2]) ? true : false;
     printf("Taking input from: %s\n", inp);
     
+    int nc = 3;
+    
     graph g(inp);
     g.parseGraph(isWeighted);
     APFB(g, nc);
