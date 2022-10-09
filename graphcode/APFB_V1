@@ -44,7 +44,7 @@ function APFB (Graph g, int nc)
             forall(col_vertex in g.nodes()){
                 if(col_vertex < nc){
                     if(col_vertex.bfsArray == bfsLevel){
-                        for(neigh_row in g.neighbours(col_vertex)){
+                        for(nr in g.neighbors(col_vertex)){
                             int col_match = neigh_row.rmatch;
                             if(col_match > -1){
                                 if(col_match.bfsArray == NOT_VISITED){
