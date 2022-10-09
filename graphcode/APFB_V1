@@ -80,19 +80,21 @@ function APFB (Graph g, int nc)
         // <ALTERNATE> Starts Here
         bool compressed = False;
         fixedPoint until(compressed : !modified) {
-            forall(row_vertex in g.nodes()){
+            forall(row_vertex in g.nodes().filter(compress == True)){
                 if(row_vertex >= nc){
                     int matched_col = row_vertex.predeccesor;
                     int matched_row = matched_col.cmatch;
                     
                     if(matched_row.predeccesor != matched_col){
-                        matched_row.cmatch = row_vertex;
+                        matched_col.cmatch = row_vertex;
                         row_vertex.rmatch = matched_col;
                         if(matched_row != -1){
                             matched_row.compress = True;
                             compressed = False;
                         }
                     }
+                    
+                    row_vertex.compress = False;
                 }
             }
         }
