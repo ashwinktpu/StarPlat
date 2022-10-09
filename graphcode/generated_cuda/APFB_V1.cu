@@ -127,13 +127,6 @@ void APFB(graph& g,int nc)
     cudaMalloc(&d_predeccesor, sizeof(int)*(V));
 
     initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_predeccesor,(int)-1);
-    
-    bool* h_pred1 = (bool *)malloc((V)*sizeof(int));
-    cudaMemcpy(h_pred1, d_predeccesor, V * sizeof(int), cudaMemcpyDeviceToHost);
-
-    for(int i = 0; i < V; i++){
-      printf("h_pred1[%d]: %d\n", i, h_pred1[i]);
-    }
 
     bool noNewVertices = false; // asst in .cu
 
@@ -215,7 +208,7 @@ void APFB(graph& g,int nc)
 
     ; // asst in .cu
 
-    bool* h_pred = (bool *)malloc((V)*sizeof(int));
+    int* h_pred = (int *)malloc((V)*sizeof(int));
     cudaMemcpy(h_pred, d_predeccesor, V * sizeof(int), cudaMemcpyDeviceToHost);
 
     for(int i = 0; i < V; i++){
@@ -232,8 +225,8 @@ void APFB(graph& g,int nc)
     initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
   } // END FIXED POINT
 
-  bool* h_rmatch = (bool *)malloc((V)*sizeof(int));
-  bool* h_cmatch = (bool *)malloc((V)*sizeof(int));
+  int* h_rmatch = (int *)malloc((V)*sizeof(int));
+  int* h_cmatch = (int *)malloc((V)*sizeof(int));
   cudaMemcpy(h_rmatch, d_rmatch, V * sizeof(int), cudaMemcpyDeviceToHost);
   cudaMemcpy(h_cmatch, d_cmatch, V * sizeof(int), cudaMemcpyDeviceToHost);
 
