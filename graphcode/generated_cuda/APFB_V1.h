@@ -36,7 +36,7 @@ __device__ int bfsLevel ; // DEVICE ASSTMENT in .h
 
 __device__ bool noNewVertices ; // DEVICE ASSTMENT in .h
 
-__global__ void APFB_kernel_2(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_bfsArray,int* d_rmatch,int* d_predeccesor){ // BEGIN KER FUN via ADDKERNEL
+__global__ void APFB_kernel_2(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_rmatch,int* d_bfsArray,int* d_predeccesor){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned col_vertex = blockIdx.x * blockDim.x + threadIdx.x;
   if(col_vertex >= V) return;
@@ -74,12 +74,12 @@ __global__ void APFB_kernel_3(int V, int E, int* d_meta, int* d_data, int* d_src
   if(r >= V) return;
   if (r >= nc && d_rmatch[r] == -2){ // if filter begin 
     d_compress[r] = true;
-    // printf("Compress %d", r);
+
   } // if filter end
 } // end KER FUNC
 __device__ bool compressed ; // DEVICE ASSTMENT in .h
 
-__global__ void APFB_kernel_4(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,bool* d_compress,int* d_predeccesor,int* d_cmatch,int* d_rmatch,bool* d_compress_next){ // BEGIN KER FUN via ADDKERNEL
+__global__ void APFB_kernel_4(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_predeccesor,bool* d_compress,int* d_cmatch,bool* d_compress_next,int* d_rmatch){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned row_vertex = blockIdx.x * blockDim.x + threadIdx.x;
   if(row_vertex >= V) return;
@@ -135,6 +135,10 @@ __global__ void APFB_kernel_6(int V, int E, int* d_meta, int* d_data, int* d_src
         d_rmatch[r] = -1;
 
       } // if filter end
+
+    } // if filter end
+    if (c == -2){ // if filter begin 
+      d_rmatch[r] = -1;
 
     } // if filter end
 
