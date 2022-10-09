@@ -21,7 +21,7 @@ function APFB (Graph g, int nc)
     fixedPoint until (noNewPaths : !modified) {
         int L0 = 0;
         
-        // Initialize BFS Array
+        // <INIT BFS ARRAY>
         propNode<int> bfsArray;
         int NOT_VISITED = L0 - 1;
         g.attachNodeProperty(bfsArray = NOT_VISITED);
@@ -32,6 +32,7 @@ function APFB (Graph g, int nc)
                 }
             }
         }
+        // <INIT BFS ARRAY>
         
         // TODO: Not sure whether this is the right initialisation for predeccesor
         propNode<int> predeccesor;
@@ -120,6 +121,9 @@ function APFB (Graph g, int nc)
                     if(c.cmatch != r){
                         r.rmatch = -1;
                     }
+                }
+                if(c < -1){ // THIS DIDN'T MENTION THIS
+                    r.rmatch = -1;
                 }
             }
         }
