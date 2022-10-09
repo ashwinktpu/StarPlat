@@ -71,7 +71,10 @@ function APFB (Graph g, int nc)
         }
         
         propNode<bool> compress;
+        propNode<bool> compress_next;
         g.attachNodeProperty(compress = False);
+        g.attachNodeProperty(compress_next = False);
+        
         forall(r in g.nodes()){
             if(r >= nc && r.rmatch == -2){
                 r.compress = True;
@@ -97,12 +100,17 @@ function APFB (Graph g, int nc)
                         matched_col.cmatch = row_vertex;
                         row_vertex.rmatch = matched_col;
                         if(matched_row != -1){
-                            matched_row.compress = True;
+                            matched_row.compress_next = True;
                             compressed = False;
                         }
                     }
-                    
-                    row_vertex.compress = False;
+                }
+            }
+            
+            forall(row_vertex in g.nodes()){
+                if(row_vertex >= nc){
+                    row_vertex.compress = row_vertex.compress_next;
+                    row_vertex.compress_next = False;
                 }
             }
         }

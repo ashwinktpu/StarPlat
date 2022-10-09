@@ -82,7 +82,7 @@ __global__ void APFB_kernel_3(int V, int E, int* d_meta, int* d_data, int* d_src
 } // end KER FUNC
 __device__ bool compressed ; // DEVICE ASSTMENT in .h
 
-__global__ void APFB_kernel_4(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,bool* d_compress,int* d_predeccesor,int* d_cmatch,int* d_rmatch){ // BEGIN KER FUN via ADDKERNEL
+__global__ void APFB_kernel_4(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,bool* d_compress,int* d_predeccesor,int* d_cmatch,bool* d_compress_next,int* d_rmatch){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned row_vertex = blockIdx.x * blockDim.x + threadIdx.x;
   if(row_vertex >= V) return;
@@ -105,19 +105,28 @@ __global__ void APFB_kernel_4(int V, int E, int* d_meta, int* d_data, int* d_src
         d_cmatch[matched_col] = row_vertex;
         d_rmatch[row_vertex] = matched_col;
         if (matched_row != -1){ // if filter begin 
-          d_compress[matched_row] = true;
+          d_compress_next[matched_row] = true;
           compressed = false;
 
         } // if filter end
 
       } // if filter end
-      d_compress[row_vertex] = false;
 
     } // if filter end
 
   } // if filter end
 } // end KER FUNC
-__global__ void APFB_kernel_5(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_rmatch,int* d_cmatch){ // BEGIN KER FUN via ADDKERNEL
+__global__ void APFB_kernel_5(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,bool* d_compress_next,bool* d_compress){ // BEGIN KER FUN via ADDKERNEL
+  float num_nodes  = V;
+  unsigned row_vertex = blockIdx.x * blockDim.x + threadIdx.x;
+  if(row_vertex >= V) return;
+  if (row_vertex >= nc){ // if filter begin 
+    d_compress[row_vertex] = d_compress_next[row_vertex];
+    d_compress_next[row_vertex] = false;
+
+  } // if filter end
+} // end KER FUNC
+__global__ void APFB_kernel_6(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_rmatch,int* d_cmatch){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned r = blockIdx.x * blockDim.x + threadIdx.x;
   if(r >= V) return;
