@@ -11,6 +11,15 @@ int main(int argc, char** argv) {
     
     int nc = 3;
     
+//       bool* h_rmatch = (bool *)malloc((V)*sizeof(int));
+//   bool* h_cmatch = (bool *)malloc((V)*sizeof(int));
+//   cudaMemcpy(h_rmatch, d_rmatch, V * sizeof(int), cudaMemcpyDeviceToHost);
+//   cudaMemcpy(h_cmatch, d_rmatch, V * sizeof(int), cudaMemcpyDeviceToHost);
+
+//   for(int i = 0; i < V; i++){
+//     printf("H rmatch[%d]: %d, cmatch[%d]: %d\n", i, h_rmatch[i], i, h_cmatch[i]);
+//   }
+    
     graph g(inp);
     g.parseGraph(isWeighted);
     APFB(g, nc);
