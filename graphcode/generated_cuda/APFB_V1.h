@@ -36,7 +36,7 @@ __global__ void APFB_kernel_1(int V, int E, int* d_meta, int* d_data, int* d_src
 } // end KER FUNC
 __device__ bool noNewVertices ; // DEVICE ASSTMENT in .h
 
-__global__ void APFB_kernel_2(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_rmatch,int* d_bfsArray,int* d_predeccesor){ // BEGIN KER FUN via ADDKERNEL
+__global__ void APFB_kernel_2(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_bfsArray,int* d_rmatch,int* d_predeccesor){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned col_vertex = blockIdx.x * blockDim.x + threadIdx.x;
   if(col_vertex >= V) return;
@@ -82,23 +82,27 @@ __global__ void APFB_kernel_3(int V, int E, int* d_meta, int* d_data, int* d_src
 } // end KER FUNC
 __device__ bool compressed ; // DEVICE ASSTMENT in .h
 
-__global__ void APFB_kernel_4(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_cmatch,int* d_predeccesor,int* d_rmatch,bool* d_compress){ // BEGIN KER FUN via ADDKERNEL
+__global__ void APFB_kernel_4(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,bool* d_compress,int* d_cmatch,int* d_predeccesor,int* d_rmatch){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned row_vertex = blockIdx.x * blockDim.x + threadIdx.x;
   if(row_vertex >= V) return;
-  if (row_vertex >= nc){ // if filter begin 
-    int matched_col = d_predeccesor[row_vertex]; // DEVICE ASSTMENT in .h
+  if (d_compress[row_vertex] == true){ // if filter begin 
+    if (row_vertex >= nc){ // if filter begin 
+      int matched_col = d_predeccesor[row_vertex]; // DEVICE ASSTMENT in .h
 
-    int matched_row = d_cmatch[matched_col]; // DEVICE ASSTMENT in .h
+      int matched_row = d_cmatch[matched_col]; // DEVICE ASSTMENT in .h
 
-    if (d_predeccesor[matched_row] != matched_col){ // if filter begin 
-      d_cmatch[matched_row] = row_vertex;
-      d_rmatch[row_vertex] = matched_col;
-      if (matched_row != -1){ // if filter begin 
-        d_compress[matched_row] = true;
-        compressed = false;
+      if (d_predeccesor[matched_row] != matched_col){ // if filter begin 
+        d_cmatch[matched_col] = row_vertex;
+        d_rmatch[row_vertex] = matched_col;
+        if (matched_row != -1){ // if filter begin 
+          d_compress[matched_row] = true;
+          compressed = false;
+
+        } // if filter end
 
       } // if filter end
+      d_compress[row_vertex] = false;
 
     } // if filter end
 
