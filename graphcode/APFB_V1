@@ -21,7 +21,6 @@ function APFB (Graph g, int nc)
     bool noNewPaths = False;
     fixedPoint until (noNewPaths : !modified) {
         int L0 = 0;
-        int bfsLevel = L0;
         
         // Initialize BFS Array
         propNode<int> bfsArray;
@@ -38,6 +37,8 @@ function APFB (Graph g, int nc)
         // TODO: Not sure whether this is the right initialisation for predeccesor
         propNode<int> predeccesor;
         g.attachNodeProperty(predeccesor = -1); 
+        
+        int bfsLevel = L0;
         bool noNewVertices = False;
         fixedPoint until (noNewVertices : !modified) {
             // <BFS> Starts Here
