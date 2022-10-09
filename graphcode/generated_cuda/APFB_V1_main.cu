@@ -21,9 +21,8 @@ using namespace std;
 int main(int argc, char** argv) {
     char* inp = argv[1];
     bool isWeighted = atoi(argv[2]) ? true : false;
+    int nc = atoi(argv[3]);
     printf("Taking input from: %s\n", inp);
-    
-    int nc = 6;
     
     graph g(inp);
     g.parseGraph(isWeighted);
