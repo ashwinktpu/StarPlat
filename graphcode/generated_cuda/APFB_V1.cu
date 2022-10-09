@@ -228,9 +228,14 @@ void APFB(graph& g,int nc)
   cudaMemcpy(h_rmatch, d_rmatch, V * sizeof(int), cudaMemcpyDeviceToHost);
   cudaMemcpy(h_cmatch, d_cmatch, V * sizeof(int), cudaMemcpyDeviceToHost);
 
+  int cntMatchings = 0;
   for(int i = 0; i < V; i++){
-    printf("rmatch[%d]: %d, cmatch[%d]: %d\n", i, h_rmatch[i], i, h_cmatch[i]);
+    // printf("rmatch[%d]: %d, cmatch[%d]: %d\n", i, h_rmatch[i], i, h_cmatch[i]);
+    if(h_cmatch[i] >= 0){
+      cntMatchings += 1;
+    }
   }
+  printf("Maximum MATCHES: %d\n", cntMatchings);
 
   //cudaFree up!! all propVars in this BLOCK!
   cudaFree(d_cmatch);
