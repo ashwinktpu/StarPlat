@@ -1,4 +1,3 @@
-// Also modify APFB_V1_main.cu file
 0 6
 0 7
 0 8
