@@ -1602,7 +1602,7 @@ void dsl_cpp_generator :: addCudaKernel(forallStmt* forAll)
     }
   }
   
-  header.pushString(",bool *d_isMSTEdge"); // TODO: Remove isMSTEdge
+  // header.pushString(",bool *d_isMSTEdge"); // TODO: Remove isMSTEdge
 
   header.pushstr_newL("){ // BEGIN KER FUN via ADDKERNEL");
 
@@ -1715,8 +1715,8 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
           main.pushString(/*createParamName(*/iden->getIdentifier());
         }
       }
-    main.pushString(",d_isMSTEdge)"); // TODO: Remove isMSTEdge
-    main.push(';');
+    // main.pushString(",d_isMSTEdge"); // TODO: Remove isMSTEdge
+    main.push(');');
     main.NewLine();
 
     main.pushString("cudaDeviceSynchronize();");
