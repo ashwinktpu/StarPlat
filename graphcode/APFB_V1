@@ -122,7 +122,7 @@ function APFB (Graph g, int nc)
                         r.rmatch = -1;
                     }
                 }
-                // if(c == -2){ // THIS DIDN'T MENTION THIS
+                // if(c == -2){ // PAPER DIDN'T MENTION THIS
                 //     r.rmatch = -1;
                 // }
             }
