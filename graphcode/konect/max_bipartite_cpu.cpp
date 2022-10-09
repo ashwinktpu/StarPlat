@@ -185,7 +185,7 @@ void BipGraph::addEdge(int u, int v)
 // Driver Program
 int main(int argc, char** argv)
 {
-    // g++ -std=c++17 max_bipartite_cpu.cpp && ./a.out "south_african_companies.txt" 6 5
+    // g++ -std=c++17 max_bipartite_cpu.cpp && ./a.out "american_revolution.txt" 136 5
     if(argc < 4){
         cout << "Usage: " << argv[0] << " <input_file> <left_size> <right_size>" << endl; 
     }

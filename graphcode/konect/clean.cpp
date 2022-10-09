@@ -3,6 +3,7 @@ using namespace std;
 
 void parseGraph(char* input, char* output, int leftSize, bool isWeighted = false)
 {
+    // g++ -std=c++17 clean.cpp && ./a.out "american_revolution.txt" "american_revolution_clean.txt" 136
     ifstream infile;
     infile.open(input);
     
