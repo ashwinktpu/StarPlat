@@ -58,7 +58,7 @@ function APFB (Graph g, int nc)
                                 if(col_match == -1){
                                     neigh_row.rmatch = -2;
                                     neigh_row.predeccesor = col_vertex;
-                                    noNewPaths = False;
+                                    // noNewPaths = False;
                                 }
                             }
                         }
@@ -104,7 +104,7 @@ function APFB (Graph g, int nc)
         forall(r in g.nodes()){
             if(r >= nc){
                 int rm = r.rmatch;
-                if(rm != -1){
+                if(rm > -1){
                     if(rm.cmatch != r){
                         r.rmatch = -1;
                     }
