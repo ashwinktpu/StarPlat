@@ -4,8 +4,8 @@ using namespace std;
 
 #include "APFB_V1.cu"
 
-//   bool* h_rmatch = (bool *)malloc((V)*sizeof(int));
-//   bool* h_cmatch = (bool *)malloc((V)*sizeof(int));
+//   int* h_rmatch = (int *)malloc((V)*sizeof(int));
+//   int* h_cmatch = (int *)malloc((V)*sizeof(int));
 //   cudaMemcpy(h_rmatch, d_rmatch, V * sizeof(int), cudaMemcpyDeviceToHost);
 //   cudaMemcpy(h_cmatch, d_cmatch, V * sizeof(int), cudaMemcpyDeviceToHost);
 
