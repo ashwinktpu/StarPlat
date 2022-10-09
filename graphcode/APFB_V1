@@ -73,7 +73,7 @@ function APFB (Graph g, int nc)
         g.attachNodeProperty(compress = False);
         forall(r in g.nodes()){
             if(r >= nc && r.rmatch == -2){
-                compress = True;
+                r.compress = True;
             }
         }
         

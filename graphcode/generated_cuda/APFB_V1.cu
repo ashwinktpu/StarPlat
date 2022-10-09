@@ -116,121 +116,121 @@ void APFB(graph& g,int nc)
 
     cudaMemcpyToSymbol(::L0, &L0, sizeof(int), 0, cudaMemcpyHostToDevice);
     cudaMemcpyToSymbol(::nc, &nc, sizeof(int), 0, cudaMemcpyHostToDevice);
-    APFB_kernel_1<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_cmatch,d_bfsArray;
+    APFB_kernel_1<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_cmatch,d_bfsArray);
+    cudaDeviceSynchronize();
+    cudaMemcpyFromSymbol(&L0, ::L0, sizeof(int), 0, cudaMemcpyDeviceToHost);
+    cudaMemcpyFromSymbol(&nc, ::nc, sizeof(int), 0, cudaMemcpyDeviceToHost);
+
+
+
+    int* d_predeccesor;
+    cudaMalloc(&d_predeccesor, sizeof(int)*(V));
+
+    initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_predeccesor,(int)-1);
+
+    bool noNewVertices = false; // asst in .cu
+
+    // FIXED POINT variables
+    //BEGIN FIXED POINT
+    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
+    while(!noNewVertices) {
+
+      noNewVertices = true;
+      cudaMemcpyToSymbol(::noNewVertices, &noNewVertices, sizeof(bool), 0, cudaMemcpyHostToDevice);
+      cudaMemcpyToSymbol(::NOT_VISITED, &NOT_VISITED, sizeof(int), 0, cudaMemcpyHostToDevice);
+      cudaMemcpyToSymbol(::bfsLevel, &bfsLevel, sizeof(int), 0, cudaMemcpyHostToDevice);
+      cudaMemcpyToSymbol(::nc, &nc, sizeof(int), 0, cudaMemcpyHostToDevice);
+      cudaMemcpyToSymbol(::noNewPaths, &noNewPaths, sizeof(bool), 0, cudaMemcpyHostToDevice);
+      cudaMemcpyToSymbol(::noNewVertices, &noNewVertices, sizeof(bool), 0, cudaMemcpyHostToDevice);
+      APFB_kernel_2<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_rmatch,d_bfsArray,d_predeccesor);
       cudaDeviceSynchronize();
-      cudaMemcpyFromSymbol(&L0, ::L0, sizeof(int), 0, cudaMemcpyDeviceToHost);
+      cudaMemcpyFromSymbol(&NOT_VISITED, ::NOT_VISITED, sizeof(int), 0, cudaMemcpyDeviceToHost);
+      cudaMemcpyFromSymbol(&bfsLevel, ::bfsLevel, sizeof(int), 0, cudaMemcpyDeviceToHost);
       cudaMemcpyFromSymbol(&nc, ::nc, sizeof(int), 0, cudaMemcpyDeviceToHost);
+      cudaMemcpyFromSymbol(&noNewPaths, ::noNewPaths, sizeof(bool), 0, cudaMemcpyDeviceToHost);
+      cudaMemcpyFromSymbol(&noNewVertices, ::noNewVertices, sizeof(bool), 0, cudaMemcpyDeviceToHost);
 
 
 
-      int* d_predeccesor;
-      cudaMalloc(&d_predeccesor, sizeof(int)*(V));
+      ; // asst in .cu
 
-      initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_predeccesor,(int)-1);
+      bfsLevel = bfsLevel + 1;
 
-      bool noNewVertices = false; // asst in .cu
-
-      // FIXED POINT variables
-      //BEGIN FIXED POINT
+      cudaMemcpyFromSymbol(&noNewVertices, ::noNewVertices, sizeof(bool), 0, cudaMemcpyDeviceToHost);
+      cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
       initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-      while(!noNewVertices) {
+    } // END FIXED POINT
 
-        noNewVertices = true;
-        cudaMemcpyToSymbol(::noNewVertices, &noNewVertices, sizeof(bool), 0, cudaMemcpyHostToDevice);
-        cudaMemcpyToSymbol(::NOT_VISITED, &NOT_VISITED, sizeof(int), 0, cudaMemcpyHostToDevice);
-        cudaMemcpyToSymbol(::nc, &nc, sizeof(int), 0, cudaMemcpyHostToDevice);
-        cudaMemcpyToSymbol(::bfsLevel, &bfsLevel, sizeof(int), 0, cudaMemcpyHostToDevice);
-        cudaMemcpyToSymbol(::noNewPaths, &noNewPaths, sizeof(bool), 0, cudaMemcpyHostToDevice);
-        cudaMemcpyToSymbol(::noNewVertices, &noNewVertices, sizeof(bool), 0, cudaMemcpyHostToDevice);
-        APFB_kernel_2<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_bfsArray,d_rmatch,d_predeccesor;
-          cudaDeviceSynchronize();
-          cudaMemcpyFromSymbol(&NOT_VISITED, ::NOT_VISITED, sizeof(int), 0, cudaMemcpyDeviceToHost);
-          cudaMemcpyFromSymbol(&nc, ::nc, sizeof(int), 0, cudaMemcpyDeviceToHost);
-          cudaMemcpyFromSymbol(&bfsLevel, ::bfsLevel, sizeof(int), 0, cudaMemcpyDeviceToHost);
-          cudaMemcpyFromSymbol(&noNewPaths, ::noNewPaths, sizeof(bool), 0, cudaMemcpyDeviceToHost);
-          cudaMemcpyFromSymbol(&noNewVertices, ::noNewVertices, sizeof(bool), 0, cudaMemcpyDeviceToHost);
+    bool* d_compress;
+    cudaMalloc(&d_compress, sizeof(bool)*(V));
+
+    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_compress,(bool)false);
+
+    cudaMemcpyToSymbol(::nc, &nc, sizeof(int), 0, cudaMemcpyHostToDevice);
+    APFB_kernel_3<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_rmatch,d_compress);
+    cudaDeviceSynchronize();
+    cudaMemcpyFromSymbol(&nc, ::nc, sizeof(int), 0, cudaMemcpyDeviceToHost);
 
 
 
-          ; // asst in .cu
+    bool compressed = false; // asst in .cu
 
-          bfsLevel = bfsLevel + 1;
+    // FIXED POINT variables
+    //BEGIN FIXED POINT
+    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
+    while(!compressed) {
 
-          cudaMemcpyFromSymbol(&noNewVertices, ::noNewVertices, sizeof(bool), 0, cudaMemcpyDeviceToHost);
-          cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
-          initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-        } // END FIXED POINT
-
-        bool* d_compress;
-        cudaMalloc(&d_compress, sizeof(bool)*(V));
-
-        initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_compress,(bool)false);
-
-        cudaMemcpyToSymbol(::nc, &nc, sizeof(int), 0, cudaMemcpyHostToDevice);
-        APFB_kernel_3<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_rmatch,d_compress;
-          cudaDeviceSynchronize();
-          cudaMemcpyFromSymbol(&nc, ::nc, sizeof(int), 0, cudaMemcpyDeviceToHost);
+      compressed = true;
+      cudaMemcpyToSymbol(::compressed, &compressed, sizeof(bool), 0, cudaMemcpyHostToDevice);
+      cudaMemcpyToSymbol(::nc, &nc, sizeof(int), 0, cudaMemcpyHostToDevice);
+      cudaMemcpyToSymbol(::compressed, &compressed, sizeof(bool), 0, cudaMemcpyHostToDevice);
+      APFB_kernel_4<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_predeccesor,d_cmatch,d_compress,d_rmatch);
+      cudaDeviceSynchronize();
+      cudaMemcpyFromSymbol(&nc, ::nc, sizeof(int), 0, cudaMemcpyDeviceToHost);
+      cudaMemcpyFromSymbol(&compressed, ::compressed, sizeof(bool), 0, cudaMemcpyDeviceToHost);
 
 
 
-          bool compressed = false; // asst in .cu
+      ; // asst in .cu
 
-          // FIXED POINT variables
-          //BEGIN FIXED POINT
-          initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-          while(!compressed) {
-
-            compressed = true;
-            cudaMemcpyToSymbol(::compressed, &compressed, sizeof(bool), 0, cudaMemcpyHostToDevice);
-            cudaMemcpyToSymbol(::nc, &nc, sizeof(int), 0, cudaMemcpyHostToDevice);
-            cudaMemcpyToSymbol(::compressed, &compressed, sizeof(bool), 0, cudaMemcpyHostToDevice);
-            APFB_kernel_4<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_predeccesor,d_cmatch,d_compress,d_rmatch;
-              cudaDeviceSynchronize();
-              cudaMemcpyFromSymbol(&nc, ::nc, sizeof(int), 0, cudaMemcpyDeviceToHost);
-              cudaMemcpyFromSymbol(&compressed, ::compressed, sizeof(bool), 0, cudaMemcpyDeviceToHost);
+      ; // asst in .cu
 
 
+      cudaMemcpyFromSymbol(&compressed, ::compressed, sizeof(bool), 0, cudaMemcpyDeviceToHost);
+      cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
+      initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
+    } // END FIXED POINT
 
-              ; // asst in .cu
-
-              ; // asst in .cu
-
-
-              cudaMemcpyFromSymbol(&compressed, ::compressed, sizeof(bool), 0, cudaMemcpyDeviceToHost);
-              cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
-              initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-            } // END FIXED POINT
-
-            cudaMemcpyToSymbol(::nc, &nc, sizeof(int), 0, cudaMemcpyHostToDevice);
-            APFB_kernel_5<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_rmatch,d_cmatch;
-              cudaDeviceSynchronize();
-              cudaMemcpyFromSymbol(&nc, ::nc, sizeof(int), 0, cudaMemcpyDeviceToHost);
+    cudaMemcpyToSymbol(::nc, &nc, sizeof(int), 0, cudaMemcpyHostToDevice);
+    APFB_kernel_5<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_cmatch,d_rmatch);
+    cudaDeviceSynchronize();
+    cudaMemcpyFromSymbol(&nc, ::nc, sizeof(int), 0, cudaMemcpyDeviceToHost);
 
 
 
-              ; // asst in .cu
+    ; // asst in .cu
 
 
-              //cudaFree up!! all propVars in this BLOCK!
-              cudaFree(d_compress);
-              cudaFree(d_predeccesor);
-              cudaFree(d_bfsArray);
+    //cudaFree up!! all propVars in this BLOCK!
+    cudaFree(d_predeccesor);
+    cudaFree(d_compress);
+    cudaFree(d_bfsArray);
 
-              cudaMemcpyFromSymbol(&noNewPaths, ::noNewPaths, sizeof(bool), 0, cudaMemcpyDeviceToHost);
-              cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
-              initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-            } // END FIXED POINT
+    cudaMemcpyFromSymbol(&noNewPaths, ::noNewPaths, sizeof(bool), 0, cudaMemcpyDeviceToHost);
+    cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
+    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
+  } // END FIXED POINT
 
 
-            //cudaFree up!! all propVars in this BLOCK!
-            cudaFree(d_cmatch);
-            cudaFree(d_rmatch);
-            cudaFree(d_modified);
+  //cudaFree up!! all propVars in this BLOCK!
+  cudaFree(d_cmatch);
+  cudaFree(d_rmatch);
+  cudaFree(d_modified);
 
-            //TIMER STOP
-            cudaEventRecord(stop,0);
-            cudaEventSynchronize(stop);
-            cudaEventElapsedTime(&milliseconds, start, stop);
-            printf("GPU Time: %.6f ms\n", milliseconds);
+  //TIMER STOP
+  cudaEventRecord(stop,0);
+  cudaEventSynchronize(stop);
+  cudaEventElapsedTime(&milliseconds, start, stop);
+  printf("GPU Time: %.6f ms\n", milliseconds);
 
-          } //end FUN
+} //end FUN
