@@ -3,7 +3,6 @@ function APFB (Graph g, int nc)
     // NOTE:
     // 1. All the edges are from columns to rows.
     // 2. Make sure there are no self loops.
-    // 3. Make sure nc is passed correctly in main function
     // 3. Coloumns [0, nc)
     // 4. Rows [nc, V) V is # vertices
     // 5. APFB not APsB (Lines 9, 10 in Algo 1 removed)
