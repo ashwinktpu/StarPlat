@@ -3,7 +3,6 @@ using namespace std;
 
 void parseGraph(char* input, char* output, int leftSize, bool isWeighted = false)
 {
-    // g++ -std=c++17 clean.cpp && ./a.out "american_revolution.txt" "american_revolution_clean.txt" 136
     ifstream infile;
     infile.open(input);
     
@@ -27,6 +26,7 @@ void parseGraph(char* input, char* output, int leftSize, bool isWeighted = false
 }
 
 int  main(int argc, char **argv){
+    // g++ -std=c++17 clean.cpp && ./a.out "wikiversity_edits_(ru).txt" "wikiversity_edits_(ru)_clean.txt" 3171
     if(argc < 4){
         cout << "Usage: ./a.out <input_file> <output_file> <left_size>" << endl;
         return 0;
