@@ -86,7 +86,14 @@ function APFB (Graph g, int nc)
                     int matched_col = row_vertex.predeccesor;
                     int matched_row = matched_col.cmatch;
                     
-                    if(matched_row.predeccesor != matched_col){
+                    bool isValid = True;
+                    if(matched_row != -1){
+                        if(matched_row.predeccesor == matched_col){
+                            isValid = False;
+                        }
+                    }
+                    
+                    if(isValid){
                         matched_col.cmatch = row_vertex;
                         row_vertex.rmatch = matched_col;
                         if(matched_row != -1){
