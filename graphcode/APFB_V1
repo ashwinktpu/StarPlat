@@ -59,7 +59,7 @@ function APFB (Graph g, int nc)
                                 if(col_match == -1){
                                     neigh_row.rmatch = -2;
                                     neigh_row.predeccesor = col_vertex;
-                                    // noNewPaths = False;
+                                    noNewPaths = False;
                                 }
                             }
                         }
