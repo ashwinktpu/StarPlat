@@ -1716,7 +1716,7 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
         }
       }
     // main.pushString(",d_isMSTEdge"); // TODO: Remove isMSTEdge
-    main.push(');');
+    main.pushString(");");
     main.NewLine();
 
     main.pushString("cudaDeviceSynchronize();");
