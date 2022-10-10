@@ -16,7 +16,11 @@ module load cuda10.1
 module load gcc640
 nvcc -o "APFB_V1".out "generated_cuda/APFB_V1_main.cu"  -std=c++14  #-arch=sm_70
 # time (./APFB_V1.out $cleandir/GermanyRoadud.txt 0 > output_APFB_V1.txt) # 0 - Unweighted Graph
-time (./APFB_V1.out "konect/teams_clean.txt" 0 901166 > output_APFB_V1.txt) # 0 - Unweighted Graph # Left Size
+# Loop 10 times
+for i in {1..10}
+do
+    time (./APFB_V1.out "konect/teams_clean.txt" 0 901166 > output_APFB_V1.txt) # 0 - Unweighted Graph # Left Size
+done;
 
 rm *.out
 # move everything from $tempdir to $PBS_O_WORKDIR
