@@ -26,7 +26,7 @@ void parseGraph(char* input, char* output, int leftSize, bool isWeighted = false
 }
 
 int  main(int argc, char **argv){
-    // g++ -std=c++17 clean.cpp && ./a.out "teams.txt" "teams_clean.txt" 901166
+    // g++ -std=c++17 clean.cpp && ./a.out "teams.txt" "teams_clean.txt" "<LEFT>"
     if(argc < 4){
         cout << "Usage: ./a.out <input_file> <output_file> <left_size>" << endl;
         return 0;
