@@ -49,21 +49,24 @@ function Boruvka (Graph g)
         propNode<int> minEdgeOfComp;
         g.attachNodeProperty(minEdgeOfComp=-1);
         
-        forall(src in g.nodes())
-        {
-            if(src.color == src.nodeId){
-                for(nbr in g.nodes().filter(color == src.color))
-                {
-                    edge minEdgeNbr = nbr.minEdge;
-                    edge minEdgeOfComp = src.minEdgeOfComp;
-                    if(minEdgeNbr != -1 && minEdgeOfComp == -1){
-                        src.minEdgeOfComp = minEdgeNbr;
+        bool finishedMinEdge = False;
+        fixedPoint until (finishedMinEdge: !modified) {
+            forall(u in g.nodes()){
+                int comp = u.color;
+                int minEdge = comp.minEdgeOfComp;
+                int e = u.minEdge;
+                
+                if(e != -1){
+                    int dst = e.data;
+                    if(minEdge == -1) {
+                        comp.minEdgeOfComp = e;
+                        finishedMinEdge = False;
                     }
-                    if(minEdgeNbr != -1 && minEdgeOfComp != -1){
-                        node minDst = minEdgeOfComp.data;
-                        node dst = minEdgeNbr.data;
-                        if(minEdgeNbr.weight < minEdgeOfComp.weight || (minEdgeNbr.weight == minEdgeOfComp.weight && dst.color < minDst.color)){
-                            src.minEdgeOfComp = minEdgeNbr;
+                    if(minEdge != -1){
+                        node minDst = minEdge.data;
+                        if(e.weight < minEdge.weight || (e.weight == minEdge.weight && dst.color < minDst.color)) {
+                            comp.minEdgeOfComp = e;
+                            finishedMinEdge = False;
                         }
                     }
                 }
