@@ -158,18 +158,18 @@ void Boruvka(graph& g)
       initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
     } // END FIXED POINT
 
-    Boruvka_kernel_4<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdgeOfComp,d_nodeId,d_color);
+    Boruvka_kernel_4<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_color,d_minEdgeOfComp,d_nodeId);
     cudaDeviceSynchronize();
 
 
 
-    Boruvka_kernel_5<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdgeOfComp,d_nodeId,d_color);
+    Boruvka_kernel_5<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_color,d_minEdgeOfComp,d_nodeId);
     cudaDeviceSynchronize();
 
 
 
     cudaMemcpyToSymbol(::noNewComp, &noNewComp, sizeof(bool), 0, cudaMemcpyHostToDevice);
-    Boruvka_kernel_6<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdgeOfComp,d_nodeId,d_color);
+    Boruvka_kernel_6<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_color,d_minEdgeOfComp,d_nodeId);
     cudaDeviceSynchronize();
     cudaMemcpyFromSymbol(&noNewComp, ::noNewComp, sizeof(bool), 0, cudaMemcpyDeviceToHost);
 
@@ -213,10 +213,10 @@ void Boruvka(graph& g)
 
 
   //cudaFree up!! all propVars in this BLOCK!
-  cudaFree(d_modified);
   cudaFree(d_isMSTEdge);
-  cudaFree(d_color);
+  cudaFree(d_modified);
   cudaFree(d_nodeId);
+  cudaFree(d_color);
 
   //TIMER STOP
   cudaEventRecord(stop,0);

@@ -25,7 +25,7 @@ function Boruvka (Graph g)
         propNode<int> minEdge; // TODO: Should be replaced by edge, int is just a hack
         g.attachNodeProperty(minEdge=-1);
         forall(src in g.nodes())
-        {   
+        {
             for(dst in g.neighbors(src))
             {
                 if(src.color != dst.color) // Consider edges across components

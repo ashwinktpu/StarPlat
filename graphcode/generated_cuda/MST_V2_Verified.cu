@@ -1,5 +1,5 @@
 // FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
-#include "MST_V1.h"
+#include "MST_V2_Verified.h"
 #include<bits/stdc++.h>
 using namespace std;
 void Boruvka(graph& g)
@@ -251,7 +251,7 @@ void Boruvka(graph& g)
   for(int i = 0; i < E; i++){
     if(h_isMSTEdge[i] == true) mst += h_weight[i];
   }
-  printf("MST Weight: %d\n", mst);
+  printf("MST Weight: %lld\n", mst);
 
   //cudaFree up!! all propVars in this BLOCK!
   cudaFree(d_modified);
