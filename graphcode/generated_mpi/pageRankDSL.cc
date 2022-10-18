@@ -165,7 +165,7 @@ void Compute_PR(graph g,float beta,float delta,int maxIter,
   for (int v = startv; v <= endv; v++) 
   {
     float val = ( 1 - delta)  / num_nodes + delta * sum[v-startv] ;
-    diff += val - pageRank[v-startv];
+    diff += std::fabs(val - pageRank[v-startv]);
     if(v >= startv && v <= endv)
       pageRank[v - startv]  = val;
   }
