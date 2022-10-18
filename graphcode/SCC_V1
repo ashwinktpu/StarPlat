@@ -1,0 +1,109 @@
+function Hong (Graph g)
+{
+    propNode<int> modified;
+    propNode<int> scc;
+    g.attachNodeProperty(modified = False, scc = -1);
+    
+    //1. Trim Function
+    bool fpoint1 = False;
+    fixedPoint until (fpoint1 : !modified) {
+        forall(src in g.nodes()) {
+            if(src.scc == -1) {
+                int ifIn = 0;
+                int ifOut = 0;
+                for(dst in g.nodes_to(src)) {
+                    if(dst.scc == -1) {ifIn = 1;}
+                }
+
+                // TODO : Hopefully neighbors == nodes_from
+                for(dst in g.neighbors(src)) {
+                    if(dst.scc == -1) {ifOut = 1;}
+                }
+
+                if(ifIn == 0 || ifOut == 0) {
+                    src.scc = src;
+                    fpoint1 = False;
+                }
+            }
+        }
+    }
+
+    propNode<int> visitFw;
+    propNode<int> visitBw;
+    g.attachNodeProperty(visitFw = -1, visitBw = -1);
+
+    //3. Till we can find new pivot
+    bool fpoint2 = False;
+    fixedPoint until (fpoint2: !modified) {
+        forall(src in g.nodes()) {
+            src.visitFw = src;
+            src.visitBw = src;
+        }
+        
+
+        //4Adv. FW-BW Reach
+        bool fpoint3 = False;
+        fixedPoint until (fpoint3 : !modified) {
+            // Forward
+            forall(src in g.nodes()) {
+                if(src.scc == -1) {
+                    for(dst in g.neighbors(src)) {
+                        if(((dst.visitFw == -1) || (dst.visitFw > src.visitFw)) && dst.scc == -1) {
+                            dst.visitFw = src.visitFw;
+                            fpoint3 = False;
+                        } 
+                    }
+                }
+            }
+
+            // Backward
+            forall(src in g.nodes()) {
+                if(src.scc == -1) {
+                    for(dst in g.nodes_to(src)) {
+                        if(((dst.visitBw == -1) || (dst.visitBw > src.visitBw)) && dst.scc == -1) {
+                            dst.visitBw = src.visitBw;
+                            fpoint3 = False;
+                        } 
+                    }
+                }
+            }
+        }
+
+        
+
+        //8. Update SCC
+        forall(v in g.nodes()) {
+            if(v.scc == -1 && v.visitFw == v.visitBw) {
+                v.scc = v.visitFw;
+                fpoint2 = False;
+            }
+        }
+
+        //6. TRIM 
+        fpoint1 = False;
+        fixedPoint until (fpoint1 : !modified) {
+            forall(src in g.nodes()) {
+                if(src.scc == -1) {
+                    int ifIn = 0;
+                    int ifOut = 0;
+                    for(dst in g.nodes_to(src)) {
+                        if(dst.scc == -1) {ifIn = 1;}
+                    }
+
+                    // TODO : Hopefully neighbors == nodes_from
+                    for(dst in g.neighbors(src)) {
+                        if(dst.scc == -1) {ifOut = 1;}
+                    }
+
+                    if((ifIn == 0 || ifOut == 0) && src.scc == -1) {
+                        src.scc = src;
+                        fpoint1 = False;
+                    }
+                }
+            }
+        }
+    }
+
+}
+
+

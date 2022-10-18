@@ -1,0 +1,293 @@
+function vHong(Graph g) {
+    propNode<int> modified;
+    int firstPivot = -1; int firstPivotValue = 0;
+    propNode<int> pivotField; propNode<int> pivotFieldValue;
+    propNode<bool> isPivot;
+    propNode<int> scc;
+    propNode<int> range;
+    propNode<bool> visitFw; propNode<bool> visitBw;
+    propNode<bool> propFw; propNode<bool> propBw;
+
+    g.attachNodeProperty(modified = False);
+    g.attachNodeProperty(visitFw = False);
+    g.attachNodeProperty(visitBw = False);
+    g.attachNodeProperty(propFw = False);
+    g.attachNodeProperty(propBw = False);
+    g.attachNodeProperty(isPivot = False);
+    g.attachNodeProperty(scc = -1);
+    g.attachNodeProperty(range = 0);
+
+    // Fix this initialization problem to avoid oldSrc to be -1 and ....
+    // OutDeg * InDeg overflow
+    // 3 * id overflow
+    g.attachNodeProperty(pivotField = 0);
+    g.attachNodeProperty(pivotFieldValue = 0);
+
+    
+    
+
+    bool fpoint1 = False;
+    fixedPoint until (fpoint1: !modified) {
+        // Trim1
+        forall(src in g.nodes().filter(scc == -1)) {
+            int myrange = src.range;
+            int havePar = 0; int haveChild = 0;
+            for(par in g.nodes_to(src)) {
+                if(par.scc == -1 && par.range == myrange) {
+                    havePar = 1;
+                }
+            }
+            for(dst in g.neighbors(src)) {
+                if(dst.scc == -1 && dst.range == myrange) {
+                    haveChild = 1;
+                }
+            }
+            if(havePar == 0 || haveChild == 0) {
+                src.scc = src;
+                src.isPivot = True;
+                fpoint1 = False;
+            }
+        }
+    }
+
+    // pollFirstPivot
+    forall(src in g.nodes().filter(scc == -1)) {
+        int nxt = src + 1;
+        int outDeg = nxt.meta - src.meta;
+        int inDeg = nxt.rev_meta - src.rev_meta;
+        int base = 0;
+        if(firstPivotValue < outDeg * inDeg) {
+            firstPivotValue = outDeg * inDeg;
+            base.pivotField = src;
+            firstPivot = src;
+        }
+    }
+
+    // selectPivot
+    forall(src in g.nodes().filter(scc == -1)) {
+        int index = src.range;
+        int rem = (index) - (index/V)*V;
+        if(rem.pivotField == src) {
+            src.visitFw = True;
+            src.visitBw = True;
+            src.isPivot = True;
+        }
+    }
+
+    bool fpoint2 = False;
+    fixedPoint until (fpoint2 : !modified) {
+        // forward closure
+        forall(src in g.nodes()) {
+            int myrange = src.range;
+            if(src.scc == -1 && src.propFw == False && src.visitFw == True) {
+                int myrange = src.range;
+                for(dst in g.neighbors(src)) {
+                    if(dst.scc == -1 && dst.visitFw == False && dst.range == myrange) {
+                        dst.visitFw = True;
+                        fpoint2 = False;
+                    }
+                }
+                src.propFw = True;
+            }
+        }
+    }
+
+    bool fpoint3 = False;
+    fixedPoint until (fpoint3 : !modified) {
+        // Backward closure
+        forall(src in g.nodes()) {
+            int myrange = src.range;
+            if(src.scc == -1 && src.propBw == False && src.visitBw == True) {
+                for(par in g.nodes_to(src)) {
+                    if(par.scc == -1 && par.visitBw == False && par.range == myrange) {
+                        par.visitBw = True;
+                        fpoint3 = False;
+                    }
+                }
+                src.propBw = True;
+            }
+        }
+    }
+
+    // update
+    forall(src in g.nodes().filter(scc == -1)) {
+        if(src.visitFw == False || src.visitBw == False) {
+            // main loop point
+            int ext1 = 0; int ext2 = 0;
+            if(src.visitFw == True) {ext1 = 1;}
+            if(src.visitBw == True) {ext1 = 1;}
+            src.range = 3 * src.range + ext1 + ext2;
+            src.visitFw = False;
+            src.visitBw = False;
+            src.propFw = False;
+            src.propBw = False;
+        }
+        if(src.visitFw == True && src.visitBw == True) {
+            src.scc = src;
+        }
+    }
+
+    fpoint1 = False;
+    fixedPoint until (fpoint1: !modified) {
+        // Trim1
+        forall(src in g.nodes().filter(scc == -1)) {
+            int myrange = src.range;
+            int havePar = 0; int haveChild = 0;
+            for(par in g.nodes_to(src)) {
+                if(par.scc == -1 && par.range == myrange) {
+                    havePar = 1;
+                }
+            }
+            for(dst in g.neighbors(src)) {
+                if(dst.scc == -1 && dst.range == myrange) {
+                    haveChild = 1;
+                }
+            }
+            if(havePar == 0 || haveChild == 0) {
+                src.scc = src;
+                src.isPivot = True;
+                fpoint1 = False;
+            }
+        }
+    }
+
+    //=======================================     Propagate / WCC decomposition ============================================//
+    // Range initialization
+    forall(src in g.nodes()) {
+        //Fix this ... src.range has non-zero value due to update function... 
+        src.range += src;
+    }
+
+
+    bool fpoint4 = False;
+    fixedPoint until (fpoint4 : !modified) {
+        // WCC propagate 1
+        forall(src in g.nodes().filter(scc == -1)) {
+            int myrange = src.range;
+            bool change = False;
+            for(dst in g.neighbors(src).filter(scc == -1)) {
+                if(dst.range < myrange) {
+                    myrange = dst.range;
+                    change = True;
+                }
+            } 
+            if(change) {
+                src.range = myrange;
+                fpoint4 = False;
+            }
+        }
+
+        // SCC propagate 2
+        forall(src in g.nodes().filter(scc == -1)) {
+            int myrange = src.range;
+            if(myrange != src && myrange != myrange.range) {
+                src.range = myrange.range;
+                fpoint4 = False;
+            }
+        }
+    }
+
+    //=======================================     Main procedure iterations ============================================//
+    bool fpoint5 = False;
+    fixedPoint until (fpoint5 : !modified) {
+        // pollForPivots
+        forall(src in g.nodes().filter(scc == -1)) {
+            // add % operator to DSL
+            int index = src.range;
+            int rem = (index) - (index/V)*V;
+            int oldSrc = rem.pivotField;
+            
+            // no long long int support 
+            int nxt = src + 1;
+            int outDeg = nxt.meta - src.meta;
+            int inDeg = nxt.rev_meta - src.rev_meta;
+            // we can't assign propNode values in forall
+            src.pivotFieldValue += outDeg * inDeg;
+            if(oldSrc.pivotFieldValue < src.pivotFieldValue) {
+                rem.pivotField = src;
+            }
+        }
+
+        // Select Pivots
+        forall(src in g.nodes().filter(scc == -1)) {
+            int index = src.range;
+            int rem = (index) - (index/V)*V;
+            if(rem.pivotField == src) {
+                src.visitFw = True;
+                src.visitBw = True;
+                src.isPivot = True;
+            }
+        }
+
+        fpoint2 = False;
+        fixedPoint until (fpoint2 : !modified) {
+            // Fwd closure
+            forall(src in g.nodes()) {
+                int myrange = src.range;
+                if(src.scc == -1 && src.propFw == False && src.visitFw == True) {
+                    int myrange = src.range;
+                    for(dst in g.neighbors(src)) {
+                        if(dst.scc == -1 && dst.visitFw == False && dst.range == myrange) {
+                            dst.visitFw = True;
+                            fpoint2 = False;
+                        }
+                    }
+                    src.propFw = True;
+                }
+            }
+        } // end of fwd closure
+
+        fpoint3 = False;
+        fixedPoint until (fpoint3 : !modified) {
+            // Bwd closure
+            forall(src in g.nodes()) {
+                int myrange = src.range;
+                if(src.scc == -1 && src.propBw == False && src.visitBw == True) {
+                    for(par in g.nodes_to(src)) {
+                        if(par.scc == -1 && par.visitBw == False && par.range == myrange) {
+                            par.visitBw = True;
+                            fpoint3 = False;
+                        }
+                    }
+                    src.propBw = True;
+                }
+            }
+        } // End of BWD closure
+
+        // update
+        forall(src in g.nodes().filter(scc == -1)) {
+            if(src.visitFw == False || src.visitBw == False) {
+                // main loop point
+                fpoint5 = False;
+                int ext1 = 0; int ext2 = 0;
+                if(src.visitFw == True) {ext1 = 1;}
+                if(src.visitBw == True) {ext2 = 1;}
+                src.range = 3 * src.range + ext1 + ext2;
+                src.visitFw = False;
+                src.visitBw = False;
+                src.propFw = False;
+                src.propBw = False;
+            }
+            if(src.visitFw == True && src.visitBw == True) {
+                
+                src.scc = src;
+            }
+        } // END of update
+
+    } // End of main while loop
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
