@@ -119,7 +119,7 @@ void Compute_TC(graph g)
               if ( w > v )
               {
                 if (check_if_nbr(u, w, local_index, local_edgeList, startv) ){
-                  triangle_count += 1;
+                  triangle_count += std::fabs(1);
                 }
               }
             }
@@ -172,7 +172,7 @@ void Compute_TC(graph g)
           if ( w > v )
           {
             if ((u_list.size() > 0 && check_if_nbr_new(u,w,u_list,w_list)) || (w_list.size() > 0 && check_if_nbr_new(w,u,w_list,u_list))  ){
-              triangle_count += 1;
+              triangle_count += std::fabs(1);
             }
           }
         }

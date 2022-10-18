@@ -565,7 +565,10 @@ void mpi_cpp_generator::generateReductionStmt(reductionCallStmt* stmt)
     main.pushstr_space(id->getIdentifier());
     const char* operatorString=getOperatorString(op);
     main.pushstr_space(operatorString);
+    //Need to be changed.. Needed for pagerank
+    main.pushString("std::fabs(");
     generateExpr(rhs);
+    main.pushString(")");
     main.pushstr_newL(";");
     red_details->set_reductionDetails(true,op,id);
     cout<<red_details->get_reductionOp()<<endl;

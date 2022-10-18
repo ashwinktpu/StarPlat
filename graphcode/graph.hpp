@@ -709,7 +709,7 @@ class graph
             edgeList[j+indexofNodes[i]]=vect[j];
 
             vect.clear();
-            std::vector<int>().swap(vect);
+	    std::vector<int>().swap(vect);
 
     }
 
@@ -1039,11 +1039,11 @@ std::vector<edge> getNeighbors( int node)
 =======
 
             vect.clear();
-            std::vector<int>().swap(vect);
+	    std::vector<int>().swap(vect);
 
         }
-        delete [] edge_indexinrevCSR;
-        std::map<int,std::vector<edge>>().swap(edges);
+	delete [] edge_indexinrevCSR;
+	std::map<int,std::vector<edge>>().swap(edges);
  }
 
 
