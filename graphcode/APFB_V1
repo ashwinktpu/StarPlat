@@ -46,18 +46,20 @@ function APFB (Graph g, int nc)
                 if(col_vertex < nc){
                     if(col_vertex.bfsArray == bfsLevel){
                         for(neigh_row in g.neighbors(col_vertex)){
-                            int col_match = neigh_row.rmatch;
-                            if(col_match > -1){
-                                if(col_match.bfsArray == NOT_VISITED){
-                                    noNewVertices = False;
-                                    col_match.bfsArray = bfsLevel + 1;
-                                    neigh_row.predeccesor = col_vertex;
+                            if(neigh_row >= nc){
+                                int col_match = neigh_row.rmatch;
+                                if(col_match > -1){
+                                    if(col_match.bfsArray == NOT_VISITED){
+                                        noNewVertices = False;
+                                        col_match.bfsArray = bfsLevel + 1;
+                                        neigh_row.predeccesor = col_vertex;
+                                    }
                                 }
-                            }
-                            if(col_match == -1){
-                                neigh_row.rmatch = -2;
-                                neigh_row.predeccesor = col_vertex;
-                                noNewPaths = False;
+                                if(col_match == -1){
+                                    neigh_row.rmatch = -2;
+                                    neigh_row.predeccesor = col_vertex;
+                                    noNewPaths = False;
+                                }
                             }
                         }
                     }

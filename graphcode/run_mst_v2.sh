@@ -19,17 +19,17 @@ echo "" > output_MST_V1_Manual.txt
 
 nvcc -o "MST_V1_Manual".out "generated_cuda/MST_V2_Verified.cu"  -std=c++14  -arch=sm_70
 
-time (./MST_V1_Manual.out $cleandir/GermanyRoadud.txt 0 > output_MST_V1_Manual.txt) # 0 - Unweighted Graph
-time (./MST_V1_Manual.out $cleandir/cleancom-orkutud.txt 0 >> output_MST_V1_Manual.txt) # 0 - Unweighted Graph
-time (./MST_V1_Manual.out $cleandir/livud.txt 0 >> output_MST_V1_Manual.txt) # 0 - Unweighted Graph
-time (./MST_V1_Manual.out $cleandir/rmatud.txt 0 >> output_MST_V1_Manual.txt) # 0 - Unweighted Graph
-time (./MST_V1_Manual.out $cleandir/u10m_80mud.txt 0 >> output_MST_V1_Manual.txt) # 0 - Unweighted Graph
-time (./MST_V1_Manual.out $cleandir/USAud.txt 0 >> output_MST_V1_Manual.txt) # 0 - Unweighted Graph
-time (./MST_V1_Manual.out $cleandir/livjournalud.txt 0 >> output_MST_V1_Manual.txt) # 0 - Unweighted Graph
+# time (./MST_V1_Manual.out $cleandir/GermanyRoadud.txt 0 > output_MST_V1_Manual.txt) # 0 - Unweighted Graph
+# time (./MST_V1_Manual.out $cleandir/cleancom-orkutud.txt 0 >> output_MST_V1_Manual.txt) # 0 - Unweighted Graph
+# time (./MST_V1_Manual.out $cleandir/livud.txt 0 >> output_MST_V1_Manual.txt) # 0 - Unweighted Graph
+# time (./MST_V1_Manual.out $cleandir/rmatud.txt 0 >> output_MST_V1_Manual.txt) # 0 - Unweighted Graph
+# time (./MST_V1_Manual.out $cleandir/u10m_80mud.txt 0 >> output_MST_V1_Manual.txt) # 0 - Unweighted Graph
+# time (./MST_V1_Manual.out $cleandir/USAud.txt 0 >> output_MST_V1_Manual.txt) # 0 - Unweighted Graph
+# time (./MST_V1_Manual.out $cleandir/livjournalud.txt 0 >> output_MST_V1_Manual.txt) # 0 - Unweighted Graph
 time (./MST_V1_Manual.out $cleandir/pokecud.txt 0 >> output_MST_V1_Manual.txt) # 0 - Unweighted Graph
-time (./MST_V1_Manual.out $cleandir/sinaweiboud.txt 0 >> output_MST_V1_Manual.txt) # 0 - Unweighted Graph
-time (./MST_V1_Manual.out $cleandir/twitud.txt 0 >> output_MST_V1_Manual.txt) # 0 - Unweighted Graph
-time (./MST_V1_Manual.out $cleandir/wikiud.txt 0 >> output_MST_V1_Manual.txt) # 0 - Unweighted Graph
+# time (./MST_V1_Manual.out $cleandir/sinaweiboud.txt 0 >> output_MST_V1_Manual.txt) # 0 - Unweighted Graph
+# time (./MST_V1_Manual.out $cleandir/twitud.txt 0 >> output_MST_V1_Manual.txt) # 0 - Unweighted Graph
+# time (./MST_V1_Manual.out $cleandir/wikiud.txt 0 >> output_MST_V1_Manual.txt) # 0 - Unweighted Graph
 
 rm *.out
 # move everything from $tempdir to $PBS_O_WORKDIR
