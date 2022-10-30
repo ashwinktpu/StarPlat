@@ -118,10 +118,14 @@ function vHong(Graph g) {
     // update SCC
     forall(src in g.nodes().filter(scc == -1)) {
         if(src.visitFw == False || src.visitBw == False) {
-            int ext1 = 0; int ext2 = 0;
-            if(src.visitFw == False) {ext1 = 1;}
-            if(src.visitBw == False) {ext2 = 1;}
-            src.range = 3 * src.range + ext1 + ext2;
+            // main loop point
+            fpoint5 = False;
+            int ext = 0;
+            if(src.visitFw == False && src.visitBw == True) {ext = 1;}
+            if(src.visitFw == False && src.visitBw == False) {ext = 2;}
+            int newRange = 3 * src.range + ext;
+            newRange = (newRange) - (newRange/V)*V;
+            src.range = newRange;
             src.visitFw = False;
             src.visitBw = False;
             src.propFw = False;
@@ -168,19 +172,16 @@ function vHong(Graph g) {
         // Weakly connected components propagate 1
         forall(src in g.nodes().filter(scc == -1)) {
             for(dst in g.neighbors(src).filter(scc == -1)) {
-                if(dst.range < src.range) {
-                    src.range = dst.range;
+                if(dst.range > src.range) {
+                    dst.range = src.range;
                     fpoint4 = False;
                 }
             }
-        }
-
-        // WCC propagate 2
-        forall(src in g.nodes().filter(scc == -1)) {
-            int myrange = src.range;
-            if((myrange != src) && (myrange != myrange.range)) {
-                src.range = myrange.range;
-                fpoint4 = False;
+            for(dst in g.nodes_to(src).filter(scc == -1)) {
+                if(dst.range > src.range) {
+                    dst.range = src.range;
+                    fpoint4 = False;
+                }
             }
         }
     }
@@ -245,12 +246,12 @@ function vHong(Graph g) {
             if(src.visitFw == False || src.visitBw == False) {
                 // main loop point
                 fpoint5 = False;
-                int ext1 = 0; int ext2 = 0;
-                if(src.visitFw == False) {ext1 = 1;}
-                if(src.visitBw == False) {ext2 = 1;}
-                int newColor = 3 * src.range;
-                newColor = (newColor) - (newColor/V)*V;
-                src.range = newColor + ext1 + ext2;
+                int ext = 0;
+                if(src.visitFw == False && src.visitBw == True) {ext = 1;}
+                if(src.visitFw == False && src.visitBw == False) {ext = 2;}
+                int newRange = 3 * src.range + ext;
+                newRange = (newRange) - (newRange/V)*V;
+                src.range = newRange;
                 src.visitFw = False;
                 src.visitBw = False;
                 src.propFw = False;
@@ -263,18 +264,3 @@ function vHong(Graph g) {
 
     } // End of main while loop
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
