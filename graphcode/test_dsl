@@ -9,7 +9,7 @@ function Compute_SSSP (Graph g, node src)
                 int count = 0;
                 forall (nbr in g.neighbors(v))
                 {
-                        count = count + 1;
+                        count = count + nbr.dist;
                 }
                 accum += count;
         }
