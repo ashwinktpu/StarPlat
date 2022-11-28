@@ -47,9 +47,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
      assert(id->getIdentifier()!=NULL);
      TableEntry* tableEntry=sTab->findEntryInST(id);
      if(tableEntry==NULL)
-     {  
-        // sTab->create_and_add_entry();
-         return false;
+     {  return false;
          //to be added.
      }
      // cout<<"FINALLY FOUND IT"<<"\n";
@@ -58,7 +56,6 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
       assert(id->getSymbolInfo()==tableEntry);
       }
      else
-     {
         id->setSymbolInfo(tableEntry);
 
      return true;
@@ -393,8 +390,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
            list<statement*>::iterator itrProc;
           bool flag=false;
           bool callFlag=false;
-          //string backend(backendTarget);
-          //string backend = NULL;
+          string backend(backendTarget);
           for(itr=stmtList.begin();itr!=stmtList.end();itr++)
           { 
           
@@ -451,13 +447,6 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
        {   whileStmt* whilestmt=(whileStmt*)stmt;
            checkForExpressions(whilestmt->getCondition());
            buildForStatements(whilestmt->getBody());
-           break;
-       }
-       case NODE_DOWHILESTMT:
-       {
-           dowhileStmt* dowhilestmt = (dowhileStmt*) stmt;
-           checkForExpressions(dowhilestmt->getCondition());
-           buildForStatements(dowhilestmt->getBody());
            break;
        }
        case NODE_IFSTMT:
@@ -538,7 +527,6 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
        }
        case NODE_ITRBFS:
        {
-           cout<<"At symtab bulder - iterate in bfs\n";
           iterateBFS* iBFS=(iterateBFS*)stmt;
           string backend(backendTarget);
             if(backend.compare("omp")==0 ||  backend.compare("openACC") == 0 )
