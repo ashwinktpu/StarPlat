@@ -1,6 +1,7 @@
 #include"sssp_dslV2.h"
 
-void Compute_SSSP(graph g,int* dist,int src)
+void Compute_SSSP(graph g,int* dist,int* weight,int src
+)
 {
   int my_rank,np,part_size,startv,endv;
   struct timeval start, end, start1, end1;
@@ -99,6 +100,7 @@ void Compute_SSSP(graph g,int* dist,int src)
   MPI_Barrier(MPI_COMM_WORLD);
   gettimeofday(&start, NULL);
   dist = new int[part_size];
+  weight = new int[part_size];
   bool* modified=new bool[part_size];
   for (int t = 0; t < part_size; t++) 
   {
@@ -206,6 +208,18 @@ void Compute_SSSP(graph g,int* dist,int src)
   else
   {
       gather(world, dist, part_size, final_dist, 0);
+  }
+  int* final_weight;
+  if (my_rank == 0)
+  {
+      final_weight = new int [_num_nodes];
+      gather(world, weight, part_size, final_weight, 0);
+      for (int t = 0; t < _actual_num_nodes; t++)
+        cout << "weight[" << t << "] = " << final_weight[t] << endl;
+  }
+  else
+  {
+      gather(world, weight, part_size, final_weight, 0);
   }
   delete [] local_index;
   delete [] local_rev_index;

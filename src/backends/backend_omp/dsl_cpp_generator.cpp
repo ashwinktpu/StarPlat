@@ -1656,7 +1656,7 @@ void dsl_cpp_generator::generateFunc(ASTNode* proc) {
   generateFuncHeader(func, true);
   curFuncType = func->getFuncType();
   currentFunc = func;
-
+  std::cout << "############3Current Func count : " << curFuncCount() << std::endl;
   //including locks before hand in the body of function.
   main.pushstr_newL("{");
   if (func->getInitialLockDecl()) {

@@ -187,7 +187,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
     switch(stmt->getTypeofNode())
     {
        case NODE_DECL:
-       {
+       {    
            declaration* declStmt=(declaration*)stmt;
            Type* type=declStmt->getType();
            SymbolTable* symbTab=type->isPropType()?currPropSymbT:currVarSymbT;
@@ -285,8 +285,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
        }
 
        case NODE_FORALLSTMT:
-       {   
-           
+       {  
            forallStmt* forAll=(forallStmt*)stmt;
            Identifier* source1=forAll->isSourceProcCall()?forAll->getSourceGraph():NULL;
             if(forAll->getSource()!=NULL)
@@ -303,9 +302,9 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                another forall which is to be generated with
                omp parallel pragma, and then disable the parallel loop*/
 
-            if( (backend.compare("omp")==0) || (backend.compare("cuda")==0) || (backend.compare("openACC")==0) )
+            if( (backend.compare("omp")==0) || (backend.compare("cuda")==0) || (backend.compare("openACC")==0) || (backend.compare("mpi")==0) )
              {  
-                 if(parallelConstruct.size()>0)
+                 if(parallelConstruct.size()>0 && (backend.compare("mpi")!=0))
                   {  
                       forAll->disableForall();
                       if(forAll->hasFilterExpr())
@@ -371,7 +370,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
               //~ delete_curr_SymbolTable();
 
 
-               if((backend.compare("omp")==0 || backend.compare("cuda")==0 || backend.compare("openACC")==0 ) &&forAll->isForall())
+               if((backend.compare("omp")==0 || backend.compare("cuda")==0 || backend.compare("openACC")==0 )  || (backend.compare("mpi")==0) &&forAll->isForall())
                     {
                         parallelConstruct.pop_back();
                     }
@@ -529,7 +528,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
        {
           iterateBFS* iBFS=(iterateBFS*)stmt;
           string backend(backendTarget);
-            if(backend.compare("omp")==0 ||  backend.compare("openACC") == 0 )
+            if(backend.compare("omp")==0 ||  backend.compare("openACC") == 0 || backend.compare("mpi") == 0)
              { 
                parallelConstruct.push_back(iBFS);
                
@@ -538,8 +537,9 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
           buildForStatements(iBFS->getBody());
           iterateReverseBFS* iRevBFS = iBFS->getRBFS();
           iRevBFS->addAccumulateAssignment();
+          buildForStatements(iRevBFS->getBody());
 
-          if(backend.compare("omp")==0  ||  backend.compare("openACC") == 0 )
+          if(backend.compare("omp")==0  ||  backend.compare("openACC") == 0  || backend.compare("mpi") == 0)
              { 
               parallelConstruct.pop_back();
                
