@@ -18,7 +18,8 @@
 using namespace std;
 namespace mpi = boost::mpi;
 
-void Compute_SSSP(graph g,int* dist,int src);
+void Compute_SSSP(graph g,int* dist,int* weight,int src
+);
 bool is_finished (int startv,int endv,bool* modified)
 {
   int sum = 0,res = 0;

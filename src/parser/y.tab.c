@@ -2958,7 +2958,9 @@ int main(int argc,char **argv)
 	if(error!=1)
 	{
      //TODO: redirect to different backend generator after comparing with the 'b' option
-    stBuilder.buildST(frontEndContext.getFuncList());
+    std::cout << "at 1" << std::endl;
+	stBuilder.buildST(frontEndContext.getFuncList());
+	std::cout << "at 2" << std::endl;
 
 	if(staticGen)
 	  {
@@ -3003,6 +3005,12 @@ int main(int argc,char **argv)
       else if (strcmp(backendTarget, "omp") == 0) {
         spomp::dsl_cpp_generator cpp_backend;
 	std::cout<< "size:" << frontEndContext.getFuncList().size() << '\n';
+        cpp_backend.setFileName(fileName);
+        cpp_backend.generate();
+      } 
+	  else if (strcmp(backendTarget, "mpi") == 0) {
+        spmpi::dsl_cpp_generator cpp_backend;
+		std::cout<< "size:" << frontEndContext.getFuncList().size() << '\n';
         cpp_backend.setFileName(fileName);
         cpp_backend.generate();
       } 
