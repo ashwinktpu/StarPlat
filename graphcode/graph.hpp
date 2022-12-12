@@ -348,39 +348,7 @@ class graph
   }
 
 
-    //GPU specific check for neighbours for TC algorithm
-    __device__ bool findNeighborSorted (int s, int d, int * gpu_OA, int *gpu_edgeList)   //we can move this to graph.hpp file
-    {
-      int startEdge=gpu_OA[s];
-      int endEdge=gpu_OA[s+1]-1;
-
-
-      if(gpu_edgeList[startEdge]==d)
-          return true;
-      if(gpu_edgeList[endEdge]==d)
-         return true;
-
-       int mid = (startEdge+endEdge)/2;
-
-      while(startEdge<=endEdge)
-        {
-
-          if(gpu_edgeList[mid]==d)
-             return true;
-
-          if(d<gpu_edgeList[mid])
-             endEdge=mid-1;
-          else
-            startEdge=mid+1;
-
-          mid = (startEdge+endEdge)/2;
-
-        }
-
-      return false;
-
-    }
-
+    
 
    void parseEdges()
   {
