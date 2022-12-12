@@ -382,7 +382,7 @@ class graph
     }
 
 
-   void parseGraph()
+   void parseEdges()
   {
     //printf("OH HELLOHIHod \n");
      std::ifstream infile;
