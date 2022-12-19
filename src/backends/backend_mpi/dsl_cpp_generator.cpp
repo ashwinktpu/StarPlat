@@ -29,7 +29,7 @@ enum{SEND_DATA, SEND_DATA_FLOAT, SEND_DATA_DOUBLE};
 namespace spmpi {
 
 
-void dsl_cpp_generator::addIncludeToFile(char* includeName,dslCodePad& file,bool isCppLib)
+void dsl_cpp_generator::addIncludeToFile(const char* includeName,dslCodePad& file,bool isCppLib)
 {  //cout<<"ENTERED TO THIS ADD INCLUDE FILE"<<"\n";
     if(!isCppLib)
       file.push('"');
@@ -455,7 +455,7 @@ void dsl_cpp_generator::generateReductionStmt(reductionCallStmt* stmt)
             int i=0;
       
             list<ASTNode*> rightList=stmt->getRightList();
-            printf("LEFT LIST SIZE %d \n",leftList.size());
+            printf("LEFT LIST SIZE %ld \n",leftList.size());
           
                 main.space();
                 if(stmt->getAssignedId()->getSymbolInfo()->getType()->isPropType())
@@ -609,7 +609,7 @@ void dsl_cpp_generator::generateInnerReductionStmt(reductionCallStmt* stmt,int s
             int i=0;
       
             list<ASTNode*> rightList=stmt->getRightList();
-            printf("LEFT LIST SIZE %d \n",leftList.size());
+            printf("LEFT LIST SIZE %ld \n",leftList.size());
           
                 //main.space();
                 if(stmt->getAssignedId()->getSymbolInfo()->getType()->isPropType())
@@ -776,7 +776,7 @@ void dsl_cpp_generator::generateReductionStmtForSend(reductionCallStmt* stmt,boo
             int i=0;
       
             list<ASTNode*> rightList=stmt->getRightList();
-            printf("LEFT LIST SIZE %d \n",leftList.size());
+            printf("LEFT LIST SIZE %ld \n",leftList.size());
             
                 list<ASTNode*>::iterator itr1;
                 list<ASTNode*>::iterator itr2;
@@ -858,7 +858,7 @@ void dsl_cpp_generator::generateReductionStmtForSend(reductionCallStmt* stmt,boo
                 int i=0;
               
                 list<ASTNode*> rightList=stmt->getRightList();
-                printf("LEFT LIST SIZE %d \n",leftList.size());
+                printf("LEFT LIST SIZE %ld \n",leftList.size());
                   
                     list<argument*>::iterator argItr;
                     argItr=argList.begin();
@@ -2094,7 +2094,7 @@ bool checkReductionCallStmt(reductionCallStmt* stmt,Identifier* remote)
             int i=0;
       
             list<ASTNode*> rightList=stmt->getRightList();
-            printf("LEFT LIST SIZE %d \n",leftList.size());
+            printf("LEFT LIST SIZE %ld \n",leftList.size());
           
                 //if(stmt->getAssignedId()->getSymbolInfo()->getType()->isPropType())
                // { Type* type=stmt->getAssignedId()->getSymbolInfo()->getType();
@@ -3196,9 +3196,9 @@ void dsl_cpp_generator:: generateVariableDecl(declaration* declStmt)
      {
        if(make_decl_par)
        {
-          sprintf(strBuffer,"%s* %s = new %s[part_size];",convertToCppType(type),declStmt->getdeclId()->getIdentifier(),convertToCppType(type),graphVar[0]->getIdentifier());
+          sprintf(strBuffer,"%s* %s = new %s[part_size];",convertToCppType(type),declStmt->getdeclId()->getIdentifier(),convertToCppType(type));
           main.pushstr_newL(strBuffer);
-          sprintf(strBuffer,"for(int i0=0;i0<part_size;i0++)",graphVar[0]->getIdentifier());
+          sprintf(strBuffer,"for(int i0=0;i0<part_size;i0++)");
           main.pushstr_newL(strBuffer);
           main.insert_indent();
           mp->set_par(true,declStmt->getdeclId());
