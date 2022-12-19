@@ -102,7 +102,7 @@ class dsl_cpp_generator
  // void generateIsFinished();
   void generateId();
   void generateOid();
-  void addIncludeToFile(char* includeName,dslCodePad& file,bool isCPPLib);
+  void addIncludeToFile(const char* includeName,dslCodePad& file,bool isCPPLib);
   void generatePropertyDefination(Type* type,char* Id);
   void findTargetGraph(vector<Identifier*> graphTypes,Type* type);
   void getDefaultValueforTypes(int type);
