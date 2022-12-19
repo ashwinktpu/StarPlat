@@ -1,6 +1,77 @@
 
 
 # StarPlat: A Versatile DSL for Graph Analytics
+# GraphDSL MPI Backend
+
+### How to compile Generated MPI Codes on Aqua Cluster
+```
+$ module load openmpi316
+$ mpicxx -I/lfs/usrhome/oth/rnintern/scratch/MPI_Comparison/boost/install_dir/include program.cc ../boost/install_dir/lib/libboost_mpi.a ../boost/install_dir/lib/libboost_serialization.a -o output  
+
+(Assuming your parent directory contains boost library files)
+Done with the compilation!
+
+```
+
+### How to run MPI programs
+
+```
+$ /lfs/sware/openmpi316/bin/mpirun -np 64 -hostfile $PBS_NODEFILE $PBS_O_WORKDIR/output /lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/sinaweibowt.txt > $PBS_O_WORKDIR/output_logfile_name.txt 
+
+(The CS16d003 contains all the graphs which we are using)
+Done with running!
+```
+
+### Sample Script to run on Aqua Cluster
+
+```
+#!/bin/bash
+#PBS -o logfile.log
+#PBS -e errorfile_slash.err
+#PBS -l walltime=00:60:00
+#PBS -l select=2:ncpus=32
+#PBS -q rupesh_gpuq
+
+module load openmpi316
+
+#tpdir=`echo $PBS_JOBID | cut -f 1 -d .`
+#tempdir=$HOME/scratch/job$tpdir
+#mkdir -p $tempdir
+#cd $tempdir
+
+#Compilation not needed already done
+#mpicxx -I/lfs/usrhome/oth/rnintern/scratch/MPI_Comparison/boost/install_dir/include triangle_count_dsl.cc ../boost/install_dir/lib/libboost_mpi.a ../boost/install_dir/lib/libboost_serialization.a -o tc_exe
+
+#Execution
+/lfs/sware/openmpi316/bin/mpirun -np 64 -hostfile $PBS_NODEFILE $PBS_O_WORKDIR/sssp_exe /lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/sinaweibowt.txt > $PBS_O_WORKDIR/output_sinaweibo.txt
+
+#mv ../job$tpdir $PBS_O_WORKDIR/.
+
+```
+### Sample main() for generated CC  (SSSP)
+
+```
+int main(int argc, char* argv[])
+{
+
+  mpi::environment env(argc, argv);
+  graph G1(argv[1]);
+  int src=0;
+  int* dist;
+  Compute_SSSP(G1,dist,src);
+
+  return 0;
+}
+
+```
+
+
+### Aqua Cheats
+```
+$ qsub script.cmd : To run/subscribe script on specified queue
+$ qstat : Gives the status of scripts running 
+$ qdel <processid> : Removes script from queue
+```
 
 
 
