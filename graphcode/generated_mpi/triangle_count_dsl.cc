@@ -1,6 +1,6 @@
 #include"triangle_count_dsl.h"
 
-void Compute_TC(graph g)
+auto Compute_TC(graph g)
 {
   int my_rank,np,part_size,startv,endv;
   struct timeval start, end, start1, end1;
@@ -179,6 +179,8 @@ void Compute_TC(graph g)
       }
     }
   }
+  triangle_count = all_reduce(world, triangle_count, std::plus<long>());
+  return triangle_count;
 
   gettimeofday(&end, NULL);
   seconds = (end.tv_sec - start.tv_sec);
@@ -193,5 +195,4 @@ void Compute_TC(graph g)
   delete [] weight;
   delete [] local_edgeList;
   delete [] local_srcList;
-  MPI_Finalize();
 }

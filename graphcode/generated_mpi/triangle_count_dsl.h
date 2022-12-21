@@ -18,7 +18,7 @@
 using namespace std;
 namespace mpi = boost::mpi;
 
-void Compute_TC(graph g);
+auto Compute_TC(graph g);
 bool check_if_nbr(int s, int d, int* indexofNodes,int* edgeList, int startv)
 {
     int startEdge=indexofNodes[s - startv];

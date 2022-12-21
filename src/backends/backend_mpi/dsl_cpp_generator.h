@@ -107,6 +107,9 @@ class dsl_cpp_generator
   void findTargetGraph(vector<Identifier*> graphTypes,Type* type);
   void getDefaultValueforTypes(int type);
 
+  void generate_returnExprIdentifier(Identifier* id);
+  void generateReturnExpr(Expression* expr);
+
   void incFuncCount(int funcType);
   int curFuncCount();
   void setCurrentFunc(Function* func);
