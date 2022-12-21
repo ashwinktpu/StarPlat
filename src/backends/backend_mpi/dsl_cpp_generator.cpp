@@ -352,6 +352,32 @@ void add_InitialDeclarations(dslCodePad* main,iterateBFS* bfsAbstraction)
 
  }
 
+/*Function to reduce return expresssion of identifier type */
+void dsl_cpp_generator::generate_returnExprIdentifier(Identifier* id)
+{
+  char strBuffer[1024];
+  sprintf(strBuffer,"%s = all_reduce(world, %s, std::plus<%s>());", id->getIdentifier(), id->getIdentifier(), 
+        convertToCppType(id->getSymbolInfo()->getType()));
+  main.pushstr_newL(strBuffer);
+
+}
+
+//**************Function to translate return expressions*****************//
+void dsl_cpp_generator::generateReturnExpr(Expression* expr)
+{ 
+  cout<<"inside generate Return Expr\n";
+  
+       if(expr->isIdentifierExpr())
+       {
+         generate_returnExprIdentifier(expr->getId());
+       }
+       else 
+       {
+         assert(false);
+       }
+
+}
+
 //Fuction to handle translation of different types of statements
 void dsl_cpp_generator::generateStatement(statement* stmt)
 {  
@@ -430,6 +456,14 @@ void dsl_cpp_generator::generateStatement(statement* stmt)
       cout<< "Here123 UNARY\n";
       cout<<"calling generateUnary"<<endl;
       generate_exprUnary(((unary_stmt*)stmt)->getUnaryExpr());
+    }
+    if (stmt->getTypeofNode() == NODE_RETURN) 
+    {
+      returnStmt* returnStmtNode = (returnStmt*)stmt;
+      generateReturnExpr(returnStmtNode->getReturnExpression());
+      main.pushstr_space("return");
+      generateExpr(returnStmtNode->getReturnExpression());
+      main.pushstr_newL(";"); 
     }
 
 
@@ -4221,7 +4255,7 @@ void dsl_cpp_generator::generateFunc(ASTNode* proc)
    main.pushstr_newL("delete [] weight;");
    main.pushstr_newL("delete [] local_edgeList;");
    main.pushstr_newL("delete [] local_srcList;");
-   main.pushstr_newL("MPI_Finalize();");
+   //main.pushstr_newL("MPI_Finalize();");
    main.push('}');
 
    incFuncCount(func->getFuncType());
@@ -4329,7 +4363,10 @@ void dsl_cpp_generator:: generateFuncHeader(Function* proc,bool isMainFile)
   std::cout << "Generate Func Header" << std::endl;
  
   dslCodePad& targetFile=isMainFile?main:header;
-  targetFile.pushString("void ");
+  if(proc->containsReturn())
+    targetFile.pushstr_space("auto");
+  else
+    targetFile.pushstr_space("void ");
   targetFile.pushString(proc->getIdentifier()->getIdentifier());
   targetFile.push('(');
   
