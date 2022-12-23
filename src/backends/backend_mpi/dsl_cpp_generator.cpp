@@ -80,7 +80,7 @@ void dsl_cpp_generator::generation_begin()
   header.pushstr_space("#include");
   addIncludeToFile("boost/mpi/collectives.hpp",header,true);
   header.pushstr_space("#include");
-  addIncludeToFile("graph.hpp",header,false);
+  addIncludeToFile("mpi_graph.hpp",header,false);
 
   header.NewLine();
   header.pushstr_newL("using namespace std;");
