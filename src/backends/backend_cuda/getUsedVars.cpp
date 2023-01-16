@@ -288,7 +288,7 @@ usedVariables getDeclaredPropertyVarsOfBlock(blockStatement *blockStmt)
   {
     if (stmt->getTypeofNode() == NODE_DECL) {
       declaration *decl = (declaration *)stmt;
-      if(decl->getType()->isPropNodeType()) {
+      if(decl->getType()->isPropType()) {
         currVars.addVariable(decl->getdeclId(),READ_WRITE); //2nd arg may be not used by us
       }
     }
