@@ -2,10 +2,11 @@
 DIGIT       [0-9]
 ALPHANUM    [a-zA-Z][a-zA-Z0-9_]*
 WS  [ \t\v\n\f]
+NEGATE [-]
 
 %{
     #include <stdlib.h>
-    #include <stdio.h>  
+    #include <stdio.h>
     #include <string.h>
     #include "includeHeader.hpp"
     #include "y.tab.h"
@@ -28,6 +29,7 @@ WS  [ \t\v\n\f]
 "bool"    {printf("Type: %s", yytext);  return T_BOOL;}
 "forall"  {printf("Keyword-forall: %s", yytext); return T_FORALL;}
 "for"     {printf("For: %s", yytext); return T_FOR;}
+"return"  {printf("Return: %s", yytext); return T_RETURN;}
 "+INF"    {printf("+Infinity: %s", yytext); return T_P_INF;}
 "INF"     {printf("+Infinity: %s", yytext); return T_INF;}
 "-INF"    {printf("-Infinity: %s", yytext); return T_N_INF;}
@@ -37,7 +39,6 @@ WS  [ \t\v\n\f]
 "if"      {printf("Keyword if: %s", yytext);  return T_IF;}
 "else"    {printf("Keyword else: %s", yytext); return T_ELSE;}
 "while"   {printf("Keyword while: %s", yytext);  return T_WHILE;}
-"Return"  {printf("Keyword return: %s", yytext);  return T_RETURN;}
 "do"      {printf("Keyword do: %s", yytext);  return T_DO;}
 "in"      {printf("Keyword in ");  return T_IN;}
 "fixedPoint" {printf("Keyword fixedPoint"); return T_FIXEDPOINT;}
@@ -45,7 +46,16 @@ WS  [ \t\v\n\f]
 "iterateInBFS"  {printf("iterateInBFS");  return T_BFS;}
 "iterateInReverse" {printf("iterateInReverse");  return T_REVERSE;} 
 "from"          {printf("from"); return T_FROM;} 
-"filter"        {printf("from");  return T_FILTER;} 
+"filter"        {printf("filter");  return T_FILTER;} 
+"Incremental"   {printf("incremental"); return T_INCREMENTAL;}
+"Decremental"   {printf("decremental"); return T_DECREMENTAL;}
+"Static"        {printf("static"); return T_STATIC;}
+"Dynamic"       {printf("dynamic"); return T_DYNAMIC ;}
+"Batch"         {printf("batch"); return T_BATCH ;} 
+"OnDelete"      {printf("Ondelete") ; return T_ONDELETE;}
+"OnAdd"      {printf("Onadd") ; return T_ONADD;}
+ 
+
 
 "+="					{ printf ("ADD_ASSIGN "); return T_ADD_ASSIGN;}
 "-="					{ printf ("SUB_ASSIGN"); return T_SUB_ASSIGN;}
@@ -66,7 +76,7 @@ WS  [ \t\v\n\f]
 ">="					{ printf ( "GE_OP");  return T_GE_OP;}
 "=="					{ printf ( "EQ_OP");  return T_EQ_OP;}
 "!="					{ printf ( "NE_OP");  return T_NE_OP;}
- 
+
 ";"					{ printf ( "';'"); return ';' ;}
 ("{"|"<%")				{ printf ( "'{'") ;  return '{' ;}
 ("}"|"%>")				{ printf ( "'}'"); return '}';}
@@ -83,25 +93,25 @@ WS  [ \t\v\n\f]
 "~"					{ printf ( "'~'");  return '~';}
 "-"					{ printf ( "'-'");  return '-';}
 "+"					{ printf ( "'+'");  return '+';}
-"*"					{ printf ( "'*'");  return '*';} 
+"*"					{ printf ( "'*'");  return '*';}
 "/"					{ printf ( "'/'"); return '/';}
-"%"					{ printf ( "'%'");  return '%';}
+"%"					{ printf ( "'%%'");  return '%';}
 "<"					{ printf ( "'<'");  return '<';}
 ">"					{ printf ( "'>'");  return '>';}
 
 "^"					{ printf ( "'^'"); return '^';}
 "|"					{ printf ( "'|'"); return '|';}
-"?"					{ printf ( "'?'");  return '?';} 
- 
+"?"					{ printf ( "'?'");  return '?';}
 
-"And"     { printf ( "And");  return T_AND;}
-"Or"      { printf ( "Or");  return T_OR;}
+
+"And"     { /* printf ( "And"); */  return T_AND;}
+"Or"      { /* printf ( "Or"); */  return T_OR;}
 
 "Sum"     { printf ( "Sum");  return T_SUM;}
 "Count"   { printf ( "Count");  return T_COUNT;}
 "Product" { printf ( "Product"); return T_PRODUCT;}
 "Max"     { printf ( "Max");  return T_MAX;}
-"Min"     { printf ( "Min"); return T_MIN;} 
+"Min"     { printf ( "Min"); return T_MIN;}
 
 
  /* Graph Types */
@@ -111,25 +121,25 @@ WS  [ \t\v\n\f]
 "edge" 		{printf("Edge Type");return T_EDGE;}
 "propNode" {printf("Node Property");  return T_NP;}
 "propEdge" {printf("Edge Property"); return T_EP;}
- 
+
  /* Collection Type */
 "SetN" 	{printf("Set of Nodes");  return T_SET_NODES;}
 "SetE" 	{printf("Set of Edges"); return T_SET_EDGES;}
-"elements" {printf("elements");  return T_ELEMENTS;}
 "list" {printf("list type"); return T_LIST;}
+"updates" {printf("updates type"); return T_UPDATES;}
 
 
  /* Numbers and Identifies */
-{ALPHANUM}          { yylval.text=yytext; /*printf("HELLO ID %s",yytext); printf("\n");*/ return ID;}
+{ALPHANUM}          { yylval.text=yytext; /*printf("HELLO ID %s",yytext); /* printf("\n");*/ return ID;}
 {DIGIT}+"."{DIGIT}* { yylval.fval=atof(yytext);
                         return FLOAT_NUM;}
-{DIGIT}{DIGIT}*     {  yylval.ival=atoi(yytext);
+{NEGATE}*{DIGIT}{DIGIT}*     {  yylval.ival=atoi(yytext);
                             return INT_NUM;}
 
-[ \n\t]	{ printf("\n");}  
-{WS}+					{ /* whitespace separates tokens */ } 
+[ \n\t]	{ printf("\n");}
+{WS}+					{ /* whitespace separates tokens */ }
 
-.    {printf("invalid\n");}
+.    {/* printf("invalid\n"); */}
 
 
 %%

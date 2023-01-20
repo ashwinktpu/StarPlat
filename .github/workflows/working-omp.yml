@@ -1,0 +1,30 @@
+name: OMPGen
+
+on:
+  push:
+    branches: [ WorkingBranch ]
+  pull_request:
+    branches: [ WorkingBranch ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+        
+    - name: make
+      run: cd src && make
+      
+    - name: list files
+      run: ls -al
+      
+      # OMP Generation
+    - name: Generate OMP
+      run:  ./src/StarPlat -s -f ./graphcode/sssp_dslV2 -b omp
+      
+    - name: List Generated files
+      run: cat ./graphcode/generated_omp/sssp_dslV2.*
+      
+

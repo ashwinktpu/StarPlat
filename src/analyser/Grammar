@@ -1,0 +1,162 @@
+program:
+        | program function_def 
+
+function_def: function_data  function_body  
+
+function_data: T_FUNC id '(' paramList ')' 
+
+paramList: param 
+            | param ',' paramList 
+
+param : type1 id 
+        | type2 id 
+        | type2 id '(' id ')' 
+
+function_body : blockstatements 
+
+statements :  
+	| statements statement 
+
+statement: declaration ';'
+	|assignment ';'
+	|proc_call ';' 
+	|control_flow 
+	|reduction ';'
+	| bfs_abstraction 
+	| blockstatements 
+	| unary_expr ';' 
+
+
+blockstatements : block_begin statements block_end 
+
+block_begin: '{'
+
+block_end: '}'
+
+declaration : type1 id
+	| type1 id '=' rhs  
+	| type2 id  
+	| type2 id '=' rhs 
+
+type1: primitive 
+	| graph 
+	| collections 
+
+
+primitive: T_INT 
+	| T_FLOAT 
+	| T_BOOL 
+	| T_DOUBLE 
+    | T_LONG 
+
+graph : T_GRAPH 
+	|T_DIR_GRAPH 
+
+collections : T_LIST 
+		|T_SET_NODES '<' id '>' 
+        | T_SET_EDGES '<' id '>' 
+
+type2 : T_NODE 
+       | T_EDGE 
+	   | property 
+
+property : T_NP '<' primitive '>' 
+            | T_EP '<' primitive '>' 
+            | T_NP '<' collections '>'
+            | T_EP '<' collections '>' 
+
+assignment :  leftSide '=' rhs  
+
+rhs : expression 
+
+expression : proc_call 
+             | expression '+' expression 
+	         | expression '-' expression 
+	         | expression '*' expression 
+	         | expression'/' expression
+             | expression T_AND_OP expression 
+	         | expression T_OR_OP  expression 
+	         | expression T_LE_OP expression 
+	         | expression T_GE_OP expression
+			 | expression '<' expression
+			 | expression '>' expression
+			 | expression T_EQ_OP expression
+             | expression T_NE_OP expression
+			 | '!'expression 
+		     | '(' expression ')' 
+	         | val 
+			 | leftSide 
+			 | unary_expr 
+
+unary_expr :   expression T_INC_OP 
+			 |  expression T_DEC_OP 
+
+proc_call : leftSide '(' arg_list ')' 
+
+val : INT_NUM 
+	| FLOAT_NUM 
+	| BOOL_VAL 
+	| T_INF 
+	| T_P_INF 
+	| T_N_INF 
+
+control_flow : selection_cf 
+              | iteration_cf 
+
+iteration_cf : T_FIXEDPOINT T_UNTIL '(' id ':' expression ')' blockstatements 
+		    | T_WHILE '(' boolean_expr')' blockstatements 
+		    | T_DO blockstatements T_WHILE '(' boolean_expr ')' ';' 
+		    | T_FORALL '(' id T_IN id '.' proc_call filterExpr')'  blockstatements 
+		    | T_FOR '(' id T_IN leftSide ')' blockstatements 
+		    | T_FOR '(' id T_IN id '.' proc_call  filterExpr')' blockstatements 
+
+filterExpr  :         
+            |'.' T_FILTER '(' boolean_expr ')'
+
+boolean_expr : expression 
+
+selection_cf : T_IF '(' boolean_expr ')' blockstatements 
+	           | T_IF '(' boolean_expr ')' blockstatements T_ELSE blockstatements  
+
+
+reduction : leftSide '=' reductionCall                                                            $$=Util::createNodeForReductionStmtList($2->ASTNList,reduc,$8->ASTNList);
+		   | leftSide reduce_op expression 
+
+
+reduce_op : T_ADD_ASSIGN 
+          | T_MUL_ASSIGN   
+		  | leftSide 
+
+rightList : val ',' rightList 
+          | val    
+
+reductionCall : reduction_calls '(' arg_list ')' 
+
+reduction_calls : T_SUM 
+	         | T_COUNT 
+	         | T_PRODUCT 
+	         | T_MAX 
+	         | T_MIN 
+
+leftSide : id 
+         | oid 
+         | tid 
+
+arg_list :
+		| assignment ',' arg_list 
+        | expression ',' arg_list   
+        | expression 
+        | assignment 
+
+
+bfs_abstraction	: T_BFS '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr blockstatements reverse_abstraction
+			| T_BFS '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr blockstatements 
+
+reverse_abstraction :  T_REVERSE blockstatements 
+                     | T_REVERSE '(' boolean_expr ')'  blockstatements 
+
+oid : id '.' id 
+
+tid : id '.' id '.' id 
+
+id : ID   
