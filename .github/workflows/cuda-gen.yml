@@ -1,0 +1,22 @@
+name: CUGen
+
+on:
+  push:
+    branches: [ cuda ]
+  pull_request:
+    branches: [ cuda ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+        
+    - name: make
+      run: cd src && make cuda
+      
+    - name: Generation
+      run:  ./src/StarPlat -s -f ../graphcode/sssp_dslV2 -b cuda
+

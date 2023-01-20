@@ -5,8 +5,8 @@ CC = g++
 all: parse 
 
 parse: lrparser.y
-	yacc -d lrparser.y
-	lex lexer.l
+	bison -dy lrparser.y
+	flex lexer.l
 	$(CC) -c -x c++ y.tab.c -o ../bin/y.tab.o
 	$(CC) -c -x c++ lex.yy.c -o ../bin/lex.yy.o
 

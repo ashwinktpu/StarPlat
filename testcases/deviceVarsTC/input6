@@ -1,0 +1,15 @@
+function test(Graph g, node src)
+{
+    propNode<int> prop;
+    g.attachNodeProperty(prop =  10);
+
+    forall(v in g.nodes()){
+        v.prop = 26;
+    }
+
+    while(True)
+    {
+        int sumV = 0;
+        sumV = src.prop;
+    }
+}
