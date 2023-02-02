@@ -2928,7 +2928,7 @@ int main(int argc,char **argv)
    }
    else
     {
-		if(!((strcmp(backendTarget,"omp")==0)||(strcmp(backendTarget,"mpi")==0)||(strcmp(backendTarget,"cuda")==0) || (strcmp(backendTarget,"acc")==0)))
+		if(!((strcmp(backendTarget,"omp")==0)||(strcmp(backendTarget,"sycl")==0)||(strcmp(backendTarget,"mpi")==0)||(strcmp(backendTarget,"cuda")==0) || (strcmp(backendTarget,"acc")==0)))
 		   {
 			  fprintf(stderr, "Specified backend target is not implemented in the current version!\n");
 			   exit(-1);
@@ -3016,6 +3016,12 @@ int main(int argc,char **argv)
       } 
       else if (strcmp(backendTarget, "acc") == 0) {
         spacc::dsl_cpp_generator cpp_backend;
+        cpp_backend.setFileName(fileName);
+        cpp_backend.generate();
+      }
+	else if (strcmp(backendTarget, "sycl") == 0) {
+		std::cout<<"GENERATING SYCL CODE"<<std::endl;
+        spsycl::dsl_cpp_generator cpp_backend;
         cpp_backend.setFileName(fileName);
         cpp_backend.generate();
       }
