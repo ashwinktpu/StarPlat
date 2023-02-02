@@ -1,8 +1,7 @@
 // FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
-#include "PageRank_DSL_V2.h"
+#include "temp_algo.h"
 
-void Compute_PR(graph& g,float beta,float delta,int maxIter,
-  float* pageRank)
+void count_nodes(graph& g)
 
 {
   // CSR BEGIN
@@ -78,56 +77,37 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
 
 
   //DECLAR DEVICE AND HOST vars in params
-  float* d_pageRank;
-  cudaMalloc(&d_pageRank, sizeof(float)*(V));
-
 
   //BEGIN DSL PARSING 
-  float* d_pageRank_nxt;
-  cudaMalloc(&d_pageRank_nxt, sizeof(float)*(V));
+  int* d_prop;
+  cudaMalloc(&d_prop, sizeof(int)*(V));
 
-  float num_nodes = (float)g.num_nodes( ); // asst in .cu
+  int x; // asst in .cu
 
-  initKernel<float> <<<numBlocks,threadsPerBlock>>>(V,d_pageRank,(float)1 / num_nodes);
+  int y; // asst in .cu
 
-  int iterCount = 0; // asst in .cu
+  int z; // asst in .cu
 
-  float diff; // asst in .cu
+  int w = 0; // asst in .cu
 
-  bool tempVar_ Å(?V = false; // asst in .cu
+  y = x + 10;
+  z = x;
+  initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_prop,(int)(x || z));
 
-    do{
-      if (tempVar_ Å(?V){ // if filter begin 
-
-      } // if filter end
-      tempVar_ Å(?V = true;
-        diff = 0.000000;
-        cudaMemcpyToSymbol(::diff, &diff, sizeof(float), 0, cudaMemcpyHostToDevice);
-        cudaMemcpyToSymbol(::num_nodes, &num_nodes, sizeof(float), 0, cudaMemcpyHostToDevice);
-        cudaMemcpyToSymbol(::delta, &delta, sizeof(float), 0, cudaMemcpyHostToDevice);
-        Compute_PR_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_pageRank,d_pageRank_nxt);
-        cudaDeviceSynchronize();
+  cudaMemcpyToSymbol(::y, &y, sizeof(int), 0, cudaMemcpyHostToDevice);
+  count_nodes_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_prop);
+  cudaDeviceSynchronize();
 
 
 
-        ; // asst in .cu
 
-        ; // asst in .cu
+  //cudaFree up!! all propVars in this BLOCK!
+  cudaFree(d_prop);
 
-        cudaMemcpy(d_pageRank, d_pageRank_nxt, sizeof(float)*V, cudaMemcpyDeviceToDevice);
-        iterCount++;
-        cudaMemcpyFromSymbol(&diff, ::diff, sizeof(float), 0, cudaMemcpyDeviceToHost);
+  //TIMER STOP
+  cudaEventRecord(stop,0);
+  cudaEventSynchronize(stop);
+  cudaEventElapsedTime(&milliseconds, start, stop);
+  printf("GPU Time: %.6f ms\n", milliseconds);
 
-      }while((diff > beta) && (iterCount < maxIter));
-
-      //cudaFree up!! all propVars in this BLOCK!
-      cudaFree(d_pageRank_nxt);
-
-      //TIMER STOP
-      cudaEventRecord(stop,0);
-      cudaEventSynchronize(stop);
-      cudaEventElapsedTime(&milliseconds, start, stop);
-      printf("GPU Time: %.6f ms\n", milliseconds);
-
-      cudaMemcpy(pageRank, d_pageRank, sizeof(float)*(V), cudaMemcpyDeviceToHost);
-    } //end FUN
+} //end FUN

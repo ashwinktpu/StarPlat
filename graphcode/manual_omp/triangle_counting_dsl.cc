@@ -39,16 +39,18 @@ void Compute_TC(graph& g)
 int main()
 {
 
-  graph G("../dataRecords/sample.txt");
+  graph G("../sample_graphs/test_graph.txt");
   G.parseGraph();
 
- 
-  /*double startTime = omp_get_wtime();
-  Compute_TC(G);
-  double endTime = omp_get_wtime();
-  printf("EXECUTION TIME %f \n", endTime - startTime);*/
+  float* node_pr = new float[G.num_nodes()];
 
- /* char *outputfilename = "outputN.txt";
+ 
+  // double startTime = omp_get_wtime();
+  Compute_TC(G);
+  // double endTime = omp_get_wtime();
+  // printf("EXECUTION TIME %f \n", endTime - startTime);
+
+ char *outputfilename = "outputN.txt";
   FILE *outputfilepointer;
   outputfilepointer = fopen(outputfilename, "w");
 
@@ -57,6 +59,5 @@ int main()
   {
     fprintf(outputfilepointer, "%d  %0.9lf\n", i, node_pr[i]);
   }
-*/
   
 }
