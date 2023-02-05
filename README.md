@@ -141,6 +141,8 @@ pgc++ -std=c++14 ../graphcode/generated_OpenACC/sssp_dslV2.cu -I .. -o ssspAcc.o
 Graph DSL for basic graph algorithms 
 - Phase1 (static)  **SSSP, BC, PR, and TC**
 
+#Acknowledgments
+This project is funded by India's National Supercomputing Mission, whose timely funding and regular reviews are greatly appreciated.
 
 [![License](http://img.shields.io/:license-mit-blue.svg?style=flat-square)](http://badges.mit-license.org)
 
