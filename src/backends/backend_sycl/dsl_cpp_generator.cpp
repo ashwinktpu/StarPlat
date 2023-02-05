@@ -4,6 +4,7 @@
 
 #include "../../ast/ASTHelper.cpp"
 #include "dsl_cpp_generator.h"
+#include "getUsedVars.cpp"
 
 //~ using namespace spsycl;
 namespace spsycl{
@@ -380,6 +381,368 @@ namespace spsycl{
 
     }
 
+    void dsl_cpp_generator::castIfRequired(Type* type, Identifier* methodID,dslCodePad& main) 
+    {
+        /* This needs to be made generalized, extended for all predefined function,
+            made available by the DSL*/
+        string predefinedFunc("num_nodes");
+        if (predefinedFunc.compare(methodID->getIdentifier()) == 0) {
+            if (type->gettypeId() != TYPE_INT) {
+            char strBuffer[1024];
+            sprintf(strBuffer, "(%s)", convertToCppType(type));
+            main.pushString(strBuffer);
+            }
+        }
+    }
+
+    void dsl_cpp_generator::generate_exprLiteral(Expression* expr, bool isMainFile) 
+    {
+        char valBuffer[1024];
+
+        int expr_valType = expr->getExpressionFamily();
+
+        switch (expr_valType) 
+        {
+            case EXPR_INTCONSTANT:
+            sprintf(valBuffer, "%ld", expr->getIntegerConstant());
+            break;
+
+            case EXPR_FLOATCONSTANT:
+                sprintf(valBuffer, "%lf", expr->getFloatConstant());
+                break;
+            case EXPR_BOOLCONSTANT:
+                sprintf(valBuffer, "%s", expr->getBooleanConstant() ? "true" : "false");
+                break;
+            default:
+                assert(false);
+        }
+
+        main.pushString(valBuffer);
+    }
+
+    void dsl_cpp_generator::generate_exprInfinity(Expression* expr, bool isMainFile) 
+    {
+        char valBuffer[1024];
+        if (expr->getTypeofExpr()) {
+            int typeClass = expr->getTypeofExpr();
+            switch (typeClass) {
+            case TYPE_INT:
+                sprintf(valBuffer, "%s",
+                        expr->isPositiveInfinity() ? "INT_MAX" : "INT_MIN");
+                break;
+            case TYPE_LONG:
+                sprintf(valBuffer, "%s",
+                        expr->isPositiveInfinity() ? "LLONG_MAX" : "LLONG_MIN");
+                break;
+            case TYPE_FLOAT:
+                sprintf(valBuffer, "%s",
+                        expr->isPositiveInfinity() ? "FLT_MAX" : "FLT_MIN");
+                break;
+            case TYPE_DOUBLE:
+                sprintf(valBuffer, "%s",
+                        expr->isPositiveInfinity() ? "DBL_MAX" : "DBL_MIN");
+                break;
+            default:
+                sprintf(valBuffer, "%s",
+                        expr->isPositiveInfinity() ? "INT_MAX" : "INT_MIN");
+                break;
+            }
+
+        } else
+        {
+            sprintf(valBuffer, "%s", expr->isPositiveInfinity() ? "INT_MAX" : "INT_MIN");
+        }
+        main.pushString(valBuffer);
+    }
+
+    void dsl_cpp_generator::generate_exprPropId(PropAccess* propId, bool isMainFile)
+    {
+        char strBuffer[1024];
+        Identifier* id1 = propId->getIdentifier1();
+        Identifier* id2 = propId->getIdentifier2();
+        ASTNode* propParent = propId->getParent();
+        bool relatedToReduction =
+            propParent != NULL ? propParent->getTypeofNode() == NODE_REDUCTIONCALLSTMT
+                                : false;
+        if (id2->getSymbolInfo() != NULL &&
+            id2->getSymbolInfo()->getId()->get_fp_association() &&
+            relatedToReduction) {
+            sprintf(strBuffer, "d_%s_next[%s]", id2->getIdentifier(),
+                    id1->getIdentifier());
+        } else {
+            if (!isMainFile)
+            sprintf(strBuffer, "d_%s[%s]", id2->getIdentifier(), id1->getIdentifier());  // PREFIX D
+            else
+            sprintf(strBuffer, "%s[%s]", id2->getIdentifier(), id1->getIdentifier());
+        }
+        main.pushString(strBuffer);
+    }
+
+    void dsl_cpp_generator::generate_exprArL(Expression* expr, bool isMainFile, bool isAtomic) 
+    {
+        if (expr->hasEnclosedBrackets()) {
+            main.pushString("(");
+        }
+        if (!isAtomic)
+            generateExpr(expr->getLeft(), isMainFile);
+        main.space();
+        const char* operatorString = getOperatorString(expr->getOperatorType());
+        if (!isAtomic)
+            main.pushstr_space(operatorString);
+        generateExpr(expr->getRight(), isMainFile);
+        if (expr->hasEnclosedBrackets()) {
+            main.pushString(")");
+        }
+    }
+
+    void dsl_cpp_generator::generate_exprRelational(Expression* expr, bool isMainFile) 
+    {
+        if (expr->hasEnclosedBrackets()) {
+            main.pushString("(");
+        }
+        generateExpr(expr->getLeft(), isMainFile);
+
+        main.space();
+        const char* operatorString = getOperatorString(expr->getOperatorType());
+        main.pushstr_space(operatorString);
+        generateExpr(expr->getRight(), isMainFile);
+        if (expr->hasEnclosedBrackets()) {
+            main.pushString(")");
+        }
+    }
+
+    void dsl_cpp_generator::generate_exprProcCall(Expression* expr, bool isMainFile)
+    {
+        proc_callExpr* proc = (proc_callExpr*)expr;
+        string methodId(proc->getMethodId()->getIdentifier());
+        if (methodId == "get_edge") {
+            main.pushString("edge");                           
+                                                
+        } else if (methodId == "count_outNbrs")
+        {
+            char strBuffer[1024];
+            list<argument*> argList = proc->getArgList();
+            assert(argList.size() == 1);
+            Identifier* nodeId = argList.front()->getExpr()->getId();
+            //~ Identifier* objectId = proc->getId1();
+            sprintf(strBuffer, "(%s[%s+1]-%s[%s])", "d_meta", nodeId->getIdentifier(), "d_meta", nodeId->getIdentifier());
+            main.pushString(strBuffer);
+        } else if (methodId == "is_an_edge") {
+            char strBuffer[1024];
+            list<argument*> argList = proc->getArgList();
+            assert(argList.size() == 2);
+            Identifier* srcId = argList.front()->getExpr()->getId();
+            Identifier* destId = argList.back()->getExpr()->getId();
+            //~ Identifier* objectId = proc->getId1();
+            sprintf(strBuffer, "%s(%s, %s, %s, %s)", "findNeighborSorted", srcId->getIdentifier(), destId->getIdentifier(), "d_meta", "d_data");
+            main.pushString(strBuffer);
+
+        } else {
+            char strBuffer[1024];
+            list<argument*> argList = proc->getArgList();
+            if (argList.size() == 0) {
+            Identifier* objectId = proc->getId1();
+            sprintf(strBuffer, "%s.%s( )", objectId->getIdentifier(),proc->getMethodId()->getIdentifier());
+            main.pushString(strBuffer);
+            }
+        }
+    }
+
+    void dsl_cpp_generator::generate_exprUnary(Expression* expr, bool isMainFile) 
+    {
+        if (expr->hasEnclosedBrackets()) {
+            main.pushString("(");
+        }
+
+        if (expr->getOperatorType() == OPERATOR_NOT) {
+            const char* operatorString = getOperatorString(expr->getOperatorType());
+            main.pushString(operatorString);
+            generateExpr(expr->getUnaryExpr(), isMainFile);
+        }
+
+        if (expr->getOperatorType() == OPERATOR_INC ||
+            expr->getOperatorType() == OPERATOR_DEC) {
+            generateExpr(expr->getUnaryExpr(), isMainFile);
+            const char* operatorString = getOperatorString(expr->getOperatorType());
+            main.pushString(operatorString);
+        }
+
+        if (expr->hasEnclosedBrackets()) {
+            main.pushString(")");
+        }
+    }
+
+    void dsl_cpp_generator::generate_exprIdentifier(Identifier* id, bool isMainFile) 
+    {
+        main.pushString(id->getIdentifier());
+    }
+
+    void dsl_cpp_generator::generateExpr(Expression* expr, bool isMainFile, bool isAtomic) 
+    {
+        if (expr->isLiteral()) {
+            generate_exprLiteral(expr, isMainFile);
+        } else if (expr->isInfinity()) {
+            generate_exprInfinity(expr, isMainFile);
+        } else if (expr->isIdentifierExpr()) {
+            generate_exprIdentifier(expr->getId(), isMainFile);
+        } else if (expr->isPropIdExpr()) {
+            generate_exprPropId(expr->getPropId(), isMainFile);
+        } else if (expr->isArithmetic() || expr->isLogical()) {
+            generate_exprArL(expr, isMainFile, isAtomic);
+        } else if (expr->isRelational()) {
+            generate_exprRelational(expr, isMainFile);
+        } else if (expr->isProcCallExpr()) {
+            generate_exprProcCall(expr, isMainFile);
+        } else if (expr->isUnary()) {
+            generate_exprUnary(expr, isMainFile);
+        } else {
+            assert(false);
+        }
+    }
+
+    void dsl_cpp_generator::generateVariableDecl(declaration* declStmt, bool isMainFile)
+    {
+        Type* type = declStmt->getType();
+        
+        if (type->isPropType())
+        {
+            if (type->getInnerTargetType()->isPrimitiveType())
+            {
+                Type* innerType = type->getInnerTargetType();
+                main.pushString(convertToCppType(innerType));  // convertToCppType need to be modified.
+                main.pushString("*");
+                main.space();
+                main.pushString("d_");
+                main.pushString(declStmt->getdeclId()->getIdentifier());
+                main.pushstr_newL(";");
+                generateMallocDevice(type, declStmt->getdeclId()->getIdentifier());
+            }
+        }
+        else if (type->isPrimitiveType())
+        {
+            char strBuffer[1024];
+            const char* varType = convertToCppType(type);
+            const char* varName = declStmt->getdeclId()->getIdentifier();
+            cout << "varT:" << varType << endl;
+            cout << "varN:" << varName << endl;
+
+            sprintf(strBuffer, "%s %s", varType, varName);
+            main.pushString(strBuffer);
+
+            if (declStmt->isInitialized()) 
+            {
+                main.pushString(" = ");
+                if (declStmt->getExpressionAssigned()->getExpressionFamily() == EXPR_PROCCALL) {
+                    proc_callExpr* pExpr = (proc_callExpr*)declStmt->getExpressionAssigned();
+                    Identifier* methodId = pExpr->getMethodId();
+                    castIfRequired(type, methodId, main);
+                }
+                generateExpr(declStmt->getExpressionAssigned(), isMainFile);  // PRINTS RHS? YES
+            }
+            main.pushstr_newL("; // asst in main");
+            main.NewLine();
+        }
+        else if (type->isNodeEdgeType()) 
+        {
+            main.pushstr_space(convertToCppType(type));
+            main.pushString(declStmt->getdeclId()->getIdentifier());
+            if (declStmt->isInitialized()) {
+            main.pushString(" = ");
+            generateExpr(declStmt->getExpressionAssigned(), isMainFile);
+            main.pushstr_newL(";");
+            }
+        }
+    }
+
+    void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment* asmt, bool isMainFile)
+    {
+        main.pushstr_newL("// Device assignment statement");
+    }
+
+    void dsl_cpp_generator::generateAtomicDeviceAssignmentStmt(assignment* asmt, bool isMainFile)
+    {
+        main.pushstr_newL("// Atomic device assignment statement");
+    }
+
+    void dsl_cpp_generator::generateStatement(statement* stmt, bool isMainFile)
+    {
+        if (stmt->getTypeofNode() == NODE_BLOCKSTMT) {
+            generateBlock((blockStatement*)stmt, false, isMainFile);
+        }
+
+        if (stmt->getTypeofNode() == NODE_DECL) {
+            generateVariableDecl((declaration*)stmt, isMainFile);
+        }
+
+        if (stmt->getTypeofNode() == NODE_ASSIGN) {
+            // generateAssignmentStmt((assignment*)stmt);
+            assignment* asst = (assignment*)stmt;
+            if (asst->isDeviceAssignment())
+                generateDeviceAssignmentStmt(asst, isMainFile);
+            else  // atomic or normal asmt
+                generateAtomicDeviceAssignmentStmt(asst, isMainFile);
+        }
+
+        if (stmt->getTypeofNode() == NODE_WHILESTMT) {
+            // generateWhileStmt((whileStmt*) stmt);
+        }
+
+        if (stmt->getTypeofNode() == NODE_IFSTMT) {
+            generateIfStmt((ifStmt*)stmt, isMainFile);
+        }
+
+        if (stmt->getTypeofNode() == NODE_DOWHILESTMT) {
+            generateDoWhileStmt((dowhileStmt*)stmt, isMainFile);
+        }
+
+        if (stmt->getTypeofNode() == NODE_FORALLSTMT) {
+            std::cout << "STMT: For" << '\n';
+            printf("isMainFile val %d\n", isMainFile);
+            generateForAll((forallStmt*)stmt, isMainFile);
+        }
+
+        if (stmt->getTypeofNode() == NODE_FIXEDPTSTMT) {
+            generateFixedPoint((fixedPointStmt*)stmt, isMainFile);
+        }
+        if (stmt->getTypeofNode() == NODE_REDUCTIONCALLSTMT) {
+            generateReductionStmt((reductionCallStmt*)stmt, isMainFile);
+        }
+        if (stmt->getTypeofNode() == NODE_ITRBFS) {
+            generateBFSAbstraction((iterateBFS*)stmt, isMainFile);
+        }
+        if (stmt->getTypeofNode() == NODE_PROCCALLSTMT) {
+            generateProcCall((proc_callStmt*)stmt, isMainFile);
+        }
+        if (stmt->getTypeofNode() == NODE_UNARYSTMT) {
+            unary_stmt* unaryStmt = (unary_stmt*)stmt;
+            generateExpr(unaryStmt->getUnaryExpr(), isMainFile);
+            main.pushstr_newL(";");
+        }
+        if (isOptimized && (stmt->getTypeofNode() == NODE_TRANSFERSTMT)) {
+            varTransferStmt* transferStmt = (varTransferStmt*)stmt;
+            generateTransferStmt(transferStmt);
+        }
+
+    }
+
+    void dsl_cpp_generator::generateBlock(blockStatement* blockStmt, bool includeBrace, bool isMainFile)
+    {
+        usedVariables usedVars = getDeclaredPropertyVariablesOfBlock(blockStmt);
+        list<Identifier*> vars = usedVars.getVariables();
+        std::cout << "\t==VARSIZE:" << vars.size() << '\n';
+
+        list<statement*> stmtList = blockStmt->returnStatements();
+        list<statement*>::iterator itr;
+        if (includeBrace) {
+            main.pushstr_newL("{");
+        }
+
+        for (itr = stmtList.begin(); itr != stmtList.end(); itr++) {
+            statement* stmt = *itr;
+            generateStatement(stmt, isMainFile);
+        }
+    }
+
     void dsl_cpp_generator::generateFunc(ASTNode* proc) 
     {
         Function* func = (Function*)proc;
@@ -393,6 +756,12 @@ namespace spsycl{
         main.pushstr_newL("//DECLAR DEVICE AND HOST vars in params");
         /* function for generation of cudamalloc for property type params*/
         generateMallocDeviceParams(func->getParamList());
+
+        main.NewLine();
+
+        main.pushstr_newL("//BEGIN DSL PARSING ");
+
+        generateBlock(func->getBlockStatement(), false);
 
     }
 
@@ -424,6 +793,54 @@ namespace spsycl{
         bodyFile = NULL;
     }
 
+    const char* dsl_cpp_generator::getOperatorString(int operatorId) 
+    {
+        switch (operatorId) {
+            case OPERATOR_ADD:
+            return "+";
+            case OPERATOR_DIV:
+            return "/";
+            case OPERATOR_MUL:
+            return "*";
+            case OPERATOR_MOD:
+            return "%";
+            case OPERATOR_SUB:
+            return "-";
+            case OPERATOR_EQ:
+            return "==";
+            case OPERATOR_NE:
+            return "!=";
+            case OPERATOR_LT:
+            return "<";
+            case OPERATOR_LE:
+            return "<=";
+            case OPERATOR_GT:
+            return ">";
+            case OPERATOR_GE:
+            return ">=";
+            case OPERATOR_AND:
+            return "&&";
+            case OPERATOR_OR:
+            return "||";
+            case OPERATOR_INC:
+            return "++";
+            case OPERATOR_DEC:
+            return "--";
+            case OPERATOR_ADDASSIGN:
+            return "+";
+            case OPERATOR_ANDASSIGN:
+            return "&&";
+            case OPERATOR_ORASSIGN:
+            return "||";
+            case OPERATOR_MULASSIGN:
+            return "*";
+            case OPERATOR_SUBASSIGN:
+            return "-";
+            default:
+            return "NA";
+        }
+    }
+    
     bool dsl_cpp_generator::generate() 
     {
         cout<<"INSIDE SYCL GENERATOR"<<endl;
