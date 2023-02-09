@@ -552,7 +552,6 @@ void dsl_cpp_generator::generateBFSAbstraction(iterateBFS* bfsAbstraction,
   main.pushstr_newL("}");
   main.pushstr_newL("//accumulate_bc<<<numBlocks,threadsPerBlock>>>(V,d_delta, d_BC, d_level, src);");
   //~ main.NewLine();
-
   //~ main.pushstr_newL("}while(!finished);");
   //~ main.pushstr_newL("}");
   //~ main.pushstr_newL("phase = phase - 1 ;");
@@ -1359,7 +1358,7 @@ void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll, bool isMainF
         Identifier* nodeNbr = argList.front()->getExpr()->getId();
         sprintf(strBuffer, "for (%s %s = %s[%s]; %s < %s[%s+1]; %s++)", "int", "edge", "d_rev_meta", nodeNbr->getIdentifier(), "edge", "d_rev_meta", nodeNbr->getIdentifier(), "edge");
         targetFile.pushstr_newL(strBuffer);
-        targetFile.pushString("{");
+        targetFile.pushstr_newL("{");
         sprintf(strBuffer, "%s %s = %s[%s] ;", "int", iterator->getIdentifier(), "d_src", "edge");  //needs to move the addition of
         targetFile.pushstr_newL(strBuffer);
       }  //statement to  a different method.
@@ -1550,6 +1549,14 @@ void dsl_cpp_generator ::addCudaKernel(forallStmt* forAll) {
   header.pushString("_kernel");
 
   header.pushString("(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next");
+
+  cout << "isMetaUsed : " << forAll->isMetaUsed << endl;
+  cout << "isDataUsed : " << forAll->isDataUsed << endl;
+  cout << "isSrcUsed : " << forAll->isSrcUsed << endl;
+  cout << "isWeightUsed : " << forAll->isWeightUsed << endl;
+  cout << "isRevMetaUsed : " << forAll->isRevMetaUsed << endl;
+  cout << "isModifiedNextUsed : " << forAll->isModifiedNextUsed << endl;
+
   /*if(currentFunc->getParamList().size()!=0)
     {
       header.pushString(" ,");

@@ -37,6 +37,9 @@ usedVariables deviceVarsAnalyser::getVarsExpr(Expression *expr)
         result = getVarsExpr(expr->getLeft());
         result.merge(getVarsExpr(expr->getRight()));
     }
+    else if(expr->isProcCallExpr()) {
+
+    }
     return result;
 }
 
@@ -143,6 +146,8 @@ usedVariables deviceVarsAnalyser::getVarsForAll(forallStmt *stmt)
             if(arg->getExpr() != nullptr) 
                 currVars.merge(getVarsExpr(arg->getExpr()));
         }
+        stmt->isRevMetaUsed = true;
+        stmt->isSrcUsed = true;
   }
   else if(!stmt->isSourceField())
   {
@@ -227,16 +232,25 @@ usedVariables deviceVarsAnalyser::getVarsReduction(reductionCallStmt *stmt)
     {
       for(ASTNode* node: stmt->getLeftList())
       {
+        Identifier* affectedId = NULL;
         if(node->getTypeofNode() == NODE_ID)
         {
           Identifier* iden = (Identifier*)node;
           currVars.addVariable(iden, WRITE);
+          affectedId = iden;
         }
         else if(node->getTypeofNode() == NODE_PROPACCESS)
         {
           PropAccess* propId = (PropAccess*)node;
           currVars.addVariable(propId->getIdentifier1(), READ);
           currVars.addVariable(propId->getIdentifier2(), WRITE);
+          affectedId = propId->getIdentifier2();
+        }
+
+        if(affectedId->getSymbolInfo()->getId()->get_fp_association()) {
+          Identifier* fpId = affectedId->getSymbolInfo()->getId()->get_fpIdNode();
+          cout << "fpId: " << fpId->getIdentifier() << endl;
+          currVars.addVariable(fpId, READ_WRITE);
         }
       }
       getVarsReductionCall(stmt->getReducCall());

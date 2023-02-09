@@ -1,0 +1,218 @@
+fileName ../graphcode/sssp_dslV2
+Backend Target cuda
+Type: function
+
+'('Graph Type
+
+','Node Property'<'Type: int'>'
+','
+Edge Property'<'Type: int'>'
+','
+Node Type
+')'currentFuncType check!!0
+tempID g funccount 0
+
+'{'Node Property
+'<'Type: bool'>'
+';'
+'.''(''='+Infinity: INF','
+
+'='
+Type Bool: False')'';'TYPE OF NODE OF STATEMENT1
+'.'
+'='
+Type Bool: True';''.''='';'
+Type: bool
+
+'='Type Bool: False';'
+Keyword fixedPoint
+Keyword until
+'('':''!'')'
+'{'
+Keyword-forall: forall
+'('
+Keyword in 
+'.''('')''.'filter'('
+EQ_OP
+Type Bool: True')'
+')'
+'{'Keyword-forall: forall
+'('
+Keyword in 
+'.''('')'')''{'Edge Type
+
+'='
+'.''('','
+')'';''<''.'',''.''>'
+'='
+'<'Min
+'(''.'','
+'.'
+'+'
+'.'')'','
+Type Bool: True'>'';''}'
+'}'CHECK FILTER TYPE1
+
+'}''}'
+error val 0
+at 1
+ANAME1:6
+ANAME2:2
+		Setting device bool
+ANAME1:6
+ANAME2:2
+		Setting device bool
+FORALL par   NAME1:6
+FORALL ParPar NAME2:11
+FORALL ParParPar NAME3:6
+FORALL par   NAME1:6
+FORALL ParPar NAME2:18
+FORALL ParParPar NAME3:6
+at 2
+Function Compute_SSSP
+	{
+		Declaration
+		Procedure Call
+		Assignment
+		Assignment
+		Declaration
+		Fixed Point
+			{
+				For all
+					{
+						For all
+							{
+								Declaration
+								Reduction
+							}
+					}
+			}
+	}
+Initializing 0x55d26d9e5fd0 6
+Initializing 0x55d26d9e61e0 7
+Initializing 0x55d26d9e6840 17
+Initializing 0x55d26d9e6a60 8
+Initializing 0x55d26d9e6cb0 8
+Initializing 0x55d26d9e6eb0 7
+Initializing 0x55d26d9e9340 11
+Initializing 0x55d26d9e7160 6
+Initializing 0x55d26d9e91b0 18
+fpId: finished
+Analysing 0x55d26d9e5fd0 6
+Analysing 0x55d26d9e61e0 7
+Analysing 0x55d26d9e6840 17
+Analysing 0x55d26d9e6a60 8
+Analysing 0x55d26d9e6cb0 8
+Analysing 0x55d26d9e6eb0 7
+Analysing 0x55d26d9e9340 11
+Analysing 0x55d26d9e7160 6
+Analysing 0x55d26d9e91b0 18
+Analysing 0x55d26d9e7160 6
+Analysing 0x55d26d9e91b0 18
+Transfering 0x55d26d9e61e0 7
+Transfering 0x55d26d9e6840 17
+Transfering 0x55d26d9e6a60 8
+Transfering 0x55d26d9e6cb0 8
+Transfering 0x55d26d9e6eb0 7
+Transfering 0x55d26d9e9340 11
+Transfering 0x55d26d9e7160 6
+Transfering 0x55d26d9e91b0 18
+{
+	Declaration
+	Tranfer statement
+		dist CPU to GPU
+	Tranfer statement
+		modified CPU to GPU
+	Procedure Call
+	Tranfer statement
+		modified GPU to CPU
+	Assignment
+	Tranfer statement
+		dist GPU to CPU
+	Assignment
+	Declaration
+	Tranfer statement
+		dist CPU to GPU
+	Fixed Point
+		{
+			Tranfer statement
+				weight CPU to GPU
+			Tranfer statement
+				finished CPU to GPU
+			Tranfer statement
+				modified CPU to GPU
+			For all
+				{
+					For all
+						{
+							Declaration
+							Reduction
+						}
+				}
+			Tranfer statement
+				modified GPU to CPU
+			Tranfer statement
+				finished GPU to CPU
+		}
+	Tranfer statement
+		dist CPU to GPU
+}
+fileName sssp_dslV2
+param :g
+paramD:d_g
+========== SET TRUE
+param :dist
+paramD:d_dist
+param :weight
+paramD:d_weight
+param :src
+paramD:d_src
+param :g
+paramD:d_g
+param :dist
+paramD:d_dist
+param :weight
+paramD:d_weight
+param :src
+paramD:d_src
+	==VARSIZE:1
+varName:dist
+varName:modified
+	ASST 
+	DEVICE ASST
+	ASST 
+	DEVICE ASST
+varT:bool
+varN:finished
+IN FIX PT
+Size::5
+	==VARSIZE:0
+STMT: For
+isMainFile val 1
+Entered here for forall 
+INN OPTIMESED ---------------
+_
+_
+_
+_
+isMetaUsed : 65
+isDataUsed : 0
+isSrcUsed : 1
+isWeightUsed : 0
+isRevMetaUsed : 1
+isModifiedNextUsed : 0
+============CHANGED BODY  TYPE==============1start of kernel block 
+=======IF FILTER
+	==VARSIZE:0
+STMT: For
+isMainFile val 0
+GenerateForAllSignature = 0
+	 ITERATE Neighbour 
+src:nbr
+	==VARSIZE:0
+------>PROP PRO CAL
+LEFT LIST SIZE 2 
+VAR:dist
+FPID ========> finished
+FOR BODY END
+finished successfully
