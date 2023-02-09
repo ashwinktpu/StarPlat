@@ -275,6 +275,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                      tableId->set_redecl(); //explained in the ASTNodeTypes
                      tableId->set_fpassociation(); //explained in the ASTNodeTypes
                      tableId->set_fpId(fixedPointId->getIdentifier()); //explained in the ASTNodeTypes
+                     tableId->set_fpIdNode(fixedPointId); //explained in the ASTNodeTypes
                      tableId->set_dependentExpr(fpStmt->getDependentProp());
                  }
            }

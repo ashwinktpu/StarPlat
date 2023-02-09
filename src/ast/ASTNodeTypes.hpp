@@ -136,6 +136,9 @@ class Identifier:public ASTNode
 
   char* fpId;          /*If the identifier is associated with a fixedpoint,
                          the field stores the fixedpoint id name*/
+  Identifier* fpIdNode; /*If the identifier is associated with a fixedpoint,
+                         the field stores the fixedpoint id node*/
+
   TableEntry* idInfo;
   Expression* dependentExpr; /*the expression in fixedPoint of which the current
                                identifier is a part of*/
@@ -221,6 +224,16 @@ class Identifier:public ASTNode
    char* get_fpId()
    {
      return fpId;
+   }
+
+   void set_fpIdNode(Identifier* fp_sentIdNode)
+   {
+     fpIdNode=fp_sentIdNode;
+   }
+
+   Identifier* get_fpIdNode()
+   {
+     return fpIdNode;
    }
 
    void set_assignedExpr(Expression* assignExprSent)
@@ -1889,7 +1902,15 @@ class fixedPointStmt:public statement
     Expression* assocExpr;
     
     list<Identifier*> usedVars;
+
     public:
+    bool isMetaUsed = false;
+    bool isDataUsed = false;
+    bool isSrcUsed = false;
+    bool isWeightUsed = false;
+    bool isRevMetaUsed = false;
+    bool isModifiedNextUsed = false;
+
     forallStmt()
     {
       iterator=NULL;

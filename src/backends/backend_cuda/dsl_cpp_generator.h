@@ -6,6 +6,7 @@
 #include "../../ast/ASTNodeTypes.hpp"
 #include "../dslCodePad.h"
 //~ #include "../../parser/includeHeader.hpp"
+#include "../../analyser/analyserUtil.cpp"
 
 namespace spcuda {
 class dsl_cpp_generator {

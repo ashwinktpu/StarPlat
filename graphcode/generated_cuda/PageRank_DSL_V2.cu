@@ -94,40 +94,40 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
 
   float diff; // asst in .cu
 
-  bool tempVar_ Å(?V = false; // asst in .cu
+  bool tempVar_0 = false; // asst in .cu
 
-    do{
-      if (tempVar_ Å(?V){ // if filter begin 
+  do{
+    if (tempVar_0){ // if filter begin 
 
-      } // if filter end
-      tempVar_ Å(?V = true;
-        diff = 0.000000;
-        cudaMemcpyToSymbol(::diff, &diff, sizeof(float), 0, cudaMemcpyHostToDevice);
-        cudaMemcpyToSymbol(::num_nodes, &num_nodes, sizeof(float), 0, cudaMemcpyHostToDevice);
-        cudaMemcpyToSymbol(::delta, &delta, sizeof(float), 0, cudaMemcpyHostToDevice);
-        Compute_PR_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_pageRank,d_pageRank_nxt);
-        cudaDeviceSynchronize();
+    } // if filter end
+    tempVar_0 = true;
+    diff = 0.000000;
+    cudaMemcpyToSymbol(::diff, &diff, sizeof(float), 0, cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol(::num_nodes, &num_nodes, sizeof(float), 0, cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol(::delta, &delta, sizeof(float), 0, cudaMemcpyHostToDevice);
+    Compute_PR_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_pageRank,d_pageRank_nxt);
+    cudaDeviceSynchronize();
 
 
 
-        ; // asst in .cu
+    ; // asst in .cu
 
-        ; // asst in .cu
+    ; // asst in .cu
 
-        cudaMemcpy(d_pageRank, d_pageRank_nxt, sizeof(float)*V, cudaMemcpyDeviceToDevice);
-        iterCount++;
-        cudaMemcpyFromSymbol(&diff, ::diff, sizeof(float), 0, cudaMemcpyDeviceToHost);
+    cudaMemcpy(d_pageRank, d_pageRank_nxt, sizeof(float)*V, cudaMemcpyDeviceToDevice);
+    iterCount++;
+    cudaMemcpyFromSymbol(&diff, ::diff, sizeof(float), 0, cudaMemcpyDeviceToHost);
 
-      }while((diff > beta) && (iterCount < maxIter));
+  }while((diff > beta) && (iterCount < maxIter));
 
-      //cudaFree up!! all propVars in this BLOCK!
-      cudaFree(d_pageRank_nxt);
+  //cudaFree up!! all propVars in this BLOCK!
+  cudaFree(d_pageRank_nxt);
 
-      //TIMER STOP
-      cudaEventRecord(stop,0);
-      cudaEventSynchronize(stop);
-      cudaEventElapsedTime(&milliseconds, start, stop);
-      printf("GPU Time: %.6f ms\n", milliseconds);
+  //TIMER STOP
+  cudaEventRecord(stop,0);
+  cudaEventSynchronize(stop);
+  cudaEventElapsedTime(&milliseconds, start, stop);
+  printf("GPU Time: %.6f ms\n", milliseconds);
 
-      cudaMemcpy(pageRank, d_pageRank, sizeof(float)*(V), cudaMemcpyDeviceToHost);
-    } //end FUN
+  cudaMemcpy(pageRank, d_pageRank, sizeof(float)*(V), cudaMemcpyDeviceToHost);
+} //end FUN
