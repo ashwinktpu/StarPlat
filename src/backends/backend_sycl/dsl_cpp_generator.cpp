@@ -664,6 +664,376 @@ namespace spsycl{
         main.pushstr_newL("// Atomic device assignment statement");
     }
 
+    void dsl_cpp_generator::generateIfStmt(ifStmt* ifstmt, bool isMainFile)
+    {
+        Expression* condition = ifstmt->getCondition();
+        main.pushString("if (");
+        std::cout << "=======IF FILTER" << '\n';
+        generateExpr(condition, isMainFile);
+        main.pushstr_newL("){ // if filter begin ");
+
+        generateStatement(ifstmt->getIfBody(), isMainFile);
+        main.pushstr_newL("} // if filter end");
+        if (ifstmt->getElseBody() == NULL) return;
+        main.pushstr_newL("else");
+        generateStatement(ifstmt->getElseBody(), isMainFile);
+
+    }
+
+    void dsl_cpp_generator::generateDoWhileStmt(dowhileStmt* doWhile, bool isMainFile) 
+    {
+        main.pushstr_newL("// Generate do while statement");
+    }
+
+    void dsl_cpp_generator::generateCudaMemCpySymbol(char* var, const char* typeStr, bool direction)
+    {
+        char strBuffer[1024];
+        // cudaMalloc(&d_ nodeVal ,sizeof( int ) * V );
+        //                   1             2      3
+        // if (direction) {
+        //     sprintf(strBuffer, "cudaMemcpyToSymbol(::%s, &%s, sizeof(%s), 0, cudaMemcpyHostToDevice);", var, var,
+        //             typeStr);  // this assumes PropNode type  IS PROPNODE? V : E //else
+        //                     // might error later
+        // } else {
+        //     sprintf(strBuffer, "cudaMemcpyFromSymbol(&%s, ::%s, sizeof(%s), 0, cudaMemcpyDeviceToHost);", var, var,
+        //             typeStr);
+        // }
+        // main.pushstr_newL(strBuffer);
+        main.pushstr_newL("// Generate mem cpy symbol statement");
+    }
+
+    blockStatement* dsl_cpp_generator::includeIfToBlock(forallStmt* forAll)
+    {
+        Expression* filterExpr = forAll->getfilterExpr();
+        Expression* modifiedFilterExpr = filterExpr;
+        if (filterExpr->getExpressionFamily() == EXPR_RELATIONAL) 
+        {
+            Expression* expr1 = filterExpr->getLeft();
+            Expression* expr2 = filterExpr->getRight();
+            if (expr1->isIdentifierExpr())
+            {
+                /*if it is a nodeproperty, the filter is on the nodes that are iterated on
+                One more check can be applied to check if the iterating type is a neigbor
+                iteration or allgraph iterations.
+                */
+                if (expr1->getId()->getSymbolInfo() != NULL)
+                {
+                    if (expr1->getId()->getSymbolInfo()->getType()->isPropNodeType())
+                    {
+                        Identifier* iterNode = forAll->getIterator();
+                        Identifier* nodeProp = expr1->getId();
+                        PropAccess* propIdNode = (PropAccess*)Util::createPropIdNode(iterNode, nodeProp);
+                        Expression* propIdExpr = Expression::nodeForPropAccess(propIdNode);
+                            modifiedFilterExpr = (Expression*)Util::createNodeForRelationalExpr(propIdExpr, expr2, filterExpr->getOperatorType());
+                    }
+                }
+            }
+        }
+        
+        ifStmt* ifNode = (ifStmt*)Util::createNodeForIfStmt(modifiedFilterExpr,forAll->getBody(), NULL);
+        blockStatement* newBlock = new blockStatement();
+        newBlock->setTypeofNode(NODE_BLOCKSTMT);
+        newBlock->addStmtToBlock(ifNode);
+        return newBlock;
+    }
+
+    void dsl_cpp_generator::addCudaKernel(forallStmt* forAll)
+    {
+        const char* loopVar = "v";
+        char strBuffer[1024];
+
+        usedVariables usedVars = getVariablesForAll(forAll);
+        list<Identifier*> vars = usedVars.getVariables();
+
+        sprintf(strBuffer, "Q.submit([&](handler &h){ h.parallel_for(NUM_THREADS, [=](id<1> v){for (; v < V; v += NUM_THREADS)");
+        main.pushString(strBuffer);
+        main.pushstr_newL("{ // BEGIN KER FUN via ADDKERNEL");
+
+        if (forAll->hasFilterExpr()) {
+            blockStatement* changedBody = includeIfToBlock(forAll);
+            cout << "============CHANGED BODY  TYPE==============" << (changedBody->getTypeofNode() == NODE_BLOCKSTMT);
+            forAll->setBody(changedBody);
+            // cout<<"FORALL BODY
+            // TYPE"<<(forAll->getBody()->getTypeofNode()==NODE_BLOCKSTMT);
+        }
+
+        statement* body = forAll->getBody();
+        assert(body->getTypeofNode() == NODE_BLOCKSTMT);
+        blockStatement* block = (blockStatement*)body;
+        list<statement*> statementList = block->returnStatements();
+
+        printf("start of kernel block \n");
+
+        for (statement* stmt : statementList) {
+            generateStatement(stmt, false);  //false. All these stmts should be inside kernel
+                                            //~ if (stmt->getTypeofNode() == NODE_FORALLSTMT) {
+        }
+        main.pushstr_newL("}");
+        main.pushstr_newL("}); }).wait(); // end KER FUNC");
+    }
+
+    bool dsl_cpp_generator::allGraphIteration(char* methodId)
+    {
+        string methodString(methodId);
+
+        return (methodString == "nodes" || methodString == "edges");
+    }
+
+    bool dsl_cpp_generator::neighbourIteration(char* methodId)
+    {
+        string methodString(methodId);
+        return (methodString == "neighbors" || methodString == "nodes_to");
+    }
+
+    bool dsl_cpp_generator::elementsIteration(char* extractId)
+    {
+        string extractString(extractId);
+        return (extractString == "elements");
+    }
+
+    void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll, bool isMainFile)
+    {
+        cout << "GenerateForAllSignature = " << isMainFile << endl;
+
+        char strBuffer[1024];
+        Identifier* iterator = forAll->getIterator();
+
+        if (forAll->isSourceProcCall())
+        {
+            proc_callExpr* extractElemFunc = forAll->getExtractElementFunc();
+            Identifier* iteratorMethodId = extractElemFunc->getMethodId();
+            if (allGraphIteration(iteratorMethodId->getIdentifier()))
+            {
+
+            }
+            else if(neighbourIteration(iteratorMethodId->getIdentifier()))
+            {
+                char* methodId = iteratorMethodId->getIdentifier();
+                string s(methodId);
+                if (s.compare("neighbors") == 0)
+                {
+                    list<argument*> argList = extractElemFunc->getArgList();
+                    assert(argList.size() == 1);
+                    sprintf(strBuffer, "for (%s %s = %s[%s]; %s < %s[%s+1]; %s++) { // FOR NBR ITR ", "int", "edge", "d_meta", "v", "edge", "d_meta", "v", "edge");
+                    main.pushstr_newL(strBuffer);
+                    sprintf(strBuffer, "%s %s = %s[%s];", "int", iterator->getIdentifier(), "d_data", "edge");  //needs to move the addition of
+                    main.pushstr_newL(strBuffer);
+                }
+                if (s.compare("nodes_to") == 0)  //for pageRank
+                {
+                    main.pushstr_newL("// Nodes to neighbour iteration");
+                }
+
+            }
+            else if (forAll->isSourceField())
+            {
+
+            }
+            else
+            {
+                main.pushstr_newL("// For signature of set");   
+            }
+        }
+
+    }
+
+    void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile)
+    {
+        main.pushstr_newL("// Generate for all statement");
+        proc_callExpr* extractElemFunc = forAll->getExtractElementFunc();
+        PropAccess* sourceField = forAll->getPropSource();
+        Identifier* sourceId = forAll->getSource();
+
+        Identifier* collectionId;
+        if (sourceField != NULL) {
+            collectionId = sourceField->getIdentifier1();
+        }
+        if (sourceId != NULL) {
+            collectionId = sourceId;
+        }
+        Identifier* iteratorMethodId;
+        if (extractElemFunc != NULL)
+            iteratorMethodId = extractElemFunc->getMethodId();
+        statement* body = forAll->getBody();
+        char strBuffer[1024];
+
+        if (forAll->isForall())
+        {
+            std::cout<<"Entered for all"<<std::endl;
+            if (!isOptimized) 
+            {
+                std::cout<< "============EARLIER NOT OPT=============" << '\n';
+                usedVariables usedVars = getVariablesForAll(forAll);
+                list<Identifier*> vars = usedVars.getVariables();
+                
+                for (Identifier* iden : vars) 
+                {
+                    std::cout<< "varName:" << iden->getIdentifier() << '\n';
+                    Type* type = iden->getSymbolInfo()->getType();
+
+                    if (type->isPrimitiveType())
+                    generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), true);
+                    /*else if(type->isPropType())
+                    {
+                        Type* innerType = type->getInnerTargetType();
+                        string dIden = "d_" + string(iden->getIdentifier());
+                        generateCudaMemCpyStr(dIden.c_str(), iden->getIdentifier(), convertToCppType(innerType), "V", true);
+                    }*/
+                }
+            }
+            addCudaKernel(forAll);
+        }   
+        else
+        {  //IS FOR
+            main.pushstr_newL("// for all else part");
+
+            generateForAllSignature(forAll, false);  // FOR LINE
+
+            if (forAll->hasFilterExpr()) 
+            {
+                blockStatement* changedBody = includeIfToBlock(forAll);
+                cout << "============CHANGED BODY  TYPE==============" << (changedBody->getTypeofNode() == NODE_BLOCKSTMT);
+                forAll->setBody(changedBody);
+            }
+
+            if (extractElemFunc != NULL)
+            {
+                if (neighbourIteration(iteratorMethodId->getIdentifier()))
+                {
+                    cout << "\t ITERATE Neighbour \n";
+                    char* wItr = forAll->getIterator()->getIdentifier();
+                    std::cout << "src:" << wItr << '\n';
+                    char* nbrVar;
+
+                    if (forAll->getParent()->getParent()->getTypeofNode() == NODE_ITRBFS)
+                    {
+                        list<argument*> argList = extractElemFunc->getArgList();
+                        assert(argList.size() == 1);
+                        Identifier* nodeNbr = argList.front()->getExpr()->getId();
+                        nbrVar = nodeNbr->getIdentifier();
+
+                        sprintf(strBuffer, "if(d_level[%s] == -1) {", wItr);
+                        main.pushstr_newL(strBuffer);
+                        sprintf(strBuffer, "d_level[%s] = *d_hops_from_source + 1;", wItr);
+
+                        main.pushstr_newL(strBuffer);
+                        main.pushstr_newL("*d_finished = false;");
+                        main.pushstr_newL("}");
+
+                        sprintf(strBuffer, "if(d_level[%s] == *d_hops_from_source + 1) {", wItr);
+                        main.pushstr_newL(strBuffer);
+
+                        generateBlock((blockStatement*)forAll->getBody(), false, false);
+
+                        main.pushstr_newL("}");
+
+                        main.pushstr_newL("}");
+                    }
+                    else if (forAll->getParent()->getParent()->getTypeofNode() == NODE_ITRRBFS)
+                    {  // ITERATE REV BFS
+                        main.pushstr_newL("// rev bfs iterate");
+                    }
+                    else
+                    {
+                        generateStatement(forAll->getBody(), isMainFile);
+                        main.pushstr_newL("} //  end FOR NBR ITR. TMP FIX!");
+                        std::cout << "FOR BODY END" << '\n';
+                    }
+                }
+                else
+                {
+                    printf("FOR NORML");
+                    generateStatement(forAll->getBody(), false);
+                }
+            }
+            else 
+            {
+                if (collectionId->getSymbolInfo()->getType()->gettypeId() == TYPE_SETN) 
+                {  //FOR SET
+                    // if (body->getTypeofNode() == NODE_BLOCKSTMT) {
+                    // targetFile.pushstr_newL("{");  // uncomment after fixing NBR FOR brackets } issues.
+                    // //~ targetFile.pushstr_newL("//HERE");
+                    // printf("FOR");
+                    // sprintf(strBuffer, "int %s = *itr;", forAll->getIterator()->getIdentifier());
+                    // targetFile.pushstr_newL(strBuffer);
+                    // generateBlock((blockStatement*)body, false);  //FOR BODY for
+                    // targetFile.pushstr_newL("}");
+                    // } else
+                    // generateStatement(forAll->getBody(), false);
+                    main.pushstr_newL("set todo");
+
+                } 
+                else
+                {
+                    cout << iteratorMethodId->getIdentifier() << "\n";
+                    generateStatement(forAll->getBody(), false);
+                }
+                if (forAll->isForall() && forAll->hasFilterExpr())
+                {
+                    Expression* filterExpr = forAll->getfilterExpr();
+                    generatefixedpt_filter(filterExpr, false);
+                }
+            }
+        }
+    }
+
+    void dsl_cpp_generator::generatefixedpt_filter(Expression* filterExpr, bool isMainFile)
+    {
+        Expression* lhs = filterExpr->getLeft();
+        //~ char strBuffer[1024];
+        if (lhs->isIdentifierExpr()) {
+            //~ Identifier* filterId = lhs->getId();
+            //~ TableEntry* tableEntry = filterId->getSymbolInfo();
+            /*
+            if(tableEntry->getId()->get_fp_association())
+            {
+                targetFile.pushstr_newL("#pragma omp for");
+                sprintf(strBuffer,"for (%s %s = 0; %s < %s.%s(); %s ++)
+            ","int","v","v",graphId[0]->getIdentifier(),"num_nodes","v");
+                targetFile.pushstr_newL(strBuffer);
+                targetFile.pushstr_space("{");
+                sprintf(strBuffer,"%s[%s] =  %s_nxt[%s]
+            ;",filterId->getIdentifier(),"v",filterId->getIdentifier(),"v");
+                targetFile.pushstr_newL(strBuffer);
+                Expression* initializer =
+            filterId->getSymbolInfo()->getId()->get_assignedExpr();
+                assert(initializer->isBooleanLiteral());
+                sprintf(strBuffer,"%s_nxt[%s] = %s
+            ;",filterId->getIdentifier(),"v",initializer->getBooleanConstant()?"true":"false");
+                targetFile.pushstr_newL(strBuffer);
+                targetFile.pushstr_newL("}");
+                targetFile.pushstr_newL("}");
+
+            }
+            */
+        }
+    }
+
+    void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct, bool isMainFile)
+    {
+        main.pushstr_newL("// Generate fixed point statement");
+    }
+
+    void dsl_cpp_generator::generateReductionStmt(reductionCallStmt* stmt, bool isMainFile)
+    {
+        main.pushstr_newL("// Generate reduction statement");
+    }
+
+    void dsl_cpp_generator::generateBFSAbstraction(iterateBFS* bfsAbstraction, bool isMainFile)
+    {
+        main.pushstr_newL("// Generate bfs abstraction statement");
+    }
+
+    void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt, bool isMainFile)
+    {
+        main.pushstr_newL("// Generate proc call statement");
+    }
+
+    void dsl_cpp_generator::generateTransferStmt(varTransferStmt* stmt)
+    {
+        main.pushstr_newL("// Generate transfer statement");
+    }
+
     void dsl_cpp_generator::generateStatement(statement* stmt, bool isMainFile)
     {
         if (stmt->getTypeofNode() == NODE_BLOCKSTMT) {
@@ -741,6 +1111,40 @@ namespace spsycl{
             statement* stmt = *itr;
             generateStatement(stmt, isMainFile);
         }
+
+        // FREE memory
+        char strBuffer[1024];
+
+        if (vars.size() > 0) {
+            main.NewLine();
+            main.pushstr_newL("//cudaFree up!! all propVars in this BLOCK!");
+        }
+        for (Identifier* iden : vars) {
+            sprintf(strBuffer, "cudaFree(d_%s);", iden->getIdentifier());
+            main.pushstr_newL(strBuffer);
+        }
+        main.NewLine();
+
+        if (includeBrace) {
+            main.pushstr_newL("}");
+        }
+    }
+
+    void dsl_cpp_generator::generateCudaMemCpyParams(list<formalParam*> paramList)
+    {
+        main.pushstr_newL("// Generate memcpy params statement");
+    }
+
+    void dsl_cpp_generator::incFuncCount(int funcType)
+    {
+        if (funcType == GEN_FUNC)
+            genFuncCount++;
+        else if (funcType == STATIC_FUNC)
+            staticFuncCount++;
+        else if (funcType == INCREMENTAL_FUNC)
+            inFuncCount++;
+        else
+            decFuncCount++;
     }
 
     void dsl_cpp_generator::generateFunc(ASTNode* proc) 
@@ -762,6 +1166,17 @@ namespace spsycl{
         main.pushstr_newL("//BEGIN DSL PARSING ");
 
         generateBlock(func->getBlockStatement(), false);
+
+        generateCudaMemCpyParams(func->getParamList());
+        //~ sprintf(strBuffer, "cudaMemcpy(%s,d_%s , sizeof(%s) * (V), cudaMemcpyDeviceToHost);", outVarName, outVarName, outVarType);
+
+        //~ main.pushstr_newL(strBuffer);
+
+        main.pushstr_newL("} //end FUN");
+
+        incFuncCount(func->getFuncType());
+
+        return;
 
     }
 
@@ -873,4 +1288,4 @@ namespace spsycl{
         }
         fileName = prevtoken;
     }
-    }
+}
