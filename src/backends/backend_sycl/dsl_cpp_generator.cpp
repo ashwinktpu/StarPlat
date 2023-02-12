@@ -689,17 +689,22 @@ namespace spsycl{
     {
         char strBuffer[1024];
         // cudaMalloc(&d_ nodeVal ,sizeof( int ) * V );
-        //                   1             2      3
-        // if (direction) {
-        //     sprintf(strBuffer, "cudaMemcpyToSymbol(::%s, &%s, sizeof(%s), 0, cudaMemcpyHostToDevice);", var, var,
-        //             typeStr);  // this assumes PropNode type  IS PROPNODE? V : E //else
-        //                     // might error later
-        // } else {
-        //     sprintf(strBuffer, "cudaMemcpyFromSymbol(&%s, ::%s, sizeof(%s), 0, cudaMemcpyDeviceToHost);", var, var,
-        //             typeStr);
-        // }
-        // main.pushstr_newL(strBuffer);
-        main.pushstr_newL("// Generate mem cpy symbol statement");
+        //                   1             2      3        
+        if (direction) {
+            sprintf(strBuffer, "%s *dev_%s = malloc_device<%s>(1, Q);", typeStr, var, typeStr);
+            main.pushstr_newL(strBuffer);
+            main.pushstr_newL("Q.submit([&](handler &h)");
+            sprintf(strBuffer, "{ h.memcpy(dev_%s, %s, N * sizeof(%s)); })", var, var, typeStr);
+            main.pushstr_newL(strBuffer);
+            main.pushstr_newL(".wait();");
+            main.NewLine();
+        } else {
+            main.pushstr_newL("Q.submit([&](handler &h)");
+            sprintf(strBuffer, "{ h.memcpy(%s, dev_%s, N * sizeof(%s)); })", var, var, typeStr);
+            main.pushstr_newL(strBuffer);
+            main.pushstr_newL(".wait();");
+            main.NewLine();
+        }
     }
 
     blockStatement* dsl_cpp_generator::includeIfToBlock(forallStmt* forAll)
@@ -770,6 +775,7 @@ namespace spsycl{
         }
         main.pushstr_newL("}");
         main.pushstr_newL("}); }).wait(); // end KER FUNC");
+        main.NewLine();
     }
 
     bool dsl_cpp_generator::allGraphIteration(char* methodId)
@@ -881,7 +887,26 @@ namespace spsycl{
                     }*/
                 }
             }
+
             addCudaKernel(forAll);
+
+            if (!isOptimized)
+            {
+                usedVariables usedVars = getVariablesForAll(forAll);
+                list<Identifier*> vars = usedVars.getVariables();
+                for (Identifier* iden : vars) {
+                    Type* type = iden->getSymbolInfo()->getType();
+                    if (type->isPrimitiveType())
+                    generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), false);
+                    /*else if(type->isPropType())
+                    {
+                        Type* innerType = type->getInnerTargetType();
+                        string dIden = "d_" + string(iden->getIdentifier());
+                        generateCudaMemCpyStr(iden->getIdentifier(),dIden.c_str(), convertToCppType(innerType), "V", false);
+                    }*/
+                }
+            /*memcpy from symbol*/
+            }
         }   
         else
         {  //IS FOR
@@ -1014,9 +1039,60 @@ namespace spsycl{
         main.pushstr_newL("// Generate fixed point statement");
     }
 
+    void dsl_cpp_generator::generateReductionCallStmt(reductionCallStmt* stmt, bool isMainFile)
+    {
+        // reductionCall* reduceCall = stmt->getReducCall();
+        // char strBuffer[1024];
+
+        // if (reduceCall->getReductionType() == REDUCE_MIN)
+        // {
+        //     if (stmt->isListInvolved())
+        //     {
+
+        //     }
+        // }
+        main.pushstr_newL("// Generate reduction call statement");
+
+    }
+
+    void dsl_cpp_generator::generateReductionOpStmt(reductionCallStmt* stmt, bool isMainFile)
+    {
+        char strBuffer[1024];
+        if (stmt->isLeftIdentifier())
+        {
+            Identifier* id = stmt->getLeftId(); 
+            const char* typVar = convertToCppType(id->getSymbolInfo()->getType());
+            sprintf(strBuffer, "atomic_ref<%s, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data(dev_%s[0])", typVar, id->getIdentifier());
+            main.pushString(strBuffer);
+            main.pushstr_newL(";");
+            sprintf(strBuffer, "atomic_data += ");
+            main.pushString(strBuffer);
+            generateExpr(stmt->getRightSide(), isMainFile);
+            main.pushstr_newL(";");
+        }
+        else
+        {
+            generate_exprPropId(stmt->getPropAccess(), isMainFile);
+            main.pushString(" = ");   
+            generate_exprPropId(stmt->getPropAccess(), isMainFile);
+            const char* operatorString = getOperatorString(stmt->reduction_op());
+            main.pushstr_space(operatorString);
+            generateExpr(stmt->getRightSide(), isMainFile);
+            main.pushstr_newL(";");
+        }
+    }
+
     void dsl_cpp_generator::generateReductionStmt(reductionCallStmt* stmt, bool isMainFile)
     {
         main.pushstr_newL("// Generate reduction statement");
+        if (stmt->is_reducCall())
+        {
+            generateReductionCallStmt(stmt, isMainFile);
+        }
+        else
+        {
+            generateReductionOpStmt(stmt, isMainFile);
+        }
     }
 
     void dsl_cpp_generator::generateBFSAbstraction(iterateBFS* bfsAbstraction, bool isMainFile)
@@ -1132,7 +1208,29 @@ namespace spsycl{
 
     void dsl_cpp_generator::generateCudaMemCpyParams(list<formalParam*> paramList)
     {
-        main.pushstr_newL("// Generate memcpy params statement");
+        list<formalParam*>::iterator itr;
+        for (itr = paramList.begin(); itr != paramList.end(); itr++) 
+        {
+            Type* type = (*itr)->getType();
+            if (type->isPropType()) 
+            {
+                if (type->getInnerTargetType()->isPrimitiveType()) 
+                {
+                    const char* sizeofProp = NULL;
+                    if (type->isPropEdgeType())
+                    sizeofProp = "E";
+                    else
+                    sizeofProp = "V";
+                    const char* temp = "d_";
+                    char* temp1 = (*itr)->getIdentifier()->getIdentifier();
+                    char* temp2 = (char*)malloc(1 + strlen(temp) + strlen(temp1));
+                    strcpy(temp2, temp);
+                    strcat(temp2, temp1);
+
+                    generateMemCpyStr((*itr)->getIdentifier()->getIdentifier(), temp2, convertToCppType(type->getInnerTargetType()), sizeofProp);
+                }
+            }
+        }
     }
 
     void dsl_cpp_generator::incFuncCount(int funcType)
