@@ -1,4 +1,5 @@
 #include<atomic>
+#include<algorithm>
 
 template<typename T>
 inline void atomicMin(T* targetVar, T update_val)
