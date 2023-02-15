@@ -1904,15 +1904,81 @@ void dsl_cpp_generator::generate_exprProcCall(Expression* expr)
      }
    else
     {
+        list<argument*> argList = proc->getArgList(); 
         char strBuffer[1024];
-        list<argument*> argList=proc->getArgList();
-        if(argList.size()==0)
-        {
-         Identifier* objectId=proc->getId1();
-         sprintf(strBuffer,"%s.%s( )",objectId->getIdentifier(),proc->getMethodId()->getIdentifier());
-         main.pushString(strBuffer);
+    
+        Identifier* objectId = proc->getId1();
+        Expression* indexExpr = proc->getIndexExpr();
+
+        if(objectId!=NULL) 
+          {
+             Identifier* id2 = proc->getId2();
+             if(id2 != NULL)
+               {
+
+                 sprintf(strBuffer,"%s.%s.%s",objectId->getIdentifier(), id2->getIdentifier(), getProcName(proc));
+               }
+             else
+              {
+                 sprintf(strBuffer,"%s.%s",objectId->getIdentifier(), getProcName(proc).c_str());  
+           
+              }  
+          }
+        else if(indexExpr != NULL)
+          {
+           // cout<<"ENTERED HERE FOR INDEXEXPR GENERATION DYNAMIC"<<"\n";
+            Expression* mapExpr = indexExpr->getMapExpr();
+            Identifier* mapExprId = mapExpr->getId();
+
+            if(parallelConstruct.size() > 0 && mapExprId->getSymbolInfo()->getId()->isLocalMapReq())
+                 generate_exprIndex(indexExpr, true);
+            else
+                 generate_exprIndex(indexExpr, false);
+
+            sprintf(strBuffer,".%s", getProcName(proc).data());
+          } 
+        else {
+        
+          sprintf(strBuffer,"%s", getProcName(proc).data());
+       
         }
 
+
+        main.pushString(strBuffer);
+
+      if(methodId == "insert"){
+         
+         main.pushString("(");
+
+         if(indexExpr != NULL){
+         Expression* mapExpr = indexExpr->getMapExpr();
+         Identifier* mapExprId = mapExpr->getId();
+
+        if(parallelConstruct.size() > 0 && mapExprId->getSymbolInfo()->getId()->isLocalMapReq())
+            generate_exprIndex(indexExpr, true);
+        else
+            generate_exprIndex(indexExpr, false);
+         }
+         else if(objectId != NULL){
+          Identifier* id2 = proc->getId2();
+          if(id2 != NULL)
+             sprintf(strBuffer,"%s.%s",objectId->getIdentifier(), id2->getIdentifier());               
+          else
+             sprintf(strBuffer,"%s",objectId->getIdentifier()); 
+
+          main.pushString(strBuffer);      
+         }
+
+         main.pushString(".end()");
+         main.pushString(",");
+         generateArgList(argList,false);
+         main.pushString(".begin(),");
+         generateArgList(argList, false);
+         main.pushString(".end())");
+                
+      }  
+      else  
+        generateArgList(argList, true);  
     }
   
 
