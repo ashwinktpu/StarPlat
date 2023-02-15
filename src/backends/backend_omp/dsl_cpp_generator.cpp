@@ -1559,14 +1559,14 @@ void dsl_cpp_generator::generate_exprProcCall(Expression* expr) {
 
          main.pushString(".end()");
          main.pushString(",");
-         generateArgList(argList,false);
+         generateArgList(argList);
          main.pushString(".begin(),");
-         generateArgList(argList, false);
+         generateArgList(argList);
          main.pushString(".end())");
                 
       }  
       else  
-        generateArgList(argList, true);  
+        generateArgList(argList);  
   }
 }
 
