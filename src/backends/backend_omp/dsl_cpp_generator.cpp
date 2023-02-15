@@ -1492,12 +1492,12 @@ void dsl_cpp_generator::generate_exprProcCall(Expression* expr) {
     main.pushString(strBuffer);
 
   } else {
+       
         list<argument*> argList = proc->getArgList(); 
         char strBuffer[1024];
     
         Identifier* objectId = proc->getId1();
-        Expression* indexExpr = proc->getIndexExpr();
-
+      
         if(objectId!=NULL) 
           {
              Identifier* id2 = proc->getId2();
@@ -1512,60 +1512,11 @@ void dsl_cpp_generator::generate_exprProcCall(Expression* expr) {
            
               }  
           }
-        else if(indexExpr != NULL)
-          {
-           // cout<<"ENTERED HERE FOR INDEXEXPR GENERATION DYNAMIC"<<"\n";
-            Expression* mapExpr = indexExpr->getMapExpr();
-            Identifier* mapExprId = mapExpr->getId();
-
-            if(parallelConstruct.size() > 0 && mapExprId->getSymbolInfo()->getId()->isLocalMapReq())
-                 generate_exprIndex(indexExpr, true);
-            else
-                 generate_exprIndex(indexExpr, false);
-
-            sprintf(strBuffer,".%s", getProcName(proc).data());
-          } 
-        else {
-        
+        else { 
           sprintf(strBuffer,"%s", getProcName(proc).data());
        
         }
-
-
         main.pushString(strBuffer);
-
-      if(methodId == "insert"){
-         
-         main.pushString("(");
-
-         if(indexExpr != NULL){
-         Expression* mapExpr = indexExpr->getMapExpr();
-         Identifier* mapExprId = mapExpr->getId();
-
-        if(parallelConstruct.size() > 0 && mapExprId->getSymbolInfo()->getId()->isLocalMapReq())
-            generate_exprIndex(indexExpr, true);
-        else
-            generate_exprIndex(indexExpr, false);
-         }
-         else if(objectId != NULL){
-          Identifier* id2 = proc->getId2();
-          if(id2 != NULL)
-             sprintf(strBuffer,"%s.%s",objectId->getIdentifier(), id2->getIdentifier());               
-          else
-             sprintf(strBuffer,"%s",objectId->getIdentifier()); 
-
-          main.pushString(strBuffer);      
-         }
-
-         main.pushString(".end()");
-         main.pushString(",");
-         generateArgList(argList);
-         main.pushString(".begin(),");
-         generateArgList(argList);
-         main.pushString(".end())");
-                
-      }  
-      else  
         generateArgList(argList);  
   }
 }
