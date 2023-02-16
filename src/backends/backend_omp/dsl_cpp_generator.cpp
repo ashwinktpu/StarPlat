@@ -1504,16 +1504,16 @@ void dsl_cpp_generator::generate_exprProcCall(Expression* expr) {
              if(id2 != NULL)
                {
 
-                 sprintf(strBuffer,"%s.%s.%s",objectId->getIdentifier(), id2->getIdentifier(), getProcName(proc));
+                 sprintf(strBuffer,"%s.%s.%s",objectId->getIdentifier(), id2->getIdentifier(),proc->getMethodId()->getIdentifier());
                }
              else
               {
-                 sprintf(strBuffer,"%s.%s",objectId->getIdentifier(), getProcName(proc).c_str());  
+                 sprintf(strBuffer,"%s.%s",objectId->getIdentifier(), proc->getMethodId()->getIdentifier());  
            
               }  
           }
         else { 
-          sprintf(strBuffer,"%s", getProcName(proc).data());
+          sprintf(strBuffer,"%s", proc->getMethodId()->getIdentifier());
        
         }
         main.pushString(strBuffer);
