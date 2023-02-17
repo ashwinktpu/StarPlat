@@ -1548,14 +1548,11 @@ void dsl_cpp_generator ::addCudaKernel(forallStmt* forAll) {
   header.pushString(getCurrentFunc()->getIdentifier()->getIdentifier());
   header.pushString("_kernel");
 
-  header.pushString("(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next");
+  header.pushString("(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight");
+  if(forAll->isRevMetaUsed)
+    header.pushString(", int *d_rev_meta,bool *d_modified_next");
 
-  cout << "isMetaUsed : " << forAll->isMetaUsed << endl;
-  cout << "isDataUsed : " << forAll->isDataUsed << endl;
-  cout << "isSrcUsed : " << forAll->isSrcUsed << endl;
-  cout << "isWeightUsed : " << forAll->isWeightUsed << endl;
-  cout << "isRevMetaUsed : " << forAll->isRevMetaUsed << endl;
-  cout << "isModifiedNextUsed : " << forAll->isModifiedNextUsed << endl;
+  // cout << "isRevMeta used ? : " << forAll->isRevMetaUsed << endl;
 
   /*if(currentFunc->getParamList().size()!=0)
     {
@@ -1674,7 +1671,9 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
     main.pushString("numBlocks, threadsPerBlock");
     main.pushString(">>>");
     main.push('(');
-    main.pushString("V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next");
+    main.pushString("V,E,d_meta,d_data,d_src,d_weight");
+    if(forAll->isRevMetaUsed)                                   // if d_rev_meta is used, i.e. nodes_to is called
+      main.pushString(",d_rev_meta,d_modified_next");
     //  if(currentFunc->getParamList().size()!=0)
     // main.pushString(",");
     if (!isOptimized) {
@@ -3081,7 +3080,7 @@ void dsl_cpp_generator::generateCudaMemcpy(const char* dVar, const char* cVar,
   //~ main.NewLine();
 }
 
-void dsl_cpp_generator::generateCSRArrays(const char* gId) {
+void dsl_cpp_generator::generateCSRArrays(const char* gId, Function* func) {
   char strBuffer[1024];
 
   sprintf(strBuffer, "int V = %s.num_nodes();",
@@ -3105,23 +3104,27 @@ void dsl_cpp_generator::generateCSRArrays(const char* gId) {
   main.pushstr_newL("int *h_data;");
   main.pushstr_newL("int *h_src;");
   main.pushstr_newL("int *h_weight;");
-  main.pushstr_newL("int *h_rev_meta;");  //done only to handle PR since other doesn't uses it
+  if(func->isRevMetaUsed)
+    main.pushstr_newL("int *h_rev_meta;");  //done only to handle PR since other doesn't uses it
   main.NewLine();
 
   main.pushstr_newL("h_meta = (int *)malloc( (V+1)*sizeof(int));");
   main.pushstr_newL("h_data = (int *)malloc( (E)*sizeof(int));");
   main.pushstr_newL("h_src = (int *)malloc( (E)*sizeof(int));");
   main.pushstr_newL("h_weight = (int *)malloc( (E)*sizeof(int));");
-  main.pushstr_newL("h_rev_meta = (int *)malloc( (V+1)*sizeof(int));");
+  if(func->isRevMetaUsed)
+    main.pushstr_newL("h_rev_meta = (int *)malloc( (V+1)*sizeof(int));");
   main.NewLine();
 
   main.pushstr_newL("for(int i=0; i<= V; i++) {");
   sprintf(strBuffer, "int temp = %s.indexofNodes[i];", gId);
   main.pushstr_newL(strBuffer);
   main.pushstr_newL("h_meta[i] = temp;");
-  sprintf(strBuffer, "temp = %s.rev_indexofNodes[i];", gId);
-  main.pushstr_newL(strBuffer);
-  main.pushstr_newL("h_rev_meta[i] = temp;");
+  if(func->isRevMetaUsed) {
+    sprintf(strBuffer, "temp = %s.rev_indexofNodes[i];", gId);
+    main.pushstr_newL(strBuffer);
+    main.pushstr_newL("h_rev_meta[i] = temp;");
+  }
   main.pushstr_newL("}");
   main.NewLine();
 
@@ -3217,7 +3220,7 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
 
   if (genCSR) {
     main.pushstr_newL("// CSR BEGIN");
-    generateCSRArrays(gId);
+    generateCSRArrays(gId, proc);
 
     //~ sprintf(strBuffer,"int MAX_VAL = 2147483647 ;");
     //~ main.pushstr_newL(strBuffer);
@@ -3301,8 +3304,10 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
     main.pushstr_newL(strBuffer);
     sprintf(strBuffer, "int* d_weight;");
     main.pushstr_newL(strBuffer);
-    sprintf(strBuffer, "int* d_rev_meta;");
-    main.pushstr_newL(strBuffer);
+    if(currentFunc->isRevMetaUsed) {
+      sprintf(strBuffer, "int* d_rev_meta;");
+      main.pushstr_newL(strBuffer);
+    }
     sprintf(strBuffer, "bool* d_modified_next;");
     main.pushstr_newL(strBuffer);
     main.NewLine();
@@ -3311,7 +3316,8 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
     generateCudaMallocStr("d_data", "int", "(E)");
     generateCudaMallocStr("d_src", "int", "(E)");
     generateCudaMallocStr("d_weight", "int", "(E)");
-    generateCudaMallocStr("d_rev_meta", "int", "(V+1)");
+    if(currentFunc->isRevMetaUsed)
+      generateCudaMallocStr("d_rev_meta", "int", "(V+1)");
     generateCudaMallocStr("d_modified_next", "bool", "(V)");
 
     main.NewLine();
@@ -3322,7 +3328,8 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
     generateCudaMemCpyStr("d_data", "h_data", "int", "E");
     generateCudaMemCpyStr("d_src", "h_src", "int", "E");
     generateCudaMemCpyStr("d_weight", "h_weight", "int", "E");
-    generateCudaMemCpyStr("d_rev_meta", "h_rev_meta", "int", "(V+1)");
+    if(currentFunc->isRevMetaUsed)
+      generateCudaMemCpyStr("d_rev_meta", "h_rev_meta", "int", "(V+1)");
     main.NewLine();
 
     main.pushstr_newL("// CSR END");

@@ -354,6 +354,18 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                        }
                    }
                }
+              else {
+                proc_callExpr* extractElemFunc = forAll->getExtractElementFunc();
+                if(extractElemFunc != NULL) {
+                  Identifier* iteratorMethodId = extractElemFunc->getMethodId();
+                  string iteratorMethodString(iteratorMethodId->getIdentifier());
+                  if(iteratorMethodString.compare("nodes_to") == 0) {
+                    forallStmt* parentForall = (forallStmt*) parallelConstruct.back();
+                    parentForall->isRevMetaUsed = true;
+                    currentFunc->isRevMetaUsed = true;
+                  }
+                }
+              }
 
               //~ init_curr_SymbolTable(forAll);
     
