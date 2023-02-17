@@ -1,0 +1,114 @@
+bool isRevMetaUsedStmt(statement* stmt);
+bool isRevMetaUsedExpr(Expression* expr) 
+{
+  if (expr->isUnary())
+  {
+    if (expr->getOperatorType() == OPERATOR_NOT)
+      return isRevMetaUsedExpr(expr->getUnaryExpr());
+  }
+  else if (expr->isLogical() || expr->isArithmetic() || expr->isRelational())
+  {
+    return isRevMetaUsedExpr(expr->getLeft()) || isRevMetaUsedExpr(expr->getRight());
+  }
+  else if (expr->isProcCallExpr())
+  {
+    proc_callExpr* procCallExpr = (proc_callExpr *)expr;
+    if (procCallExpr->getMethodId()->getIdentifier() == "nodes_to")
+      return true;
+    else
+    {
+      list<argument*> argList = procCallExpr->getArgList();
+      for (argument* arg : argList)
+      {
+        if(isRevMetaUsedExpr(arg->getExpr()) || isRevMetaUsedStmt(arg->getAssignExpr()))
+          return true;
+      }
+    }
+  }
+}
+
+bool isRevMetaUsedStmt(statement *stmt) 
+{
+  switch(stmt->getTypeofNode())
+  {
+    case NODE_BLOCKSTMT:
+    {
+      blockStatement* blockStmt = (blockStatement *)stmt;
+      list<statement*> stmtList = blockStmt->returnStatements();
+      for (statement* stmt : stmtList)
+      {
+        if(isRevMetaUsedStmt(stmt))
+          return true;
+      }
+      break;
+    }
+    case NODE_ASSIGN:
+    {
+      assignment* assignStmt = (assignment *)stmt;
+      Expression* rightExpr = assignStmt->getExpr();
+      return isRevMetaUsedExpr(rightExpr);
+      break;
+    }
+    case NODE_IFSTMT:
+    {
+      ifStmt* ifstmt = (ifStmt*) stmt;
+      Expression* condExpr = ifstmt->getCondition();
+      if(isRevMetaUsedExpr(condExpr))
+        return true;
+      if(isRevMetaUsedStmt(ifstmt->getIfBody()))
+        return true;
+      if(isRevMetaUsedStmt(ifstmt->getElseBody()))
+        return true;
+      break;
+    }
+    case NODE_WHILESTMT:
+    {
+      whileStmt* whilestmt = (whileStmt*) stmt;
+      Expression* condExpr = whilestmt->getCondition();
+      if(isRevMetaUsedExpr(condExpr))
+        return true;
+      if(isRevMetaUsedStmt(whilestmt->getBody()))
+        return true;
+      break;
+    }
+    case NODE_DOWHILESTMT:
+    {
+      dowhileStmt* dowhilestmt = (dowhileStmt*) stmt;
+      Expression* condExpr = dowhilestmt->getCondition();
+      if(isRevMetaUsedExpr(condExpr))
+        return true;
+      if(isRevMetaUsedStmt(dowhilestmt->getBody()))
+        return true;
+      break;
+    }
+    case NODE_FORALLSTMT:
+    {
+      forallStmt* forallstmt = (forallStmt*) stmt;
+      if(isRevMetaUsedStmt(forallstmt->getBody()))
+        return true;
+      if(forallstmt->hasFilterExpr()) {
+        Expression* filterExpr = forallstmt->getfilterExpr();
+        if(isRevMetaUsedExpr(filterExpr))
+          return true;
+      }
+      break;
+    }
+    case NODE_REDUCTIONCALLSTMT:
+    {
+      reductionCallStmt* redCallStmt = (reductionCallStmt*) stmt;
+      reductionCall* redCall = redCallStmt->getReducCall();
+      
+
+      if(redCallStmt->is_reducCall())
+      {
+        for(argument* arg: redCall->getargList()){
+          if(arg->isExpr())
+            if(isRevMetaUsedExpr(arg->getExpr()))
+              return true;
+        }
+      }
+    }
+    default:
+      ; // added to fix warning!
+  }
+}

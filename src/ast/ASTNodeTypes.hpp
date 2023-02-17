@@ -420,7 +420,12 @@ class Function:public ASTNode
 
 
   public:
-
+  bool isMetaUsed = false; // if d_meta is used in function
+  bool isDataUsed = false; // if d_data is used in function
+  bool isSrcUsed = false; // if d_src is used in function
+  bool isWeightUsed = false; // if d_weight is used in function
+  bool isRevMetaUsed = false; // if d_rev_meta is used in function
+  bool isModifiedNextUsed = false; // if d_modified_next is used in function 
   Function()
   { 
     functionId=NULL;
@@ -1904,12 +1909,7 @@ class fixedPointStmt:public statement
     list<Identifier*> usedVars;
 
     public:
-    bool isMetaUsed = false;
-    bool isDataUsed = false;
-    bool isSrcUsed = false;
-    bool isWeightUsed = false;
     bool isRevMetaUsed = false;
-    bool isModifiedNextUsed = false;
 
     forallStmt()
     {

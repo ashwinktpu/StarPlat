@@ -153,7 +153,7 @@ class dsl_cpp_generator {
 
   void generateInitkernelStr(const char* inVarType, const char* inVarName, const char* initVal);
 
-  void generateCSRArrays(const char*);
+  void generateCSRArrays(const char*, Function*);
   void generateInitkernel(const char* name);
   void generateLaunchConfig(const char* name);
   void generateCudaDeviceSync();
