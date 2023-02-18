@@ -1642,8 +1642,8 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
       std::cout<< "============EARLIER NOT OPT=============" << '\n';
       usedVariables usedVars = getVarsForAll(forAll);
       list<Identifier*> vars = usedVars.getVariables();
-      
-      
+
+
 
       for (Identifier* iden : vars) {
         std::cout<< "varName:" << iden->getIdentifier() << '\n';
@@ -2030,13 +2030,16 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
     targetFile.pushString(stringBuffer);
     targetFile.pushString(";");
     */
+    bool is_declared_in_header = false;
     if (isMainFile == true) {  //to fix the PageRank we are doing this
       if (isOptimized) {
         if (declStmt->getInGPU()) {
+          is_declared_in_header = true;
           sprintf(strBuffer, "__device__ %s %s ", varType, varName);
           header.pushString(strBuffer);
         }
       } else {
+        is_declared_in_header = true;
         sprintf(strBuffer, "__device__ %s %s ", varType, varName);
         header.pushString(strBuffer);
       }
@@ -2077,8 +2080,10 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
       //getDefaultValueforTypes(type->gettypeId());
      // targetFile.pushstr_newL(";");
     }*/
-    header.pushstr_newL("; // DEVICE ASSTMENT in .h");
-    header.NewLine();
+    if(is_declared_in_header){
+      header.pushstr_newL("; // DEVICE ASSTMENT in .h");
+      header.NewLine();
+    }
 
     main.pushstr_newL("; // asst in .cu");
     main.NewLine();

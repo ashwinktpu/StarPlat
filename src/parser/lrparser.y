@@ -9,7 +9,7 @@
 	#include "../analyser/deviceVars/deviceVarsAnalyser.h"
 	#include<getopt.h>
 	//#include "../symbolutil/SymbolTableBuilder.cpp"
-     
+
 	void yyerror(const char *);
 	int yylex(void);
     extern FILE* yyin;
@@ -68,11 +68,11 @@
 %type <node> statement blockstatements assignment declaration proc_call control_flow reduction return_stmt batch_blockstmt on_add_blockstmt on_delete_blockstmt
 %type <node> type1 type2
 %type <node> primitive graph collections property
-%type <node> id leftSide rhs expression oid val boolean_expr unary_expr tid 
+%type <node> id leftSide rhs expression oid val boolean_expr unary_expr tid
 %type <node> bfs_abstraction filterExpr reverse_abstraction
 %type <nodeList> leftList rightList
 %type <node> iteration_cf selection_cf
-%type <node> reductionCall 
+%type <node> reductionCall
 %type <aList> arg_list
 %type <ival> reduction_calls reduce_op
 
@@ -89,70 +89,70 @@
 %left T_AND_OP
 %left T_EQ_OP  T_NE_OP
 %left '<' '>'  T_LE_OP T_GE_OP
-%left '+' '-' 
+%left '+' '-'
 %left '*' '/' '%'
 
- 
+
 
 %%
-program:  
+program:
         | program function_def {/* printf("LIST SIZE %d",frontEndContext.getFuncList().size())  ;*/ };
 
-function_def: function_data  function_body  { 
+function_def: function_data  function_body  {
 	                                          Function* func=(Function*)$1;
                                               blockStatement* block=(blockStatement*)$2;
                                               func->setBlockStatement(block);
 											   Util::addFuncToList(func);
 											};
 
-function_data: T_FUNC id '(' paramList ')' { 
+function_data: T_FUNC id '(' paramList ')' {
 										   $$=Util::createFuncNode($2,$4->PList);
                                            Util::setCurrentFuncType(GEN_FUNC);
 										   Util::resetTemp(tempIds);
 										   tempIds.clear();
 	                                      };
-			   | T_STATIC id '(' paramList ')' { 
+			   | T_STATIC id '(' paramList ')' {
 										   $$=Util::createStaticFuncNode($2,$4->PList);
                                             Util::setCurrentFuncType(STATIC_FUNC);
 											Util::resetTemp(tempIds);
 											tempIds.clear();
 	                                      };
-	           | T_INCREMENTAL '(' paramList ')' { 
+	           | T_INCREMENTAL '(' paramList ')' {
 										   $$=Util::createIncrementalNode($3->PList);
                                             Util::setCurrentFuncType(INCREMENTAL_FUNC);
 											Util::resetTemp(tempIds);
 											tempIds.clear();
-	                                      };	
-			   | T_DECREMENTAL '(' paramList ')' { 
+	                                      };
+			   | T_DECREMENTAL '(' paramList ')' {
 										   $$=Util::createDecrementalNode($3->PList);
                                             Util::setCurrentFuncType(DECREMENTAL_FUNC);
 											Util::resetTemp(tempIds);
 											tempIds.clear();
-	                                      };	
+	                                      };
 		       | T_DYNAMIC id '(' paramList ')' { $$=Util::createDynamicFuncNode($2,$4->PList);
                                             Util::setCurrentFuncType(DYNAMIC_FUNC);
 											Util::resetTemp(tempIds);
 											tempIds.clear();
-											};								  					  								  							  
+											};
 
 paramList: param {$$=Util::createPList($1);};
-               | param ',' paramList {$$=Util::addToPList($3,$1); 
+               | param ',' paramList {$$=Util::addToPList($3,$1);
 			                           };
 
 param : type1 id {  //Identifier* id=(Identifier*)Util::createIdentifierNode($2);
                         Type* type=(Type*)$1;
 	                     Identifier* id=(Identifier*)$2;
-						 
+
 						 if(type->isGraphType())
 						    {
 							 tempIds.push_back(id);
-						   
+
 							}
 					printf("\n");
                     $$=Util::createParamNode($1,$2); } ;
                | type2 id { // Identifier* id=(Identifier*)Util::createIdentifierNode($2);
-			  
-					
+
+
                              $$=Util::createParamNode($1,$2);};
 			   | type2 id '(' id ')' { // Identifier* id1=(Identifier*)Util::createIdentifierNode($4);
 			                            //Identifier* id=(Identifier*)Util::createIdentifierNode($2);
@@ -196,24 +196,24 @@ block_begin:'{' { Util::createNewBlock(); }
 block_end:'}'
 
 return_stmt : T_RETURN expression {$$ = Util::createReturnStatementNode($2);}
-               
+
 
 declaration : type1 id   {
 	                     Type* type=(Type*)$1;
 	                     Identifier* id=(Identifier*)$2;
-						 
+
 						 if(type->isGraphType())
 						    Util::storeGraphId(id);
 
                          $$=Util::createNormalDeclNode($1,$2);};
 	| type1 id '=' rhs  {//Identifier* id=(Identifier*)Util::createIdentifierNode($2);
-	                    
+
 	                    $$=Util::createAssignedDeclNode($1,$2,$4);};
 	| type2 id  {//Identifier* id=(Identifier*)Util::createIdentifierNode($2);
-	            
+
                          $$=Util::createNormalDeclNode($1,$2); };
 	| type2 id '=' rhs {//Identifier* id=(Identifier*)Util::createIdentifierNode($2);
-	                   
+
 	                    $$=Util::createAssignedDeclNode($1,$2,$4);};
 
 type1: primitive {$$=$1; };
@@ -273,23 +273,23 @@ expression : proc_call { $$=$1;};
 			 | unary_expr {$$=$1;};
 
 unary_expr :   expression T_INC_OP {$$=Util::createNodeForUnaryExpr($1,OPERATOR_INC);};
-			 |  expression T_DEC_OP {$$=Util::createNodeForUnaryExpr($1,OPERATOR_DEC);}; 			 
+			 |  expression T_DEC_OP {$$=Util::createNodeForUnaryExpr($1,OPERATOR_DEC);};
 
-proc_call : leftSide '(' arg_list ')' { 
-                                       
-                                       $$ = Util::createNodeForProcCall($1,$3->AList); 
+proc_call : leftSide '(' arg_list ')' {
+
+                                       $$ = Util::createNodeForProcCall($1,$3->AList);
 
 									    };
 			| T_INCREMENTAL '(' arg_list ')' { ASTNode* id = Util::createIdentifierNode("Incremental");
-			                                   $$ = Util::createNodeForProcCall(id, $3->AList); 
+			                                   $$ = Util::createNodeForProcCall(id, $3->AList);
 
 				                               };
 			| T_DECREMENTAL '(' arg_list ')' { ASTNode* id = Util::createIdentifierNode("Decremental");
-			                                   $$ = Util::createNodeForProcCall(id, $3->AList); 
+			                                   $$ = Util::createNodeForProcCall(id, $3->AList);
 
-				                               };								   
-											   					
-		
+				                               };
+
+
 
 
 
@@ -307,9 +307,9 @@ control_flow : selection_cf { $$=$1; };
 iteration_cf : T_FIXEDPOINT T_UNTIL '(' id ':' expression ')' blockstatements { $$=Util::createNodeForFixedPointStmt($4,$6,$8);};
 		   | T_WHILE '(' boolean_expr')' blockstatements {$$=Util::createNodeForWhileStmt($3,$5); };
 		   | T_DO blockstatements T_WHILE '(' boolean_expr ')' ';' {$$=Util::createNodeForDoWhileStmt($5,$2);  };
-		| T_FORALL '(' id T_IN id '.' proc_call filterExpr')'  blockstatements { 
+		| T_FORALL '(' id T_IN id '.' proc_call filterExpr')'  blockstatements {
 																				$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,true);};
-		| T_FORALL '(' id T_IN leftSide ')' blockstatements	{ $$=Util::createNodeForForStmt($3,$5,$7,true);};																	
+		| T_FORALL '(' id T_IN leftSide ')' blockstatements	{ $$=Util::createNodeForForStmt($3,$5,$7,true);};
 		| T_FOR '(' id T_IN leftSide ')' blockstatements { $$=Util::createNodeForForStmt($3,$5,$7,false);};
 		| T_FOR '(' id T_IN id '.' proc_call  filterExpr')' blockstatements {$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,false);};
 
@@ -318,14 +318,14 @@ filterExpr  :         { $$=NULL;};
 
 boolean_expr : expression { $$=$1 ;};
 
-selection_cf : T_IF '(' boolean_expr ')' statement { $$=Util::createNodeForIfStmt($3,$5,NULL); }; 
+selection_cf : T_IF '(' boolean_expr ')' statement { $$=Util::createNodeForIfStmt($3,$5,NULL); };
 	           | T_IF '(' boolean_expr ')' statement T_ELSE statement  {$$=Util::createNodeForIfStmt($3,$5,$7); };
 
 
 reduction : leftSide '=' reductionCall { $$=Util::createNodeForReductionStmt($1,$3) ;}
 		   |'<' leftList '>' '=' '<' reductionCall ',' rightList '>'  { reductionCall* reduc=(reductionCall*)$6;
 		                                                               $$=Util::createNodeForReductionStmtList($2->ASTNList,reduc,$8->ASTNList);};
-		   | leftSide reduce_op expression {$$=Util::createNodeForReductionOpStmt($1,$2,$3);}; 															   
+		   | leftSide reduce_op expression {$$=Util::createNodeForReductionOpStmt($1,$2,$3);};
 
 
 reduce_op : T_ADD_ASSIGN {$$=OPERATOR_ADDASSIGN;};
@@ -348,7 +348,7 @@ rightList : val ',' rightList { $$=Util::addToNList($3,$1);};
             /*reductionCall ',' val { $$=new tempNode();
 	                                $$->reducCall=(reductionCall*)$1;
                                     $$->exprVal=(Expression*)$3; };
-          | reductionCall { 
+          | reductionCall {
 			                $$->reducCall=(reductionCall*)$1;} ;*/
 
 reductionCall : reduction_calls '(' arg_list ')' {$$=Util::createNodeforReductionCall($1,$3->AList);} ;
@@ -366,7 +366,7 @@ leftSide : id { $$=$1; };
 arg_list :    {
                  argList* aList=new argList();
 				 $$=aList;  };
-		      
+
 		|assignment ',' arg_list {argument* a1=new argument();
 		                          assignment* assign=(assignment*)$1;
 		                     a1->setAssign(assign);
@@ -379,8 +379,8 @@ arg_list :    {
 						  {
 							  printf("VALUE OF ARG %d",arg->getAssignExpr()); //rm for warnings
 						  }
-						  */ 
-						  
+						  */
+
                           };
 
 
@@ -423,12 +423,12 @@ tid : id '.' id '.' id {// Identifier* id1=(Identifier*)Util::createIdentifierNo
                   // Identifier* id2=(Identifier*)Util::createIdentifierNode($1);
 				   $$=Util::createPropIdNode($1,$3);
 				    };
-id : ID   { 
-	         $$=Util::createIdentifierNode($1);  
+id : ID   {
+	         $$=Util::createIdentifierNode($1);
 
-            
-            };                                                   
-          
+
+            };
+
 
 
 %%
@@ -439,19 +439,19 @@ void yyerror(const char *s) {
 }
 
 
-int main(int argc,char **argv) 
+int main(int argc,char **argv)
 {
-  
+
   if(argc<4){
     std::cout<< "Usage: " << argv[0] << " [-s|-d] -f <dsl.sp> -b [cuda|omp|mpi|acc] " << '\n';
     std::cout<< "E.g. : " << argv[0] << " -s -f ../graphcode/sssp_dslV2 -b omp " << '\n';
     exit(-1);
   }
-  
+
     //dsl_cpp_generator cpp_backend;
     SymbolTableBuilder stBuilder;
      FILE    *fd;
-     
+
   int opt;
   char* fileName=NULL;
   backendTarget = NULL;
@@ -459,9 +459,9 @@ int main(int argc,char **argv)
   bool dynamicGen = false;
   bool optimize = false;
 
-  while ((opt = getopt(argc, argv, "sdf:b:o")) != -1) 
+  while ((opt = getopt(argc, argv, "sdf:b:o")) != -1)
   {
-     switch (opt) 
+     switch (opt)
      {
       case 'f':
         fileName = optarg;
@@ -474,10 +474,10 @@ int main(int argc,char **argv)
 		break;
 	  case 'd':
 	    dynamicGen = true;
-        break;	
+        break;
 	  case 'o':
 	  	optimize = true;
-		break;	
+		break;
       case '?':
         fprintf(stderr,"Unknown option: %c\n", optopt);
 		exit(-1);
@@ -488,18 +488,18 @@ int main(int argc,char **argv)
         break;
      }
   }
-   
+
    printf("fileName %s\n",fileName);
    printf("Backend Target %s\n",backendTarget);
 
-   
+
    if(fileName==NULL||backendTarget==NULL)
    {
 	   if(fileName==NULL)
 	      fprintf(stderr,"FileName option Error!\n");
 	   if(backendTarget==NULL)
 	      fprintf(stderr,"backendTarget option Error!\n")	;
-	   exit(-1);	    
+	   exit(-1);
    }
    else
     {
@@ -514,105 +514,103 @@ int main(int argc,char **argv)
 		fprintf(stderr, "Type of graph(static/dynamic) not specified!\n");
 		exit(-1);
      }
-	  
-     
+
+
 
 
    yyin= fopen(fileName,"r");
-   
+
    if(!yyin) {
 	printf("file doesn't exists!\n");
 	exit(-1);
    }
-   
-   
+
+
    int error=yyparse();
    printf("error val %d\n",error);
 
 
 	if(error!=1)
 	{
-     //TODO: redirect to different backend generator after comparing with the 'b' option
-    std::cout << "at 1" << std::endl;
-	stBuilder.buildST(frontEndContext.getFuncList());
-	std::cout << "at 2" << std::endl;
+		//TODO: redirect to different backend generator after comparing with the 'b' option
+		std::cout << "at 1" << std::endl;
+		stBuilder.buildST(frontEndContext.getFuncList());
+		std::cout << "at 2" << std::endl;
 
-	if(staticGen)
-	  {
-		  /*
-		  if(optimize)
-		  {
-			  attachPropAnalyser apAnalyser;
-			  apAnalyser.analyse(frontEndContext.getFuncList());
+		if(staticGen)
+		{
+			/*
+			if(optimize)
+			{
+				attachPropAnalyser apAnalyser;
+				apAnalyser.analyse(frontEndContext.getFuncList());
 
-			  dataRaceAnalyser drAnalyser;
-			  drAnalyser.analyse(frontEndContext.getFuncList());
-			  
-			  if(strcmp(backendTarget,"cuda")==0)
-			  {
-			  	deviceVarsAnalyser dvAnalyser;
-				//cpp_backend.setOptimized();
-			  	dvAnalyser.analyse(frontEndContext.getFuncList());
-			  }
-		  }
-		  */
-	  //cpp_backend.setFileName(fileName);
-	  //cpp_backend.generate();
-     if (strcmp(backendTarget, "cuda") == 0) {
-        spcuda::dsl_cpp_generator cpp_backend;
-        cpp_backend.setFileName(fileName);
-	//~ cpp_backend.setOptimized();
-	
-	if (optimize) {
-	  attachPropAnalyser apAnalyser;
-	  apAnalyser.analyse(frontEndContext.getFuncList());
+				dataRaceAnalyser drAnalyser;
+				drAnalyser.analyse(frontEndContext.getFuncList());
 
-	  dataRaceAnalyser drAnalyser;
-	  drAnalyser.analyse(frontEndContext.getFuncList());
+				if(strcmp(backendTarget,"cuda")==0)
+				{
+					deviceVarsAnalyser dvAnalyser;
+					//cpp_backend.setOptimized();
+					dvAnalyser.analyse(frontEndContext.getFuncList());
+				}
+			}
+			*/
+			//cpp_backend.setFileName(fileName);
+			//cpp_backend.generate();
+			if (strcmp(backendTarget, "cuda") == 0) {
+				spcuda::dsl_cpp_generator cpp_backend;
+				cpp_backend.setFileName(fileName);
 
-	  deviceVarsAnalyser dvAnalyser;
-	  //cpp_backend.setOptimized();
-	  dvAnalyser.analyse(frontEndContext.getFuncList());
-	}
-		  
-        cpp_backend.generate();
-      } 
-      else if (strcmp(backendTarget, "omp") == 0) {
-        spomp::dsl_cpp_generator cpp_backend;
-	std::cout<< "size:" << frontEndContext.getFuncList().size() << '\n';
-        cpp_backend.setFileName(fileName);
-        cpp_backend.generate();
-      } 
-	  else if (strcmp(backendTarget, "mpi") == 0) {
-        spmpi::dsl_cpp_generator cpp_backend;
-		std::cout<< "size:" << frontEndContext.getFuncList().size() << '\n';
-        cpp_backend.setFileName(fileName);
-        cpp_backend.generate();
-      } 
-      else if (strcmp(backendTarget, "acc") == 0) {
-        spacc::dsl_cpp_generator cpp_backend;
-        cpp_backend.setFileName(fileName);
-        cpp_backend.generate();
-      }
-      else
-	std::cout<< "invalid backend" << '\n';
-	
-	  }
-	/*else
-	 {
-		 /*
-		 printf("static graphsize %d\n",graphId[2][0].size());
-		 dsl_dyn_cpp_generator cpp_dyn_gen;
-		 cpp_dyn_gen.setFileName(fileName);
-		 cpp_dyn_gen.generate();
+				if (optimize) {
+					attachPropAnalyser apAnalyser;
+					apAnalyser.analyse(frontEndContext.getFuncList());
 
-	 }*/
-	
+					dataRaceAnalyser drAnalyser;
+					drAnalyser.analyse(frontEndContext.getFuncList());
+
+					deviceVarsAnalyser dvAnalyser;
+					cpp_backend.setOptimized();
+					dvAnalyser.analyse(frontEndContext.getFuncList());
+				}
+				cpp_backend.generate();
+			}
+			else if (strcmp(backendTarget, "omp") == 0) {
+				spomp::dsl_cpp_generator cpp_backend;
+				std::cout<< "size:" << frontEndContext.getFuncList().size() << '\n';
+				cpp_backend.setFileName(fileName);
+				cpp_backend.generate();
+			}
+			else if (strcmp(backendTarget, "mpi") == 0) {
+				spmpi::dsl_cpp_generator cpp_backend;
+				std::cout<< "size:" << frontEndContext.getFuncList().size() << '\n';
+				cpp_backend.setFileName(fileName);
+				cpp_backend.generate();
+			}
+			else if (strcmp(backendTarget, "acc") == 0) {
+				spacc::dsl_cpp_generator cpp_backend;
+				cpp_backend.setFileName(fileName);
+				cpp_backend.generate();
+			}
+			else
+				std::cout<< "invalid backend" << '\n';
+
+		}
+		/*else
+		{
+		/*
+			printf("static graphsize %d\n",graphId[2][0].size());
+			dsl_dyn_cpp_generator cpp_dyn_gen;
+			cpp_dyn_gen.setFileName(fileName);
+			cpp_dyn_gen.generate();
+
+		}*/
+
 	}
 
 	printf("finished successfully\n");
-   
+
    /* to generate code, ./finalcode -s/-d -f "filename" -b "backendname"*/
-	return 0;   
-	 
+	return 0;
+
 }
