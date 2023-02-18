@@ -1100,9 +1100,65 @@ namespace spsycl{
         main.pushstr_newL("// Generate bfs abstraction statement");
     }
 
+    void dsl_cpp_generator::generateInitkernel1(assignment* assign, bool isMainFile)
+    {  // const char* typ,
+        //~ initKernel<double> <<<numBlocks,numThreads>>>(V,d_BC, 0.0);
+        char strBuffer[1024];
+
+        Identifier* inId = assign->getId();
+        Expression* exprAssigned = assign->getExpr();
+
+        const char* inVarType =
+            convertToCppType(inId->getSymbolInfo()->getType()->getInnerTargetType());
+        const char* inVarName = inId->getIdentifier();
+
+        sprintf(strBuffer, "initKernel<%s> <<<numBlocks,threadsPerBlock>>>(V,d_%s,(%s)",
+                inVarType, inVarName, inVarType);
+        main.pushString(strBuffer);
+
+        std::cout << "varName:" << inVarName << '\n';
+        generateExpr(exprAssigned, isMainFile);  // asssuming int/float const literal // OUTPUTS INIT VALUE
+
+        main.pushstr_newL(");");
+        main.NewLine();
+    }
+
+
     void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt, bool isMainFile)
     {
-        main.pushstr_newL("// Generate proc call statement");
+        proc_callExpr* procedure = proc_callStmt->getProcCallExpr();
+        string methodID(procedure->getMethodId()->getIdentifier());
+        string IDCoded("attachNodeProperty");
+        int x = methodID.compare(IDCoded);
+
+        if (x == 0)
+        {
+            //~ char strBuffer[1024];
+            list<argument*> argList = procedure->getArgList();
+            list<argument*>::iterator itr;
+
+            for (itr = argList.begin(); itr != argList.end(); itr++)
+            {
+                assignment* assign = (*itr)->getAssignExpr();
+
+                if (argList.size() == 1)
+                {
+                    generateInitkernel1(assign, isMainFile);
+                    //~ std::cout << "%%%%%%%%%%" << '\n';
+
+                    /// initKernel<double> <<<numBlocks,threadsPerBlock>>>(V,d_BC, 0);
+                }
+                else if (argList.size() == 2)
+                {
+                    //~ std::cout << "===============" << '\n';
+                    generateInitkernel1(assign, isMainFile);
+                    //~ std::cout<< "initType:" <<
+                    //convertToCppType(lhsId->getSymbolInfo()->getType()) << '\n'; ~
+                    //std::cout<< "===============" << '\n'; ~
+                    //generateInitkernel1(lhsId,"0"); //TODO
+                }
+            }
+        }
     }
 
     void dsl_cpp_generator::generateTransferStmt(varTransferStmt* stmt)
