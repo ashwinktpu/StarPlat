@@ -1551,7 +1551,8 @@ void dsl_cpp_generator ::addCudaKernel(forallStmt* forAll) {
   header.pushString("(int V, int E, int* d_meta");
   if(forAll->getIsDataUsed())
     header.pushString(", int* d_data");
-  header.pushString(", int* d_src");
+  if(forAll->getIsSrcUsed())
+    header.pushString(", int* d_src");
   if(forAll->getIsWeightUsed())
     header.pushString(", int* d_weight");
   if(forAll->getIsRevMetaUsed())
@@ -1683,7 +1684,8 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
     main.pushString("V,E,d_meta");
     if(forAll->getIsDataUsed())                                       // if d_data is used, i.e. neighbors or is_an_edge is called          
       main.pushString(",d_data");
-    main.pushString(",d_src");
+    if(forAll->getIsSrcUsed())                                        // if d_src is used, i.e. nodes_to is called
+      main.pushString(",d_src");
     if(forAll->getIsWeightUsed())                                    // if d_weight is used, can never be used as of now
       main.pushString(",d_weight");
     if(forAll->getIsRevMetaUsed())                                   // if d_rev_meta is used, i.e. nodes_to is called
@@ -3129,7 +3131,8 @@ void dsl_cpp_generator::generateCSRArrays(const char* gId, Function* func) {
   main.pushstr_newL("int *h_meta;");
   if(func->getIsDataUsed())
     main.pushstr_newL("int *h_data;");
-  main.pushstr_newL("int *h_src;");
+  if(func->getIsSrcUsed())
+    main.pushstr_newL("int *h_src;");
   if(func->getIsWeightUsed())
     main.pushstr_newL("int *h_weight;");
   if(func->getIsRevMetaUsed())
@@ -3139,7 +3142,8 @@ void dsl_cpp_generator::generateCSRArrays(const char* gId, Function* func) {
   main.pushstr_newL("h_meta = (int *)malloc( (V+1)*sizeof(int));");
   if(func->getIsDataUsed())
     main.pushstr_newL("h_data = (int *)malloc( (E)*sizeof(int));");
-  main.pushstr_newL("h_src = (int *)malloc( (E)*sizeof(int));");
+  if(func->getIsSrcUsed())
+    main.pushstr_newL("h_src = (int *)malloc( (E)*sizeof(int));");
   if(func->getIsWeightUsed()) 
     main.pushstr_newL("h_weight = (int *)malloc( (E)*sizeof(int));");
   if(func->getIsRevMetaUsed())
@@ -3340,8 +3344,10 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
       sprintf(strBuffer, "int* d_data;");
       main.pushstr_newL(strBuffer);
     }
-    sprintf(strBuffer, "int* d_src;");
-    main.pushstr_newL(strBuffer);
+    if(currentFunc->getIsSrcUsed()) { // checking if src is used
+      sprintf(strBuffer, "int* d_src;");
+      main.pushstr_newL(strBuffer);
+    }
     if(currentFunc->getIsWeightUsed()) { // checking if weight is used
       sprintf(strBuffer, "int* d_weight;");
       main.pushstr_newL(strBuffer);
@@ -3357,7 +3363,8 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
     generateCudaMallocStr("d_meta", "int", "(1+V)");
     if(currentFunc->getIsDataUsed())  // checking if data is used
       generateCudaMallocStr("d_data", "int", "(E)");
-    generateCudaMallocStr("d_src", "int", "(E)");
+    if(currentFunc->getIsSrcUsed())  // checking if src is used
+      generateCudaMallocStr("d_src", "int", "(E)");
     if(currentFunc->getIsWeightUsed())  // checking if weight is used
       generateCudaMallocStr("d_weight", "int", "(E)");
     if(currentFunc->getIsRevMetaUsed()) // checking if rev_meta is used
@@ -3371,7 +3378,8 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
     generateCudaMemCpyStr("d_meta", "h_meta", "int", "V+1");
     if(currentFunc->getIsDataUsed())  // checking if data is used
       generateCudaMemCpyStr("d_data", "h_data", "int", "E");
-    generateCudaMemCpyStr("d_src", "h_src", "int", "E");
+    if(currentFunc->getIsSrcUsed())  // checking if src is used
+      generateCudaMemCpyStr("d_src", "h_src", "int", "E");
     if(currentFunc->getIsWeightUsed())  // checking if weight is used
       generateCudaMemCpyStr("d_weight", "h_weight", "int", "E");
     if(currentFunc->getIsRevMetaUsed())  // checking if rev_meta is used

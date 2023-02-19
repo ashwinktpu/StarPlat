@@ -7,3 +7,5 @@ deviceVarsAnalyser.h   :   getTempVar() LINE 284 removed static cast and used st
 added fp_idnode to identifier
 analyser/deviceVars/getUsedVars.cpp: LINE 230 fixed fp for sssp
 src/symbolutil/SymbolTableBuilder.cpp: LINE 278 added fp node
+
+formal parameters generation:

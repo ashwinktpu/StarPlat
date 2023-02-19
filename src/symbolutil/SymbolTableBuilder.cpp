@@ -363,6 +363,8 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                     forallStmt* parentForall = (forallStmt*) parallelConstruct[0];
                     parentForall->setIsRevMetaUsed();
                     currentFunc->setIsRevMetaUsed();
+                    parentForall->setIsSrcUsed();
+                    currentFunc->setIsSrcUsed();
                   } else if(iteratorMethodString.compare("neighbors") == 0) { // if the proc call is neighbors, d_data is needed
                     forallStmt* parentForall = (forallStmt*) parallelConstruct[0];
                     parentForall->setIsDataUsed();

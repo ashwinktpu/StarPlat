@@ -4,7 +4,7 @@ Analysis:
 
     d_meta          - yet to be done
     d_data          - fixed for all occurrences
-    d_src           - yet to be done
+    d_src           - fixed for all occurrences
     d_weight        - fixed for all occurrences
     d_rev_meta      - fixed for all occurrences
     d_var_nxt       - fixed function parameters and function calls. Yet to stop generating.
