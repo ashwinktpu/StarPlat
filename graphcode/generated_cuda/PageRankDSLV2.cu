@@ -28,6 +28,11 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
     h_rev_meta[i] = temp;
   }
 
+  for(int i=0; i< E; i++) {
+    temp = g.srcList[i];
+    h_src[i] = temp;
+  }
+
 
   int* d_meta;
   int* d_src;

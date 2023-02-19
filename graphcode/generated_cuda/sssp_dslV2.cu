@@ -15,13 +15,9 @@ void Compute_SSSP(graph& g,int* dist,int* wt,int src
 
   int *h_meta;
   int *h_data;
-  int *h_src;
-  int *h_weight;
 
   h_meta = (int *)malloc( (V+1)*sizeof(int));
   h_data = (int *)malloc( (E)*sizeof(int));
-  h_src = (int *)malloc( (E)*sizeof(int));
-  h_weight = (int *)malloc( (E)*sizeof(int));
 
   for(int i=0; i<= V; i++) {
     int temp = g.indexofNodes[i];
@@ -31,29 +27,19 @@ void Compute_SSSP(graph& g,int* dist,int* wt,int src
   for(int i=0; i< E; i++) {
     int temp = g.edgeList[i];
     h_data[i] = temp;
-    temp = g.srcList[i];
-    h_src[i] = temp;
-    temp = edgeLen[i];
-    h_weight[i] = temp;
   }
 
 
   int* d_meta;
   int* d_data;
-  int* d_src;
-  int* d_weight;
   bool* d_modified_next;
 
   cudaMalloc(&d_meta, sizeof(int)*(1+V));
   cudaMalloc(&d_data, sizeof(int)*(E));
-  cudaMalloc(&d_src, sizeof(int)*(E));
-  cudaMalloc(&d_weight, sizeof(int)*(E));
   cudaMalloc(&d_modified_next, sizeof(bool)*(V));
 
   cudaMemcpy(  d_meta,   h_meta, sizeof(int)*(V+1), cudaMemcpyHostToDevice);
   cudaMemcpy(  d_data,   h_data, sizeof(int)*(E), cudaMemcpyHostToDevice);
-  cudaMemcpy(   d_src,    h_src, sizeof(int)*(E), cudaMemcpyHostToDevice);
-  cudaMemcpy(d_weight, h_weight, sizeof(int)*(E), cudaMemcpyHostToDevice);
 
   // CSR END
   //LAUNCH CONFIG
@@ -99,7 +85,7 @@ void Compute_SSSP(graph& g,int* dist,int* wt,int src
     finished = true;
     cudaMemcpyToSymbol(::finished, &finished, sizeof(bool), 0, cudaMemcpyHostToDevice);
     cudaMemcpyToSymbol(::finished, &finished, sizeof(bool), 0, cudaMemcpyHostToDevice);
-    Compute_SSSP_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_modified,d_modified_next,d_dist,d_wt);
+    Compute_SSSP_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_modified,d_modified_next,d_wt,d_dist);
     cudaDeviceSynchronize();
 
 

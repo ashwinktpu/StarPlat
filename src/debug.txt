@@ -1,26 +1,51 @@
-fileName ../graphcode/staticDSLCodes/triangle_counting_dsl
+fileName ../graphcode/staticDSLCodes/sssp_dslV2
 Backend Target cuda
 Type: function
 '('Graph Type
 
+','
+Node Property'<'Type: int'>'
+','
+Edge Property'<'Type: int'>'
+','
+Node Type
 ')'currentFuncType check!!0
 tempID g funccount 0
 
-'{'Type: long
+'{'Node Property'<'Type: bool'>'
+';''.''('
+'='
++Infinity: INF','
 
 '='
-';'Keyword-forall: forall'('
-Keyword in 
-'.''('')'')''{'Keyword-forall: forall'('
+Type Bool: False')'';'TYPE OF NODE OF STATEMENT1'.'
+'='
+Type Bool: True';''.'
+'='
+';'Type: bool
+
+'='
+Type Bool: False';'Keyword fixedPoint
+Keyword until'('
+':'
+'!'')''{'Keyword-forall: forall'('
 Keyword in 
 '.''('')''.'filter'('
-'<'
-')'')''{'Keyword-forall: forall'('
+EQ_OP
+Type Bool: True')'')''{'Keyword-forall: forall'('
 Keyword in 
-'.''('')''.'filter'('
-'>'
-')'')''{'Keyword if: if'(''.''('','')'')''{'ADD_ASSIGN ';''}''}'CHECK FILTER TYPE1
-ForallStmt created
+'.''('')'')''{'Edge Type
+
+'='
+'.''('','
+')'';''<''.'','
+'.''>'
+'='
+'<'Min'(''.'','
+'.'
+'+'
+'.'')'','
+Type Bool: True'>'';''}'ForallStmt created
 0
 0
 0
@@ -33,19 +58,19 @@ ForallStmt created
 0
 0
 0
-'}'ForallStmt created
-0
-0
-0
-0
-0
-Return: return
-';''}'
+'}'
+'}'
 error val 0
 at 1
+ANAME1:6
+ANAME2:2
+		Setting device bool
+ANAME1:6
+ANAME2:2
+		Setting device bool
 FORALL par   NAME1:6
-FORALL ParPar NAME2:2
-		TO Set DEVICE BOOL
+FORALL ParPar NAME2:11
+FORALL ParParPar NAME3:6
 Parent of forAll: 
 0
 0
@@ -56,101 +81,150 @@ FORALL par   NAME1:6
 FORALL ParPar NAME2:18
 FORALL ParParPar NAME3:6
 Parent of forAll: 
-0
 1
-0
-0
-0
-FORALL par   NAME1:6
-FORALL ParPar NAME2:18
-FORALL ParParPar NAME3:6
-Parent of forAll: 
-0
 1
 0
 0
 0
 at 2
-Function Compute_TC
+Function Compute_SSSP
 	{
 		Declaration
-		For all
+		Procedure Call
+		Assignment
+		Assignment
+		Declaration
+		Fixed Point
 			{
 				For all
 					{
 						For all
 							{
-								If statment
-									{
-										Reduction
-									}
+								Declaration
+								Reduction
 							}
 					}
 			}
 	}
-Initializing 0x5576b9a0fa20 6
-Initializing 0x5576b9a0fc70 7
-Initializing 0x5576b9a11b90 18
-Initializing 0x5576b9a11e70 22
-Analysing 0x5576b9a0fa20 6
-Analysing 0x5576b9a0fc70 7
-Analysing 0x5576b9a11b90 18
-Analysing 0x5576b9a11e70 22
-Transfering 0x5576b9a0fc70 7
-Transfering 0x5576b9a11b90 18
-Transfering 0x5576b9a11e70 22
+Initializing 0x55925bb65ff0 6
+Initializing 0x55925bb66200 7
+Initializing 0x55925bb66860 17
+Initializing 0x55925bb66a80 8
+Initializing 0x55925bb66cd0 8
+Initializing 0x55925bb66ed0 7
+Initializing 0x55925bb693a0 11
+Initializing 0x55925bb67180 6
+Initializing 0x55925bb691f0 18
+fpId: finished
+Analysing 0x55925bb65ff0 6
+Analysing 0x55925bb66200 7
+Analysing 0x55925bb66860 17
+Analysing 0x55925bb66a80 8
+Analysing 0x55925bb66cd0 8
+Analysing 0x55925bb66ed0 7
+Analysing 0x55925bb693a0 11
+Analysing 0x55925bb67180 6
+Analysing 0x55925bb691f0 18
+Analysing 0x55925bb67180 6
+Analysing 0x55925bb691f0 18
+Transfering 0x55925bb66200 7
+Transfering 0x55925bb66860 17
+Transfering 0x55925bb66a80 8
+Transfering 0x55925bb66cd0 8
+Transfering 0x55925bb66ed0 7
+Transfering 0x55925bb693a0 11
+Transfering 0x55925bb67180 6
+Transfering 0x55925bb691f0 18
 {
 	Declaration
 	Tranfer statement
-		triangle_count CPU to GPU
-	For all
+		dist CPU to GPU
+	Tranfer statement
+		modified CPU to GPU
+	Procedure Call
+	Tranfer statement
+		modified GPU to CPU
+	Assignment
+	Tranfer statement
+		dist GPU to CPU
+	Assignment
+	Declaration
+	Tranfer statement
+		dist CPU to GPU
+	Fixed Point
 		{
+			Tranfer statement
+				wt CPU to GPU
+			Tranfer statement
+				finished CPU to GPU
+			Tranfer statement
+				modified CPU to GPU
 			For all
 				{
 					For all
 						{
-							If statment
-								{
-									Reduction
-								}
+							Declaration
+							Reduction
 						}
 				}
+			Tranfer statement
+				modified GPU to CPU
+			Tranfer statement
+				finished GPU to CPU
 		}
+	Tranfer statement
+		dist CPU to GPU
 }
-fileName triangle_counting_dsl
+fileName sssp_dslV2
 param :g
 paramD:d_g
 ========== SET TRUE
+param :dist
+paramD:d_dist
+param :wt
+paramD:d_wt
+param :src
+paramD:d_src
 param :g
 paramD:d_g
+param :dist
+paramD:d_dist
+param :wt
+paramD:d_wt
+param :src
+paramD:d_src
+	==VARSIZE:1
+varName:dist
+varName:modified
+	ASST 
+	DEVICE ASST
+	ASST 
+	DEVICE ASST
+varT:bool
+varN:finished
+IN FIX PT
+Size::5
 	==VARSIZE:0
-varT:long
-varN:triangle_count
 STMT: For
 isMainFile val 1
 Entered here for forall 
 INN OPTIMESED ---------------
 _
-start of kernel block 
-STMT: For
-isMainFile val 0
-GenerateForAllSignature = 0
-============CHANGED BODY  TYPE==============1	 ITERATE Neighbour 
-src:u
-	==VARSIZE:0
+_
+_
+_
+============CHANGED BODY  TYPE==============1start of kernel block 
 =======IF FILTER
 	==VARSIZE:0
 STMT: For
 isMainFile val 0
 GenerateForAllSignature = 0
-============CHANGED BODY  TYPE==============1	 ITERATE Neighbour 
-src:w
+	 ITERATE Neighbour 
+src:nbr
 	==VARSIZE:0
-=======IF FILTER
-	==VARSIZE:0
-=======IF FILTER
 ------>PROP PRO CAL
-	==VARSIZE:0
-FOR BODY END
+LEFT LIST SIZE 2 
+VAR:dist
+FPID ========> finished
 FOR BODY END
 finished successfully

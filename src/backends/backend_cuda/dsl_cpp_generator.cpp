@@ -1548,7 +1548,9 @@ void dsl_cpp_generator ::addCudaKernel(forallStmt* forAll) {
   header.pushString(getCurrentFunc()->getIdentifier()->getIdentifier());
   header.pushString("_kernel");
 
-  header.pushString("(int V, int E, int* d_meta");
+  header.pushString("(int V, int E");
+  if(forAll->getIsMetaUsed())
+    header.pushString(", int* d_meta");
   if(forAll->getIsDataUsed())
     header.pushString(", int* d_data");
   if(forAll->getIsSrcUsed())
@@ -1681,7 +1683,9 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
     main.pushString("numBlocks, threadsPerBlock");
     main.pushString(">>>");
     main.push('(');
-    main.pushString("V,E,d_meta");
+    main.pushString("V,E");
+    if(forAll->getIsMetaUsed())                                       // if d_meta is used
+      main.pushString(",d_meta");
     if(forAll->getIsDataUsed())                                       // if d_data is used, i.e. neighbors or is_an_edge is called          
       main.pushString(",d_data");
     if(forAll->getIsSrcUsed())                                        // if d_src is used, i.e. nodes_to is called
@@ -3127,8 +3131,9 @@ void dsl_cpp_generator::generateCSRArrays(const char* gId, Function* func) {
   main.pushstr_newL(strBuffer);
   main.NewLine();
 
-  // These H & D arrays of CSR do not change. Hence hardcoded!
-  main.pushstr_newL("int *h_meta;");
+  // These H & D arrays of CSR do not change. Hence hardcoded!. NOTE: not anymore
+  if(func->getIsMetaUsed())
+    main.pushstr_newL("int *h_meta;");
   if(func->getIsDataUsed())
     main.pushstr_newL("int *h_data;");
   if(func->getIsSrcUsed())
@@ -3139,7 +3144,8 @@ void dsl_cpp_generator::generateCSRArrays(const char* gId, Function* func) {
     main.pushstr_newL("int *h_rev_meta;");  //done only to handle PR since other don't use it
   main.NewLine();
 
-  main.pushstr_newL("h_meta = (int *)malloc( (V+1)*sizeof(int));");
+  if(func->getIsMetaUsed())
+    main.pushstr_newL("h_meta = (int *)malloc( (V+1)*sizeof(int));");
   if(func->getIsDataUsed())
     main.pushstr_newL("h_data = (int *)malloc( (E)*sizeof(int));");
   if(func->getIsSrcUsed())
@@ -3152,9 +3158,11 @@ void dsl_cpp_generator::generateCSRArrays(const char* gId, Function* func) {
 
   if(func->getIsMetaUsed() || func->getIsRevMetaUsed()) {
     main.pushstr_newL("for(int i=0; i<= V; i++) {");
-    sprintf(strBuffer, "int temp = %s.indexofNodes[i];", gId);
-    main.pushstr_newL(strBuffer);
-    main.pushstr_newL("h_meta[i] = temp;");
+    if(func->getIsMetaUsed()) {
+      sprintf(strBuffer, "int temp = %s.indexofNodes[i];", gId);
+      main.pushstr_newL(strBuffer);
+      main.pushstr_newL("h_meta[i] = temp;");
+    }
     if(func->getIsRevMetaUsed()) {
       sprintf(strBuffer, "temp = %s.rev_indexofNodes[i];", gId);
       main.pushstr_newL(strBuffer);
@@ -3171,9 +3179,11 @@ void dsl_cpp_generator::generateCSRArrays(const char* gId, Function* func) {
       main.pushstr_newL(strBuffer);
       main.pushstr_newL("h_data[i] = temp;");
     }
-    sprintf(strBuffer, "temp = %s.srcList[i];", gId);
-    main.pushstr_newL(strBuffer);
-    main.pushstr_newL("h_src[i] = temp;");
+    if(func->getIsSrcUsed()) {
+      sprintf(strBuffer, "temp = %s.srcList[i];", gId);
+      main.pushstr_newL(strBuffer);
+      main.pushstr_newL("h_src[i] = temp;");
+    }
     if(func->getIsWeightUsed()) {
       main.pushstr_newL("temp = edgeLen[i];");
       main.pushstr_newL("h_weight[i] = temp;");
@@ -3338,8 +3348,10 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
 
     main.NewLine();
 
-    sprintf(strBuffer, "int* d_meta;");
-    main.pushstr_newL(strBuffer);
+    if(currentFunc->getIsMetaUsed()) { // checking if meta is used
+      sprintf(strBuffer, "int* d_meta;");
+      main.pushstr_newL(strBuffer);
+    }
     if(currentFunc->getIsDataUsed()) { // checking if data is used
       sprintf(strBuffer, "int* d_data;");
       main.pushstr_newL(strBuffer);
@@ -3360,7 +3372,8 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
     main.pushstr_newL(strBuffer);
     main.NewLine();
 
-    generateCudaMallocStr("d_meta", "int", "(1+V)");
+    if(currentFunc->getIsMetaUsed())  // checking if meta is used
+      generateCudaMallocStr("d_meta", "int", "(1+V)");
     if(currentFunc->getIsDataUsed())  // checking if data is used
       generateCudaMallocStr("d_data", "int", "(E)");
     if(currentFunc->getIsSrcUsed())  // checking if src is used
@@ -3375,7 +3388,8 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
 
     // h_meta h_data h_weight has to be populated!
 
-    generateCudaMemCpyStr("d_meta", "h_meta", "int", "V+1");
+    if(currentFunc->getIsMetaUsed())  // checking if meta is used
+      generateCudaMemCpyStr("d_meta", "h_meta", "int", "V+1");
     if(currentFunc->getIsDataUsed())  // checking if data is used
       generateCudaMemCpyStr("d_data", "h_data", "int", "E");
     if(currentFunc->getIsSrcUsed())  // checking if src is used

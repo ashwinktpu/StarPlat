@@ -367,6 +367,8 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                     currentFunc->setIsSrcUsed();
                   } else if(iteratorMethodString.compare("neighbors") == 0) { // if the proc call is neighbors, d_data is needed
                     forallStmt* parentForall = (forallStmt*) parallelConstruct[0];
+                    parentForall->setIsMetaUsed();
+                    currentFunc->setIsMetaUsed();
                     parentForall->setIsDataUsed();
                     currentFunc->setIsDataUsed();
                   }
@@ -562,6 +564,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                
              }     
           
+          currentFunc->setIsMetaUsed(); // d_meta is used in itrbfs
           currentFunc->setIsDataUsed(); // d_data is used in itrbfs
           currentFunc->setIsWeightUsed(); // d_weight is used in itrbfs
 
@@ -725,8 +728,16 @@ void SymbolTableBuilder::checkForArguments(list<argument*> argList)
               if(s.compare("is_an_edge") == 0)
                 {
                   forallStmt* parentForAll = (forallStmt*)parallelConstruct[0];
+                  parentForAll->setIsMetaUsed();
+                  currentFunc->setIsMetaUsed();
                   parentForAll->setIsDataUsed();
                   currentFunc->setIsDataUsed();
+                }
+              if(s.compare("count_outNbrs") == 0)
+                {
+                  forallStmt* parentForAll = (forallStmt*)parallelConstruct[0];
+                  parentForAll->setIsMetaUsed();
+                  currentFunc->setIsMetaUsed();
                 }
              break;   
          }  

@@ -16,7 +16,7 @@ void Compute_SSSP(graph& g,int* dist,int* wt,int src
 
 __device__ bool finished ; // DEVICE ASSTMENT in .h
 
-__global__ void Compute_SSSP_kernel(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight,bool* d_modified,bool* d_modified_next,int* d_dist,int* d_wt){ // BEGIN KER FUN via ADDKERNEL
+__global__ void Compute_SSSP_kernel(int V, int E, int* d_meta, int* d_data,bool* d_modified,bool* d_modified_next,int* d_wt,int* d_dist){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
   if(v >= V) return;
