@@ -1548,7 +1548,10 @@ void dsl_cpp_generator ::addCudaKernel(forallStmt* forAll) {
   header.pushString(getCurrentFunc()->getIdentifier()->getIdentifier());
   header.pushString("_kernel");
 
-  header.pushString("(int V, int E, int* d_meta, int* d_data, int* d_src");
+  header.pushString("(int V, int E, int* d_meta");
+  if(forAll->getIsDataUsed())
+    header.pushString(", int* d_data");
+  header.pushString(", int* d_src");
   if(forAll->getIsWeightUsed())
     header.pushString(", int* d_weight");
   if(forAll->getIsRevMetaUsed())
@@ -1677,7 +1680,10 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
     main.pushString("numBlocks, threadsPerBlock");
     main.pushString(">>>");
     main.push('(');
-    main.pushString("V,E,d_meta,d_data,d_src");
+    main.pushString("V,E,d_meta");
+    if(forAll->getIsDataUsed())                                       // if d_data is used, i.e. neighbors or is_an_edge is called          
+      main.pushString(",d_data");
+    main.pushString(",d_src");
     if(forAll->getIsWeightUsed())                                    // if d_weight is used, can never be used as of now
       main.pushString(",d_weight");
     if(forAll->getIsRevMetaUsed())                                   // if d_rev_meta is used, i.e. nodes_to is called
@@ -3121,7 +3127,8 @@ void dsl_cpp_generator::generateCSRArrays(const char* gId, Function* func) {
 
   // These H & D arrays of CSR do not change. Hence hardcoded!
   main.pushstr_newL("int *h_meta;");
-  main.pushstr_newL("int *h_data;");
+  if(func->getIsDataUsed())
+    main.pushstr_newL("int *h_data;");
   main.pushstr_newL("int *h_src;");
   if(func->getIsWeightUsed())
     main.pushstr_newL("int *h_weight;");
@@ -3130,7 +3137,8 @@ void dsl_cpp_generator::generateCSRArrays(const char* gId, Function* func) {
   main.NewLine();
 
   main.pushstr_newL("h_meta = (int *)malloc( (V+1)*sizeof(int));");
-  main.pushstr_newL("h_data = (int *)malloc( (E)*sizeof(int));");
+  if(func->getIsDataUsed())
+    main.pushstr_newL("h_data = (int *)malloc( (E)*sizeof(int));");
   main.pushstr_newL("h_src = (int *)malloc( (E)*sizeof(int));");
   if(func->getIsWeightUsed()) 
     main.pushstr_newL("h_weight = (int *)malloc( (E)*sizeof(int));");
@@ -3138,31 +3146,37 @@ void dsl_cpp_generator::generateCSRArrays(const char* gId, Function* func) {
     main.pushstr_newL("h_rev_meta = (int *)malloc( (V+1)*sizeof(int));");
   main.NewLine();
 
-  main.pushstr_newL("for(int i=0; i<= V; i++) {");
-  sprintf(strBuffer, "int temp = %s.indexofNodes[i];", gId);
-  main.pushstr_newL(strBuffer);
-  main.pushstr_newL("h_meta[i] = temp;");
-  if(func->getIsRevMetaUsed()) {
-    sprintf(strBuffer, "temp = %s.rev_indexofNodes[i];", gId);
+  if(func->getIsMetaUsed() || func->getIsRevMetaUsed()) {
+    main.pushstr_newL("for(int i=0; i<= V; i++) {");
+    sprintf(strBuffer, "int temp = %s.indexofNodes[i];", gId);
     main.pushstr_newL(strBuffer);
-    main.pushstr_newL("h_rev_meta[i] = temp;");
+    main.pushstr_newL("h_meta[i] = temp;");
+    if(func->getIsRevMetaUsed()) {
+      sprintf(strBuffer, "temp = %s.rev_indexofNodes[i];", gId);
+      main.pushstr_newL(strBuffer);
+      main.pushstr_newL("h_rev_meta[i] = temp;");
+    }
+    main.pushstr_newL("}");
+    main.NewLine();
   }
-  main.pushstr_newL("}");
-  main.NewLine();
 
-  main.pushstr_newL("for(int i=0; i< E; i++) {");
-  sprintf(strBuffer, "int temp = %s.edgeList[i];", gId);
-  main.pushstr_newL(strBuffer);
-  main.pushstr_newL("h_data[i] = temp;");
-  sprintf(strBuffer, "temp = %s.srcList[i];", gId);
-  main.pushstr_newL(strBuffer);
-  main.pushstr_newL("h_src[i] = temp;");
-  if(func->getIsWeightUsed()) {
-    main.pushstr_newL("temp = edgeLen[i];");
-    main.pushstr_newL("h_weight[i] = temp;");
+  if(func->getIsDataUsed() || func->getIsSrcUsed() || func->getIsWeightUsed()) {
+    main.pushstr_newL("for(int i=0; i< E; i++) {");
+    if(func->getIsDataUsed()) {
+      sprintf(strBuffer, "int temp = %s.edgeList[i];", gId);
+      main.pushstr_newL(strBuffer);
+      main.pushstr_newL("h_data[i] = temp;");
+    }
+    sprintf(strBuffer, "temp = %s.srcList[i];", gId);
+    main.pushstr_newL(strBuffer);
+    main.pushstr_newL("h_src[i] = temp;");
+    if(func->getIsWeightUsed()) {
+      main.pushstr_newL("temp = edgeLen[i];");
+      main.pushstr_newL("h_weight[i] = temp;");
+    }
+    main.pushstr_newL("}");
+    main.NewLine();
   }
-  main.pushstr_newL("}");
-  main.NewLine();
 
   //to handle rev_offset array for pageRank only // MOVED TO PREV FOR LOOP
   //~ main.pushstr_newL("for(int i=0; i<= V; i++) {");
@@ -3322,8 +3336,10 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
 
     sprintf(strBuffer, "int* d_meta;");
     main.pushstr_newL(strBuffer);
-    sprintf(strBuffer, "int* d_data;");
-    main.pushstr_newL(strBuffer);
+    if(currentFunc->getIsDataUsed()) { // checking if data is used
+      sprintf(strBuffer, "int* d_data;");
+      main.pushstr_newL(strBuffer);
+    }
     sprintf(strBuffer, "int* d_src;");
     main.pushstr_newL(strBuffer);
     if(currentFunc->getIsWeightUsed()) { // checking if weight is used
@@ -3339,7 +3355,8 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
     main.NewLine();
 
     generateCudaMallocStr("d_meta", "int", "(1+V)");
-    generateCudaMallocStr("d_data", "int", "(E)");
+    if(currentFunc->getIsDataUsed())  // checking if data is used
+      generateCudaMallocStr("d_data", "int", "(E)");
     generateCudaMallocStr("d_src", "int", "(E)");
     if(currentFunc->getIsWeightUsed())  // checking if weight is used
       generateCudaMallocStr("d_weight", "int", "(E)");
@@ -3352,7 +3369,8 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
     // h_meta h_data h_weight has to be populated!
 
     generateCudaMemCpyStr("d_meta", "h_meta", "int", "V+1");
-    generateCudaMemCpyStr("d_data", "h_data", "int", "E");
+    if(currentFunc->getIsDataUsed())  // checking if data is used
+      generateCudaMemCpyStr("d_data", "h_data", "int", "E");
     generateCudaMemCpyStr("d_src", "h_src", "int", "E");
     if(currentFunc->getIsWeightUsed())  // checking if weight is used
       generateCudaMemCpyStr("d_weight", "h_weight", "int", "E");
