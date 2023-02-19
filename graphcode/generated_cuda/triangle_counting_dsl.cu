@@ -20,11 +20,6 @@ void Compute_TC(graph& g)
   h_data = (int *)malloc( (E)*sizeof(int));
   h_src = (int *)malloc( (E)*sizeof(int));
 
-  for(int i=0; i<= V; i++) {
-    int temp = g.indexofNodes[i];
-    h_meta[i] = temp;
-  }
-
   for(int i=0; i< E; i++) {
     int temp = g.edgeList[i];
     h_data[i] = temp;

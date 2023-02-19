@@ -593,7 +593,7 @@ class Function:public ASTNode
       return isRevMetaUsed;
     }
 
-    void setRevMetaUsed() {
+    void setIsRevMetaUsed() {
       this->isRevMetaUsed = true;
     }
 
@@ -2213,7 +2213,7 @@ class fixedPointStmt:public statement
       return isRevMetaUsed;
     }
 
-    void setRevMetaUsed() {
+    void setIsRevMetaUsed() {
       this->isRevMetaUsed = true;
     }
 
