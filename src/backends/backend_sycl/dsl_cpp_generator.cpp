@@ -713,7 +713,55 @@ namespace spsycl
 
     void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment *asmt, bool isMainFile)
     {
-        main.pushstr_newL("// Device assignment statement");
+        bool isDevice = false;
+        std::cout << "\tASST \n";
+        char strBuffer[300];
+        if (asmt->lhs_isIdentifier())
+        {
+            Identifier *id = asmt->getId();
+
+            main.pushString(id->getIdentifier());
+        }
+        else if (asmt->lhs_isProp()) // the check for node and edge property to be carried out.
+        {
+            PropAccess *propId = asmt->getPropId();
+            if (asmt->isDeviceAssignment())
+            {
+                isDevice = true;
+                Type *typeB = propId->getIdentifier2()->getSymbolInfo()->getType()->getInnerTargetType();
+                const char *varType = convertToCppType(typeB);
+
+                main.pushstr_newL("Q.submit([&](handler &h){ h.single_task([=](){");
+
+                sprintf(strBuffer, "d_%s[%s] = (%s)",
+                        propId->getIdentifier2()->getIdentifier(),
+                        propId->getIdentifier1()->getIdentifier(),
+                        varType);
+                main.pushString(strBuffer);
+            }
+            else
+            {
+                main.pushString("d_"); /// IMPORTANT
+                main.pushString(propId->getIdentifier2()->getIdentifier());
+                main.push('[');
+                main.pushString(propId->getIdentifier1()->getIdentifier());
+                main.push(']');
+            }
+        }
+
+        if (!isDevice)
+            main.pushString(" = ");
+
+        generateExpr(asmt->getExpr(), isMainFile);
+
+        if (isDevice)
+        {
+            main.pushstr_newL("});");
+            main.pushstr_newL("}).wait(); //InitIndexDevice");
+            main.NewLine();
+        }
+        else
+            main.pushstr_newL("; //InitIndex");
     }
 
     void dsl_cpp_generator::generateAtomicDeviceAssignmentStmt(assignment *asmt, bool isMainFile)
@@ -1161,8 +1209,9 @@ namespace spsycl
     }
 
     void dsl_cpp_generator::generateInitkernel1(assignment *assign, bool isMainFile)
-    { // const char* typ,
-        //~ initKernel<double> <<<numBlocks,numThreads>>>(V,d_BC, 0.0);
+    {
+        main.pushstr_newL("Q.submit([&](handler &h){ h.parallel_for(NUM_THREADS, [=](id<1> i){");
+
         char strBuffer[1024];
 
         Identifier *inId = assign->getId();
@@ -1172,14 +1221,14 @@ namespace spsycl
             convertToCppType(inId->getSymbolInfo()->getType()->getInnerTargetType());
         const char *inVarName = inId->getIdentifier();
 
-        sprintf(strBuffer, "initKernel<%s> <<<numBlocks,threadsPerBlock>>>(V,d_%s,(%s)",
-                inVarType, inVarName, inVarType);
+        sprintf(strBuffer, "for (; i < V; i += stride) d_%s[i] = (%s)", inVarName, inVarType);
         main.pushString(strBuffer);
 
         std::cout << "varName:" << inVarName << '\n';
         generateExpr(exprAssigned, isMainFile); // asssuming int/float const literal // OUTPUTS INIT VALUE
 
-        main.pushstr_newL(");");
+        main.pushstr_newL("});");
+        main.pushstr_newL("}).wait();");
         main.NewLine();
     }
 
