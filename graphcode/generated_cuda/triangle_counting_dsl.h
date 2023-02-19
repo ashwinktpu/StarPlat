@@ -15,7 +15,7 @@ void Compute_TC(graph& g);
 
 __device__ long triangle_count ; // DEVICE ASSTMENT in .h
 
-__global__ void Compute_TC_kernel(int V, int E, int* d_meta, int* d_data, int* d_src){ // BEGIN KER FUN via ADDKERNEL
+__global__ void Compute_TC_kernel(int V, int E, int* d_meta, int* d_data){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
   if(v >= V) return;

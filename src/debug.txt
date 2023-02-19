@@ -1,52 +1,51 @@
-fileName ../graphcode/staticDSLCodes/PageRankDSLV2
+fileName ../graphcode/staticDSLCodes/triangle_counting_dsl
 Backend Target cuda
 Type: function
 '('Graph Type
 
-','Type: float
-
-','Type: float
-
-','Type: int
-
-','Node Property'<'Type: float'>'
 ')'currentFuncType check!!0
 tempID g funccount 0
 
-'{'Type: float
+'{'Type: long
 
 '='
-'.''('')'';'Node Property'<'Type: float'>'
-';''.''(''=''/'')'';'TYPE OF NODE OF STATEMENT1Type: int
-'='';'Type: float
-';'Keyword do: do'{''='';'Keyword-forall: forall'('
+';'Keyword-forall: forall'('
 Keyword in 
-'.''('')'')''{'Type: float
-'='';'For: for'('
+'.''('')'')''{'Keyword-forall: forall'('
 Keyword in 
-'.''('')'')''{''=''+''.''/''.''('')'';''}'ForallStmt created
+'.''('')''.'filter'('
+'<'
+')'')''{'Keyword-forall: forall'('
+Keyword in 
+'.''('')''.'filter'('
+'>'
+')'')''{'Keyword if: if'(''.''('','')'')''{'ADD_ASSIGN ';''}''}'CHECK FILTER TYPE1
+ForallStmt created
 0
 0
 0
 0
 0
-Type: float
-'=''(''-'')''/''+''*'';'ADD_ASSIGN '-''.'';''.''='';''}'ForallStmt created
+'}'CHECK FILTER TYPE1
+ForallStmt created
 0
 0
 0
 0
 0
-
-'='
-
-';'INC_OP';''}'
-Keyword while: while'(''(''>'')'AND_OP'(''<'')'')'';''}'
+'}'ForallStmt created
+0
+0
+0
+0
+0
+Return: return
+';''}'
 error val 0
 at 1
 FORALL par   NAME1:6
-FORALL ParPar NAME2:10
-FORALL ParParPar NAME3:6
+FORALL ParPar NAME2:2
+		TO Set DEVICE BOOL
 Parent of forAll: 
 0
 0
@@ -58,187 +57,100 @@ FORALL ParPar NAME2:18
 FORALL ParParPar NAME3:6
 Parent of forAll: 
 0
+1
 0
 0
+0
+FORALL par   NAME1:6
+FORALL ParPar NAME2:18
+FORALL ParParPar NAME3:6
+Parent of forAll: 
 0
 1
-ANAME1:6
-ANAME2:18
+0
+0
+0
 at 2
-Function Compute_PR
+Function Compute_TC
 	{
 		Declaration
-		Declaration
-		Procedure Call
-		Declaration
-		Declaration
-		Do While
+		For all
 			{
-				Assignment
 				For all
 					{
-						Declaration
 						For all
 							{
-								Assignment
+								If statment
+									{
+										Reduction
+									}
 							}
-						Declaration
-						Reduction
-						Assignment
 					}
-				Assignment
-				Unary statment
 			}
 	}
-Initializing 0x5596778af140 6
-Initializing 0x5596778af660 7
-Initializing 0x5596778af4c0 7
-Initializing 0x5596778afc90 17
-Initializing 0x5596778afe60 7
-Initializing 0x5596778affe0 7
-Initializing 0x5596778b3380 10
-Initializing 0x5596778b0070 6
-Initializing 0x5596778b0260 8
-Initializing 0x5596778b27c0 18
-Initializing 0x5596778b2b30 8
-Initializing 0x5596778b2d50 21
-Analysing 0x5596778af140 6
-Analysing 0x5596778af660 7
-Analysing 0x5596778af4c0 7
-Analysing 0x5596778afc90 17
-Analysing 0x5596778afe60 7
-Analysing 0x5596778affe0 7
-Analysing 0x5596778b3380 10
-Analysing 0x5596778b0070 6
-Analysing 0x5596778b0260 8
-Analysing 0x5596778b27c0 18
-Analysing 0x5596778b2b30 8
-Analysing 0x5596778b2d50 21
-Analysing 0x5596778b0070 6
-Analysing 0x5596778b0260 8
-Analysing 0x5596778b27c0 18
-Analysing 0x5596778b2b30 8
-Analysing 0x5596778b2d50 21
-Transfering 0x5596778af660 7
-Transfering 0x5596778af4c0 7
-Transfering 0x5596778afc90 17
-Transfering 0x5596778afe60 7
-Transfering 0x5596778affe0 7
-Transfering 0x5596778b3380 10
-Transfering 0x5596778b0070 6
-Transfering 0x5596778b0260 8
-Transfering 0x5596778b27c0 18
-Transfering 0x5596778b2b30 8
-Transfering 0x5596778b2d50 21
+Initializing 0x5576b9a0fa20 6
+Initializing 0x5576b9a0fc70 7
+Initializing 0x5576b9a11b90 18
+Initializing 0x5576b9a11e70 22
+Analysing 0x5576b9a0fa20 6
+Analysing 0x5576b9a0fc70 7
+Analysing 0x5576b9a11b90 18
+Analysing 0x5576b9a11e70 22
+Transfering 0x5576b9a0fc70 7
+Transfering 0x5576b9a11b90 18
+Transfering 0x5576b9a11e70 22
 {
 	Declaration
-	Declaration
 	Tranfer statement
-		pageRank CPU to GPU
-	Procedure Call
-	Declaration
-	Declaration
-	Declaration
-	Do While
+		triangle_count CPU to GPU
+	For all
 		{
-			If statment
-				{
-					Tranfer statement
-						pageRank CPU to GPU
-				}
-			Assignment
-			Assignment
-			Tranfer statement
-				diff CPU to GPU
-			Tranfer statement
-				num_nodes CPU to GPU
-			Tranfer statement
-				pageRank_nxt CPU to GPU
-			Tranfer statement
-				delta CPU to GPU
 			For all
 				{
-					Declaration
 					For all
 						{
-							Assignment
+							If statment
+								{
+									Reduction
+								}
 						}
-					Declaration
-					Reduction
-					Assignment
 				}
-			Tranfer statement
-				pageRank GPU to CPU
-			Tranfer statement
-				pageRank_nxt GPU to CPU
-			Assignment
-			Unary statment
-			Tranfer statement
-				diff GPU to CPU
 		}
 }
-fileName PageRankDSLV2
+fileName triangle_counting_dsl
 param :g
 paramD:d_g
 ========== SET TRUE
-param :beta
-paramD:d_beta
-param :delta
-paramD:d_delta
-param :maxIter
-paramD:d_maxIter
-param :pageRank
-paramD:d_pageRank
 param :g
 paramD:d_g
-param :beta
-paramD:d_beta
-param :delta
-paramD:d_delta
-param :maxIter
-paramD:d_maxIter
-param :pageRank
-paramD:d_pageRank
-	==VARSIZE:1
-varT:float
-varN:num_nodes
------->PROP PRO CAL
-varName:pageRank
-varT:int
-varN:iterCount
-varT:float
-varN:diff
-varT:bool
-varN:tempVar_0
 	==VARSIZE:0
-=======IF FILTER
-	==VARSIZE:0
-	ASST
-	ASST
+varT:long
+varN:triangle_count
 STMT: For
 isMainFile val 1
 Entered here for forall 
 INN OPTIMESED ---------------
 _
-_
-_
-_
-_
 start of kernel block 
-varT:float
-varN:sum
 STMT: For
 isMainFile val 0
 GenerateForAllSignature = 0
-	 ITERATE Neighbour 
-src:nbr
+============CHANGED BODY  TYPE==============1	 ITERATE Neighbour 
+src:u
 	==VARSIZE:0
-	ASST
+=======IF FILTER
+	==VARSIZE:0
+STMT: For
+isMainFile val 0
+GenerateForAllSignature = 0
+============CHANGED BODY  TYPE==============1	 ITERATE Neighbour 
+src:w
+	==VARSIZE:0
+=======IF FILTER
+	==VARSIZE:0
+=======IF FILTER
 ------>PROP PRO CAL
+	==VARSIZE:0
 FOR BODY END
-varT:float
-varN:val
-	ASST
-	ASST
------->PROP UNARY
+FOR BODY END
 finished successfully
