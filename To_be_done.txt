@@ -1,0 +1,10 @@
+Analysis:
+    To analyse and figure out the formal parameters required for parallel computation.
+    Stop generating the unnecessary formal parameters.
+
+    d_meta          - yet to be done
+    d_data          - yet to be done
+    d_src           - yet to be done
+    d_weight        - fixed for all occurrences
+    d_rev_meta      - fixed for all occurrences
+    d_var_nxt       - fixed function parameters and function calls. Yet to stop generating.

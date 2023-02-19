@@ -1548,11 +1548,12 @@ void dsl_cpp_generator ::addCudaKernel(forallStmt* forAll) {
   header.pushString(getCurrentFunc()->getIdentifier()->getIdentifier());
   header.pushString("_kernel");
 
-  header.pushString("(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight");
-  if(forAll->isRevMetaUsed)
-    header.pushString(", int *d_rev_meta,bool *d_modified_next");
-
-  // cout << "isRevMeta used ? : " << forAll->isRevMetaUsed << endl;
+  header.pushString("(int V, int E, int* d_meta, int* d_data, int* d_src");
+  if(forAll->getIsWeightUsed())
+    header.pushString(", int* d_weight");
+  if(forAll->getIsRevMetaUsed())
+    header.pushString(", int *d_rev_meta");
+  // header.pushString(",bool *d_modified_next");
 
   /*if(currentFunc->getParamList().size()!=0)
     {
@@ -1565,6 +1566,11 @@ void dsl_cpp_generator ::addCudaKernel(forallStmt* forAll) {
       char strBuffer[1024];
       sprintf(strBuffer, ",%s d_%s", convertToCppType(type), iden->getIdentifier());
       header.pushString(/*createParamName(*/ strBuffer);
+      if(iden->getSymbolInfo()->getId()->get_fp_association()) { // If id has a fp association then _next must also be added as a parameter
+        char strBuffer[1024];
+        sprintf(strBuffer, ",%s d_%s_next", convertToCppType(type), iden->getIdentifier());
+        header.pushString(/*createParamName(*/ strBuffer);
+      }
     }
   }
 
@@ -1671,9 +1677,12 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
     main.pushString("numBlocks, threadsPerBlock");
     main.pushString(">>>");
     main.push('(');
-    main.pushString("V,E,d_meta,d_data,d_src,d_weight");
-    if(forAll->isRevMetaUsed)                                   // if d_rev_meta is used, i.e. nodes_to is called
-      main.pushString(",d_rev_meta,d_modified_next");
+    main.pushString("V,E,d_meta,d_data,d_src");
+    if(forAll->getIsWeightUsed())                                    // if d_weight is used, can never be used as of now
+      main.pushString(",d_weight");
+    if(forAll->getIsRevMetaUsed())                                   // if d_rev_meta is used, i.e. nodes_to is called
+      main.pushString(",d_rev_meta");
+    // main.pushString(",d_modified_next");
     //  if(currentFunc->getParamList().size()!=0)
     // main.pushString(",");
     if (!isOptimized) {
@@ -1697,6 +1706,11 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
           main.pushString(",");
           main.pushString("d_");
           main.pushString(/*createParamName(*/ iden->getIdentifier());
+          if(iden->getSymbolInfo()->getId()->get_fp_association()) { // If id has a fp association then _next must also be added as a parameter
+            char strBuffer[1024];
+            sprintf(strBuffer, ",d_%s_next", iden->getIdentifier());
+            main.pushString(/*createParamName(*/ strBuffer);
+          }
         }
       }
     }
@@ -2025,6 +2039,8 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
     cout << "varT:" << varType << endl;
     cout << "varN:" << varName << endl;
 
+    bool declInHeader = !isMainFile;  // if variable is declared in header file, to stop generating unnecessary commas and newline
+
     //~ generateExtraDeviceVariable(varType,varName,"1");
     //~ generateHeaderDeviceVariable(varType,varName);
 
@@ -2041,10 +2057,12 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
         if (declStmt->getInGPU()) {
           sprintf(strBuffer, "__device__ %s %s ", varType, varName);
           header.pushString(strBuffer);
+          declInHeader = true;
         }
       } else {
         sprintf(strBuffer, "__device__ %s %s ", varType, varName);
         header.pushString(strBuffer);
+        declInHeader = true;
       }
     }
     /// REPLICATE ON HOST AND DEVICE
@@ -2083,8 +2101,10 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
       //getDefaultValueforTypes(type->gettypeId());
      // targetFile.pushstr_newL(";");
     }*/
-    header.pushstr_newL("; // DEVICE ASSTMENT in .h");
-    header.NewLine();
+    if(declInHeader) {
+      header.pushstr_newL("; // DEVICE ASSTMENT in .h");
+      header.NewLine();
+    }
 
     main.pushstr_newL("; // asst in .cu");
     main.NewLine();
@@ -3091,7 +3111,7 @@ void dsl_cpp_generator::generateCSRArrays(const char* gId, Function* func) {
   main.NewLine();
 
   main.pushstr_newL("printf(\"#nodes:%d\\n\",V);");
-  main.pushstr_newL("printf(\"#edges:\%d\\n\",E);");
+  main.pushstr_newL("printf(\"#edges:%d\\n\",E);");
   //~ main.pushstr_newL("printf(\"#srces:\%d\\n\",sourceSet.size()); /// TODO get from var");
 
   sprintf(strBuffer, "int* edgeLen = %s.getEdgeLen();",
@@ -3103,16 +3123,18 @@ void dsl_cpp_generator::generateCSRArrays(const char* gId, Function* func) {
   main.pushstr_newL("int *h_meta;");
   main.pushstr_newL("int *h_data;");
   main.pushstr_newL("int *h_src;");
-  main.pushstr_newL("int *h_weight;");
-  if(func->isRevMetaUsed)
-    main.pushstr_newL("int *h_rev_meta;");  //done only to handle PR since other doesn't uses it
+  if(func->getIsWeightUsed())
+    main.pushstr_newL("int *h_weight;");
+  if(func->getIsRevMetaUsed())
+    main.pushstr_newL("int *h_rev_meta;");  //done only to handle PR since other don't use it
   main.NewLine();
 
   main.pushstr_newL("h_meta = (int *)malloc( (V+1)*sizeof(int));");
   main.pushstr_newL("h_data = (int *)malloc( (E)*sizeof(int));");
   main.pushstr_newL("h_src = (int *)malloc( (E)*sizeof(int));");
-  main.pushstr_newL("h_weight = (int *)malloc( (E)*sizeof(int));");
-  if(func->isRevMetaUsed)
+  if(func->getIsWeightUsed()) 
+    main.pushstr_newL("h_weight = (int *)malloc( (E)*sizeof(int));");
+  if(func->getIsRevMetaUsed())
     main.pushstr_newL("h_rev_meta = (int *)malloc( (V+1)*sizeof(int));");
   main.NewLine();
 
@@ -3120,7 +3142,7 @@ void dsl_cpp_generator::generateCSRArrays(const char* gId, Function* func) {
   sprintf(strBuffer, "int temp = %s.indexofNodes[i];", gId);
   main.pushstr_newL(strBuffer);
   main.pushstr_newL("h_meta[i] = temp;");
-  if(func->isRevMetaUsed) {
+  if(func->getIsRevMetaUsed()) {
     sprintf(strBuffer, "temp = %s.rev_indexofNodes[i];", gId);
     main.pushstr_newL(strBuffer);
     main.pushstr_newL("h_rev_meta[i] = temp;");
@@ -3135,8 +3157,10 @@ void dsl_cpp_generator::generateCSRArrays(const char* gId, Function* func) {
   sprintf(strBuffer, "temp = %s.srcList[i];", gId);
   main.pushstr_newL(strBuffer);
   main.pushstr_newL("h_src[i] = temp;");
-  main.pushstr_newL("temp = edgeLen[i];");
-  main.pushstr_newL("h_weight[i] = temp;");
+  if(func->getIsWeightUsed()) {
+    main.pushstr_newL("temp = edgeLen[i];");
+    main.pushstr_newL("h_weight[i] = temp;");
+  }
   main.pushstr_newL("}");
   main.NewLine();
 
@@ -3302,9 +3326,11 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
     main.pushstr_newL(strBuffer);
     sprintf(strBuffer, "int* d_src;");
     main.pushstr_newL(strBuffer);
-    sprintf(strBuffer, "int* d_weight;");
-    main.pushstr_newL(strBuffer);
-    if(currentFunc->isRevMetaUsed) {
+    if(currentFunc->getIsWeightUsed()) { // checking if weight is used
+      sprintf(strBuffer, "int* d_weight;");
+      main.pushstr_newL(strBuffer);
+    }
+    if(currentFunc->getIsRevMetaUsed()) {  // checking if rev_meta is used
       sprintf(strBuffer, "int* d_rev_meta;");
       main.pushstr_newL(strBuffer);
     }
@@ -3315,8 +3341,9 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
     generateCudaMallocStr("d_meta", "int", "(1+V)");
     generateCudaMallocStr("d_data", "int", "(E)");
     generateCudaMallocStr("d_src", "int", "(E)");
-    generateCudaMallocStr("d_weight", "int", "(E)");
-    if(currentFunc->isRevMetaUsed)
+    if(currentFunc->getIsWeightUsed())  // checking if weight is used
+      generateCudaMallocStr("d_weight", "int", "(E)");
+    if(currentFunc->getIsRevMetaUsed()) // checking if rev_meta is used
       generateCudaMallocStr("d_rev_meta", "int", "(V+1)");
     generateCudaMallocStr("d_modified_next", "bool", "(V)");
 
@@ -3327,8 +3354,9 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
     generateCudaMemCpyStr("d_meta", "h_meta", "int", "V+1");
     generateCudaMemCpyStr("d_data", "h_data", "int", "E");
     generateCudaMemCpyStr("d_src", "h_src", "int", "E");
-    generateCudaMemCpyStr("d_weight", "h_weight", "int", "E");
-    if(currentFunc->isRevMetaUsed)
+    if(currentFunc->getIsWeightUsed())  // checking if weight is used
+      generateCudaMemCpyStr("d_weight", "h_weight", "int", "E");
+    if(currentFunc->getIsRevMetaUsed())  // checking if rev_meta is used
       generateCudaMemCpyStr("d_rev_meta", "h_rev_meta", "int", "(V+1)");
     main.NewLine();
 

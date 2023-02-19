@@ -418,14 +418,14 @@ class Function:public ASTNode
   bool hasReturn;                          
   int funcType ;
 
+  list<Identifier*> doubleBufferVars; // the propnodes which need to be double buffered
 
+  bool isMetaUsed; // if d_meta is used in function
+  bool isDataUsed; // if d_data is used in function
+  bool isSrcUsed; // if d_src is used in function
+  bool isWeightUsed; // if d_weight is used in function
+  bool isRevMetaUsed; // if d_rev_meta is used in function
   public:
-  bool isMetaUsed = false; // if d_meta is used in function
-  bool isDataUsed = false; // if d_data is used in function
-  bool isSrcUsed = false; // if d_src is used in function
-  bool isWeightUsed = false; // if d_weight is used in function
-  bool isRevMetaUsed = false; // if d_rev_meta is used in function
-  bool isModifiedNextUsed = false; // if d_modified_next is used in function 
   Function()
   { 
     functionId=NULL;
@@ -433,6 +433,11 @@ class Function:public ASTNode
     funcType = 0;
     initialLockDecl = false;
     createSymbTab();
+    isMetaUsed = false;
+    isDataUsed = false;
+    isSrcUsed = false; 
+    isWeightUsed = false;
+    isRevMetaUsed = false;
   }
 
   static Function* createFunctionNode(Identifier* funcId,list<formalParam*> paramList)
@@ -551,7 +556,55 @@ class Function:public ASTNode
        return hasReturn ;
      }   
 
+   
+    bool getIsMetaUsed() {
+      return isMetaUsed;
+    }
 
+    void setIsMetaUsed() {
+      this->isMetaUsed = true;
+    }
+
+    bool getIsDataUsed() {
+      return isDataUsed;
+    }
+
+    void setIsDataUsed() {
+      this->isDataUsed = true;
+    }
+
+    bool getIsSrcUsed() {
+      return isSrcUsed;
+    }
+
+    void setIsSrcUsed() {
+      this->isSrcUsed = true;
+    }
+
+    bool getIsWeightUsed() {
+      return isWeightUsed;
+    }
+
+    void setIsWeightUsed() {
+      this->isWeightUsed = true;
+    }
+
+    bool getIsRevMetaUsed() {
+      return isRevMetaUsed;
+    }
+
+    void setRevMetaUsed() {
+      this->isRevMetaUsed = true;
+    }
+
+    void addDoubleBufferVar(Identifier* var) {
+      doubleBufferVars.push_back(var);
+    }
+
+    list<Identifier*> getDoubleBufferVars() {
+      return doubleBufferVars;
+    }
+  
 };
 
 class Type:public ASTNode
@@ -1907,10 +1960,14 @@ class fixedPointStmt:public statement
     Expression* assocExpr;
     
     list<Identifier*> usedVars;
+    list<Identifier*> doubleBufferVars; // the propnodes which need to be double buffered
 
+    bool isMetaUsed; // if d_meta is used in forall
+    bool isDataUsed; // if d_data is used in forall
+    bool isSrcUsed; // if d_src is used in forall
+    bool isWeightUsed; // if d_weight is used in forall
+    bool isRevMetaUsed; // if d_rev_meta is used in forall
     public:
-    bool isRevMetaUsed = false;
-
     forallStmt()
     {
       iterator=NULL;
@@ -1924,6 +1981,11 @@ class fixedPointStmt:public statement
       isSourceId=false;
       createSymbTab();
       filterExprAssoc = false; 
+      isMetaUsed = false;
+      isDataUsed = false;
+      isSrcUsed = false;
+      isWeightUsed = false;
+      isRevMetaUsed = false;
     }
 
     static forallStmt* createforallStmt(Identifier* iterator,Identifier* sourceGraph,proc_callExpr* extractElemFunc,statement* body,Expression* filterExpr,bool isforall)
@@ -2115,6 +2177,54 @@ class fixedPointStmt:public statement
          }
     }
 
+    bool getIsMetaUsed() {
+      return isMetaUsed;
+    }
+
+    void setIsMetaUsed() {
+      this->isMetaUsed = true;
+    }
+
+    bool getIsDataUsed() {
+      return isDataUsed;
+    }
+
+    void setIsDataUsed() {
+      this->isDataUsed = true;
+    }
+
+    bool getIsSrcUsed() {
+      return isSrcUsed;
+    }
+
+    void setIsSrcUsed() {
+      this->isSrcUsed = true;
+    }
+
+    bool getIsWeightUsed() {
+      return isWeightUsed;
+    }
+
+    void setIsWeightUsed() {
+      this->isWeightUsed = true;
+    }
+
+    bool getIsRevMetaUsed() {
+      return isRevMetaUsed;
+    }
+
+    void setRevMetaUsed() {
+      this->isRevMetaUsed = true;
+    }
+
+    void addDoubleBufferVar(Identifier* var) {
+      doubleBufferVars.push_back(var);
+    }
+
+    list<Identifier*> getDoubleBufferVars() {
+      return doubleBufferVars;
+    }
+  
 };
   class reductionCall:public ASTNode
   {

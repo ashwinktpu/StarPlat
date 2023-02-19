@@ -107,5 +107,5 @@ clean_windows:
 
 clean:
 #~ 	rm -f $(EXPENDABLES)
-	rm bin/*.o StarPlat StarPlat.exe
+	rm bin/*.o StarPlat
 	rmdir bin
