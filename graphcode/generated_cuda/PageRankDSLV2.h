@@ -19,13 +19,9 @@ __device__ int maxIter ;
 
 __device__ float num_nodes ; // DEVICE ASSTMENT in .h
 
-; // DEVICE ASSTMENT in .h
-
 __device__ float diff ; // DEVICE ASSTMENT in .h
 
-; // DEVICE ASSTMENT in .h
-
-__global__ void Compute_PR_kernel(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,float* d_pageRank,float* d_pageRank_nxt){ // BEGIN KER FUN via ADDKERNEL
+__global__ void Compute_PR_kernel(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,float* d_pageRank,float* d_pageRank_nxt){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
   if(v >= V) return;

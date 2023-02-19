@@ -2996,7 +2996,6 @@ int main(int argc,char **argv)
 	  drAnalyser.analyse(frontEndContext.getFuncList());
 
 	  deviceVarsAnalyser dvAnalyser;
-	  cpp_backend.setOptimized();
 	  dvAnalyser.analyse(frontEndContext.getFuncList());
 	  cpp_backend.setOptimized();
 	}

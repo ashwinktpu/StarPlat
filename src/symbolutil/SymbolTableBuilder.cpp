@@ -354,18 +354,26 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                        }
                    }
                }
-              else {
+              else { // if for all statement has a proc call
                 proc_callExpr* extractElemFunc = forAll->getExtractElementFunc();
                 if(extractElemFunc != NULL) {
                   Identifier* iteratorMethodId = extractElemFunc->getMethodId();
                   string iteratorMethodString(iteratorMethodId->getIdentifier());
-                  if(iteratorMethodString.compare("nodes_to") == 0) {
-                    forallStmt* parentForall = (forallStmt*) parallelConstruct.back();
-                    parentForall->isRevMetaUsed = true;
-                    currentFunc->isRevMetaUsed = true;
+                  if(iteratorMethodString.compare("nodes_to") == 0) { // if the proc call is nodes_to, d_rev_meta is needed
+                    forallStmt* parentForall = (forallStmt*) parallelConstruct[0];
+                    parentForall->setRevMetaUsed();
+                    currentFunc->setRevMetaUsed();
                   }
                 }
               }
+
+              cout << "Parent of forAll: \n";
+              cout << ((forallStmt*)parallelConstruct[0])->getIsMetaUsed() << endl;
+              cout << ((forallStmt*)parallelConstruct[0])->getIsDataUsed() << endl;
+              cout << ((forallStmt*)parallelConstruct[0])->getIsSrcUsed() << endl;
+              cout << ((forallStmt*)parallelConstruct[0])->getIsWeightUsed() << endl;
+              cout << ((forallStmt*)parallelConstruct[0])->getIsRevMetaUsed() << endl;
+
 
               //~ init_curr_SymbolTable(forAll);
     
@@ -547,7 +555,8 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                parallelConstruct.push_back(iBFS);
                
              }     
-          
+          currentFunc->setIsWeightUsed(); // d_weight is used in itrbfs
+
           buildForStatements(iBFS->getBody());
           iterateReverseBFS* iRevBFS = iBFS->getRBFS();
           iRevBFS->addAccumulateAssignment();

@@ -37,9 +37,6 @@ usedVariables deviceVarsAnalyser::getVarsExpr(Expression *expr)
         result = getVarsExpr(expr->getLeft());
         result.merge(getVarsExpr(expr->getRight()));
     }
-    else if(expr->isProcCallExpr()) {
-
-    }
     return result;
 }
 
@@ -146,8 +143,6 @@ usedVariables deviceVarsAnalyser::getVarsForAll(forallStmt *stmt)
             if(arg->getExpr() != nullptr) 
                 currVars.merge(getVarsExpr(arg->getExpr()));
         }
-        stmt->isRevMetaUsed = true;
-        stmt->isSrcUsed = true;
   }
   else if(!stmt->isSourceField())
   {
