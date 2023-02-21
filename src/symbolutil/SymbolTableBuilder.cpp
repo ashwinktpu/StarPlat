@@ -372,7 +372,8 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
 
                if((backend.compare("omp")==0 || backend.compare("cuda")==0 || backend.compare("openACC")==0 )  || (backend.compare("mpi")==0) &&forAll->isForall())
                     {
-                        parallelConstruct.pop_back();
+                       if(forAll->isForall())
+                          parallelConstruct.pop_back();
                     }
               break;
           //-----------------------------------------------------------------------------------------------------------------
