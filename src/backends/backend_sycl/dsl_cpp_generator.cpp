@@ -756,7 +756,7 @@ namespace spsycl
 
         if (isDevice)
         {
-            main.pushstr_newL("});");
+            main.pushstr_newL(";});");
             main.pushstr_newL("}).wait(); //InitIndexDevice");
             main.NewLine();
         }
@@ -1195,7 +1195,7 @@ namespace spsycl
 
                     sprintf(strBuffer, "for (; i < V; i += stride) %s[i] = false", modifiedVarNext);
                     main.pushString(strBuffer);
-                    main.pushstr_newL("});");
+                    main.pushstr_newL(";});");
                     main.pushstr_newL("}).wait();");
                     main.NewLine();
 
@@ -1221,17 +1221,18 @@ namespace spsycl
                     main.pushstr_newL("Q.submit([&](handler &h){ h.parallel_for(NUM_THREADS, [=](id<1> i){");
                     sprintf(strBuffer, "for (; i < V; i += stride) d_%s[i] = %s[i]", modifiedVar, modifiedVarNext);
                     main.pushString(strBuffer);
-                    main.pushstr_newL("});");
+                    main.pushstr_newL(";});");
                     main.pushstr_newL("}).wait();");
                     main.NewLine();
 
                     main.pushstr_newL("Q.submit([&](handler &h){ h.parallel_for(NUM_THREADS, [=](id<1> i){");
                     sprintf(strBuffer, "for (; i < V; i += stride) %s[i] = false", modifiedVarNext);
                     main.pushString(strBuffer);
-                    main.pushstr_newL("});");
+                    main.pushstr_newL(";});");
                     main.pushstr_newL("}).wait();");
                     main.NewLine();
 
+                    main.pushstr_newL("k++;");
                     Expression *initializer = dependentId->getSymbolInfo()->getId()->get_assignedExpr();
                     assert(initializer->isBooleanLiteral());
                 }
@@ -1383,7 +1384,7 @@ namespace spsycl
                     if (affected_Id->getSymbolInfo()->getId()->get_fp_association())
                     {
                         char *fpId = affected_Id->getSymbolInfo()->getId()->get_fpId();
-                        sprintf(strBuffer, "dev_%s = %s ;", fpId, "false");
+                        sprintf(strBuffer, "*dev_%s = %s ;", fpId, "false");
                         std::cout << "FPID ========> " << fpId << '\n';
                         main.pushstr_newL(strBuffer);
                         //~ targetFile.pushstr_newL("}");  // needs to be removed
@@ -1460,7 +1461,7 @@ namespace spsycl
         std::cout << "varName:" << inVarName << '\n';
         generateExpr(exprAssigned, isMainFile); // asssuming int/float const literal // OUTPUTS INIT VALUE
 
-        main.pushstr_newL("});");
+        main.pushstr_newL(";});");
         main.pushstr_newL("}).wait();");
         main.NewLine();
     }
@@ -1609,7 +1610,7 @@ namespace spsycl
         }
         for (Identifier *iden : vars)
         {
-            sprintf(strBuffer, "free(d_%s);", iden->getIdentifier());
+            sprintf(strBuffer, "free(d_%s, Q);", iden->getIdentifier());
             main.pushstr_newL(strBuffer);
         }
         main.NewLine();
