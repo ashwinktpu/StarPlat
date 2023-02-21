@@ -96,23 +96,23 @@ void Compute_SSSP(graph &g, int *dist, int src)
   Q.submit([&](handler &h)
            { h.parallel_for(NUM_THREADS, [=](id<1> i)
                             {
-    for (; i < V; i += stride) d_dist[i] = (int)INT_MAX }); })
+    for (; i < V; i += stride) d_dist[i] = (int)INT_MAX; }); })
       .wait();
 
   Q.submit([&](handler &h)
            { h.parallel_for(NUM_THREADS, [=](id<1> i)
                             {
-  for (; i < V; i += stride) d_modified[i] = (bool)false }); })
+  for (; i < V; i += stride) d_modified[i] = (bool)false; }); })
       .wait();
 
   Q.submit([&](handler &h)
            { h.single_task([=]()
-                           { d_modified[src] = (bool)true }); })
+                           { d_modified[src] = (bool)true; }); })
       .wait(); // InitIndexDevice
 
   Q.submit([&](handler &h)
            { h.single_task([=]()
-                           { d_dist[src] = (int)0 }); })
+                           { d_dist[src] = (int)0; }); })
       .wait(); // InitIndexDevice
 
   bool finished = false; // asst in main
@@ -122,7 +122,7 @@ void Compute_SSSP(graph &g, int *dist, int src)
   Q.submit([&](handler &h)
            { h.parallel_for(NUM_THREADS, [=](id<1> i)
                             {
-for (; i < V; i += stride) d_modified_next[i] = false }); })
+for (; i < V; i += stride) d_modified_next[i] = false; }); })
       .wait();
 
   int k = 0; // #fixpt-Iterations
@@ -153,7 +153,7 @@ if(d_dist[v]!= INT_MAX && d_dist[nbr] > dist_new)
   atomic_ref<int, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data(d_dist[nbr]);
   atomic_data.fetch_min(dist_new);
   d_modified_next[nbr] = modified_new;
-  dev_finished = false ;
+  *dev_finished = false ;
 }
 
 } //  end FOR NBR ITR. TMP FIX!
@@ -169,26 +169,27 @@ if(d_dist[v]!= INT_MAX && d_dist[nbr] > dist_new)
     Q.submit([&](handler &h)
              { h.parallel_for(NUM_THREADS, [=](id<1> i)
                               {
-for (; i < V; i += stride) d_modified[i] = d_modified_next[i] }); })
+for (; i < V; i += stride) d_modified[i] = d_modified_next[i]; }); })
         .wait();
 
     Q.submit([&](handler &h)
              { h.parallel_for(NUM_THREADS, [=](id<1> i)
                               {
-for (; i < V; i += stride) d_modified_next[i] = false }); })
+for (; i < V; i += stride) d_modified_next[i] = false; }); })
         .wait();
 
+    k++;
   } // END FIXED POINT
 
   // cudaFree up!! all propVars in this BLOCK!
-  free(d_modified);
+  free(d_modified, Q);
 
   Q.submit([&](handler &h)
            { h.memcpy(dist, d_dist, sizeof(int) * (V)); })
       .wait();
-
   for (int i = 0; i < V; i++)
     std::cout << i << " " << dist[i] << std::endl;
+  std::cout << "Number of rounds required for convergence: " << k << std::endl;
 
 } // end FUN
 
@@ -198,7 +199,8 @@ int main(int argc, char **argv)
   G1.parseGraph();
   int src = 0;
   int *dist;
-  Compute_TC(G1);
+  dist = (int *)malloc(G1.num_nodes() * sizeof(int));
+  Compute_SSSP(G1, dist, src);
   return 0;
 }
 #endif
