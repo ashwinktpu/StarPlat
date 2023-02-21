@@ -1145,22 +1145,255 @@ namespace spsycl
 
     void dsl_cpp_generator::generateFixedPoint(fixedPointStmt *fixedPointConstruct, bool isMainFile)
     {
-        main.pushstr_newL("// Generate fixed point statement");
+        std::cout << "IN FIX PT" << '\n';
+        char strBuffer[1024];
+        Expression *convergeExpr = fixedPointConstruct->getDependentProp();
+        Identifier *fixedPointId = fixedPointConstruct->getFixedPointId();
+
+        assert(convergeExpr->getExpressionFamily() == EXPR_UNARY ||
+               convergeExpr->getExpressionFamily() == EXPR_ID);
+
+        Identifier *dependentId = NULL;
+        //~ bool isNot = false;
+        assert(convergeExpr->getExpressionFamily() == EXPR_UNARY || convergeExpr->getExpressionFamily() == EXPR_ID);
+
+        if (convergeExpr->getExpressionFamily() == EXPR_UNARY)
+        {
+            if (convergeExpr->getUnaryExpr()->getExpressionFamily() == EXPR_ID)
+            {
+                dependentId = convergeExpr->getUnaryExpr()->getId();
+                //~ isNot = true;
+            }
+        }
+
+        const char *modifiedVar = dependentId->getIdentifier();
+        char *fixPointVar = fixedPointId->getIdentifier();
+
+        //~ const char *modifiedVarType = convertToCppType(dependentId->getSymbolInfo()->getType()->getInnerTargetType()); // BOTH are of type bool
+        const char *fixPointVarType = convertToCppType(fixedPointId->getSymbolInfo()->getType());
+
+        main.pushstr_newL("// FIXED POINT variables");
+        // char modifiedVarPrev[80] = "d_";
+        char modifiedVarNext[80] = "d_";
+
+        // strcat(modifiedVarPrev, modifiedVar);strcat(modifiedVarPrev, "_prev");
+        strcat(modifiedVarNext, modifiedVar);
+        strcat(modifiedVarNext, "_next");
+
+        if (convergeExpr->getExpressionFamily() == EXPR_ID)
+            dependentId = convergeExpr->getId();
+
+        if (dependentId != NULL)
+        {
+            if (dependentId->getSymbolInfo()->getType()->isPropType())
+            {
+                if (dependentId->getSymbolInfo()->getType()->isPropNodeType())
+                {
+                    main.pushstr_newL("//BEGIN FIXED POINT");
+
+                    main.pushstr_newL("Q.submit([&](handler &h){ h.parallel_for(NUM_THREADS, [=](id<1> i){");
+
+                    sprintf(strBuffer, "for (; i < V; i += stride) %s[i] = false", modifiedVarNext);
+                    main.pushString(strBuffer);
+                    main.pushstr_newL("});");
+                    main.pushstr_newL("}).wait();");
+                    main.NewLine();
+
+                    main.pushstr_newL("int k=0; // #fixpt-Iterations");
+                    sprintf(strBuffer, "while(!%s) {", fixPointVar);
+                    main.pushstr_newL(strBuffer);
+
+                    std::cout << "Size::" << graphId.size() << '\n';
+                    main.NewLine();
+                    sprintf(strBuffer, "%s = %s", fixPointVar, "true");
+                    main.pushString(strBuffer);
+                    main.pushstr_newL(";");
+
+                    generateCudaMemCpySymbol(fixPointVar, fixPointVarType, true);
+
+                    if (fixedPointConstruct->getBody()->getTypeofNode() != NODE_BLOCKSTMT)
+                        generateStatement(fixedPointConstruct->getBody(), isMainFile);
+                    else
+                        generateBlock((blockStatement *)fixedPointConstruct->getBody(), false, isMainFile);
+
+                    generateCudaMemCpySymbol(fixPointVar, fixPointVarType, false);
+
+                    main.pushstr_newL("Q.submit([&](handler &h){ h.parallel_for(NUM_THREADS, [=](id<1> i){");
+                    sprintf(strBuffer, "for (; i < V; i += stride) d_%s[i] = %s[i]", modifiedVar, modifiedVarNext);
+                    main.pushString(strBuffer);
+                    main.pushstr_newL("});");
+                    main.pushstr_newL("}).wait();");
+                    main.NewLine();
+
+                    main.pushstr_newL("Q.submit([&](handler &h){ h.parallel_for(NUM_THREADS, [=](id<1> i){");
+                    sprintf(strBuffer, "for (; i < V; i += stride) %s[i] = false", modifiedVarNext);
+                    main.pushString(strBuffer);
+                    main.pushstr_newL("});");
+                    main.pushstr_newL("}).wait();");
+                    main.NewLine();
+
+                    Expression *initializer = dependentId->getSymbolInfo()->getId()->get_assignedExpr();
+                    assert(initializer->isBooleanLiteral());
+                }
+            }
+        }
+        main.pushstr_newL("} // END FIXED POINT");
+        main.NewLine();
     }
 
     void dsl_cpp_generator::generateReductionCallStmt(reductionCallStmt *stmt, bool isMainFile)
     {
-        // reductionCall* reduceCall = stmt->getReducCall();
-        // char strBuffer[1024];
+        reductionCall *reduceCall = stmt->getReducCall();
+        char strBuffer[1024];
 
-        // if (reduceCall->getReductionType() == REDUCE_MIN)
-        // {
-        //     if (stmt->isListInvolved())
-        //     {
+        if (reduceCall->getReductionType() == REDUCE_MIN)
+        {
+            if (stmt->isListInvolved())
+            {
+                list<argument *> argList = reduceCall->getargList();
+                list<ASTNode *> leftList = stmt->getLeftList();
+                list<ASTNode *> rightList = stmt->getRightList();
+                printf("LEFT LIST SIZE %lu \n", leftList.size());
 
-        //     }
-        // }
-        main.pushstr_newL("// Generate reduction call statement");
+                main.space();
+                if (stmt->getAssignedId()->getSymbolInfo()->getType()->isPropType())
+                {
+                    Type *type = stmt->getAssignedId()->getSymbolInfo()->getType();
+
+                    main.pushstr_space(convertToCppType(type->getInnerTargetType()));
+                }
+                sprintf(strBuffer, "%s_new", stmt->getAssignedId()->getIdentifier());
+                std::cout << "VAR:" << stmt->getAssignedId()->getIdentifier() << '\n';
+                main.pushString(strBuffer);
+
+                list<argument *>::iterator argItr;
+                argItr = argList.begin();
+                argItr++;
+                main.pushString(" = ");
+
+                generateExpr((*argItr)->getExpr(), isMainFile);
+                main.pushstr_newL(";");
+                list<ASTNode *>::iterator itr1;
+                list<ASTNode *>::iterator itr2;
+                itr2 = rightList.begin();
+                itr1 = leftList.begin();
+                itr1++;
+
+                for (; itr1 != leftList.end(); itr1++)
+                {
+                    ASTNode *node = *itr1;
+                    ASTNode *node1 = *itr2;
+
+                    if (node->getTypeofNode() == NODE_ID)
+                    {
+                        main.pushstr_space(convertToCppType(((Identifier *)node)->getSymbolInfo()->getType()));
+                        sprintf(strBuffer, "%s_new", ((Identifier *)node)->getIdentifier());
+                        main.pushString(strBuffer);
+                        main.pushString(" = ");
+                        generateExpr((Expression *)node1, isMainFile);
+                    }
+                    if (node->getTypeofNode() == NODE_PROPACCESS)
+                    {
+                        PropAccess *p = (PropAccess *)node;
+                        Type *type = p->getIdentifier2()->getSymbolInfo()->getType();
+                        if (type->isPropType())
+                        {
+                            main.pushstr_space(convertToCppType(type->getInnerTargetType()));
+                        }
+
+                        sprintf(strBuffer, "%s_new", p->getIdentifier2()->getIdentifier());
+                        main.pushString(strBuffer);
+                        main.pushString(" = ");
+                        generateExpr((Expression *)node1, isMainFile);
+                        main.pushstr_newL(";");
+                    }
+                    itr2++;
+                }
+
+                main.pushString("if(");
+                sprintf(strBuffer, "d_%s[v]!= INT_MAX && ", stmt->getAssignedId()->getIdentifier());
+                main.pushString(strBuffer);
+                generate_exprPropId(stmt->getTargetPropId(), isMainFile);
+
+                sprintf(strBuffer, " > %s_new)", stmt->getAssignedId()->getIdentifier());
+                main.pushstr_newL(strBuffer);
+                main.pushstr_newL("{"); // added for testing then doing atomic min.
+                                        /* storing the old value before doing a atomic operation on the node
+                                         * property */
+
+                if (stmt->isTargetId())
+                {
+                    Identifier *targetId = stmt->getTargetId();
+                    main.pushstr_space(convertToCppType(targetId->getSymbolInfo()->getType()));
+                    main.pushstr_space("oldValue");
+                    main.pushstr_space("=");
+                    generate_exprIdentifier(stmt->getTargetId(), isMainFile);
+                    main.pushstr_newL(";");
+                }
+                else
+                {
+                    PropAccess *targetProp = stmt->getTargetPropId();
+                    Type *type = targetProp->getIdentifier2()->getSymbolInfo()->getType();
+                    if (type->isPropType())
+                    {
+                        // targetFile.pushstr_space(convertToCppType(type->getInnerTargetType()));
+                        // targetFile.pushstr_space("oldValue");
+                        // targetFile.pushstr_space("=");
+                        // generate_exprPropId(stmt->getTargetPropId(), isMainFile);
+                        // targetFile.pushstr_newL(";");
+                    }
+                }
+
+                main.pushString("atomic_ref<int, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data(");
+                generate_exprPropId(stmt->getTargetPropId(), isMainFile);
+                main.pushstr_newL(");");
+                main.pushString("atomic_data.fetch_min(");
+                sprintf(strBuffer, "%s_new);", stmt->getAssignedId()->getIdentifier());
+                main.pushstr_newL(strBuffer);
+
+                itr1 = leftList.begin();
+                itr1++;
+                for (; itr1 != leftList.end(); itr1++)
+                {
+                    ASTNode *node = *itr1;
+                    Identifier *affected_Id = NULL;
+                    if (node->getTypeofNode() == NODE_ID)
+                    {
+                        generate_exprIdentifier((Identifier *)node, isMainFile);
+                    }
+                    if (node->getTypeofNode() == NODE_PROPACCESS)
+                    {
+                        generate_exprPropId((PropAccess *)node, isMainFile);
+                    }
+                    main.space();
+                    main.pushstr_space("=");
+                    if (node->getTypeofNode() == NODE_ID)
+                    {
+                        generate_exprIdentifier((Identifier *)node, isMainFile);
+                        affected_Id = (Identifier *)node;
+                    }
+                    if (node->getTypeofNode() == NODE_PROPACCESS) // here
+                    {
+                        generate_exprIdentifier(((PropAccess *)node)->getIdentifier2(), isMainFile);
+                        affected_Id = ((PropAccess *)node)->getIdentifier2();
+                    }
+                    main.pushString("_new");
+                    main.pushstr_newL(";");
+
+                    if (affected_Id->getSymbolInfo()->getId()->get_fp_association())
+                    {
+                        char *fpId = affected_Id->getSymbolInfo()->getId()->get_fpId();
+                        sprintf(strBuffer, "dev_%s = %s ;", fpId, "false");
+                        std::cout << "FPID ========> " << fpId << '\n';
+                        main.pushstr_newL(strBuffer);
+                        //~ targetFile.pushstr_newL("}");  // needs to be removed
+                        //~ targetFile.pushstr_newL("}");  // needs to be removed
+                    }
+                }
+                // targetFile.pushstr_newL("}");
+                main.pushstr_newL("}"); // added for testing condition..then atomicmin.
+            }
+        }
     }
 
     void dsl_cpp_generator::generateReductionOpStmt(reductionCallStmt *stmt, bool isMainFile)
@@ -1376,7 +1609,7 @@ namespace spsycl
         }
         for (Identifier *iden : vars)
         {
-            sprintf(strBuffer, "cudaFree(d_%s);", iden->getIdentifier());
+            sprintf(strBuffer, "free(d_%s);", iden->getIdentifier());
             main.pushstr_newL(strBuffer);
         }
         main.NewLine();
