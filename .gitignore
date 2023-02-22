@@ -13,4 +13,7 @@ src/bin/
 ../.history/*
 StarPlat
 StarPlat.exe
-
+debug.txt
+dump
+*.pdf
+To_be_done.txt
