@@ -13,15 +13,9 @@ void count_nodes(graph& g);
 
 
 
-; // DEVICE ASSTMENT in .h
-
 __device__ int y ; // DEVICE ASSTMENT in .h
 
-; // DEVICE ASSTMENT in .h
-
-; // DEVICE ASSTMENT in .h
-
-__global__ void count_nodes_kernel(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_prop){ // BEGIN KER FUN via ADDKERNEL
+__global__ void count_nodes_kernel(int V, int E,int* d_prop){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
   if(v >= V) return;

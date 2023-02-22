@@ -270,7 +270,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                }
                if(depId->getSymbolInfo()!=NULL)
                  {  
-                     
+                     currentFunc->addDoubleBufferVar(depId);
                      Identifier* tableId = depId->getSymbolInfo()->getId();
                      tableId->set_redecl(); //explained in the ASTNodeTypes
                      tableId->set_fpassociation(); //explained in the ASTNodeTypes
@@ -374,14 +374,6 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                   }
                 }
               }
-
-              cout << "Parent of forAll: \n";
-              cout << ((forallStmt*)parallelConstruct[0])->getIsMetaUsed() << endl;
-              cout << ((forallStmt*)parallelConstruct[0])->getIsDataUsed() << endl;
-              cout << ((forallStmt*)parallelConstruct[0])->getIsSrcUsed() << endl;
-              cout << ((forallStmt*)parallelConstruct[0])->getIsWeightUsed() << endl;
-              cout << ((forallStmt*)parallelConstruct[0])->getIsRevMetaUsed() << endl;
-
 
               //~ init_curr_SymbolTable(forAll);
     
