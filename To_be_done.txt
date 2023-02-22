@@ -1,13 +1,22 @@
 Analysis:
-    To analyse and figure out the formal parameters required for parallel computation.
+    
+1.  To analyse and figure out the formal parameters required for parallel computation.
     Stop generating the unnecessary formal parameters.
 
-    d_meta          - yet to be done
-    d_data          - fixed for all occurrences
-    d_src           - fixed for all occurrences
-    d_weight        - fixed for all occurrences
-    d_rev_meta      - fixed for all occurrences
-    d_var_nxt       - fixed function parameters and function calls. Yet to stop generating.
+    d_meta          - fixed for all occurrences in CUDA
+    d_data          - fixed for all occurrences in CUDA
+    d_src           - fixed for all occurrences in CUDA
+    d_weight        - fixed for all occurrences in CUDA
+    d_rev_meta      - fixed for all occurrences in CUDA
+    d_var_nxt       - fixed for all occurrences in CUDA (Assuming every fixedpoint dependend variable will trigger double buffering)
 
     Testing:
         Yet to be done
+
+2.  For many algorithms, a forall loop is nested inside in a while/do-while loop. 
+    Most of the arrays/variables can be "copied-in" at the beginning of the while loop and "copied out" at the end of the while loop, 
+    because they are not used by the CPU anhywhere inside the while loop. 
+    However, some variables/arrays (flags etc.) are also used by CPU within the while loop. 
+    Analysis has to be done to find out which data structures are used only within the parallel for-loop GPU-regions in the while loop;
+    and which data are also used outside any parallel for-loop regions (CPU region) inside the while loop. 
+    These varibles that are used by CPU have to be copied out after each iteration of for-loop

@@ -1,230 +1,134 @@
-fileName ../graphcode/staticDSLCodes/sssp_dslV2
+fileName ../graphcode/temp_algo
 Backend Target cuda
 Type: function
 '('Graph Type
 
-','
-Node Property'<'Type: int'>'
-','
-Edge Property'<'Type: int'>'
-','
-Node Type
 ')'currentFuncType check!!0
 tempID g funccount 0
 
-'{'Node Property'<'Type: bool'>'
+'{'Type: int
+';'Type: int
+';'Type: int
+';'Type: int
+
+'='
+';'Node Property'<'Type: int'>'
+';'
+'='
+'+'';'
+'='
 ';''.''('
 '='
-+Infinity: INF','
-
-'='
-Type Bool: False')'';'TYPE OF NODE OF STATEMENT1'.'
-'='
-Type Bool: True';''.'
-'='
-';'Type: bool
-
-'='
-Type Bool: False';'Keyword fixedPoint
-Keyword until'('
-':'
-'!'')''{'Keyword-forall: forall'('
+'('
+OR_OP
+')'')'';'TYPE OF NODE OF STATEMENT1Keyword-forall: forall'('
 Keyword in 
-'.''('')''.'filter'('
-EQ_OP
-Type Bool: True')'')''{'Keyword-forall: forall'('
-Keyword in 
-'.''('')'')''{'Edge Type
+'.''('')'')'
+'{''.'
+'='
+';''}'ForallStmt created
+0
+0
+0
+0
+0
 
-'='
-'.''('','
-')'';''<''.'','
-'.''>'
-'='
-'<'Min'(''.'','
-'.'
-'+'
-'.'')'','
-Type Bool: True'>'';''}'ForallStmt created
-0
-0
-0
-0
-0
-'}'CHECK FILTER TYPE1
-ForallStmt created
-0
-0
-0
-0
-0
-'}'
-'}'
-error val 0
+'}'error val 0
 at 1
-ANAME1:6
-ANAME2:2
-		Setting device bool
-ANAME1:6
-ANAME2:2
-		Setting device bool
 FORALL par   NAME1:6
-FORALL ParPar NAME2:11
-FORALL ParParPar NAME3:6
-Parent of forAll: 
-0
-0
-0
-0
-0
-FORALL par   NAME1:6
-FORALL ParPar NAME2:18
-FORALL ParParPar NAME3:6
-Parent of forAll: 
-1
-1
-0
-0
-0
+FORALL ParPar NAME2:2
+		TO Set DEVICE BOOL
+		ON: DEV ASST
+ANAME1:6
+ANAME2:18
 at 2
-Function Compute_SSSP
+Function count_nodes
 	{
 		Declaration
-		Procedure Call
-		Assignment
-		Assignment
 		Declaration
-		Fixed Point
+		Declaration
+		Declaration
+		Declaration
+		Assignment
+		Assignment
+		Procedure Call
+		For all
 			{
-				For all
-					{
-						For all
-							{
-								Declaration
-								Reduction
-							}
-					}
+				Assignment
 			}
 	}
-Initializing 0x55925bb65ff0 6
-Initializing 0x55925bb66200 7
-Initializing 0x55925bb66860 17
-Initializing 0x55925bb66a80 8
-Initializing 0x55925bb66cd0 8
-Initializing 0x55925bb66ed0 7
-Initializing 0x55925bb693a0 11
-Initializing 0x55925bb67180 6
-Initializing 0x55925bb691f0 18
-fpId: finished
-Analysing 0x55925bb65ff0 6
-Analysing 0x55925bb66200 7
-Analysing 0x55925bb66860 17
-Analysing 0x55925bb66a80 8
-Analysing 0x55925bb66cd0 8
-Analysing 0x55925bb66ed0 7
-Analysing 0x55925bb693a0 11
-Analysing 0x55925bb67180 6
-Analysing 0x55925bb691f0 18
-Analysing 0x55925bb67180 6
-Analysing 0x55925bb691f0 18
-Transfering 0x55925bb66200 7
-Transfering 0x55925bb66860 17
-Transfering 0x55925bb66a80 8
-Transfering 0x55925bb66cd0 8
-Transfering 0x55925bb66ed0 7
-Transfering 0x55925bb693a0 11
-Transfering 0x55925bb67180 6
-Transfering 0x55925bb691f0 18
+Initializing 0x560b34f87a20 6
+Initializing 0x560b34f882d0 7
+Initializing 0x560b34f87bf0 7
+Initializing 0x560b34f87d70 7
+Initializing 0x560b34f87ef0 7
+Initializing 0x560b34f880f0 7
+Initializing 0x560b34f88600 8
+Initializing 0x560b34f88830 8
+Initializing 0x560b34f88f30 17
+Initializing 0x560b34f895f0 18
+Analysing 0x560b34f87a20 6
+Analysing 0x560b34f882d0 7
+Analysing 0x560b34f87bf0 7
+Analysing 0x560b34f87d70 7
+Analysing 0x560b34f87ef0 7
+Analysing 0x560b34f880f0 7
+Analysing 0x560b34f88600 8
+Analysing 0x560b34f88830 8
+Analysing 0x560b34f88f30 17
+Analysing 0x560b34f895f0 18
+Transfering 0x560b34f882d0 7
+Transfering 0x560b34f87bf0 7
+Transfering 0x560b34f87d70 7
+Transfering 0x560b34f87ef0 7
+Transfering 0x560b34f880f0 7
+Transfering 0x560b34f88600 8
+Transfering 0x560b34f88830 8
+Transfering 0x560b34f88f30 17
+Transfering 0x560b34f895f0 18
 {
 	Declaration
+	Declaration
+	Declaration
+	Declaration
+	Declaration
+	Assignment
+	Assignment
 	Tranfer statement
-		dist CPU to GPU
-	Tranfer statement
-		modified CPU to GPU
+		prop CPU to GPU
 	Procedure Call
 	Tranfer statement
-		modified GPU to CPU
-	Assignment
-	Tranfer statement
-		dist GPU to CPU
-	Assignment
-	Declaration
-	Tranfer statement
-		dist CPU to GPU
-	Fixed Point
+		y CPU to GPU
+	For all
 		{
-			Tranfer statement
-				wt CPU to GPU
-			Tranfer statement
-				finished CPU to GPU
-			Tranfer statement
-				modified CPU to GPU
-			For all
-				{
-					For all
-						{
-							Declaration
-							Reduction
-						}
-				}
-			Tranfer statement
-				modified GPU to CPU
-			Tranfer statement
-				finished GPU to CPU
+			Assignment
 		}
-	Tranfer statement
-		dist CPU to GPU
 }
-fileName sssp_dslV2
+fileName temp_algo
 param :g
 paramD:d_g
 ========== SET TRUE
-param :dist
-paramD:d_dist
-param :wt
-paramD:d_wt
-param :src
-paramD:d_src
 param :g
 paramD:d_g
-param :dist
-paramD:d_dist
-param :wt
-paramD:d_wt
-param :src
-paramD:d_src
 	==VARSIZE:1
-varName:dist
-varName:modified
-	ASST 
-	DEVICE ASST
-	ASST 
-	DEVICE ASST
-varT:bool
-varN:finished
-IN FIX PT
-Size::5
-	==VARSIZE:0
+varT:int
+varN:x
+varT:int
+varN:y
+varT:int
+varN:z
+varT:int
+varN:w
+	ASST
+	ASST
+varName:prop
 STMT: For
 isMainFile val 1
 Entered here for forall 
 INN OPTIMESED ---------------
 _
 _
-_
-_
-============CHANGED BODY  TYPE==============1start of kernel block 
-=======IF FILTER
-	==VARSIZE:0
-STMT: For
-isMainFile val 0
-GenerateForAllSignature = 0
-	 ITERATE Neighbour 
-src:nbr
-	==VARSIZE:0
------->PROP PRO CAL
-LEFT LIST SIZE 2 
-VAR:dist
-FPID ========> finished
-FOR BODY END
+start of kernel block 
+	ASST 
+	DEVICE ASST
 finished successfully

@@ -1573,7 +1573,6 @@ void dsl_cpp_generator ::addCudaKernel(forallStmt* forAll) {
       sprintf(strBuffer, ",%s d_%s", convertToCppType(type), iden->getIdentifier());
       header.pushString(/*createParamName(*/ strBuffer);
       if(iden->getSymbolInfo()->getId()->get_fp_association()) { // If id has a fp association then _next must also be added as a parameter
-        char strBuffer[1024];
         sprintf(strBuffer, ",%s d_%s_next", convertToCppType(type), iden->getIdentifier());
         header.pushString(/*createParamName(*/ strBuffer);
       }
@@ -3368,8 +3367,11 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
       sprintf(strBuffer, "int* d_rev_meta;");
       main.pushstr_newL(strBuffer);
     }
-    sprintf(strBuffer, "bool* d_modified_next;");
-    main.pushstr_newL(strBuffer);
+    for(Identifier* id: currentFunc->getDoubleBufferVars()) {
+      Type* type = id->getSymbolInfo()->getType();
+      sprintf(strBuffer, "%s d_%s_next;", convertToCppType(type), id->getIdentifier());
+      main.pushstr_newL(strBuffer);
+    }
     main.NewLine();
 
     if(currentFunc->getIsMetaUsed())  // checking if meta is used
@@ -3382,7 +3384,14 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
       generateCudaMallocStr("d_weight", "int", "(E)");
     if(currentFunc->getIsRevMetaUsed()) // checking if rev_meta is used
       generateCudaMallocStr("d_rev_meta", "int", "(V+1)");
-    generateCudaMallocStr("d_modified_next", "bool", "(V)");
+    for(Identifier* id: currentFunc->getDoubleBufferVars()) {   // all double buffer mem allocation
+      Type* type = id->getSymbolInfo()->getType();
+      sprintf(strBuffer, "d_%s_next", id->getIdentifier());
+      if(type->isPropNodeType())
+        generateCudaMallocStr(strBuffer, convertToCppType(type->getInnerTargetType()), "(V)");
+      else if(type->isPropEdgeType())
+        generateCudaMallocStr(strBuffer, convertToCppType(type->getInnerTargetType()), "(E)");
+    }
 
     main.NewLine();
 
