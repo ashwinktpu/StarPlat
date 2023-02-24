@@ -6,6 +6,8 @@
 #include "dsl_cpp_generator.h"
 #include "getUsedVars.cpp"
 
+bool flag_for_device_variable = 0; // temporary fix to accomodate device variable and
+
 //~ using namespace spsycl;
 namespace spsycl
 {
@@ -766,7 +768,70 @@ namespace spsycl
 
     void dsl_cpp_generator::generateAtomicDeviceAssignmentStmt(assignment *asmt, bool isMainFile)
     {
-        main.pushstr_newL("// Atomic device assignment statement");
+        bool isAtomic = false;
+        bool isResult = false;
+        std::cout << "\tASST\n";
+        if (asmt->lhs_isIdentifier())
+        {
+            Identifier *id = asmt->getId();
+            Expression *exprAssigned = asmt->getExpr();
+            if (asmt->hasPropCopy()) // prop_copy is of the form (propId = propId)
+            {
+                char strBuffer[1024];
+                Identifier *rhsPropId2 = exprAssigned->getId();
+                Type *type = id->getSymbolInfo()->getType();
+                main.pushstr_newL("Q.submit([&](handler &h){ h.parallel_for(NUM_THREADS, [=](id<1> i){");
+                sprintf(strBuffer, "for (; i < V; i += stride) d_%s[i] = d_%s[i];", id->getIdentifier(), rhsPropId2->getIdentifier());
+                main.pushString(strBuffer);
+                main.pushstr_newL("}); }).wait();");
+            }
+            else
+            {
+                main.pushString(id->getIdentifier());
+            }
+        }
+        else if (asmt->lhs_isProp()) // the check for node and edge property to be
+                                     // carried out.
+        {
+            PropAccess *propId = asmt->getPropId();
+            if (asmt->isDeviceAssignment())
+            {
+                std::cout << "\t  DEVICE ASST" << '\n';
+            }
+            if (asmt->getAtomicSignal())
+            {
+                main.pushString("atomicAdd(&");
+                isAtomic = true;
+                std::cout << "\t  ATOMIC ASST" << '\n';
+            }
+            if (asmt->isAccumulateKernel())
+            { // NOT needed
+                isResult = true;
+                std::cout << "\t  RESULT NO BC by 2 ASST" << '\n';
+            }
+            main.pushString("d_"); /// IMPORTANT
+            main.pushString(propId->getIdentifier2()->getIdentifier());
+            main.push('[');
+            main.pushString(propId->getIdentifier1()->getIdentifier());
+            main.push(']');
+        }
+
+        if (isAtomic)
+            main.pushString(", ");
+        else if (!asmt->hasPropCopy())
+            main.pushString(" = ");
+
+        //~ std::cout<< "------>BEG EXP"  << '\n';
+        if (!asmt->hasPropCopy())
+            generateExpr(asmt->getExpr(), isMainFile, isAtomic);
+        //~ std::cout<< "------>END EXP"  << '\n';
+
+        if (isAtomic)
+            main.pushstr_newL(");");
+        else if (isResult)
+            main.pushstr_newL(";"); // No need "/2.0;" for directed graphs
+        else if (!asmt->hasPropCopy())
+            main.pushstr_newL(";");
     }
 
     void dsl_cpp_generator::generateIfStmt(ifStmt *ifstmt, bool isMainFile)
@@ -787,7 +852,14 @@ namespace spsycl
 
     void dsl_cpp_generator::generateDoWhileStmt(dowhileStmt *doWhile, bool isMainFile)
     {
-        main.pushstr_newL("// Generate do while statement");
+        flag_for_device_variable = 1; // done for PR fix
+        main.pushstr_newL("do{");
+        //~ targetFile.pushString("{");
+        generateStatement(doWhile->getBody(), isMainFile);
+        //~ targetFile.pushString("}");
+        main.pushString("}while(");
+        generateExpr(doWhile->getCondition(), isMainFile);
+        main.pushstr_newL(");");
     }
 
     void dsl_cpp_generator::generateCudaMemCpySymbol(char *var, const char *typeStr, bool direction)
@@ -936,7 +1008,14 @@ namespace spsycl
                 }
                 if (s.compare("nodes_to") == 0) // for pageRank
                 {
-                    main.pushstr_newL("// Nodes to neighbour iteration");
+                    list<argument *> argList = extractElemFunc->getArgList();
+                    assert(argList.size() == 1);
+                    Identifier *nodeNbr = argList.front()->getExpr()->getId();
+                    sprintf(strBuffer, "for (%s %s = %s[%s]; %s < %s[%s+1]; %s++)", "int", "edge", "d_rev_meta", nodeNbr->getIdentifier(), "edge", "d_rev_meta", nodeNbr->getIdentifier(), "edge");
+                    main.pushstr_newL(strBuffer);
+                    main.pushString("{");
+                    sprintf(strBuffer, "%s %s = %s[%s] ;", "int", iterator->getIdentifier(), "d_src", "edge"); // needs to move the addition of
+                    main.pushstr_newL(strBuffer);
                 }
             }
             else if (forAll->isSourceField())
