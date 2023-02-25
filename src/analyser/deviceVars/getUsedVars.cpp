@@ -244,8 +244,7 @@ usedVariables deviceVarsAnalyser::getVarsReduction(reductionCallStmt *stmt)
 
         if(affectedId->getSymbolInfo()->getId()->get_fp_association()) {
           Identifier* fpId = affectedId->getSymbolInfo()->getId()->get_fpIdNode();
-          cout << "fpId: " << fpId->getIdentifier() << endl;
-          currVars.addVariable(fpId, READ_WRITE);
+          currVars.addVariable(fpId, WRITE);
         }
       }
       getVarsReductionCall(stmt->getReducCall());
