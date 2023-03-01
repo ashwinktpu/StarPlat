@@ -433,7 +433,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
             proc_callExpr* pExpr=proc->getProcCallExpr();
             pExpr->addToArgList(arg);
             PropAccess* propIdNode=PropAccess::createPropAccessNode(itrbFS->getRootNode(),id);
-            Expression* expr=Expression::nodeForIntegerConstant(-1);
+            Expression* expr=Expression::nodeForIntegerConstant(0);
             assignment* assignmentNode=assignment::prop_assignExpr(propIdNode,expr);
             blockStmt->insertToBlock(assignmentNode,bfsPos+1);
 

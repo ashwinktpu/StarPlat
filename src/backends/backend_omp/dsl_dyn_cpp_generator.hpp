@@ -3,6 +3,7 @@
 
 #include "dsl_cpp_generator.h"
 
+namespace spdynomp {
 class dsl_dyn_cpp_generator:public spomp::dsl_cpp_generator
 {   
 
@@ -47,4 +48,5 @@ class dsl_dyn_cpp_generator:public spomp::dsl_cpp_generator
  void generateFreeInCurrentBatch();
 
 };
+}
 #endif
