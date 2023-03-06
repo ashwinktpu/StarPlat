@@ -1164,7 +1164,24 @@ namespace spsycl
                     }
                     else if (forAll->getParent()->getParent()->getTypeofNode() == NODE_ITRRBFS)
                     { // ITERATE REV BFS
-                        main.pushstr_newL("// rev bfs iterate");
+                        char strBuffer[1024];
+                        list<argument *> argList = extractElemFunc->getArgList();
+                        assert(argList.size() == 1);
+                        Identifier *nodeNbr = argList.front()->getExpr()->getId();
+                        nbrVar = nodeNbr->getIdentifier();
+                        std::cout << "V?:" << nbrVar << '\n';
+                        //~ sprintf(strBuffer, "for(int i = d_meta[%s], end = d_meta[%s+1]; i < end; ++i)", nbrVar, nbrVar);
+                        //~ targetFile.pushstr_newL(strBuffer);
+
+                        // HAS ALL THE STMTS IN FOR
+                        //~ targetFile.pushstr_newL("{"); // uncomment after fixing NBR FOR brackets } issues.
+                        //~ sprintf(strBuffer, "int %s = d_data[i];", wItr);
+                        //~ targetFile.pushstr_newL(strBuffer);
+                        sprintf(strBuffer, "if(d_level[%s] == *d_hops_from_source) {", wItr);
+                        main.pushstr_newL(strBuffer);
+                        generateBlock((blockStatement *)forAll->getBody(), false, false);
+                        main.pushstr_newL("} // end IF  ");
+                        main.pushstr_newL("} // end FOR");
                     }
                     else
                     {
@@ -1547,7 +1564,7 @@ namespace spsycl
         blockStatement *block = (blockStatement *)body;
         list<statement *> statementList = block->returnStatements();
 
-        main.pushstr_newL("Q.submit([&](handler &h){ h.parallel_for(NUM_THREADS, [=](id<1> v)");
+        main.pushstr_newL("Q.submit([&](handler &h){ h.parallel_for(NUM_THREADS, [=](id<1> v){for (; v < V; v += NUM_THREADS){");
         sprintf(strBuffer, "if(d_level[%s] == *d_hops_from_source) {", loopVar);
         main.pushstr_newL(strBuffer);
 
@@ -1556,7 +1573,7 @@ namespace spsycl
             generateStatement(stmt, false);
         }
         main.pushstr_newL("} // end if d lvl");
-        main.pushstr_newL("}).wait(); // kernel end");
+        main.pushstr_newL("}});}).wait(); // kernel end");
         main.NewLine();
     }
 
@@ -1568,16 +1585,36 @@ namespace spsycl
         main.pushstr_newL("//Kernel LAUNCH");
 
         addCudaBFSIterKernel(bfsAbstraction); // KERNEL BODY!!!
+
+        main.pushstr_newL("Q.submit([&](handler &h){ h.single_task([=](){ *d_hops_from_source += 1; }); }).wait();");
+        main.pushstr_newL("++hops_from_source; // updating the level to process in the next iteration");
     }
 
     void dsl_cpp_generator::addCudaRevBFSIterationLoop(iterateBFS *bfsAbstraction)
     {
-        main.pushstr_newL("// addCudaRevBFSIterationLoop");
+        main.NewLine();
+        main.pushstr_newL("hops_from_source--;");
+        generateMemCpyStr("d_hops_from_source", "&hops_from_source", "int", "1");
+        main.NewLine();
     }
 
     void dsl_cpp_generator::addCudaRevBFSIterKernel(list<statement *> &statementList)
     {
-        main.pushstr_newL("// addCudaRevBFSIterKernel");
+        const char *loopVar = "v";
+        char strBuffer[1024];
+
+        main.pushstr_newL("Q.submit([&](handler &h){ h.parallel_for(NUM_THREADS, [=](id<1> v){for (; v < V; v += NUM_THREADS){");
+        sprintf(strBuffer, "if(d_level[%s] == *d_hops_from_source-1) {", loopVar);
+        main.pushstr_newL(strBuffer);
+
+        for (statement *stmt : statementList)
+        {
+            generateStatement(stmt, false); // false. All these stmts should be inside kernel
+        }
+
+        main.pushstr_newL("} // end if d lvl");
+        main.pushstr_newL(" }});}).wait(); // kernel end");
+        main.NewLine();
     }
 
     void dsl_cpp_generator::generatePropParams(list<formalParam *> paramList, bool isNeedType = true, bool isMainFile = true)
@@ -1629,7 +1666,7 @@ namespace spsycl
         main.pushstr_newL("Q.submit([&](handler &h){ h.single_task([=](){");
         sprintf(strBuffer, "d_level[%s] = 0;", bfsAbstraction->getRootNode()->getIdentifier());
         main.pushstr_newL(strBuffer);
-        main.pushstr_newL("}); }).wait()");
+        main.pushstr_newL("}); }).wait();");
         main.NewLine();
 
         main.pushstr_newL("// long k =0 ;// For DEBUG");
@@ -1679,11 +1716,6 @@ namespace spsycl
 
         main.NewLine();
         main.pushstr_newL("//KERNEL Launch");
-        main.pushstr_newL("back_pass<<<numBlocks,threadsPerBlock>>>(V, d_meta, d_data, d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished");
-
-        generatePropParams(getCurrentFunc()->getParamList(), false, true); // true: typeneed false:inMainfile
-
-        main.pushstr_newL("); ///DONE from varList"); /// TODO get all propnodes from function body and params
 
         main.NewLine();
         addCudaRevBFSIterKernel(revStmtList); // KERNEL BODY
@@ -1696,13 +1728,6 @@ namespace spsycl
         generateMemCpyStr("d_hops_from_source", "&hops_from_source", "int", "1");
 
         main.pushstr_newL("}");
-        main.pushstr_newL("//accumulate_bc<<<numBlocks,threadsPerBlock>>>(V,d_delta, d_BC, d_level, src);");
-        //~ main.NewLine();
-
-        //~ main.pushstr_newL("}while(!finished);");
-        //~ main.pushstr_newL("}");
-        //~ main.pushstr_newL("phase = phase - 1 ;");
-        //~ main.pushstr_newL("}");
     }
 
     void dsl_cpp_generator::generateInitkernel1(assignment *assign, bool isMainFile)
