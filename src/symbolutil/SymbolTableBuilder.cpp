@@ -270,7 +270,6 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                }
                if(depId->getSymbolInfo()!=NULL)
                  {  
-                     currentFunc->addDoubleBufferVar(depId);
                      Identifier* tableId = depId->getSymbolInfo()->getId();
                      tableId->set_redecl(); //explained in the ASTNodeTypes
                      tableId->set_fpassociation(); //explained in the ASTNodeTypes
@@ -303,7 +302,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                another forall which is to be generated with
                omp parallel pragma, and then disable the parallel loop*/
 
-            if( (backend.compare("omp")==0) || (backend.compare("cuda")==0) || (backend.compare("openACC")==0) || (backend.compare("mpi")==0) )
+            if( (backend.compare("omp")==0) || (backend.compare("cuda")==0) || (backend.compare("acc")==0) || (backend.compare("mpi")==0) )
              {  
                  if(parallelConstruct.size()>0 && (backend.compare("mpi")!=0))
                   {  
@@ -383,7 +382,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
               buildForStatements(forAll->getBody());  
               
            //----------------------MERGE CONFLICT OCCURRED HERE (WORKING BRANCH <---- OPENACC)----------------------------------
-               //~ if((backend.compare("omp")==0 || backend.compare("openACC")==0 ) && forAll->isForall())
+               //~ if((backend.compare("omp")==0 || backend.compare("acc")==0 ) && forAll->isForall())
                     //~ {  
                         //~ parallelConstruct.pop_back();
                     //~ } 
@@ -391,7 +390,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
               //~ delete_curr_SymbolTable();
 
 
-               if((backend.compare("omp")==0 || backend.compare("cuda")==0 || backend.compare("openACC")==0 )  || (backend.compare("mpi")==0) &&forAll->isForall())
+               if((backend.compare("omp")==0 || backend.compare("cuda")==0 || backend.compare("acc")==0 )  || (backend.compare("mpi")==0) &&forAll->isForall())
                     {
                       if(forAll->isForall())
                         parallelConstruct.pop_back();
@@ -442,7 +441,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
              count++;
           }
 
-          if(flag&&(backend.compare("omp")==0 || backend.compare("openACC")==0 ))
+          if(flag&&(backend.compare("omp")==0 || backend.compare("acc")==0 ))
           { 
             iterateBFS* itrbFS=(iterateBFS*)(*itrIBFS);  
             Identifier* id=Identifier::createIdNode("bfsDist");
@@ -511,7 +510,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
             if(leftList.size() > 2)
                {
                    string backend(backendTarget);
-                   if(backend.compare("omp") == 0 ||  backend.compare("openACC") == 0 )
+                   if(backend.compare("omp") == 0 ||  backend.compare("acc") == 0 )
                      {
                         currentFunc->setInitialLockDecl();
                      }   
@@ -550,7 +549,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
        {
           iterateBFS* iBFS=(iterateBFS*)stmt;
           string backend(backendTarget);
-            if(backend.compare("omp")==0 ||  backend.compare("openACC") == 0 || backend.compare("mpi") == 0)
+            if(backend.compare("omp")==0 ||  backend.compare("acc") == 0 || backend.compare("mpi") == 0)
              { 
                parallelConstruct.push_back(iBFS);
                
@@ -565,7 +564,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
           iRevBFS->addAccumulateAssignment();
           buildForStatements(iRevBFS->getBody());
 
-          if(backend.compare("omp")==0  ||  backend.compare("openACC") == 0  || backend.compare("mpi") == 0)
+          if(backend.compare("omp")==0  ||  backend.compare("acc") == 0  || backend.compare("mpi") == 0)
              { 
               parallelConstruct.pop_back();
                
