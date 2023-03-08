@@ -2038,6 +2038,20 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
 
       /*placeholder for adding code for declarations that are initialized as
        * well*/
+
+      //~ /* decl with variable name as var_nxt is required for double buffering
+      //~ ex :- In case of fixedpoint */
+      if(declStmt->getdeclId()->getSymbolInfo()->getId()->require_redecl())
+      {
+        char strBuffer[1024];
+        main.pushString(convertToCppType(innerType)); //convertToCppType need to be modified. 
+        main.pushString("*"); 
+        main.space();
+        sprintf(strBuffer,"%s_nxt",declStmt->getdeclId()->getIdentifier());
+        main.pushString(strBuffer);
+        main.pushstr_newL(";");
+        generateCudaMalloc(type, strBuffer);
+      }
     }
   }
 
@@ -3367,11 +3381,6 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
       sprintf(strBuffer, "int* d_rev_meta;");
       main.pushstr_newL(strBuffer);
     }
-    for(Identifier* id: currentFunc->getDoubleBufferVars()) {
-      Type* type = id->getSymbolInfo()->getType();
-      sprintf(strBuffer, "%s d_%s_next;", convertToCppType(type), id->getIdentifier());
-      main.pushstr_newL(strBuffer);
-    }
     main.NewLine();
 
     if(currentFunc->getIsMetaUsed())  // checking if meta is used
@@ -3384,14 +3393,6 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
       generateCudaMallocStr("d_weight", "int", "(E)");
     if(currentFunc->getIsRevMetaUsed()) // checking if rev_meta is used
       generateCudaMallocStr("d_rev_meta", "int", "(V+1)");
-    for(Identifier* id: currentFunc->getDoubleBufferVars()) {   // all double buffer mem allocation
-      Type* type = id->getSymbolInfo()->getType();
-      sprintf(strBuffer, "d_%s_next", id->getIdentifier());
-      if(type->isPropNodeType())
-        generateCudaMallocStr(strBuffer, convertToCppType(type->getInnerTargetType()), "(V)");
-      else if(type->isPropEdgeType())
-        generateCudaMallocStr(strBuffer, convertToCppType(type->getInnerTargetType()), "(E)");
-    }
 
     main.NewLine();
 

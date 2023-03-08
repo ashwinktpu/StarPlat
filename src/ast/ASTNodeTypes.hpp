@@ -418,8 +418,6 @@ class Function:public ASTNode
   bool hasReturn;                          
   int funcType ;
 
-  list<Identifier*> doubleBufferVars; // the propnodes which need to be double buffered
-
   bool isMetaUsed; // if d_meta is used in function
   bool isDataUsed; // if d_data is used in function
   bool isSrcUsed; // if d_src is used in function
@@ -595,14 +593,6 @@ class Function:public ASTNode
 
     void setIsRevMetaUsed() {
       this->isRevMetaUsed = true;
-    }
-
-    void addDoubleBufferVar(Identifier* var) {
-      doubleBufferVars.push_back(var);
-    }
-
-    list<Identifier*> getDoubleBufferVars() {
-      return doubleBufferVars;
     }
   
 };
