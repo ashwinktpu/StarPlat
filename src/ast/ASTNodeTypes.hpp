@@ -141,7 +141,9 @@ class Identifier:public ASTNode
                                identifier is a part of*/
   Identifier* updates_association; /* for update.source/destination, get the updates to
                                       which this update belongs to.*/                             
-   
+
+  bool forall_filter_association; 
+  bool used_inside_forall_filter_and_changed_inside_forall_body;
   public: 
  
   static Identifier* createIdNode(const char* id)
@@ -156,6 +158,8 @@ class Identifier:public ASTNode
      idNode->fp_association = false;
      idNode->assignedExpr = NULL;
      idNode->dependentExpr = NULL;
+     idNode->forall_filter_association = false;
+     idNode->used_inside_forall_filter_and_changed_inside_forall_body = false;
    // std::cout<<"IDENTIFIER = "<<idNode->getIdentifier()<<" "<<strlen(idNode->getIdentifier());
      return idNode;
 
@@ -201,6 +205,21 @@ class Identifier:public ASTNode
    bool require_redecl()
    {
      return redecl;
+   }
+   void set_used_inside_forall_filter_and_changed_inside_forall_body(){
+    used_inside_forall_filter_and_changed_inside_forall_body = true; 
+   }
+   bool get_used_inside_forall_filter_and_changed_inside_forall_body(){
+    return used_inside_forall_filter_and_changed_inside_forall_body ;
+   } 
+   void set_forall_filter_association()
+   {
+     forall_filter_association=true;
+   }
+
+   bool get_forall_filter_association()
+   {
+     return forall_filter_association;
    }
 
    void set_fpassociation()
@@ -1887,7 +1906,8 @@ class fixedPointStmt:public statement
     set<int> reduc_keys;
     bool filterExprAssoc;
     Expression* assocExpr;
-    
+    statement * reductionStatement;
+    bool containsreductionStatement;
     list<Identifier*> usedVars;
     public:
     forallStmt()
@@ -1903,6 +1923,8 @@ class fixedPointStmt:public statement
       isSourceId=false;
       createSymbTab();
       filterExprAssoc = false; 
+      reductionStatement = NULL;
+      containsreductionStatement = false;
     }
 
     static forallStmt* createforallStmt(Identifier* iterator,Identifier* sourceGraph,proc_callExpr* extractElemFunc,statement* body,Expression* filterExpr,bool isforall)
@@ -2002,7 +2024,19 @@ class fixedPointStmt:public statement
     {
       return (filterExpr!=NULL);
     }
-
+    void setReductionStatement(statement * stmt)
+    {
+      containsreductionStatement = true;
+      reductionStatement = stmt;
+    }
+    bool containsReductionStatement()
+    {
+      return containsreductionStatement;
+    }
+    statement * getReductionStatement()
+    {
+      return reductionStatement;
+    }
     void setAssocExpr(Expression* filterExprSent)
      {
        assocExpr = filterExprSent;
