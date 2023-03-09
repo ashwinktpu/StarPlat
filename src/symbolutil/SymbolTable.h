@@ -1,7 +1,8 @@
  #ifndef SYMBOLTABLE_H
 #define SYMBOLTABLE_H
 
-#include<list>
+#include <list>
+#include <cstddef>
 
 using namespace std;
 
@@ -127,11 +128,6 @@ bool check_conflicts_and_add(SymbolTable* sTab,Identifier* id,Type* type);
 
 
  }*/
-
-
-
-
-
 
 };
 

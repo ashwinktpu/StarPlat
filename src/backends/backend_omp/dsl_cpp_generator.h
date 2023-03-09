@@ -13,8 +13,10 @@ class dsl_cpp_generator
 
   dslCodePad header;
   dslCodePad main;
+  dslCodePad cl;
   FILE *headerFile;
   FILE *bodyFile;
+  FILE *clFile;
   char* fileName;
   int genFuncCount;
   int staticFuncCount;
@@ -25,9 +27,10 @@ class dsl_cpp_generator
   Function* currentFunc;
   vector<pair<Identifier*,proc_callExpr*>> forallStack;
   fixedPointStmt* fixedPointEnv;
-  vector<Identifier*> freeIdStore;
+  vector<vector<Identifier*>> freeIdStore;
   bool insidePreprocessEnv;
   bool insideBatchBlock ;
+  vector<ASTNode*> parallelConstruct;
   
  
   public:
@@ -35,6 +38,7 @@ class dsl_cpp_generator
   {
     headerFile=NULL;
     bodyFile=NULL;
+    clFile = NULL;
     fixedPointEnv = NULL;
     fileName=new char[1024];
     genFuncCount = 0;
@@ -83,6 +87,7 @@ class dsl_cpp_generator
   virtual void generate_exprProcCall(Expression* expr);
   void generate_exprArL(Expression* expr);
   void generate_exprUnary(Expression* expr);
+  void generate_exprIndex(Expression* expr, bool islocal);
   void generateForAll_header(forallStmt* forAll);
   void getEdgeTranslation(Expression* expr); //translation of edge assignment.
   virtual void generateForAllSignature(forallStmt* forAll);
@@ -92,9 +97,13 @@ class dsl_cpp_generator
   bool neighbourIteration(char* methodId);
   bool allGraphIteration(char* methodId);
   bool elementsIteration(char* extractId);
-  void generateArgList(list<argument*> argList);    
-  
+  void generateArgList(list<argument*> argList, bool addBraces);    
+  void generateNestedContainer(Type* type);
+  void generateFreeInCurrentBatch();
+  void generatePriorDeclarations(Function* proc);
+
   blockStatement* includeIfToBlock(forallStmt* forAll);
+  Expression* associateIterNodeToProp(Expression* filterExpr, Identifier* iterNode);
 
   void generateId();
   void generateOid();
@@ -109,7 +118,9 @@ class dsl_cpp_generator
   void generateFixedPointUpdate(PropAccess* propId);
   bool checkFixedPointAssociation(PropAccess* propId);
   void checkAndGenerateFixedPtFilter(forallStmt* forAll);
-
+  void generateForMergeContainer(Type* type, int& level);
+  void generateInserts(Type* type,  Identifier* id);
+  string  getProcName(proc_callExpr* proc);
 
 
 };

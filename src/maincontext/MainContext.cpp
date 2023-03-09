@@ -1,5 +1,5 @@
 #include "MainContext.hpp"
-#include "../symbolutil/SymbolTable.hpp"
+//#include "../symbolutil/SymbolTable.hpp"
 #include <vector>
 
 using namespace std;
@@ -59,9 +59,21 @@ int FrontEndContext::getCurrentFuncType()
      else if(funcType == DYNAMIC_FUNC)
          dynFuncCount++;                      
 
+  }
 
+  void FrontEndContext::setDynamicLinkFuncs(map<string, bool> sentMap){
+
+   dynamicLinkFunc = sentMap;
 
   }
+
+ 
+
+ map<string, bool> FrontEndContext::getDynamicLinkFuncs(){
+
+  return dynamicLinkFunc;
+
+ }
 
   int FrontEndContext::getCurrentFuncCount()
       {
