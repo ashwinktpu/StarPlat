@@ -264,7 +264,7 @@ void dsl_cpp_generator::generatePropParams(list<formalParam*> paramList, bool is
 void dsl_cpp_generator::addCudaRevBFSIterKernel(list<statement*>& statementList) {
   //~ var v
   //~ var w
-  //~   __global__ void back_pass(int n, int* d_meta,int* d_data,int* d_weight, double* d_delta, double* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished, double* d_bc) {
+  //~   __global__ void back_pass(int n, int* d_meta,int* d_data,int* d_weight, double* d_delta, float* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished, double* d_bc) {
   //~ unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
   //~ if(v >= n) return;
 
@@ -285,7 +285,7 @@ void dsl_cpp_generator::addCudaRevBFSIterKernel(list<statement*>& statementList)
   //~ assert(body->getTypeofNode() == NODE_BLOCKSTMT);
   //~ blockStatement* block = (blockStatement*)body;
   //~ list<statement*> statementList = block->returnStatements();
-  sprintf(strBuffer, "__global__ void back_pass(int n, int* d_meta,int* d_data,int* d_weight, float* d_delta, double* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished");
+  sprintf(strBuffer, "__global__ void back_pass(int n, int* d_meta,int* d_data,int* d_weight, float* d_delta, float* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished");
   header.pushString(strBuffer);
 
   generatePropParams(getCurrentFunc()->getParamList(), true, false);  // true: typeneed false:inMainfile
@@ -314,7 +314,7 @@ void dsl_cpp_generator::addCudaRevBFSIterKernel(list<statement*>& statementList)
 void dsl_cpp_generator::addCudaBFSIterKernel(iterateBFS* bfsAbstraction) {
   //~ var v
   //~ var w
-  //~ __global__ void fwd_pass(int n, int* d_meta,int* d_data,int* d_weight, double* d_delta, double* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished, double* d_bc) {
+  //~ __global__ void fwd_pass(int n, int* d_meta,int* d_data,int* d_weight, double* d_delta, float* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished, double* d_bc) {
   //~ unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
   //~ if(v >= n) return;
   //~ if(d_level[v] == *d_hops_from_source) {
@@ -339,7 +339,7 @@ void dsl_cpp_generator::addCudaBFSIterKernel(iterateBFS* bfsAbstraction) {
   blockStatement* block = (blockStatement*)body;
   list<statement*> statementList = block->returnStatements();
 
-  header.pushString("__global__ void fwd_pass(int n, int* d_meta,int* d_data,int* d_weight, float* d_delta, double* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished");
+  header.pushString("__global__ void fwd_pass(int n, int* d_meta,int* d_data,int* d_weight, float* d_delta, float* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished");
 
   generatePropParams(getCurrentFunc()->getParamList(), true, false);  // true: typeneed false:inMainfile
 

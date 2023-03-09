@@ -3,6 +3,7 @@
 #include<string.h>
 #include<cassert>
 
+extern usedVariables getVarsStatement(statement* stmt);
 
 //~ using namespace spacc;
 namespace spacc{
@@ -1256,22 +1257,112 @@ generateForAll_header(forallStmt* forAll)    //Required only if there is reducti
     main.pushstr_newL(strBuffer1);
     main.pushstr_newL("{"); //---------------------------------------------
     //main.pushString("#pragma acc data copyin(g)"); main.NewLine();
-    sprintf(strBuffer1, "#pragma acc data copyin( %s.indexofNodes[:%s.num_nodes()+1], %s.edgeList[0:%s.num_edges()] )", graph_name, graph_name, graph_name, graph_name ); 
+    // sprintf(strBuffer1, "#pragma acc data copyin( %s.indexofNodes[:%s.num_nodes()+1], %s.edgeList[0:%s.num_edges()] )", graph_name, graph_name, graph_name, graph_name ); 
+    // main.pushString(strBuffer1);
+    // main.space();
+    sprintf(strBuffer1, "#pragma acc data copyin(");
     main.pushString(strBuffer1);
     main.space();
+
+    bool isFirstVar = true;
+    if(forAll->getIsMetaUsed()) {
+      if(!isFirstVar) main.push(',');
+      sprintf(strBuffer1, "%s.indexOfNodes[:%s.num_nodes()+1]", graph_name, graph_name);
+      main.pushString(strBuffer1);
+      main.space();
+      isFirstVar = false;
+    }
+    if(forAll->getIsRevMetaUsed()) {
+      if(!isFirstVar) main.push(',');
+      sprintf(strBuffer1, "%s.rev_indexOfNodes[:%s.num_nodes()+1]", graph_name, graph_name);
+      main.pushString(strBuffer1);
+      main.space();
+      isFirstVar = false;
+    }
+    if(forAll->getIsDataUsed()) {
+      if(!isFirstVar) main.push(',');
+      sprintf(strBuffer1, "%s.edgeList[:%s.num_edges()+1]", graph_name, graph_name);
+      main.pushString(strBuffer1);
+      main.space();
+      isFirstVar = false;
+    }
+    if(forAll->getIsSrcUsed()) {
+      if(!isFirstVar) main.push(',');
+      sprintf(strBuffer1, "%s.srcList[:%s.num_edges()+1]", graph_name, graph_name);
+      main.pushString(strBuffer1);
+      main.space();
+      isFirstVar = false;
+    }
+    if(forAll->getIsWeightUsed()) {
+      if(!isFirstVar) main.push(',');
+      sprintf(strBuffer1, "%s.edgeLen[:%s.num_edges()+1]", graph_name, graph_name);
+      main.pushString(strBuffer1);
+      main.space();
+      isFirstVar = false;
+    }
+    main.push(')');
+    main.space();
+
     //main.pushstr_newL("{");  
 
+    usedVariables usedVars = getVarsStatement(forAll->getBody());
+    usedVars.removeVariable(forAll->getIterator(), READ_WRITE);
+    for(Identifier* id: usedVars.getVariables(READ_ONLY)) {
+      cout << "read only " << id->getIdentifier() << endl;
+      Type* type = id->getSymbolInfo()->getType();
+      if(type->isPropType()) {
+        sprintf(strBuffer1, "copyin( %s.%s[:%s.%s()] )", graph_name, id->getIdentifier(), graph_name, id->getIdentifier() );
+        main.pushString(strBuffer1);
+        main.space();
+      }
+      else if(type->isPrimitiveType()) {
+        sprintf(strBuffer1, "copyin( %s )", id->getIdentifier() );
+        main.pushString(strBuffer1);
+        main.space();
+      }
+    }
+    for(Identifier* id: usedVars.getVariables(WRITE_ONLY)) {
+      cout << "write only " << id->getIdentifier() << endl;
+      Type* type = id->getSymbolInfo()->getType();
+      if(type->isPropType()) {
+        sprintf(strBuffer1, "copyout( %s.%s[:%s.%s()] )", graph_name, id->getIdentifier(), graph_name, id->getIdentifier() );
+        main.pushString(strBuffer1);
+        main.space();
+      }
+      else if(type->isPrimitiveType()) {
+        sprintf(strBuffer1, "copyout( %s )", id->getIdentifier() );
+        main.pushString(strBuffer1);
+        main.space();
+      }
+    }
+    for(Identifier* id: usedVars.getVariables(READ_AND_WRITE)) {
+      cout << "read and write" << id->getIdentifier() << endl;
+      Type* type = id->getSymbolInfo()->getType();
+      if(type->isPropType()) {
+        sprintf(strBuffer1, "copy( %s.%s[:%s.%s()] )", graph_name, id->getIdentifier(), graph_name, id->getIdentifier() );
+        main.pushString(strBuffer1);
+        main.space();
+      }
+      else if(type->isPrimitiveType()) {
+        sprintf(strBuffer1, "copy( %s )", id->getIdentifier() );
+        main.pushString(strBuffer1);
+        main.space();
+      }
+    }
+
+    main.pushstr_newL("");
+
   //------- Generate----  copy(reduce_key1, reduce_key2....) if required..  NOTE: #pragma acc data copyin() for each respective algorithm is already generated above. Only "copy(reduce_keys)" to be generated.
-      set<int> reduce_Keys=forAll->get_reduceKeys();
+      /*set<int> reduce_Keys=forAll->get_reduceKeys();
       assert(reduce_Keys.size()==1);
-      //char strBuffer1[1024];
+      // char strBuffer1[1024];
       set<int>::iterator it;
       it=reduce_Keys.begin();
       list<Identifier*> op_List=forAll->get_reduceIds(*it);
       list<Identifier*>::iterator list_itr;
       main.space();
-      //sprintf(strBuffer,"reduction(%s : ",getOperatorString(*it));
-      //sprintf(strBuffer1,"#pragma acc data copy(");
+      // sprintf(strBuffer,"reduction(%s : ",getOperatorString(*it));
+      // sprintf(strBuffer1,"#pragma acc data copy(");
       sprintf(strBuffer1,"copy(");
       main.pushString(strBuffer1);
       for(list_itr=op_List.begin();list_itr!=op_List.end();list_itr++)
@@ -1281,7 +1372,7 @@ generateForAll_header(forallStmt* forAll)    //Required only if there is reducti
         if(std::next(list_itr)!=op_List.end())
          main.pushString(",");
       }
-      main.pushstr_newL(")");
+      main.pushstr_newL(")");*/
   
   //--------------------generate parallel pragma----------------------
   main.pushstr_newL("{");
