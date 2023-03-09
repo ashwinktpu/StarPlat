@@ -18,6 +18,7 @@ class edge
   int32_t weight;
   int32_t id; /* -unique Id for each edge.
                  -useful in adding properties to edges. */
+  int dir;               
 };
 
 
@@ -89,6 +90,14 @@ class graph
         }
         else 
            return edgesTotal;
+  }
+
+
+ std::vector<edge> getInOutNbrs(int v){
+
+  std::vector<edge> vec;
+  return vec;
+
   }
 
   edge getEdge(int s, int d)
@@ -757,7 +766,4 @@ std::vector<edge> getNeighbors( int node)
    
   }
  
-
-
-
 };
