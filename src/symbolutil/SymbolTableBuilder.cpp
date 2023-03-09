@@ -355,7 +355,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                }
               else { // if for all statement has a proc call
                 proc_callExpr* extractElemFunc = forAll->getExtractElementFunc();
-                if(extractElemFunc != NULL) {
+                if(extractElemFunc != NULL && forAll->isForall()) {
                   Identifier* iteratorMethodId = extractElemFunc->getMethodId();
                   string iteratorMethodString(iteratorMethodId->getIdentifier());
                   if(iteratorMethodString.compare("nodes_to") == 0) { // if the proc call is nodes_to, d_rev_meta is needed

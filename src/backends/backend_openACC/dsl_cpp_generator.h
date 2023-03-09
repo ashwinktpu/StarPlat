@@ -6,6 +6,7 @@
 #include "../../ast/ASTNodeTypes.hpp"
 //~ #include "../../parser/includeHeader.hpp"
 #include "../dslCodePad.h"
+#include "../../analyser/analyserUtil.cpp"
 
 namespace spacc {
 class dsl_cpp_generator {
