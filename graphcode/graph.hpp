@@ -93,10 +93,17 @@ class graph
   }
 
 
- std::vector<edge> getInOutNbrs(int v){
+ 
+  std::vector<edge> getInOutNbrs(int v){
 
-  std::vector<edge> vec;
-  return vec;
+  std::vector<edge> resVec;
+
+  std::vector<edge> inEdges = getInNeighbors(v);
+  resVec.insert(resVec.end(), inEdges.begin(), inEdges.end());
+  std::vector<edge> Edges = getNeighbors(v);
+  resVec.insert(resVec.end(), Edges.begin(), Edges.end());
+  
+  return resVec;
 
   }
 
@@ -354,6 +361,26 @@ class graph
     std::vector<update> addVec = getAdditions(updateIndex, batchSize, updateVec);
     return addVec;
     
+  }
+
+  void propagateNodeFlags(bool* modified){
+  
+    bool finished = false;
+    while (!finished)
+    {
+      finished = true;
+      
+     for(int v = 0 ; v <= nodesTotal ; v++)
+      for (edge e : getNeighbors(v))
+      {
+        if (!modified[e.destination])
+        {
+          modified[e.destination] = true;
+          finished = false;
+        }
+      }
+    }
+
   }
 
    void parseEdges()
@@ -696,6 +723,7 @@ std::vector<edge> getNeighbors( int node)
            e.destination = nbr;
            e.weight = edgeLen[i];
            e.id = i;
+           e.dir = 1;
          //  printf(" weight %d\n", e.weight);
            out_edges.push_back(e);
          }
@@ -713,6 +741,7 @@ std::vector<edge> getNeighbors( int node)
             e.destination = nbr;
             e.weight = diff_edgeLen[j];
             e.id = edgesTotal + j ;
+            e.dir = 1;
            // printf(" weight %d\n", e.weight);
             out_edges.push_back(e);
           }
@@ -740,6 +769,7 @@ std::vector<edge> getNeighbors( int node)
            e.source = node;
            e.destination = nbr;
            e.weight = rev_edgeLen[i];
+           e.dir = 0;
            in_edges.push_back(e);
          }
      }  
@@ -755,6 +785,7 @@ std::vector<edge> getNeighbors( int node)
             e.source = node;
             e.destination = nbr;
             e.weight = diff_rev_edgeLen[j];
+            e.dir = 0;
             in_edges.push_back(e);
           }
 
