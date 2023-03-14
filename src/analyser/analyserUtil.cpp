@@ -75,6 +75,8 @@ public:
 
     void addVariable(Identifier *iden, int type)
     {
+        if (iden->getSymbolInfo() == NULL)  // To not include the iterators in the list
+            return;
         if (type & 1)
             readVars.insert({iden->getSymbolInfo(), iden});
         if (type & 2)

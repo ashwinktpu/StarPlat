@@ -309,6 +309,8 @@ usedVariables blockVarsAnalyser::getVarsExprProcCall(proc_callExpr *procCall)
   {
     if (arg->isExpr())
       currVars.merge(getVarsExpr(arg->getExpr()));
+    else if (arg->isAssignExpr())
+      currVars.merge(getVarsAssignment(arg->getAssignExpr()));
   }
   
   return currVars;

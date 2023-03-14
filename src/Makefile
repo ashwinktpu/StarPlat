@@ -87,8 +87,8 @@ bin/dv4.o: analyser/deviceVars/deviceVarsTransfer.cpp analyser/deviceVars/device
 bin/dv5.o: analyser/deviceVars/getUsedVars.cpp analyser/deviceVars/deviceVarsAnalyser.h analyser/analyserUtil.cpp
 	$(CC) $(CFLAGS) -c analyser/deviceVars/getUsedVars.cpp -o bin/dv5.o
 
-bin/blockVarsAnalyser.o: bin/bv1.o bin/bv2.o bin/bv3.o
-	ld -r bin/bv1.o bin/bv2.o bin/bv3.o -o bin/blockVarsAnalyser.o
+bin/blockVarsAnalyser.o: bin/bv1.o bin/bv2.o bin/bv3.o bin/bv4.o
+	ld -r bin/bv1.o bin/bv2.o bin/bv3.o bin/bv4.o -o bin/blockVarsAnalyser.o
 
 bin/bv1.o: analyser/blockVars/blockVarsAnalyser.cpp analyser/blockVars/blockVarsAnalyser.h analyser/analyserUtil.cpp
 	$(CC) $(CFLAGS) -c analyser/blockVars/blockVarsAnalyser.cpp -o bin/bv1.o
@@ -98,6 +98,9 @@ bin/bv2.o: analyser/blockVars/blockVarsInit.cpp analyser/blockVars/blockVarsAnal
 
 bin/bv3.o: analyser/blockVars/getUsedVars.cpp analyser/blockVars/blockVarsAnalyser.h analyser/analyserUtil.cpp
 	$(CC) $(CFLAGS) -c analyser/blockVars/getUsedVars.cpp -o bin/bv3.o
+
+bin/bv4.o: analyser/blockVars/NodeBlockData.cpp analyser/blockVars/blockVarsAnalyser.h analyser/analyserUtil.cpp
+	$(CC) $(CFLAGS) -c analyser/blockVars/NodeBlockData.cpp -o bin/bv4.o
 
 bin/analyserUtil.o: analyser/analyserUtil.cpp
 	$(CC) $(CFLAGS) -c analyser/analyserUtil.cpp -o bin/analyserUtil.o

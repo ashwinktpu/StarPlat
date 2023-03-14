@@ -27,13 +27,7 @@ ASTNodeBlock* blockVarsAnalyser::initStatement(statement* stmt, ASTNodeBlock* bl
         case NODE_UNARYSTMT:
             return initUnary((unary_stmt*)stmt, blockNode);
         case NODE_FORALLSTMT:
-        {
-            forallStmt* forStmt = (forallStmt*)stmt;
-            if(forStmt->isForall())
-                return initForAll((forallStmt*)stmt, blockNode);
-            else
-                return initFor((forallStmt*)stmt, blockNode);
-        }
+            return initForAll((forallStmt*)stmt, blockNode);
         case NODE_BLOCKSTMT:
             return initBlock((blockStatement*)stmt, blockNode);
         case NODE_IFSTMT:
@@ -116,6 +110,7 @@ ASTNodeBlock* blockVarsAnalyser::initForAll(forallStmt* forAllStmt, ASTNodeBlock
     usedVariables usedVars;
     if(forAllStmt->isSourceProcCall())
     {
+        usedVars.addVariable(forAllStmt->getSourceGraph(), READ);
         proc_callExpr *expr = forAllStmt->getExtractElementFunc();
         usedVars.merge(getVarsExprProcCall(expr));
     }
@@ -146,45 +141,6 @@ ASTNodeBlock* blockVarsAnalyser::initForAll(forallStmt* forAllStmt, ASTNodeBlock
     return forAllCondNode;
 }
 
-ASTNodeBlock* blockVarsAnalyser::initFor(forallStmt* forStmt, ASTNodeBlock* blockNode)
-{
-    // Create a new block node for the for statement
-    ASTNodeBlock* forCondNode = new ASTNodeBlock(forStmt);
-
-    // Add the used and def variables to use set of the new block for cond
-    usedVariables usedVars;
-    if(forStmt->isSourceProcCall())
-    {
-        proc_callExpr *expr = forStmt->getExtractElementFunc();
-        usedVars.merge(getVarsExprProcCall(expr));
-    }
-    else if(!forStmt->isSourceField())
-    {
-        Identifier *iden = forStmt->getSource();
-        usedVars.addVariable(iden, READ);
-    }
-    else
-    {
-        PropAccess *propId = forStmt->getPropSource();
-        usedVars.addVariable(propId->getIdentifier1(), READ);
-    }
-
-    if (forStmt->hasFilterExpr())
-        usedVars.merge(getVarsExpr(forStmt->getfilterExpr()));
-
-    forCondNode->addVars(usedVars);
-
-    // Add the passed block as succ of the new block
-    forCondNode->addSucc(blockNode);
-
-    // Add the for statement as a succ of the new block
-    forCondNode->addSucc(initStatement(forStmt->getBody(), forCondNode));
-
-    // Add this node to the list of block nodes
-    addBlockNode(forStmt, forCondNode);
-    return forCondNode;
-}
-
 ASTNodeBlock* blockVarsAnalyser::initIfElse(ifStmt* ifStmt, ASTNodeBlock* blockNode)
 {
     // Create a new block node for the if statement
@@ -213,43 +169,76 @@ ASTNodeBlock* blockVarsAnalyser::initIfElse(ifStmt* ifStmt, ASTNodeBlock* blockN
 
 ASTNodeBlock* blockVarsAnalyser::initWhile(whileStmt* whileStmt, ASTNodeBlock* blockNode)
 {
+    // Create a new block node for the do-while statement start and end block
+    ASTNodeBlock* whileStartNode = new ASTNodeBlock();
+    ASTNodeBlock* whileEndNode = new ASTNodeBlock();
+
     // Create a new block node for the while statement
-    ASTNodeBlock* whileCondNode = new ASTNodeBlock(whileStmt);
+    ASTNodeBlock* whileCondNode = new ASTNodeBlock(whileStmt->getCondition());
 
     // Add the used and def variables to use set of the new block
     usedVariables usedVars = getVarsExpr(whileStmt->getCondition());
     whileCondNode->addVars(usedVars);
 
-    // Add the passed block as succ of the new block
-    whileCondNode->addSucc(blockNode);
+    // Add the end block as succ of the new block
+    whileCondNode->addSucc(whileEndNode);
+
+    // Add the passed block as succ of the end block
+    whileEndNode->addSucc(blockNode);
+    blockNodes.push_back(whileEndNode);
+
+    // Add the while statement to the list of block nodes
+    addBlockNode(whileStmt->getCondition(), whileCondNode);
 
     // Add the while statement as a succ of the new block
-    whileCondNode->addSucc(initStatement(whileStmt->getBody(), whileCondNode));
+    ASTNodeBlock* whileBodyStartNode = initStatement(whileStmt->getBody(), whileCondNode);
+    whileCondNode->addSucc(whileBodyStartNode);
 
-    // Add this node to the list of block nodes
-    addBlockNode(whileStmt, whileCondNode);
-    return whileCondNode;
+    // Add the cond block as a succ of the while statement start block
+    whileStartNode->addSucc(whileCondNode);
+    blockNodes.push_back(whileStartNode);
+
+    // Map the while statement's start and end block 
+    addBlockNode(whileStmt, whileStartNode, whileEndNode);
+
+    return whileStartNode;
 }
 
 ASTNodeBlock* blockVarsAnalyser::initDoWhile(dowhileStmt* doWhileStmt, ASTNodeBlock* blockNode)
 {
-    // Create a new block node for the do-while statement
-    ASTNodeBlock* doWhileCondNode = new ASTNodeBlock(doWhileStmt);
+    // Create a new block node for the do-while statement start and end block
+    ASTNodeBlock* doWhileStartNode = new ASTNodeBlock();
+    ASTNodeBlock* doWhileEndNode = new ASTNodeBlock();
+
+    // Create a new block node for the do-while condition statement
+    ASTNodeBlock* doWhileCondNode = new ASTNodeBlock(doWhileStmt->getCondition());
 
     // Add the used and def variables to use set of the new block
     usedVariables usedVars = getVarsExpr(doWhileStmt->getCondition());
     doWhileCondNode->addVars(usedVars);
 
-    // Add the passed block as succ of the new block
-    doWhileCondNode->addSucc(blockNode);
+    // Add the end block as succ of the new block
+    doWhileCondNode->addSucc(doWhileEndNode);
+
+    // Add the passed block as succ of the end block
+    doWhileEndNode->addSucc(blockNode);
+    blockNodes.push_back(doWhileEndNode);
 
     // Add this node to the list of block nodes
-    addBlockNode(doWhileStmt, doWhileCondNode);
+    addBlockNode(doWhileStmt->getCondition(), doWhileCondNode);
 
     // Add the do-while statement as a succ of the new block
-    doWhileCondNode->addSucc(initStatement(doWhileStmt->getBody(), doWhileCondNode));
+    ASTNodeBlock* doWhileBodyStartNode = initStatement(doWhileStmt->getBody(), doWhileCondNode);
+    doWhileCondNode->addSucc(doWhileBodyStartNode);
 
-    return doWhileCondNode;
+    // Add the do-while body start as a succ of the start block
+    doWhileStartNode->addSucc(doWhileBodyStartNode);
+    blockNodes.push_back(doWhileStartNode);
+
+    // Map the do-while statement's start and end block
+    addBlockNode(doWhileStmt, doWhileStartNode, doWhileEndNode);
+    
+    return doWhileStartNode;
 }
 
 ASTNodeBlock* blockVarsAnalyser::initProcCall(proc_callStmt* procCallStmt, ASTNodeBlock* blockNode)
@@ -271,21 +260,35 @@ ASTNodeBlock* blockVarsAnalyser::initProcCall(proc_callStmt* procCallStmt, ASTNo
 
 ASTNodeBlock* blockVarsAnalyser::initFixedPoint(fixedPointStmt* fixedPointStmt, ASTNodeBlock* blockNode)
 {
+    // Create a new block node for start and end block of the fixed point statement
+    ASTNodeBlock* fixedPointStartNode = new ASTNodeBlock();
+    ASTNodeBlock* fixedPointEndNode = new ASTNodeBlock();
+
     // Create a new block node for the fixed point statement
-    ASTNodeBlock* fixedPointCondNode = new ASTNodeBlock(fixedPointStmt);
+    ASTNodeBlock* fixedPointCondNode = new ASTNodeBlock(fixedPointStmt->getFixedPointId());
 
     // Add the used and def variables to use set of the new block
     fixedPointCondNode->addUse(fixedPointStmt->getFixedPointId());
 
     // Add the passed block as succ of the new block
-    fixedPointCondNode->addSucc(blockNode);
+    fixedPointCondNode->addSucc(fixedPointEndNode);
+
+    // Add the end block to the list of block nodes
+    fixedPointEndNode->addSucc(blockNode);
+    blockNodes.push_back(fixedPointEndNode);
 
     // Add the fixed point statement as a succ of the new block
     fixedPointCondNode->addSucc(initStatement(fixedPointStmt->getBody(), fixedPointCondNode));
+    addBlockNode(fixedPointStmt->getFixedPointId(), fixedPointCondNode);
 
-    // Add this node to the list of block nodes
-    addBlockNode(fixedPointStmt, fixedPointCondNode);
-    return fixedPointCondNode;
+    // Add the fixed point statement as a succ of the start block
+    fixedPointStartNode->addSucc(fixedPointCondNode);
+    blockNodes.push_back(fixedPointStartNode);
+
+    // Map the fixed point statement's start and end block
+    addBlockNode(fixedPointStmt, fixedPointStartNode, fixedPointEndNode);
+
+    return fixedPointStartNode;
 }
 
 ASTNodeBlock* blockVarsAnalyser::initReduction(reductionCallStmt* reductionCallStmt, ASTNodeBlock* blockNode)
