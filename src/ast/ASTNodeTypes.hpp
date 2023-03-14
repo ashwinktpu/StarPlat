@@ -29,6 +29,80 @@ extern vector<map<int,vector<Identifier*>>> graphId;
                                                        where the graphId vector is 
                                                        separated across different function type*/
 class varTransferStmt;
+class NodeBlockData;
+
+class MetaDataUsed
+{
+  public:
+  bool isMetaUsed;      // if d_meta is used in the ASTNode
+  bool isRevMetaUsed;   // if d_rev_meta is used in the ASTNode
+  bool isDataUsed;      // if d_data is used in the ASTNode
+  bool isSrcUsed;       // if d_src is used in the ASTNode
+  bool isWeightUsed;    // if d_weight is used in the ASTNode
+
+  MetaDataUsed() 
+  {
+    isMetaUsed = false;
+    isRevMetaUsed = false;
+    isDataUsed = false;
+    isSrcUsed = false;
+    isWeightUsed = false;
+  }
+
+  operator bool() const
+  {
+    return isMetaUsed || isRevMetaUsed || isDataUsed || isSrcUsed || isWeightUsed;
+  }
+
+  MetaDataUsed& operator|= (const MetaDataUsed& rhs)
+  {
+    isMetaUsed = isMetaUsed || rhs.isMetaUsed;
+    isRevMetaUsed = isRevMetaUsed || rhs.isRevMetaUsed;
+    isDataUsed = isDataUsed || rhs.isDataUsed;
+    isSrcUsed = isSrcUsed || rhs.isSrcUsed;
+    isWeightUsed = isWeightUsed || rhs.isWeightUsed;
+    return *this;
+  }
+
+  MetaDataUsed& operator&= (const MetaDataUsed& rhs)
+  {
+    isMetaUsed = isMetaUsed && rhs.isMetaUsed;
+    isRevMetaUsed = isRevMetaUsed && rhs.isRevMetaUsed;
+    isDataUsed = isDataUsed && rhs.isDataUsed;
+    isSrcUsed = isSrcUsed && rhs.isSrcUsed;
+    isWeightUsed = isWeightUsed && rhs.isWeightUsed;
+    return *this;
+  }
+
+  MetaDataUsed& operator^= (const MetaDataUsed& rhs)
+  {
+    isMetaUsed = isMetaUsed ^ rhs.isMetaUsed;
+    isRevMetaUsed = isRevMetaUsed ^ rhs.isRevMetaUsed;
+    isDataUsed = isDataUsed ^ rhs.isDataUsed;
+    isSrcUsed = isSrcUsed ^ rhs.isSrcUsed;
+    isWeightUsed = isWeightUsed ^ rhs.isWeightUsed;
+    return *this;
+  }
+
+  MetaDataUsed& operator= (const MetaDataUsed& rhs)
+  {
+    isMetaUsed = rhs.isMetaUsed;
+    isRevMetaUsed = rhs.isRevMetaUsed;
+    isDataUsed = rhs.isDataUsed;
+    isSrcUsed = rhs.isSrcUsed;
+    isWeightUsed = rhs.isWeightUsed;
+    return *this;
+  }
+
+  void print()
+  {
+    cout << "isMetaUsed: " << isMetaUsed << endl;
+    cout << "isRevMetaUsed: " << isRevMetaUsed << endl;
+    cout << "isDataUsed: " << isDataUsed << endl;
+    cout << "isSrcUsed: " << isSrcUsed << endl;
+    cout << "isWeightUsed: " << isWeightUsed << endl;
+  }
+};
 
 class argument
 {  
@@ -418,11 +492,7 @@ class Function:public ASTNode
   bool hasReturn;                          
   int funcType ;
 
-  bool isMetaUsed; // if d_meta is used in function
-  bool isDataUsed; // if d_data is used in function
-  bool isSrcUsed; // if d_src is used in function
-  bool isWeightUsed; // if d_weight is used in function
-  bool isRevMetaUsed; // if d_rev_meta is used in function
+  MetaDataUsed metadata;
   public:
   Function()
   { 
@@ -431,11 +501,7 @@ class Function:public ASTNode
     funcType = 0;
     initialLockDecl = false;
     createSymbTab();
-    isMetaUsed = false;
-    isDataUsed = false;
-    isSrcUsed = false; 
-    isWeightUsed = false;
-    isRevMetaUsed = false;
+    metadata = MetaDataUsed();
   }
 
   static Function* createFunctionNode(Identifier* funcId,list<formalParam*> paramList)
@@ -556,45 +622,48 @@ class Function:public ASTNode
 
    
     bool getIsMetaUsed() {
-      return isMetaUsed;
+      return metadata.isMetaUsed;
     }
 
     void setIsMetaUsed() {
-      this->isMetaUsed = true;
+      metadata.isMetaUsed = true;
     }
 
     bool getIsDataUsed() {
-      return isDataUsed;
+      return metadata.isDataUsed;
     }
 
     void setIsDataUsed() {
-      this->isDataUsed = true;
+      metadata.isDataUsed = true;
     }
 
     bool getIsSrcUsed() {
-      return isSrcUsed;
+      return metadata.isSrcUsed;
     }
 
     void setIsSrcUsed() {
-      this->isSrcUsed = true;
+      metadata.isSrcUsed = true;
     }
 
     bool getIsWeightUsed() {
-      return isWeightUsed;
+      return metadata.isWeightUsed;
     }
 
     void setIsWeightUsed() {
-      this->isWeightUsed = true;
+      metadata.isWeightUsed = true;
     }
 
     bool getIsRevMetaUsed() {
-      return isRevMetaUsed;
+      return metadata.isRevMetaUsed;
     }
 
     void setIsRevMetaUsed() {
-      this->isRevMetaUsed = true;
+      metadata.isRevMetaUsed = true;
     }
-  
+
+    MetaDataUsed getMetaDataUsed() {
+      return metadata;
+    }
 };
 
 class Type:public ASTNode
@@ -1372,6 +1441,7 @@ class whileStmt:public statement
   private:
   Expression* iterCondition;
   blockStatement* body;
+  NodeBlockData* blockData;
 
   public:
 
@@ -1407,12 +1477,23 @@ class whileStmt:public statement
     {
        body=bodySent;
     }
+
+    void setBlockData(NodeBlockData* bd)
+    {
+      this->blockData = bd;
+    }
+
+    NodeBlockData* getBlockData()
+    {
+      return blockData;
+    }
   }; 
   class dowhileStmt:public statement
 {
   private:
   Expression* iterCondition;
   blockStatement* body;
+  NodeBlockData* blockdata;
 
   public:
 
@@ -1447,6 +1528,14 @@ class whileStmt:public statement
     void setBody(blockStatement* bodySent)
     {
        body=bodySent;
+    }
+
+    NodeBlockData* getBlockData(){
+      return blockdata;
+    }
+
+    void setBlockData(NodeBlockData* blockdataSent){
+      blockdata = blockdataSent;
     }
   };
 
@@ -1952,11 +2041,7 @@ class fixedPointStmt:public statement
     list<Identifier*> usedVars;
     list<Identifier*> doubleBufferVars; // the propnodes which need to be double buffered
 
-    bool isMetaUsed; // if d_meta is used in forall
-    bool isDataUsed; // if d_data is used in forall
-    bool isSrcUsed; // if d_src is used in forall
-    bool isWeightUsed; // if d_weight is used in forall
-    bool isRevMetaUsed; // if d_rev_meta is used in forall
+    MetaDataUsed metadata;
     public:
     forallStmt()
     {
@@ -1971,11 +2056,7 @@ class fixedPointStmt:public statement
       isSourceId=false;
       createSymbTab();
       filterExprAssoc = false; 
-      isMetaUsed = false;
-      isDataUsed = false;
-      isSrcUsed = false;
-      isWeightUsed = false;
-      isRevMetaUsed = false;
+      metadata = MetaDataUsed();
     }
 
     static forallStmt* createforallStmt(Identifier* iterator,Identifier* sourceGraph,proc_callExpr* extractElemFunc,statement* body,Expression* filterExpr,bool isforall)
@@ -2168,43 +2249,43 @@ class fixedPointStmt:public statement
     }
 
     bool getIsMetaUsed() {
-      return isMetaUsed;
+      return metadata.isMetaUsed;
     }
 
     void setIsMetaUsed() {
-      this->isMetaUsed = true;
+      metadata.isMetaUsed = true;
     }
 
     bool getIsDataUsed() {
-      return isDataUsed;
+      return metadata.isDataUsed;
     }
 
     void setIsDataUsed() {
-      this->isDataUsed = true;
+      metadata.isDataUsed = true;
     }
 
     bool getIsSrcUsed() {
-      return isSrcUsed;
+      return metadata.isSrcUsed;
     }
 
     void setIsSrcUsed() {
-      this->isSrcUsed = true;
+      metadata.isSrcUsed = true;
     }
 
     bool getIsWeightUsed() {
-      return isWeightUsed;
+      return metadata.isWeightUsed;
     }
 
     void setIsWeightUsed() {
-      this->isWeightUsed = true;
+      metadata.isWeightUsed = true;
     }
 
     bool getIsRevMetaUsed() {
-      return isRevMetaUsed;
+      return metadata.isRevMetaUsed;
     }
 
     void setIsRevMetaUsed() {
-      this->isRevMetaUsed = true;
+      metadata.isRevMetaUsed = true;
     }
 
     void addDoubleBufferVar(Identifier* var) {
@@ -2213,6 +2294,10 @@ class fixedPointStmt:public statement
 
     list<Identifier*> getDoubleBufferVars() {
       return doubleBufferVars;
+    }
+
+    MetaDataUsed getMetaDataUsed() {
+      return metadata;
     }
   
 };

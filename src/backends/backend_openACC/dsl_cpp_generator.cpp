@@ -3,6 +3,8 @@
 #include<string.h>
 #include<cassert>
 
+#include "getMetaDataUsed.cpp"
+
 extern usedVariables getVarsStatement(statement* stmt);
 
 //~ using namespace spacc;
@@ -743,6 +745,9 @@ void dsl_cpp_generator::generateDoWhileStmt(dowhileStmt* doWhile)
   main.pushstr_newL("{");  //Start of inner openAcc data body
   //-------------------------------------------------------------------
 
+  MetaDataUsed md = getMetaDataUsedDoWhile(doWhile);
+  md.print();
+
   main.pushstr_newL("do");
   generateStatement(doWhile->getBody());
   main.pushString("while(");
@@ -1308,7 +1313,7 @@ generateForAll_header(forallStmt* forAll)    //Required only if there is reducti
     usedVariables usedVars = getVarsStatement(forAll->getBody());
     usedVars.removeVariable(forAll->getIterator(), READ_WRITE);
     for(Identifier* id: usedVars.getVariables(READ_ONLY)) {
-      cout << "read only " << id->getIdentifier() << endl;
+      // cout << "read only " << id->getIdentifier() << endl;
       Type* type = id->getSymbolInfo()->getType();
       if(type->isPropType()) {
         sprintf(strBuffer1, "copyin( %s.%s[:%s.%s()] )", graph_name, id->getIdentifier(), graph_name, id->getIdentifier() );
@@ -1322,7 +1327,7 @@ generateForAll_header(forallStmt* forAll)    //Required only if there is reducti
       }
     }
     for(Identifier* id: usedVars.getVariables(WRITE_ONLY)) {
-      cout << "write only " << id->getIdentifier() << endl;
+      // cout << "write only " << id->getIdentifier() << endl;
       Type* type = id->getSymbolInfo()->getType();
       if(type->isPropType()) {
         sprintf(strBuffer1, "copyout( %s.%s[:%s.%s()] )", graph_name, id->getIdentifier(), graph_name, id->getIdentifier() );
@@ -1336,7 +1341,7 @@ generateForAll_header(forallStmt* forAll)    //Required only if there is reducti
       }
     }
     for(Identifier* id: usedVars.getVariables(READ_AND_WRITE)) {
-      cout << "read and write" << id->getIdentifier() << endl;
+      // cout << "read and write" << id->getIdentifier() << endl;
       Type* type = id->getSymbolInfo()->getType();
       if(type->isPropType()) {
         sprintf(strBuffer1, "copy( %s.%s[:%s.%s()] )", graph_name, id->getIdentifier(), graph_name, id->getIdentifier() );

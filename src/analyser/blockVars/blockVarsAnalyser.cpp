@@ -1,5 +1,33 @@
 #include "blockVarsAnalyser.h"
 
+ASTNodeBlock* blockVarsAnalyser::initBlockNode() 
+{
+    ASTNodeBlock* blockNode = new ASTNodeBlock();
+    return blockNode;
+}
+
+ASTNodeBlock* blockVarsAnalyser::initBlockNode(ASTNode* node) 
+{
+    ASTNodeBlock* blockNode = new ASTNodeBlock(node);
+    return blockNode;
+}
+
+void blockVarsAnalyser::addBlockNode(ASTNode* node, ASTNodeBlock* blockNode) 
+{
+    blockNodes.push_back(blockNode);
+    blockNodeMap[node] = new NodeBlockData(node, blockNode);
+}
+
+void blockVarsAnalyser::addBlockNode(ASTNode* node, ASTNodeBlock* startBlock, ASTNodeBlock* endBlock) 
+{
+    blockNodeMap[node] = new NodeBlockData(node, startBlock, endBlock);
+}
+
+NodeBlockData* blockVarsAnalyser::getBlockData(ASTNode* node)
+{
+    return blockNodeMap[node];
+}
+
 void blockVarsAnalyser::toString(NODETYPE type)
 {
     switch(type)
@@ -97,38 +125,69 @@ void blockVarsAnalyser::printBlockNodes()
     for (auto blockNode: blockNodes) 
     {
         cout << "Block number " << ++i << ": "; 
-        toString(blockNode->getNode()->getTypeofNode());
+        if (blockNode->getNode() == NULL)
+            cout << "NULL";
+        else
+            toString(blockNode->getNode()->getTypeofNode());
         cout << endl;
-        for (Identifier* id : blockNode->getDef()) 
+        for (TableEntry* id : blockNode->getDef()) 
         {
-            cout << "Def: " << id->getIdentifier() << endl;
+            cout << "Def: " << id->getId()->getIdentifier() << endl;
         }
-        for (Identifier* id : blockNode->getUse()) 
+        for (TableEntry* id : blockNode->getUse()) 
         {
-            cout << "Use: " << id->getIdentifier() << endl;
+            cout << "Use: " << id->getId()->getIdentifier() << endl;
         }
-        for (Identifier* id : blockNode->getIn()) 
+        for (TableEntry* id : blockNode->getIn()) 
         {
-            cout << "In: " << id->getIdentifier() << endl;
+            cout << "In: " << id->getId()->getIdentifier() << endl;
         }
-        for (Identifier* id : blockNode->getOut()) 
+        for (TableEntry* id : blockNode->getOut()) 
         {
-            cout << "Out: " << id->getIdentifier() << endl;
+            cout << "Out: " << id->getId()->getIdentifier() << endl;
         }
         for (ASTNodeBlock* succ : blockNode->getSucc()) 
         {
             cout << "Succ: ";
-            toString(succ->getNode()->getTypeofNode());
+            if (succ->getNode() == NULL)
+                cout << "NULL";
+            else
+                toString(succ->getNode()->getTypeofNode());
             cout << endl;
         }
     }
+}
+
+void blockVarsAnalyser::analyseBlockNodes()
+{
+    bool changed = true;
+    do
+    {
+        changed = false;
+        for (ASTNodeBlock* blockNode: blockNodes)
+        {
+            set<TableEntry*> oldIn = blockNode->getIn();
+            set<TableEntry*> oldOut = blockNode->getOut();
+            for (ASTNodeBlock* succ: blockNode->getSucc())
+            {
+                blockNode->addOut(succ->getIn());
+            }
+            blockNode->addIn(blockNode->getOut());
+            blockNode->removeIn(blockNode->getDef());
+            blockNode->addIn(blockNode->getUse());
+        
+            if (oldIn != blockNode->getIn() || oldOut != blockNode->getOut())
+                changed = true;
+        }
+    } while (changed);
 }
 
 void blockVarsAnalyser::analyseFunc(ASTNode* proc) 
 {
     Function* func = (Function*)proc;
 
-    cout << "Function Name: " << func->getIdentifier()->getIdentifier() << endl;
+    ASTNodeBlock* endBlock = new ASTNodeBlock();
+    blockNodes.push_back(endBlock);
 
     ASTNodeBlock* blockNode = initBlockNode(func);
     for (formalParam* param : func->getParamList()) 
@@ -139,8 +198,10 @@ void blockVarsAnalyser::analyseFunc(ASTNode* proc)
     blockNode->addSucc(initStatement(func->getBlockStatement(), NULL));
     addBlockNode(func, blockNode);
 
+    // printBlockNodes();
+    analyseBlockNodes();
+
     printBlockNodes();
-    // analyseBlockNodes();
 }
 
 void blockVarsAnalyser::analyse(list<Function*> functions) 
