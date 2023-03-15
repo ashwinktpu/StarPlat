@@ -124,12 +124,13 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
  bool create_Symbol(SymbolTable* sTab,Identifier* id,Type* type)
  {
      bool checkFine=sTab->check_conflicts_and_add(sTab, id,type);
+     
      if(!checkFine)
      {
          //action to be added.
      }
      search_and_connect_toId(sTab,id);
-
+    
      return checkFine;
  }
 
@@ -190,12 +191,15 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
        {    
            declaration* declStmt=(declaration*)stmt;
            Type* type=declStmt->getType();
+          
            SymbolTable* symbTab=type->isPropType()?currPropSymbT:currVarSymbT;
+            
            bool creatsFine=create_Symbol(symbTab,declStmt->getdeclId(),type);
            if(declStmt->isInitialized())
            {
                checkForExpressions(declStmt->getExpressionAssigned());
            }
+           
              break;
        }
 

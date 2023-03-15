@@ -307,7 +307,7 @@ static ASTNode* createNodeForProcCall(ASTNode* proc_callId,list<argument*> argLi
     proc_callExpr* proc_callExprNode;
     if(proc_callId->getTypeofNode()==NODE_ID)
     {
-      proc_callExprNode=proc_callExpr::nodeForProc_Call(NULL,NULL,(Identifier*)proc_callId,argList);
+        proc_callExprNode = proc_callExpr::nodeForProc_Call(NULL, NULL, (Identifier *)proc_callId, argList);
 
 
     }

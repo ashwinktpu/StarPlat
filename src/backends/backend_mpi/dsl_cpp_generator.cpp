@@ -4346,8 +4346,9 @@ const char* dsl_cpp_generator::convertToCppType(Type* type)
       switch(typeId)
       {
         case TYPE_SETN:
+          return "std::set<int>";
+        case TYPE_VECTOR:
           return "std::vector<int>";
-       
         default:
          assert(false);          
       }

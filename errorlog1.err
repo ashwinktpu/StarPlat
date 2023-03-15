@@ -1,0 +1,18 @@
+graphcode/generated_cuda/../graph.hpp(112): warning: missing return statement at end of non-void function "graph::getEdge"
+
+graphcode/generated_cuda/../graph.hpp(97): warning: variable "startEdge" was declared but never referenced
+
+graphcode/generated_cuda/../graph.hpp(98): warning: variable "endEdge" was declared but never referenced
+
+graphcode/generated_cuda/../graph.hpp(99): warning: variable "foundEdge" was declared but never referenced
+
+graphcode/generated_cuda/../graph.hpp(388): warning: variable "weightVal" was declared but never referenced
+
+graphcode/generated_cuda/bc_dslV2.cu(67): warning: variable "numThreads" was declared but never referenced
+
+graphcode/generated_cuda/../graph.hpp(112): warning: missing return statement at end of non-void function "graph::getEdge"
+
+mv: inter-device move failed: ‘graphcode’ to ‘/lfs/usrhome/btech/cs19b019/B.Tech-Project/StarPlat/./graphcode’; unable to remove target: Directory not empty
+mv: inter-device move failed: ‘src’ to ‘/lfs/usrhome/btech/cs19b019/B.Tech-Project/StarPlat/./src’; unable to remove target: Directory not empty
+mv: inter-device move failed: ‘testcases’ to ‘/lfs/usrhome/btech/cs19b019/B.Tech-Project/StarPlat/./testcases’; unable to remove target: Directory not empty
+rmdir: failed to remove ‘/lfs/usrhome/btech/cs19b019/scratch/job967360’: Directory not empty

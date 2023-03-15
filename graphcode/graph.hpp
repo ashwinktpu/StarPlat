@@ -402,7 +402,7 @@ class graph
            edges[source].push_back(e);
            graph_edge.push_back(e);
 
-           ss>>weightVal; //for edgelists having weight too.      
+          //  ss>>weightVal; //for edgelists having weight too.      
            
      }
 

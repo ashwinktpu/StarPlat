@@ -1,0 +1,11 @@
+function computeMaxPath(Graph g, propNode<int> dist, SetN<g> l){
+      int x =0;
+      vector<double> s1;
+      vector<long> s1;
+      SetN<g> l;
+      
+      forall(v in g.nodes())
+      {
+            x = x + 1;
+      }
+}

@@ -138,7 +138,7 @@ bool deviceVarsAnalyser::initFixedPoint(fixedPointStmt *stmt, list<Identifier *>
 {
     ASTNodeWrap *stmtNode = initWrapNode(stmt, vars);
     ASTNodeWrap *condNode = initWrapNode(stmt->getFixedPointId(), vars);
-
+    gpuUsedVars.addVariable(stmt->getFixedPointId(), READ_WRITE);
     condNode->usedVars.addVariable(stmt->getFixedPointId(), READ_WRITE);
     for (Identifier *iden : getVarsExpr(stmt->getDependentProp()).getVariables(READ_WRITE))
         condNode->usedVars.addVariable(iden, READ_WRITE);
@@ -209,7 +209,10 @@ bool deviceVarsAnalyser::initItrBFS(iterateBFS *stmt, list<Identifier *> &vars)
         Identifier *itr = bVars.getVariables(READ_WRITE).front();
 
         revNode->usedVars = getVarsStatement(revStmt->getBody());
-        revNode->usedVars.removeVariable(itr, READ_WRITE);
+        if(itr!=NULL){
+            revNode->usedVars.removeVariable(itr, READ_WRITE);
+        }
+        
 
         revStmt->initUsedVariable(revNode->usedVars.getVariables());
         gpuUsedVars.merge(revNode->usedVars);

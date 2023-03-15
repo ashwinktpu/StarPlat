@@ -20,6 +20,7 @@ enum TYPE
  TYPE_PROPEDGE,
  TYPE_NONE,
  TYPE_UPDATES,
+ TYPE_VECTOR,
 
 };
 
@@ -33,8 +34,9 @@ inline bool check_isPropType(int typeId)
 }
 inline bool check_isCollectionType(int typeId)
 {
-  return ((typeId == TYPE_LIST)||(typeId==TYPE_SETE)||(typeId==TYPE_SETN)||(typeId == TYPE_UPDATES));
+  return ((typeId == TYPE_LIST)||(typeId==TYPE_SETE)||(typeId==TYPE_SETN)||(typeId == TYPE_UPDATES)||(typeId == TYPE_VECTOR));
 }
+
 inline bool check_isGraphType(int typeId)
 {
   return ((typeId==TYPE_GRAPH)||(typeId==TYPE_DIRGRAPH));
@@ -53,6 +55,12 @@ inline bool check_isPrimitiveType(int typeId)
  {
    return typeId==TYPE_PROPEDGE;
  }
+
+inline bool check_isVectorCollectionType(int typeId)
+{
+  return typeId==TYPE_VECTOR;
+}
+
 inline bool check_isListCollectionType(int typeId)
 {
   return typeId==TYPE_LIST;
@@ -118,33 +126,33 @@ enum FUNCTYPE
 };
 
 enum NODETYPE{
-  NODE_ID,
-  NODE_PROPACCESS,
-  NODE_FUNC,
-  NODE_TYPE,
-  NODE_FORMALPARAM,
-  NODE_STATEMENT,
-  NODE_BLOCKSTMT,
-  NODE_DECL,
-  NODE_ASSIGN,
-  NODE_WHILESTMT,
-  NODE_DOWHILESTMT,
-  NODE_FIXEDPTSTMT,
-  NODE_IFSTMT,
-  NODE_ITRBFS,
-  NODE_ITRRBFS,
-  NODE_EXPR,
-  NODE_PROCCALLEXPR,
-  NODE_PROCCALLSTMT,
-  NODE_FORALLSTMT,
-  NODE_REDUCTIONCALL,
-  NODE_REDUCTIONCALLSTMT,
-  NODE_UNARYSTMT,
-  NODE_RETURN,
-  NODE_BATCHBLOCKSTMT,
-  NODE_ONADDBLOCK,
-  NODE_ONDELETEBLOCK,
-  NODE_TRANSFERSTMT,
+  NODE_ID,               //0
+  NODE_PROPACCESS,       //1
+  NODE_FUNC,             //2 
+  NODE_TYPE,             //3
+  NODE_FORMALPARAM,      //4
+  NODE_STATEMENT,        //5
+  NODE_BLOCKSTMT,        //6
+  NODE_DECL,             //7
+  NODE_ASSIGN,           //8
+  NODE_WHILESTMT,        //9
+  NODE_DOWHILESTMT,      //10
+  NODE_FIXEDPTSTMT,      //11
+  NODE_IFSTMT,           //12
+  NODE_ITRBFS,           //13
+  NODE_ITRRBFS,          //14
+  NODE_EXPR,             //15
+  NODE_PROCCALLEXPR,     //16
+  NODE_PROCCALLSTMT,     //17
+  NODE_FORALLSTMT,       //18
+  NODE_REDUCTIONCALL,    //19
+  NODE_REDUCTIONCALLSTMT, //20
+  NODE_UNARYSTMT,        //21
+  NODE_RETURN,           //22
+  NODE_BATCHBLOCKSTMT,   //23
+  NODE_ONADDBLOCK,       //24
+  NODE_ONDELETEBLOCK,    //25
+  NODE_TRANSFERSTMT,     //26
 };
 
 
@@ -175,6 +183,15 @@ static const char* countOutNbrCall = "count_outNbrs";
 static const char* isAnEdgeCall = "is_an_edge"; 
 static const char* nodesToCall = "nodes_to";
 static const char* nodesCall = "nodes";
+
+// functions for set
+static const char *elements = "elements";
+static const char *contains = "contains";
+static const char *addNode = "addNode";
+static const char *addSetN = "addSetN";
+static const char *discard = "discard";
+static const char *totalElements = "totalElements";
+static const char *isEmpty = "isEmpty";
 
 #endif
 

@@ -7,6 +7,7 @@
 	#include "../analyser/attachProp/attachPropAnalyser.h"
 	#include "../analyser/dataRace/dataRaceAnalyser.h"
 	#include "../analyser/deviceVars/deviceVarsAnalyser.h"
+	#include "../analyser/pushpull/pushpullAnalyser.h"
 	#include<getopt.h>
 	//#include "../symbolutil/SymbolTableBuilder.cpp"
      
@@ -43,7 +44,7 @@
 	ASTNodeList* nodeList;
     tempNode* temporary;
      }
-%token T_INT T_FLOAT T_BOOL T_DOUBLE  T_LONG
+%token T_INT T_FLOAT T_BOOL T_DOUBLE  T_LONG 
 %token T_FORALL T_FOR  T_P_INF  T_INF T_N_INF
 %token T_FUNC T_IF T_ELSE T_WHILE T_RETURN T_DO T_IN T_FIXEDPOINT T_UNTIL T_FILTER
 %token T_ADD_ASSIGN T_SUB_ASSIGN T_MUL_ASSIGN T_DIV_ASSIGN T_MOD_ASSIGN T_AND_ASSIGN T_XOR_ASSIGN
@@ -51,7 +52,7 @@
 %token T_AND T_OR T_SUM T_AVG T_COUNT T_PRODUCT T_MAX T_MIN
 %token T_GRAPH T_DIR_GRAPH  T_NODE T_EDGE T_UPDATES
 %token T_NP  T_EP
-%token T_LIST T_SET_NODES T_SET_EDGES  T_FROM
+%token T_LIST T_SET_NODES T_SET_EDGES  T_FROM  T_VECTOR
 %token T_BFS T_REVERSE
 %token T_INCREMENTAL T_DECREMENTAL T_STATIC T_DYNAMIC
 %token T_BATCH T_ONADD T_ONDELETE
@@ -226,6 +227,7 @@ primitive: T_INT { $$=Util::createPrimitiveTypeNode(TYPE_INT);};
 	| T_BOOL { $$=Util::createPrimitiveTypeNode(TYPE_BOOL);};
 	| T_DOUBLE { $$=Util::createPrimitiveTypeNode(TYPE_DOUBLE); };
     | T_LONG {$$=$$=Util::createPrimitiveTypeNode(TYPE_LONG);};
+	
 
 graph : T_GRAPH { $$=Util::createGraphTypeNode(TYPE_GRAPH,NULL);};
 	|T_DIR_GRAPH {$$=Util::createGraphTypeNode(TYPE_DIRGRAPH,NULL);};
@@ -235,8 +237,8 @@ collections : T_LIST { $$=Util::createCollectionTypeNode(TYPE_LIST,NULL);};
 			                     $$=Util::createCollectionTypeNode(TYPE_SETN,$3);};
                 | T_SET_EDGES '<' id '>' {// Identifier* id=(Identifier*)Util::createIdentifierNode($3);
 					                    $$=Util::createCollectionTypeNode(TYPE_SETE,$3);};
-				| T_UPDATES '<' id '>'   { $$=Util::createCollectionTypeNode(TYPE_UPDATES,$3);}
-
+				| T_UPDATES '<' id '>'   { $$=Util::createCollectionTypeNode(TYPE_UPDATES,$3);};
+                | T_VECTOR '<' primitive '>' {$$=Util::createCollectionTypeNode(TYPE_VECTOR,$3);};
 
 type2 : T_NODE {$$=Util::createNodeEdgeTypeNode(TYPE_NODE) ;};
        | T_EDGE {$$=Util::createNodeEdgeTypeNode(TYPE_EDGE);};
@@ -571,10 +573,11 @@ int main(int argc,char **argv)
 	  drAnalyser.analyse(frontEndContext.getFuncList());
 
 	  deviceVarsAnalyser dvAnalyser;
-	  //cpp_backend.setOptimized();
+	  cpp_backend.setOptimized();
 	  dvAnalyser.analyse(frontEndContext.getFuncList());
 	}
-		  
+		pushpullAnalyser ppAnalyser;
+		ppAnalyser.analyse(frontEndContext.getFuncList());
         cpp_backend.generate();
       } 
       else if (strcmp(backendTarget, "omp") == 0) {

@@ -1,0 +1,8 @@
+int main(int argc, char* argv[]){
+   char* filename = argv[1];
+   graph g(filename);
+   g.parseGraph();
+   int * dist = (int*) malloc((g.num_nodes()+1)*sizeof(int));
+   int src =1;
+   Compute_SSSP(g,dist,src);
+}

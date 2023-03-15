@@ -157,3 +157,13 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
 
   cudaMemcpy(      BC,     d_BC, sizeof(float)*(V), cudaMemcpyDeviceToHost);
 } //end FUN
+
+
+int main(int argc, char* argv[]){
+   char* filename = argv[1];
+   graph g(filename);
+   g.parseGraph();
+   std::set<int> src = {1};
+   float * BC= (float*) malloc((g.num_nodes())*sizeof(float));
+   Compute_BC(g,BC,src);
+}

@@ -175,6 +175,7 @@ lattice deviceVarsAnalyser::analyseFixedPoint(fixedPointStmt *stmt, lattice &inM
   wrapNode->inMap = inMap;
 
   Identifier *iden = stmt->getFixedPointId();
+  
   ASTNodeWrap *condNode = getWrapNode(iden);
   
   bool hasChanged;

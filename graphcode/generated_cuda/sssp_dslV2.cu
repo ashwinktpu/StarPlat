@@ -1,8 +1,7 @@
 // FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
 #include "sssp_dslV2.h"
 
-void Compute_SSSP(graph& g,int* dist,int* weight,int src
-)
+void Compute_SSSP(graph& g,int* dist,int src)
 
 {
   // CSR BEGIN
@@ -81,9 +80,6 @@ void Compute_SSSP(graph& g,int* dist,int* weight,int src
   int* d_dist;
   cudaMalloc(&d_dist, sizeof(int)*(V));
 
-  int* d_weight;
-  cudaMalloc(&d_weight, sizeof(int)*(E));
-
 
   //BEGIN DSL PARSING 
   bool* d_modified;
@@ -105,7 +101,7 @@ void Compute_SSSP(graph& g,int* dist,int* weight,int src
 
     finished = true;
     cudaMemcpyToSymbol(::finished, &finished, sizeof(bool), 0, cudaMemcpyHostToDevice);
-    Compute_SSSP_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_modified,d_weight,d_dist);
+    Compute_SSSP_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_modified,d_dist);
     cudaDeviceSynchronize();
 
 
@@ -128,5 +124,4 @@ void Compute_SSSP(graph& g,int* dist,int* weight,int src
   printf("GPU Time: %.6f ms\n", milliseconds);
 
   cudaMemcpy(    dist,   d_dist, sizeof(int)*(V), cudaMemcpyDeviceToHost);
-  cudaMemcpy(  weight, d_weight, sizeof(int)*(E), cudaMemcpyDeviceToHost);
 } //end FUN

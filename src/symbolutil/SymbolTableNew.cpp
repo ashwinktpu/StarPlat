@@ -13,8 +13,10 @@ TableEntry::TableEntry(Identifier* idSent,Type* typeSent)
 
 
  void SymbolTable::create_and_add_entry(Identifier* id, Type* type) {
+    
         Identifier* idCopy = id->copy();
         Type* typeCopy = type->copy();
+    
         TableEntry* e = new TableEntry(idCopy,typeCopy);
         id->setSymbolInfo(e);
         entries.push_back(e);
@@ -47,6 +49,7 @@ bool SymbolTable::check_conflicts_and_add(SymbolTable* sTab,Identifier* id,Type*
  {
         assert(id->getSymbolInfo() == NULL);
         TableEntry* tabEntry=findEntryInST(id);
+       
         if (tabEntry != NULL) 
         return false;
         create_and_add_entry(id, type);

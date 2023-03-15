@@ -17,16 +17,22 @@ list<statement*> transferStatements(lattice &inp, lattice &out)
         {
             if((outType == lattice::GPU_ONLY) || (outType == lattice::CPU_GPU_SHARED))
             {
-                varTransferStmt* transferStmt = new varTransferStmt(vars.first->getId(), 0);
-                transferStatements.push_back(transferStmt);
+                if(vars.first!=NULL){
+                      varTransferStmt* transferStmt = new varTransferStmt(vars.first->getId(), 0);
+                      transferStatements.push_back(transferStmt);
+                }
+               
             }
         }
         else if(inpType == lattice::GPU_ONLY)
         {
             if((outType == lattice::CPU_ONLY) || (outType == lattice::CPU_GPU_SHARED))
             {
-                varTransferStmt* transferStmt = new varTransferStmt(vars.first->getId(), 1);
-                transferStatements.push_back(transferStmt);
+                if(vars.first!=NULL){
+                    varTransferStmt* transferStmt = new varTransferStmt(vars.first->getId(), 1);
+                    transferStatements.push_back(transferStmt);
+                }
+               
             }
         }
     }

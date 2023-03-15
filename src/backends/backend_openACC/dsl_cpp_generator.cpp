@@ -2649,6 +2649,8 @@ const char* dsl_cpp_generator:: convertToCppType(Type* type)
           return "std::set<int>&";
         case TYPE_UPDATES:
           return "std::vector<update>&";
+        case TYPE_VECTOR:
+          return "std::vector<int>&";
         default:
          assert(false);          
       }

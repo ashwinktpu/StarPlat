@@ -127,7 +127,7 @@ NEGATE [-]
 "SetE" 	{printf("Set of Edges"); return T_SET_EDGES;}
 "list" {printf("list type"); return T_LIST;}
 "updates" {printf("updates type"); return T_UPDATES;}
-
+"vector"  {printf("vectors type");  return T_VECTOR;}
 
  /* Numbers and Identifies */
 {ALPHANUM}          { yylval.text=yytext; /*printf("HELLO ID %s",yytext); /* printf("\n");*/ return ID;}
@@ -142,8 +142,10 @@ NEGATE [-]
 .    {/* printf("invalid\n"); */}
 
 
+
 %%
 
 int yywrap(void) {
     return 1;
 }
+

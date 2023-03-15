@@ -9,29 +9,29 @@
 #include "../libcuda.cuh"
 #include <cooperative_groups.h>
 
-void Compute_SSSP(graph& g,int* dist,int* weight,int src
-);
+void Compute_SSSP(graph& g,int* dist,int src);
 
 
 
 __device__ bool finished ; // DEVICE ASSTMENT in .h
 
-__global__ void Compute_SSSP_kernel(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,bool* d_modified,int* d_weight,int* d_dist){ // BEGIN KER FUN via ADDKERNEL
+__global__ void Compute_SSSP_kernel(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,bool* d_modified,int* d_dist){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
-  unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
-  if(v >= V) return;
-  if (d_modified[v] == true){ // if filter begin 
-    for (int edge = d_meta[v]; edge < d_meta[v+1]; edge++) { // FOR NBR ITR 
+  unsigned pp = blockIdx.x * blockDim.x + threadIdx.x;
+  if(pp >= V) return;
+  if (d_modified[pp] == true){ // if filter begin 
+    for (int edge = d_meta[pp]; edge < d_meta[pp+1]; edge++) { // FOR NBR ITR 
       int nbr = d_data[edge];
       int e = edge;
-       int dist_new = d_dist[v] + d_weight[e];
+       int dist_new = d_dist[nbr] + d_weight[e];
       bool modified_new = true;
-      if(d_dist[v]!= INT_MAX && d_dist[nbr] > dist_new)
+      if(d_dist[nbr]!= INT_MAX && d_dist[pp] > dist_new)
       {
-        atomicMin(&d_dist[nbr],dist_new);
-        d_modified_next[nbr] = modified_new;
+        atomicMin(&d_dist[pp],dist_new);
+        d_modified_next[pp] = modified_new;
         finished = false ;
       }
+      d_dist[nbr] = d_dist[nbr]+ d_dist[nbr] + 1;
 
     } //  end FOR NBR ITR. TMP FIX!
 

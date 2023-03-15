@@ -189,7 +189,6 @@ class Identifier:public ASTNode
      strcpy(copyId->identifier,identifier);
      copyId->accessType=0;
      copyId->setTypeofNode(NODE_ID);
-
      return copyId;
    }
    
@@ -580,7 +579,12 @@ class Type:public ASTNode
        Type* type=new Type();
        type->typeId=typeIdSent;
        type->rootType=rootTypeSent;
-       type->TargetGraph=TargetGraphSent;
+       if(typeIdSent==TYPE_VECTOR){
+          type->innerTargetType=(Type* )TargetGraphSent;
+       }
+       else{
+              type->TargetGraph=TargetGraphSent;
+       }
        return type;
   }
   static Type* createForPropertyType(int typeIdSent,int rootTypeSent, Type* innerTargetTypeSent)
@@ -650,6 +654,11 @@ class Type:public ASTNode
    bool isPropEdgeType()
    {
      return check_isPropEdgeType(typeId);
+   }
+
+   bool isVectorCollection()
+   {
+     return check_isVectorCollectionType(typeId);
    }
 
    bool isListCollection()
