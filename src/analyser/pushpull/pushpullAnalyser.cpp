@@ -7,9 +7,10 @@ int pushpullAnalyser::analyseforinfor(forallStmt* forstmt,Identifier* ownvertex)
     blockStatement *forbody = (blockStatement *)forstmt->getBody();
     list<statement *> forbodystmts = forbody->returnStatements();
     for (statement *stmt : forbodystmts){
-       int pushorpull = analyseStatementinForAll(stmt,ownvertex);
-       if(pushorpull==0){
-        return 0;
+        int pushorpull = analyseStatementinForAll(stmt, ownvertex);
+        if (pushorpull == 0)
+        {
+            return 0;
        }
     }
     return 1;
@@ -57,20 +58,49 @@ int pushpullAnalyser::analysereductioninfor(reductionCallStmt* stmt, Identifier 
     }
     return 1;
 }
+
+int pushpullAnalyser::analyseexprinfor(unary_stmt* input,Identifier *ownvertex){
+    Expression* stmt = input->getUnaryExpr();
+    while (stmt->isUnary())
+    {
+        stmt = stmt->getUnaryExpr();
+    }
+    if(stmt->isIdentifierExpr()){
+        Identifier* affectedId = stmt->getId();
+        if (strcmp(ownvertex->getIdentifier(), affectedId->getIdentifier()) != 0)
+        {
+             return 0;
+        }
+    }
+    if(stmt->isPropIdExpr()){
+        PropAccess *propaccess = stmt->getPropId();
+        Identifier *affectedId = propaccess->getIdentifier1();
+        if (strcmp(ownvertex->getIdentifier(), affectedId->getIdentifier()) != 0)
+        {
+             return 0;
+        }
+    }
+        return 1;
+}
 int pushpullAnalyser::analyseStatementinForAll(statement* stmt,Identifier *ownvertex){
-    switch(stmt->getTypeofNode()){
-        case NODE_FORALLSTMT:
+        switch (stmt->getTypeofNode())
         {
-            return analyseforinfor((forallStmt *)stmt, ownvertex);
-        }
-        case NODE_ASSIGN:
-        {
-            return analyseassigninfor((assignment*)stmt,ownvertex);
-        }
-        case NODE_REDUCTIONCALLSTMT:
-        {
-            return analysereductioninfor((reductionCallStmt*)stmt, ownvertex);
-        }
+            case NODE_FORALLSTMT:
+            {
+                return analyseforinfor((forallStmt *)stmt, ownvertex);
+            }
+            case NODE_ASSIGN:
+            {
+                return analyseassigninfor((assignment*)stmt,ownvertex);
+            }
+            case NODE_REDUCTIONCALLSTMT:
+            {
+                return analysereductioninfor((reductionCallStmt*)stmt, ownvertex);
+            }
+            case NODE_UNARYSTMT:
+            {
+                return analyseexprinfor((unary_stmt*)stmt,ownvertex);
+            }
     }
     return 1;
 }

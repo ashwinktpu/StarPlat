@@ -15,8 +15,8 @@ class pushpullAnalyser{
     int analyseassigninfor(assignment *stmt,Identifier *ownvertex);
     int analysereductioninfor(reductionCallStmt *stmt,Identifier *ownvertex);
     int analyseStatementinForAll(statement* stmt,Identifier* ownvertex);
+    int analyseexprinfor(unary_stmt *stmt, Identifier *ownvertex);
 
-    public : void
-                analyse(list<Function *> funcList);
+    public : void analyse(list<Function *> funcList);
 };
 #endif
