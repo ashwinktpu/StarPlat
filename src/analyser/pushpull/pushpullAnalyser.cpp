@@ -40,7 +40,21 @@ int pushpullAnalyser::analysereductioninfor(reductionCallStmt* stmt, Identifier 
              }
         }
     }
-
+    Identifier* leftid = stmt->getLeftId();
+    if(leftid!=NULL){
+        if (strcmp(ownvertex->getIdentifier(), leftid->getIdentifier()) != 0)
+        {
+             return 0;
+        }
+    }
+    PropAccess* leftprop = stmt->getPropAccess();
+    if(leftprop!=NULL){
+        Identifier *affectedId = leftprop->getIdentifier1();
+        if (strcmp(ownvertex->getIdentifier(), affectedId->getIdentifier()) != 0)
+        {
+             return 0;
+        }
+    }
     return 1;
 }
 int pushpullAnalyser::analyseStatementinForAll(statement* stmt,Identifier *ownvertex){

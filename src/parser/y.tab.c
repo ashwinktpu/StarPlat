@@ -3133,20 +3133,19 @@ int main(int argc,char **argv)
         cpp_backend.generate();
       }
       else
-	std::cout<< "invalid backend" << '\n';
-	
+	    std::cout<< "invalid backend" << '\n';
 	  }
-	/*else
+	else
 	 {
-		 /*
-		 printf("static graphsize %d\n",graphId[2][0].size());
-		 dsl_dyn_cpp_generator cpp_dyn_gen;
-		 cpp_dyn_gen.setFileName(fileName);
-		 cpp_dyn_gen.generate();
+		if(strcmp(backendTarget, "omp") == 0) {
+		   spdynomp::dsl_dyn_cpp_generator cpp_dyn_gen;
+		   cpp_dyn_gen.setFileName(fileName);
+	       cpp_dyn_gen.generate();
+		}
 
-	 }*/
+	 }
 	
-	}
+   }
 
 	printf("finished successfully\n");
    
