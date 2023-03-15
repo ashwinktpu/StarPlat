@@ -3148,12 +3148,40 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt *fixedPointConstruct, 
         targetFile.pushstr_newL("cudaSetDevice(i);"); 
         sprintf(strBuffer, "cudaMemcpyAsync(h_%s[i],%s[i],sizeof(%s)*(V+1),cudaMemcpyDeviceToHost);", modifiedVar, modifiedVarNext, fixPointVarType); 
         targetFile.pushstr_newL(strBuffer); 
-        targetFile.pushstr_newL("}") ;
-
+        targetFile.pushstr_newL("}");
+        targetFile.pushstr_newL("for(int i=0;i<devicecount;i++){");
+        targetFile.pushstr_newL("cudaSetDevice(i);");
+        targetFile.pushstr_newL("cudaDeviceSynchronize();");
+        targetFile.pushstr_newL("}");
+        targetFile.pushstr_newL("cudaSetDevice(0);");
+        sprintf(strBuffer,"bool* d_%s_temp;",modifiedVar);
+        targetFile.pushstr_newL(strBuffer);
+        sprintf(strBuffer,"bool* d_%s_temp1;",modifiedVar);
+        targetFile.pushstr_newL(strBuffer);
+        sprintf(strBuffer,"cudaMalloc(&d_%s_temp,(V+1)*sizeof(%s));",modifiedVar,modifiedVarType);
+        targetFile.pushstr_newL(strBuffer);
+        sprintf(strBuffer,"cudaMalloc(&d_%s_temp1,(devicecount)*(V+1)*sizeof(%s));",modifiedVar,modifiedVarType);
+        targetFile.pushstr_newL(strBuffer);
+        sprintf(strBuffer,"initKernel<%s><<<numBlocks,threadsPerBlock>>>(V+1,d_%s_temp,false);",modifiedVarType,modifiedVar);
+        targetFile.pushstr_newL(strBuffer);
+        sprintf(strBuffer,"for(int i=0;i<devicecount;i++){");
+        targetFile.pushstr_newL(strBuffer);
+        sprintf(strBuffer,"cudaMemcpy(d_%s_temp1+i*(V+1),h_%s[i],sizeof(%s)*(V+1),cudaMemcpyHostToDevice);",modifiedVar,modifiedVar,modifiedVarType);
+        targetFile.pushstr_newL(strBuffer);
+        targetFile.pushstr_newL("}");
+        sprintf(strBuffer,"Compute_Or<<<numBlocks,threadsPerBlock>>>(d_%s_temp1,d_%s_temp,V,devicecount);",modifiedVar,modifiedVar);
+        targetFile.pushstr_newL(strBuffer);
+        sprintf(strBuffer,"cudaMemcpy(h_%s[devicecount],d_%s_temp,sizeof(%s)*(V+1),cudaMemcpyDeviceToHost);",modifiedVar,modifiedVar,modifiedVarType);
+        targetFile.pushstr_newL(strBuffer);
+        targetFile.pushstr_newL("for(int i=0;i<devicecount;i++){");
+        targetFile.pushstr_newL("cudaSetDevice(i);");
+        targetFile.pushstr_newL("cudaDeviceSynchronize();");
+        targetFile.pushstr_newL("}");
+        
         sprintf(strBuffer, "for(int i = 0 ; i < devicecount ; i++){");
         targetFile.pushstr_newL(strBuffer);
         targetFile.pushstr_newL("cudaSetDevice(i);");
-        sprintf(strBuffer, "cudaMemcpyAsync(d_%s[i],h_%s[i],sizeof(%s)*(V+1),cudaMemcpyHostToDevice);", modifiedVar, modifiedVar, fixPointVarType);
+        sprintf(strBuffer, "cudaMemcpyAsync(d_%s[i],h_%s[devicecount],sizeof(%s)*(V+1),cudaMemcpyHostToDevice);", modifiedVar, modifiedVar, fixPointVarType);
         targetFile.pushstr_newL(strBuffer);
         targetFile.pushstr_newL("}");
 

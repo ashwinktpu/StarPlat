@@ -224,9 +224,28 @@ void Compute_SSSP(graph& g,int* dist,int src)
       cudaSetDevice(i);
       cudaMemcpyAsync(h_modified[i],d_modified_next[i],sizeof(bool)*(V+1),cudaMemcpyDeviceToHost);
     }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
+      cudaDeviceSynchronize();
+    }
+    cudaSetDevice(0);
+    bool* d_modified_temp;
+    bool* d_modified_temp1;
+    cudaMalloc(&d_modified_temp,(V+1)*sizeof(bool));
+    cudaMalloc(&d_modified_temp1,(devicecount)*(V+1)*sizeof(bool));
+    initKernel<bool><<<numBlocks,threadsPerBlock>>>(V+1,d_modified_temp,false);
+    for(int i=0;i<devicecount;i++){
+      cudaMemcpy(d_modified_temp1+i*(V+1),h_modified[i],sizeof(bool)*(V+1),cudaMemcpyHostToDevice);
+    }
+    Compute_Or<<<numBlocks,threadsPerBlock>>>(d_modified_temp1,d_modified_temp,V,devicecount);
+    cudaMemcpy(h_modified[devicecount],d_modified_temp,sizeof(bool)*(V+1),cudaMemcpyDeviceToHost);
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
+      cudaDeviceSynchronize();
+    }
     for(int i = 0 ; i < devicecount ; i++){
       cudaSetDevice(i);
-      cudaMemcpyAsync(d_modified[i],h_modified[i],sizeof(bool)*(V+1),cudaMemcpyHostToDevice);
+      cudaMemcpyAsync(d_modified[i],h_modified[devicecount],sizeof(bool)*(V+1),cudaMemcpyHostToDevice);
     }
     for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
