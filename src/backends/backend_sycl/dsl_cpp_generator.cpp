@@ -53,7 +53,7 @@ namespace spsycl
         currentFunc = func;
     }
 
-    const char *dsl_cpp_generator::convertToCppType(Type *type)
+    const char *dsl_cpp_generator::convertToCppType(Type *type, bool isElementOfProp = false)
     {
         if (type->isPrimitiveType())
         {
@@ -76,6 +76,30 @@ namespace spsycl
                 return "int";
             default:
                 assert(false);
+            }
+        }
+        else if (type->isPrimitiveType() || isElementOfProp)
+        {
+            Type *targetType = type->getInnerTargetType();
+            if (targetType->isPrimitiveType())
+            {
+                int typeId = targetType->gettypeId();
+                //~ cout << "TYPEID IN CPP" << typeId << "\n";
+                switch (typeId)
+                {
+                case TYPE_INT:
+                    return "int";
+                case TYPE_BOOL:
+                    return "bool";
+                case TYPE_LONG:
+                    return "long";
+                case TYPE_FLOAT:
+                    return "float";
+                case TYPE_DOUBLE:
+                    return "double";
+                default:
+                    assert(false);
+                }
             }
         }
         else if (type->isPropType())
@@ -771,6 +795,8 @@ namespace spsycl
         bool isAtomic = false;
         bool isResult = false;
         std::cout << "\tASST\n";
+        char strBuffer[1024];
+
         if (asmt->lhs_isIdentifier())
         {
             Identifier *id = asmt->getId();
@@ -794,13 +820,33 @@ namespace spsycl
                                      // carried out.
         {
             PropAccess *propId = asmt->getPropId();
+            bool defaultAction = true;
             if (asmt->isDeviceAssignment())
             {
                 std::cout << "\t  DEVICE ASST" << '\n';
+                defaultAction = false;
+                main.pushString("d_"); /// IMPORTANT
+                main.pushString(propId->getIdentifier2()->getIdentifier());
+                main.push('[');
+                main.pushString(propId->getIdentifier1()->getIdentifier());
+                main.push(']');
             }
             if (asmt->getAtomicSignal())
             {
-                main.pushString("atomicAdd(&");
+                main.pushstr_newL("// atomic update");
+                defaultAction = false;
+                const char *typVar = convertToCppType(propId->getIdentifier2()->getSymbolInfo()->getType(), true);
+                sprintf(strBuffer, "atomic_ref<%s, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data(", typVar);
+                main.pushString(strBuffer);
+                main.pushString("d_"); /// IMPORTANT
+                main.pushString(propId->getIdentifier2()->getIdentifier());
+                main.push('[');
+                main.pushString(propId->getIdentifier1()->getIdentifier());
+                main.push(']');
+                // main.pushString("atomic_data += (");
+                // sprintf(strBuffer, "%s_new);", stmt->getAssignedId()->getIdentifier());
+                // main.pushstr_newL(strBuffer);
+                // main.pushString("atomicAdd(&");
                 isAtomic = true;
                 std::cout << "\t  ATOMIC ASST" << '\n';
             }
@@ -808,16 +854,28 @@ namespace spsycl
             { // NOT needed
                 isResult = true;
                 std::cout << "\t  RESULT NO BC by 2 ASST" << '\n';
+                defaultAction = false;
+                main.pushString("d_"); /// IMPORTANT
+                main.pushString(propId->getIdentifier2()->getIdentifier());
+                main.push('[');
+                main.pushString(propId->getIdentifier1()->getIdentifier());
+                main.push(']');
             }
-            main.pushString("d_"); /// IMPORTANT
-            main.pushString(propId->getIdentifier2()->getIdentifier());
-            main.push('[');
-            main.pushString(propId->getIdentifier1()->getIdentifier());
-            main.push(']');
+            if (defaultAction)
+            {
+                main.pushString("d_"); /// IMPORTANT
+                main.pushString(propId->getIdentifier2()->getIdentifier());
+                main.push('[');
+                main.pushString(propId->getIdentifier1()->getIdentifier());
+                main.push(']');
+            }
         }
 
         if (isAtomic)
-            main.pushString(", ");
+        {
+            main.pushstr_newL(");");
+            main.pushString("atomic_data += ");
+        }
         else if (!asmt->hasPropCopy())
             main.pushString(" = ");
 
@@ -827,7 +885,7 @@ namespace spsycl
         //~ std::cout<< "------>END EXP"  << '\n';
 
         if (isAtomic)
-            main.pushstr_newL(");");
+            main.pushstr_newL(";");
         else if (isResult)
             main.pushstr_newL(";"); // No need "/2.0;" for directed graphs
         else if (!asmt->hasPropCopy())

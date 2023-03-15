@@ -321,23 +321,32 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
       }
     }
 
-    if (checkInsideBFSIter(parallelConstruct)) // this assumes all the assignment stmts inside for of ITER BFS are atomic. Possibile bug if more statements!
+    if (forAll->getParent()->getParent()->getTypeofNode() == NODE_ITRBFS) // this assumes all the assignment stmts inside for of ITER BFS are atomic. Possibile bug if more statements!
     {
       /* the assignment statements(arithmetic & logical) within the block of a for statement that
          is itself within a IterateInBFS abstraction are signaled to become atomic while code
          generation. */
-      proc_callExpr *extractElem = forAll->getExtractElementFunc();
-      if (extractElem != NULL)
-      {
-        string methodString(extractElem->getMethodId()->getIdentifier());
-        list<argument *> argList = extractElem->getArgList();
-        if (methodString == nbrCall)
-        {
-
-          forAll->addAtomicSignalToStatements();
-        }
-      }
+      std::cout << "\t\tTP SET ATOMIC BOOL" << '\n';
+      forAll->addAtomicSignalToStatements();
     }
+
+    // if (checkInsideBFSIter(parallelConstruct)) // this assumes all the assignment stmts inside for of ITER BFS are atomic. Possibile bug if more statements!
+    // {
+    //   /* the assignment statements(arithmetic & logical) within the block of a for statement that
+    //      is itself within a IterateInBFS abstraction are signaled to become atomic while code
+    //      generation. */
+    //   proc_callExpr *extractElem = forAll->getExtractElementFunc();
+    //   if (extractElem != NULL)
+    //   {
+    //     string methodString(extractElem->getMethodId()->getIdentifier());
+    //     list<argument *> argList = extractElem->getArgList();
+    //     if (methodString == nbrCall)
+    //     {
+
+    //       forAll->addAtomicSignalToStatements();
+    //     }
+    //   }
+    // }
 
     //~ init_curr_SymbolTable(forAll);
 

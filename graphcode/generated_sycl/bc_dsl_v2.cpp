@@ -173,7 +173,9 @@ if(d_level[w] == -1) {
   *d_finished = false;
 }
 if(d_level[w] == *d_hops_from_source + 1) {
-  d_sigma[w] = d_sigma[w] + d_sigma[v];
+  // atomic update
+  atomic_ref<double, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data(d_sigma[w]);
+  atomic_data +=  d_sigma[v];
 
 }
 }
