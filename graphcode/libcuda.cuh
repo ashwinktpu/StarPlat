@@ -27,10 +27,24 @@ __global__ void Compute_Min(int* array1,int* array2,unsigned V,int devicecount){
   unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
   if(v<=V){
     for(int i=0;i<devicecount;i++){
-      atomicMin(&array2[v],array1[i*(V+1)+v]); 
+      if(array2[v]>array1[i*(V+1)+v]){
+        array2[v] = array1[i*(V+1)+v];
+      }
     }
   }
 }
+
+__global__ void Compute_Or(bool* array1,bool* array2,unsigned V,int devicecount){
+  unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
+  if(v<=V){
+    for(int i=0;i<devicecount;i++){
+      if(array1[i*(V+1)+v]==true){
+        array2[v]=true;
+      }
+    }
+  }
+}
+
 
 //NOT USED
 __global__ void accumulate_bc(unsigned n, double* d_delta, double* d_nodeBC, int* d_level, unsigned s) {
