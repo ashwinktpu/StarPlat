@@ -1,5 +1,7 @@
+#include "../../ast/ASTHelper.cpp"
 #include "dsl_dyn_cpp_generator.hpp"
 
+namespace spdynomp {
 void dsl_dyn_cpp_generator::setPreprocessEnv()
 {
   insidePreprocessEnv = true;
@@ -991,9 +993,8 @@ bool dsl_dyn_cpp_generator::generate()
 
    closeOutputFile();
 
-
-
    return true;
 
+}
 }
 
