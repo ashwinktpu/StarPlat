@@ -215,7 +215,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                   //~ std::cout<< "PROP ASST" << propId->getIdentifier1()->getIdentifier() << '\n';
              }
 
-             if(backend.compare("cuda")== 0  && assign->lhs_isProp()){  // This flags device assingments OUTSIDE for
+             if((backend.compare("cuda")== 0 || backend.compare("multigpu")== 0)&& assign->lhs_isProp()){  // This flags device assingments OUTSIDE for
               //~ std::cout<< "varName1: " << assign->getPropId()->getIdentifier1()->getIdentifier() << '\n';
               //~ std::cout<< "varName2: " << assign->getPropId()->getIdentifier2()->getIdentifier() << '\n';
               std::cout<<"ANAME1:"<< assign->getParent()->getTypeofNode() << '\n';
@@ -302,7 +302,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                another forall which is to be generated with
                omp parallel pragma, and then disable the parallel loop*/
 
-            if( (backend.compare("omp")==0) || (backend.compare("cuda")==0) || (backend.compare("openACC")==0) || (backend.compare("mpi")==0) )
+            if( (backend.compare("omp")==0) || (backend.compare("cuda")==0) || (backend.compare("multigpu")==0) || (backend.compare("openACC")==0) || (backend.compare("mpi")==0) )
              {  
                  if(parallelConstruct.size()>0 && (backend.compare("mpi")!=0))
                   {  
@@ -318,7 +318,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                     }
              }
 
-             if(backend.compare("cuda")== 0 ){ // This flags device assingments INSIDE for
+             if(backend.compare("cuda")== 0||backend.compare("multigpu")== 0){ // This flags device assingments INSIDE for
               std::cout<< "FORALL par   NAME1:"<< forAll->getParent()->getTypeofNode() << '\n';
               if(forAll->getParent()->getParent())
                 std::cout<< "FORALL ParPar NAME2:"<< forAll->getParent()->getParent()->getTypeofNode() << '\n';
@@ -370,7 +370,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
               //~ delete_curr_SymbolTable();
 
 
-               if((backend.compare("omp")==0 || backend.compare("cuda")==0 || backend.compare("openACC")==0 )  || (backend.compare("mpi")==0) &&forAll->isForall())
+               if((backend.compare("omp")==0 || backend.compare("cuda")==0 || backend.compare("multigpu")==0 || backend.compare("openACC")==0 )  || (backend.compare("mpi")==0) &&forAll->isForall())
                     {
                        if(forAll->isForall())
                           parallelConstruct.pop_back();

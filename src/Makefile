@@ -1,7 +1,7 @@
 EXPENDABLES_WINDOWS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c bin/deviceVarsAnalyser.o bin/analyserUtil.o bin/dv*.o
 EXPENDABLES = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c  bin/deviceVarsAnalyser.o
 ANALYSER = bin/dataRaceAnalyser.o
-PROGRAMS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/cu_dsl_cpp_generator.o  bin/ac_dsl_cpp_generator.o bin/om_dsl_cpp_generator.o bin/mpi_dsl_cpp_generator.o bin/om_dyn_dsl_cpp_generator.o
+PROGRAMS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/cu_dsl_cpp_generator.o  bin/ac_dsl_cpp_generator.o bin/om_dsl_cpp_generator.o bin/mpi_dsl_cpp_generator.o bin/multigpu_dsl_cpp_generator.o bin/om_dyn_dsl_cpp_generator.o 
 #bin/ac_dsl_cpp_generator.o 
 #bin/om_dsl_cpp_generator.o
 A_PROGRAM = bin/attachPropAnalyser.o bin/dataRaceAnalyser.o bin/deviceVarsAnalyser.o bin/analyserUtil.o
@@ -22,6 +22,12 @@ all: starplat
 
 #~ starplat_cuda: bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o $(A_PROGRAM)
 #~ 	$(CC) bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o $(A_PROGRAM) -o starplat
+
+
+#multigpu
+bin/multigpu_dsl_cpp_generator.o : backends/backend_multigpu/dsl_cpp_generator.cpp backends/dslCodePad.h
+	$(CC) $(CFLAGS) -c backends/backend_multigpu/dsl_cpp_generator.cpp -o bin/multigpu_dsl_cpp_generator.o
+
 
 #CUDA
 bin/cu_dsl_cpp_generator.o: backends/backend_cuda/dsl_cpp_generator.cpp backends/dslCodePad.h
