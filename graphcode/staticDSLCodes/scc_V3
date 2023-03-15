@@ -1,0 +1,76 @@
+function Hong (Graph g)
+{
+    propNode<int> modified;
+    propNode<int> scc;
+    g.attachNodeProperty(modified = False, scc = -1);
+    
+    bool fpoint1 = False;
+    fixedPoint until (fpoint1 : !modified) {
+        forall(src in g.nodes().filter(scc == -1)) {
+            int ifIn = 0; int ifOut = 0;
+            for(dst in g.nodes_to(src).filter(scc == -1)) {ifIn = 1;}
+            for(dst in g.neighbors(src).filter(scc == -1)) {ifOut = 1;}
+            if((ifIn == 0) || (ifOut == 0)) {
+                src.scc = src;
+                fpoint1 = False;
+            }
+        }
+    }
+
+    propNode<int> visitFw; 
+    propNode<int> visitBw; 
+    g.attachNodeProperty(visitFw = -1, visitBw = -1);
+
+    bool fpoint2 = False;
+    fixedPoint until (fpoint2: !modified) {
+        forall(src in g.nodes().filter(scc == -1)) {
+            src.visitFw = src;
+            src.visitBw = src;
+        }
+        
+
+        bool fpoint3 = False;
+        fixedPoint until (fpoint3 : !modified) {
+            forall(src in g.nodes().filter(scc == -1)) {
+                for(dst in g.neighbors(src).filter(scc == -1)) {
+                    if(dst.visitFw > src.visitFw) {
+                        dst.visitFw = src.visitFw;
+                        fpoint3 = False;
+                    } 
+                }
+            }
+
+            forall(src in g.nodes().filter(scc == -1)) {
+                for(dst in g.nodes_to(src).filter(scc == -1)) {
+                    if(dst.visitBw > src.visitBw) {
+                        dst.visitBw = src.visitBw;
+                        fpoint3 = False;
+                    } 
+                }
+            }
+        }
+
+        forall(v in g.nodes().filter(scc == -1)) {
+            if(v.visitFw == v.visitBw) {
+                v.scc = v.visitFw;
+                fpoint2 = False;
+            }
+        }
+
+        fpoint1 = False;
+        fixedPoint until (fpoint1 : !modified) {
+            forall(src in g.nodes().filter(scc == -1)) {
+                int ifIn = 0; int ifOut = 0;
+                for(dst in g.nodes_to(src).filter(scc == -1)) {ifIn = 1;}
+                for(dst in g.neighbors(src).filter(scc == -1)) {ifOut = 1;}
+                if((ifIn == 0) || (ifOut == 0)) {
+                    src.scc = src;
+                    fpoint1 = False;
+                }
+            }
+        }
+    }
+
+}
+
+

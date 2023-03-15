@@ -1,0 +1,27 @@
+function vHong(Graph g) {
+    propNode<int> modified;
+    propNode<int> outDeg; propNode<int> inDeg;
+    propNode<bool> visitFw; propNode<bool> visitBw;
+    propNode<bool> propFw; propNode<bool> propBw;
+    propNode<bool> isPivot;
+    propNode<int> scc;
+    propNode<int> range;
+    propNode<int> pivotField; 
+
+    g.attachNodeProperty(modified = False);
+    g.attachNodeProperty(outDeg = 0, inDeg = 0);
+    g.attachNodeProperty(visitFw = False, visitBw = False);
+    g.attachNodeProperty(propFw = False, propBw = False);
+    g.attachNodeProperty(isPivot = False);
+    g.attachNodeProperty(scc = -1);
+    g.attachNodeProperty(range = 0);
+    g.attachNodeProperty(pivotField = -1);
+    forall(src in g.nodes()) {
+        int nxtSrc = src + 1;
+        src.inDeg += nxtSrc.rev_meta - src.rev_meta;
+        src.outDeg += nxtSrc.meta - src.meta;
+    }
+    
+} 
+
+    

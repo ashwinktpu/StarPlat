@@ -443,7 +443,7 @@ int main(int argc,char **argv)
 {
   
   if(argc<4){
-    std::cout<< "Usage: " << argv[0] << " [-s|-d] -f <dsl.sp> -b [cuda|omp|mpi|acc] " << '\n';
+    std::cout<< "Usage: " << argv[0] << " [-s|-d] -f <dsl.sp> -b [cuda|omp|mpi|acc|multigpu] " << '\n';
     std::cout<< "E.g. : " << argv[0] << " -s -f ../graphcode/sssp_dslV2 -b omp " << '\n';
     exit(-1);
   }
@@ -503,7 +503,7 @@ int main(int argc,char **argv)
    }
    else
     {
-		if(!((strcmp(backendTarget,"omp")==0)||(strcmp(backendTarget,"mpi")==0)||(strcmp(backendTarget,"cuda")==0) || (strcmp(backendTarget,"acc")==0)))
+		if(!((strcmp(backendTarget,"omp")==0)||(strcmp(backendTarget,"mpi")==0)||(strcmp(backendTarget,"cuda")==0) || (strcmp(backendTarget,"acc")==0) || (strcmp(backendTarget,"multigpu")==0)))
 		   {
 			  fprintf(stderr, "Specified backend target is not implemented in the current version!\n");
 			   exit(-1);
@@ -594,10 +594,15 @@ int main(int argc,char **argv)
         cpp_backend.setFileName(fileName);
         cpp_backend.generate();
       }
+	  else if(strcmp(backendTarget, "multigpu") == 0){
+		spmultigpu::dsl_cpp_generator cpp_backend;
+		cpp_backend.setFileName(fileName);
+		cpp_backend.generate();
+	  }
       else
 	    std::cout<< "invalid backend" << '\n';
 	  }
-	else
+	else 
 	 {
 		if(strcmp(backendTarget, "omp") == 0) {
 		   spdynomp::dsl_dyn_cpp_generator cpp_dyn_gen;

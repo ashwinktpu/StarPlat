@@ -22,6 +22,16 @@ __global__ void initKernel2(unsigned V, T1* init_array1, T1 init_value1, T2* ini
   }
 }
 
+//Only use for reduce_MIN multigpu
+__global__ void Compute_Min(int* array1,int* array2,unsigned V,int devicecount){
+  unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
+  if(v<=V){
+    for(int i=0;i<devicecount;i++){
+      atomicMin(&array2[v],array1[i*(V+1)+v]); 
+    }
+  }
+}
+
 //NOT USED
 __global__ void accumulate_bc(unsigned n, double* d_delta, double* d_nodeBC, int* d_level, unsigned s) {
   unsigned tid = blockIdx.x * blockDim.x + threadIdx.x;
