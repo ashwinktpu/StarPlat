@@ -284,7 +284,10 @@ class deviceVarsAnalyser
   char* getTempVar()
   {
     string var = "tempVar_" + to_string(tempVar++);
-    return const_cast<char*>(var.c_str());
+    int len = var.length();
+    char* s=new char[len+1];
+    strcpy(s,var.c_str());
+    return s;
   }
 
   public:

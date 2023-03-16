@@ -1725,6 +1725,14 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
             generateCudaMemCpyStr(iden->getIdentifier(),dIden.c_str(), convertToCppType(innerType), "V", false);
           }*/
       }
+    }
+      else{
+        for (Identifier *iden : forAll->getUsedVariables())
+        {
+          Type *type = iden->getSymbolInfo()->getType();
+          if (type->isPrimitiveType())
+            generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), false);
+        }
       /*memcpy from symbol*/
     }
 

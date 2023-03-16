@@ -31,7 +31,7 @@ __global__ void Compute_SSSP_kernel(int V, int E, int* d_meta, int* d_data, int*
         d_modified_next[pp] = modified_new;
         finished = false ;
       }
-      vv++
+
     } //  end FOR NBR ITR. TMP FIX!
 
   } // if filter end

@@ -106,7 +106,6 @@ void Compute_SSSP(graph& g,int* dist,int src)
 
 
 
-    ;
 
     cudaMemcpyFromSymbol(&finished, ::finished, sizeof(bool), 0, cudaMemcpyDeviceToHost);
     cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);

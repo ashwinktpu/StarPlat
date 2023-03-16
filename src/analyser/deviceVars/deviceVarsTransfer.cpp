@@ -162,6 +162,7 @@ statement* deviceVarsAnalyser::transferVarsDoWhile(dowhileStmt* stmt, blockState
 {
     ASTNodeWrap* wrapNode = getWrapNode(stmt);
     ASTNodeWrap* condNode = getWrapNode(stmt->getCondition());
+    return stmt;
 
     blockStatement* newBody = (blockStatement*) transferVarsStatement(stmt->getBody(), parBlock);
     {
