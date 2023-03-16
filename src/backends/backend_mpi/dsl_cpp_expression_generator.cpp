@@ -27,7 +27,7 @@ namespace spmpi {
 
         } 
         else {
-            sprintf(strBuffer, "%s.getValue(%s)", id2->getIdentifier(), id1->getIdentifier());
+            sprintf(strBuffer, "%s.%s",id1->getIdentifier(),id2->getIdentifier());
         }
         main.pushString(strBuffer);
         
@@ -108,11 +108,28 @@ namespace spmpi {
                 main.pushString(strBuffer);
             }
             else {
+                
                 Identifier* objectId = proc->getId1();
-                sprintf(strBuffer, "%s.%s", objectId->getIdentifier(), proc->getMethodId()->getIdentifier());
+                if(objectId!=NULL)
+                {
+                    Identifier* id2 = proc->getId2();
+                    if(id2 != NULL)
+                        sprintf(strBuffer,"%s.%s.%s",objectId->getIdentifier(), id2->getIdentifier(), proc->getMethodId()->getIdentifier());
+                    else
+                        sprintf(strBuffer,"%s.%s",objectId->getIdentifier(), proc->getMethodId()->getIdentifier());    
+                }
+                else
+                {
+                    sprintf(strBuffer,"%s",proc->getMethodId()->getIdentifier());
+                } 
                 main.pushString(strBuffer);
                 main.pushString("(");
                 generateArgList(argList);
+                if(objectId == NULL)
+                {   
+                    sprintf(strBuffer,", %s","world");
+                    main.pushString(strBuffer);
+                }
                 main.pushString(")");
             }
         }

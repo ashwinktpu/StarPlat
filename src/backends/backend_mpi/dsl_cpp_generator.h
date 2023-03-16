@@ -24,7 +24,7 @@ class dsl_cpp_generator
     int dynFuncCount;
     int curFuncType;
     vector<pair<Identifier*, proc_callExpr*>> forallStack;
-    statement* insideParallelForAll;
+    std::vector<statement*> insideParallelConstruct;
     fixedPointStmt* fixedPointEnv;
     //bool isOptimized;
   public:
@@ -40,7 +40,6 @@ class dsl_cpp_generator
     decFuncCount = 0;
     dynFuncCount = 0;
     
-    insideParallelForAll = NULL;
     fixedPointEnv = NULL;
     printf("set to null\n");
     //isOptimized = false;
@@ -50,18 +49,18 @@ class dsl_cpp_generator
   const char * getReductionOperatorString(int reductionType);
   void setFileName(char* f);
   bool generate();
-  void generation_begin();
+  virtual void generation_begin();
   void generation_end();
-  bool openFileforOutput();
+  virtual bool openFileforOutput();
   void closeOutputFile();
   const char* convertToCppType(Type* type);
   void castIfRequired(Type* type, Identifier* methodID, dslCodePad& main);
   const char* getOperatorString(int operatorId);
-  void generateFunc(ASTNode* proc);
+  virtual void generateFunc(ASTNode* proc);
   void generateFuncHeader(Function* proc, bool isMainFile);
   void generateProcCall(proc_callStmt* procCall);
   void generateVariableDecl(declaration* decl);
-  void generateStatement(statement* stmt);
+  virtual void generateStatement(statement* stmt);
   void generateAssignmentStmt(assignment* assignStmt);
   void generateWhileStmt(whileStmt* whilestmt);
   void generateForAll(forallStmt* forAll);
@@ -83,7 +82,7 @@ class dsl_cpp_generator
   void generate_exprIdentifier(Identifier* id);
   void generate_exprPropId(PropAccess* propId);  //not yet implemented
   //void generate_exprPropIdReceive(PropAccess* propId);
-  void generate_exprProcCall(Expression* expr);
+  virtual void generate_exprProcCall(Expression* expr);
   void generate_exprArL(Expression* expr);
   void generate_exprUnary(Expression* expr);
 

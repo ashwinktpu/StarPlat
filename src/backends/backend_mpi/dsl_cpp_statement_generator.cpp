@@ -10,7 +10,7 @@ namespace spmpi {
     void dsl_cpp_generator::generateBFSAbstraction(iterateBFS* bfsAbstraction) 
     {   
         vector<Identifier*> graphIds = graphId[curFuncType][curFuncCount()];
-        insideParallelForAll = bfsAbstraction;
+        insideParallelConstruct.push_back(bfsAbstraction);
         char strBuffer[1024];
         sprintf(strBuffer,"%s.create_bfs_dag(%s);",graphIds[0]->getIdentifier(),bfsAbstraction->getRootNode()->getIdentifier());
         main.pushstr_newL(strBuffer);
@@ -49,7 +49,7 @@ namespace spmpi {
         main.pushstr_newL("}");
         main.pushstr_newL("world.barrier();");
         main.pushstr_newL("}");
-        
+        insideParallelConstruct.pop_back();
     }
  
     void dsl_cpp_generator::generateReductionCallStmt(reductionCallStmt* stmt) 
@@ -442,7 +442,7 @@ namespace spmpi {
             //main.pushstr_newL("#pragma omp atomic");
             //}
 
-            if(insideParallelForAll == NULL)
+            if(insideParallelConstruct.size()==0)
             {   
                 if(propId->getIdentifier2()->getSymbolInfo()->getType()->gettypeId()==TYPE_PROPNODE) 
                     sprintf(strBuffer, "if(world.rank() == %s.%s(%s))", graphIds[0]->getIdentifier(),"get_node_owner", propId->getIdentifier1()->getIdentifier());
@@ -489,7 +489,7 @@ namespace spmpi {
                 main.pushstr_newL(");");
             }
 
-            if(insideParallelForAll == NULL)    
+            if(insideParallelConstruct.size()==0)    
                 main.pushstr_newL("}");
 
             Identifier* id2 = propId->getIdentifier2();
@@ -715,7 +715,7 @@ namespace spmpi {
         char strBuffer[1024];
         if (forAll->isForall()) {
 
-            insideParallelForAll = forAll;
+            insideParallelConstruct.push_back(forAll);
             
         
             if (forAll->hasFilterExpr() || forAll->hasFilterExprAssoc()) {
@@ -866,7 +866,7 @@ namespace spmpi {
             } 
             else if (collectionId->getSymbolInfo()->getType()->gettypeId() == TYPE_UPDATES) 
             {
-                // TODO : To be added when adding dynamic algorithms support
+                generateStatement(body);
             } 
             else 
             {
@@ -919,7 +919,7 @@ namespace spmpi {
         main.NewLine();
 
         if(forAll->isForall())
-            insideParallelForAll = NULL;
+            insideParallelConstruct.pop_back();
     }
 
     void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll) {
@@ -991,19 +991,15 @@ namespace spmpi {
         } else {
             Identifier* sourceId = forAll->getSource();
             if (sourceId != NULL) {
-                if (sourceId->getSymbolInfo()->getType()->gettypeId() == TYPE_SETN) {
-                    if(forAll->isForall())
-                    {
-                        // Not yet found a way to parrallelize this in mpi (right now not added).
-                        // Think about possible way else , keep sequetial for this set case
-                        assert(false);
-                    }
-                    else 
-                    {    
+                if (sourceId->getSymbolInfo()->getType()->gettypeId() == TYPE_SETN) {    
                         main.pushstr_newL("std::set<int>::iterator itr;");
                         sprintf(strBuffer, "for(itr=%s.begin();itr!=%s.end();itr++)", sourceId->getIdentifier(), sourceId->getIdentifier());
                         main.pushstr_newL(strBuffer);
-                    }
+                }
+                else if(sourceId->getSymbolInfo()->getType()->gettypeId() == TYPE_UPDATES)
+                {
+                    sprintf(strBuffer, "for(Update %s : %s.getUpdates())", forAll->getIterator()->getIdentifier(), sourceId->getIdentifier());
+                    main.pushstr_newL(strBuffer);
                 }
             }
         }
