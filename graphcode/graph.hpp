@@ -6,6 +6,7 @@
 #include<map>
 #include<algorithm>
 #include<string.h>
+#include<climits>
 #include "graph_ompv2.hpp"
 
 //using namespace std;
@@ -52,6 +53,8 @@ class graph
    int32_t* perNodeCSRSpace;
    int32_t* perNodeRevCSRSpace;
    int32_t* edgeMap;  
+   std::map<int, int> outDeg;
+   std::map<int, int> inDeg;
 
   graph(char* file)
   {
@@ -93,7 +96,6 @@ class graph
   }
 
 
- 
   std::vector<edge> getInOutNbrs(int v){
 
   std::vector<edge> resVec;
@@ -242,6 +244,18 @@ class graph
     }
 
 
+    int getOutDegree(int v){
+
+     return outDeg[v];
+
+    }
+
+    int getInDegree(int v){
+  
+     return inDeg[v];
+
+    }
+
     void addEdge(int src, int dest)
      {
         int startIndex = indexofNodes[src];
@@ -383,6 +397,8 @@ class graph
 
   }
 
+  
+
    void parseEdges()
    {
      std::ifstream infile;
@@ -428,8 +444,10 @@ class graph
            graph_edge.push_back(e);
 
            ss>>weightVal; //for edgelists having weight too.      
-           
+             
      }
+
+     
 
      infile.close();
     
@@ -584,7 +602,12 @@ class graph
 
         }
      
-      printf("After this \n");
+      
+      for(int i = 0 ; i <= nodesTotal ; i++){
+         
+         inDeg[i] = rev_indexofNodes[i+1] - rev_indexofNodes[i];
+         outDeg[i] = indexofNodes[i+1] - indexofNodes[i];
+     }
       free(vertexInter);
       free(edgeMapInter);
     //change to nodesTotal+1.
@@ -655,6 +678,12 @@ class graph
     perNodeUpdateInfo.clear();
     perNodeUpdateRevInfo.clear();
 
+    for(int i = 0 ; i <= nodesTotal ; i++){
+         
+         inDeg[i] = getInNeighbors(i).size();
+         outDeg[i] = getNeighbors(i).size();
+     }
+
   }
 
 
@@ -702,6 +731,12 @@ class graph
 
     perNodeUpdateInfo.clear();
     perNodeUpdateRevInfo.clear();
+
+     for(int i = 0 ; i <= nodesTotal ; i++){
+         
+         inDeg[i] = getInNeighbors(i).size();
+         outDeg[i] = getNeighbors(i).size();
+     }
 
   }
 
@@ -769,8 +804,8 @@ std::vector<edge> getNeighbors( int node)
            e.source = node;
            e.destination = nbr;
            e.weight = rev_edgeLen[i];
-           e.dir = 0;
            in_edges.push_back(e);
+           e.dir = 0;
          }
      }  
      
@@ -785,8 +820,8 @@ std::vector<edge> getNeighbors( int node)
             e.source = node;
             e.destination = nbr;
             e.weight = diff_rev_edgeLen[j];
-            e.dir = 0;
             in_edges.push_back(e);
+            e.dir = 0;
           }
 
        }
@@ -796,5 +831,5 @@ std::vector<edge> getNeighbors( int node)
      return in_edges;
    
   }
- 
+
 };
