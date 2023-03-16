@@ -61,8 +61,8 @@ namespace spmpi {
         // TODO : (Atharva) Correct this for new mpi header 
         else if (type->isNodeEdgeType()) 
         {
-            if (type->isEdgeType() && (curFuncType == INCREMENTAL_FUNC || curFuncType == DECREMENTAL_FUNC || curFuncType == DYNAMIC_FUNC))
-                return "int";
+            if (type->isEdgeType() )
+                return "Edge";
             else
                 return "int";  //need to be modified.
 
@@ -81,7 +81,7 @@ namespace spmpi {
                 case TYPE_SETN:
                     return "std::set<int>&";
                 case TYPE_UPDATES:
-                    return "std::vector<update>&";
+                    return "Updates &";
                 default:
                     assert(false);
             }
