@@ -276,5 +276,5 @@ void Compute_SSSP(graph& g,int* dist,int src)
   cudaEventElapsedTime(&milliseconds, start, stop);
   printf("GPU Time: %.6f ms\n", milliseconds);
 
-  cudaMemcpy(    dist,   d_dist, sizeof(int)*(V), cudaMemcpyDeviceToHost);
+  cudaMemcpy(dist,h_dist[devicecount], sizeof(int)*(V+1), cudaMemcpyDeviceToHost);
 } //end FUN
