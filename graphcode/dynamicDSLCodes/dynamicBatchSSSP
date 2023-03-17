@@ -16,12 +16,13 @@ forall (v in g.nodes().filter(modified == True) )
                         <nbr.dist,nbr.modified_nxt,nbr.parent> = <Min(nbr.dist, v.dist + e.weight), True, v>;
                         }
    }
-}
-modified = modified_nxt;
-g.attachNodeProperty(modified_nxt = False); 
+  modified = modified_nxt;
+  g.attachNodeProperty(modified_nxt = False); 
 }
 
-Incremental(Graph g, propNode<int> dist, propNode<int> parent, propNode<bool> modified)
+}
+
+Incremental(Graph g, propNode<int> dist, propNode<int> parent, propEdge<int> weight, propNode<bool> modified)
 {
  propNode <bool> modified_nxt;
  g.attachNodeProperty(modified_nxt = False);
@@ -33,19 +34,21 @@ Incremental(Graph g, propNode<int> dist, propNode<int> parent, propNode<bool> mo
     {
      forall (nbr in g.neighbors(v))
                         {          
-                        edge e = g.get_edge(nbr, v);
+                        edge e = g.get_edge(v, nbr);
                         <nbr.dist,nbr.modified_nxt,nbr.parent> = <Min (nbr.dist, v.dist + e.weight), True,v>;
                         }
     }
+    modified = modified_nxt;
+    g.attachNodeProperty(modified_nxt = False);
   }
-modified = modified_nxt;
-g.attachNodeProperty(modified_nxt = False);  
+  
 }
 
-Decremental(Graph g, propNode<int> dist, propNode<int> parent, propNode<bool> modified)
+Decremental(Graph g, propNode<int> dist, propNode<int> parent, propEdge<int> weight, propNode<bool> modified)
 {
- propNode <bool> modified_nxt;
- 
+
+ bool finished = False;
+
  while(!finished)
  {
    finished = true;
@@ -57,7 +60,7 @@ Decremental(Graph g, propNode<int> dist, propNode<int> parent, propNode<bool> mo
                v.dist = INT_MAX/2;
                v.modified = True;
                v.parent= -1;
-               finished = false;
+               finished &= false;
            }
           
     }
@@ -73,12 +76,12 @@ Decremental(Graph g, propNode<int> dist, propNode<int> parent, propNode<bool> mo
     {
      forall (nbr in g.nodes_to(v))
              {          
-                edge e = g.get_edge(v, nbr);
+                edge e = g.get_edge(nbr, v);
                  if(v.dist > nbr.dist + e.weight)
                      {
                         v.dist = nbr.dist + e.weight;
                         v.parent = nbr;
-                        finished = false;
+                        finished &= false;
                      }
              }
 
@@ -99,9 +102,6 @@ Dynamic DynSSSP(Graph g, propNode<int> dist, propNode<int> parent, propEdge<int>
 
        g.attachNodeProperty(modified = false, modified_add = false);
 
-     updates<g> deleteBatch = updateBatch.currentBatch(0);
-     updates<g> addBatch = updateBatch.currentBatch(1);
-
      OnDelete(u in updateBatch.currentBatch()):
           { 
             int src = u.source;
@@ -118,7 +118,7 @@ Dynamic DynSSSP(Graph g, propNode<int> dist, propNode<int> parent, propEdge<int>
 
 
         g.updateCSRDel(updateBatch); 
-        Decremental(g, dist, parent, modified,deleteBatch);   
+        Decremental(g, dist, parent, weight, modified);   
 
       OnAdd(u in updateBatch.currentBatch()): 
          {
@@ -133,7 +133,7 @@ Dynamic DynSSSP(Graph g, propNode<int> dist, propNode<int> parent, propEdge<int>
           }  
                 
           g.updateCSRAdd(updateBatch);      
-          Incremental(g, dist, parent, modified_add, addBatch);
+          Incremental(g, dist, parent, weight, modified_add);
 
     }
  }

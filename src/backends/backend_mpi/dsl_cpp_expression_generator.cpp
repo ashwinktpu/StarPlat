@@ -27,7 +27,11 @@ namespace spmpi {
 
         } 
         else {
-            sprintf(strBuffer, "%s.%s",id1->getIdentifier(),id2->getIdentifier());
+            string s ="weight";
+            if(s.compare(id2->getIdentifier()) == 0)
+                sprintf(strBuffer, "%s.getValue(%s)",id2->getIdentifier(), id1->getIdentifier());
+            else     
+                sprintf(strBuffer, "%s.%s",id1->getIdentifier(),id2->getIdentifier());
         }
         main.pushString(strBuffer);
         

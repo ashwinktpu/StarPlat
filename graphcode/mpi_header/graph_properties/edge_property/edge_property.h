@@ -44,15 +44,30 @@ class EdgeProperty : public Property
     EdgeProperty() : Property(true) 
     {
         if constexpr (std::is_same_v<T, int>)
+        {    
             propList.mpi_datatype = MPI_INT32_T;  
+            diff_propList.mpi_datatype = MPI_INT32_T;
+        }
         else if (std::is_same_v<T, long>)
+        {
             propList.mpi_datatype = MPI_INT64_T;
+            diff_propList.mpi_datatype = MPI_INT64_T;
+        }    
         else if (std::is_same_v<T, float>)
+        {    
             propList.mpi_datatype = MPI_FLOAT;
+            diff_propList.mpi_datatype = MPI_FLOAT;
+        }
         else if (std::is_same_v<T, double>)
+        {    
             propList.mpi_datatype = MPI_DOUBLE;
+            diff_propList.mpi_datatype = MPI_DOUBLE;
+        }
         else if (std::is_same_v<T, bool>) 
+        {    
             propList.mpi_datatype = MPI_CXX_BOOL;
+            diff_propList.mpi_datatype = MPI_CXX_BOOL;
+        }
         else 
         {
           std::cerr<<"Invalid EdgeProperty type";
@@ -80,7 +95,7 @@ class EdgeProperty : public Property
     
     void setValue(Edge edge ,T value, bool check_concurrency = true);
     
-    void remeberHistory();
+    void rememberHistory();
     
     T getHistoryValue(Edge edge);
     

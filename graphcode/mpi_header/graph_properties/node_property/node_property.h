@@ -60,7 +60,7 @@ class NodeProperty : public Property
 
     void setValue(int node_id ,T value, bool check_concurrency = true);
 
-    void remeberHistory();
+    void rememberHistory();
 
     T getHistoryValue(int node_id);
  

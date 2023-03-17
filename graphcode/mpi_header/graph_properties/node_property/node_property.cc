@@ -134,7 +134,7 @@ template <typename T>
     }
 
     template <typename T>
-    void NodeProperty<T>::remeberHistory()
+    void NodeProperty<T>::rememberHistory()
     {
         history_data = new T [length];
         propList.get_lock(world.rank(),SHARED_LOCK);

@@ -165,6 +165,7 @@
         else
         {
           value = diff_propList.data[local_edge_id];
+
         }
         return value;
       }
@@ -234,7 +235,7 @@
     }
 
     template <typename T>
-    void EdgeProperty<T>::remeberHistory()
+    void EdgeProperty<T>::rememberHistory()
     {
         history_data = new T [length];
         propList.get_lock(world.rank(),SHARED_LOCK);
