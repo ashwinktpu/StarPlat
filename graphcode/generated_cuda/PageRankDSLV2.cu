@@ -83,10 +83,10 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
 
 
   //BEGIN DSL PARSING 
+  float num_nodes = (float)g.num_nodes( ); // asst in .cu
+
   float* d_pageRank_nxt;
   cudaMalloc(&d_pageRank_nxt, sizeof(float)*(V));
-
-  float num_nodes = (float)g.num_nodes( ); // asst in .cu
 
   initKernel<float> <<<numBlocks,threadsPerBlock>>>(V,d_pageRank,(float)1 / num_nodes);
 
@@ -96,6 +96,9 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
 
   do{
     diff = 0.000000;
+    cudaMemcpyToSymbol(::delta, &delta, sizeof(float), 0, cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol(::diff, &diff, sizeof(float), 0, cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol(::num_nodes, &num_nodes, sizeof(float), 0, cudaMemcpyHostToDevice);
     Compute_PR_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_pageRank,d_pageRank_nxt);
     cudaDeviceSynchronize();
     cudaMemcpyFromSymbol(&delta, ::delta, sizeof(float), 0, cudaMemcpyDeviceToHost);

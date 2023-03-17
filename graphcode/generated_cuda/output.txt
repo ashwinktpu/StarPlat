@@ -1,0 +1,14 @@
+Here half
+After this 
+#nodes:9
+#edges:12
+1
+2
+3
+4
+5
+7
+6
+8
+GPU Time: 2.215936 ms
+2147483647 0 1 1 2 2 3 2 3 

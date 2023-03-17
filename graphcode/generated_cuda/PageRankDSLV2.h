@@ -19,7 +19,7 @@ __device__ int maxIter ;
 
 __device__ float num_nodes ; // DEVICE ASSTMENT in .h
 
-; // DEVICE ASSTMENT in .h
+__device__ int iterCount ; // DEVICE ASSTMENT in .h
 
 __device__ float diff ; // DEVICE ASSTMENT in .h
 

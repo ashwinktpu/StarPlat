@@ -23,12 +23,12 @@ __global__ void Compute_SSSP_kernel(int V, int E, int* d_meta, int* d_data, int*
     for (int edge = d_meta[pp]; edge < d_meta[pp+1]; edge++) { // FOR NBR ITR 
       int nbr = d_data[edge];
       int e = edge;
-       int dist_new = d_dist[nbr] + d_weight[e];
+       int dist_new = d_dist[pp] + d_weight[e];
       bool modified_new = true;
-      if(d_dist[nbr]!= INT_MAX && d_dist[pp] > dist_new)
+      if(d_dist[pp]!= INT_MAX && d_dist[nbr] > dist_new)
       {
-        atomicMin(&d_dist[pp],dist_new);
-        d_modified_next[pp] = modified_new;
+        atomicMin(&d_dist[nbr],dist_new);
+        d_modified_next[nbr] = modified_new;
         finished = false ;
       }
 

@@ -1,5 +1,0 @@
-Here half
-After this 
-#nodes:23947347
-#edges:57708624
-GPU Time: 19427.052734 ms

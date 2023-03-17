@@ -13,7 +13,7 @@ function Compute_SSSP(Graph g, propNode<int> dist, node src)
                forall(nbr in g.neighbors(pp))
                {
                     edge e = g.get_edge(pp, nbr);
-                    <pp.dist,pp.modified> = <Min(pp.dist, nbr.dist + e.weight), True>;
+                    <nbr.dist,nbr.modified> = <Min(nbr.dist, pp.dist + e.weight), True>;
                }
           }
      }

@@ -261,6 +261,7 @@ class PropAccess:public ASTNode
   Identifier* identifier1;
   Identifier* identifier2;
   int accessType;
+  string pushorpull;
 
   public:
   static PropAccess* createPropAccessNode(Identifier* id1, Identifier* id2)
@@ -270,6 +271,7 @@ class PropAccess:public ASTNode
      propAccessNode->identifier2=id2;
      propAccessNode->accessType=1;
      propAccessNode->setTypeofNode(NODE_PROPACCESS);
+     propAccessNode->pushorpull = "PULL";
      return propAccessNode;
 
    }
@@ -277,6 +279,14 @@ class PropAccess:public ASTNode
    int getAccessType()
    {
      return accessType;
+   }
+
+   void setPushorPull(string pp){
+       pushorpull=pp;
+   }
+
+   string getPushorPull(){
+      return pushorpull;
    }
 
    Identifier* getIdentifier1()

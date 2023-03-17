@@ -11,8 +11,8 @@ cd $tempdir
 cp -R $PBS_O_WORKDIR/* .
 module load cuda10.1
 module load gcc640
-nvcc -o "BC".out "graphcode/generated_cuda/bc_dslV2.cu"  -std=c++14 -arch=sm_70 -rdc=true
-./BC.out /lfs1/usrscratch/phd/cs16d003/11suiteDSL/USAud.txt > outputBC.txt
+nvcc -o "sssp_u10m_80m".out "graphcode/generated_cuda/sssp_dslV2.cu"  -std=c++14 -arch=sm_70 -rdc=true
+./sssp_u10m_80m.out /lfs1/usrscratch/phd/cs16d003/11suiteDSL/u10m_80m.txt > sssp_u10m_80m.txt
 rm *.out
 mv * $PBS_O_WORKDIR/.
 rmdir $tempdir

@@ -24,6 +24,7 @@ int pushpullAnalyser::analyseassigninfor(assignment *stmt, Identifier *ownvertex
         Identifier *affectedId = leftprop->getIdentifier1();
         if (strcmp(ownvertex->getIdentifier(), affectedId->getIdentifier()) != 0)
         {
+             leftprop->setPushorPull("PUSH");
              return 0;
         }
     }
@@ -37,22 +38,25 @@ int pushpullAnalyser::analysereductioninfor(reductionCallStmt* stmt, Identifier 
              Identifier *affectedId = ((PropAccess*)stmt)->getIdentifier1();
              if (strcmp(ownvertex->getIdentifier(), affectedId->getIdentifier()) != 0)
              {
+                 PropAccess* stmt1 = (PropAccess*) stmt;
+                 stmt1->setPushorPull("PUSH");
                  return 0;
              }
         }
     }
-    Identifier* leftid = stmt->getLeftId();
-    if(leftid!=NULL){
-        if (strcmp(ownvertex->getIdentifier(), leftid->getIdentifier()) != 0)
-        {
-             return 0;
-        }
-    }
+    // Identifier* leftid = stmt->getLeftId();
+    // if(leftid!=NULL){
+    //     if (strcmp(ownvertex->getIdentifier(), leftid->getIdentifier()) != 0)
+    //     {
+    //          return 0;
+    //     }
+    // }
     PropAccess* leftprop = stmt->getPropAccess();
     if(leftprop!=NULL){
         Identifier *affectedId = leftprop->getIdentifier1();
         if (strcmp(ownvertex->getIdentifier(), affectedId->getIdentifier()) != 0)
         {
+             leftprop->setPushorPull("PUSH");
              return 0;
         }
     }
@@ -65,18 +69,19 @@ int pushpullAnalyser::analyseexprinfor(unary_stmt* input,Identifier *ownvertex){
     {
         stmt = stmt->getUnaryExpr();
     }
-    if(stmt->isIdentifierExpr()){
-        Identifier* affectedId = stmt->getId();
-        if (strcmp(ownvertex->getIdentifier(), affectedId->getIdentifier()) != 0)
-        {
-             return 0;
-        }
-    }
+    // if(stmt->isIdentifierExpr()){
+    //     Identifier* affectedId = stmt->getId();
+    //     if (strcmp(ownvertex->getIdentifier(), affectedId->getIdentifier()) != 0)
+    //     {
+    //          return 0;
+    //     }
+    // }
     if(stmt->isPropIdExpr()){
         PropAccess *propaccess = stmt->getPropId();
         Identifier *affectedId = propaccess->getIdentifier1();
         if (strcmp(ownvertex->getIdentifier(), affectedId->getIdentifier()) != 0)
         {
+             propaccess->setPushorPull("PUSH");
              return 0;
         }
     }
