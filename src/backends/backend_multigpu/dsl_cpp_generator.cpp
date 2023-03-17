@@ -8,7 +8,8 @@
 
 namespace spmultigpu{
 
-  
+
+map<char*,int> declInForAll;
 
  void dsl_cpp_generator::generateInitkernel(const char *name)
 {
@@ -1127,7 +1128,7 @@ void dsl_cpp_generator::generateAtomicDeviceAssignmentStmt(assignment *asmt,
   dslCodePad &targetFile = isMainFile ? main : header;
   bool isAtomic = false;
   bool isResult = false;
-  std::cout << "\tASST\n";
+  std::cout << "\tASST kjdskfs\n";
   if (asmt->lhs_isIdentifier())
   {
     Identifier *id = asmt->getId();
@@ -1143,8 +1144,32 @@ void dsl_cpp_generator::generateAtomicDeviceAssignmentStmt(assignment *asmt,
       targetFile.pushString(strBuffer);
       targetFile.pushstr_newL(";");
     }
-    else
-      targetFile.pushString(id->getIdentifier());
+    else{
+      int isForall = 0;
+      ASTNode* tempstmt = asmt;
+      int isForall1 = 0;
+      while(tempstmt){
+      if(tempstmt->getTypeofNode()==18){
+        isForall1 = 1;
+        break;
+      }
+      tempstmt = tempstmt->getParent();
+    }
+      for(auto x :declInForAll){
+        cout<<id->getIdentifier()<<" "<<x.first<<endl;
+        if(strcmp(id->getIdentifier(),x.first)==0){
+          isForall = x.second;
+        }
+      }
+      if(isForall==2||isForall1==0){
+        targetFile.pushString(id->getIdentifier());
+      }
+      else{
+        targetFile.pushString("d_");
+        targetFile.pushString(id->getIdentifier());
+        targetFile.pushString("[0]");
+      }
+    }
   }
   else if (asmt->lhs_isProp()) // the check for node and edge property to be
                                // carried out.
@@ -1177,7 +1202,7 @@ void dsl_cpp_generator::generateAtomicDeviceAssignmentStmt(assignment *asmt,
   else if (!asmt->hasPropCopy())
     targetFile.pushString(" = ");
 
-  //~ std::cout<< "------>BEG EXP"  << '\n';
+  std::cout<< "------>BEG EXP"  << '\n';
   if (!asmt->hasPropCopy())
     generateExpr(asmt->getExpr(), isMainFile, isAtomic);
   //~ std::cout<< "------>END EXP"  << '\n';
@@ -1195,12 +1220,12 @@ void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment *asmt,
 
   dslCodePad &targetFile = isMainFile ? main : header;
   bool isDevice = false;
-  std::cout << "\tASST \n";
+  std::cout << "\tASST SADJLAKD\n";
   char strBuffer[300];
   if (asmt->lhs_isIdentifier())
   {
     Identifier *id = asmt->getId();
-
+    targetFile.pushString("hi\n");
     targetFile.pushString(id->getIdentifier());
   }
   else if (asmt->lhs_isProp()) // the check for node and edge property to be
@@ -2339,7 +2364,18 @@ void dsl_cpp_generator::generateVariableDecl(declaration *declStmt,
                                              bool isMainFile)
 {
   dslCodePad &targetFile = isMainFile ? main : header;
-
+    ASTNode* tempstmt = declStmt;
+    int isForall = 1;
+    while(tempstmt){
+      if(tempstmt->getTypeofNode()==18){
+        isForall = 2;
+        break;
+      }
+      tempstmt = tempstmt->getParent();
+    }
+  Identifier* id = declStmt->getdeclId();
+  declInForAll[id->getIdentifier()] = isForall;
+  cout<<id->getIdentifier()<<" "<<declInForAll[id->getIdentifier()]<<endl;
   Type *type = declStmt->getType();
   //~ char strBuffer[1024];
   //~ if (type->isPrimitiveType()){
@@ -2478,17 +2514,10 @@ void dsl_cpp_generator::generateVariableDecl(declaration *declStmt,
     // header.pushstr_newL("; // DEVICE ASSTMENT in .h");
     //header.NewLine();
     //Add here for declaration statements
-    ASTNode* tempstmt = declStmt;
-    bool isForall = false;
-    while(tempstmt){
-      if(tempstmt->getTypeofNode()==18){
-        isForall = true;
-      }
-      tempstmt = tempstmt->getParent();
-    }
+    
     targetFile.pushstr_space("; // asst in .cu");
     targetFile.NewLine();
-    if(!isForall){
+    if(isForall==1){
     sprintf(strBuffer, "%s** h_%s;", varType, varName);
     targetFile.pushstr_newL(strBuffer);
     sprintf(strBuffer,"h_%s = (%s**)malloc(sizeof(%s*)*(devicecount+1));",varName,varType,varType);
@@ -2677,7 +2706,6 @@ void dsl_cpp_generator::generate_exprIdentifier(Identifier *id,
                                                 bool isMainFile)
 {
   dslCodePad &targetFile = isMainFile ? main : header;
-
   targetFile.pushString(id->getIdentifier());
   
   
@@ -2691,7 +2719,7 @@ void dsl_cpp_generator::generateExpr(Expression *expr, bool isMainFile, bool isA
   {
     //~ cout << "INSIDE THIS FOR LITERAL"
     //~ << "\n";
-    //~ std::cout<< "------>PROP LIT"  << '\n';
+    std::cout<< "------>PROP LIT"  << '\n';
     generate_exprLiteral(expr, isMainFile);
   }
   else if (expr->isInfinity())
@@ -2700,22 +2728,22 @@ void dsl_cpp_generator::generateExpr(Expression *expr, bool isMainFile, bool isA
   }
   else if (expr->isIdentifierExpr())
   {
-    //~ std::cout<< "------>PROP ID"  << '\n';
+  std::cout<< "------>PROP ID"  << '\n';
     generate_exprIdentifier(expr->getId(), isMainFile);
   }
   else if (expr->isPropIdExpr())
   {
-    //~ std::cout<< "------>PROP EXP"  << '\n';
+    std::cout<< "------>PROP EXP"  << '\n';
     generate_exprPropId(expr->getPropId(), isMainFile);
   }
   else if (expr->isArithmetic() || expr->isLogical())
   {
-    //~ std::cout<< "------>PROP AR/LG"  << '\n';
+    std::cout<< "------>PROP AR/LG"  << '\n';
     generate_exprArL(expr, isMainFile, isAtomic);
   }
   else if (expr->isRelational())
   {
-    //~ std::cout<< "------>PROP RL"  << '\n';
+    std::cout<< "------>PROP RL"  << '\n';
     generate_exprRelational(expr, isMainFile);
   }
   else if (expr->isProcCallExpr())

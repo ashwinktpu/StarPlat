@@ -123,7 +123,6 @@ class Identifier:public ASTNode
 
   int accessType;
   char* identifier;
-
   Expression* assignedExpr; /*added to store node/edge property initialized values.
                              - Used in SymbolTable phase for storing metadata. 
                              - This field is more of a code generation utility.  */
@@ -143,7 +142,7 @@ class Identifier:public ASTNode
                                       which this update belongs to.*/                             
    
   public: 
- 
+  
   static Identifier* createIdNode(const char* id)
    {
    
@@ -156,6 +155,7 @@ class Identifier:public ASTNode
      idNode->fp_association = false;
      idNode->assignedExpr = NULL;
      idNode->dependentExpr = NULL;
+     //idNode->declInForAll = false;
    // std::cout<<"IDENTIFIER = "<<idNode->getIdentifier()<<" "<<strlen(idNode->getIdentifier());
      return idNode;
 
@@ -192,7 +192,7 @@ class Identifier:public ASTNode
 
      return copyId;
    }
-   
+
    void set_redecl()
    {
      redecl=true;
