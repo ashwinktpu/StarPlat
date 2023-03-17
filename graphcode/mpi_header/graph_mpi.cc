@@ -15,6 +15,11 @@
         {
           std::cout<<destList.data[j]<<" ";
         }std::cout<<std::endl;
+        std::cout<<"csr weights: ";
+        for(int j=indexofNodes.data[get_node_local_index(i)]; j < indexofNodes.data[get_node_local_index(i)+1];j++)
+        {
+          std::cout<<weights.propList.data[j]<<" ";
+        }std::cout<<std::endl;
         std::cout<<"rev csr neighbors: ";
         for(int j=rev_indexofNodes.data[get_node_local_index(i)]; j < rev_indexofNodes.data[get_node_local_index(i)+1];j++)
         {
@@ -26,6 +31,11 @@
         for(int j=diff_indexofNodes.data[get_node_local_index(i)]; j < diff_indexofNodes.data[get_node_local_index(i)+1];j++)
         {
           std::cout<<diff_destList.data[j]<<" ";
+        }std::cout<<std::endl;
+        std::cout<<"diff csr weights: ";
+        for(int j=diff_indexofNodes.data[get_node_local_index(i)]; j < diff_indexofNodes.data[get_node_local_index(i)+1];j++)
+        {
+          std::cout<<weights.diff_propList.data[j]<<" ";
         }std::cout<<std::endl;
         }
         if(rev_diff_csr_created)
@@ -472,7 +482,7 @@
           }
         }  
      }
-     std::cerr<<"invalid edge asked in get_edge\n";
+     std::cerr<<"invalid edge asked in get_edge: src "<<v<<" , nbr "<<nbr<<"\n";
      exit(-1);
     }
     else
@@ -529,7 +539,7 @@
         }
 
      }
-     std::cerr<<"invalid edge asked in get_edge\n";
+     std::cerr<<"invalid edge asked in get_edge: src "<<v<<" , nbr "<<nbr<<"\n";
      exit(-1);
     }
     

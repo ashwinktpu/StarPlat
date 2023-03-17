@@ -732,7 +732,7 @@ namespace spmpi {
                     TableEntry* tableEntry = filterId != NULL ? filterId->getSymbolInfo() : NULL;
                     if (tableEntry != NULL && tableEntry->getId()->get_used_inside_forall_filter_and_changed_inside_forall_body()) 
                     {
-                        sprintf(strBuffer,"%s.remeberHistory()", filterId->getIdentifier());
+                        sprintf(strBuffer,"%s.rememberHistory();", filterId->getIdentifier());
                         already_remebered = true;
                         main.pushstr_newL(strBuffer);
 
