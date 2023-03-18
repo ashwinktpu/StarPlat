@@ -1883,7 +1883,7 @@ class fixedPointStmt:public statement
     Expression* filterExpr;
     bool isSourceId;
     bool isforall;
-    map<int,list<Identifier*>> reduction_map;
+    map<int,list<Identifier*> > reduction_map;
     set<int> reduc_keys;
     bool filterExprAssoc;
     Expression* assocExpr;

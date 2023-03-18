@@ -148,7 +148,7 @@ class dsl_cpp_generator {
   void generateGPUTimerStart();
   void generateCudaMemCpyStr(const char*, const char*, const char*, const char*,
                              bool);
-  void generateInitkernel1(assignment*, bool);
+  void generateInitkernel1(assignment*, bool, bool);
 
   void generateInitkernelStr(const char* inVarType, const char* inVarName, const char* initVal);
 
