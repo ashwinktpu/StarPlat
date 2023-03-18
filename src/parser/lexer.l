@@ -94,7 +94,6 @@ NEGATE [-]
 "-"					{ printf ( "'-'");  return '-';}
 "+"					{ printf ( "'+'");  return '+';}
 "*"					{ printf ( "'*'");  return '*';}
-"//"[^\n]*"\n"                { printf ( "COMMENT" ); }
 "/"					{ printf ( "'/'"); return '/';}
 "%"					{ printf ( "'%%'");  return '%';}
 "<"					{ printf ( "'<'");  return '<';}
