@@ -14,5 +14,3 @@ src/bin/
 StarPlat
 StarPlat.exe
 
-.vscode/settings.json
-*.DS_Store
