@@ -1,46 +1,45 @@
 #include "analyserUtil.cpp"
 
-usedVariables getVariablesStatement(statement* stmt);
+usedVariables getVariablesStatement(statement *stmt);
 usedVariables getVariablesExpr(Expression *expr)
 {
-    usedVariables result;
+  usedVariables result;
 
-    if (expr->isIdentifierExpr())
+  if (expr->isIdentifierExpr())
+  {
+    Identifier *iden = expr->getId();
+    result.addVariable(iden, READ);
+  }
+  else if (expr->isPropIdExpr())
+  {
+    PropAccess *propExpr = expr->getPropId();
+    result.addVariable(propExpr->getIdentifier1(), READ);
+    result.addVariable(propExpr->getIdentifier2(), READ);
+  }
+  else if (expr->isUnary())
+  {
+    if (expr->getOperatorType() == OPERATOR_NOT)
+      result = getVariablesExpr(expr->getUnaryExpr());
+    else if ((expr->getOperatorType() == OPERATOR_INC) || (expr->getOperatorType() == OPERATOR_DEC))
     {
-        Identifier *iden = expr->getId();
-        result.addVariable(iden, READ);
+      Expression *uExpr = expr->getUnaryExpr();
+      if (uExpr->isIdentifierExpr())
+        result.addVariable(uExpr->getId(), READ_WRITE);
+      else if (uExpr->isPropIdExpr())
+      {
+        PropAccess *propId = uExpr->getPropId();
+        result.addVariable(propId->getIdentifier1(), READ);
+        result.addVariable(propId->getIdentifier2(), READ_WRITE);
+      }
     }
-    else if (expr->isPropIdExpr())
-    {
-        PropAccess *propExpr = expr->getPropId();
-        result.addVariable(propExpr->getIdentifier1(), READ);
-        result.addVariable(propExpr->getIdentifier2(), READ);
-    }
-    else if (expr->isUnary())
-    {
-        if (expr->getOperatorType() == OPERATOR_NOT)
-            result = getVariablesExpr(expr->getUnaryExpr());
-        else if ((expr->getOperatorType() == OPERATOR_INC) || (expr->getOperatorType() == OPERATOR_DEC))
-        {
-            Expression *uExpr = expr->getUnaryExpr();
-            if (uExpr->isIdentifierExpr())
-                result.addVariable(uExpr->getId(), READ_WRITE);
-            else if (uExpr->isPropIdExpr())
-            {
-                PropAccess* propId = uExpr->getPropId();
-                result.addVariable(propId->getIdentifier1(), READ);
-                result.addVariable(propId->getIdentifier2(), READ_WRITE);
-            }
-        }
-    }
-    else if (expr->isLogical() || expr->isArithmetic() || expr->isRelational())
-    {
-        result = getVariablesExpr(expr->getLeft());
-        result.merge(getVariablesExpr(expr->getRight()));
-    }
-    return result;
+  }
+  else if (expr->isLogical() || expr->isArithmetic() || expr->isRelational())
+  {
+    result = getVariablesExpr(expr->getLeft());
+    result.merge(getVariablesExpr(expr->getRight()));
+  }
+  return result;
 }
-
 
 usedVariables getVariablesWhile(whileStmt *stmt)
 {
@@ -49,7 +48,6 @@ usedVariables getVariablesWhile(whileStmt *stmt)
 
   return currVars;
 }
-
 
 usedVariables getVariablesDoWhile(dowhileStmt *stmt)
 {
@@ -100,57 +98,58 @@ usedVariables getVariablesReduction(reductionCallStmt *stmt)
 {
   usedVariables currVars;
 
-  auto getVariablesReductionCall = [&currVars](reductionCall* callExpr) -> void
+  auto getVariablesReductionCall = [&currVars](reductionCall *callExpr) -> void
   {
-    for(argument* arg: callExpr->getargList()){
-      if(arg->isExpr())
+    for (argument *arg : callExpr->getargList())
+    {
+      if (arg->isExpr())
         currVars.merge(getVariablesExpr(arg->getExpr()));
     }
   };
 
-  if(stmt->is_reducCall())
+  if (stmt->is_reducCall())
   {
-    if(stmt->getLhsType() == 1)
+    if (stmt->getLhsType() == 1)
     {
-        currVars.addVariable(stmt->getLeftId(), WRITE);
-        getVariablesReductionCall(stmt->getReducCall());
+      currVars.addVariable(stmt->getLeftId(), WRITE);
+      getVariablesReductionCall(stmt->getReducCall());
     }
-    else if(stmt->getLhsType() == 2)
+    else if (stmt->getLhsType() == 2)
     {
-      PropAccess* propId = stmt->getPropAccess();
+      PropAccess *propId = stmt->getPropAccess();
       currVars.addVariable(propId->getIdentifier1(), READ);
       currVars.addVariable(propId->getIdentifier2(), WRITE);
 
       getVariablesReductionCall(stmt->getReducCall());
     }
-    else if(stmt->getLhsType() == 3)
+    else if (stmt->getLhsType() == 3)
     {
-      for(ASTNode* node: stmt->getLeftList())
+      for (ASTNode *node : stmt->getLeftList())
       {
-        if(node->getTypeofNode() == NODE_ID)
+        if (node->getTypeofNode() == NODE_ID)
         {
-          Identifier* iden = (Identifier*)node;
+          Identifier *iden = (Identifier *)node;
           currVars.addVariable(iden, WRITE);
         }
-        else if(node->getTypeofNode() == NODE_PROPACCESS)
+        else if (node->getTypeofNode() == NODE_PROPACCESS)
         {
-          PropAccess* propId = (PropAccess*)node;
+          PropAccess *propId = (PropAccess *)node;
           currVars.addVariable(propId->getIdentifier1(), READ);
           currVars.addVariable(propId->getIdentifier2(), WRITE);
         }
       }
       getVariablesReductionCall(stmt->getReducCall());
 
-      for(ASTNode* node: stmt->getRightList())
+      for (ASTNode *node : stmt->getRightList())
       {
-        if(node->getTypeofNode() == NODE_ID)
+        if (node->getTypeofNode() == NODE_ID)
         {
-          Identifier* iden = (Identifier*)node;
+          Identifier *iden = (Identifier *)node;
           currVars.addVariable(iden, WRITE);
         }
-        else if(node->getTypeofNode() == NODE_PROPACCESS)
+        else if (node->getTypeofNode() == NODE_PROPACCESS)
         {
-          PropAccess* propId = (PropAccess*)node;
+          PropAccess *propId = (PropAccess *)node;
           currVars.addVariable(propId->getIdentifier1(), READ);
           currVars.addVariable(propId->getIdentifier2(), WRITE);
         }
@@ -159,14 +158,14 @@ usedVariables getVariablesReduction(reductionCallStmt *stmt)
   }
   else
   {
-    if(stmt->isLeftIdentifier())
+    if (stmt->isLeftIdentifier())
     {
       currVars.addVariable(stmt->getLeftId(), READ_WRITE);
       currVars.merge(getVariablesExpr(stmt->getRightSide()));
     }
     else
     {
-      PropAccess* propId = stmt->getPropAccess();
+      PropAccess *propId = stmt->getPropAccess();
       currVars.addVariable(propId->getIdentifier1(), READ);
       currVars.addVariable(propId->getIdentifier2(), READ_WRITE);
 
@@ -213,23 +212,24 @@ usedVariables getVariablesForAll(forallStmt *stmt)
   usedVariables currVars = getVariablesStatement(stmt->getBody());
   currVars.removeVariable(stmt->getIterator(), READ_WRITE);
 
-  if(stmt->isSourceProcCall())
+  if (stmt->isSourceProcCall())
   {
-      proc_callExpr *expr = stmt->getExtractElementFunc();
-        for(argument* arg: expr->getArgList()){
-            if(arg->getExpr() != nullptr)
-                currVars.merge(getVariablesExpr(arg->getExpr()));
-        }
+    proc_callExpr *expr = stmt->getExtractElementFunc();
+    for (argument *arg : expr->getArgList())
+    {
+      if (arg->getExpr() != nullptr)
+        currVars.merge(getVariablesExpr(arg->getExpr()));
+    }
   }
-  else if(!stmt->isSourceField())
+  else if (!stmt->isSourceField())
   {
-      Identifier *iden = stmt->getSource();
-      currVars.addVariable(iden, READ);
+    Identifier *iden = stmt->getSource();
+    currVars.addVariable(iden, READ);
   }
   else
   {
-      PropAccess *propId = stmt->getPropSource();
-      currVars.addVariable(propId->getIdentifier1(), READ);
+    PropAccess *propId = stmt->getPropSource();
+    currVars.addVariable(propId->getIdentifier1(), READ);
   }
 
   if (stmt->hasFilterExpr())
@@ -286,10 +286,12 @@ usedVariables getDeclaredPropertyVariablesOfBlock(blockStatement *blockStmt)
   usedVariables currVars;
   for (statement *stmt : stmtList)
   {
-    if (stmt->getTypeofNode() == NODE_DECL) {
+    if (stmt->getTypeofNode() == NODE_DECL)
+    {
       declaration *decl = (declaration *)stmt;
-      if(decl->getType()->isPropNodeType()) {
-        currVars.addVariable(decl->getdeclId(),READ_WRITE); //2nd arg may be not used by us
+      if (decl->getType()->isPropType())
+      {
+        currVars.addVariable(decl->getdeclId(), READ_WRITE); // 2nd arg may be not used by us
       }
     }
   }
@@ -314,13 +316,13 @@ usedVariables getVariablesStatement(statement *stmt)
     return getVariablesIf((ifStmt *)stmt);
 
   case NODE_WHILESTMT:
-      return getVariablesWhile((whileStmt *)stmt);
+    return getVariablesWhile((whileStmt *)stmt);
 
   case NODE_DOWHILESTMT:
-      return getVariablesDoWhile((dowhileStmt *)stmt);
+    return getVariablesDoWhile((dowhileStmt *)stmt);
 
   case NODE_FORALLSTMT:
-      return getVariablesForAll((forallStmt *) stmt);
+    return getVariablesForAll((forallStmt *)stmt);
 
   case NODE_REDUCTIONCALLSTMT:
     return getVariablesReduction((reductionCallStmt *)stmt);
@@ -330,8 +332,7 @@ usedVariables getVariablesStatement(statement *stmt)
 
     case NODE_FIXEDPTSTMT:
       return getVariablesFixedPoint((fixedPointStmt *)stmt);*/
-  default:
-    ; // added to fix warning!
+  default:; // added to fix warning!
   }
 
   return usedVariables();
