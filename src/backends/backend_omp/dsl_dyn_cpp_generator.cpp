@@ -88,12 +88,12 @@ void dsl_dyn_cpp_generator::generateOnAddBlock(onAddBlock* onAddStmt)
 
 }
 
-void dsl_dyn_cpp_generator::generateFreeInCurrentBatch()
+/*void dsl_dyn_cpp_generator::generateFreeInCurrentBatch()
 {
   char strBuffer[1024];
-  for(int i=0 ; i < freeIdStore.size() ; i++)
+  for(int i=0 ; i < freeIdStore.back().size() ; i++)
      { 
-       Identifier* id = freeIdStore[i];
+       Identifier* id = freeIdStore.back()[i];
        if(id->getSymbolInfo()->getType()->gettypeId() == TYPE_PROPNODE ||
           id->getSymbolInfo()->getType()->gettypeId() == TYPE_PROPEDGE)
          {
@@ -108,7 +108,7 @@ void dsl_dyn_cpp_generator::generateFreeInCurrentBatch()
 
      }
 
-}
+}*/
 
 void dsl_dyn_cpp_generator::generateBatchBlock(batchBlock* batchStmt)
 {
@@ -118,7 +118,6 @@ void dsl_dyn_cpp_generator::generateBatchBlock(batchBlock* batchStmt)
   Identifier* updateId = batchStmt->getUpdateId();
   char strBuffer[1024];
   insideBatchBlock = true;
-
   /*for(itr=paramList.begin();itr!=paramList.end();itr++)
   { 
       Type* type=(*itr)->getType();
@@ -154,7 +153,8 @@ void dsl_dyn_cpp_generator::generateBatchBlock(batchBlock* batchStmt)
 
       generateBlock(batchStmt->getStatements(),false);
       main.NewLine();
-      generateFreeInCurrentBatch();
+      //generateFreeInCurrentBatch();
+      //freeIdStore.pop_back();
       main.pushstr_newL("}");
 
       resetBatchEnv();
@@ -269,6 +269,7 @@ void dsl_dyn_cpp_generator::generate_exprProcCall(Expression* expr)
   if(methodId=="get_edge")
   {
    
+      //cout<<"Inside get edge "<<"\n";
    // if(curFuncType == INCREMENTAL_FUNC || curFuncType == DECREMENTAL_FUNC)
         getEdgeTranslation(expr);
     /*else    
@@ -299,7 +300,6 @@ void dsl_dyn_cpp_generator::generate_exprProcCall(Expression* expr)
      }
    else if(methodId == "updateCSRAdd" || methodId == "updateCSRDel") 
      {
-      
        char strBuffer[1024];
        list<argument*> argList = proc->getArgList();
        assert(argList.size() == 1);
@@ -309,7 +309,9 @@ void dsl_dyn_cpp_generator::generate_exprProcCall(Expression* expr)
        if(methodId == "updateCSRAdd")
           sprintf(strBuffer,"%s.%s(%s, %s, %s)",objectId->getIdentifier(),"updateCSRAdd",updateId->getIdentifier(),"updateIndex","batchElements");
        else
+        {
           sprintf(strBuffer,"%s.%s(%s, %s, %s)",objectId->getIdentifier(),"updateCSRDel",updateId->getIdentifier(),"updateIndex","batchElements");
+        }
        main.pushString(strBuffer);
 
      }
@@ -339,7 +341,7 @@ void dsl_dyn_cpp_generator::generate_exprProcCall(Expression* expr)
            if(methodId == "Decremental")
               sprintf(strBuffer, "%s_del", fileName);
            main.pushString(strBuffer);
-           generateArgList(proc->getArgList());         
+           generateArgList(proc->getArgList(), true);         
 
         } 
    else
@@ -347,37 +349,95 @@ void dsl_dyn_cpp_generator::generate_exprProcCall(Expression* expr)
         char strBuffer[1024];
         list<argument*> argList=proc->getArgList();
         Identifier* objectId = proc->getId1();
-        if(objectId!=NULL)
+        Expression* indexExpr = proc->getIndexExpr();
+
+        if(objectId!=NULL) 
           {
              Identifier* id2 = proc->getId2();
-             if(id2 == NULL)
-                 sprintf(strBuffer,"%s.%s.%s",objectId->getIdentifier(), id2->getIdentifier(), proc->getMethodId()->getIdentifier());
+             if(id2 != NULL)
+               {
+
+                 sprintf(strBuffer,"%s.%s.%s",objectId->getIdentifier(), id2->getIdentifier(), getProcName(proc));
+               }
              else
-                 sprintf(strBuffer,"%s.%s",objectId->getIdentifier(), proc->getMethodId()->getIdentifier());    
+              {
+                 sprintf(strBuffer,"%s.%s",objectId->getIdentifier(), getProcName(proc).c_str());  
+           
+              }  
           }
-        else
+        else if(indexExpr != NULL)
           {
-            sprintf(strBuffer,"%s",proc->getMethodId()->getIdentifier());
+            cout<<"ENTERED HERE FOR INDEXEXPR GENERATION DYNAMIC"<<"\n";
+            Expression* mapExpr = indexExpr->getMapExpr();
+            Identifier* mapExprId = mapExpr->getId();
+
+            if(parallelConstruct.size() > 0 && mapExprId->getSymbolInfo()->getId()->isLocalMapReq())
+                 generate_exprIndex(indexExpr, true);
+            else
+                 generate_exprIndex(indexExpr, false);
+
+            sprintf(strBuffer,".%s", getProcName(proc).data());
           } 
+        else {
+        
+          sprintf(strBuffer,"%s", getProcName(proc).data());
+       
+        }
+
 
         main.pushString(strBuffer);
-        generateArgList(argList);   
+
+      if(methodId == "insert"){
+         
+         main.pushString("(");
+
+         if(indexExpr != NULL){
+         Expression* mapExpr = indexExpr->getMapExpr();
+         Identifier* mapExprId = mapExpr->getId();
+
+        if(parallelConstruct.size() > 0 && mapExprId->getSymbolInfo()->getId()->isLocalMapReq())
+            generate_exprIndex(indexExpr, true);
+        else
+            generate_exprIndex(indexExpr, false);
+         }
+         else if(objectId != NULL){
+          Identifier* id2 = proc->getId2();
+          if(id2 != NULL)
+             sprintf(strBuffer,"%s.%s",objectId->getIdentifier(), id2->getIdentifier());               
+          else
+             sprintf(strBuffer,"%s",objectId->getIdentifier()); 
+
+          main.pushString(strBuffer);      
+         }
+
+         main.pushString(".end()");
+         main.pushString(",");
+         generateArgList(argList,false);
+         main.pushString(".begin(),");
+         generateArgList(argList, false);
+         main.pushString(".end())");
+                
+      }  
+      else  
+        generateArgList(argList, true);   
 
     }
-  
+ 
 
 }
 
 
 void dsl_dyn_cpp_generator::generate_exprPropId(PropAccess* propId) //This needs to be made more generic.
 { 
-  
   char strBuffer[1024];
   Identifier* id1=propId->getIdentifier1();
   Identifier* id2=propId->getIdentifier2();
+  Expression* indexexpr = propId->getPropExpr();
   ASTNode* propParent=propId->getParent();
   //bool relatedToReduction = propParent!=NULL?propParent->getTypeofNode()==NODE_REDUCTIONCALLSTMT:false;
-   if(id2->getSymbolInfo()!=NULL&&id2->getSymbolInfo()->getId()->get_fp_association())
+   if(id2 != NULL)
+   {
+    if(id2->getSymbolInfo()!=NULL&&id2->getSymbolInfo()->getId()->get_fp_association())
     {
        bool relatedToUpdation = propParent!=NULL?((propParent->getTypeofNode() == NODE_REDUCTIONCALLSTMT|| propParent->getTypeofNode() == NODE_ASSIGN) && checkFixedPointAssociation(propId)):false;
        if(relatedToUpdation)
@@ -393,6 +453,7 @@ void dsl_dyn_cpp_generator::generate_exprPropId(PropAccess* propId) //This needs
     }
     else
     {
+
       if(id2->getSymbolInfo()==NULL)
         {
           if(id1->getUpdateAssociation()!=NULL)
@@ -416,7 +477,30 @@ void dsl_dyn_cpp_generator::generate_exprPropId(PropAccess* propId) //This needs
 
        }
     }
-  main.pushString(strBuffer);
+} 
+else if(indexexpr != NULL){
+
+     /* semantic checks needs to be added for maps containing property as values */
+     generateExpr(indexexpr);
+
+     if(id1->getSymbolInfo() != NULL) 
+     {
+       int typeId = id1->getSymbolInfo()->getType()->gettypeId();
+       if(typeId == TYPE_INT || typeId == TYPE_NODE)
+
+          sprintf(strBuffer,"[%s]",id1->getIdentifier());
+
+       else if(typeId == TYPE_EDGE){
+
+          sprintf(strBuffer,"[%s.id]",id1->getIdentifier());
+
+       }    
+     }
+     else
+        sprintf(strBuffer,"[%s]",id1->getIdentifier());   
+ }
+     
+ main.pushString(strBuffer);
 
 }
 
@@ -424,13 +508,24 @@ void dsl_dyn_cpp_generator::generate_exprPropId(PropAccess* propId) //This needs
 void dsl_dyn_cpp_generator::generateForAllSignature(forallStmt* forAll)
 {
   
-  
-  if(curFuncType == GEN_FUNC || curFuncType == STATIC_FUNC)
-    {
+  map<string, bool> dynamicLinkFunc = frontEndContext.getDynamicLinkFuncs();
+
+
+  if(curFuncType == STATIC_FUNC) {
+
       dsl_cpp_generator::generateForAllSignature(forAll);
+
     } 
-  else
-   { 
+  else {
+
+   Identifier* funcId = currentFunc->getIdentifier();  
+   string funcIdString = "";
+   if(funcId != NULL)
+      funcIdString.assign(funcId->getIdentifier());
+
+   if(curFuncType == DECREMENTAL_FUNC || curFuncType == INCREMENTAL_FUNC 
+      ||curFuncType == DYNAMIC_FUNC || (dynamicLinkFunc.find(funcIdString) != dynamicLinkFunc.end())) {
+        
    char strBuffer[1024];
    Identifier* iterator=forAll->getIterator();
    if(forAll->isSourceProcCall())
@@ -481,7 +576,18 @@ void dsl_dyn_cpp_generator::generateForAllSignature(forallStmt* forAll)
        main.pushString("{");
        sprintf(strBuffer,"%s %s = %s_inedge.destination ;","int",iterator->getIdentifier(),nodeNbr->getIdentifier()); //needs to move the addition of
        main.pushstr_newL(strBuffer);
-       }                                                                                                    //statement to a different method.
+       }     
+      if(s.compare("inOutNbrs")==0)
+       {
+        list<argument*>  argList=extractElemFunc->getArgList();
+       assert(argList.size()==1);
+       Identifier* nodeNbr=argList.front()->getExpr()->getId();
+       sprintf(strBuffer,"for (edge %s_edges: %s.getInOutNbrs(%s)) ",nodeNbr->getIdentifier(),graphId,nodeNbr->getIdentifier());
+       main.pushstr_newL(strBuffer);
+       main.pushString("{");
+       sprintf(strBuffer,"%s %s = %s_edges.destination ;","int",iterator->getIdentifier(),nodeNbr->getIdentifier()); //needs to move the addition of
+       main.pushstr_newL(strBuffer);
+       }                                                                                                //statement to a different method.
 
     }
   }
@@ -515,12 +621,34 @@ void dsl_dyn_cpp_generator::generateForAllSignature(forallStmt* forAll)
       }*/
 
   }
+  else if(forAll->isSourceExpr()){
+  
+  Expression* expr = forAll->getSourceExpr();
+  Expression* mapExpr = expr->getMapExpr();
+  Identifier* mapId = mapExpr->getId();
+
+  cout<<"ENTERED................................................."<<"\n";
+
+  if(mapId->getSymbolInfo()->getType()->gettypeId() == TYPE_CONTAINER){
+     main.pushString("for(int i = 0 ; i < ");
+     generateExpr(expr);
+     main.pushstr_newL(".size() ; i++)");
+     main.pushString("{ ");
+     sprintf(strBuffer, "int %s = ", iterator->getIdentifier());
+     main.pushString(strBuffer);
+     generateExpr(expr);
+     main.pushstr_newL("[i] ;");
+  } 
+  
+ // cout<<"REACHED HERE AFTER COMPLETING "<<"\n";
+  
+  }
   else
   {
     Identifier* sourceId = forAll->getSource();
     if(sourceId !=NULL)
        {
-          if(sourceId->getSymbolInfo()->getType()->gettypeId()==TYPE_SETN)
+          if(sourceId->getSymbolInfo()->getType()->gettypeId() == TYPE_SETN)
           {
 
            main.pushstr_newL("std::set<int>::iterator itr;");
@@ -528,17 +656,29 @@ void dsl_dyn_cpp_generator::generateForAllSignature(forallStmt* forAll)
            main.pushstr_newL(strBuffer);
 
           }  
-          else if(sourceId->getSymbolInfo()->getType()->gettypeId()==TYPE_UPDATES)
+          else if(sourceId->getSymbolInfo()->getType()->gettypeId() == TYPE_UPDATES)
               {
                  sprintf(strBuffer,"for(int i = 0 ; i < %s.size() ; i++)",sourceId->getIdentifier());
                  main.pushstr_newL(strBuffer);
 
               }
+          else if(sourceId->getSymbolInfo()->getType()->gettypeId() == TYPE_CONTAINER){
+
+                 sprintf(strBuffer,"for(int i = 0 ; i < %s.size() ; i++)",sourceId->getIdentifier());
+                 main.pushstr_newL(strBuffer); 
+                 main.pushString("{ ");
+                 sprintf(strBuffer, "int %s = %s[i] ;", iterator->getIdentifier(), sourceId->getIdentifier());
+                 main.pushstr_newL(strBuffer); 
+
+          }    
        }
    }
 }
+else {
 
-}
+ dsl_cpp_generator::generateForAllSignature(forAll);
+
+} } }
 
 void dsl_dyn_cpp_generator::generateForAll(forallStmt* forAll)
 { 
@@ -564,6 +704,7 @@ void dsl_dyn_cpp_generator::generateForAll(forallStmt* forAll)
      char strBuffer[1024];
   if(forAll->isForall())
   { 
+    parallelConstruct.push_back(forAll);
     if(forAll->hasFilterExpr() || forAll->hasFilterExprAssoc())
      {  
         Expression* filterExpr = NULL;
@@ -594,7 +735,8 @@ void dsl_dyn_cpp_generator::generateForAll(forallStmt* forAll)
 
   if(forAll->hasFilterExpr())
   { 
-
+  
+    cout<<"Entered here first**********"<<"\n";
     blockStatement* changedBody=includeIfToBlock(forAll);
    // cout<<"CHANGED BODY TYPE"<<(changedBody->getTypeofNode()==NODE_BLOCKSTMT);
     forAll->setBody(changedBody);
@@ -659,6 +801,17 @@ void dsl_dyn_cpp_generator::generateForAll(forallStmt* forAll)
     forallStack.pop_back();
    
   }
+  else if(forAll->isSourceExpr()){
+   
+    if(body->getTypeofNode()==NODE_BLOCKSTMT){
+           generateBlock((blockStatement*)body,false);
+        }
+    else
+       generateStatement(forAll->getBody());
+
+      main.pushstr_newL("}");
+
+  }
   else 
   {   
     
@@ -693,6 +846,16 @@ void dsl_dyn_cpp_generator::generateForAll(forallStmt* forAll)
          generateStatement(forAll->getBody());
 
        }
+       else if(collectionId->getSymbolInfo()->getType()->gettypeId()==TYPE_CONTAINER){
+
+        if(body->getTypeofNode()==NODE_BLOCKSTMT){
+           generateBlock((blockStatement*)body,false);
+        }
+        else
+         generateStatement(forAll->getBody());
+
+        main.pushstr_newL("}");
+     }  
      else
       {
      
@@ -708,7 +871,27 @@ void dsl_dyn_cpp_generator::generateForAll(forallStmt* forAll)
       
      }
   }
-    
+
+  if(forAll->isForall()){
+    parallelConstruct.pop_back();
+   if(forAll->getMapLocal().size() > 0){
+
+     /* write logic here */
+   // main.pushstr_newL("***************");
+   
+    set<Identifier*>  containerId = forAll->getMapLocal();
+    auto it = containerId.begin();
+    Identifier* id = *it;
+    int start = 0;
+    generateForMergeContainer(id->getSymbolInfo()->getType(), start);
+    char val = 'k' + start + 1;
+    sprintf(strBuffer, "for(int %c = 0 ; %c < omp_get_max_threads() ; %c++)", val, val, val);
+    main.pushstr_newL(strBuffer);
+    generateInserts(id->getSymbolInfo()->getType(), id);
+   
+  } 
+}
+
 } 
 
 
@@ -826,7 +1009,7 @@ void dsl_dyn_cpp_generator::generateIncremental(Function* incFunc)
          main.NewLine();
 
        }
-
+   generatePriorDeclarations(incFunc);
    generateBlock(incFunc->getBlockStatement(),false);
    main.NewLine();
    main.pushstr_newL("}");
@@ -860,7 +1043,8 @@ void dsl_dyn_cpp_generator::generateDecremental(Function* decFunc)
          main.NewLine();
 
        }
-
+   
+   generatePriorDeclarations(decFunc);
    generateBlock(decFunc->getBlockStatement(),false);
    main.NewLine();
    main.pushstr_newL("}");
@@ -894,7 +1078,7 @@ void dsl_dyn_cpp_generator::generateDynamicFunc(Function* dynFunc)
          main.NewLine();
 
        }
-
+   generatePriorDeclarations(dynFunc);
    generateBlock(dynFunc->getBlockStatement(),false);
    main.NewLine();
    main.pushstr_newL("}");
@@ -925,8 +1109,12 @@ void dsl_dyn_cpp_generator::generateFunction(ASTNode* func)
         {      
           generateDynamicFunc(function);
            
-        }    
-
+        }
+   else if(function->getFuncType() == GEN_FUNC)
+         {
+            generateFunc(function);
+         }         
+   
 }
 
 bool dsl_dyn_cpp_generator::openFileforOutput()
@@ -983,7 +1171,7 @@ bool dsl_dyn_cpp_generator::generate()
       return false;
    generation_begin(); 
    
-   list<Function*> funcList=frontEndContext.getFuncList();
+   list<Function*> funcList = frontEndContext.getFuncList();
    for(Function* func:funcList)
    {
        generateFunction(func);

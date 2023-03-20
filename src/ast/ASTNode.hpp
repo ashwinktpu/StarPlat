@@ -17,6 +17,7 @@ class ASTNode
   NODETYPE typeofNode;
   SymbolTable* var_symbTab;
   SymbolTable* prop_symbTab;
+  
   public:
   ASTNode()
   {

@@ -3,7 +3,6 @@
 
 #include <cstddef> //for NULL in gcc 6
 #include<list>
-#include <cstddef>
 
 using namespace std;
 
@@ -129,11 +128,6 @@ bool check_conflicts_and_add(SymbolTable* sTab,Identifier* id,Type* type);
 
 
  }*/
-
-
-
-
-
 
 };
 
