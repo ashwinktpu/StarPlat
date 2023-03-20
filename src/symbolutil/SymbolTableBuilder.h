@@ -5,7 +5,7 @@
 #include "../ast/ASTNodeTypes.hpp"
 #include "../maincontext/MainContext.hpp"
 #include <cassert>
-
+#include <unordered_set>
 extern char* backendTarget;
 class SymbolTableBuilder
 {
@@ -20,6 +20,7 @@ class SymbolTableBuilder
  
  public:
  vector<ASTNode*> parallelConstruct;
+ std::unordered_set<TableEntry *> IdsInsideParallelFilter;
  ASTNode* batchBlockEnv;
  ASTNode* preprocessEnv;
 
@@ -67,6 +68,7 @@ bool checkHeaderSymbols(Identifier* src,PropAccess* propId,forallStmt* forall);
 bool findSymbolId(Identifier* id);
 bool findSymbolPropId(PropAccess* propId);
 bool checkForArguments(list<argument*> arglist);
+void getIdsInsideExpression(Expression* expr, std::unordered_set<TableEntry *>& ids);
 map<string, bool> getDynamicLinkedFuncs();
 char* getbackendTarget();
 

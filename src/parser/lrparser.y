@@ -640,7 +640,13 @@ int main(int argc,char **argv)
 		   cpp_dyn_gen.setFileName(fileName);
 	       cpp_dyn_gen.generate();
 		}
-
+		if(strcmp(backendTarget, "mpi") == 0){
+		   spdynmpi::dsl_dyn_cpp_generator cpp_dyn_gen;
+		   std::cout<<"created dyn mpi"<<std::endl;
+		   cpp_dyn_gen.setFileName(fileName);
+		   std::cout<<"file name set"<<std::endl;
+	       cpp_dyn_gen.generate();	
+		}
 	 }
 	
    }

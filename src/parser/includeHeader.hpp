@@ -15,6 +15,7 @@
 
 /* UNCOMMENT IT TO GENERATE FOR MPI BACKEND */
 #include "../backends/backend_mpi/dsl_cpp_generator.h"
+#include "../backends/backend_mpi/dsl_dyn_cpp_generator.h"
 
 /* UNCOMMENT IT TO GENERATE FOR CUDA BACKEND */
 #include "../backends/backend_cuda/dsl_cpp_generator.h"

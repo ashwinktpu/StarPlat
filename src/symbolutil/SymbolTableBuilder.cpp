@@ -194,12 +194,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
            Type* type = declStmt->getType();
            SymbolTable* symbTab = type->isPropType()?currPropSymbT:currVarSymbT;
            bool creatsFine = create_Symbol(symbTab,declStmt->getdeclId(),type);
-           if(type->gettypeId() == TYPE_CONTAINER){
 
-             cout<<"!!!!!!!!!!!size of container!!!!!!!!!!"<<type->getArgList().size()<<"\n";
-             cout<<"***********name of container********"<<declStmt->getdeclId()->getIdentifier()<<"\n";
-
-           }
            if(declStmt->isInitialized())
            {
                Expression* exprAssigned = declStmt->getExpressionAssigned();
@@ -232,17 +227,23 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
        { 
            assignment* assign=(assignment*)stmt;
            Expression* exprAssigned = assign->getExpr();
+           string backend(backendTarget);
+
            if(assign->lhs_isIdentifier())
              {
                  Identifier* id=assign->getId();
-                  searchSuccess=findSymbolId(id);
+                 searchSuccess=findSymbolId(id);
+                if(backend.compare("mpi") == 0 && IdsInsideParallelFilter.find(id->getSymbolInfo()) != IdsInsideParallelFilter.end()) {
+                    id->getSymbolInfo()->getId()->set_used_inside_forall_filter_and_changed_inside_forall_body();
+                }
              }
              else if(assign->lhs_isProp())
              {
-                 PropAccess* propId=assign->getPropId();
-                 searchSuccess=findSymbolPropId(propId);
-
-
+                 PropAccess* propId = assign->getPropId();
+                 searchSuccess = findSymbolPropId(propId);
+                 if(backend.compare("mpi") == 0 && IdsInsideParallelFilter.find(propId->getIdentifier2()->getSymbolInfo()) != IdsInsideParallelFilter.end()) {
+                    propId->getIdentifier2()->getSymbolInfo()->getId()->set_used_inside_forall_filter_and_changed_inside_forall_body();
+                  }
              }
              else if(assign->lhs_isIndexAccess()){
 
@@ -250,6 +251,19 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                 checkForExpressions(expr);
 
              }
+              
+             if(backend.compare("cuda")== 0  && assign->lhs_isProp()){  // This flags device assingments OUTSIDE for
+              //~ std::cout<< "varName1: " << assign->getPropId()->getIdentifier1()->getIdentifier() << '\n';
+              //~ std::cout<< "varName2: " << assign->getPropId()->getIdentifier2()->getIdentifier() << '\n';
+              std::cout<<"ANAME1:"<< assign->getParent()->getTypeofNode() << '\n';
+              std::cout<< "ANAME2:"<< assign->getParent()->getParent()->getTypeofNode() << '\n';
+              //~ std::cout<< "ANAME3:"<< assign->getParent()->getParent()->getParent()->getTypeofNode() << '\n';
+              if(assign->getParent()->getParent()->getTypeofNode()==NODE_FUNC || (assign->getParent()->getParent()->getTypeofNode()!=NODE_FUNC && assign->getParent()->getParent()->getParent()->getTypeofNode()==NODE_FUNC)){
+                std::cout<< "\t\tSetting device bool" << '\n';
+                assign->flagAsDeviceVariable();
+              }
+             }  
+
 
              checkForExpressions(exprAssigned);
              
@@ -281,7 +295,6 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
            
            if(fpStmt->getDependentProp()->isUnary()||fpStmt->getDependentProp()->isIdentifierExpr())
            {  
-               printf("INSIDE FIXEDPTCHECK\n");
                Identifier* depId ;
                if(fpStmt->getDependentProp()->isUnary())
                {
@@ -352,6 +365,8 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                   if(forAll->isForall())
                     {
                         parallelConstruct.push_back(forAll);
+                        if(forAll->hasFilterExpr())
+                          getIdsInsideExpression(forAll->getfilterExpr(),IdsInsideParallelFilter); 
                        
                     }
              }
@@ -376,11 +391,22 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                }
 
               buildForStatements(forAll->getBody());  
-               if(backend.compare("omp")==0&&forAll->isForall())
-                    {  
-                        parallelConstruct.pop_back();
-                    } 
+              
+           //----------------------MERGE CONFLICT OCCURRED HERE (WORKING BRANCH <---- OPENACC)----------------------------------
+               //~ if((backend.compare("omp")==0 || backend.compare("openACC")==0 ) && forAll->isForall())
+                    //~ {  
+                        //~ parallelConstruct.pop_back();
+                    //~ } 
 
+              //~ delete_curr_SymbolTable();
+
+
+               if((backend.compare("omp")==0 || backend.compare("cuda")==0 || backend.compare("openACC")==0 )  || (backend.compare("mpi")==0) &&forAll->isForall())
+                    {
+                       if(forAll->isForall())
+                          parallelConstruct.pop_back();
+                        IdsInsideParallelFilter.clear();
+                    }
               break;
        }
        case NODE_BLOCKSTMT:
@@ -424,7 +450,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
              count++;
           }
 
-          if(flag&&backend.compare("omp")==0)
+          if(flag&&(backend.compare("omp")==0 || backend.compare("openACC")==0 ) )
           { 
             iterateBFS* itrbFS=(iterateBFS*)(*itrIBFS);  
             Identifier* id=Identifier::createIdNode("bfsDist");
@@ -513,6 +539,13 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
            
            reductionCall* reduceExpr = reducStmt->getReducCall();
            checkReductionExpr(reduceExpr);
+
+           ASTNode* nearest_Parallel=parallelConstruct.back();
+            if(nearest_Parallel->getTypeofNode()==NODE_FORALLSTMT)
+            {
+              forallStmt* forAll=(forallStmt*)nearest_Parallel;
+              forAll->setReductionStatement(reducStmt);
+            }  
            }
            else
            {
@@ -653,6 +686,62 @@ bool SymbolTableBuilder::checkForArguments(list<argument*> argList)
 
 
 }
+
+ void SymbolTableBuilder::getIdsInsideExpression(Expression* expr, std::unordered_set<TableEntry *>& ids)
+ {
+    switch(expr->getExpressionFamily())
+    {
+         case EXPR_ARITHMETIC:
+            {
+                getIdsInsideExpression(expr->getLeft(),ids);
+                getIdsInsideExpression(expr->getRight(),ids);
+                break;
+            }
+         case EXPR_PROCCALL:
+         {
+             proc_callExpr* pExpr=(proc_callExpr*)expr;
+             Identifier* id=pExpr->getId1();
+             ids.insert(id->getSymbolInfo());
+             
+             list<argument *> arglist= pExpr->getArgList();
+              for(list<argument *>::iterator it = arglist.begin(); it!=arglist.end();it++)
+              {
+                  if((*it)->isExpr())
+                    getIdsInsideExpression((*it)->getExpr(), ids);
+              } 
+
+             break;   
+         }  
+         case EXPR_UNARY:
+         {   
+             getIdsInsideExpression(expr->getUnaryExpr(),ids);
+             break;
+         }
+         case EXPR_LOGICAL:
+         {
+             getIdsInsideExpression(expr->getLeft(),ids);
+             getIdsInsideExpression(expr->getRight(),ids);
+             break;
+         }
+         case EXPR_RELATIONAL:
+         {
+             getIdsInsideExpression(expr->getLeft(),ids);
+             getIdsInsideExpression(expr->getRight(),ids);
+             break;
+         }
+         case EXPR_ID:
+         {  
+             ids.insert(expr->getId()->getSymbolInfo());
+             break;
+         }
+         case EXPR_PROPID:
+         {  
+             ids.insert(expr->getPropId()->getIdentifier1()->getSymbolInfo());
+             ids.insert(expr->getPropId()->getIdentifier2()->getSymbolInfo());
+             break;
+         }
+     }
+ }
 
  void SymbolTableBuilder::checkForExpressions(Expression* expr)
  {  bool ifFine=false;
