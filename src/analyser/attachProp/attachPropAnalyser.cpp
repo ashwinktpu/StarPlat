@@ -1,11 +1,15 @@
 #include "attachPropAnalyser.h"
 
+#include<vector>
 #include <string.h>
 #include <cassert>
 #include <unordered_map>
 #include <unordered_set>
 #include "../analyserUtil.cpp"
 #include "../../ast/ASTHelper.cpp"
+
+#include <iostream>
+using namespace std;
 
 //Stores the statement pointer and the index in it's parent block
 struct statementPos
@@ -93,16 +97,16 @@ bool checkDependancy(statement *stmt, usedVariables &usedVars)
     {
       for (argument *arg : procedure->getArgList())
       {
-        
+
         if (arg->isAssignExpr())
         {
           assignment *asgn = arg->getAssignExpr();
           if(usedVars.isUsedProp(PropAccess::createPropAccessNode(nullptr, asgn->getId())))
             return true;
-          
+
           if (checkExprDependancy(asgn->getExpr()))
             return true;
-          
+
         }
       }
     }
@@ -135,7 +139,7 @@ bool checkDependancy(statement *stmt, usedVariables &usedVars)
   return false;
 }
 
-//Returns the minimum left index and maximum right index upto which a statement can be moved 
+//Returns the minimum left index and maximum right index upto which a statement can be moved
 statementRange getRange(statementPos stPos, vector<statement *> stmts)
 {
   int l = stPos.pos;
@@ -208,6 +212,7 @@ list<statementPos> findStmtPosition(list<statementRange> stmts)
 
 void attachPropAnalyser::analyseBlock(blockStatement *blockStmt)
 {
+
   list<statement *> stmtList = blockStmt->returnStatements();
   list<statement *>::iterator itr;
 
@@ -313,14 +318,120 @@ void attachPropAnalyser::analyseBlock(blockStatement *blockStmt)
   for (list<statementPos>::reverse_iterator itr = newAttachNodeStmt.rbegin(); itr != newAttachNodeStmt.rend(); itr++){
     newStatements.insert(newStatements.begin() + itr->pos, itr->stmt);
   }
-
+  if(backend==1){ // this is only valid for cuda backend for now , change this if the other cpp generators are changed in future
+    vector<statement*> final_statements;  // merging the attachnode property with device variable assignments
+    int last_attach_node_prop_pos = -1;
+    int curr_pos = 0;
+    for(auto stmt:newStatements){
+      switch (stmt->getTypeofNode()){
+        case NODE_PROCCALLSTMT:
+        {
+          proc_callExpr *procedure = ((proc_callStmt *)stmt)->getProcCallExpr();
+          string methodID(procedure->getMethodId()->getIdentifier());
+          final_statements.push_back(stmt);
+          if (methodID == "attachNodeProperty"){
+            last_attach_node_prop_pos = curr_pos;
+          }
+        break;
+        }
+        case NODE_ASSIGN:{
+          if(((assignment*)stmt)->lhs_isProp() && ((assignment*)stmt)->isDeviceAssignment()){
+            bool flag = true;
+            usedVariables usedVars;
+            usedVars.merge(analyserUtils::getVarsExpr(((assignment*)stmt)->getExpr()));
+            PropAccess* propId = ((assignment*)stmt)->getPropId();
+            usedVars.addVariable(propId->getIdentifier1(),WRITE);
+            usedVars.addVariable(propId->getIdentifier2(),WRITE);
+            for(int ii=last_attach_node_prop_pos+1;ii<final_statements.size();ii++){
+              if(checkDependancy(final_statements[ii],usedVars)){
+                flag = false;
+                break;
+              }
+            }
+            if(flag){
+              if(last_attach_node_prop_pos<0 || last_attach_node_prop_pos>=final_statements.size()){
+                final_statements.push_back(stmt);
+              }
+              else{
+                proc_callExpr* expr = ((proc_callStmt*)final_statements[last_attach_node_prop_pos])->getProcCallExpr();
+                argument* arg = new argument();
+                arg->setAssign((assignment*)stmt,true);
+                expr->addToArgList(arg);
+                curr_pos--;
+              }
+            }
+            else{
+              final_statements.push_back(stmt);
+            }
+          }
+          else{
+            final_statements.push_back(stmt);
+          }
+          break;
+        }
+        default:
+          final_statements.push_back(stmt);
+          break;
+      }
+      curr_pos++;
+    }
+    newStatements = final_statements;
+    final_statements.clear();
+    curr_pos = 0;
+    int last_device_assignment = -1;
+    for(auto stmt:newStatements){
+      switch(stmt->getTypeofNode()){
+        case NODE_ASSIGN:{
+          if(((assignment*)stmt)->lhs_isProp() && ((assignment*)stmt)->isDeviceAssignment()){
+            if(last_device_assignment!=-1){
+              bool flag = true;
+              usedVariables usedVars;
+              usedVars.merge(analyserUtils::getVarsExpr(((assignment*)stmt)->getExpr()));
+              PropAccess* propId = ((assignment*)stmt)->getPropId();
+              usedVars.addVariable(propId->getIdentifier1(),WRITE);
+              usedVars.addVariable(propId->getIdentifier2(),WRITE);
+              for(int ii=last_device_assignment+1;ii<final_statements.size();ii++){
+                if(checkDependancy(final_statements[ii],usedVars)){
+                  flag = false;
+                  break;
+                }
+              }
+              if(flag){
+                ((assignment*)final_statements[last_device_assignment])->add_device_assignment((assignment*)stmt);
+                curr_pos--;
+              }
+              else{
+                final_statements.push_back(stmt);
+                last_device_assignment = curr_pos;
+              }
+            }
+            else{
+              final_statements.push_back(stmt);
+              last_device_assignment = curr_pos;
+            }
+          }
+          else{
+            final_statements.push_back(stmt);
+          }
+          break;
+        }
+        default:{
+          final_statements.push_back(stmt);
+        }
+      }
+      curr_pos++;
+    }
+    newStatements = final_statements;
+  }
   //adding the merged statements to block
   blockStmt->clearStatements();
   for (statementPos stmt : nodePropList) //Adding property declaration to start of block
     blockStmt->addStmtToBlock(stmt.stmt);
-  for (statement *stmt : newStatements)
+  for (statement *stmt : newStatements){
     blockStmt->addStmtToBlock(stmt);
+  }
 }
+
 
 void attachPropAnalyser::analyseStatement(statement *stmt)
 {
