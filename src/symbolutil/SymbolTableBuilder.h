@@ -15,10 +15,9 @@ class SymbolTableBuilder
  SymbolTable* currVarSymbT;
  SymbolTable* currPropSymbT;
  Function* currentFunc; 
+ map<string, bool> dynamicLinkedFunc;
 
  
- 
-
  public:
  vector<ASTNode*> parallelConstruct;
  ASTNode* batchBlockEnv;
@@ -67,7 +66,8 @@ void checkForExpressions(Expression* expr);
 bool checkHeaderSymbols(Identifier* src,PropAccess* propId,forallStmt* forall);
 bool findSymbolId(Identifier* id);
 bool findSymbolPropId(PropAccess* propId);
-void checkForArguments(list<argument*> arglist);
+bool checkForArguments(list<argument*> arglist);
+map<string, bool> getDynamicLinkedFuncs();
 char* getbackendTarget();
 
 };
