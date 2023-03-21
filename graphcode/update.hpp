@@ -30,11 +30,8 @@ class update
 	    	}*/
         
         std::stringstream ss(line);
-        
-       
+	     
         //edgesTotal++; //TO BE REMOVED 
-        
-    
         char type;
         int32_t source;
         int32_t destination;
