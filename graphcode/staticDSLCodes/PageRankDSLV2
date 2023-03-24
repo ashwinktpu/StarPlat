@@ -6,6 +6,8 @@ function Compute_PR(Graph g,float beta,float delta,int maxIter,propNode<float> p
  int iterCount=0;
  
  float diff;
+ int x;
+ int y;
  do
   {
     diff=0.0;
@@ -20,15 +22,11 @@ function Compute_PR(Graph g,float beta,float delta,int maxIter,propNode<float> p
          }
 
          float val=(1-delta)/num_nodes+delta*sum;
-         diff+=val-v.pageRank; 
+         diff+=v.pageRank-val; 
          v.pageRank_nxt=val;
-
     }
-     
     pageRank = pageRank_nxt ; 
     iterCount++;
-
-
   } while((diff>beta)&&(iterCount<maxIter));
 
 }

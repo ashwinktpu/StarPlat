@@ -1,8 +1,29 @@
-int main(int argc, char* argv[]){
-   char* filename = argv[1];
-   graph g(filename);
-   g.parseGraph();
-   int * dist = (int*) malloc((g.num_nodes()+1)*sizeof(int));
-   int src =1;
-   Compute_SSSP(g,dist,src);
+//sssp
+int main(int argc, char *argv[])
+{
+  char *filename = argv[1];
+  graph g(filename);
+  g.parseGraph();
+  int *dist = (int *)malloc((g.num_nodes() + 1) * sizeof(int));
+  int src = 1;
+  Compute_SSSP(g, dist, src);
+  for (int i = 1; i < g.num_nodes();i++){
+    std::cout<<i<<" "<<dist[i]<<std::endl;
+  }
+  std::cout<< std::endl;
+}
+
+//pagerank
+int main(int argc, char *argv[])
+{
+  char *filename = argv[1];
+  graph g(filename);
+  g.parseGraph();
+  float *pr = (float *)malloc((g.num_nodes() + 1) * sizeof(float));
+  Compute_PR(g, 0.001, 0.85, 100, pr);
+  for (int i = 0; i < g.num_nodes(); i++)
+  {
+    std::cout << i << " " << pr[i] << std::endl;
+  }
+  std::cout << std::endl;
 }

@@ -93,6 +93,8 @@ void Compute_SSSP(graph& g,int* dist,int src)
   initIndex<int><<<1,1>>>(V,d_dist,src,(int)0); //InitIndexDevice
   bool finished = false; // asst in .cu
 
+  int x = 1; // asst in .cu
+
   // FIXED POINT variables
   //BEGIN FIXED POINT
   initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
@@ -125,3 +127,4 @@ void Compute_SSSP(graph& g,int* dist,int src)
 
   cudaMemcpy(    dist,   d_dist, sizeof(int)*(V), cudaMemcpyDeviceToHost);
 } //end FUN
+
