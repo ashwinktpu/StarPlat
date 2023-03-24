@@ -6,14 +6,15 @@
 int pushpullAnalyser::analyseforinfor(forallStmt* forstmt,Identifier* ownvertex){
     blockStatement *forbody = (blockStatement *)forstmt->getBody();
     list<statement *> forbodystmts = forbody->returnStatements();
+    int ans = 1;
     for (statement *stmt : forbodystmts){
         int pushorpull = analyseStatementinForAll(stmt, ownvertex);
         if (pushorpull == 0)
         {
-            return 0;
+            ans = 0;
        }
     }
-    return 1;
+    return ans;
 }
 
 int pushpullAnalyser::analyseassigninfor(assignment *stmt, Identifier *ownvertex)
@@ -33,6 +34,7 @@ int pushpullAnalyser::analyseassigninfor(assignment *stmt, Identifier *ownvertex
 
 int pushpullAnalyser::analysereductioninfor(reductionCallStmt* stmt, Identifier *ownvertex){
     list<ASTNode *> leftlist = stmt->getLeftList();
+    int ans =1 ;
     for(ASTNode* stmt : leftlist){
         if(stmt->getTypeofNode()==NODE_PROPACCESS){
              Identifier *affectedId = ((PropAccess*)stmt)->getIdentifier1();
@@ -40,7 +42,7 @@ int pushpullAnalyser::analysereductioninfor(reductionCallStmt* stmt, Identifier 
              {
                  PropAccess* stmt1 = (PropAccess*) stmt;
                  stmt1->setPushorPull("PUSH");
-                 return 0;
+                 ans =0;
              }
         }
     }
@@ -57,10 +59,10 @@ int pushpullAnalyser::analysereductioninfor(reductionCallStmt* stmt, Identifier 
         if (strcmp(ownvertex->getIdentifier(), affectedId->getIdentifier()) != 0)
         {
              leftprop->setPushorPull("PUSH");
-             return 0;
+             ans =0;
         }
     }
-    return 1;
+    return ans;
 }
 
 int pushpullAnalyser::analyseexprinfor(unary_stmt* input,Identifier *ownvertex){
@@ -115,15 +117,16 @@ int pushpullAnalyser::analyseForAll(forallStmt *forstmt)
     blockStatement *forbody = (blockStatement *)forstmt->getBody();
     list<statement *> forbodystmts = forbody->returnStatements();
     Identifier *ownvertex = forstmt->getIterator();
+    int ans =1;
     for (statement *stmt : forbodystmts)
     {
         int pushorpull = analyseStatementinForAll(stmt,ownvertex);
         if (pushorpull == 0)
         {
-            return 0;
+            ans =0;
         }
     }
-    return 1;
+    return ans;
 }
 
 
@@ -149,12 +152,6 @@ void pushpullAnalyser::analyseStatement(statement *stmt)
             forallStmt *forStmt = (forallStmt *)stmt;
             if (forStmt->isForall()){
                 int pushorpull = analyseForAll((forallStmt *)stmt);
-                if(pushorpull==1){
-                    cout<<"                       The kernel is PULL type                    "<<endl;
-                }
-                else{
-                    cout<<"                       The kernel is PUSH type                    "<<endl;
-                }
             }
             else analyseBlock((blockStatement *)forStmt->getBody());
             break;

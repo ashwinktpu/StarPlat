@@ -1416,7 +1416,7 @@ class fixedPointStmt:public statement
     private:
     Expression* dependentProp;
     Identifier* fixedPointId;
-    statement* body;
+    blockStatement* body;
 
     public:
     fixedPointStmt()
@@ -1429,7 +1429,7 @@ class fixedPointStmt:public statement
 
     }
 
-    static fixedPointStmt* createforfixedPointStmt(Identifier* fixedPointIdSent,Expression* dependentPropSent,statement* body)
+    static fixedPointStmt *createforfixedPointStmt(Identifier *fixedPointIdSent, Expression *dependentPropSent, blockStatement *body)
     {
       fixedPointStmt* new_fixedPointStmt=new fixedPointStmt();
       new_fixedPointStmt->fixedPointId=fixedPointIdSent;
@@ -1451,13 +1451,14 @@ class fixedPointStmt:public statement
      {
        return fixedPointId;
      }
-     statement* getBody()
+     blockStatement* getBody()
      {
        return body;
      }
-    void setBody(statement* body)
-    {
-      this->body = body;
+     void setBody(blockStatement *body)
+     {
+       body->setParent(this);
+       this->body = body;
     }
 
 };
