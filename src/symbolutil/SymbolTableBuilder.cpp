@@ -410,8 +410,9 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                     {
                         parallelConstruct.push_back(forAll);
                         if(forAll->hasFilterExpr())
-                          if(backend.compare("mpi"))
+                          if(backend.compare("mpi")==0)
                             getIdsInsideExpression(forAll->getfilterExpr(),IdsInsideParallelFilter); 
+
                        
                     }
              }
@@ -462,11 +463,13 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
               //~ delete_curr_SymbolTable();
 
 
-               if((backend.compare("omp")==0 || backend.compare("cuda")==0 || backend.compare("openACC")==0 )  || (backend.compare("mpi")==0) &&forAll->isForall())
+               if((backend.compare("omp")==0 || backend.compare("cuda")==0 || backend.compare("openACC")==0   || backend.compare("mpi")==0) &&forAll->isForall())
                     {
                        if(forAll->isForall())
+                       {
                           parallelConstruct.pop_back();
-                        IdsInsideParallelFilter.clear();
+                          IdsInsideParallelFilter.clear();
+                       }  
                     }
               break;
        }
@@ -757,6 +760,7 @@ bool SymbolTableBuilder::checkForArguments(list<argument*> argList)
 
  void SymbolTableBuilder::getIdsInsideExpression(Expression* expr, std::unordered_set<TableEntry *>& ids)
  {
+  
     switch(expr->getExpressionFamily())
     {
          case EXPR_ARITHMETIC:
@@ -781,29 +785,33 @@ bool SymbolTableBuilder::checkForArguments(list<argument*> argList)
              break;   
          }  
          case EXPR_UNARY:
-         {   
+         {    
+          
              getIdsInsideExpression(expr->getUnaryExpr(),ids);
              break;
          }
          case EXPR_LOGICAL:
          {
+      
              getIdsInsideExpression(expr->getLeft(),ids);
              getIdsInsideExpression(expr->getRight(),ids);
              break;
          }
          case EXPR_RELATIONAL:
-         {
+         {  
              getIdsInsideExpression(expr->getLeft(),ids);
              getIdsInsideExpression(expr->getRight(),ids);
              break;
          }
          case EXPR_ID:
          {  
+          
              ids.insert(expr->getId()->getSymbolInfo());
              break;
          }
          case EXPR_PROPID:
          {  
+          
              ids.insert(expr->getPropId()->getIdentifier1()->getSymbolInfo());
              ids.insert(expr->getPropId()->getIdentifier2()->getSymbolInfo());
              break;

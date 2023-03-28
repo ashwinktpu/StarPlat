@@ -25,7 +25,7 @@ void Compute_SSSP(Graph& g, NodeProperty<int>& dist, EdgeProperty<int>& weight, 
     for (int v = g.start_node(); v <= g.end_node(); v ++) 
     {
       if (modified.getValue(v) == true )
-        {
+      {
         for (int nbr : g.getNeighbors(v)) 
         {
           Edge e = g.get_edge(v, nbr);
@@ -42,26 +42,4 @@ void Compute_SSSP(Graph& g, NodeProperty<int>& dist, EdgeProperty<int>& weight, 
     finished = modified.aggregateValue(NOT);
   }
 
-}
-
-int main(int argc, char *argv[])
-{
-   
-    boost::mpi::environment env(argc, argv);
-    boost::mpi::communicator world;
-    
-    printf("program started\n"); 
-    Graph graph(argv[1],world);
-    world.barrier();
-
-    //BC
-    NodeProperty<int> dist;
-    Compute_SSSP(graph, dist,graph.weights,0, world);
-    for(int i=graph.start_node() ;i<=graph.end_node();i++)
-    {
-        printf("%d %d\n", i, dist.getValue(i));
-    }
-    
-    world.barrier();
-    return 0;
 }

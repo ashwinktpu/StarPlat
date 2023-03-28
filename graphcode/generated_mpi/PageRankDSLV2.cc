@@ -6,7 +6,7 @@ void Compute_PR(Graph& g, float beta, float delta, int maxIter,
   float num_nodes = (float)g.num_nodes( );
   NodeProperty<float> pageRank_nxt;
   pageRank.attachToGraph(&g, (float)1 / num_nodes);
-  pageRank_nxt.attachToGraph(&g, (float)false);
+  pageRank_nxt.attachToGraph(&g, (float)0);
   int iterCount = 0;
   float diff = 0.0 ;
   do
@@ -34,29 +34,4 @@ void Compute_PR(Graph& g, float beta, float delta, int maxIter,
     iterCount++;
   }
   while((diff > beta) && (iterCount < maxIter));
-}
-
-int main(int argc, char *argv[])
-{
-   
-    boost::mpi::environment env(argc, argv);
-    boost::mpi::communicator world;
-    
-    //printf("program started\n"); 
-    Graph graph(argv[1],world);
-    world.barrier();
-
-    //PageRank
-    float beta = 0.01;
-    float delta = 0.85;
-    int maxIter = 100;
-    NodeProperty<float> pageRank;
-    Compute_PR(graph, beta, delta, maxIter, pageRank, world);
-    for(int i=graph.start_node() ;i<=graph.end_node();i++)
-    {
-        printf("%d %f\n", i, pageRank.getValue(i));
-    }
-    
-    world.barrier();
-    return 0;
 }

@@ -166,7 +166,6 @@ auto dynamicBatchTCV2_del(Graph& g, int triangle_countSent, EdgeProperty<bool>& 
 void DynTC(Graph& g, Updates & updateBatch, int batchSize, boost::mpi::communicator world )
 {
   int triangleCount = staticTC(g, world);
-  printf("triangle count : %d\n", triangleCount);
   updateBatch.splitIntoSmallerBatches(batchSize);
   while(updateBatch.nextBatch())
   {
@@ -190,7 +189,6 @@ void DynTC(Graph& g, Updates & updateBatch, int batchSize, boost::mpi::communica
 
     }
     triangleCount = dynamicBatchTCV2_del(g,triangleCount,modified_del,deleteBatch, world);
-    printf("triangle count : %d\n", triangleCount);
     updateBatch.updateCsrDel(&g);
 
     updateBatch.updateCsrAdd(&g);
@@ -213,25 +211,7 @@ void DynTC(Graph& g, Updates & updateBatch, int batchSize, boost::mpi::communica
 
     }
     triangleCount = dynamicBatchTCV2_add(g,triangleCount,modified_add,addBatch, world);
-    printf("triangle count : %d\n", triangleCount);
+
   }
-  printf("triangle count : %d\n", triangleCount);
-}
 
-int main(int argc, char *argv[])
-{
-   
-    boost::mpi::environment env(argc, argv);
-    boost::mpi::communicator world;
-    
-    printf("program started\n"); 
-    Graph graph(argv[1],world);
-    world.barrier();
-
-    Updates updateBatch(argv[2],world, &graph);
-
-    DynTC(graph,updateBatch,100, world);
-    
-    world.barrier();
-    return 0;
 }
