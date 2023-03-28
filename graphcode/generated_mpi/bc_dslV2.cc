@@ -45,26 +45,3 @@ void Compute_BC(Graph& g, NodeProperty<float>& BC, std::set<int>& sourceSet, boo
 
 
 }
-
-int main(int argc, char *argv[])
-{
-   
-    boost::mpi::environment env(argc, argv);
-    boost::mpi::communicator world;
-    
-    printf("program started\n"); 
-    Graph graph(argv[1],world);
-    world.barrier();
-
-    //BC
-    std::set<int> sourceSet; sourceSet.insert(0);
-    NodeProperty<float> BC;
-    Compute_BC(graph, BC, sourceSet, world);
-    for(int i=graph.start_node() ;i<=graph.end_node();i++)
-    {
-        printf("%d %f\n", i, BC.getValue(i));
-    }
-    
-    world.barrier();
-    return 0;
-}
