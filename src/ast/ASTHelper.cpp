@@ -613,7 +613,10 @@ static ASTNode* createIterateInBFSNode(ASTNode* iterator,ASTNode* graphId,ASTNod
     char* methodName = nodeCall->getMethodId()->getIdentifier();
     string methodString(methodName);
     assert(methodString.compare("nodes")==0);
-    iterateBFSNode=iterateBFS::nodeForIterateBFS(id1,id2,nodeCall,id3,(Expression*)filterExpr,(statement*)body,(iterateReverseBFS*)revBFS);
+    if(revBFS != NULL)
+      iterateBFSNode=iterateBFS::nodeForIterateBFS(id1,id2,nodeCall,id3,(Expression*)filterExpr,(statement*)body,(iterateReverseBFS*)revBFS);
+    else
+      iterateBFSNode=iterateBFS::nodeForIterateBFS(id1,id2,nodeCall,id3,(Expression*)filterExpr,(statement*)body, NULL); 
     return iterateBFSNode;
 }
 };

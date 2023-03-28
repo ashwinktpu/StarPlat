@@ -2001,7 +2001,8 @@ class fixedPointStmt:public statement
         new_iterBFS->revBFS=revBFS;
         new_iterBFS->setTypeofNode(NODE_ITRBFS);
         body->setParent(new_iterBFS);
-        revBFS->setParent(new_iterBFS);
+        if(revBFS != NULL)
+          revBFS->setParent(new_iterBFS);
         return new_iterBFS;
       }
 
