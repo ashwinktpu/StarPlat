@@ -16,8 +16,9 @@ class TableEntry
   Identifier* id;
   Type* type;
   bool isArgument;
+  bool isGlobalVar;
 
-  TableEntry():id(nullptr), type(nullptr),isArgument(false){
+  TableEntry():id(nullptr), type(nullptr),isArgument(false), isGlobalVar(false){
 
   }
  
@@ -37,12 +38,21 @@ public:
  {
     isArgument=ifArg;
  }
-
+ 
  bool isArg()
  {
      return isArgument;
  }
 
+ void setGlobalVariable()
+ {
+    isGlobalVar = true;
+ }
+ 
+ bool isGlobalVariable()
+ {
+    return isGlobalVar;
+ }
 };
 
 class SymbolTable

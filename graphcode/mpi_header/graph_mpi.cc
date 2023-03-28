@@ -270,6 +270,9 @@
     this->diff_destList.mpi_datatype = MPI_INT32_T;
     this->diff_srcList.mpi_datatype = MPI_INT32_T;
 
+    diff_csr_created = false;
+    rev_diff_csr_created = false;
+    
     weights.attachToGraph(this, weightList.data());
 
     MPI_Win_allocate(sizeof(int),  sizeof(int) , MPI_INFO_NULL, world, &reduction_lock,&reduction_window);
@@ -277,10 +280,18 @@
       *reduction_lock = 0;
     world.barrier();
     
-    diff_csr_created = false;
-    rev_diff_csr_created = false;
-    perNodeCSRSpace = std::vector<int32_t>(nodesPartitionSize,0);
-    perNodeRevCSRSpace = std::vector<int32_t>(nodesPartitionSize,0);
+    this->perNodeCSRSpace.mpi_datatype = MPI_INT32_T;
+    this->perNodeRevCSRSpace.mpi_datatype = MPI_INT32_T;
+    this->perNodeDiffCSRSpace.mpi_datatype = MPI_INT32_T;
+    this->perNodeDiffRevCSRSpace.mpi_datatype = MPI_INT32_T;
+    
+    std::vector<int32_t> temp = std::vector<int32_t>(nodesPartitionSize,0);
+    this->perNodeCSRSpace.create_window(temp.data(),nodesPartitionSize,sizeof(int32_t),world);
+    this->perNodeRevCSRSpace.create_window(temp.data(),nodesPartitionSize,sizeof(int32_t),world);
+    this->perNodeDiffCSRSpace.create_window(temp.data(),nodesPartitionSize,sizeof(int32_t),world);
+    this->perNodeDiffRevCSRSpace.create_window(temp.data(),nodesPartitionSize,sizeof(int32_t),world);
+    
+    
   }
  
   void Graph::initialise_reduction(MPI_Op op, Property* reduction_property, std::vector<Property*> other_properties)
@@ -397,16 +408,38 @@
       int count =0;
       if(owner_proc==world.rank())
       {
-        indexofNodes.get_lock(owner_proc, SHARED_LOCK, false);
-        count = indexofNodes.data[index+1] - indexofNodes.data[index];
-        indexofNodes.unlock(owner_proc, SHARED_LOCK);
-            
+        count = indexofNodes.data[index+1] - indexofNodes.data[index] - perNodeCSRSpace.data[index];    
       }
       else {
         indexofNodes.get_lock(owner_proc, SHARED_LOCK, false);
         int * destListIndices = indexofNodes.get_data(owner_proc, index, 2,SHARED_LOCK);
         indexofNodes.unlock(owner_proc, SHARED_LOCK);
-        count = destListIndices[1] - destListIndices[0];
+
+        perNodeCSRSpace.get_lock(owner_proc, SHARED_LOCK, false);
+        int * emptySpace = perNodeCSRSpace.get_data(owner_proc, index, 1,SHARED_LOCK);
+        perNodeCSRSpace.unlock(owner_proc, SHARED_LOCK);
+
+        count = destListIndices[1] - destListIndices[0] - emptySpace[0];
+      }
+      
+      if(diff_csr_created)
+      {
+        if(owner_proc==world.rank())
+        {
+          count += diff_indexofNodes.data[index+1] - diff_indexofNodes.data[index] - perNodeDiffCSRSpace.data[index]; 
+        }
+        else {
+          diff_indexofNodes.get_lock(owner_proc, SHARED_LOCK, false);
+          int * diff_destListIndices = diff_indexofNodes.get_data(owner_proc, index, 2,SHARED_LOCK);
+          diff_indexofNodes.unlock(owner_proc, SHARED_LOCK);
+
+          perNodeDiffCSRSpace.get_lock(owner_proc, SHARED_LOCK, false);
+          int * diff_emptySpace = perNodeDiffCSRSpace.get_data(owner_proc, index, 1,SHARED_LOCK);
+          perNodeDiffCSRSpace.unlock(owner_proc, SHARED_LOCK);
+
+
+          count += diff_destListIndices[1] - diff_destListIndices[0] - diff_emptySpace[0];
+        } 
       }
       return count;
   }
@@ -793,17 +826,17 @@
       std::vector<int32_t> newDiffCsrSpaceRequired(nodesPartitionSize,0);
       for(int i=0;i<nodesPartitionSize;i++)
       {
-        int space = perNodeCSRSpace[i];
+        int space = perNodeCSRSpace.data[i];
         if(diff_csr_created)
         {
-          space+= perNodeDiffCSRSpace[i];
+          space+= perNodeDiffCSRSpace.data[i];
           
-          newDiffCsrSpaceRequired[i]= diff_indexofNodes.data[i+1] - diff_indexofNodes.data[i] - perNodeDiffCSRSpace[i];
+          newDiffCsrSpaceRequired[i]= diff_indexofNodes.data[i+1] - diff_indexofNodes.data[i] - perNodeDiffCSRSpace.data[i];
         }
         if(space < (int)src_separated_updates[i].size())
         {  
           need_new_diff_csr = true;
-          newDiffCsrSpaceRequired[i] += src_separated_updates[i].size() - perNodeCSRSpace[i] ;
+          newDiffCsrSpaceRequired[i] += src_separated_updates[i].size() - perNodeCSRSpace.data[i] ;
         }
       }
       
@@ -858,16 +891,16 @@
           for(int i=0;i<nodesPartitionSize;i++)
           {
             int index = indexofNodes.data[i]; 
-            int diff_index = new_diff_indexOfNodes[i] + (diff_indexofNodes.data[i+1] - diff_indexofNodes.data[i]-perNodeDiffCSRSpace[i]);
+            int diff_index = new_diff_indexOfNodes[i] + (diff_indexofNodes.data[i+1] - diff_indexofNodes.data[i]-perNodeDiffCSRSpace.data[i]);
             for(std::pair<int32_t,int32_t> p : src_separated_updates[i])
             { 
-                if(perNodeCSRSpace[i]>0)
+                if(perNodeCSRSpace.data[i]>0)
                 {
                   while(destList.data[index]!=INT_MAX/2){index++;}
                   destList.data[index]= p.first;
                   weights.propList.data[index] = p.second;
                   index++;
-                  perNodeCSRSpace[i]--;
+                  perNodeCSRSpace.data[i]--;
                 }
                 else
                 {
@@ -888,13 +921,13 @@
             int diff_index = new_diff_indexOfNodes[i];
             for(std::pair<int32_t,int32_t> p : src_separated_updates[i])
             { 
-                if(perNodeCSRSpace[i]>0)
+                if(perNodeCSRSpace.data[i]>0)
                 {
                   while(destList.data[index]!=INT_MAX/2){index++;}
                   destList.data[index]= p.first;
                   weights.propList.data[index] = p.second;
                   index++;
-                  perNodeCSRSpace[i]--;
+                  perNodeCSRSpace.data[i]--;
                 }
                 else
                 {
@@ -909,8 +942,11 @@
           diff_indexofNodes.create_window(new_diff_indexOfNodes.data(),nodesPartitionSize+1,sizeof(int32_t),world);
           diff_destList.create_window(new_diff_csr,total_new_diff_csr_space, sizeof(int32_t), world);
           weights.attachToGraph(this,NULL,new_diff_weights,true, true);
-          perNodeDiffCSRSpace = std::vector<int32_t>(nodesPartitionSize, 0);
           
+          for(int i=0;i<nodesPartitionSize;i++)
+          {
+            perNodeDiffCSRSpace.data[i]=0;
+          }
       }
       else
       {   
@@ -922,13 +958,13 @@
               diff_index = diff_indexofNodes.data[i] ;
             for(std::pair<int32_t,int32_t> p : src_separated_updates[i])
             { 
-                if(perNodeCSRSpace[i]>0)
+                if(perNodeCSRSpace.data[i]>0)
                 {
                   while(destList.data[index]!=INT_MAX/2){index++;}
                   destList.data[index]= p.first;
                   weights.propList.data[index] = p.second;
                   index++;
-                  perNodeCSRSpace[i]--;
+                  perNodeCSRSpace.data[i]--;
                 }
                 else
                 {
@@ -939,7 +975,7 @@
                   diff_destList.data[diff_index]= p.first;
                   weights.diff_propList.data[diff_index] = p.second;
                   diff_index++;
-                  perNodeDiffCSRSpace[i]--;
+                  perNodeDiffCSRSpace.data[i]--;
                 }
             }
           }
@@ -965,7 +1001,7 @@
           {
             destList.data[i]=INT_MAX/2;
             deleted = true;
-            perNodeCSRSpace[index]++;
+            perNodeCSRSpace.data[index]++;
             break;
           } 
         }
@@ -981,7 +1017,7 @@
             {
               diff_destList.data[i]=INT_MAX/2;
               deleted = true;
-              perNodeDiffCSRSpace[index]++;
+              perNodeDiffCSRSpace.data[index]++;
               break;
             }
           }  
@@ -1014,17 +1050,17 @@
       std::vector<int32_t> newDiffRevCsrSpaceRequired(nodesPartitionSize,0);
       for(int i=0;i<nodesPartitionSize;i++)
       {
-        int space = perNodeRevCSRSpace[i];
+        int space = perNodeRevCSRSpace.data[i];
         if(rev_diff_csr_created)
         {
-          space+= perNodeDiffRevCSRSpace[i];
+          space+= perNodeDiffRevCSRSpace.data[i];
           
-          newDiffRevCsrSpaceRequired[i]= diff_rev_indexofNodes.data[i+1] - diff_rev_indexofNodes.data[i] - perNodeDiffRevCSRSpace[i];
+          newDiffRevCsrSpaceRequired[i]= diff_rev_indexofNodes.data[i+1] - diff_rev_indexofNodes.data[i] - perNodeDiffRevCSRSpace.data[i];
         }
         if(space < (int)dest_separated_updates[i].size())
         {  
           need_new_diff_csr = true;
-          newDiffRevCsrSpaceRequired[i] += dest_separated_updates[i].size() - perNodeRevCSRSpace[i] ;
+          newDiffRevCsrSpaceRequired[i] += dest_separated_updates[i].size() - perNodeRevCSRSpace.data[i] ;
         }    
       }
 
@@ -1068,15 +1104,15 @@
           for(int i=0;i<nodesPartitionSize;i++)
           {
             int index = rev_indexofNodes.data[i];
-            int diff_index = new_diff_rev_indexOfNodes[i] + (diff_rev_indexofNodes.data[i+1] - diff_rev_indexofNodes.data[i]-perNodeDiffRevCSRSpace[i]);
+            int diff_index = new_diff_rev_indexOfNodes[i] + (diff_rev_indexofNodes.data[i+1] - diff_rev_indexofNodes.data[i]-perNodeDiffRevCSRSpace.data[i]);
             for(std::pair<int32_t,int32_t> p : dest_separated_updates[i])
             { 
-                if(perNodeRevCSRSpace[i]>0)
+                if(perNodeRevCSRSpace.data[i]>0)
                 {
                   while(srcList.data[index]!=INT_MAX/2){index++;}
                   srcList.data[index]= p.first;
                   index++;
-                  perNodeRevCSRSpace[i]--;
+                  perNodeRevCSRSpace.data[i]--;
                 }
                 else
                 {
@@ -1096,12 +1132,12 @@
             int diff_index = new_diff_rev_indexOfNodes[i];
             for(std::pair<int32_t,int32_t> p : dest_separated_updates[i])
             { 
-                if(perNodeRevCSRSpace[i]>0)
+                if(perNodeRevCSRSpace.data[i]>0)
                 {
                   while(srcList.data[index]!=INT_MAX/2){index++;}
                   srcList.data[index]= p.first;
                   index++;
-                  perNodeRevCSRSpace[i]--;
+                  perNodeRevCSRSpace.data[i]--;
                 }
                 else
                 {
@@ -1115,7 +1151,10 @@
           
           diff_rev_indexofNodes.create_window(new_diff_rev_indexOfNodes.data(),nodesPartitionSize+1,sizeof(int32_t),world);
           diff_srcList.create_window(new_diff_rev_csr,total_new_diff_csr_space, sizeof(int32_t), world);
-          perNodeDiffRevCSRSpace = std::vector<int32_t>(nodesPartitionSize, 0);
+          for(int i=0;i<nodesPartitionSize;i++)
+          {
+            perNodeDiffRevCSRSpace.data[i]=0;
+          }
       }
       else
       {
@@ -1128,12 +1167,12 @@
             
             for(std::pair<int32_t,int32_t> p : dest_separated_updates[i])
             { 
-                if(perNodeRevCSRSpace[i]>0)
+                if(perNodeRevCSRSpace.data[i]>0)
                 {
                   while(srcList.data[index]!=INT_MAX/2){index++;}
                   srcList.data[index]= p.first;
                   index++;
-                  perNodeRevCSRSpace[i]--;
+                  perNodeRevCSRSpace.data[i]--;
                 }
                 else
                 {
@@ -1142,7 +1181,7 @@
                   while(diff_srcList.data[diff_index]!=INT_MAX/2){diff_index++;}
                   diff_srcList.data[diff_index]= p.first;
                   diff_index++;
-                  perNodeDiffRevCSRSpace[i]--;
+                  perNodeDiffRevCSRSpace.data[i]--;
                 }
             }
           }
@@ -1167,7 +1206,7 @@
           {
             srcList.data[i]=INT_MAX/2;
             deleted = true;
-            perNodeRevCSRSpace[index]++;
+            perNodeRevCSRSpace.data[index]++;
             break;
           } 
         }
@@ -1183,7 +1222,7 @@
             {
               diff_srcList.data[i]=INT_MAX/2;
               deleted = true;
-              perNodeDiffRevCSRSpace[index]++;
+              perNodeDiffRevCSRSpace.data[index]++;
               break;
             }
           }  
@@ -1195,4 +1234,45 @@
         std::cerr<<"invalid edge asked in get_edge\n";
     
       }
+  }
+
+  void Graph::propagateNodeFlags(NodeProperty<bool>& property)
+  {
+      
+      int prev_total_count = 0;
+      int total_count = 0;      
+      while(1){
+        
+        int local_count = 0;
+        std::vector<std::unordered_set<int>> newNodesToSet(world.size());
+        for(int v = start_node();v<=end_node();v++)
+        {
+          if(property.propList.data[get_node_local_index(v)] == true)
+          {
+            local_count++;
+            for(int nbr : getNeighbors(v))
+            {
+               newNodesToSet[get_node_owner(nbr)].insert(nbr);
+            }
+          }
+        }
+      
+        MPI_Allreduce(&local_count, &total_count, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+        if(total_count == prev_total_count)
+          break;
+
+        boost::mpi::all_to_all(world,newNodesToSet,newNodesToSet);
+
+        for(int i=0;i<world.size();i++)
+        {
+          for(int v : newNodesToSet[i])
+          {
+            assert(get_node_owner(v)==world.rank());
+            if(property.propList.data[get_node_local_index(v)] == false)
+              property.propList.data[get_node_local_index(v)] = true;
+          }
+        }  
+
+        prev_total_count = total_count;
+        }
   }

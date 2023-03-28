@@ -191,9 +191,14 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
        case NODE_DECL:
        {
            declaration* declStmt=(declaration*)stmt;
-           Type* type = declStmt->getType();
-           SymbolTable* symbTab = type->isPropType()?currPropSymbT:currVarSymbT;
-           bool creatsFine = create_Symbol(symbTab,declStmt->getdeclId(),type);
+           Type* type=declStmt->getType();
+           SymbolTable* symbTab=type->isPropType()?currPropSymbT:currVarSymbT;
+           bool creatsFine=create_Symbol(symbTab,declStmt->getdeclId(),type);
+           
+           if(parallelConstruct.size()==0)
+           {
+              declStmt->getdeclId()->getSymbolInfo()->setGlobalVariable();
+           }
 
            if(declStmt->isInitialized())
            {
@@ -235,6 +240,42 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                  searchSuccess=findSymbolId(id);
                 if(backend.compare("mpi") == 0 && IdsInsideParallelFilter.find(id->getSymbolInfo()) != IdsInsideParallelFilter.end()) {
                     id->getSymbolInfo()->getId()->set_used_inside_forall_filter_and_changed_inside_forall_body();
+                }
+
+                // Add MORE DOC : Push all the globalvariables which are modified inside the parallel region
+                if(backend.compare("mpi") == 0)
+                {
+                  if(id->getSymbolInfo()->isGlobalVariable())
+                  {
+                    
+                    if(parallelConstruct.size()>0)
+                    { printf("global variable changed here %s \n", id->getIdentifier());
+                      // Add More DOC (Atharva)
+                      ASTNode * parallel = parallelConstruct.back();
+                      if(parallel->getTypeofNode() == NODE_FORALLSTMT)
+                      {
+                      
+                      forallStmt* forall = (forallStmt*) parallel;
+                      printf("%s\n",id->getSymbolInfo()->getId()->getIdentifier());
+                      forall->pushModifiedGlobalVariable(id->getSymbolInfo());
+                      printf("global var inserted\n");
+                      }
+                      else if(parallel->getTypeofNode() == NODE_ITRBFS)
+                      {
+                        //iterateBFS* iBFS = (iterateBFS*) parallel;
+                        //iBFS->pushModifiedGlobalVariable(id->getSymbolInfo());
+                      }
+                      else if(parallel->getTypeofNode() == NODE_ITRRBFS)
+                      {
+                        //iterateReverseBFS* iRBFS = (iterateReverseBFS*) parallel;
+                        //iRBFS->pushModifiedGlobalVariable(id->getSymbolInfo());
+                      }
+                      else
+                      {
+                        assert(false); // add similar for other parallel constructs like itrbfs if needed
+                      }
+                    }
+                  }
                 }
              }
              else if(assign->lhs_isProp())

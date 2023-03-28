@@ -59,10 +59,11 @@ class Graph
   Rma_Datatype<int32_t> diff_destList; 
   Rma_Datatype<int32_t> diff_rev_indexofNodes;
   Rma_Datatype<int32_t> diff_srcList;
-  std::vector<int32_t> perNodeCSRSpace;
-  std::vector<int32_t> perNodeRevCSRSpace;
-  std::vector<int32_t> perNodeDiffCSRSpace;
-  std::vector<int32_t> perNodeDiffRevCSRSpace;
+  
+  Rma_Datatype<int32_t> perNodeCSRSpace;
+  Rma_Datatype<int32_t> perNodeRevCSRSpace;
+  Rma_Datatype<int32_t> perNodeDiffCSRSpace;
+  Rma_Datatype<int32_t> perNodeDiffRevCSRSpace;
   std::vector<int32_t> diff_edgeProcMap;
   
 
@@ -122,6 +123,8 @@ class Graph
   void initialise_reduction(MPI_Op op, Property* reduction_property, std::vector<Property*> other_properties);
 
   void sync_reduction();
+
+  void propagateNodeFlags(NodeProperty<bool>& property);
 
   template<typename T, typename ... Types>
   void queue_for_reduction(std::pair<int, T> reduction_property_data , Types ... other_properties_data)

@@ -26,7 +26,7 @@ void staticSSSP(Graph& g, NodeProperty<int>& dist, NodeProperty<int>& parent, Ed
     for (int v = g.start_node(); v <= g.end_node(); v ++) 
     {
       if (modified.getValue(v) == true )
-        {
+      {
         for (int nbr : g.getNeighbors(v)) 
         {
           Edge e = g.get_edge(v, nbr);
@@ -58,7 +58,7 @@ void dynamicBatchSSSP_add(Graph& g, NodeProperty<int>& dist, NodeProperty<int>& 
     for (int v = g.start_node(); v <= g.end_node(); v ++) 
     {
       if (modified.getValue(v) == true )
-        {
+      {
         for (int nbr : g.getNeighbors(v)) 
         {
           Edge e = g.get_edge(v, nbr);
@@ -83,53 +83,63 @@ void dynamicBatchSSSP_del(Graph& g, NodeProperty<int>& dist, NodeProperty<int>& 
   while (!finished ){
     finished = true;
     modified.rememberHistory();
+    int finished_leader_rank = -1 ;
+
     world.barrier();
     for (int v = g.start_node(); v <= g.end_node(); v ++) 
     {
       if (modified.getHistoryValue(v) == false )
-        {
+      {
         int parent_v = parent.getValue(v);
         if (parent_v > -1 && modified.getValue(parent_v) )
-          {
+        {
           dist.setValue(v,INT_MAX / 2);
           modified.setValue(v,true);
           parent.setValue(v,-1);
-          finished = finished && false;
+          finished_leader_rank = world.rank();
+          finished = false;
         }
       }
     }
     world.barrier();
+    int finished_leader_rank_temp = finished_leader_rank;
+    MPI_Allreduce(&finished_leader_rank_temp,&finished_leader_rank,1,MPI_INT,MPI_MAX,MPI_COMM_WORLD);
+    MPI_Bcast(&finished,1,MPI_C_BOOL,finished_leader_rank,MPI_COMM_WORLD);
 
-    bool finished_temp = finished;
-    MPI_Allreduce(&finished_temp,&finished,1,MPI_C_BOOL,MPI_LAND,MPI_COMM_WORLD);
+
 
   }
   finished = false;
   while (!finished ){
     finished = true;
     modified.rememberHistory();
+    int finished_leader_rank = -1 ;
+
     world.barrier();
     for (int v = g.start_node(); v <= g.end_node(); v ++) 
     {
       if (modified.getHistoryValue(v) == true )
-        {
+      {
         for (int nbr : g.getInNeighbors(v)) 
         {
           Edge e = g.get_edge(nbr, v);
           if (dist.getValue(v) > dist.getValue(nbr) + weight.getValue(e) )
-            {
+          {
             dist.setValue(v,dist.getValue(nbr) + weight.getValue(e));
             parent.setValue(v,nbr);
-            finished = finished && false;
+            finished_leader_rank = world.rank();
+            finished = false;
           }
         }
 
       }
     }
     world.barrier();
+    int finished_leader_rank_temp = finished_leader_rank;
+    MPI_Allreduce(&finished_leader_rank_temp,&finished_leader_rank,1,MPI_INT,MPI_MAX,MPI_COMM_WORLD);
+    MPI_Bcast(&finished,1,MPI_C_BOOL,finished_leader_rank,MPI_COMM_WORLD);
 
-    bool finished_temp = finished;
-    MPI_Allreduce(&finished_temp,&finished,1,MPI_C_BOOL,MPI_LAND,MPI_COMM_WORLD);
+
 
   }
 
@@ -151,7 +161,7 @@ void DynSSSP(Graph& g, NodeProperty<int>& dist, NodeProperty<int>& parent, EdgeP
       int src = u.source;
       int dest = u.destination;
       if (parent.getValue(dest) == src )
-        {
+      {
         dist.setValue(dest,INT_MAX / 2);
         modified.setValue(dest,true);
         parent.setValue(dest,-1);
@@ -161,46 +171,23 @@ void DynSSSP(Graph& g, NodeProperty<int>& dist, NodeProperty<int>& parent, EdgeP
     updateBatch.updateCsrDel(&g);
 
     dynamicBatchSSSP_del(g,dist,parent,weight,modified, world);
+
     for(Update u : updateBatch.getCurrentAddBatch().getUpdates())
     {
       int src = u.source;
       int dest = u.destination;
       if (dist.getValue(dest) > dist.getValue(src) + 1 )
-        {
+      {
         modified_add.setValue(dest,true);
         modified_add.setValue(src,true);
       }
 
     }
-    
     updateBatch.updateCsrAdd(&g);
-    
+
     dynamicBatchSSSP_add(g,dist,parent,weight,modified_add, world);
+
 
   }
 
-}
-
-int main(int argc, char *argv[])
-{
-   
-    boost::mpi::environment env(argc, argv);
-    boost::mpi::communicator world;
-    
-    //printf("program started\n"); 
-    Graph graph(argv[1],world);
-    world.barrier();
-
-    Updates updateBatch(argv[2],world,&graph);
-    
-    NodeProperty<int> dist;
-    NodeProperty<int> parent;
-    DynSSSP(graph, dist, parent, graph.weights,updateBatch,8,0, world);
-    for(int i=graph.start_node() ;i<=graph.end_node();i++)
-    {
-        printf("%d %d\n", i, dist.getValue(i));
-    }
-    
-    world.barrier();
-    return 0;
 }

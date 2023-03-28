@@ -60,7 +60,7 @@ Decremental(Graph g, propNode<int> dist, propNode<int> parent, propEdge<int> wei
                v.dist = INT_MAX/2;
                v.modified = True;
                v.parent= -1;
-               finished &= false;
+               finished = false;
            }
           
     }
@@ -81,7 +81,7 @@ Decremental(Graph g, propNode<int> dist, propNode<int> parent, propEdge<int> wei
                      {
                         v.dist = nbr.dist + e.weight;
                         v.parent = nbr;
-                        finished &= false;
+                        finished = false;
                      }
              }
 
