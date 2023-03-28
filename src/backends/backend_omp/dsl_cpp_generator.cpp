@@ -138,25 +138,29 @@ void dsl_cpp_generator::generateBFSAbstraction(iterateBFS* bfsAbstraction) {
   main.pushstr_newL("{");
   sprintf(strBuffer, " levelNodes[phase].insert(levelNodes[phase].end(),levelNodes_later[%s].begin(),levelNodes_later[%s].end());", "i", "i");
   main.pushstr_newL(strBuffer);
-  sprintf(strBuffer, " bfsCount=bfsCount+levelNodes_later[%s].size();", "i");
+  sprintf(strBuffer, " bfsCount = bfsCount+levelNodes_later[%s].size();", "i");
   main.pushstr_newL(strBuffer);
   sprintf(strBuffer, " levelNodes_later[%s].clear();", "i");
   main.pushstr_newL(strBuffer);
   main.pushstr_newL("}");
   main.pushstr_newL(" levelCount[phase] = bfsCount ;");
   main.pushstr_newL("}");
-  main.pushstr_newL("phase = phase -1 ;");
-  add_RBFSIterationLoop(&main, bfsAbstraction);
-  blockStatement* revBlock = (blockStatement*)bfsAbstraction->getRBFS()->getBody();
-  list<statement*> revStmtList = revBlock->returnStatements();
+  main.pushstr_newL("phase = phase - 1 ;");
 
-  for (statement* stmt : revStmtList) {
-    generateStatement(stmt);
-  }
+  if(bfsAbstraction->getRBFS() != NULL) {
+     add_RBFSIterationLoop(&main, bfsAbstraction);
+     blockStatement* revBlock = (blockStatement*)bfsAbstraction->getRBFS()->getBody();
+     list<statement*> revStmtList = revBlock->returnStatements();
+
+     for (statement* stmt : revStmtList) {
+         generateStatement(stmt);
+    }
 
   main.pushstr_newL("}");
   main.pushstr_newL("phase = phase - 1 ;");
   main.pushstr_newL("}");
+}
+
 }
 
 void dsl_cpp_generator::generateWhileStmt(whileStmt* whilestmt) {
