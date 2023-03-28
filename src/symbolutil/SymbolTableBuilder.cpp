@@ -396,7 +396,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                the forall is checked for its existence inside 
                another forall which is to be generated with 
                omp parallel pragma, and then disable the parallel loop*/
-            if(backend.compare("omp")==0)
+            if((backend.compare("omp")==0) || (backend.compare("cuda")==0) || (backend.compare("openACC")==0) || (backend.compare("mpi")==0))
              {  
                  if(parallelConstruct.size()>0)
                   {  
@@ -410,12 +410,29 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                     {
                         parallelConstruct.push_back(forAll);
                         if(forAll->hasFilterExpr())
-                          getIdsInsideExpression(forAll->getfilterExpr(),IdsInsideParallelFilter); 
+                          if(backend.compare("mpi"))
+                            getIdsInsideExpression(forAll->getfilterExpr(),IdsInsideParallelFilter); 
                        
                     }
              }
            
-          
+             if(backend.compare("cuda")== 0 ){ // This flags device assingments INSIDE for
+              std::cout<< "FORALL par   NAME1:"<< forAll->getParent()->getTypeofNode() << '\n';
+              if(forAll->getParent()->getParent())
+                std::cout<< "FORALL ParPar NAME2:"<< forAll->getParent()->getParent()->getTypeofNode() << '\n';
+              if(forAll->getParent()->getParent()->getParent())
+                std::cout<< "FORALL ParParPar NAME3:"<< forAll->getParent()->getParent()->getParent()->getTypeofNode() << '\n';
+
+              if(forAll->getParent()->getParent()->getTypeofNode()==NODE_FUNC){      // This flags device assingments OUTSIDE for e.g BC
+                std::cout<< "\t\tTO Set DEVICE BOOL" << '\n';
+                forAll->addDeviceAssignment();
+              }
+              if(forAll->getParent()->getParent()->getTypeofNode()==NODE_ITRRBFS ) {
+                std::cout<< "\t\tTP SET ACC BC BOOL" << '\n';
+                //~ forAll->addDeviceAssignment();
+              }
+            }
+
             if(checkInsideBFSIter(parallelConstruct))
                {
                  /* the assignment statements(arithmetic & logical) within the block of a for statement that
@@ -570,7 +587,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
             if(leftList.size() > 2)
                {
                    string backend(backendTarget);
-                   if(backend.compare("omp") == 0)
+                   if(backend.compare("omp") == 0 || backend.compare("openACC"))
                      {
                         currentFunc->setInitialLockDecl();
                      }   
@@ -615,7 +632,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
        {
           iterateBFS* iBFS=(iterateBFS*)stmt;
           string backend(backendTarget);
-            if(backend.compare("omp")==0)
+            if((backend.compare("omp")==0) || (backend.compare("cuda")==0) || (backend.compare("openACC")==0) || (backend.compare("mpi")==0))
              { 
                parallelConstruct.push_back(iBFS);
                
@@ -623,7 +640,14 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
           
           buildForStatements(iBFS->getBody());
 
-          if(backend.compare("omp")==0)
+          
+           iterateReverseBFS* iRevBFS = iBFS->getRBFS();
+          if(iRevBFS != NULL)
+          {
+            iRevBFS->addAccumulateAssignment();
+            buildForStatements(iRevBFS->getBody());
+          }
+          if((backend.compare("omp")==0) || (backend.compare("cuda")==0) || (backend.compare("openACC")==0) || (backend.compare("mpi")==0))
              { 
               parallelConstruct.pop_back();
                
