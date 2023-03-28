@@ -270,13 +270,16 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
              if(assign->lhs_isIdentifier())
              {
                   Identifier* id=assign->getId();
-                  if(id->getSymbolInfo()->getType()->isPropNodeType())
+                  if(id->getSymbolInfo()->getType()->isPropType())
                     {
                         if(exprAssigned->isIdentifierExpr())
                           {
                               Identifier* rhsPropId = exprAssigned->getId();
-                              if(rhsPropId->getSymbolInfo()->getType()->isPropNodeType())
+                              if(id->getSymbolInfo()->getType()->isPropNodeType() && rhsPropId->getSymbolInfo()->getType()->isPropNodeType())
+                                 assign->setPropCopy() ;
+                              else if(id->getSymbolInfo()->getType()->isPropEdgeType() && rhsPropId->getSymbolInfo()->getType()->isPropEdgeType())
                                  assign->setPropCopy() ; 
+
                           }
                     }
                    

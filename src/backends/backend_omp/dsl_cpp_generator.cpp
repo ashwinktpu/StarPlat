@@ -544,11 +544,20 @@ void dsl_cpp_generator::generateAssignmentStmt(assignment* asmt) {
       char strBuffer[1024];
       Identifier* rhsPropId2 = exprAssigned->getId();
       main.pushstr_newL("#pragma omp parallel for");
-      sprintf(strBuffer, "for (%s %s = 0; %s < %s.%s(); %s ++) ", "int", "node", "node", graphIds[0]->getIdentifier(), "num_nodes", "node");
+      if(id->getSymbolInfo()->getType()->isPropNodeType())
+         sprintf(strBuffer, "for (%s %s = 0; %s < %s.%s(); %s ++) ", "int", "node", "node", graphIds[0]->getIdentifier(), "num_nodes", "node");
+      else
+        sprintf(strBuffer, "for (%s %s = 0; %s < %s.%s(); %s ++) ", "int", "t", "t", graphIds[0]->getIdentifier(), "num_edges", "t");  
+
       main.pushstr_newL(strBuffer);
       /* the graph associated                          */
       main.pushstr_newL("{");
-      sprintf(strBuffer, "%s [%s] = %s [%s] ;", id->getIdentifier(), "node", rhsPropId2->getIdentifier(), "node");
+
+      if(id->getSymbolInfo()->getType()->isPropNodeType()) 
+         sprintf(strBuffer, "%s [%s] = %s [%s] ;", id->getIdentifier(), "node", rhsPropId2->getIdentifier(), "node");
+      else
+         sprintf(strBuffer, "%s [%s] = %s [%s] ;", id->getIdentifier(), "t", rhsPropId2->getIdentifier(), "t");
+
       main.pushstr_newL(strBuffer);
       main.pushstr_newL("}");
 
