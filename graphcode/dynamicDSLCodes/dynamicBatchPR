@@ -2,7 +2,7 @@ Static staticPR(Graph g,float beta,float delta,int maxIter,propNode<float> pageR
 {
  float num_nodes = g.num_nodes();
  propNode<float> pageRank_nxt;
- g.attachNodeProperty(pageRank = 1/num_nodes);
+ g.attachNodeProperty(pageRank = 1/num_nodes, pageRank_nxt = 0);
  int iterCount=0;
  
  float diff;
@@ -36,6 +36,7 @@ Incremental(Graph g,float beta,float delta,int maxIter,propNode<float> pageRank,
  {
 
  propNode<float> pageRank_nxt;
+ g.attachNodeProperty(pageRank_nxt = 0);
  int iterCount=0;
  float diff;
 
@@ -74,6 +75,7 @@ Decremental(Graph g,float beta,float delta,int maxIter,propNode<float> pageRank,
  {
 
  propNode<float> pageRank_nxt;
+ g.attachNodeProperty(pageRank_nxt = 0);
  int iterCount=0;
  float diff;
 

@@ -9,13 +9,13 @@ auto staticTC(Graph& g, boost::mpi::communicator world )
     for (int u : g.getNeighbors(v)) 
     {
       if (u < v )
-        {
+      {
         for (int w : g.getNeighbors(v)) 
         {
           if (w > v )
-            {
+          {
             if (g.check_if_nbr(u, w) )
-              {
+            {
               triangle_count = triangle_count + 1;
             }
           }
@@ -48,28 +48,32 @@ auto dynamicBatchTCV2_add(Graph& g, int triangle_countSent, EdgeProperty<bool>& 
     for (int v3 : g.getNeighbors(v1)) 
     {
       if (v3 != v2 && v3 != v1 && v1 != v2 )
-        {
+      {
         Edge e1 = g.get_edge(v1, v3);
         int newEdge = 1;
         bool isTriangle = false;
         if (modified.getValue(e1) )
+        {
           newEdge = newEdge + 1;
+        }
         if (g.check_if_nbr(v2, v3) )
-          {
+        {
           Edge e2 = g.get_edge(v2, v3);
           isTriangle = true;
           if (modified.getValue(e2) )
+          {
             newEdge = newEdge + 1;
+          }
         }
         if (isTriangle )
-          {
+        {
           if (newEdge == 1 )
-            {
+          {
             count1 = count1 + 1;
           }
           else
           if (newEdge == 2 )
-            {
+          {
             count2 = count2 + 1;
           }
           else
@@ -109,28 +113,32 @@ auto dynamicBatchTCV2_del(Graph& g, int triangle_countSent, EdgeProperty<bool>& 
     for (int v3 : g.getNeighbors(v1)) 
     {
       if (v3 != v2 && v3 != v1 && v1 != v2 )
-        {
+      {
         Edge e1 = g.get_edge(v1, v3);
         int newEdge = 1;
         bool isTriangle = false;
         if (modified.getValue(e1) )
+        {
           newEdge = newEdge + 1;
+        }
         if (g.check_if_nbr(v2, v3) )
-          {
+        {
           Edge e2 = g.get_edge(v2, v3);
           isTriangle = true;
           if (modified.getValue(e2) )
+          {
             newEdge = newEdge + 1;
+          }
         }
         if (isTriangle )
-          {
+        {
           if (newEdge == 1 )
-            {
+          {
             count1 = count1 + 1;
           }
           else
           if (newEdge == 2 )
-            {
+          {
             count2 = count2 + 1;
           }
           else
@@ -158,6 +166,7 @@ auto dynamicBatchTCV2_del(Graph& g, int triangle_countSent, EdgeProperty<bool>& 
 void DynTC(Graph& g, Updates & updateBatch, int batchSize, boost::mpi::communicator world )
 {
   int triangleCount = staticTC(g, world);
+  printf("triangle count : %d\n", triangleCount);
   updateBatch.splitIntoSmallerBatches(batchSize);
   while(updateBatch.nextBatch())
   {
@@ -173,12 +182,15 @@ void DynTC(Graph& g, Updates & updateBatch, int batchSize, boost::mpi::communica
       {
         Edge e = g.get_edge(src, nbr);
         if (nbr == dest )
+        {
           modified_del.setValue(e,true);
+        }
       }
 
 
     }
     triangleCount = dynamicBatchTCV2_del(g,triangleCount,modified_del,deleteBatch, world);
+    printf("triangle count : %d\n", triangleCount);
     updateBatch.updateCsrDel(&g);
 
     updateBatch.updateCsrAdd(&g);
@@ -193,13 +205,33 @@ void DynTC(Graph& g, Updates & updateBatch, int batchSize, boost::mpi::communica
       {
         Edge e = g.get_edge(src, nbr);
         if (nbr == dest )
+        {
           modified_add.setValue(e,true);
+        }
       }
 
 
     }
     triangleCount = dynamicBatchTCV2_add(g,triangleCount,modified_add,addBatch, world);
-
+    printf("triangle count : %d\n", triangleCount);
   }
+  printf("triangle count : %d\n", triangleCount);
+}
 
+int main(int argc, char *argv[])
+{
+   
+    boost::mpi::environment env(argc, argv);
+    boost::mpi::communicator world;
+    
+    printf("program started\n"); 
+    Graph graph(argv[1],world);
+    world.barrier();
+
+    Updates updateBatch(argv[2],world, &graph);
+
+    DynTC(graph,updateBatch,100, world);
+    
+    world.barrier();
+    return 0;
 }

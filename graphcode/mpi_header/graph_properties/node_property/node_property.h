@@ -11,7 +11,7 @@ class NodeProperty : public Property
 {
     private :
     int length;
-    Rma_Datatype<T> propList;
+    
     bool attached_to_graph;
     int propertyId;
     Graph * graph;
@@ -21,6 +21,7 @@ class NodeProperty : public Property
     std::vector<std::vector<std::pair<int32_t, T>>> reduction_queue;
 
     public :
+    Rma_Datatype<T> propList;
     NodeProperty() : Property(true) 
     {
         if constexpr (std::is_same_v<T, int>)
@@ -78,6 +79,7 @@ class NodeProperty : public Property
     T compareAndSwap(int node_id, T compare, T swap);
 
     void atomicAdd(int node_id, T value);
+    
 };
 
 #endif

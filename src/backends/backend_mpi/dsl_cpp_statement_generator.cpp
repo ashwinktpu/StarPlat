@@ -9,6 +9,8 @@ namespace spmpi {
 
     void dsl_cpp_generator::generateBFSAbstraction(iterateBFS* bfsAbstraction) 
     {   
+
+
         vector<Identifier*> graphIds = graphId[curFuncType][curFuncCount()];
         insideParallelConstruct.push_back(bfsAbstraction);
         char strBuffer[1024];
@@ -18,6 +20,12 @@ namespace spmpi {
         sprintf(strBuffer,"for(int phase=0;phase<%s.num_bfs_phases();phase++)",graphIds[0]->getIdentifier());
         main.pushstr_newL(strBuffer);
         main.pushstr_newL("{");
+        
+        // TODO (Atharva) : similar to forall to add logic for when reduction operator is present inside iterBFS
+        // and reverse IterBFS. And also to add logic for when global variable is modified inside a prallel region,
+        // again similar to forall
+
+
         sprintf(strBuffer,"for( int %s : %s.get_bfs_nodes_for_phase(phase) )",bfsAbstraction->getIteratorNode()->getIdentifier(),graphIds[0]->getIdentifier());
         main.pushstr_newL(strBuffer);
         main.pushstr_newL("{");
@@ -417,6 +425,11 @@ namespace spmpi {
             Identifier* id = assignStmt->getId();
             if (assignStmt->hasPropCopy())  // prop_copy is of the form (propId = propId)
             {
+                if(insideParallelConstruct.size()>0)
+                {
+                    // cant assign prop copy inside a parallel region?
+                    assert(false);
+                }
                 Type * type = id->getSymbolInfo()->getType();
                 char strBuffer[1024];
                 //Identifier* rhsPropId2 = exprAssigned->getId();
@@ -427,10 +440,38 @@ namespace spmpi {
             } 
             else
             {
-                main.pushString(id->getIdentifier());
-                main.pushString(" = ");
-                generateExpr(assignStmt->getExpr());
-                main.pushstr_newL(";");
+                // we can directly generate as we cant have conflicting assignment for global variable inside
+                // non-parallel region
+                if(insideParallelConstruct.size()==0)
+                {
+                    main.pushString(id->getIdentifier());
+                    main.pushString(" = ");
+                    generateExpr(assignStmt->getExpr());
+                    main.pushstr_newL(";");
+                }
+                else
+                {
+                    if(id->getSymbolInfo()->isGlobalVariable())
+                    {   
+
+                        sprintf(strBuffer,"%s_leader_rank",id->getIdentifier());
+                        main.pushString(strBuffer);
+                        main.pushString(" = world.rank()");
+                        main.pushstr_newL(";");
+
+                        main.pushString(id->getIdentifier());
+                        main.pushString(" = ");
+                        generateExpr(assignStmt->getExpr());
+                        main.pushstr_newL(";");
+                    }
+                    else 
+                    {
+                        main.pushString(id->getIdentifier());
+                        main.pushString(" = ");
+                        generateExpr(assignStmt->getExpr());
+                        main.pushstr_newL(";");
+                    }
+                }
             }    
         } 
         else if (assignStmt->lhs_isProp())  //the check for node and edge property to be carried out.
@@ -459,6 +500,8 @@ namespace spmpi {
                 string propId2(propId->getIdentifier2()->getIdentifier());
                 string propIdExpr1(propIdExpr->getIdentifier1()->getIdentifier());
                 string propIdExpr2(propIdExpr->getIdentifier2()->getIdentifier());
+                
+                // Find out whether there is a better way to do this
                 if(propId1.compare(propIdExpr1)==0 && propId2.compare(propIdExpr2)==0)
                 {
                     if(assignStmt->getExpr()->getOperatorType() == OPERATOR_ADD)
@@ -645,9 +688,16 @@ namespace spmpi {
         cout << "TYPE OF IFSTMT" << condition->getTypeofExpr() << "\n";
         generateExpr(condition);
         main.pushstr_newL(" )");
-        main.space();
-        main.space();
-        generateStatement(ifstmt->getIfBody());
+        
+        if(ifstmt->getIfBody()->getTypeofNode()==NODE_BLOCKSTMT)
+            generateStatement(ifstmt->getIfBody());
+        else
+        {
+            main.pushstr_newL("{");
+            generateStatement(ifstmt->getIfBody());
+            main.pushstr_newL("}");
+        }   
+
         if (ifstmt->getElseBody() == NULL)
             return;
         main.pushstr_newL("else");
@@ -756,6 +806,16 @@ namespace spmpi {
                     }
                 }    
             } 
+            
+            if(forAll->getModifiedGlobalVariables().size() > 0)
+            {
+                for(TableEntry * te : forAll->getModifiedGlobalVariables())
+                {
+                    sprintf(strBuffer,"int %s_leader_rank = -1 ;", te->getId()->getIdentifier());
+                    main.pushstr_newL(strBuffer);
+                }
+                main.NewLine();
+            }
 
             std::cout<<"here befor\n";
             if(forAll->containsReductionStatement())
@@ -887,7 +947,23 @@ namespace spmpi {
         }
         if(forAll->isForall())
             main.pushstr_newL("world.barrier();");
-        // Genereate code related to reduction at the end of for all 
+        // Genereate code related to reduction at the end of for all
+
+        if(forAll->isForall() &&  forAll->getModifiedGlobalVariables().size() > 0)
+            {
+                for(TableEntry * te : forAll->getModifiedGlobalVariables())
+                {
+                    sprintf(strBuffer,"int %s_leader_rank_temp = %s_leader_rank;", te->getId()->getIdentifier(), te->getId()->getIdentifier());
+                    main.pushstr_newL(strBuffer);
+                    sprintf(strBuffer, "MPI_Allreduce(&%s_leader_rank_temp,&%s_leader_rank,1,%s,%s,MPI_COMM_WORLD);",te->getId()->getIdentifier(),te->getId()->getIdentifier() ,"MPI_INT","MPI_MAX");
+                    main.pushstr_newL(strBuffer);
+                    sprintf(strBuffer,"MPI_Bcast(&%s,1,%s,%s_leader_rank,MPI_COMM_WORLD);",te->getId()->getIdentifier(),getMPItype(te->getType()),te->getId()->getIdentifier());
+                    main.pushstr_newL(strBuffer);
+                    main.NewLine();
+                }
+                main.NewLine();
+            }
+
         if (forAll->isForall() && forAll->get_reduceKeys().size() > 0) {
             printf("INSIDE GENERATE FOR ALL FOR KEYS\n");
 

@@ -1718,6 +1718,7 @@ class fixedPointStmt:public statement
     //list<varTransferStmt*> revTransfer;
 
     list<Identifier*> usedVars;
+    std::set<TableEntry *> modifiedGlobalVars;
     public: 
     iterateReverseBFS()
     {
@@ -1780,6 +1781,15 @@ class fixedPointStmt:public statement
          }
     }
 
+    void pushModifiedGlobalVariable(TableEntry * te)
+    {
+      modifiedGlobalVars.insert(te);
+    }
+
+    std::set<TableEntry *> getModifiedGlobalVariables()
+    {
+      return modifiedGlobalVars;
+    }
   };
 
   class proc_callExpr:public Expression
@@ -1847,7 +1857,7 @@ class fixedPointStmt:public statement
 
     }
 
-
+    
   };
 
 
@@ -1975,6 +1985,7 @@ class fixedPointStmt:public statement
       iterateReverseBFS* revBFS;
 
       list<Identifier*> usedVars;
+      std::set<TableEntry *> modifiedGlobalVars;
       public:
 
       iterateBFS()
@@ -2038,6 +2049,15 @@ class fixedPointStmt:public statement
 
       void initUsedVariable(list<Identifier*> usedVars){
       this->usedVars = usedVars;
+    }
+    void pushModifiedGlobalVariable(TableEntry * te)
+    {
+      modifiedGlobalVars.insert(te);
+    }
+
+    std::set<TableEntry *> getModifiedGlobalVariables()
+    {
+      return modifiedGlobalVars;
     }
   };
   
@@ -2122,6 +2142,7 @@ class fixedPointStmt:public statement
     list<Identifier*> usedVars;
     set<Identifier*> mapLocals;  
 
+    std::set<TableEntry *> modifiedGlobalVars;
     public:
     forallStmt()
     {
@@ -2381,6 +2402,16 @@ class fixedPointStmt:public statement
 
   }
 
+    void pushModifiedGlobalVariable(TableEntry * te)
+    {
+      printf("inside push gvar1 %s\n", te->getId()->getIdentifier());
+      modifiedGlobalVars.insert(te);
+    }
+
+    std::set<TableEntry *> getModifiedGlobalVariables()
+    {
+      return modifiedGlobalVars;
+    }
 };
   class reductionCall:public ASTNode
   {
