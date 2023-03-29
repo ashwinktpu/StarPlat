@@ -2,7 +2,7 @@
 #define SYCL_DSL_CPP_GENERATOR
 
 #include <cstdio>
-
+#include <unordered_set>
 #include "../../ast/ASTNodeTypes.hpp"
 #include "../dslCodePad.h"
 //~ #include "../../parser/includeHeader.hpp"
@@ -148,7 +148,7 @@ namespace spsycl
     void generateGPUTimerStop();
     void generateGPUTimerStart();
     void generateMemCpyStr(const char *, const char *, const char *, const char *);
-    void generateInitkernel1(assignment *, bool);
+    void generateInitkernel1(assignment *, bool, bool);
 
     void generateInitkernelStr(const char *inVarType, const char *inVarName, const char *initVal);
 

@@ -91,9 +91,9 @@ void Compute_TC(graph &g)
   long triangle_count = 0; // asst in main
 
   // Generate for all statement
-  long *dev_triangle_count = malloc_device<long>(1, Q);
+  long *d_triangle_count = malloc_device<long>(1, Q);
   Q.submit([&](handler &h)
-           { h.memcpy(dev_triangle_count, &triangle_count, 1 * sizeof(long)); })
+           { h.memcpy(d_triangle_count, &triangle_count, 1 * sizeof(long)); })
       .wait();
 
   Q.submit([&](handler &h)
@@ -111,7 +111,7 @@ void Compute_TC(graph &g)
           if (w > v){ // if filter begin 
             if (findNeighborSorted(u, w, d_meta, d_data)){ // if filter begin 
               // Generate reduction statement
-              atomic_ref<long, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data(dev_triangle_count[0]);
+              atomic_ref<long, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data(d_triangle_count[0]);
               atomic_data += 1;
 
             } // if filter end
@@ -127,7 +127,7 @@ void Compute_TC(graph &g)
       .wait(); // end KER FUNC
 
   Q.submit([&](handler &h)
-           { h.memcpy(&triangle_count, dev_triangle_count, 1 * sizeof(long)); })
+           { h.memcpy(&triangle_count, d_triangle_count, 1 * sizeof(long)); })
       .wait();
 
   std::cout << "Num Triangles = " << triangle_count << std::endl;
