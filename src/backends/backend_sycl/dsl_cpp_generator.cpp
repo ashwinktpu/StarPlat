@@ -7,7 +7,7 @@
 #include "getUsedVars.cpp"
 
 bool flag_for_device_variable = 0; // temporary fix to accomodate device variable and
-
+std::unordered_set<string> fixedPointVariables = {};
 //~ using namespace spsycl;
 namespace spsycl
 {
@@ -813,6 +813,10 @@ namespace spsycl
             }
             else
             {
+                if (fixedPointVariables.find(id->getIdentifier()) != fixedPointVariables.end())
+                {
+                    main.pushString("*d_");
+                }
                 main.pushString(id->getIdentifier());
             }
         }
@@ -927,10 +931,10 @@ namespace spsycl
         //                   1             2      3
         if (direction)
         {
-            sprintf(strBuffer, "%s *dev_%s = malloc_device<%s>(1, Q);", typeStr, var, typeStr);
+            sprintf(strBuffer, "%s *d_%s = malloc_device<%s>(1, Q);", typeStr, var, typeStr);
             main.pushstr_newL(strBuffer);
             main.pushstr_newL("Q.submit([&](handler &h)");
-            sprintf(strBuffer, "{ h.memcpy(dev_%s, &%s, 1 * sizeof(%s)); })", var, var, typeStr);
+            sprintf(strBuffer, "{ h.memcpy(d_%s, &%s, 1 * sizeof(%s)); })", var, var, typeStr);
             main.pushstr_newL(strBuffer);
             main.pushstr_newL(".wait();");
             main.NewLine();
@@ -938,7 +942,7 @@ namespace spsycl
         else
         {
             main.pushstr_newL("Q.submit([&](handler &h)");
-            sprintf(strBuffer, "{ h.memcpy(&%s, dev_%s, 1 * sizeof(%s)); })", var, var, typeStr);
+            sprintf(strBuffer, "{ h.memcpy(&%s, d_%s, 1 * sizeof(%s)); })", var, var, typeStr);
             main.pushstr_newL(strBuffer);
             main.pushstr_newL(".wait();");
             main.NewLine();
@@ -982,13 +986,14 @@ namespace spsycl
 
     void dsl_cpp_generator::addCudaKernel(forallStmt *forAll)
     {
-        const char *loopVar = "v";
+        Identifier *iterator = forAll->getIterator();
+        const char *loopVar = iterator->getIdentifier();
         char strBuffer[1024];
 
         usedVariables usedVars = getVariablesForAll(forAll);
         list<Identifier *> vars = usedVars.getVariables();
 
-        sprintf(strBuffer, "Q.submit([&](handler &h){ h.parallel_for(NUM_THREADS, [=](id<1> v){for (; v < V; v += NUM_THREADS)");
+        sprintf(strBuffer, "Q.submit([&](handler &h){ h.parallel_for(NUM_THREADS, [=](id<1> %s){for (; %s < V; %s += NUM_THREADS)", loopVar, loopVar, loopVar);
         main.pushString(strBuffer);
         main.pushstr_newL("{ // BEGIN KER FUN via ADDKERNEL");
 
@@ -1059,6 +1064,13 @@ namespace spsycl
             Identifier *iteratorMethodId = extractElemFunc->getMethodId();
             if (allGraphIteration(iteratorMethodId->getIdentifier()))
             {
+                char *methodId = iteratorMethodId->getIdentifier();
+                string s(methodId);
+                if (s.compare("nodes") == 0)
+                {
+                    sprintf(strBuffer, "for (%s %s = 0; %s < %s; %s++) {", "int", iterator->getIdentifier(), iterator->getIdentifier(), "V", iterator->getIdentifier());
+                    main.pushstr_newL(strBuffer);
+                }
             }
             else if (neighbourIteration(iteratorMethodId->getIdentifier()))
             {
@@ -1068,7 +1080,8 @@ namespace spsycl
                 {
                     list<argument *> argList = extractElemFunc->getArgList();
                     assert(argList.size() == 1);
-                    sprintf(strBuffer, "for (%s %s = %s[%s]; %s < %s[%s+1]; %s++) { // FOR NBR ITR ", "int", "edge", "d_meta", "v", "edge", "d_meta", "v", "edge");
+                    Identifier *nodeNbr = argList.front()->getExpr()->getId();
+                    sprintf(strBuffer, "for (%s %s = %s[%s]; %s < %s[%s+1]; %s++) { // FOR NBR ITR ", "int", "edge", "d_meta", nodeNbr->getIdentifier(), "edge", "d_meta", nodeNbr->getIdentifier(), "edge");
                     main.pushstr_newL(strBuffer);
                     sprintf(strBuffer, "%s %s = %s[%s];", "int", iterator->getIdentifier(), "d_data", "edge"); // needs to move the addition of
                     main.pushstr_newL(strBuffer);
@@ -1142,8 +1155,11 @@ namespace spsycl
                     std::cout << "varName:" << iden->getIdentifier() << '\n';
                     Type *type = iden->getSymbolInfo()->getType();
 
-                    if (type->isPrimitiveType())
+                    if (type->isPrimitiveType() && (fixedPointVariables.find(iden->getIdentifier()) == fixedPointVariables.end()))
+                    {
                         generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), true);
+                    }
+
                     /*else if(type->isPropType())
                     {
                         Type* innerType = type->getInnerTargetType();
@@ -1252,6 +1268,7 @@ namespace spsycl
                 {
                     printf("FOR NORML");
                     generateStatement(forAll->getBody(), false);
+                    main.pushstr_newL("}");
                 }
             }
             else
@@ -1343,6 +1360,8 @@ namespace spsycl
 
         const char *modifiedVar = dependentId->getIdentifier();
         char *fixPointVar = fixedPointId->getIdentifier();
+        string fixPointVarName(fixPointVar);
+        fixedPointVariables.insert(fixPointVarName);
 
         //~ const char *modifiedVarType = convertToCppType(dependentId->getSymbolInfo()->getType()->getInnerTargetType()); // BOTH are of type bool
         const char *fixPointVarType = convertToCppType(fixedPointId->getSymbolInfo()->getType());
@@ -1374,7 +1393,7 @@ namespace spsycl
                     main.pushstr_newL("}).wait();");
                     main.NewLine();
 
-                    main.pushstr_newL("int k=0; // #fixpt-Iterations");
+                    // main.pushstr_newL("int k=0; // #fixpt-Iterations");
                     sprintf(strBuffer, "while(!%s) {", fixPointVar);
                     main.pushstr_newL(strBuffer);
 
@@ -1407,7 +1426,7 @@ namespace spsycl
                     main.pushstr_newL("}).wait();");
                     main.NewLine();
 
-                    main.pushstr_newL("k++;");
+                    // main.pushstr_newL("k++;");
                     Expression *initializer = dependentId->getSymbolInfo()->getId()->get_assignedExpr();
                     assert(initializer->isBooleanLiteral());
                 }
@@ -1559,7 +1578,7 @@ namespace spsycl
                     if (affected_Id->getSymbolInfo()->getId()->get_fp_association())
                     {
                         char *fpId = affected_Id->getSymbolInfo()->getId()->get_fpId();
-                        sprintf(strBuffer, "*dev_%s = %s ;", fpId, "false");
+                        sprintf(strBuffer, "*d_%s = %s ;", fpId, "false");
                         std::cout << "FPID ========> " << fpId << '\n';
                         main.pushstr_newL(strBuffer);
                         //~ targetFile.pushstr_newL("}");  // needs to be removed
@@ -1579,7 +1598,7 @@ namespace spsycl
         {
             Identifier *id = stmt->getLeftId();
             const char *typVar = convertToCppType(id->getSymbolInfo()->getType());
-            sprintf(strBuffer, "atomic_ref<%s, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data(dev_%s[0])", typVar, id->getIdentifier());
+            sprintf(strBuffer, "atomic_ref<%s, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data(d_%s[0])", typVar, id->getIdentifier());
             main.pushString(strBuffer);
             main.pushstr_newL(";");
             sprintf(strBuffer, "atomic_data += ");
@@ -1788,7 +1807,7 @@ namespace spsycl
         main.pushstr_newL("}");
     }
 
-    void dsl_cpp_generator::generateInitkernel1(assignment *assign, bool isMainFile)
+    void dsl_cpp_generator::generateInitkernel1(assignment *assign, bool isMainFile, bool isPropEdge = false)
     {
         main.pushstr_newL("Q.submit([&](handler &h){ h.parallel_for(NUM_THREADS, [=](id<1> i){");
 
@@ -1801,7 +1820,11 @@ namespace spsycl
             convertToCppType(inId->getSymbolInfo()->getType()->getInnerTargetType());
         const char *inVarName = inId->getIdentifier();
 
-        sprintf(strBuffer, "for (; i < V; i += stride) d_%s[i] = (%s)", inVarName, inVarType);
+        if (isPropEdge)
+            sprintf(strBuffer, "for (; i < E; i += stride) d_%s[i] = (%s)", inVarName, inVarType);
+        else
+            sprintf(strBuffer, "for (; i < V; i += stride) d_%s[i] = (%s)", inVarName, inVarType);
+
         main.pushString(strBuffer);
 
         std::cout << "varName:" << inVarName << '\n';
@@ -1845,6 +1868,21 @@ namespace spsycl
                     // std::cout<< "===============" << '\n'; ~
                     // generateInitkernel1(lhsId,"0"); //TODO
                 }
+            }
+        }
+        string IDCoded1("attachEdgeProperty");
+        int x1 = methodID.compare(IDCoded1);
+
+        if (x1 == 0)
+        {
+            list<argument *> argList = procedure->getArgList();
+            list<argument *>::iterator itr;
+
+            for (itr = argList.begin(); itr != argList.end(); itr++)
+            {
+                assignment *assign = (*itr)->getAssignExpr();
+                bool isPropEdge = true;
+                generateInitkernel1(assign, isMainFile, isPropEdge);
             }
         }
     }

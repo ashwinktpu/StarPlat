@@ -110,19 +110,19 @@ void Compute_PR(graph &g, float beta, float delta, int maxIter,
   {
     diff = 0.000000;
     // Generate for all statement
-    float *dev_delta = malloc_device<float>(1, Q);
+    float *d_delta = malloc_device<float>(1, Q);
     Q.submit([&](handler &h)
-             { h.memcpy(dev_delta, &delta, 1 * sizeof(float)); })
+             { h.memcpy(d_delta, &delta, 1 * sizeof(float)); })
         .wait();
 
-    float *dev_diff = malloc_device<float>(1, Q);
+    float *d_diff = malloc_device<float>(1, Q);
     Q.submit([&](handler &h)
-             { h.memcpy(dev_diff, &diff, 1 * sizeof(float)); })
+             { h.memcpy(d_diff, &diff, 1 * sizeof(float)); })
         .wait();
 
-    float *dev_num_nodes = malloc_device<float>(1, Q);
+    float *d_num_nodes = malloc_device<float>(1, Q);
     Q.submit([&](handler &h)
-             { h.memcpy(dev_num_nodes, &num_nodes, 1 * sizeof(float)); })
+             { h.memcpy(d_num_nodes, &num_nodes, 1 * sizeof(float)); })
         .wait();
 
     Q.submit([&](handler &h)
@@ -140,22 +140,22 @@ void Compute_PR(graph &g, float beta, float delta, int maxIter,
     float val = (1 - delta) / num_nodes + delta * sum; // asst in main
 
     // Generate reduction statement
-    atomic_ref<float, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data(dev_diff[0]);
+    atomic_ref<float, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data(d_diff[0]);
     atomic_data += val - d_pageRank[v];
     d_pageRank_nxt[v] = val;
   } }); })
         .wait(); // end KER FUNC
 
     Q.submit([&](handler &h)
-             { h.memcpy(&delta, dev_delta, 1 * sizeof(float)); })
+             { h.memcpy(&delta, d_delta, 1 * sizeof(float)); })
         .wait();
 
     Q.submit([&](handler &h)
-             { h.memcpy(&diff, dev_diff, 1 * sizeof(float)); })
+             { h.memcpy(&diff, d_diff, 1 * sizeof(float)); })
         .wait();
 
     Q.submit([&](handler &h)
-             { h.memcpy(&num_nodes, dev_num_nodes, 1 * sizeof(float)); })
+             { h.memcpy(&num_nodes, d_num_nodes, 1 * sizeof(float)); })
         .wait();
 
     Q.submit([&](handler &h)

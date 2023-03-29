@@ -125,14 +125,13 @@ void Compute_SSSP(graph &g, int *dist, int src)
 for (; i < V; i += stride) d_modified_next[i] = false; }); })
       .wait();
 
-  int k = 0; // #fixpt-Iterations
   while (!finished)
   {
 
     finished = true;
-    bool *dev_finished = malloc_device<bool>(1, Q);
+    bool *d_finished = malloc_device<bool>(1, Q);
     Q.submit([&](handler &h)
-             { h.memcpy(dev_finished, &finished, 1 * sizeof(bool)); })
+             { h.memcpy(d_finished, &finished, 1 * sizeof(bool)); })
         .wait();
 
     // Generate for all statement
@@ -153,7 +152,7 @@ if(d_dist[v]!= INT_MAX && d_dist[nbr] > dist_new)
   atomic_ref<int, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data(d_dist[nbr]);
   atomic_data.fetch_min(dist_new);
   d_modified_next[nbr] = modified_new;
-  *dev_finished = false ;
+  *d_finished = false ;
 }
 
 } //  end FOR NBR ITR. TMP FIX!
@@ -163,7 +162,7 @@ if(d_dist[v]!= INT_MAX && d_dist[nbr] > dist_new)
         .wait(); // end KER FUNC
 
     Q.submit([&](handler &h)
-             { h.memcpy(&finished, dev_finished, 1 * sizeof(bool)); })
+             { h.memcpy(&finished, d_finished, 1 * sizeof(bool)); })
         .wait();
 
     Q.submit([&](handler &h)
@@ -178,7 +177,6 @@ for (; i < V; i += stride) d_modified[i] = d_modified_next[i]; }); })
 for (; i < V; i += stride) d_modified_next[i] = false; }); })
         .wait();
 
-    k++;
   } // END FIXED POINT
 
   // cudaFree up!! all propVars in this BLOCK!
