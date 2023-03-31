@@ -3,11 +3,13 @@
 	#include <string.h>
 	#include <stdlib.h>
 	#include <stdbool.h>
+	#include<getopt.h>
     #include "includeHeader.hpp"
 	#include "../analyser/attachProp/attachPropAnalyser.h"
 	#include "../analyser/dataRace/dataRaceAnalyser.h"
 	#include "../analyser/deviceVars/deviceVarsAnalyser.h"
-	#include<getopt.h>
+	#include "../analyser/ForLoopFusion/ForLoopFusionAnalyser.h"
+
 	//#include "../symbolutil/SymbolTableBuilder.cpp"
 
 	void yyerror(const char *);
@@ -563,14 +565,18 @@ int main(int argc,char **argv)
 				cpp_backend.setFileName(fileName);
 
 				if (optimize) {
-					attachPropAnalyser apAnalyser;
+					cpp_backend.setOptimized();
+
+					ForLoopFusionAnalyser flAnalyser;
+					flAnalyser.analyse(frontEndContext.getFuncList());
+
+					attachPropAnalyser apAnalyser(1);
 					apAnalyser.analyse(frontEndContext.getFuncList());
 
 					dataRaceAnalyser drAnalyser;
 					drAnalyser.analyse(frontEndContext.getFuncList());
 
 					deviceVarsAnalyser dvAnalyser;
-					cpp_backend.setOptimized();
 					dvAnalyser.analyse(frontEndContext.getFuncList());
 				}
 				cpp_backend.generate();
