@@ -28,6 +28,7 @@ class dsl_cpp_generator {
   int kernelCount;
   Function* currentFunc;
   bool FIXEDPOINT;
+  bool modified_used;
   bool modified_variable_decl ; 
   char* fixed_pt_var ; 
   char* fixed_pt_type;
@@ -50,6 +51,7 @@ class dsl_cpp_generator {
     currentFunc = NULL;
     isOptimized = false;
     FIXEDPOINT = false;
+    modified_used = false;
     genFuncCount = 0;
     staticFuncCount = 0;
     inFuncCount = 0;
@@ -73,6 +75,7 @@ class dsl_cpp_generator {
   void generateVariableDecl(declaration* decl, bool isMainFile);
   void generateStatement(statement* stmt, bool isMainFile);
   // void generateAssignmentStmt(assignment* assignStmt);
+  void helper(Identifier *iden);
   void generateAssignmentStmt(assignment* assignStmt, bool isMainFile);
   void generateWhileStmt(whileStmt* whilestmt);
   void generateForAll(forallStmt* forAll, bool isMainFile);

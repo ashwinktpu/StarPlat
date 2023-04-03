@@ -32,7 +32,7 @@ void Compute_SSSP(graph& g,int* dist,int src)
   for(int i=0; i< E; i++) {
     int temp = g.edgeList[i];
     h_data[i] = temp;
-    temp = srcList[i];
+    temp = g.srcList[i];
     h_src[i] = temp;
     temp = edgeLen[i];
     h_weight[i] = temp;

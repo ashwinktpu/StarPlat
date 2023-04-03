@@ -385,24 +385,24 @@ class graph
     
         int32_t source;
         int32_t destination;
-        int32_t weightVal;
+        int32_t weightVal = 1;
 
-           ss>>source; 
+           ss>>source;source+=1; 
            if(source>nodesTotal)
               nodesTotal=source;
 
-            ss>>destination;  
+            ss>>destination;destination+=1;  
             if(destination>nodesTotal)
                nodesTotal=destination;  
-
+          //ss>>weightVal; //for edgelists having weight too.      
            e.source=source;
            e.destination=destination;
-           e.weight=1;
+           e.weight=weightVal;
 
            edges[source].push_back(e);
            graph_edge.push_back(e);
 
-           ss>>weightVal; //for edgelists having weight too.      
+           
            
      }
 

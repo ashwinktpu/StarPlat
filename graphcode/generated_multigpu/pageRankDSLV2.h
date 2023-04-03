@@ -17,7 +17,7 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
 
 
 
-__global__ void Compute_PR_kernel1(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,float* d_delta,float* d_diff,float* d_num_nodes,float* d_pageRank,float* d_pageRank_nxt){ // BEGIN KER FUN via ADDKERNEL
+__global__ void Compute_PR_kernel1(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,float* d_delta,float* d_num_nodes,float* d_pageRank,float* d_pageRank_nxt){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
   int num_vertices = end-start;
@@ -29,7 +29,6 @@ __global__ void Compute_PR_kernel1(int start,int end,int V, int E, int* d_meta, 
       sum = sum + d_pageRank[nbr] / (d_meta[nbr+1]-d_meta[nbr]);
     } //  end FOR NBR ITR. TMP FIX!
     float val = (1 - delta) / num_nodes + delta * sum; // asst in .cu 
-    atomicAdd(&d_diff[0], (float)val - d_pageRank[v]);
     d_pageRank_nxt[v] = val;
   }
 } // end KER FUNC

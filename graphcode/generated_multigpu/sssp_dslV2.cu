@@ -12,8 +12,15 @@ void Compute_SSSP(graph& g,int* dist,int src)
   printf("#edges:%d\n",E);
   int* edgeLen = g.getEdgeLen();
 
+   FILE* fptr = fopen("num_devices.txt","r"); 
   int devicecount;
-  cudaGetDeviceCount(&devicecount);
+   if(fptr == NULL){ 
+     cudaGetDeviceCount(&devicecount); 
+     } 
+   else{ 
+     fscanf(fptr," %d ",&devicecount); 
+     fclose(fptr); 
+  }
   int* h_vertex_partition;
   int *h_edges;//data
   int *h_weight;
@@ -32,11 +39,12 @@ void Compute_SSSP(graph& g,int* dist,int src)
 
   for(int i=0; i<= V; i++) {
     h_offset[i] = g.indexofNodes[i];
+    h_rev_meta[i] = g.rev_indexofNodes[i];
   }
 
   int index = 0;
   h_vertex_partition[0]=0;
-  h_vertex_partition[devicecount]=V;
+  h_vertex_partition[devicecount]=V+1;
   for(int i=1;i<devicecount;i++){
     if(i<=(V%devicecount)){
        index+=(h_vertex_per_device+1);
@@ -107,8 +115,8 @@ void Compute_SSSP(graph& g,int* dist,int src)
 
   //DECLARE DEVICE AND HOST vars in params
   int** h_dist;
-  h_dist = (int**)malloc(sizeof(int*)*(devicecount));
-  for(int i=0;i<devicecount;i++){
+  h_dist = (int**)malloc(sizeof(int*)*(devicecount+1));
+  for(int i=0;i<=devicecount;i++){
     h_dist[i] = (int*)malloc(sizeof(int)*(V+1));
   }
   int** d_dist;
@@ -120,6 +128,11 @@ void Compute_SSSP(graph& g,int* dist,int src)
 
 
   //BEGIN DSL PARSING 
+  bool** h_modified;
+  h_modified = (bool**)malloc(sizeof(bool*)*(devicecount+1));
+  for(int i=0;i<=devicecount;i++){
+    h_modified[i]=(bool*)malloc(sizeof(bool)*(V+1));
+  }
   bool** d_modified;
   d_modified = (bool**)malloc(sizeof(bool*)*devicecount);
   for (int i = 0; i < devicecount; i++) {
@@ -127,15 +140,29 @@ void Compute_SSSP(graph& g,int* dist,int src)
     cudaMalloc(&d_modified[i], sizeof(bool)*(V+1));
   }
 
+  bool* h_modified_temp1 = (bool*)malloc((V+1)*(devicecount)*sizeof(bool));
+  cudaSetDevice(0);
+  bool* d_modified_temp1;
+  cudaMalloc(&d_modified_temp1,(V+1)*(devicecount)*sizeof(bool));
+  bool* d_modified_temp2;
+  cudaMalloc(&d_modified_temp2,(V+1)*(devicecount)*sizeof(bool));
   for(int i=0;i<devicecount;i++)
   {
     cudaSetDevice(i);
     initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_dist[i],(int)INT_MAX);
   }
+  for(int i=0;i<devicecount;i++){
+    cudaSetDevice(i);
+    cudaMemcpy(h_dist[i],d_dist[i],(V+1)*sizeof(int),cudaMemcpyDeviceToHost);
+  }
   for(int i=0;i<devicecount;i++)
   {
     cudaSetDevice(i);
     initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_modified[i],(bool)false);
+  }
+  for(int i=0;i<devicecount;i++){
+    cudaSetDevice(i);
+    cudaMemcpy(h_modified[i],d_modified[i],(V+1)*sizeof(bool),cudaMemcpyDeviceToHost);
   }
   for(int i=0;i<devicecount;i++){
     cudaSetDevice(i);
@@ -148,7 +175,7 @@ void Compute_SSSP(graph& g,int* dist,int src)
   bool finished = false; // asst in .cu 
   bool** h_finished;
   h_finished = (bool**)malloc(sizeof(bool*)*(devicecount+1));
-  for(int i=0;i<devicecount;i+=1){
+  for(int i=0;i<=devicecount;i+=1){
     h_finished[i] = (bool*)malloc(sizeof(bool));
   }
 
@@ -157,7 +184,7 @@ void Compute_SSSP(graph& g,int* dist,int src)
   for(int i = 0 ; i < devicecount ; i++){
     cudaSetDevice(i);
     cudaMalloc(&d_finished[i],sizeof(bool));
-    initKernel<bool> <<<1,1>>>(1,d_finished[i],true);
+    initKernel<bool> <<<1,1>>>(1,d_finished[i],false);
   }
 
 
@@ -176,13 +203,6 @@ void Compute_SSSP(graph& g,int* dist,int src)
     initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next[i], false);
   }
 
-  int k=0; // #fixpt-Iterations
-  bool** h_modified;
-  h_modified = (bool**)malloc(sizeof(bool*)*(devicecount+1)); 
-  for (int i = 0 ; i < devicecount ; i++){
-    h_modified[i] = (bool*)malloc(sizeof(bool)*(V+1));
-  }
-
   while(!finished) {
 
     finished = true;
@@ -197,10 +217,14 @@ void Compute_SSSP(graph& g,int* dist,int src)
       cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
-
-
-
-    //ronaldo
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
+      cudaMemcpyAsync(h_dist[i],d_dist[i],sizeof(int)*(V+1),cudaMemcpyDeviceToHost);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
+      cudaDeviceSynchronize();
+    }
     cudaSetDevice(0);
     int* d_dist_temp;
     int* d_dist_temp1;
@@ -220,7 +244,7 @@ void Compute_SSSP(graph& g,int* dist,int src)
       cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
-    for(int i = 0 ; i < devicecount ; i++){
+    for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
       cudaMemcpyAsync(h_modified[i],d_modified_next[i],sizeof(bool)*(V+1),cudaMemcpyDeviceToHost);
     }
@@ -258,7 +282,6 @@ void Compute_SSSP(graph& g,int* dist,int src)
     for(int i=0;i<devicecount;i++){
       finished&=h_finished[i][0];
     }
-    k++;
     for(int i = 0 ; i < devicecount ; i++){
       cudaSetDevice(i);
       initKernel<bool> <<<1,1>>>(1,d_finished[i],true);
@@ -276,5 +299,5 @@ void Compute_SSSP(graph& g,int* dist,int src)
   cudaEventElapsedTime(&milliseconds, start, stop);
   printf("GPU Time: %.6f ms\n", milliseconds);
 
-  cudaMemcpy(dist,h_dist[devicecount], sizeof(int)*(V+1), cudaMemcpyDeviceToHost);
+  cudaMemcpy(    dist,   d_dist, sizeof(int)*(V), cudaMemcpyDeviceToHost);
 } //end FUN
