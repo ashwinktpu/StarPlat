@@ -1253,16 +1253,31 @@ void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment *asmt,
       //~ targetFile.pushstr_newL(convertToCppType(typeA));
 
       const char *varType = convertToCppType(typeB); // DONE: get the type from id
-      sprintf(strBuffer,"for(int i=0;i<devicecount;i++)");
-      targetFile.pushString(strBuffer);
-      targetFile.pushstr_newL("{");
-      targetFile.pushstr_newL("cudaSetDevice(i);");
-      sprintf(strBuffer, "initIndex<%s><<<1,1>>>(V,d_%s[i],%s,(%s)",
-              varType,
-              propId->getIdentifier2()->getIdentifier(),
-              propId->getIdentifier1()->getIdentifier(),
-              varType);
-      targetFile.pushString(strBuffer);
+      int isForall = 0;
+      ASTNode* tempstmt = asmt;
+      while(tempstmt){
+      if(tempstmt->getTypeofNode()==18){
+        isForall = 1;
+        break;
+      }
+      tempstmt = tempstmt->getParent();
+    }
+      if(isForall){
+        sprintf(strBuffer,"d_%s[%s] = ",propId->getIdentifier2()->getIdentifier(),propId->getIdentifier1()->getIdentifier());
+        targetFile.pushString(strBuffer);
+      }
+      else{
+        sprintf(strBuffer,"for(int i=0;i<devicecount;i++)");
+        targetFile.pushString(strBuffer);
+        targetFile.pushstr_newL("{");
+        targetFile.pushstr_newL("cudaSetDevice(i);");
+        sprintf(strBuffer, "initIndex<%s><<<1,1>>>(V,d_%s[i],%s,(%s)",
+                varType,
+                propId->getIdentifier2()->getIdentifier(),
+                propId->getIdentifier1()->getIdentifier(),
+                varType);
+        targetFile.pushString(strBuffer);  
+      }
       std::cout << "\tDEVICE ASST" << '\n';
 
       //~ Type *typeB = propId->getIdentifier2()->getSymbolInfo()->getType()->getInnerTargetType();
@@ -1299,7 +1314,8 @@ void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment *asmt,
 
   generateExpr(asmt->getExpr(), isMainFile);
 
-  if (isDevice){
+  if (isMainFile){
+    targetFile.pushstr_newL("hi");
     targetFile.pushstr_newL("); //InitIndexDevice");
     targetFile.pushstr_newL("}");
   }
