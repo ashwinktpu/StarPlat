@@ -45,6 +45,26 @@ __global__ void Compute_Or(bool* array1,bool* array2,unsigned V,int devicecount)
   }
 }
 
+template <typename T>
+__global__ void Compute_correct(T* array1,T* array2,unsigned V,int devicecount){
+  unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
+  if(v<=V){
+    T elem;
+    for(int i=0;i<devicecount;i++){
+      if(array1[i*(V+1)+v]!=array2[i*(V+1)+v]){
+        elem = array1[i*(V+1)+v];
+        break;
+      }
+      else{
+        elem = array2[i*(V+1)+v]; 
+      }
+    }
+    for(int i=0;i<devicecount;i++){
+      array1[i*(V+1)+v]=elem;
+      array2[i*(V+1)+v]=elem;
+    }
+  }
+}
 
 //NOT USED
 __global__ void accumulate_bc(unsigned n, double* d_delta, double* d_nodeBC, int* d_level, unsigned s) {

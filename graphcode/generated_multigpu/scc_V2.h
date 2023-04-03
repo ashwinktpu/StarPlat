@@ -57,7 +57,7 @@ __global__ void vHong_kernel2(int start,int end,int V, int E, int* d_meta, int* 
     } // if filter end
   }
 } // end KER FUNC
-__global__ void vHong_kernel3(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_scc,int* d_outDeg,int* d_inDeg,int* d_pivotField,int* d_range){ // BEGIN KER FUN via ADDKERNEL
+__global__ void vHong_kernel3(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_scc,int* d_outDeg,int* d_pivotField,int* d_inDeg,int* d_range){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
   int num_vertices = end-start;
@@ -94,7 +94,7 @@ __global__ void vHong_kernel4(int start,int end,int V, int E, int* d_meta, int* 
     } // if filter end
   }
 } // end KER FUNC
-__global__ void vHong_kernel5(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,bool* d_propBw,bool* d_visitBw,bool* d_propFw,int* d_scc,bool* d_visitFw,int* d_range,bool* d_fpoint2){ // BEGIN KER FUN via ADDKERNEL
+__global__ void vHong_kernel5(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,bool* d_propBw,bool* d_visitBw,bool* d_propFw,bool* d_visitFw,int* d_scc,int* d_range,bool* d_fpoint2){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
   int num_vertices = end-start;
@@ -129,7 +129,35 @@ __global__ void vHong_kernel5(int start,int end,int V, int E, int* d_meta, int* 
     } // if filter end
   }
 } // end KER FUNC
-__global__ void vHong_kernel6(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_range,int* d_scc,bool* d_fpoint1,bool* d_isPivot){ // BEGIN KER FUN via ADDKERNEL
+__global__ void vHong_kernel6(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_scc,bool* d_visitFw,bool* d_visitBw,int* d_range,bool* d_propBw,bool* d_propFw){ // BEGIN KER FUN via ADDKERNEL
+  float num_nodes  = V;
+  unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
+  int num_vertices = end-start;
+  if( src < num_vertices) {
+    src+=start;
+    if (d_scc[src] == -1){ // if filter begin 
+      if (d_visitFw[src] == false || d_visitBw[src] == false){ // if filter begin 
+        int ext1 = 0; // asst in .cu 
+        int ext2 = 0; // asst in .cu 
+        if (d_visitFw[src] == false){ // if filter begin 
+          ext1 = 1;
+        } // if filter end
+        if (d_visitBw[src] == false){ // if filter begin 
+          ext2 = 1;
+        } // if filter end
+        d_range[src] = 3 * d_range[src] + ext1 + ext2;
+        d_visitFw[src] = false;
+        d_visitBw[src] = false;
+        d_propFw[src] = false;
+        d_propBw[src] = false;
+      } // if filter end
+      if (d_visitFw[src] == true && d_visitBw[src] == true){ // if filter begin 
+        d_scc[src] = src;
+      } // if filter end
+    } // if filter end
+  }
+} // end KER FUNC
+__global__ void vHong_kernel7(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_range,int* d_scc,bool* d_fpoint1,bool* d_isPivot){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
   int num_vertices = end-start;
@@ -162,7 +190,7 @@ __global__ void vHong_kernel6(int start,int end,int V, int E, int* d_meta, int* 
     } // if filter end
   }
 } // end KER FUNC
-__global__ void vHong_kernel7(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_range){ // BEGIN KER FUN via ADDKERNEL
+__global__ void vHong_kernel8(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_range){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
   int num_vertices = end-start;
@@ -171,7 +199,7 @@ __global__ void vHong_kernel7(int start,int end,int V, int E, int* d_meta, int* 
     d_range[src] = d_range[src]+ src;
   }
 } // end KER FUNC
-__global__ void vHong_kernel8(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_range,int* d_scc,bool* d_fpoint4){ // BEGIN KER FUN via ADDKERNEL
+__global__ void vHong_kernel9(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_range,int* d_scc,bool* d_fpoint4){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
   int num_vertices = end-start;
@@ -181,17 +209,8 @@ __global__ void vHong_kernel8(int start,int end,int V, int E, int* d_meta, int* 
       for (int edge = d_meta[src]; edge < d_meta[src+1]; edge++) { 
         int dst = d_data[edge];
         if (d_scc[dst] == -1){ // if filter begin 
-          if (d_range[dst] > d_range[src]){ // if filter begin 
-            d_range[dst] = d_range[src];
-            d_fpoint4[0] = false;
-          } // if filter end
-        } // if filter end
-      } //  end FOR NBR ITR. TMP FIX!
-      for (int edge = d_rev_meta[src]; edge < d_rev_meta[src+1]; edge++){
-        int dst = d_src[edge] ;
-        if (d_scc[dst] == -1){ // if filter begin 
-          if (d_range[dst] > d_range[src]){ // if filter begin 
-            d_range[dst] = d_range[src];
+          if (d_range[dst] < d_range[src]){ // if filter begin 
+            d_range[src] = d_range[dst];
             d_fpoint4[0] = false;
           } // if filter end
         } // if filter end
@@ -199,7 +218,22 @@ __global__ void vHong_kernel8(int start,int end,int V, int E, int* d_meta, int* 
     } // if filter end
   }
 } // end KER FUNC
-__global__ void vHong_kernel9(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_scc,int* d_outDeg,int* d_inDeg,int* d_pivotField,int* d_range,bool* d_fpoint5){ // BEGIN KER FUN via ADDKERNEL
+__global__ void vHong_kernel10(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_scc,int* d_range,bool* d_fpoint4){ // BEGIN KER FUN via ADDKERNEL
+  float num_nodes  = V;
+  unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
+  int num_vertices = end-start;
+  if( src < num_vertices) {
+    src+=start;
+    if (d_scc[src] == -1){ // if filter begin 
+      int myrange = d_range[src]; // asst in .cu 
+      if ((myrange != src) && (myrange != d_range[myrange])){ // if filter begin 
+        d_range[src] = d_range[myrange];
+        d_fpoint4[0] = false;
+      } // if filter end
+    } // if filter end
+  }
+} // end KER FUNC
+__global__ void vHong_kernel11(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_scc,int* d_outDeg,int* d_pivotField,int* d_inDeg,int* d_range,bool* d_fpoint5){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
   int num_vertices = end-start;
@@ -219,7 +253,7 @@ __global__ void vHong_kernel9(int start,int end,int V, int E, int* d_meta, int* 
     } // if filter end
   }
 } // end KER FUNC
-__global__ void vHong_kernel10(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_scc,int* d_pivotField,int* d_range,bool* d_isPivot,bool* d_visitBw,bool* d_visitFw,bool* d_fpoint5){ // BEGIN KER FUN via ADDKERNEL
+__global__ void vHong_kernel12(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_scc,int* d_pivotField,int* d_range,bool* d_isPivot,bool* d_visitBw,bool* d_visitFw,bool* d_fpoint5){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
   int num_vertices = end-start;
@@ -236,7 +270,7 @@ __global__ void vHong_kernel10(int start,int end,int V, int E, int* d_meta, int*
     } // if filter end
   }
 } // end KER FUNC
-__global__ void vHong_kernel11(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,bool* d_propBw,bool* d_visitBw,bool* d_propFw,int* d_scc,bool* d_visitFw,int* d_range,bool* d_fpoint2){ // BEGIN KER FUN via ADDKERNEL
+__global__ void vHong_kernel13(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,bool* d_propBw,bool* d_visitBw,bool* d_propFw,bool* d_visitFw,int* d_scc,int* d_range,bool* d_fpoint2){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
   int num_vertices = end-start;
@@ -271,7 +305,7 @@ __global__ void vHong_kernel11(int start,int end,int V, int E, int* d_meta, int*
     } // if filter end
   }
 } // end KER FUNC
-__global__ void vHong_kernel12(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_scc,bool* d_visitFw,bool* d_visitBw,int* d_range,bool* d_propBw,bool* d_propFw,bool* d_fpoint5){ // BEGIN KER FUN via ADDKERNEL
+__global__ void vHong_kernel14(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_scc,bool* d_visitFw,bool* d_visitBw,int* d_range,bool* d_propFw,bool* d_propBw,bool* d_fpoint5){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
   int num_vertices = end-start;
@@ -280,16 +314,17 @@ __global__ void vHong_kernel12(int start,int end,int V, int E, int* d_meta, int*
     if (d_scc[src] == -1){ // if filter begin 
       if (d_visitFw[src] == false || d_visitBw[src] == false){ // if filter begin 
         d_fpoint5[0] = false;
-        int ext = 0; // asst in .cu 
-        if (d_visitFw[src] == false && d_visitBw[src] == true){ // if filter begin 
-          ext = 1;
+        int ext1 = 0; // asst in .cu 
+        int ext2 = 0; // asst in .cu 
+        if (d_visitFw[src] == false){ // if filter begin 
+          ext1 = 1;
         } // if filter end
-        if (d_visitFw[src] == false && d_visitBw[src] == false){ // if filter begin 
-          ext = 2;
+        if (d_visitBw[src] == false){ // if filter begin 
+          ext2 = 1;
         } // if filter end
-        int newRange = 3 * d_range[src] + ext; // asst in .cu 
+        int newRange = 3 * d_range[src]; // asst in .cu 
         newRange = newRange - (newRange / V) * V;
-        d_range[src] = newRange;
+        d_range[src] = newRange + ext1 + ext2;
         d_visitFw[src] = false;
         d_visitBw[src] = false;
         d_propFw[src] = false;

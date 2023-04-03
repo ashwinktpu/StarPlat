@@ -1,5 +1,5 @@
 // FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
-#include "pageRankDSLV2.h"
+#include "PageRankDSLV2.h"
 
 void Compute_PR(graph& g,float beta,float delta,int maxIter,
   float* pageRank)
@@ -13,8 +13,15 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
   printf("#edges:%d\n",E);
   int* edgeLen = g.getEdgeLen();
 
+   FILE* fptr = fopen("num_devices.txt","r"); 
   int devicecount;
-  cudaGetDeviceCount(&devicecount);
+   if(fptr == NULL){ 
+     cudaGetDeviceCount(&devicecount); 
+     } 
+   else{ 
+     fscanf(fptr," %d ",&devicecount); 
+     fclose(fptr); 
+  }
   int* h_vertex_partition;
   int *h_edges;//data
   int *h_weight;
@@ -33,11 +40,12 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
 
   for(int i=0; i<= V; i++) {
     h_offset[i] = g.indexofNodes[i];
+    h_rev_meta[i] = g.rev_indexofNodes[i];
   }
 
   int index = 0;
   h_vertex_partition[0]=0;
-  h_vertex_partition[devicecount]=V;
+  h_vertex_partition[devicecount]=V+1;
   for(int i=1;i<devicecount;i++){
     if(i<=(V%devicecount)){
        index+=(h_vertex_per_device+1);
@@ -108,8 +116,8 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
 
   //DECLARE DEVICE AND HOST vars in params
   float** h_pageRank;
-  h_pageRank = (float**)malloc(sizeof(float*)*(devicecount));
-  for(int i=0;i<devicecount;i++){
+  h_pageRank = (float**)malloc(sizeof(float*)*(devicecount+1));
+  for(int i=0;i<=devicecount;i++){
     h_pageRank[i] = (float*)malloc(sizeof(float)*(V+1));
   }
   float** d_pageRank;
@@ -124,7 +132,7 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
   float num_nodes = (float)g.num_nodes( ); // asst in .cu 
   float** h_num_nodes;
   h_num_nodes = (float**)malloc(sizeof(float*)*(devicecount+1));
-  for(int i=0;i<devicecount;i+=1){
+  for(int i=0;i<=devicecount;i+=1){
     h_num_nodes[i] = (float*)malloc(sizeof(float));
   }
 
@@ -133,10 +141,15 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
   for(int i = 0 ; i < devicecount ; i++){
     cudaSetDevice(i);
     cudaMalloc(&d_num_nodes[i],sizeof(float));
-    initKernel<float> <<<1,1>>>(1,d_num_nodes[i],0);
+    initKernel<float> <<<1,1>>>(1,d_num_nodes[i],g.num_nodes( ));
   }
 
 
+  float** h_pageRank_nxt;
+  h_pageRank_nxt = (float**)malloc(sizeof(float*)*(devicecount+1));
+  for(int i=0;i<=devicecount;i++){
+    h_pageRank_nxt[i]=(float*)malloc(sizeof(float)*(V+1));
+  }
   float** d_pageRank_nxt;
   d_pageRank_nxt = (float**)malloc(sizeof(float*)*devicecount);
   for (int i = 0; i < devicecount; i++) {
@@ -144,15 +157,25 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
     cudaMalloc(&d_pageRank_nxt[i], sizeof(float)*(V+1));
   }
 
+  float* h_pageRank_nxt_temp1 = (float*)malloc((V+1)*(devicecount)*sizeof(float));
+  cudaSetDevice(0);
+  float* d_pageRank_nxt_temp1;
+  cudaMalloc(&d_pageRank_nxt_temp1,(V+1)*(devicecount)*sizeof(float));
+  float* d_pageRank_nxt_temp2;
+  cudaMalloc(&d_pageRank_nxt_temp2,(V+1)*(devicecount)*sizeof(float));
   for(int i=0;i<devicecount;i++)
   {
     cudaSetDevice(i);
     initKernel<float> <<<numBlocks,threadsPerBlock>>>(V,d_pageRank[i],(float)1 / num_nodes);
   }
+  for(int i=0;i<devicecount;i++){
+    cudaSetDevice(i);
+    cudaMemcpy(h_pageRank[i],d_pageRank[i],(V+1)*sizeof(float),cudaMemcpyDeviceToHost);
+  }
   int iterCount = 0; // asst in .cu 
   int** h_iterCount;
   h_iterCount = (int**)malloc(sizeof(int*)*(devicecount+1));
-  for(int i=0;i<devicecount;i+=1){
+  for(int i=0;i<=devicecount;i+=1){
     h_iterCount[i] = (int*)malloc(sizeof(int));
   }
 
@@ -168,7 +191,7 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
   float diff; // asst in .cu 
   float** h_diff;
   h_diff = (float**)malloc(sizeof(float*)*(devicecount+1));
-  for(int i=0;i<devicecount;i+=1){
+  for(int i=0;i<=devicecount;i+=1){
     h_diff[i] = (float*)malloc(sizeof(float));
   }
 
@@ -177,16 +200,14 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
   for(int i = 0 ; i < devicecount ; i++){
     cudaSetDevice(i);
     cudaMalloc(&d_diff[i],sizeof(float));
-    initKernel<float> <<<1,1>>>(1,d_diff[i],0);
   }
 
 
   do{
-    diff = 0.000000;
     for(int i=0;i<devicecount;i++)
     {
       cudaSetDevice(i);
-      Compute_PR_kernel1<<<numBlocks, threadsPerBlock>>>(h_vertex_partition[i],h_vertex_partition[i+1],V,E,d_offset[i],d_edges[i],d_weight[i],d_src[i],d_rev_meta[i],d_delta[i],d_diff[i],d_num_nodes[i],d_pageRank[i],d_pageRank_nxt[i]);
+      Compute_PR_kernel1<<<numBlocks, threadsPerBlock>>>(h_vertex_partition[i],h_vertex_partition[i+1],V,E,d_offset[i],d_edges[i],d_weight[i],d_src[i],d_rev_meta[i],d_delta[i],d_num_nodes[i],d_pageRank[i],d_pageRank_nxt[i]);
     }
 
     for(int i=0;i<devicecount;i++)
@@ -196,9 +217,28 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
     }
 
 
-
-
-
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
+      cudaMemcpyAsync(h_pageRank_nxt_temp1+i*(V+1),d_pageRank_nxt[i],sizeof(float)*(V+1),cudaMemcpyDeviceToHost);
+      cudaDeviceSynchronize();
+    }
+    cudaSetDevice(0);
+    cudaMemcpy(d_pageRank_nxt_temp1,h_pageRank_nxt_temp1,(V+1)*(devicecount)*sizeof(float),cudaMemcpyHostToDevice);
+    for(int i=0;i<devicecount;i++){
+      cudaMemcpy(d_pageRank_nxt_temp2+i*(V+1),h_pageRank_nxt[i],sizeof(float)*(V+1),cudaMemcpyHostToDevice);
+    }
+    Compute_correct<float><<<numBlocks,threadsPerBlock>>>(d_pageRank_nxt_temp1,d_pageRank_nxt_temp2,V,devicecount);
+    for(int i=0;i<devicecount;i++){
+      cudaMemcpy(h_pageRank_nxt[i],d_pageRank_nxt_temp1+i*(V+1),(V+1)*sizeof(float),cudaMemcpyDeviceToHost);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
+      cudaMemcpy(d_pageRank_nxt[i],h_pageRank_nxt[i],(V+1)*sizeof(float),cudaMemcpyHostToDevice);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
+      cudaDeviceSynchronize();
+    }
     cudaMemcpy(d_pageRank, d_pageRank_nxt, sizeof(float)*V, cudaMemcpyDeviceToDevice);
     iterCount++;
   }while((diff > beta) && (iterCount < maxIter));

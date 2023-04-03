@@ -119,7 +119,6 @@ function vHong(Graph g) {
     forall(src in g.nodes().filter(scc == -1)) {
         if(src.visitFw == False || src.visitBw == False) {
             // main loop point
-            fpoint5 = False;
             int ext = 0;
             if(src.visitFw == False && src.visitBw == True) {ext = 1;}
             if(src.visitFw == False && src.visitBw == False) {ext = 2;}
