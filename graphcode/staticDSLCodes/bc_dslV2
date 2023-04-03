@@ -14,7 +14,7 @@ function Compute_BC ( Graph g,propNode <float> BC,SetN<g> sourceSet)
     {
      for(w in g.neighbors(v))
       { 
-     w.sigma=w.sigma+v.sigma;
+         w.sigma+=v.sigma;
       }
     } 
 

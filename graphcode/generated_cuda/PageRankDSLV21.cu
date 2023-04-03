@@ -1,7 +1,8 @@
 // FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
-#include "sssp_dslV2.h"
+#include "PageRankDSLV21.h"
 
-void Compute_SSSP(graph& g,int* dist,int src)
+void Compute_PR(graph& g,float beta,float delta,int maxIter,
+  float* pageRank)
 
 {
   // CSR BEGIN
@@ -77,45 +78,44 @@ void Compute_SSSP(graph& g,int* dist,int src)
 
 
   //DECLAR DEVICE AND HOST vars in params
-  int* d_dist;
-  cudaMalloc(&d_dist, sizeof(int)*(V));
+  float* d_pageRank;
+  cudaMalloc(&d_pageRank, sizeof(float)*(V));
 
 
   //BEGIN DSL PARSING 
-  bool* d_modified;
-  cudaMalloc(&d_modified, sizeof(bool)*(V));
+  float* d_pageRank_nxt;
+  cudaMalloc(&d_pageRank_nxt, sizeof(float)*(V));
 
-  initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_dist,(int)INT_MAX);
+  float num_nodes = (float)g.num_nodes( ); // asst in .cu
 
-  initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_modified,(bool)false);
+  initKernel<float> <<<numBlocks,threadsPerBlock>>>(V,d_pageRank,(float)1 / num_nodes);
 
-  initIndex<bool><<<1,1>>>(V,d_modified,src,(bool)true); //InitIndexDevice
-  initIndex<int><<<1,1>>>(V,d_dist,src,(int)0); //InitIndexDevice
-  bool finished = false; // asst in .cu
+  int iterCount = 0; // asst in .cu
 
-  // FIXED POINT variables
-  //BEGIN FIXED POINT
-  initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-  int k=0; // #fixpt-Iterations
-  while(!finished) {
+  float diff; // asst in .cu
 
-    finished = true;
-    cudaMemcpyToSymbol(::finished, &finished, sizeof(bool), 0, cudaMemcpyHostToDevice);
-    Compute_SSSP_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_modified,d_dist);
+  cudaMemcpyToSymbol(::delta, &delta, sizeof(float), 0, cudaMemcpyHostToDevice);
+  cudaMemcpyToSymbol(::num_nodes, &num_nodes, sizeof(float), 0, cudaMemcpyHostToDevice);
+  do{
+    diff = 0.000000;
+    cudaMemcpyToSymbol(::diff, &diff, sizeof(float), 0, cudaMemcpyHostToDevice);
+    Compute_PR_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_pageRank,d_pageRank_nxt);
     cudaDeviceSynchronize();
+    cudaMemcpyFromSymbol(&diff, ::diff, sizeof(float), 0, cudaMemcpyDeviceToHost);
 
 
 
+    ; // asst in .cu
 
-    cudaMemcpyFromSymbol(&finished, ::finished, sizeof(bool), 0, cudaMemcpyDeviceToHost);
-    cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
-    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-    k++;
-  } // END FIXED POINT
+    ; // asst in .cu
 
+    cudaMemcpy(d_pageRank, d_pageRank_nxt, sizeof(float)*V, cudaMemcpyDeviceToDevice);
+    iterCount++;
+
+  }while((diff > beta) && (iterCount < maxIter));
 
   //cudaFree up!! all propVars in this BLOCK!
-  cudaFree(d_modified);
+  cudaFree(d_pageRank_nxt);
 
   //TIMER STOP
   cudaEventRecord(stop,0);
@@ -123,5 +123,5 @@ void Compute_SSSP(graph& g,int* dist,int src)
   cudaEventElapsedTime(&milliseconds, start, stop);
   printf("GPU Time: %.6f ms\n", milliseconds);
 
-  cudaMemcpy(    dist,   d_dist, sizeof(int)*(V), cudaMemcpyDeviceToHost);
+  cudaMemcpy(pageRank, d_pageRank, sizeof(float)*(V), cudaMemcpyDeviceToHost);
 } //end FUN

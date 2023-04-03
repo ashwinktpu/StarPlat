@@ -6,8 +6,6 @@ function Compute_PR(Graph g,float beta,float delta,int maxIter,propNode<float> p
  int iterCount=0;
  
  float diff;
- int x;
- int y;
  do
   {
     diff=0.0;
