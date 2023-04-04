@@ -421,7 +421,8 @@ namespace spsycl
 
             main.NewLine();
 
-            main.pushstr_newL("// TODO: TIMER START");
+            main.pushstr_newL("// TIMER START");
+            generateStartTimer();
         }
     }
 
@@ -2043,6 +2044,16 @@ namespace spsycl
         else
             decFuncCount++;
     }
+    void dsl_cpp_generator::generateStopTimer()
+    {
+        main.pushstr_newL("std::chrono::steady_clock::time_point toc = std::chrono::steady_clock::now();");
+        main.pushstr_newL("std::cout<<\"Time required: \"<<std::chrono::duration_cast<std::chrono::microseconds>(toc - tic).count()<<\"[µs]\"<<std::endl;");
+    }
+
+    void dsl_cpp_generator::generateStartTimer()
+    {
+        main.pushstr_newL("std::chrono::steady_clock::time_point tic = std::chrono::steady_clock::now();");
+    }
 
     void dsl_cpp_generator::generateFunc(ASTNode *proc)
     {
@@ -2063,6 +2074,11 @@ namespace spsycl
         main.pushstr_newL("//BEGIN DSL PARSING ");
 
         generateBlock(func->getBlockStatement(), false);
+
+        // Assuming one function!
+        main.pushstr_newL("//TIMER STOP");
+        generateStopTimer();
+        main.NewLine();
 
         generateCudaMemCpyParams(func->getParamList());
         //~ sprintf(strBuffer, "cudaMemcpy(%s,d_%s , sizeof(%s) * (V), cudaMemcpyDeviceToHost);", outVarName, outVarName, outVarType);

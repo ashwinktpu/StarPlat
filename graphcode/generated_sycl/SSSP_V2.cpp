@@ -83,7 +83,8 @@ void Compute_SSSP(graph &g, int *dist, int src)
   int NUM_THREADS = 1048576;
   int stride = NUM_THREADS;
 
-  // TODO: TIMER START
+  // TIMER START
+  std::chrono::steady_clock::time_point tic = std::chrono::steady_clock::now();
 
   // DECLAR DEVICE AND HOST vars in params
   int *d_dist;
@@ -182,20 +183,24 @@ for (; i < V; i += stride) d_modified_next[i] = false; }); })
   // cudaFree up!! all propVars in this BLOCK!
   free(d_modified, Q);
 
+  // TIMER STOP
+  std::chrono::steady_clock::time_point toc = std::chrono::steady_clock::now();
+  std::cout << "Time required: " << std::chrono::duration_cast<std::chrono::microseconds>(toc - tic).count() << "[µs]" << std::endl;
+
   Q.submit([&](handler &h)
            { h.memcpy(dist, d_dist, sizeof(int) * (V)); })
       .wait();
   for (int i = 0; i < V; i++)
     std::cout << i << " " << dist[i] << std::endl;
-  std::cout << "Number of rounds required for convergence: " << k << std::endl;
+  // std::cout << "Number of rounds required for convergence: " << k << std::endl;
 
 } // end FUN
 
 int main(int argc, char **argv)
 {
   graph G1(argv[1]);
-  G1.parseGraph();
-  int src = 0;
+  G1.parseGraph(true);
+  int src = atoi(argv[2]);
   int *dist;
   dist = (int *)malloc(G1.num_nodes() * sizeof(int));
   Compute_SSSP(G1, dist, src);
