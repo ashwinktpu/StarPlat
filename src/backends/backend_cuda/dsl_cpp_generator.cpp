@@ -31,7 +31,7 @@ void dsl_cpp_generator::generateInitkernelStr(const char* inVarType, const char*
   main.pushstr_newL(strBuffer);
 }
 void dsl_cpp_generator::generateInitkernel1(
-    assignment* assign, bool isMainFile) {  // const char* typ,
+    assignment* assign, bool isMainFile, bool isPropEdge = false) {  // const char* typ,
   //~ initKernel<double> <<<numBlocks,numThreads>>>(V,d_BC, 0.0);
   char strBuffer[1024];
 
@@ -42,7 +42,9 @@ void dsl_cpp_generator::generateInitkernel1(
       convertToCppType(inId->getSymbolInfo()->getType()->getInnerTargetType());
   const char* inVarName = inId->getIdentifier();
 
-  sprintf(strBuffer, "initKernel<%s> <<<numBlocks,threadsPerBlock>>>(V,d_%s,(%s)",
+  if(isPropEdge) sprintf(strBuffer, "initKernel<%s> <<<numBlocks_Edge,threadsPerBlock>>>(E,d_%s,(%s)",
+          inVarType, inVarName, inVarType);
+  else sprintf(strBuffer, "initKernel<%s> <<<numBlocks,threadsPerBlock>>>(V,d_%s,(%s)",
           inVarType, inVarName, inVarType);
   main.pushString(strBuffer);
 
@@ -62,9 +64,10 @@ void dsl_cpp_generator::generateLaunchConfig(const char* name) {
   char strBuffer[1024];
   main.NewLine();
   const unsigned threadsPerBlock = 512;
-  const char* totalThreads = (strcmp(name, "nodes") == 0) ? "V" : "E";
   sprintf(strBuffer, "const unsigned threadsPerBlock = %u;", threadsPerBlock);
   main.pushstr_newL(strBuffer);
+  
+  const char* totalThreads = (strcmp(name, "nodes") == 0) ? "V" : "E";
   sprintf(strBuffer, "unsigned numThreads   = (%s < threadsPerBlock)? %u: %s;", totalThreads, threadsPerBlock, totalThreads);
   main.pushstr_newL(strBuffer);
   sprintf(strBuffer,
@@ -72,6 +75,13 @@ void dsl_cpp_generator::generateLaunchConfig(const char* name) {
           "(%s+threadsPerBlock-1)/threadsPerBlock;",
           totalThreads);
   main.pushstr_newL(strBuffer);
+  
+  const char* totalThreads_Edge = "E";
+  sprintf(strBuffer,
+          "unsigned numBlocks_Edge    = "
+          "(%s+threadsPerBlock-1)/threadsPerBlock;", totalThreads_Edge);
+  main.pushstr_newL(strBuffer);
+  
   main.NewLine();
   // main.pushstr_newL("}");
 }
@@ -1134,6 +1144,20 @@ void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt,
       }
     }
   }
+  
+  string IDCoded1("attachEdgeProperty");
+  int x1 = methodID.compare(IDCoded1);
+  
+  if(x1 == 0){
+    list<argument*> argList = procedure->getArgList();
+    list<argument*>::iterator itr;
+    
+    for (itr = argList.begin(); itr != argList.end(); itr++) {
+      assignment* assign = (*itr)->getAssignExpr();
+      bool isPropEdge = true;
+      generateInitkernel1(assign, isMainFile, isPropEdge);
+    }
+  }
   /*
    if(x==0)
        {
@@ -1362,33 +1386,31 @@ void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll, bool isMainF
       if (allGraphIteration(iteratorMethodId->getIdentifier()))
       {
       // char* graphId=sourceGraph->getIdentifier();
-      // char* methodId=iteratorMethodId->getIdentifier();
-      // string s(methodId);
-      // if(s.compare("nodes")==0)
-      //{
-      // cout<<"INSIDE NODES VALUE"<<"\n";
-      // sprintf(strBuffer,"for (%s %s = 0; %s < %s.%s(); %s ++)
-      // ","int",iterator->getIdentifier(),iterator->getIdentifier(),graphId,"num_nodes",iterator->getIdentifier());
-      //}
-      // else
-      //;
-      // sprintf(strBuffer,"for (%s %s = 0; %s < %s.%s(); %s ++)
-      // ","int",iterator->getIdentifier(),iterator->getIdentifier(),graphId,"num_edges",iterator->getIdentifier());
-
-      // main.pushstr_newL(strBuffer);
-
+      char* methodId=iteratorMethodId->getIdentifier();
+      string s(methodId);
+      if(s.compare("nodes")==0)
+      {
+        sprintf(strBuffer,"for (%s %s = 0; %s < %s; %s++) {", "int",iterator->getIdentifier(),iterator->getIdentifier(),"V", iterator->getIdentifier());
+        targetFile.pushstr_newL(strBuffer);
+      }
+      else if (s.compare("edges") == 0)
+      {
+        sprintf(strBuffer, "for (%s %s = 0; %s < %s; %s++) {", "int", iterator->getIdentifier(), iterator->getIdentifier(), "E", iterator->getIdentifier());
+        targetFile.pushstr_newL(strBuffer);
+      }
     } else if (neighbourIteration(iteratorMethodId->getIdentifier())) {
       //~ // THIS SHOULD NOT BE EXECUTING FOR SIMPLE FOR LOOP BUT IT IS SO .
       //~ // COMMENTED OUT FOR NOW.
       //~ char* graphId=sourceGraph->getIdentifier();
       char* methodId = iteratorMethodId->getIdentifier();
       string s(methodId);
-      if (s.compare("neighbors") == 0) {
-        list<argument*> argList = extractElemFunc->getArgList();
-        assert(argList.size() == 1);
-        //~ Identifier* nodeNbr=argList.front()->getExpr()->getId();
+      if(s.compare("neighbors")==0)
+      {
+        list<argument*>  argList=extractElemFunc->getArgList();
+        assert(argList.size()==1);
+        Identifier* nodeNbr=argList.front()->getExpr()->getId();
         //~ sprintf(strBuffer,"for (int edge = d_meta[v]; %s < %s[%s+1]; %s++) { // ","int","edge","d_meta","v","edge","d_meta","v","edge");
-        sprintf(strBuffer, "for (%s %s = %s[%s]; %s < %s[%s+1]; %s++) { // FOR NBR ITR ", "int", "edge", "d_meta", mainloopvar, "edge", "d_meta", mainloopvar, "edge");
+        sprintf(strBuffer,"for (%s %s = %s[%s]; %s < %s[%s+1]; %s++) { // FOR NBR ITR ","int","edge","d_meta",nodeNbr->getIdentifier(),"edge","d_meta",nodeNbr->getIdentifier(),"edge");
         targetFile.pushstr_newL(strBuffer);
         //~ targetFile.pushString("{");
         sprintf(strBuffer, "%s %s = %s[%s];", "int", iterator->getIdentifier(), "d_data", "edge");  //needs to move the addition of
@@ -1582,17 +1604,22 @@ void dsl_cpp_generator::generateParamList(list<formalParam*> paramList, dslCodeP
   }
 }
 
-void dsl_cpp_generator ::addCudaKernel(forallStmt* forAll) {
-  const char *loopVar = forAll->getIterator()->getIdentifier();
+int cnt_kernels = 1;
+void dsl_cpp_generator :: addCudaKernel(forallStmt* forAll)
+{
+  Identifier* iterator = forAll->getIterator();
+  const char* loopVar = iterator->getIdentifier();
   char strBuffer[1024];
 
   //~ Function* currentFunc = getCurrentFunc();
   usedVariables usedVars = getVarsForAll(forAll);
   list<Identifier*> vars = usedVars.getVariables();
 
-  header.pushString("__global__ void ");
-  header.pushString(getCurrentFunc()->getIdentifier()->getIdentifier());
-  header.pushString("_kernel");
+   header.pushString("__global__ void ");
+   header.pushString(getCurrentFunc()->getIdentifier()->getIdentifier());
+   header.pushString("_kernel_");
+   header.pushString(to_string(cnt_kernels).c_str());
+  cnt_kernels++;
 
   header.pushString("(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next");
   /*if(currentFunc->getParamList().size()!=0)
@@ -1608,15 +1635,31 @@ void dsl_cpp_generator ::addCudaKernel(forallStmt* forAll) {
       header.pushString(/*createParamName(*/ strBuffer);
     }
   }
+  
+  // header.pushString(",bool *d_isMSTEdge"); // TODO: Remove isMSTEdge
+  proc_callExpr *extractElemFunc = forAll->getExtractElementFunc();
+  Identifier *iteratorMethodId = extractElemFunc->getMethodId();
+  char *methodId = iteratorMethodId->getIdentifier();
+  string s(methodId);
 
   header.pushstr_newL("){ // BEGIN KER FUN via ADDKERNEL");
+  if(s.compare("nodes")==0){
+    sprintf(strBuffer, "unsigned %s = blockIdx.x * blockDim.x + threadIdx.x;", loopVar);
+    header.pushstr_newL("float num_nodes  = V;");
+    header.pushstr_newL(strBuffer);
 
-  sprintf(strBuffer, "unsigned %s = blockIdx.x * blockDim.x + threadIdx.x;", loopVar);
-  header.pushstr_newL("float num_nodes  = V;");
-  header.pushstr_newL(strBuffer);
+    sprintf(strBuffer, "if(%s >= V) return;", loopVar);
+    header.pushstr_newL(strBuffer);
+  }
+  else if(s.compare("edges")==0){
+    sprintf(strBuffer, "unsigned %s = blockIdx.x * blockDim.x + threadIdx.x;", loopVar);
+    header.pushstr_newL("float num_edges  = E;");
+    header.pushstr_newL(strBuffer);
 
-  sprintf(strBuffer, "if(%s >= V) return;", loopVar);
-  header.pushstr_newL(strBuffer);
+    sprintf(strBuffer, "if(%s >= E) return;", loopVar);
+    header.pushstr_newL(strBuffer);
+  }
+  
 
   if (forAll->hasFilterExpr()) {
     blockStatement* changedBody = includeIfToBlock(forAll);
@@ -1739,11 +1782,23 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
       }
     }
     /*memcpy to symbol*/
-
+    
+      proc_callExpr *extractElemFunc = forAll->getExtractElementFunc();
+      Identifier *iteratorMethodId = extractElemFunc->getMethodId();
+      char *methodId = iteratorMethodId->getIdentifier();
+      string s(methodId);
+    
     main.pushString(getCurrentFunc()->getIdentifier()->getIdentifier());
-    main.pushString("_kernel");
+    main.pushString("_kernel_");
+    main.pushString(to_string(cnt_kernels).c_str());
     main.pushString("<<<");
-    main.pushString("numBlocks, threadsPerBlock");
+    if(s.compare("nodes")==0){
+      main.pushString("numBlocks, threadsPerBlock");
+    }
+    else if(s.compare("edges")==0){
+      main.pushString("numBlocks_Edge, threadsPerBlock");
+    }
+    
     main.pushString(">>>");
     main.push('(');
     main.pushString("V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next");
@@ -1941,10 +1996,11 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
         //~ targetFile.pushstr_newL("}");
         //~ targetFile.pushstr_newL("}");
 
-      } else {
-        printf("FOR NORML");
-        generateStatement(forAll->getBody(), false);
-      }
+    } else {
+      printf("FOR NORML");
+      generateStatement(forAll->getBody(), false);
+      targetFile.pushstr_newL("}");
+    }
 
       if (forAll->isForall() && forAll->hasFilterExpr()) {
         Expression* filterExpr = forAll->getfilterExpr();
@@ -2784,7 +2840,7 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,
         sprintf(strBuffer, "%s = %s;", modifiedVarPrev,"tempModPtr");
         targetFile.pushstr_newL(strBuffer);*/
 
-        targetFile.pushstr_newL("k++;");
+        // targetFile.pushstr_newL("k++;");
 
         Expression* initializer = dependentId->getSymbolInfo()->getId()->get_assignedExpr();
         assert(initializer->isBooleanLiteral());

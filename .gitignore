@@ -11,6 +11,11 @@ src/bin/
 .history/
 .history/*
 ../.history/*
+<<<<<<< HEAD
 StarPlat
 StarPlat.exe
 
+=======
+.vscode/settings.json
+*.DS_Store
+>>>>>>> 1306024215535340fc6ecf9dfc54c9de2d40b1a3

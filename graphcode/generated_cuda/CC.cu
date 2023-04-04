@@ -1,7 +1,7 @@
 // FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
-#include "sssp_dslV2.h"
+#include "CC.h"
 
-void Compute_SSSP(graph& g,int* dist,int src)
+void Compute_CC(graph& g,float* CC)
 
 {
   // CSR BEGIN
@@ -78,49 +78,70 @@ void Compute_SSSP(graph& g,int* dist,int src)
 
 
   //DECLAR DEVICE AND HOST vars in params
-  int* d_dist;
-  cudaMalloc(&d_dist, sizeof(int)*(V));
+  float* d_CC;
+  cudaMalloc(&d_CC, sizeof(float)*(V));
 
 
   //BEGIN DSL PARSING 
-  bool* d_modified;
-  cudaMalloc(&d_modified, sizeof(bool)*(V));
+  initKernel<float> <<<numBlocks,threadsPerBlock>>>(V,d_CC,(float)0);
 
-  initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_dist,(int)INT_MAX);
+  int V = g.num_nodes( ); // asst in .cu
 
-  initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_modified,(bool)false);
+  int i = 0; // asst in .cu
 
-  initIndex<bool><<<1,1>>>(V,d_modified,src,(bool)true); //InitIndexDevice
-  initIndex<int><<<1,1>>>(V,d_dist,src,(int)0); //InitIndexDevice
-  bool finished = false; // asst in .cu
+  do{
+    int* d_dist;
+    cudaMalloc(&d_dist, sizeof(int)*(V));
 
-  // FIXED POINT variables
-  //BEGIN FIXED POINT
-  initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-  int k=0; // #fixpt-Iterations
-  while(!finished) {
+    bool* d_modified;
+    cudaMalloc(&d_modified, sizeof(bool)*(V));
 
-    finished = true;
-    cudaMemcpyToSymbol(::finished, &finished, sizeof(bool), 0, cudaMemcpyHostToDevice);
-    Compute_SSSP_kernel_1<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_modified,d_dist);
+    initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_dist,(int)INT_MAX);
+
+    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_modified,(bool)false);
+
+    d_modified[src] = true;
+    d_dist[src] = 0;
+    bool finished = false; // asst in .cu
+
+    // FIXED POINT variables
+    //BEGIN FIXED POINT
+    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
+    int k=0; // #fixpt-Iterations
+    while(!finished) {
+
+      finished = true;
+      cudaMemcpyToSymbol(::finished, &finished, sizeof(bool), 0, cudaMemcpyHostToDevice);
+      Compute_CC_kernel_1<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_modified,d_dist);
+      cudaDeviceSynchronize();
+
+
+
+
+      cudaMemcpyFromSymbol(&finished, ::finished, sizeof(bool), 0, cudaMemcpyDeviceToHost);
+      cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
+      initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
+    } // END FIXED POINT
+
+    Compute_CC_kernel_2<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_dist,d_CC);
     cudaDeviceSynchronize();
 
 
 
-
-    cudaMemcpyFromSymbol(&finished, ::finished, sizeof(bool), 0, cudaMemcpyDeviceToHost);
-    cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
-    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-  } // END FIXED POINT
-
-  Compute_SSSP_kernel_2<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_dist);
-  cudaDeviceSynchronize();
+    cudaMemcpyToSymbol(::i, &i, sizeof(int), 0, cudaMemcpyHostToDevice);
+    Compute_CC_kernel_3<<<numBlocks_Edge, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next);
+    cudaDeviceSynchronize();
+    cudaMemcpyFromSymbol(&i, ::i, sizeof(int), 0, cudaMemcpyDeviceToHost);
 
 
 
+    i = i + 1;
 
-  //cudaFree up!! all propVars in this BLOCK!
-  cudaFree(d_modified);
+    //cudaFree up!! all propVars in this BLOCK!
+    cudaFree(d_modified);
+    cudaFree(d_dist);
+
+  }while(i < V);
 
   //TIMER STOP
   cudaEventRecord(stop,0);
@@ -128,5 +149,5 @@ void Compute_SSSP(graph& g,int* dist,int src)
   cudaEventElapsedTime(&milliseconds, start, stop);
   printf("GPU Time: %.6f ms\n", milliseconds);
 
-  cudaMemcpy(    dist,   d_dist, sizeof(int)*(V), cudaMemcpyDeviceToHost);
+  cudaMemcpy(      CC,     d_CC, sizeof(float)*(V), cudaMemcpyDeviceToHost);
 } //end FUN

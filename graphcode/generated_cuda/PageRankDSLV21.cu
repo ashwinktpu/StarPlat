@@ -67,6 +67,7 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
   const unsigned threadsPerBlock = 512;
   unsigned numThreads   = (V < threadsPerBlock)? 512: V;
   unsigned numBlocks    = (V+threadsPerBlock-1)/threadsPerBlock;
+  unsigned numBlocks_Edge    = (E+threadsPerBlock-1)/threadsPerBlock;
 
 
   // TIMER START
@@ -99,7 +100,7 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
   do{
     diff = 0.000000;
     cudaMemcpyToSymbol(::diff, &diff, sizeof(float), 0, cudaMemcpyHostToDevice);
-    Compute_PR_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_pageRank,d_pageRank_nxt);
+    Compute_PR_kernel_1<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_pageRank,d_pageRank_nxt);
     cudaDeviceSynchronize();
     cudaMemcpyFromSymbol(&diff, ::diff, sizeof(float), 0, cudaMemcpyDeviceToHost);
 

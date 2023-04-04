@@ -43,6 +43,7 @@ class graph
                        required for iteration over out neighbours */
   int32_t* srcList;  /*stores source corresponding to edgeNo.
                        required for iteration over in neighbours */
+<<<<<<< HEAD
    std::vector<edge> graph_edge; 
    int32_t* diff_indexofNodes;
    int32_t* diff_edgeList; 
@@ -51,6 +52,12 @@ class graph
    int32_t* perNodeCSRSpace;
    int32_t* perNodeRevCSRSpace;
    int32_t* edgeMap;  
+=======
+                       
+  // TODO:
+  // srcRev, [dstRev], wtRev
+  // src, [dst], wt
+>>>>>>> 1306024215535340fc6ecf9dfc54c9de2d40b1a3
 
   graph(char* file)
   {
@@ -334,6 +341,7 @@ class graph
        
     }
 
+<<<<<<< HEAD
   std::vector<update> getDeletesFromBatch(int updateIndex, int batchSize, std::vector<update> updateVec)
   {
     std::vector<update> deleteVec = getDeletions(updateIndex, batchSize, updateVec);
@@ -351,28 +359,15 @@ class graph
     
 
    void parseEdges()
+=======
+  void parseGraph(bool isWeighted = false)
+>>>>>>> 1306024215535340fc6ecf9dfc54c9de2d40b1a3
   {
-    //printf("OH HELLOHIHod \n");
-     std::ifstream infile;
-     infile.open(filePath);
-     std::string line;
+    std::ifstream infile;
+    infile.open(filePath);
+    std::string line;
 
-
-
-
-
-     while (std::getline(infile,line))
-     {
-
-      // std::stringstream(line);
-
-       if (line.length()==0||line[0] < '0' || line[0] >'9') {
-          continue;
-
-	    	}
-
-        std::stringstream ss(line);
-
+<<<<<<< HEAD
         edgesTotal++;
         edgesTotal++;
         //edgesTotal++; //TO BE REMOVED 
@@ -412,6 +407,30 @@ class graph
            //  ss>>weightVal; //for edgelists having weight too.      
            
      }
+=======
+    while(std::getline(infile,line))
+    {
+      if(line.length()==0 || line[0] < '0' || line[0] >'9') continue;
+
+      std::stringstream ss(line);
+
+      edgesTotal++;
+      
+      int32_t source, destination, weightVal = 1;
+      ss >> source >> destination;
+      if(isWeighted) ss >> weightVal;
+      
+      if(source>nodesTotal) nodesTotal=source;
+      if(destination>nodesTotal) nodesTotal=destination;
+
+      edge e;
+      e.source=source;
+      e.destination=destination;
+      e.weight=weightVal;
+
+      edges[source].push_back(e);
+    }
+>>>>>>> 1306024215535340fc6ecf9dfc54c9de2d40b1a3
 
      infile.close();
     
