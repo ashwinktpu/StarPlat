@@ -315,7 +315,7 @@ public:
     return addVec;
   }
 
-  void parseEdges()
+  void parseEdges(bool isWeighted = false)
   {
     // printf("OH HELLOHIHod \n");
     std::ifstream infile;
@@ -344,7 +344,7 @@ public:
 
       int32_t source;
       int32_t destination;
-      int32_t weightVal;
+      int32_t weightVal = 1;
 
       ss >> source;
       if (source > nodesTotal)
@@ -354,23 +354,24 @@ public:
       if (destination > nodesTotal)
         nodesTotal = destination;
 
+      if (isWeighted)
+        ss >> weightVal; // for edgelists having weight too.
+
       e.source = source;
       e.destination = destination;
-      e.weight = 1;
+      e.weight = weightVal;
 
       edges[source].push_back(e);
       graph_edge.push_back(e);
-
-      ss >> weightVal; // for edgelists having weight too.
     }
 
     infile.close();
   }
 
-  void parseGraph()
+  void parseGraph(bool isWeighted = false)
   {
 
-    parseEdges();
+    parseEdges(isWeighted);
 
     printf("Here half\n");
 // printf("HELLO AFTER THIS %d \n",nodesTotal);
