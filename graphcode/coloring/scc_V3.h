@@ -1,12 +1,12 @@
 // FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
-#ifndef GENCPP_SCC_V2_H
-#define GENCPP_SCC_V2_H
+#ifndef GENCPP_SCC_V3_H
+#define GENCPP_SCC_V3_H
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
 #include <cuda.h>
-#include "../graph.hpp"
-#include "../libcuda.cuh"
+#include "graph.hpp"
+#include "libcuda.cuh"
 #include <cooperative_groups.h>
 
 void vHong(graph& g);
