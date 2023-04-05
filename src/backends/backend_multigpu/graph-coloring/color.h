@@ -15,7 +15,13 @@ void colorGraph(graph& g);
 
 __device__ int fpoint1;
 
-__global__ void compute_colors(int V, int E, int* d_meta, int* d_data, int* d_src,int *d_rev_meta,unsigned int* d_color,bool* d_modified,bool* d_modified_next){
+
+__global__ void initialize(int V,unsigned long* d_color,unsigned int* d_color1,unsigned int* d_color2){
+    unsigned v = blockIdx.x*blockDim.x+threadIdx.x;
+    if(v>=V) return;
+    d_color[v]=(unsigned long)d_color1[v]*(unsigned long)d_color2[v];
+}
+__global__ void compute_colors(int V, int E, int* d_meta, int* d_data, int* d_src,int *d_rev_meta,unsigned long* d_color,bool* d_modified,bool* d_modified_next){
     unsigned v = blockIdx.x*blockDim.x+threadIdx.x;
     if(v>=V) return;
     if(d_modified[v]==false){
@@ -25,7 +31,10 @@ __global__ void compute_colors(int V, int E, int* d_meta, int* d_data, int* d_sr
         for(int edge = d_meta[v];edge<d_meta[v+1];edge++){
             int nbr = d_data[edge];
             total+=1;
-            if(d_modified[nbr]){
+            if(nbr==v){
+                cnt+=1;
+            }
+            else if(d_modified[nbr]){
                 cnt+=1;
             }
             else if(d_color[v]>d_color[nbr]){
@@ -35,7 +44,10 @@ __global__ void compute_colors(int V, int E, int* d_meta, int* d_data, int* d_sr
         for(int edge = d_rev_meta[v];edge<d_rev_meta[v+1];edge++){
             int nbr = d_src[edge];
             total+=1;
-            if(d_modified[nbr]){
+            if(nbr==v){
+                cnt+=1;
+            }
+            else if(d_modified[nbr]){
                 cnt+=1;
             }
             else if(d_color[v]>d_color[nbr]){

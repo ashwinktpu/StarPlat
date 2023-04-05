@@ -61,6 +61,15 @@ void colorGraph(graph& g){
     const unsigned threadsPerBlock = 512;
     unsigned numBlocks    = (V+threadsPerBlock-1)/threadsPerBlock;
     unsigned numThreads   = (V < threadsPerBlock)? V: 512;
+    int max_deg = 0;
+    int min_deg = INT_MAX;
+    for(int i=0;i<V;i+=1){
+        int indeg = h_meta[i+1]-h_meta[i];
+        int outdeg = h_rev_meta[i+1]-h_rev_meta[i];
+        max_deg = max(max_deg,indeg+outdeg);
+        min_deg = min(min_deg,indeg+outdeg);
+    }
+    printf("max deg %d  min deg %d\n",max_deg,min_deg);
 
     // TIMER START
     cudaEvent_t start, stop;
@@ -69,33 +78,67 @@ void colorGraph(graph& g){
     float milliseconds = 0;
     cudaEventRecord(start,0);
 
-    unsigned int* d_color;unsigned int* h_color;
-    cudaMalloc(&d_color,sizeof(unsigned int)*(V+1));
+    unsigned long* d_color;
+    unsigned int* h_color;
+    unsigned int* d_color1;
+    unsigned int* d_color2;
+    cudaMalloc(&d_color,sizeof(unsigned long)*(V+1));
+    cudaMalloc(&d_color1,sizeof(unsigned int)*(V+1));
+    cudaMalloc(&d_color2,sizeof(unsigned int)*(V+1));
     h_color = (unsigned int*)malloc(sizeof(unsigned int)*(V+1));
+    bool* h_modified;
+    h_modified=(bool*)malloc(sizeof(bool)*(V+1));
     bool* d_modified;
     cudaMalloc(&d_modified,sizeof(bool)*(V+1));
     bool* d_modified_next;
     cudaMalloc(&d_modified_next,sizeof(bool)*(V+1));
 
-    initKernel<unsigned int> <<<numBlocks,threadsPerBlock>>>(V,d_color,(unsigned int)0);
+    initKernel<unsigned long> <<<numBlocks,threadsPerBlock>>>(V,d_color,(unsigned long)0);
     initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_modified,(bool)false);
-    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
+    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next,(bool)false);
+    cudaDeviceSynchronize();
     int fpoint1 = 0;
     int iter = 0;
+    // for(int i=0;i<=V;i+=1){
+    //     int x = rand();int y= rand();
+    //     h_color[i]=(int)x*(int)y;
+    // }
+    // cudaMemcpy(d_color,h_color,sizeof(int)*(V+1),cudaMemcpyHostToDevice); 
+    
     while(fpoint1<V){
-        cudaMemcpyToSymbol(::fpoint1,&fpoint1,sizeof(int),0,cudaMemcpyHostToDevice);
         curandGenerator_t gen;
+        // printf("===========================\n");
         curandCreateGenerator(&gen,CURAND_RNG_PSEUDO_PHILOX4_32_10);
         curandSetPseudoRandomGeneratorSeed(gen,rand());       
-        curandGenerate(gen,d_color,(V+1));
+        curandGenerate(gen,d_color1,(V+1));
+        // cudaMemcpy(h_color,d_color1,(V+1)*sizeof(unsigned int),cudaMemcpyDeviceToHost);
+        // for(int i=0;i<=V;i++){
+        //     printf("%u ",h_color[i]);
+        // }
+        // printf("\n");
+        curandSetPseudoRandomGeneratorSeed(gen,rand());
+        curandGenerate(gen,d_color2,(V+1));
+        // cudaMemcpy(h_color,d_color2,(V+1)*sizeof(unsigned int),cudaMemcpyDeviceToHost);
+        // for(int i=0;i<=V;i++){
+        //     printf("%u ",h_color[i]);
+        // }
+        // printf("\n");
+        initialize<<<numBlocks,numThreads>>>(V,d_color,d_color1,d_color2);
+        cudaDeviceSynchronize();
         compute_colors<<<numBlocks,numThreads>>>(V,E,d_meta,d_data,d_src,d_rev_meta,d_color,d_modified,d_modified_next);
         cudaDeviceSynchronize();
         cudaMemcpyFromSymbol(&fpoint1,::fpoint1,sizeof(int),0,cudaMemcpyDeviceToHost);
         cudaMemcpy(d_modified,d_modified_next,(V+1)*sizeof(bool),cudaMemcpyDeviceToDevice);
+        cudaMemcpy(h_modified,d_modified,(V+1)*sizeof(bool),cudaMemcpyDeviceToHost);
         iter+=1;
+        // printf("print started\n");
+        // for(int i=0;i<=V;i+=1){
+        //     printf("%d ",h_modified[i]);
+        // }
+        // printf("\n");
         // fpoint1+=1;
         printf("%d\n",fpoint1);
-        curandDestroyGenerator(gen);
+        // printf("===========================\n");
     }
 
     printf("num colors %d\n",iter);

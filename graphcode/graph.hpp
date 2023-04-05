@@ -387,11 +387,11 @@ class graph
         int32_t destination;
         int32_t weightVal = 1;
 
-           ss>>source;source+=1; 
+           ss>>source; 
            if(source>nodesTotal)
               nodesTotal=source;
 
-            ss>>destination;destination+=1;  
+            ss>>destination;
             if(destination>nodesTotal)
                nodesTotal=destination;  
           //ss>>weightVal; //for edgelists having weight too.      

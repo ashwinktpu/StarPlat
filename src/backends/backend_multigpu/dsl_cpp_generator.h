@@ -75,7 +75,7 @@ class dsl_cpp_generator {
   void generateVariableDecl(declaration* decl, bool isMainFile);
   void generateStatement(statement* stmt, bool isMainFile);
   // void generateAssignmentStmt(assignment* assignStmt);
-  void helper(Identifier *iden);
+  void helper(Identifier *iden,Identifier* loopVar);
   void generateAssignmentStmt(assignment* assignStmt, bool isMainFile);
   void generateWhileStmt(whileStmt* whilestmt);
   void generateForAll(forallStmt* forAll, bool isMainFile);
