@@ -83,7 +83,8 @@ void Compute_TC(graph &g)
   int NUM_THREADS = 1048576;
   int stride = NUM_THREADS;
 
-  // TODO: TIMER START
+  // TIMER START
+  std::chrono::steady_clock::time_point tic = std::chrono::steady_clock::now();
 
   // DECLAR DEVICE AND HOST vars in params
 
@@ -129,6 +130,10 @@ void Compute_TC(graph &g)
   Q.submit([&](handler &h)
            { h.memcpy(&triangle_count, d_triangle_count, 1 * sizeof(long)); })
       .wait();
+
+  // TIMER STOP
+  std::chrono::steady_clock::time_point toc = std::chrono::steady_clock::now();
+  std::cout << "Time required: " << std::chrono::duration_cast<std::chrono::microseconds>(toc - tic).count() << "[µs]" << std::endl;
 
   std::cout << "Num Triangles = " << triangle_count << std::endl;
 

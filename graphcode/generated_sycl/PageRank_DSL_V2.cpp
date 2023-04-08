@@ -84,7 +84,8 @@ void Compute_PR(graph &g, float beta, float delta, int maxIter,
   int NUM_THREADS = 1048576;
   int stride = NUM_THREADS;
 
-  // TODO: TIMER START
+  // TIMER START
+  std::chrono::steady_clock::time_point tic = std::chrono::steady_clock::now();
 
   // DECLAR DEVICE AND HOST vars in params
   float *d_pageRank;
@@ -141,7 +142,7 @@ void Compute_PR(graph &g, float beta, float delta, int maxIter,
 
     // Generate reduction statement
     atomic_ref<float, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data(d_diff[0]);
-    atomic_data += val - d_pageRank[v];
+    atomic_data += abs(val - d_pageRank[v]);
     d_pageRank_nxt[v] = val;
   } }); })
         .wait(); // end KER FUNC
@@ -169,6 +170,10 @@ for (; i < V; i += stride) d_pageRank[i] = d_pageRank_nxt[i]; }); })
 
   // cudaFree up!! all propVars in this BLOCK!
   free(d_pageRank_nxt, Q);
+
+  // TIMER STOP
+  std::chrono::steady_clock::time_point toc = std::chrono::steady_clock::now();
+  std::cout << "Time required: " << std::chrono::duration_cast<std::chrono::microseconds>(toc - tic).count() << "[µs]" << std::endl;
 
   Q.submit([&](handler &h)
            { h.memcpy(pageRank, d_pageRank, sizeof(float) * (V)); })
