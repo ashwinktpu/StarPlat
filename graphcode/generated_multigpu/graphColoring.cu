@@ -116,6 +116,26 @@ void colorGraph(graph& g)
   //DECLARE DEVICE AND HOST vars in params
 
   //BEGIN DSL PARSING 
+  int numNodes = g.num_nodes( ); // asst in .cu 
+  int** h_numNodes;
+  h_numNodes = (int**)malloc(sizeof(int*)*(devicecount+1));
+  for(int i=0;i<=devicecount;i+=1){
+    h_numNodes[i] = (int*)malloc(sizeof(int));
+  }
+
+  int** d_numNodes;
+  d_numNodes = (int**)malloc(sizeof(int*)*devicecount);
+  for(int i = 0 ; i < devicecount ; i++){
+    cudaSetDevice(i);
+    cudaMalloc(&d_numNodes[i],sizeof(int));
+    initKernel<int> <<<1,1>>>(1,d_numNodes[i],g.num_nodes( ));
+  }
+  for(int i=0;i<devicecount;i++){
+    cudaSetDevice(i);
+    cudaDeviceSynchronize();
+  }
+
+
   long** h_color;
   h_color = (long**)malloc(sizeof(long*)*(devicecount+1));
   for(int i=0;i<=devicecount;i++){
@@ -127,14 +147,6 @@ void colorGraph(graph& g)
     cudaSetDevice(i);
     cudaMalloc(&d_color[i], sizeof(long)*(V+1));
   }
-
-  long* h_color_temp1 = (long*)malloc((V+1)*(devicecount)*sizeof(long));
-  cudaSetDevice(0);
-  long* d_color_temp1;
-  cudaMalloc(&d_color_temp1,(V+1)*(devicecount)*sizeof(long));
-  long* d_color_temp2;
-  cudaMalloc(&d_color_temp2,(V+1)*(devicecount)*sizeof(long));
-
 
   int** h_color1;
   h_color1 = (int**)malloc(sizeof(int*)*(devicecount+1));
@@ -148,14 +160,6 @@ void colorGraph(graph& g)
     cudaMalloc(&d_color1[i], sizeof(int)*(V+1));
   }
 
-  int* h_color1_temp1 = (int*)malloc((V+1)*(devicecount)*sizeof(int));
-  cudaSetDevice(0);
-  int* d_color1_temp1;
-  cudaMalloc(&d_color1_temp1,(V+1)*(devicecount)*sizeof(int));
-  int* d_color1_temp2;
-  cudaMalloc(&d_color1_temp2,(V+1)*(devicecount)*sizeof(int));
-
-
   int** h_color2;
   h_color2 = (int**)malloc(sizeof(int*)*(devicecount+1));
   for(int i=0;i<=devicecount;i++){
@@ -167,14 +171,6 @@ void colorGraph(graph& g)
     cudaSetDevice(i);
     cudaMalloc(&d_color2[i], sizeof(int)*(V+1));
   }
-
-  int* h_color2_temp1 = (int*)malloc((V+1)*(devicecount)*sizeof(int));
-  cudaSetDevice(0);
-  int* d_color2_temp1;
-  cudaMalloc(&d_color2_temp1,(V+1)*(devicecount)*sizeof(int));
-  int* d_color2_temp2;
-  cudaMalloc(&d_color2_temp2,(V+1)*(devicecount)*sizeof(int));
-
 
   bool** h_modified;
   h_modified = (bool**)malloc(sizeof(bool*)*(devicecount+1));
@@ -188,14 +184,6 @@ void colorGraph(graph& g)
     cudaMalloc(&d_modified[i], sizeof(bool)*(V+1));
   }
 
-  bool* h_modified_temp1 = (bool*)malloc((V+1)*(devicecount)*sizeof(bool));
-  cudaSetDevice(0);
-  bool* d_modified_temp1;
-  cudaMalloc(&d_modified_temp1,(V+1)*(devicecount)*sizeof(bool));
-  bool* d_modified_temp2;
-  cudaMalloc(&d_modified_temp2,(V+1)*(devicecount)*sizeof(bool));
-
-
   bool** h_modified_next;
   h_modified_next = (bool**)malloc(sizeof(bool*)*(devicecount+1));
   for(int i=0;i<=devicecount;i++){
@@ -208,14 +196,58 @@ void colorGraph(graph& g)
     cudaMalloc(&d_modified_next[i], sizeof(bool)*(V+1));
   }
 
-  bool* h_modified_next_temp1 = (bool*)malloc((V+1)*(devicecount)*sizeof(bool));
-  cudaSetDevice(0);
-  bool* d_modified_next_temp1;
-  cudaMalloc(&d_modified_next_temp1,(V+1)*(devicecount)*sizeof(bool));
-  bool* d_modified_next_temp2;
-  cudaMalloc(&d_modified_next_temp2,(V+1)*(devicecount)*sizeof(bool));
+  for(int i=0;i<devicecount;i++)
+  {
+    cudaSetDevice(i);
+    initKernel<long> <<<numBlocks,threadsPerBlock>>>(V,d_color[i],(long)0);
+  }for(int i=0;i<devicecount;i++){
+    cudaSetDevice(i);
+    cudaDeviceSynchronize();
+  }
 
+  for(int i=0;i<devicecount;i++){
+    cudaSetDevice(i);
+    cudaMemcpyAsync(h_color[i],d_color[i],(V+1)*sizeof(long),cudaMemcpyDeviceToHost);
+  }
+  for(int i=0;i<devicecount;i++){
+    cudaSetDevice(i);
+    cudaDeviceSynchronize();
+  }
+  for(int i=0;i<devicecount;i++)
+  {
+    cudaSetDevice(i);
+    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_modified[i],(bool)false);
+  }for(int i=0;i<devicecount;i++){
+    cudaSetDevice(i);
+    cudaDeviceSynchronize();
+  }
 
+  for(int i=0;i<devicecount;i++){
+    cudaSetDevice(i);
+    cudaMemcpyAsync(h_modified[i],d_modified[i],(V+1)*sizeof(bool),cudaMemcpyDeviceToHost);
+  }
+  for(int i=0;i<devicecount;i++){
+    cudaSetDevice(i);
+    cudaDeviceSynchronize();
+  }
+  for(int i=0;i<devicecount;i++)
+  {
+    cudaSetDevice(i);
+    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_modified_next[i],(bool)false);
+  }
+  for(int i=0;i<devicecount;i++){
+    cudaSetDevice(i);
+    cudaDeviceSynchronize();
+  }
+
+  for(int i=0;i<devicecount;i++){
+    cudaSetDevice(i);
+    cudaMemcpyAsync(h_modified_next[i],d_modified_next[i],(V+1)*sizeof(bool),cudaMemcpyDeviceToHost);
+  }
+  for(int i=0;i<devicecount;i++){
+    cudaSetDevice(i);
+    cudaDeviceSynchronize();
+  }
   int fpoint1 = 0; // asst in .cu 
   int** h_fpoint1;
   h_fpoint1 = (int**)malloc(sizeof(int*)*(devicecount+1));
@@ -229,23 +261,9 @@ void colorGraph(graph& g)
     cudaSetDevice(i);
     cudaMalloc(&d_fpoint1[i],sizeof(int));
     initKernel<int> <<<1,1>>>(1,d_fpoint1[i],0);
-    cudaDeviceSynchronize();
   }
-
-
-  int numNodes = g.num_nodes(); // asst in .cu 
-  int** h_numNodes;
-  h_numNodes = (int**)malloc(sizeof(int*)*(devicecount+1));
-  for(int i=0;i<=devicecount;i+=1){
-    h_numNodes[i] = (int*)malloc(sizeof(int));
-  }
-
-  int** d_numNodes;
-  d_numNodes = (int**)malloc(sizeof(int*)*devicecount);
-  for(int i = 0 ; i < devicecount ; i++){
+  for(int i=0;i<devicecount;i++){
     cudaSetDevice(i);
-    cudaMalloc(&d_numNodes[i],sizeof(int));
-    initKernel<int> <<<1,1>>>(1,d_numNodes[i],g.num_nodes( ));
     cudaDeviceSynchronize();
   }
 
@@ -263,6 +281,9 @@ void colorGraph(graph& g)
     cudaSetDevice(i);
     cudaMalloc(&d_iter[i],sizeof(int));
     initKernel<int> <<<1,1>>>(1,d_iter[i],0);
+  }
+  for(int i=0;i<devicecount;i++){
+    cudaSetDevice(i);
     cudaDeviceSynchronize();
   }
 
@@ -272,23 +293,34 @@ void colorGraph(graph& g)
     for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
       //printed here
-
       initKernel<int> <<<1,1>>>(1,d_iter[i],(int)iter + 1);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
-    int x1=rand();
+    int x11=rand();
+    int x12=rand();
     for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
       curandGenerator_t gen;
       curandCreateGenerator(&gen,CURAND_RNG_PSEUDO_PHILOX4_32_10);
-      curandSetPseudoRandomGeneratorSeed(gen,x1);
+      curandSetPseudoRandomGeneratorSeed(gen,x11);
+      curandGenerate(gen,(unsigned int*)d_color1[i],(V+1));
+      curandSetPseudoRandomGeneratorSeed(gen,x12);
+      curandGenerate(gen,(unsigned int*)d_color2[i],(V+1));
     }
-    int x2=rand();
     for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
-      curandGenerator_t gen;
-      curandCreateGenerator(&gen,CURAND_RNG_PSEUDO_PHILOX4_32_10);
-      curandSetPseudoRandomGeneratorSeed(gen,x2);
+      cudaDeviceSynchronize();
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
+      combineRandom<<<numBlocks,numThreads>>>(V,d_color[i],d_color1[i],d_color2[i]);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
+      cudaDeviceSynchronize();
     }
     for(int i=0;i<devicecount;i++)
     {
@@ -307,22 +339,56 @@ void colorGraph(graph& g)
     for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
       cudaMemcpyAsync(h_modified_next[devicecount]+h_vertex_partition[i],d_modified_next[i]+h_vertex_partition[i],sizeof(bool)*(h_vertex_partition[i+1]-h_vertex_partition[i]),cudaMemcpyDeviceToHost);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
     for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
       cudaMemcpyAsync(d_modified_next[i],h_modified_next[devicecount],sizeof(bool)*(V+1),cudaMemcpyHostToDevice);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
     for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
       cudaMemcpyAsync(h_modified_next[i],d_modified_next[i],sizeof(bool)*(V+1),cudaMemcpyDeviceToHost);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
     for(int i=0;i<devicecount;i++){
-      fpoint1 += h_fpoint1[i][0];
+      cudaSetDevice(i);
+      cudaMemcpyAsync(h_fpoint1[i],d_fpoint1[i],sizeof(int),cudaMemcpyDeviceToHost);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
+      cudaDeviceSynchronize();
+    }
+    int fpoint1_=0;
+    for(int i=0;i<devicecount;i++){
+      fpoint1_ += h_fpoint1[i][0];
     } //end of for
-    cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
+    fpoint1=fpoint1_;
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
+      cudaMemcpyAsync(d_modified[i],h_modified_next[devicecount],sizeof(bool)*(V+1),cudaMemcpyHostToDevice);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
+      cudaDeviceSynchronize();
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
+      cudaMemcpyAsync(h_modified[i],d_modified[i],sizeof(bool)*(V+1),cudaMemcpyDeviceToHost);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
+      cudaDeviceSynchronize();
+    }
   }while(fpoint1 < numNodes);
   //TIMER STOP
   cudaEventRecord(stop,0);

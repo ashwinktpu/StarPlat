@@ -207,5 +207,6 @@ static const char* INTALLOCATION = "new int";
 static const char* BOOLALLOCATION = "new bool";
 static const char* FLOATALLOCATION = "new float";
 static const char* DOUBLEALLOCATION = "new double";
+
 }  // namespace spmultigpu
 #endif

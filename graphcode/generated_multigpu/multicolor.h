@@ -25,7 +25,7 @@ __global__ void compute_colors(int start,int end,int V, int E, int* d_meta, int*
     if(v<num_vertices){
         v+=start;
         if(d_modified[v]==false){
-        // printf("hi");
+        printf("hi\n");
             int cnt = 0;
             int total = 0;
             for(int edge = d_meta[v];edge<d_meta[v+1];edge++){
@@ -34,7 +34,7 @@ __global__ void compute_colors(int start,int end,int V, int E, int* d_meta, int*
                 if(nbr==v){
                     cnt+=1;
                 }
-                if(d_modified[nbr]){
+                else if(d_modified[nbr]==true){
                     cnt+=1;
                 }
                 else if(d_color[v]>d_color[nbr]){
@@ -47,7 +47,7 @@ __global__ void compute_colors(int start,int end,int V, int E, int* d_meta, int*
                 if(nbr==v){
                     cnt+=1;
                 }
-                if(d_modified[nbr]){
+                else if(d_modified[nbr]==true){
                     cnt+=1;
                 }
                 else if(d_color[v]>d_color[nbr]){
@@ -56,7 +56,7 @@ __global__ void compute_colors(int start,int end,int V, int E, int* d_meta, int*
             }
             if(cnt==total){
                 d_modified_next[v]=true;
-                atomicAdd(&d_fpoint1[0],1);
+                atomicAdd(&d_fpoint1[0],(int)1);
             }
         }
     }

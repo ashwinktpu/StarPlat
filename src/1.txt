@@ -5,8 +5,7 @@ Type: function
 
 ')'currentFuncType check!!0
 tempID g funccount 0
-
-'{'Node Property'<'Type: bool'>'
+'{'Node Property'<'Type: int'>'
 ';'Node Property'<'Type: int'>'
 ';'
 Node Property'<'Type: int'>'
@@ -57,6 +56,10 @@ Keyword in
 
 '+'
 ';''.'
+ADD_ASSIGN 
+'.'
+'-'
+'.'';''.'
 ADD_ASSIGN 
 '.'
 '-'
@@ -259,41 +262,31 @@ Type Bool: False
 OR_OP
 '.'
 EQ_OP
-Type Bool: False')'
-'{'Type: int
+Type Bool: False')''{'Type: int
+
+'='
+';'Type: int
 
 '='
 ';'Keyword if: if'(''.'
 EQ_OP
 Type Bool: False
-AND_OP
-'.'
-EQ_OP
-Type Bool: True')'
+')'
 '{'
 '='
 ';''}'Keyword if: if'(''.'
 EQ_OP
-Type Bool: False
-AND_OP
-'.'
-EQ_OP
 Type Bool: False')'
 '{'
 '='
-';''}'Type: int
-
+';''}''.'
 '='
 
 '*'
 '.'
 '+'
-';'
-'='
-'('')'
-'-'
-'(''/'')''*'';''.'
-'='
+
+'+'
 ';''.'
 '='
 Type Bool: False';''.'
@@ -376,7 +369,6 @@ Keyword in
 '{''.'
 ADD_ASSIGN 
 ';''}'
-
 Type: bool
 
 '='
@@ -396,20 +388,7 @@ Keyword in
 EQ_OP
 ')'')'
 '{'Keyword if: if'(''.'
-'>'
-'.'')'
-'{''.'
-'='
-'.'';'
-'='
-Type Bool: False';''}''}'CHECK FILTER TYPE1
-For: for'('
-Keyword in 
-'.''('')''.'filter'('
-EQ_OP
-')'')'
-'{'Keyword if: if'(''.'
-'>'
+'<'
 '.'')'
 '{''.'
 '='
@@ -417,6 +396,17 @@ EQ_OP
 '='
 Type Bool: False';''}''}'CHECK FILTER TYPE1
 '}'CHECK FILTER TYPE1
+Keyword-forall: forall'('
+Keyword in 
+'.''('')''.'filter'('EQ_OP')'')''{'Type: int
+
+'='
+'.'';'Keyword if: if'(''('NE_OP')'AND_OP'('NE_OP'.'')'')''{''.'
+'='
+'.'';'
+'='
+Type Bool: False';''}''}'CHECK FILTER TYPE1
+
 '}'
 Type: bool
 
@@ -574,20 +564,15 @@ Type Bool: False')'
 Type Bool: False';'Type: int
 
 '='
+';'Type: int
+
+'='
 ';'Keyword if: if'(''.'
 EQ_OP
-Type Bool: False
-AND_OP
-'.'
-EQ_OP
-Type Bool: True')'
+Type Bool: False')'
 '{'
 '='
 ';''}'Keyword if: if'(''.'
-EQ_OP
-Type Bool: False
-AND_OP
-'.'
 EQ_OP
 Type Bool: False')'
 '{'
@@ -597,14 +582,16 @@ Type Bool: False')'
 '='
 
 '*'
-'.'
-'+'
-';'
+'.'';'
 '='
 '('')'
 '-'
 '(''/'')''*'';''.'
 '='
+
+'+'
+
+'+'
 ';''.'
 '='
 Type Bool: False';''.'
@@ -624,9 +611,11 @@ Type Bool: True')'
 '='
 ';''}''}'CHECK FILTER TYPE1
 
-'}'
 
 '}'
+'}'
+
+
 error val 0
 at 1
 FORALL par   NAME1:6
@@ -716,7 +705,7 @@ FORALL ParParPar NAME3:6
 ANAME1:6
 ANAME2:12
 FORALL par   NAME1:6
-FORALL ParPar NAME2:18
+FORALL ParPar NAME2:11
 FORALL ParParPar NAME3:6
 ANAME1:6
 ANAME2:12
@@ -767,7 +756,7 @@ ANAME2:12
 ANAME1:6
 ANAME2:12
 at 2
-fileName scc_V2
+                               src scc src                                src isPivot src                                src pivotField index                                src visitFw src                                src visitBw src                                src isPivot src                                src visitFw dst                                src propFw src                                src visitBw par                                src propBw src                                src range src                                src visitFw src                                src visitBw src                                src propFw src                                src propBw src                                src scc src                                src scc src                                src isPivot src                                src range src                                src range src                                src pivotField index                                src visitFw src                                src visitBw src                                src isPivot src                                src visitFw dst                                src propFw src                                src visitBw par                                src propBw src                                src range src                                src visitFw src                                src visitBw src                                src propFw src                                src propBw src                                src scc src fileName scc_V2
 param :g
 paramD:d_g
 ========== SET TRUE
@@ -788,39 +777,49 @@ Hewwo g
 ##### ProcCallStatement
 varName:modified
 ------>PROP LIT
+attachNodeProperty
 ##### ProcCallStatement
 varName:outDeg
 ------>PROP LIT
 varName:inDeg
 ------>PROP LIT
+attachNodeProperty
 ##### ProcCallStatement
 varName:visitFw
 ------>PROP LIT
 varName:visitBw
 ------>PROP LIT
+attachNodeProperty
 ##### ProcCallStatement
 varName:propFw
 ------>PROP LIT
 varName:propBw
 ------>PROP LIT
+attachNodeProperty
 ##### ProcCallStatement
 varName:isPivot
 ------>PROP LIT
+attachNodeProperty
 ##### ProcCallStatement
 varName:scc
 ------>PROP LIT
+attachNodeProperty
 ##### ProcCallStatement
 varName:range
 ------>PROP LIT
+attachNodeProperty
 ##### ProcCallStatement
 varName:pivotField
 ------>PROP LIT
+attachNodeProperty
 ##### ForAllStmt
 STMT: For
 isMainFile val 1
 Entered here for forall 
 CHECK IT HEREoutDeg
 _____outDeg
+CHECK IT HEREinDeg
+_____inDeg
 for all
 FIXEDPOINT
 ##### declaration
@@ -828,12 +827,16 @@ varT:int
 varN:nxtSrc
 ------>PROP AR/LG
 ------>PROP ID
-src 
 ------>PROP LIT
 ##### 
 iufhsidfdihf
 sdkfdwjhf
-oasidspoakd
+------>PROP AR/LG
+------>PROP EXP
+------>PROP EXP
+##### 
+iufhsidfdihf
+sdkfdwjhf
 ------>PROP AR/LG
 ------>PROP EXP
 ------>PROP EXP
@@ -841,7 +844,9 @@ oasidspoakd
 varT:bool
 varN:fpoint1
 ------>PROP LIT
+------>PROP LIT
 ##### FixedPointStmt
+hdwhf
 IN FIX PT
 -----------------------FROM HERE CHECK TYPES
 ##### ForAllStmt
@@ -923,19 +928,14 @@ FOR BODY END
 ------>PROP AR/LG
 ------>PROP RL
 ------>PROP ID
-havePar 
-havePar 2
 ------>PROP LIT
 ------>PROP RL
 ------>PROP ID
-haveChild 
-haveChild 2
 ------>PROP LIT
 ##### BlockStatement
 ##### assignment
 	ASST kjdskfs	------>BEG EXP
 ------>PROP ID
-src 
 ##### assignment
 	ASST kjdskfs	------>BEG EXP
 ------>PROP LIT
@@ -973,17 +973,11 @@ varT:int
 varN:index
 ------>PROP AR/LG
 ------>PROP ID
-color 
-color 2
 ------>PROP AR/LG
 ------>PROP AR/LG
 ------>PROP ID
-color 
-color 2
 ------>PROP ID
-V 
 ------>PROP ID
-V 
 ##### declaration
 varT:int
 varN:oldSrcValue
@@ -996,8 +990,6 @@ varN:oldSrc
 =======IF FILTER
 ------>PROP RL
 ------>PROP ID
-oldSrc 
-oldSrc 2
 ------>PROP LIT
 ##### BlockStatement
 ##### assignment
@@ -1009,8 +1001,6 @@ oldSrc 2
 =======IF FILTER
 ------>PROP RL
 ------>PROP ID
-oldSrcValue 
-oldSrcValue 2
 ------>PROP AR/LG
 ------>PROP EXP
 ------>PROP EXP
@@ -1018,7 +1008,6 @@ oldSrcValue 2
 ##### assignment
 	ASST kjdskfs	------>BEG EXP
 ------>PROP ID
-src 
 ##### ForAllStmt
 STMT: For
 isMainFile val 1
@@ -1052,25 +1041,16 @@ varT:int
 varN:index
 ------>PROP AR/LG
 ------>PROP ID
-color 
-color 2
-color 2
 ------>PROP AR/LG
 ------>PROP AR/LG
 ------>PROP ID
-color 
-color 2
-color 2
 ------>PROP ID
-V 
 ------>PROP ID
-V 
 ##### IfStmt
 =======IF FILTER
 ------>PROP RL
 ------>PROP EXP
 ------>PROP ID
-src 
 ##### BlockStatement
 ##### assignment
 	ASST kjdskfs	------>BEG EXP
@@ -1084,6 +1064,7 @@ src
 ##### declaration
 varT:bool
 varN:fpoint2
+------>PROP LIT
 ------>PROP LIT
 ##### FixedPointStmt
 IN FIX PT
@@ -1150,8 +1131,6 @@ src:dst
 ------>PROP RL
 ------>PROP EXP
 ------>PROP ID
-myrange 
-myrange 2
 ##### BlockStatement
 ##### assignment
 	ASST kjdskfs	------>BEG EXP
@@ -1195,8 +1174,6 @@ src:par
 ------>PROP RL
 ------>PROP EXP
 ------>PROP ID
-myrange 
-myrange 2
 ##### BlockStatement
 ##### assignment
 	ASST kjdskfs	------>BEG EXP
@@ -1244,64 +1221,39 @@ FIXEDPOINT
 ##### BlockStatement
 ##### declaration
 varT:int
-varN:ext
------->PROP LIT
-##### IfStmt
-=======IF FILTER
------->PROP AR/LG
------->PROP RL
------->PROP EXP
------->PROP LIT
------->PROP RL
------->PROP EXP
------->PROP LIT
-##### BlockStatement
-##### assignment
-	ASST kjdskfs	------>BEG EXP
------->PROP LIT
-##### IfStmt
-=======IF FILTER
------->PROP AR/LG
------->PROP RL
------->PROP EXP
------->PROP LIT
------->PROP RL
------->PROP EXP
------->PROP LIT
-##### BlockStatement
-##### assignment
-	ASST kjdskfs	------>BEG EXP
+varN:ext1
 ------>PROP LIT
 ##### declaration
 varT:int
-varN:newRange
+varN:ext2
+------>PROP LIT
+##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP AR/LG
 ------>PROP AR/LG
 ------>PROP AR/LG
 ------>PROP LIT
 ------>PROP EXP
 ------>PROP ID
-ext 
-ext 2
-##### assignment
-	ASST kjdskfs	------>BEG EXP
------->PROP AR/LG
 ------>PROP ID
-newRange 
-newRange 2
------->PROP AR/LG
------->PROP AR/LG
------->PROP ID
-newRange 
-newRange 2
------->PROP ID
-V 
------->PROP ID
-V 
-##### assignment
-	ASST kjdskfs	------>BEG EXP
------->PROP ID
-newRange 
-newRange 2
 ##### assignment
 	ASST kjdskfs	------>BEG EXP
 ------>PROP LIT
@@ -1327,7 +1279,6 @@ newRange 2
 ##### assignment
 	ASST kjdskfs	------>BEG EXP
 ------>PROP ID
-src 
 ##### assignment
 	ASST kjdskfs	------>BEG EXP
 ------>PROP LIT
@@ -1415,21 +1366,14 @@ FOR BODY END
 ------>PROP AR/LG
 ------>PROP RL
 ------>PROP ID
-havePar 
-havePar 2
-havePar 2
 ------>PROP LIT
 ------>PROP RL
 ------>PROP ID
-haveChild 
-haveChild 2
-haveChild 2
 ------>PROP LIT
 ##### BlockStatement
 ##### assignment
 	ASST kjdskfs	------>BEG EXP
 ------>PROP ID
-src 
 ##### assignment
 	ASST kjdskfs	------>BEG EXP
 ------>PROP LIT
@@ -1439,6 +1383,7 @@ src
 ##### ProcCallStatement
 varName:range
 ------>PROP LIT
+attachNodeProperty
 ##### ForAllStmt
 STMT: For
 isMainFile val 1
@@ -1450,12 +1395,11 @@ FIXEDPOINT
 ##### 
 iufhsidfdihf
 sdkfdwjhf
-oasidspoakd
 ------>PROP ID
-src 
 ##### declaration
 varT:bool
 varN:fpoint4
+------>PROP LIT
 ------>PROP LIT
 ##### FixedPointStmt
 IN FIX PT
@@ -1506,21 +1450,34 @@ src:dst
 FOR BODY END
 ##### ForAllStmt
 STMT: For
-isMainFile val 0
-GenerateForAllSignature = 0
-============CHANGED BODY  TYPE==============1	 ITERATE Neighbour 
-src:dst
-##### BlockStatement
-##### IfStmt
+isMainFile val 1
+Entered here for forall 
+CHECK IT HEREscc
+___modified__scc
+CHECK IT HERErange
+___modified__range
+CHECK IT HEREfpoint4
+___modified__fpoint4
+for all
+FIXEDPOINT
+============CHANGED BODY  TYPE==============1##### IfStmt
 =======IF FILTER
 ------>PROP RL
 ------>PROP EXP
 ------>PROP LIT
 ##### BlockStatement
+##### declaration
+varT:int
+varN:myrange
+------>PROP EXP
 ##### IfStmt
 =======IF FILTER
+------>PROP AR/LG
 ------>PROP RL
------->PROP EXP
+------>PROP ID
+------>PROP ID
+------>PROP RL
+------>PROP ID
 ------>PROP EXP
 ##### BlockStatement
 ##### assignment
@@ -1529,10 +1486,10 @@ src:dst
 ##### assignment
 	ASST kjdskfs	------>BEG EXP
 ------>PROP LIT
-FOR BODY END
 ##### declaration
 varT:bool
 varN:fpoint5
+------>PROP LIT
 ------>PROP LIT
 ##### FixedPointStmt
 IN FIX PT
@@ -1568,21 +1525,11 @@ varT:int
 varN:index
 ------>PROP AR/LG
 ------>PROP ID
-color 
-color 2
-color 2
-color 2
 ------>PROP AR/LG
 ------>PROP AR/LG
 ------>PROP ID
-color 
-color 2
-color 2
-color 2
 ------>PROP ID
-V 
 ------>PROP ID
-V 
 ##### declaration
 varT:int
 varN:oldSrcValue
@@ -1595,9 +1542,6 @@ varN:oldSrc
 =======IF FILTER
 ------>PROP RL
 ------>PROP ID
-oldSrc 
-oldSrc 2
-oldSrc 2
 ------>PROP LIT
 ##### BlockStatement
 ##### assignment
@@ -1609,9 +1553,6 @@ oldSrc 2
 =======IF FILTER
 ------>PROP RL
 ------>PROP ID
-oldSrcValue 
-oldSrcValue 2
-oldSrcValue 2
 ------>PROP AR/LG
 ------>PROP EXP
 ------>PROP EXP
@@ -1619,7 +1560,6 @@ oldSrcValue 2
 ##### assignment
 	ASST kjdskfs	------>BEG EXP
 ------>PROP ID
-src 
 ##### ForAllStmt
 STMT: For
 isMainFile val 1
@@ -1653,29 +1593,16 @@ varT:int
 varN:index
 ------>PROP AR/LG
 ------>PROP ID
-color 
-color 2
-color 2
-color 2
-color 2
 ------>PROP AR/LG
 ------>PROP AR/LG
 ------>PROP ID
-color 
-color 2
-color 2
-color 2
-color 2
 ------>PROP ID
-V 
 ------>PROP ID
-V 
 ##### IfStmt
 =======IF FILTER
 ------>PROP RL
 ------>PROP EXP
 ------>PROP ID
-src 
 ##### BlockStatement
 ##### assignment
 	ASST kjdskfs	------>BEG EXP
@@ -1756,9 +1683,6 @@ src:dst
 ------>PROP RL
 ------>PROP EXP
 ------>PROP ID
-myrange 
-myrange 2
-myrange 2
 ##### BlockStatement
 ##### assignment
 	ASST kjdskfs	------>BEG EXP
@@ -1802,9 +1726,6 @@ src:par
 ------>PROP RL
 ------>PROP EXP
 ------>PROP ID
-myrange 
-myrange 2
-myrange 2
 ##### BlockStatement
 ##### assignment
 	ASST kjdskfs	------>BEG EXP
@@ -1828,10 +1749,10 @@ CHECK IT HEREvisitBw
 ___modified__visitBw
 CHECK IT HERErange
 ___modified__range
-CHECK IT HEREpropBw
-___modified__propBw
 CHECK IT HEREpropFw
 ___modified__propFw
+CHECK IT HEREpropBw
+___modified__propBw
 CHECK IT HEREfpoint5
 ___modified__fpoint5
 for all
@@ -1857,14 +1778,14 @@ FIXEDPOINT
 ------>PROP LIT
 ##### declaration
 varT:int
-varN:ext
+varN:ext1
+------>PROP LIT
+##### declaration
+varT:int
+varN:ext2
 ------>PROP LIT
 ##### IfStmt
 =======IF FILTER
------->PROP AR/LG
------->PROP RL
------->PROP EXP
------->PROP LIT
 ------>PROP RL
 ------>PROP EXP
 ------>PROP LIT
@@ -1874,10 +1795,6 @@ varN:ext
 ------>PROP LIT
 ##### IfStmt
 =======IF FILTER
------->PROP AR/LG
------->PROP RL
------->PROP EXP
------->PROP LIT
 ------>PROP RL
 ------>PROP EXP
 ------>PROP LIT
@@ -1889,36 +1806,24 @@ varN:ext
 varT:int
 varN:newRange
 ------>PROP AR/LG
------->PROP AR/LG
 ------>PROP LIT
 ------>PROP EXP
------->PROP ID
-ext 
-ext 2
-ext 2
 ##### assignment
 	ASST kjdskfs	------>BEG EXP
 ------>PROP AR/LG
 ------>PROP ID
-newRange 
-newRange 2
-newRange 2
 ------>PROP AR/LG
 ------>PROP AR/LG
 ------>PROP ID
-newRange 
-newRange 2
-newRange 2
 ------>PROP ID
-V 
 ------>PROP ID
-V 
 ##### assignment
 	ASST kjdskfs	------>BEG EXP
+------>PROP AR/LG
+------>PROP AR/LG
 ------>PROP ID
-newRange 
-newRange 2
-newRange 2
+------>PROP ID
+------>PROP ID
 ##### assignment
 	ASST kjdskfs	------>BEG EXP
 ------>PROP LIT
@@ -1944,5 +1849,4 @@ newRange 2
 ##### assignment
 	ASST kjdskfs	------>BEG EXP
 ------>PROP ID
-src 
 finished successfully

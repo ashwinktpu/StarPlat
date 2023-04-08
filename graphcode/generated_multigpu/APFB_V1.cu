@@ -152,11 +152,17 @@ void APFB(graph& g,int nc)
   {
     cudaSetDevice(i);
     initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_modified[i],(bool)false);
+  }for(int i=0;i<devicecount;i++){
+    cudaSetDevice(i);
     cudaDeviceSynchronize();
   }
+
   for(int i=0;i<devicecount;i++){
     cudaSetDevice(i);
     cudaMemcpyAsync(h_modified[i],d_modified[i],(V+1)*sizeof(bool),cudaMemcpyDeviceToHost);
+  }
+  for(int i=0;i<devicecount;i++){
+    cudaSetDevice(i);
     cudaDeviceSynchronize();
   }
   int** h_rmatch;
@@ -203,22 +209,34 @@ void APFB(graph& g,int nc)
   {
     cudaSetDevice(i);
     initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_rmatch[i],(int)-1);
+  }for(int i=0;i<devicecount;i++){
+    cudaSetDevice(i);
     cudaDeviceSynchronize();
   }
+
   for(int i=0;i<devicecount;i++){
     cudaSetDevice(i);
     cudaMemcpyAsync(h_rmatch[i],d_rmatch[i],(V+1)*sizeof(int),cudaMemcpyDeviceToHost);
+  }
+  for(int i=0;i<devicecount;i++){
+    cudaSetDevice(i);
     cudaDeviceSynchronize();
   }
   for(int i=0;i<devicecount;i++)
   {
     cudaSetDevice(i);
     initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_cmatch[i],(int)-1);
+  }for(int i=0;i<devicecount;i++){
+    cudaSetDevice(i);
     cudaDeviceSynchronize();
   }
+
   for(int i=0;i<devicecount;i++){
     cudaSetDevice(i);
     cudaMemcpyAsync(h_cmatch[i],d_cmatch[i],(V+1)*sizeof(int),cudaMemcpyDeviceToHost);
+  }
+  for(int i=0;i<devicecount;i++){
+    cudaSetDevice(i);
     cudaDeviceSynchronize();
   }
   bool noNewPaths = false; // asst in .cu 
@@ -234,6 +252,9 @@ void APFB(graph& g,int nc)
     cudaSetDevice(i);
     cudaMalloc(&d_noNewPaths[i],sizeof(bool));
     initKernel<bool> <<<1,1>>>(1,d_noNewPaths[i],false);
+  }
+  for(int i=0;i<devicecount;i++){
+    cudaSetDevice(i);
     cudaDeviceSynchronize();
   }
 
@@ -251,6 +272,9 @@ void APFB(graph& g,int nc)
   for(int i = 0 ; i < devicecount ; i++){
     cudaSetDevice(i);
     initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next[i], false);
+  }
+  for(int i=0;i<devicecount;i++){
+    cudaSetDevice(i);
     cudaDeviceSynchronize();
   }
 
@@ -260,6 +284,9 @@ void APFB(graph& g,int nc)
     for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
       initKernel<bool><<<1,1>>>(1,d_noNewPaths[i],(bool)true);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
     int L0 = 0; // asst in .cu 
@@ -275,6 +302,9 @@ void APFB(graph& g,int nc)
       cudaSetDevice(i);
       cudaMalloc(&d_L0[i],sizeof(int));
       initKernel<int> <<<1,1>>>(1,d_L0[i],0);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
 
@@ -312,6 +342,9 @@ void APFB(graph& g,int nc)
       cudaSetDevice(i);
       cudaMalloc(&d_NOT_VISITED[i],sizeof(int));
       initKernel<int> <<<1,1>>>(1,d_NOT_VISITED[i],L0 - 1);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
 
@@ -320,11 +353,17 @@ void APFB(graph& g,int nc)
     {
       cudaSetDevice(i);
       initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_bfsArray[i],(int)NOT_VISITED);
+    }for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
+
     for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
       cudaMemcpyAsync(h_bfsArray[i],d_bfsArray[i],(V+1)*sizeof(int),cudaMemcpyDeviceToHost);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
     for(int i=0;i<devicecount;i++)
@@ -342,16 +381,25 @@ void APFB(graph& g,int nc)
     for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
       cudaMemcpyAsync(h_bfsArray[devicecount]+h_vertex_partition[i],d_bfsArray[i]+h_vertex_partition[i],sizeof(int)*(h_vertex_partition[i+1]-h_vertex_partition[i]),cudaMemcpyDeviceToHost);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
     for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
       cudaMemcpyAsync(d_bfsArray[i],h_bfsArray[devicecount],sizeof(int)*(V+1),cudaMemcpyHostToDevice);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
     for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
       cudaMemcpyAsync(h_bfsArray[i],d_bfsArray[i],sizeof(int)*(V+1),cudaMemcpyDeviceToHost);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
     int** h_predeccesor;
@@ -378,11 +426,17 @@ void APFB(graph& g,int nc)
     {
       cudaSetDevice(i);
       initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_predeccesor[i],(int)-1);
+    }for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
+
     for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
       cudaMemcpyAsync(h_predeccesor[i],d_predeccesor[i],(V+1)*sizeof(int),cudaMemcpyDeviceToHost);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
     int bfsLevel = L0; // asst in .cu 
@@ -398,6 +452,9 @@ void APFB(graph& g,int nc)
       cudaSetDevice(i);
       cudaMalloc(&d_bfsLevel[i],sizeof(int));
       initKernel<int> <<<1,1>>>(1,d_bfsLevel[i],L0);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
 
@@ -415,6 +472,9 @@ void APFB(graph& g,int nc)
       cudaSetDevice(i);
       cudaMalloc(&d_noNewVertices[i],sizeof(bool));
       initKernel<bool> <<<1,1>>>(1,d_noNewVertices[i],false);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
 
@@ -424,6 +484,9 @@ void APFB(graph& g,int nc)
     for(int i = 0 ; i < devicecount ; i++){
       cudaSetDevice(i);
       initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next[i], false);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
 
@@ -433,12 +496,15 @@ void APFB(graph& g,int nc)
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
         initKernel<bool><<<1,1>>>(1,d_noNewVertices[i],(bool)true);
+      }
+      for(int i=0;i<devicecount;i++){
+        cudaSetDevice(i);
         cudaDeviceSynchronize();
       }
       for(int i=0;i<devicecount;i++)
       {
         cudaSetDevice(i);
-        APFB_kernel2<<<numBlocks, threadsPerBlock>>>(h_vertex_partition[i],h_vertex_partition[i+1],V,E,d_offset[i],d_edges[i],d_weight[i],d_src[i],d_rev_meta[i],d_bfsArray[i],d_nc[i],d_bfsLevel[i],d_rmatch[i],d_NOT_VISITED[i],d_noNewVertices[i],d_noNewPaths[i],d_predeccesor[i]);
+        APFB_kernel2<<<numBlocks, threadsPerBlock>>>(h_vertex_partition[i],h_vertex_partition[i+1],V,E,d_offset[i],d_edges[i],d_weight[i],d_src[i],d_rev_meta[i],d_nc[i],d_bfsLevel[i],d_bfsArray[i],d_rmatch[i],d_NOT_VISITED[i],d_noNewVertices[i],d_noNewPaths[i],d_predeccesor[i]);
       }
 
       for(int i=0;i<devicecount;i++)
@@ -451,6 +517,9 @@ void APFB(graph& g,int nc)
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
         cudaMemcpyAsync(h_bfsArray_temp1+i*(V+1),d_bfsArray[i],sizeof(int)*(V+1),cudaMemcpyDeviceToHost);
+      }
+      for(int i=0;i<devicecount;i++){
+        cudaSetDevice(i);
         cudaDeviceSynchronize();
       }
       cudaSetDevice(0);
@@ -474,6 +543,9 @@ void APFB(graph& g,int nc)
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
         cudaMemcpyAsync(h_predeccesor_temp1+i*(V+1),d_predeccesor[i],sizeof(int)*(V+1),cudaMemcpyDeviceToHost);
+      }
+      for(int i=0;i<devicecount;i++){
+        cudaSetDevice(i);
         cudaDeviceSynchronize();
       }
       cudaSetDevice(0);
@@ -497,6 +569,9 @@ void APFB(graph& g,int nc)
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
         cudaMemcpyAsync(h_rmatch_temp1+i*(V+1),d_rmatch[i],sizeof(int)*(V+1),cudaMemcpyDeviceToHost);
+      }
+      for(int i=0;i<devicecount;i++){
+        cudaSetDevice(i);
         cudaDeviceSynchronize();
       }
       cudaSetDevice(0);
@@ -520,6 +595,9 @@ void APFB(graph& g,int nc)
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
         cudaMemcpyAsync(h_predeccesor_temp1+i*(V+1),d_predeccesor[i],sizeof(int)*(V+1),cudaMemcpyDeviceToHost);
+      }
+      for(int i=0;i<devicecount;i++){
+        cudaSetDevice(i);
         cudaDeviceSynchronize();
       }
       cudaSetDevice(0);
@@ -545,6 +623,9 @@ void APFB(graph& g,int nc)
         //printed here
 
         initKernel<int> <<<1,1>>>(1,d_bfsLevel[i],(int)bfsLevel + 1);
+      }
+      for(int i=0;i<devicecount;i++){
+        cudaSetDevice(i);
         cudaDeviceSynchronize();
       }
       for(int i=0;i<devicecount;i++){
@@ -561,7 +642,6 @@ void APFB(graph& g,int nc)
       for(int i = 0 ; i < devicecount ; i++){
         cudaSetDevice(i);
         initKernel<bool> <<<1,1>>>(1,d_noNewVertices[i],true);
-        cudaDeviceSynchronize();
       }
 
       for(int i = 0 ; i < devicecount ; i++){
@@ -614,22 +694,34 @@ void APFB(graph& g,int nc)
     {
       cudaSetDevice(i);
       initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_compress[i],(bool)false);
+    }for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
+
     for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
       cudaMemcpyAsync(h_compress[i],d_compress[i],(V+1)*sizeof(bool),cudaMemcpyDeviceToHost);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
     for(int i=0;i<devicecount;i++)
     {
       cudaSetDevice(i);
       initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_compress_next[i],(bool)false);
+    }for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
+
     for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
       cudaMemcpyAsync(h_compress_next[i],d_compress_next[i],(V+1)*sizeof(bool),cudaMemcpyDeviceToHost);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
     for(int i=0;i<devicecount;i++)
@@ -647,16 +739,25 @@ void APFB(graph& g,int nc)
     for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
       cudaMemcpyAsync(h_compress[devicecount]+h_vertex_partition[i],d_compress[i]+h_vertex_partition[i],sizeof(bool)*(h_vertex_partition[i+1]-h_vertex_partition[i]),cudaMemcpyDeviceToHost);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
     for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
       cudaMemcpyAsync(d_compress[i],h_compress[devicecount],sizeof(bool)*(V+1),cudaMemcpyHostToDevice);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
     for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
       cudaMemcpyAsync(h_compress[i],d_compress[i],sizeof(bool)*(V+1),cudaMemcpyDeviceToHost);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
     bool compressed = false; // asst in .cu 
@@ -672,6 +773,9 @@ void APFB(graph& g,int nc)
       cudaSetDevice(i);
       cudaMalloc(&d_compressed[i],sizeof(bool));
       initKernel<bool> <<<1,1>>>(1,d_compressed[i],false);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
 
@@ -681,6 +785,9 @@ void APFB(graph& g,int nc)
     for(int i = 0 ; i < devicecount ; i++){
       cudaSetDevice(i);
       initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next[i], false);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
 
@@ -690,6 +797,9 @@ void APFB(graph& g,int nc)
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
         initKernel<bool><<<1,1>>>(1,d_compressed[i],(bool)true);
+      }
+      for(int i=0;i<devicecount;i++){
+        cudaSetDevice(i);
         cudaDeviceSynchronize();
       }
       for(int i=0;i<devicecount;i++)
@@ -710,6 +820,9 @@ void APFB(graph& g,int nc)
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
         cudaMemcpyAsync(h_cmatch_temp1+i*(V+1),d_cmatch[i],sizeof(int)*(V+1),cudaMemcpyDeviceToHost);
+      }
+      for(int i=0;i<devicecount;i++){
+        cudaSetDevice(i);
         cudaDeviceSynchronize();
       }
       cudaSetDevice(0);
@@ -733,22 +846,34 @@ void APFB(graph& g,int nc)
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
         cudaMemcpyAsync(h_rmatch[devicecount]+h_vertex_partition[i],d_rmatch[i]+h_vertex_partition[i],sizeof(int)*(h_vertex_partition[i+1]-h_vertex_partition[i]),cudaMemcpyDeviceToHost);
+      }
+      for(int i=0;i<devicecount;i++){
+        cudaSetDevice(i);
         cudaDeviceSynchronize();
       }
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
         cudaMemcpyAsync(d_rmatch[i],h_rmatch[devicecount],sizeof(int)*(V+1),cudaMemcpyHostToDevice);
+      }
+      for(int i=0;i<devicecount;i++){
+        cudaSetDevice(i);
         cudaDeviceSynchronize();
       }
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
         cudaMemcpyAsync(h_rmatch[i],d_rmatch[i],sizeof(int)*(V+1),cudaMemcpyDeviceToHost);
+      }
+      for(int i=0;i<devicecount;i++){
+        cudaSetDevice(i);
         cudaDeviceSynchronize();
       }
       //row_vertex matched_row
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
         cudaMemcpyAsync(h_compress_next_temp1+i*(V+1),d_compress_next[i],sizeof(bool)*(V+1),cudaMemcpyDeviceToHost);
+      }
+      for(int i=0;i<devicecount;i++){
+        cudaSetDevice(i);
         cudaDeviceSynchronize();
       }
       cudaSetDevice(0);
@@ -783,32 +908,50 @@ void APFB(graph& g,int nc)
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
         cudaMemcpyAsync(h_compress[devicecount]+h_vertex_partition[i],d_compress[i]+h_vertex_partition[i],sizeof(bool)*(h_vertex_partition[i+1]-h_vertex_partition[i]),cudaMemcpyDeviceToHost);
+      }
+      for(int i=0;i<devicecount;i++){
+        cudaSetDevice(i);
         cudaDeviceSynchronize();
       }
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
         cudaMemcpyAsync(d_compress[i],h_compress[devicecount],sizeof(bool)*(V+1),cudaMemcpyHostToDevice);
+      }
+      for(int i=0;i<devicecount;i++){
+        cudaSetDevice(i);
         cudaDeviceSynchronize();
       }
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
         cudaMemcpyAsync(h_compress[i],d_compress[i],sizeof(bool)*(V+1),cudaMemcpyDeviceToHost);
+      }
+      for(int i=0;i<devicecount;i++){
+        cudaSetDevice(i);
         cudaDeviceSynchronize();
       }
       //row_vertex row_vertex
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
         cudaMemcpyAsync(h_compress_next[devicecount]+h_vertex_partition[i],d_compress_next[i]+h_vertex_partition[i],sizeof(bool)*(h_vertex_partition[i+1]-h_vertex_partition[i]),cudaMemcpyDeviceToHost);
+      }
+      for(int i=0;i<devicecount;i++){
+        cudaSetDevice(i);
         cudaDeviceSynchronize();
       }
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
         cudaMemcpyAsync(d_compress_next[i],h_compress_next[devicecount],sizeof(bool)*(V+1),cudaMemcpyHostToDevice);
+      }
+      for(int i=0;i<devicecount;i++){
+        cudaSetDevice(i);
         cudaDeviceSynchronize();
       }
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
         cudaMemcpyAsync(h_compress_next[i],d_compress_next[i],sizeof(bool)*(V+1),cudaMemcpyDeviceToHost);
+      }
+      for(int i=0;i<devicecount;i++){
+        cudaSetDevice(i);
         cudaDeviceSynchronize();
       }
       for(int i=0;i<devicecount;i++){
@@ -825,7 +968,6 @@ void APFB(graph& g,int nc)
       for(int i = 0 ; i < devicecount ; i++){
         cudaSetDevice(i);
         initKernel<bool> <<<1,1>>>(1,d_compressed[i],true);
-        cudaDeviceSynchronize();
       }
 
       for(int i = 0 ; i < devicecount ; i++){
@@ -850,32 +992,50 @@ void APFB(graph& g,int nc)
     for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
       cudaMemcpyAsync(h_rmatch[devicecount]+h_vertex_partition[i],d_rmatch[i]+h_vertex_partition[i],sizeof(int)*(h_vertex_partition[i+1]-h_vertex_partition[i]),cudaMemcpyDeviceToHost);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
     for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
       cudaMemcpyAsync(d_rmatch[i],h_rmatch[devicecount],sizeof(int)*(V+1),cudaMemcpyHostToDevice);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
     for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
       cudaMemcpyAsync(h_rmatch[i],d_rmatch[i],sizeof(int)*(V+1),cudaMemcpyDeviceToHost);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
     //r r
     for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
       cudaMemcpyAsync(h_rmatch[devicecount]+h_vertex_partition[i],d_rmatch[i]+h_vertex_partition[i],sizeof(int)*(h_vertex_partition[i+1]-h_vertex_partition[i]),cudaMemcpyDeviceToHost);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
     for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
       cudaMemcpyAsync(d_rmatch[i],h_rmatch[devicecount],sizeof(int)*(V+1),cudaMemcpyHostToDevice);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
     for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
       cudaMemcpyAsync(h_rmatch[i],d_rmatch[i],sizeof(int)*(V+1),cudaMemcpyDeviceToHost);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
     for(int i=0;i<devicecount;i++){
@@ -892,7 +1052,6 @@ void APFB(graph& g,int nc)
     for(int i = 0 ; i < devicecount ; i++){
       cudaSetDevice(i);
       initKernel<bool> <<<1,1>>>(1,d_noNewPaths[i],true);
-      cudaDeviceSynchronize();
     }
 
     for(int i = 0 ; i < devicecount ; i++){
