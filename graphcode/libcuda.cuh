@@ -66,6 +66,20 @@ __global__ void Compute_correct(T* array1,T* array2,unsigned V,int devicecount){
   }
 }
 
+
+template<typename T1,typename T2>
+__global__ void combineRandom(int V,T1* d_color,T2* d_color1,T2* d_color2){
+    unsigned v = blockIdx.x*blockDim.x+threadIdx.x;
+    if(v>=V) return;
+    T1 x = (T1)d_color1[v];
+    T1 y = (T1)d_color2[v];
+    for(int i=0;i<32;i++){
+      x = x*(T1)2;
+    }
+    d_color[v]=x+y;
+}
+
+
 //NOT USED
 __global__ void accumulate_bc(unsigned n, double* d_delta, double* d_nodeBC, int* d_level, unsigned s) {
   unsigned tid = blockIdx.x * blockDim.x + threadIdx.x;

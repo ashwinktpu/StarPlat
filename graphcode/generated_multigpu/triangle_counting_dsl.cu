@@ -44,7 +44,7 @@ void Compute_TC(graph& g)
 
   int index = 0;
   h_vertex_partition[0]=0;
-  h_vertex_partition[devicecount]=V+1;
+  h_vertex_partition[devicecount]=V;
   for(int i=1;i<devicecount;i++){
     if(i<=(V%devicecount)){
        index+=(h_vertex_per_device+1);
@@ -130,6 +130,10 @@ void Compute_TC(graph& g)
     cudaMalloc(&d_triangle_count[i],sizeof(long));
     initKernel<long> <<<1,1>>>(1,d_triangle_count[i],0);
   }
+  for(int i=0;i<devicecount;i++){
+    cudaSetDevice(i);
+    cudaDeviceSynchronize();
+  }
 
 
   for(int i=0;i<devicecount;i++)
@@ -151,23 +155,15 @@ void Compute_TC(graph& g)
     cudaSetDevice(i);
     cudaDeviceSynchronize();
   }
+  long triangle_count_=0;
   for(int i=0;i<devicecount;i++){
-    triangle_count += h_triangle_count[i][0];
+    triangle_count_ += h_triangle_count[i][0];
   } //end of for
+  triangle_count=triangle_count_;
   //TIMER STOP
-  printf("TC : %ld\n",triangle_count);
   cudaEventRecord(stop,0);
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&milliseconds, start, stop);
   printf("GPU Time: %.6f ms\n", milliseconds);
 
 } //end FUN
-
-int main(int argc,char* argv[])
-{
-  char *file_name = argv[1];
-  graph g(file_name);
-  g.parseGraph();
-  Compute_TC(g);
-  return 0;
-}

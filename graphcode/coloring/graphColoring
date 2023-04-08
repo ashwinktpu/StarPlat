@@ -1,18 +1,21 @@
 function colorGraph(Graph g)
 {
+    int numNodes = g.num_nodes();
+    
     propNode<long> color;
     propNode<int> color1;
     propNode<int> color2;
     propNode<bool> modified;
     propNode<bool> modified_next;
+    g.attachNodeProperty(color=0);
+    g.attachNodeProperty(modified=False);
+    g.attachNodeProperty(modified_next=False);
     int fpoint1 = 0;
-    int numNodes = g.num_nodes();
     int iter  = 0;
     do{
         iter=iter+1;
-        g.randSP(color1);
-        g.randSP(color2);
-        q.combineRandom(color,color1,color2);
+        g.randSP(color1,color2);
+        g.combineRandom(color,color1,color2);
         forall(v in g.nodes()){
             if(v.modified==False){
                 int cnt = 0;

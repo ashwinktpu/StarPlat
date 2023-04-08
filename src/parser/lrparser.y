@@ -7,6 +7,7 @@
 	#include "../analyser/attachProp/attachPropAnalyser.h"
 	#include "../analyser/dataRace/dataRaceAnalyser.h"
 	#include "../analyser/deviceVars/deviceVarsAnalyser.h"
+	#include "../analyser/pushpull/pushpullAnalyser.h"
 	#include<getopt.h>
 	//#include "../symbolutil/SymbolTableBuilder.cpp"
      
@@ -21,6 +22,7 @@
 	extern char *yytext;
 	//extern SymbolTable* symbTab;
 	FrontEndContext frontEndContext;
+	map<string,int> push_map;
 	char* backendTarget ;
     vector<Identifier*> tempIds; //stores graph vars in current function's param list.
     //symbTab=new SymbolTable();
@@ -43,7 +45,7 @@
 	ASTNodeList* nodeList;
     tempNode* temporary;
      }
-%token T_INT T_FLOAT T_BOOL T_DOUBLE  T_LONG
+%token T_INT T_FLOAT T_BOOL T_DOUBLE  T_LONG T_UNSIGNED_INT T_UNSIGNED_LONG
 %token T_FORALL T_FOR  T_P_INF  T_INF T_N_INF
 %token T_FUNC T_IF T_ELSE T_WHILE T_RETURN T_DO T_IN T_FIXEDPOINT T_UNTIL T_FILTER
 %token T_ADD_ASSIGN T_SUB_ASSIGN T_MUL_ASSIGN T_DIV_ASSIGN T_MOD_ASSIGN T_AND_ASSIGN T_XOR_ASSIGN
@@ -226,6 +228,9 @@ primitive: T_INT { $$=Util::createPrimitiveTypeNode(TYPE_INT);};
 	| T_BOOL { $$=Util::createPrimitiveTypeNode(TYPE_BOOL);};
 	| T_DOUBLE { $$=Util::createPrimitiveTypeNode(TYPE_DOUBLE); };
     | T_LONG {$$=$$=Util::createPrimitiveTypeNode(TYPE_LONG);};
+	| T_UNSIGNED_INT {$$=$$=Util::createPrimitiveTypeNode(TYPE_UNSIGNED_INT);};
+	| T_UNSIGNED_LONG {$$=$$=Util::createPrimitiveTypeNode(TYPE_UNSIGNED_LONG);};
+	
 
 graph : T_GRAPH { $$=Util::createGraphTypeNode(TYPE_GRAPH,NULL);};
 	|T_DIR_GRAPH {$$=Util::createGraphTypeNode(TYPE_DIRGRAPH,NULL);};
@@ -596,6 +601,8 @@ int main(int argc,char **argv)
       }
 	  else if(strcmp(backendTarget, "multigpu") == 0){
 		spmultigpu::dsl_cpp_generator cpp_backend;
+		pushpullAnalyser pp;
+		pp.analyse(frontEndContext.getFuncList());
 		cpp_backend.setFileName(fileName);
 		cpp_backend.generate();
 	  }

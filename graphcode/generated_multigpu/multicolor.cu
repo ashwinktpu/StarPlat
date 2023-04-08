@@ -149,7 +149,7 @@ void colorGraph(graph& g){
   }
   for(int i=0;i<devicecount;i++){
     cudaSetDevice(i);
-    initKernel<unsigned long><<<numBlocks,threadsPerBlock>>>(V,d_color[i],(unsigned long)0);
+    initKernel<unsigned long><<<numBlocks,threadsPerBlock>>>(V,d_color[i],(unsigned long)0.000);
     cudaDeviceSynchronize();
   }
   for(int i=0;i<devicecount;i++){
@@ -180,6 +180,7 @@ void colorGraph(graph& g){
 
   int iter = 0;
   do{
+    printf("iter val %d\n",iter);
     // printf("iter value %d\n",iter);
     iter+=1;
     int x = rand();
@@ -220,6 +221,11 @@ void colorGraph(graph& g){
       fpoint1+=h_fpoint1[i][0];
     }
     // printf("%d\n",fpoint1);
+    // for(int i=0;i<devicecount;i+=1){
+    //   cudaSetDevice(i);
+    //   initKernel<int> <<<1,1>>>(1,d_fpoint1[i],(int)0);
+    //   cudaDeviceSynchronize();
+    // }
     bool* h_modified_next;
     h_modified_next =(bool*)malloc((V+1)*sizeof(bool));
     for(int i=0;i<devicecount;i++){

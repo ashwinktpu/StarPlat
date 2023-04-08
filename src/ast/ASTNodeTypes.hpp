@@ -29,6 +29,7 @@ extern vector<map<int,vector<Identifier*>>> graphId;
                                                        where the graphId vector is 
                                                        separated across different function type*/
 class varTransferStmt;
+extern map<string,int> push_map;
 
 class argument
 {  
