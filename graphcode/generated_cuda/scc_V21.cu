@@ -1,5 +1,5 @@
 // FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
-#include "scc_V2.h"
+#include "scc_V21.h"
 
 void vHong(graph& g)
 
@@ -93,11 +93,11 @@ void vHong(graph& g)
   cudaMalloc(&d_inDeg, sizeof(int)*(V));
 
   bool* d_visitFw;
-  visitFw PULL
+  visitFw PUSH
   cudaMalloc(&d_visitFw, sizeof(bool)*(V));
 
   bool* d_visitBw;
-  visitBw PULL
+  visitBw PUSH
   cudaMalloc(&d_visitBw, sizeof(bool)*(V));
 
   bool* d_propFw;
@@ -121,7 +121,7 @@ void vHong(graph& g)
   cudaMalloc(&d_range, sizeof(int)*(V));
 
   int* d_pivotField;
-  pivotField PULL
+  pivotField PUSH
   cudaMalloc(&d_pivotField, sizeof(int)*(V));
 
   initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_modified,(int)false);
@@ -211,7 +211,7 @@ void vHong(graph& g)
     fpoint2 = true;
     cudaMemcpyToSymbol(::fpoint2, &fpoint2, sizeof(bool), 0, cudaMemcpyHostToDevice);
     cudaMemcpyToSymbol(::fpoint2, &fpoint2, sizeof(bool), 0, cudaMemcpyHostToDevice);
-    vHong_kernel_5<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_visitBw,d_propFw,d_visitFw,d_scc,d_propBw,d_range);
+    vHong_kernel_5<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_propBw,d_visitBw,d_propFw,d_scc,d_visitFw,d_range);
     cudaDeviceSynchronize();
     cudaMemcpyFromSymbol(&fpoint2, ::fpoint2, sizeof(bool), 0, cudaMemcpyDeviceToHost);
 
@@ -337,7 +337,7 @@ void vHong(graph& g)
       fpoint2 = true;
       cudaMemcpyToSymbol(::fpoint2, &fpoint2, sizeof(bool), 0, cudaMemcpyHostToDevice);
       cudaMemcpyToSymbol(::fpoint2, &fpoint2, sizeof(bool), 0, cudaMemcpyHostToDevice);
-      vHong_kernel_13<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_visitBw,d_propFw,d_visitFw,d_scc,d_propBw,d_range);
+      vHong_kernel_13<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_propBw,d_visitBw,d_propFw,d_scc,d_visitFw,d_range);
       cudaDeviceSynchronize();
       cudaMemcpyFromSymbol(&fpoint2, ::fpoint2, sizeof(bool), 0, cudaMemcpyDeviceToHost);
 

@@ -176,6 +176,8 @@ lattice deviceVarsAnalyser::analyseFixedPoint(fixedPointStmt *stmt, lattice &inM
 
   Identifier *iden = stmt->getFixedPointId();
   
+  // gpuUsedVars.addVariable(iden,0);
+
   ASTNodeWrap *condNode = getWrapNode(iden);
   
   bool hasChanged;

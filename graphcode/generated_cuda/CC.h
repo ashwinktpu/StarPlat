@@ -13,11 +13,11 @@ void Compute_CC(graph& g,float* CC);
 
 
 
-; // DEVICE ASSTMENT in .h
+__device__ int V ; // DEVICE ASSTMENT in .h
 
-__device__ int i ; // DEVICE ASSTMENT in .h
+__device__ int src ; // DEVICE ASSTMENT in .h
 
-; // DEVICE ASSTMENT in .h
+__device__ bool finished ; // DEVICE ASSTMENT in .h
 
 __global__ void Compute_CC_kernel_1(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,bool* d_modified,int* d_dist){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
@@ -40,7 +40,7 @@ __global__ void Compute_CC_kernel_1(int V, int E, int* d_meta, int* d_data, int*
 
   } // if filter end
 } // end KER FUNC
-__global__ void Compute_CC_kernel_2(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_dist,float* d_CC){ // BEGIN KER FUN via ADDKERNEL
+__global__ void Compute_CC_kernel_2(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,float* d_CC,int* d_dist){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned dst = blockIdx.x * blockDim.x + threadIdx.x;
   if(dst >= V) return;
@@ -48,12 +48,6 @@ __global__ void Compute_CC_kernel_2(int V, int E, int* d_meta, int* d_data, int*
     d_CC[src] = d_CC[src] + 1.000000 / d_dist[dst];
 
   } // if filter end
-} // end KER FUNC
-__global__ void Compute_CC_kernel_3(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next){ // BEGIN KER FUN via ADDKERNEL
-  float num_edges  = E;
-  unsigned edg = blockIdx.x * blockDim.x + threadIdx.x;
-  if(edg >= E) return;
-  i = i + 1;
 } // end KER FUNC
 
 #endif

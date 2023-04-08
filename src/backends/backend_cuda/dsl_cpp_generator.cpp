@@ -1055,7 +1055,7 @@ void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment* asmt,
   {
     PropAccess* propId = asmt->getPropId();
 
-    if (asmt->isDeviceAssignment()) {
+    if (isMainFile) {
       isDevice = true;
       //~ src.dist = 0; ===>  initIndex<int><<<1,1>>>(V,d_dist,src, 0);
       //                                  1              2     3   4
@@ -1734,7 +1734,7 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
       
 
       for (Identifier* iden : vars) {
-        std::cout<< "varName:" << iden->getIdentifier() << '\n';
+        std::cout << "varName:" << iden->getIdentifier() << '\n';
         Type* type = iden->getSymbolInfo()->getType();
 
         if (type->isPrimitiveType())
@@ -1753,8 +1753,10 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
       list<Identifier *> readvars = usedVars.getVariables(1);
       list<Identifier *> writevars = usedVars.getVariables(2);
       blockStatement *bstm = (blockStatement *)((statement *)forAll)->getParent();
+      cout<<forAll->getParent()->getTypeofNode()<<endl;
       statement *stm =(statement*)bstm->getParent();
-      if (stm->getTypeofNode() == NODE_DOWHILESTMT || stm->getTypeofNode() == NODE_FIXEDPTSTMT)
+      // cout << forAll->getParent()->getParent()->getParent()->getTypeofNode() << endl;
+      if ((stm->getTypeofNode() == NODE_DOWHILESTMT || stm->getTypeofNode() == NODE_FIXEDPTSTMT))
       {
           usedVariables usedvarsparent=getVarsStatement(stm);
           
@@ -2108,6 +2110,16 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
       main.pushString("d_");
       main.pushString(declStmt->getdeclId()->getIdentifier());
       main.pushstr_newL(";");
+      if (push_map[string(declStmt->getdeclId()->getIdentifier())]==1)
+      {
+        main.pushString(declStmt->getdeclId()->getIdentifier());
+        main.pushstr_newL(" PUSH");
+      }
+      else{
+        main.pushString(declStmt->getdeclId()->getIdentifier());
+        main.pushstr_newL(" PULL");
+      }
+       
       //~ cout << "B4 adding: " << str << " Size:" << vvList.size() << '\n';
       //~ vars *v = new vars("int *", str,false);
       //~ varList.push_back(*v);
@@ -2759,7 +2771,7 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,
         sprintf(strBuffer, "initKernel<%s> <<<numBlocks,threadsPerBlock>>>(V, %s, false);", fixPointVarType, modifiedVarNext);
         targetFile.pushstr_newL(strBuffer);
 
-        targetFile.pushstr_newL("int k=0; // #fixpt-Iterations");
+        // targetFile.pushstr_newL("int k=0; // #fixpt-Iterations");
 
         /**************************************************/
         // optimization

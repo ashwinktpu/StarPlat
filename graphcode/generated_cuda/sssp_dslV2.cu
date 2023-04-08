@@ -84,6 +84,7 @@ void Compute_SSSP(graph& g,int* dist,int src)
 
   //BEGIN DSL PARSING 
   bool* d_modified;
+  modified PULL
   cudaMalloc(&d_modified, sizeof(bool)*(V));
 
   initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_dist,(int)INT_MAX);
@@ -97,7 +98,6 @@ void Compute_SSSP(graph& g,int* dist,int src)
   // FIXED POINT variables
   //BEGIN FIXED POINT
   initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-  int k=0; // #fixpt-Iterations
   while(!finished) {
 
     finished = true;
@@ -112,11 +112,6 @@ void Compute_SSSP(graph& g,int* dist,int src)
     cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
     initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
   } // END FIXED POINT
-
-  Compute_SSSP_kernel_2<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_dist);
-  cudaDeviceSynchronize();
-
-
 
 
   //cudaFree up!! all propVars in this BLOCK!

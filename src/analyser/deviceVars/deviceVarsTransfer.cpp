@@ -46,11 +46,14 @@ statement* deviceVarsAnalyser::transferVarsStatement(statement* stmt, blockState
     switch (stmt->getTypeofNode())
     {
     case NODE_DECL:
+        cout<<"decl"<<endl;
         return transferVarsDeclaration((declaration *)stmt, parBlock);
     case NODE_ASSIGN:
+        cout << "assign" << endl;
         return transferVarsAssignment((assignment *)stmt, parBlock);
     case NODE_FORALLSTMT:
     {
+        cout << "forall" << endl;
         forallStmt *forStmt = (forallStmt *)stmt;
 
         if (forStmt->isForall())
@@ -59,22 +62,31 @@ statement* deviceVarsAnalyser::transferVarsStatement(statement* stmt, blockState
         return transferVarsFor((forallStmt*)stmt, parBlock);
     }
     case NODE_BLOCKSTMT:
+        cout << "block" << endl;
         return transferVarsBlock((blockStatement *)stmt, parBlock);
     case NODE_UNARYSTMT:
+        cout << "unary" << endl;
         return transferVarsUnary((unary_stmt *)stmt, parBlock);
     case NODE_IFSTMT:
+        cout << "if" << endl;
         return transferVarsIfElse((ifStmt *)stmt, parBlock);
     case NODE_WHILESTMT:
+        cout << "while" << endl;
         return transferVarsWhile((whileStmt *)stmt, parBlock);
     case NODE_DOWHILESTMT:
+        cout << "dowhile" << endl;
         return transferVarsDoWhile((dowhileStmt *)stmt, parBlock);
     case NODE_PROCCALLSTMT:
+        cout << "proccall" << endl;
         return transferVarsProcCall((proc_callStmt *)stmt, parBlock);
     case NODE_FIXEDPTSTMT:
+        cout << "fixedpoint" << endl;
         return transferVarsFixedPoint((fixedPointStmt *)stmt, parBlock);
     case NODE_REDUCTIONCALLSTMT:
+        cout << "reduction" << endl;
         return transferVarsReduction((reductionCallStmt *)stmt, parBlock);
     case NODE_ITRBFS:
+        cout << "iteratebfs" << endl;
         return transferVarsItrBFS((iterateBFS *)stmt, parBlock);
     }
 
@@ -133,9 +145,9 @@ statement* deviceVarsAnalyser::transferVarsDeclaration(declaration* stmt, blockS
     list<statement*> transferStmts = transferStatements(wrapNode->inMap, wrapNode->outMap);
     for(statement* bstmt: transferStmts)
         parBlock->addStmtToBlock(bstmt);
-    
+   
     gpuUsedVars.isUsedVar(stmt->getdeclId()) ? stmt->setInGPU(true) : stmt->setInGPU(false);
-    return stmt;
+     return stmt;
 }
 statement* deviceVarsAnalyser::transferVarsWhile(whileStmt* stmt, blockStatement* parBlock)
 {
@@ -162,9 +174,11 @@ statement* deviceVarsAnalyser::transferVarsDoWhile(dowhileStmt* stmt, blockState
 {
     ASTNodeWrap* wrapNode = getWrapNode(stmt);
     ASTNodeWrap* condNode = getWrapNode(stmt->getCondition());
-    return stmt;
+    
 
     blockStatement* newBody = (blockStatement*) transferVarsStatement(stmt->getBody(), parBlock);
+    stmt->setBody(newBody);
+    return stmt;
     {
         Identifier* tempIden = (Identifier*) Util::createIdentifierNode(getTempVar());
         Type* idenType = (Type*) Util::createPrimitiveTypeNode(TYPE_BOOL);

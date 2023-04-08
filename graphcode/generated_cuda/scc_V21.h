@@ -1,6 +1,6 @@
 // FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
-#ifndef GENCPP_SCC_V2_H
-#define GENCPP_SCC_V2_H
+#ifndef GENCPP_SCC_V21_H
+#define GENCPP_SCC_V21_H
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
@@ -108,7 +108,7 @@ __global__ void vHong_kernel_4(int V, int E, int* d_meta, int* d_data, int* d_sr
 } // end KER FUNC
 __device__ bool fpoint2 ; // DEVICE ASSTMENT in .h
 
-__global__ void vHong_kernel_5(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,bool* d_visitBw,bool* d_propFw,bool* d_visitFw,int* d_scc,bool* d_propBw,int* d_range){ // BEGIN KER FUN via ADDKERNEL
+__global__ void vHong_kernel_5(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,bool* d_propBw,bool* d_visitBw,bool* d_propFw,int* d_scc,bool* d_visitFw,int* d_range){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
   if(src >= V) return;
@@ -309,7 +309,7 @@ __global__ void vHong_kernel_12(int V, int E, int* d_meta, int* d_data, int* d_s
 
   } // if filter end
 } // end KER FUNC
-__global__ void vHong_kernel_13(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,bool* d_visitBw,bool* d_propFw,bool* d_visitFw,int* d_scc,bool* d_propBw,int* d_range){ // BEGIN KER FUN via ADDKERNEL
+__global__ void vHong_kernel_13(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,bool* d_propBw,bool* d_visitBw,bool* d_propFw,int* d_scc,bool* d_visitFw,int* d_range){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
   if(src >= V) return;

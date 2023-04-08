@@ -138,12 +138,15 @@ bool deviceVarsAnalyser::initFixedPoint(fixedPointStmt *stmt, list<Identifier *>
 {
     ASTNodeWrap *stmtNode = initWrapNode(stmt, vars);
     ASTNodeWrap *condNode = initWrapNode(stmt->getFixedPointId(), vars);
-    gpuUsedVars.addVariable(stmt->getFixedPointId(), READ_WRITE);
+    
     condNode->usedVars.addVariable(stmt->getFixedPointId(), READ_WRITE);
     for (Identifier *iden : getVarsExpr(stmt->getDependentProp()).getVariables(READ_WRITE))
         condNode->usedVars.addVariable(iden, READ_WRITE);
 
     bool hasForAll = initStatement(stmt->getBody(), vars);
+    if(hasForAll){
+        gpuUsedVars.addVariable(stmt->getFixedPointId(), READ_WRITE);
+    }
     stmtNode->hasForAll = hasForAll;
 
     return hasForAll;

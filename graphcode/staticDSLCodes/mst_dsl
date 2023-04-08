@@ -1,0 +1,154 @@
+function Boruvka (Graph g){
+    propNode<int> nodeId;
+    propNode<int> color; 
+     propNode<int> color_next; 
+    propEdge<bool> isMSTEdge; 
+    
+    g.attachNodeProperty(nodeId = -1);
+    g.attachNodeProperty(color = -1);
+    g.attachNodeProperty(color_next = -1);
+   
+    g.attachEdgeProperty(isMSTEdge = False);
+    
+    forall(u in g.nodes()){
+        u.nodeId = u;
+        u.color = u;
+        u.color_next = u;
+    }
+     color_next=color;
+     
+    propNode<bool> modified;
+    g.attachNodeProperty(modified = False);
+
+    bool noNewComp = False;
+    fixedPoint until (noNewComp : !modified) {
+        propNode<int> minEdge; 
+        propNode<int> minEdge_next;
+
+        g.attachNodeProperty(minEdge=-1);
+        g.attachNodeProperty(minEdge_next=-1);
+
+        forall(src in g.nodes())
+        {
+            for(dst in g.neighbors(src))
+            {
+                if(src.color != dst.color)
+                {
+                    edge e = g.get_edge(dummy, dummy);
+                    edge minEdge = src.minEdge;
+                    if(minEdge == -1) {
+                        src.minEdge = e;
+                    }
+
+                    if(minEdge != -1){
+                        node minDst = minEdge.data;
+                        if(e.weight < minEdge.weight || (e.weight == minEdge.weight && dst.color < minDst.color)) {
+                            src.minEdge = e;
+                        }
+                    }
+                }
+            }
+        }
+        
+       
+        propNode<int> minEdgeOfComp;
+        propNode<int> minEdgeOfComp_next;
+        g.attachNodeProperty(minEdgeOfComp=-1);
+        g.attachNodeProperty(minEdgeOfComp_next=-1);
+        
+        bool finishedMinEdge = False;
+        fixedPoint until (finishedMinEdge: !modified) {
+
+            minEdgeOfComp_next=minEdgeOfComp;
+
+            forall(u in g.nodes()){
+                int comp = u.color;
+                int minEdge = comp.minEdgeOfComp;
+                int e = u.minEdge;
+                
+                if(e != -1){
+                    int dst = e.data;
+                    if(minEdge == -1) {
+                        comp.minEdgeOfComp_next = e;
+                        finishedMinEdge = False;
+                    }
+                    if(minEdge != -1){
+                        node minDst = minEdge.data;
+                        if(e.weight < minEdge.weight || (e.weight == minEdge.weight && dst.color < minDst.color)) {
+                            comp.minEdgeOfComp_next = e;
+                            finishedMinEdge = False;
+                        }
+                    }
+                }
+            }
+            minEdgeOfComp=minEdgeOfComp_next;
+        }
+
+
+        forall(src in g.nodes())
+        {
+            if(src.color == src.nodeId){
+                edge srcMinEdge = src.minEdgeOfComp;
+                if(srcMinEdge != -1)
+                {
+                    node dst = srcMinEdge.data; 
+                    node dstLead = dst.color;
+                    edge dstMinEdge = dstLead.minEdgeOfComp;
+                    if(dstMinEdge != -1)
+                    {
+                        node dstOfDst = dstMinEdge.data;
+                        node dstOfDstLead = dstOfDst.color;
+                        if(src.color == dstOfDstLead.color && src.color > dstLead.color)
+                        {
+                            dstLead.minEdgeOfComp_next = -1;
+                        }
+                    }
+                }
+            }
+        }
+
+        minEdgeOfComp=minEdgeOfComp_next;
+        
+        forall(src in g.nodes()){
+            if(src.color == src.nodeId){
+                edge srcMinEdge = src.minEdgeOfComp;
+                if(srcMinEdge != -1)
+                {
+                    srcMinEdge.isMSTEdge = True;
+                }
+            }
+        }
+        
+        color_next=color;
+
+        forall(src in g.nodes()){
+            if(src.color == src.nodeId){
+                edge srcMinEdge = src.minEdgeOfComp;
+                if(srcMinEdge != -1)
+                {
+                    noNewComp = False;
+                    node dst = srcMinEdge.data;
+                    src.color_next = dst.color;
+                }
+            }
+        }
+
+        color=color_next;
+        
+        bool finished = False;
+        fixedPoint until (finished: !modified) {
+            color_next=color;
+            forall(u in g.nodes()) {
+                int my_color = u.color;
+                int other_color = my_color.color;
+
+                if(my_color != other_color)
+                {
+                    finished = False;
+                    u.color_next = other_color;
+                }
+            }
+            color=color_next;
+        }
+    }   
+}

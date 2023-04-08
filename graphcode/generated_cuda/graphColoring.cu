@@ -1,7 +1,7 @@
 // FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
-#include "CC.h"
+#include "graphColoring.h"
 
-void Compute_CC(graph& g,float* CC)
+void colorGraph(graph& g)
 
 {
   // CSR BEGIN
@@ -78,65 +78,63 @@ void Compute_CC(graph& g,float* CC)
 
 
   //DECLAR DEVICE AND HOST vars in params
-  float* d_CC;
-  cudaMalloc(&d_CC, sizeof(float)*(V));
-
 
   //BEGIN DSL PARSING 
-  initKernel<float> <<<numBlocks,threadsPerBlock>>>(V,d_CC,(float)0);
+  int numNodes = g.num_nodes( ); // asst in .cu
 
-  int V = g.num_nodes( ); // asst in .cu
+  long* d_color;
+  color PULL
+  cudaMalloc(&d_color, sizeof(long)*(V));
 
-  int src = 0; // asst in .cu
+  int* d_color1;
+  color1 PULL
+  cudaMalloc(&d_color1, sizeof(int)*(V));
+
+  int* d_color2;
+  color2 PULL
+  cudaMalloc(&d_color2, sizeof(int)*(V));
+
+  bool* d_modified;
+  modified PULL
+  cudaMalloc(&d_modified, sizeof(bool)*(V));
+
+  bool* d_modified_next;
+  modified_next PULL
+  cudaMalloc(&d_modified_next, sizeof(bool)*(V));
+
+  initKernel<long> <<<numBlocks,threadsPerBlock>>>(V,d_color,(long)0);
+
+  initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_modified,(bool)false);
+
+  initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_modified_next,(bool)false);
+
+  int fpoint1 = 0; // asst in .cu
+
+  int iter = 0; // asst in .cu
 
   do{
-    int* d_dist;
-    cudaMalloc(&d_dist, sizeof(int)*(V));
-
-    bool* d_modified;
-    cudaMalloc(&d_modified, sizeof(bool)*(V));
-
-    initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_dist,(int)INT_MAX);
-
-    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_modified,(bool)false);
-
-    initIndex<bool><<<1,1>>>(V,d_modified,src,(bool)true); //InitIndexDevice
-    initIndex<int><<<1,1>>>(V,d_dist,src,(int)0); //InitIndexDevice
-    bool finished = false; // asst in .cu
-
-    // FIXED POINT variables
-    //BEGIN FIXED POINT
-    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-    int k=0; // #fixpt-Iterations
-    while(!finished) {
-
-      finished = true;
-      cudaMemcpyToSymbol(::finished, &finished, sizeof(bool), 0, cudaMemcpyHostToDevice);
-      Compute_CC_kernel_1<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_modified,d_dist);
-      cudaDeviceSynchronize();
-
-
-
-
-      cudaMemcpyFromSymbol(&finished, ::finished, sizeof(bool), 0, cudaMemcpyDeviceToHost);
-      cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
-      initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-    } // END FIXED POINT
-
-    cudaMemcpyToSymbol(::src, &src, sizeof(int), 0, cudaMemcpyHostToDevice);
-    Compute_CC_kernel_2<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_CC,d_dist);
+    iter = iter + 1;
+    cudaMemcpyToSymbol(::fpoint1, &fpoint1, sizeof(int), 0, cudaMemcpyHostToDevice);
+    colorGraph_kernel_1<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_modified,d_color,d_modified_next);
     cudaDeviceSynchronize();
-    cudaMemcpyFromSymbol(&src, ::src, sizeof(int), 0, cudaMemcpyDeviceToHost);
+    cudaMemcpyFromSymbol(&fpoint1, ::fpoint1, sizeof(int), 0, cudaMemcpyDeviceToHost);
 
 
 
-    src = src + 1;
+    ; // asst in .cu
 
-    //cudaFree up!! all propVars in this BLOCK!
-    cudaFree(d_modified);
-    cudaFree(d_dist);
+    ; // asst in .cu
 
-  }while(src < V);
+    cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
+
+  }while(fpoint1 < numNodes);
+
+  //cudaFree up!! all propVars in this BLOCK!
+  cudaFree(d_modified_next);
+  cudaFree(d_modified);
+  cudaFree(d_color2);
+  cudaFree(d_color1);
+  cudaFree(d_color);
 
   //TIMER STOP
   cudaEventRecord(stop,0);
@@ -144,5 +142,4 @@ void Compute_CC(graph& g,float* CC)
   cudaEventElapsedTime(&milliseconds, start, stop);
   printf("GPU Time: %.6f ms\n", milliseconds);
 
-  cudaMemcpy(      CC,     d_CC, sizeof(float)*(V), cudaMemcpyDeviceToHost);
 } //end FUN

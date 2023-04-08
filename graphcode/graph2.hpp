@@ -373,43 +373,37 @@ class graph
 
         std::stringstream ss(line);
 
-        edgesTotal++;
-        edgesTotal++;
+        edgesTotal+=2;
+         
         //edgesTotal++; //TO BE REMOVED 
 
         //edgesTotal++; //TO BE REMOVED
 
 
-        edge e;
+        edge e;edge e1;
         
     
         int32_t source;
         int32_t destination;
-        int32_t weightVal;
+        int32_t weightVal = 1;
 
-           ss>>source; 
+           ss>>source;
            if(source>nodesTotal)
               nodesTotal=source;
 
-            ss>>destination;  
+            ss>>destination;
             if(destination>nodesTotal)
                nodesTotal=destination;  
-
-           e.source=source;
-           e.destination=destination;
-           ss>>e.weight;
+          ss>>weightVal; //for edgelists having weight too.      
+           e.source=source; e1.destination=source;
+           e.destination=destination; e1.source = destination;
+           e.weight=weightVal; e1.weight = weightVal;
 
            edges[source].push_back(e);
-           graph_edge.push_back(e);
-
-           edge e1;
-           e1.source = destination;
-           e1.destination = source;
-           e1.weight=e.weight;
            edges[destination].push_back(e1);
-           graph_edge.push_back(e1);
-
-           //  ss>>weightVal; //for edgelists having weight too.      
+           graph_edge.push_back(e);
+            graph_edge.push_back(e1);
+           
            
      }
 

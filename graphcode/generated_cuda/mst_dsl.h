@@ -1,36 +1,29 @@
 // FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
-#ifndef GENCPP_MST_V1_H
-#define GENCPP_MST_V1_H
+#ifndef GENCPP_MST_DSL_H
+#define GENCPP_MST_DSL_H
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
 #include <cuda.h>
-#include "../graph1.hpp"
-#include "../libcuda1.cuh"
+#include "../graph.hpp"
+#include "../libcuda.cuh"
 #include <cooperative_groups.h>
 
 void Boruvka(graph& g);
 
 
 
-__global__ void Boruvka_kernel_1(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_color,int* d_nodeId,bool *d_isMSTEdge){ // BEGIN KER FUN via ADDKERNEL
+__global__ void Boruvka_kernel_1(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_color_next,int* d_color,int* d_nodeId){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned u = blockIdx.x * blockDim.x + threadIdx.x;
   if(u >= V) return;
-  //int i = 0; // DEVICE ASSTMENT in .h
-
-  //for (int v = 0; v < V; v++) {
-    //d_nodeId[v] = i;
-    //d_color[v] = i;
-    //i = i + 1;
-
-  //}
-  d_nodeId[u] = u;
-  d_color[u] = u;
+  d_nodeId[u] = u; //InitIndex
+  d_color[u] = u; //InitIndex
+  d_color_next[u] = u; //InitIndex
 } // end KER FUNC
 __device__ bool noNewComp ; // DEVICE ASSTMENT in .h
 
-__global__ void Boruvka_kernel_2(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_minEdge,int* d_color,bool *d_isMSTEdge){ // BEGIN KER FUN via ADDKERNEL
+__global__ void Boruvka_kernel_2(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_minEdge,int* d_color){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
   if(src >= V) return;
@@ -44,7 +37,8 @@ __global__ void Boruvka_kernel_2(int V, int E, int* d_meta, int* d_data, int* d_
 
       } // if filter end
       if (minEdge != -1){ // if filter begin 
-        int minDst = d_data[minEdge];
+        int minDst = d_data[minEdge]; // DEVICE ASSTMENT in .h
+
         if (d_weight[e] < d_weight[minEdge] || (d_weight[e] == d_weight[minEdge] && d_color[dst] < d_color[minDst])){ // if filter begin 
           d_minEdge[src] = e;
 
@@ -58,7 +52,7 @@ __global__ void Boruvka_kernel_2(int V, int E, int* d_meta, int* d_data, int* d_
 } // end KER FUNC
 __device__ bool finishedMinEdge ; // DEVICE ASSTMENT in .h
 
-__global__ void Boruvka_kernel_3(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_minEdge,int* d_minEdgeOfComp,int* d_color,bool *d_isMSTEdge){ // BEGIN KER FUN via ADDKERNEL
+__global__ void Boruvka_kernel_3(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_minEdge,int* d_minEdgeOfComp,int* d_color,int* d_minEdgeOfComp_next){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned u = blockIdx.x * blockDim.x + threadIdx.x;
   if(u >= V) return;
@@ -72,14 +66,15 @@ __global__ void Boruvka_kernel_3(int V, int E, int* d_meta, int* d_data, int* d_
     int dst = d_data[e]; // DEVICE ASSTMENT in .h
 
     if (minEdge == -1){ // if filter begin 
-      d_minEdgeOfComp[comp] = e;
+      d_minEdgeOfComp_next[comp] = e;
       finishedMinEdge = false;
 
     } // if filter end
     if (minEdge != -1){ // if filter begin 
-      int minDst = d_data[minEdge];
+      int minDst = d_data[minEdge]; // DEVICE ASSTMENT in .h
+
       if (d_weight[e] < d_weight[minEdge] || (d_weight[e] == d_weight[minEdge] && d_color[dst] < d_color[minDst])){ // if filter begin 
-        d_minEdgeOfComp[comp] = e;
+        d_minEdgeOfComp_next[comp] = e;
         finishedMinEdge = false;
 
       } // if filter end
@@ -88,21 +83,25 @@ __global__ void Boruvka_kernel_3(int V, int E, int* d_meta, int* d_data, int* d_
 
   } // if filter end
 } // end KER FUNC
-__global__ void Boruvka_kernel_4(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_minEdgeOfComp,int* d_color,int* d_nodeId,bool *d_isMSTEdge){ // BEGIN KER FUN via ADDKERNEL
+__global__ void Boruvka_kernel_4(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_color,int* d_nodeId,int* d_minEdgeOfComp,int* d_minEdgeOfComp_next){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
   if(src >= V) return;
   if (d_color[src] == d_nodeId[src]){ // if filter begin 
     int srcMinEdge = d_minEdgeOfComp[src];
     if (srcMinEdge != -1){ // if filter begin 
-      int dst = d_data[srcMinEdge];
-      int dstLead = d_color[dst];
+      int dst = d_data[srcMinEdge]; // DEVICE ASSTMENT in .h
+
+      int dstLead = d_color[dst]; // DEVICE ASSTMENT in .h
+
       int dstMinEdge = d_minEdgeOfComp[dstLead];
       if (dstMinEdge != -1){ // if filter begin 
-        int dstOfDst = d_data[dstMinEdge];
-        int dstOfDstLead = d_color[dstOfDst];
+        int dstOfDst = d_data[dstMinEdge]; // DEVICE ASSTMENT in .h
+
+        int dstOfDstLead = d_color[dstOfDst]; // DEVICE ASSTMENT in .h
+
         if (d_color[src] == d_color[dstOfDstLead] && d_color[src] > d_color[dstLead]){ // if filter begin 
-          d_minEdgeOfComp[dstLead] = -1;
+          d_minEdgeOfComp_next[dstLead] = -1;
 
         } // if filter end
 
@@ -112,7 +111,7 @@ __global__ void Boruvka_kernel_4(int V, int E, int* d_meta, int* d_data, int* d_
 
   } // if filter end
 } // end KER FUNC
-__global__ void Boruvka_kernel_5(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_minEdgeOfComp,int* d_color,int* d_nodeId,bool *d_isMSTEdge){ // BEGIN KER FUN via ADDKERNEL
+__global__ void Boruvka_kernel_5(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_color,int* d_nodeId,int* d_minEdgeOfComp,bool* d_isMSTEdge){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
   if(src >= V) return;
@@ -125,7 +124,7 @@ __global__ void Boruvka_kernel_5(int V, int E, int* d_meta, int* d_data, int* d_
 
   } // if filter end
 } // end KER FUNC
-__global__ void Boruvka_kernel_6(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_minEdgeOfComp,int* d_color,int* d_nodeId,bool *d_isMSTEdge){ // BEGIN KER FUN via ADDKERNEL
+__global__ void Boruvka_kernel_6(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_color,int* d_nodeId,int* d_minEdgeOfComp,int* d_color_next){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
   if(src >= V) return;
@@ -133,8 +132,9 @@ __global__ void Boruvka_kernel_6(int V, int E, int* d_meta, int* d_data, int* d_
     int srcMinEdge = d_minEdgeOfComp[src];
     if (srcMinEdge != -1){ // if filter begin 
       noNewComp = false;
-      int dst = d_data[srcMinEdge];
-      d_color[src] = d_color[dst];
+      int dst = d_data[srcMinEdge]; // DEVICE ASSTMENT in .h
+
+      d_color_next[src] = d_color[dst];
 
     } // if filter end
 
@@ -142,7 +142,7 @@ __global__ void Boruvka_kernel_6(int V, int E, int* d_meta, int* d_data, int* d_
 } // end KER FUNC
 __device__ bool finished ; // DEVICE ASSTMENT in .h
 
-__global__ void Boruvka_kernel_7(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_color,bool *d_isMSTEdge){ // BEGIN KER FUN via ADDKERNEL
+__global__ void Boruvka_kernel_7(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_color,int* d_color_next){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned u = blockIdx.x * blockDim.x + threadIdx.x;
   if(u >= V) return;
@@ -152,7 +152,7 @@ __global__ void Boruvka_kernel_7(int V, int E, int* d_meta, int* d_data, int* d_
 
   if (my_color != other_color){ // if filter begin 
     finished = false;
-    d_color[u] = other_color;
+    d_color_next[u] = other_color;
 
   } // if filter end
 } // end KER FUNC

@@ -1,0 +1,157 @@
+fileName ../graphcode/staticDSLCodes/graphColoring
+Backend Target cuda
+Type: function
+'('Graph Type
+
+')'currentFuncType check!!0
+tempID g funccount 0
+
+'{'Type: int
+
+'='
+'.''('')'';'Node Property'<'Type: long'>'
+';'Node Property'<'Type: int'>'
+';'Node Property'<'Type: int'>'
+';'Node Property'<'Type: bool'>'
+';'Node Property'<'Type: bool'>'
+';''.''(''='')'';'TYPE OF NODE OF STATEMENT1'.''(''='Type Bool: False')'';'TYPE OF NODE OF STATEMENT1'.''(''='Type Bool: False')'';'TYPE OF NODE OF STATEMENT1Type: int
+
+'='
+';'Type: int
+'='
+';'Keyword do: do'{''=''+'';''.''('','')'';'TYPE OF NODE OF STATEMENT1'.''('','','')'';'TYPE OF NODE OF STATEMENT1Keyword-forall: forall'('
+Keyword in 
+'.''('')'')''{'Keyword if: if'(''.'EQ_OPType Bool: False')''{'Type: int
+
+'='
+';'Type: int
+
+'='
+';'For: for'('
+Keyword in 
+'.''('')'')''{''=''+'';'Keyword if: if'('EQ_OP')''{''=''+'';''}'Keyword else: else
+Keyword if: if'(''.'EQ_OPType Bool: True')''{''=''+'';''}'Keyword else: else
+Keyword if: if'(''.''>''.'')''{''=''+'';''}''}'For: for'('
+Keyword in 
+'.''('')'')''{''=''+'';'Keyword if: if'('EQ_OP')''{''=''+'';''}'Keyword else: else
+Keyword if: if'(''.'EQ_OPType Bool: True')''{''=''+'';''}'Keyword else: else
+Keyword if: if'(''.''>''.'')''{''=''+'';''}''}'Keyword if: if'('EQ_OP')''{''.'
+'='
+Type Bool: True';'ADD_ASSIGN ';''}''}''}'
+'='
+';''}'Keyword while: while'(''<'')'';'
+
+'}'error val 0
+at 1
+FORALL par   NAME1:6
+FORALL ParPar NAME2:10
+FORALL ParParPar NAME3:6
+FORALL par   NAME1:6
+FORALL ParPar NAME2:12
+FORALL ParParPar NAME3:6
+FORALL par   NAME1:6
+FORALL ParPar NAME2:12
+FORALL ParParPar NAME3:6
+ANAME1:6
+ANAME2:12
+at 2
+block
+dowhile
+forall
+ if
+   for
+   assign
+ if
+   assign
+ else
+ if
+   assign
+ else
+ if
+   assign
+   for
+   assign
+ if
+   assign
+ else
+ if
+   assign
+ else
+ if
+   assign
+ if
+   assign
+                               v modified_next v    reduction
+fileName graphColoring
+param :g
+paramD:d_g
+========== SET TRUE
+param :g
+paramD:d_g
+	==VARSIZE:5
+varT:int
+varN:numNodes
+varName:color
+varName:modified
+varName:modified_next
+varT:int
+varN:fpoint1
+varT:int
+varN:iter
+	==VARSIZE:0
+	ASST
+STMT: For
+isMainFile val 1
+Entered here for forall 
+============EARLIER NOT OPT=============
+varName:modified
+varName:fpoint1
+varName:color
+varName:modified_next
+NOT OPTIMESED ---------------
+start of kernel block 
+=======IF FILTER
+	==VARSIZE:0
+varT:int
+varN:cnt
+varT:int
+varN:total
+STMT: For
+isMainFile val 0
+GenerateForAllSignature = 0
+	 ITERATE Neighbour 
+src:nbr
+	==VARSIZE:0
+	ASST
+=======IF FILTER
+	==VARSIZE:0
+	ASST
+=======IF FILTER
+	==VARSIZE:0
+	ASST
+=======IF FILTER
+	==VARSIZE:0
+	ASST
+FOR BODY END
+STMT: For
+isMainFile val 0
+GenerateForAllSignature = 0
+	 ITERATE Neighbour 
+src:par
+	==VARSIZE:0
+	ASST
+=======IF FILTER
+	==VARSIZE:0
+	ASST
+=======IF FILTER
+	==VARSIZE:0
+	ASST
+=======IF FILTER
+	==VARSIZE:0
+	ASST
+FOR BODY END
+=======IF FILTER
+	==VARSIZE:0
+	ASST
+	ASST
+finished successfully

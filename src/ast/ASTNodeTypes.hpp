@@ -29,7 +29,8 @@ extern vector<map<int,vector<Identifier*>>> graphId;
                                                        where the graphId vector is 
                                                        separated across different function type*/
 class varTransferStmt;
-
+extern map<string,int> push_map;
+extern map<string,int> atomicAdd_map;
 class argument
 {  
   private:
@@ -123,6 +124,7 @@ class Identifier:public ASTNode
 
   int accessType;
   char* identifier;
+  
 
   Expression* assignedExpr; /*added to store node/edge property initialized values.
                              - Used in SymbolTable phase for storing metadata. 
@@ -156,7 +158,8 @@ class Identifier:public ASTNode
      idNode->fp_association = false;
      idNode->assignedExpr = NULL;
      idNode->dependentExpr = NULL;
-   // std::cout<<"IDENTIFIER = "<<idNode->getIdentifier()<<" "<<strlen(idNode->getIdentifier());
+     
+     // std::cout<<"IDENTIFIER = "<<idNode->getIdentifier()<<" "<<strlen(idNode->getIdentifier());
      return idNode;
 
    }
@@ -191,7 +194,7 @@ class Identifier:public ASTNode
      copyId->setTypeofNode(NODE_ID);
      return copyId;
    }
-   
+
    void set_redecl()
    {
      redecl=true;
@@ -261,7 +264,7 @@ class PropAccess:public ASTNode
   Identifier* identifier1;
   Identifier* identifier2;
   int accessType;
-  string pushorpull;
+  
 
   public:
   static PropAccess* createPropAccessNode(Identifier* id1, Identifier* id2)
@@ -271,7 +274,6 @@ class PropAccess:public ASTNode
      propAccessNode->identifier2=id2;
      propAccessNode->accessType=1;
      propAccessNode->setTypeofNode(NODE_PROPACCESS);
-     propAccessNode->pushorpull = "PULL";
      return propAccessNode;
 
    }
@@ -281,13 +283,7 @@ class PropAccess:public ASTNode
      return accessType;
    }
 
-   void setPushorPull(string pp){
-       pushorpull=pp;
-   }
-
-   string getPushorPull(){
-      return pushorpull;
-   }
+   
 
    Identifier* getIdentifier1()
    {
@@ -1363,7 +1359,9 @@ class whileStmt:public statement
 
     void setBody(blockStatement* bodySent)
     {
-       body=bodySent;
+     
+      body = bodySent;
+      body->setParent(this);
     }
   }; 
   class dowhileStmt:public statement
@@ -1404,7 +1402,8 @@ class whileStmt:public statement
 
     void setBody(blockStatement* bodySent)
     {
-       body=bodySent;
+      body = bodySent;
+      body->setParent(this);
     }
   };
 
@@ -2049,6 +2048,7 @@ class fixedPointStmt:public statement
     void setBody(statement* bodySent)
     {
        body=bodySent;
+       body->setParent(this);
     }
     Expression* getfilterExpr()
     {

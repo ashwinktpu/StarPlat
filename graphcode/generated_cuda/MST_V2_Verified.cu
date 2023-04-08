@@ -89,7 +89,7 @@ void Boruvka(graph& g)
   //DECLAR DEVICE AND HOST vars in params
 
   //BEGIN DSL PARSING 
-   int* d_nodeId;
+  int* d_nodeId;
   cudaMalloc(&d_nodeId, sizeof(int)*(V));
 
   int* d_color;
@@ -123,24 +123,25 @@ void Boruvka(graph& g)
   // cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
   // printf("d_modified malloc and init %.3f\n", time);
  
+  int x=0;
   while(!noNewComp) {
     // cudaEventRecord(start, 0);
     noNewComp = true;
     cudaMemcpyToSymbol(::noNewComp, &noNewComp, sizeof(bool), 0, cudaMemcpyHostToDevice);
     int* d_minEdge;
     cudaMalloc(&d_minEdge, sizeof(int)*(V));
+    // int* ed = (int*)malloc(V*(sizeof(int)));
 
     initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_minEdge,(int)-1);
     // cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
     // printf("d_minEdge malloc and init %.3f\n", time);
-
+    
 
     // cudaEventRecord(start, 0);
     Boruvka_kernel_2<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdge,d_color,d_isMSTEdge);
     cudaDeviceSynchronize();
     // cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
     // printf("Boruvka Kernel 2 %.3f\n", time);
-
 
     // cudaEventRecord(start, 0);
     int* d_minEdgeOfComp;
@@ -156,6 +157,7 @@ void Boruvka(graph& g)
     // FIXED POINT variables
     //BEGIN FIXED POINT
     initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
+    int y=0;
     while(!finishedMinEdge) {
       finishedMinEdge = true;
       cudaMemcpyToSymbol(::finishedMinEdge, &finishedMinEdge, sizeof(bool), 0, cudaMemcpyHostToDevice);
@@ -166,27 +168,88 @@ void Boruvka(graph& g)
       cudaMemcpyFromSymbol(&finishedMinEdge, ::finishedMinEdge, sizeof(bool), 0, cudaMemcpyDeviceToHost);
       cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
       initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
+      y++;
     } // END FIXED POINT
     // cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
     // printf("Boruvka Kernel 3 %.3f\n", time);
 
     // cudaEventRecord(start, 0);
+    
+    bool* ed=(bool*)malloc(sizeof(bool)*E);
+    // cudaMemcpy(ed,d_isMSTEdge,sizeof(bool)*E,cudaMemcpyDeviceToHost);
+    // if(x<2){
+    //   printf("before::\n");
+    //   for(int i=0;i<E;i++){
+    //     if(ed[i])
+    //       printf("1 ");
+    //     else
+    //       printf("0 ");
+    //   }
+    //   printf("\n");
+    // }
     Boruvka_kernel_4<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdgeOfComp,d_color,d_nodeId,d_isMSTEdge);
     cudaDeviceSynchronize();
+
+    // int* ed=(int*)malloc(sizeof(int)*V);
+    // cudaMemcpy(ed,d_minEdgeOfComp,V*sizeof(int),cudaMemcpyDeviceToHost);
+    //   if(x<4){
+    //     printf("x=%d\n",x);
+    //     for(int i=0;i<V;i++){
+    //       printf("%d ",ed[i]);
+    //     }
+    //     printf("\n");
+    //   }
     // cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
     // printf("Boruvka Kernel 4 %.3f\n", time);
 
     // cudaEventRecord(start, 0);
+    // bool* ed=(bool*)malloc(sizeof(bool)*E);
+    cudaMemcpy(ed,d_isMSTEdge,sizeof(bool)*E,cudaMemcpyDeviceToHost);
+    if(x<2){
+      printf("before::\n");
+      for(int i=0;i<E;i++){
+        if(ed[i])
+          printf("1 ");
+        else
+          printf("0 ");
+      }
+      printf("\n");
+    }
+
+    int* comp=(int*)malloc(sizeof(int)*(V));
+    cudaMemcpy(comp,d_minEdgeOfComp,sizeof(int)*V,cudaMemcpyDeviceToHost);
+
+   
     Boruvka_kernel_5<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdgeOfComp,d_color,d_nodeId,d_isMSTEdge);
     cudaDeviceSynchronize();
     // cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
     // printf("Boruvka Kernel 5 %.3f\n", time);
+    // bool* ed=(bool*)malloc(sizeof(bool)*E);
+    cudaMemcpy(ed,d_isMSTEdge,sizeof(bool)*E,cudaMemcpyDeviceToHost);
+
+    if(x<2){
+      printf("after::\n");
+      for(int i=0;i<E;i++){
+        if(ed[i])
+          printf("1 ");
+        else
+          printf("0 ");
+      }
+      printf("\n");
+      printf("minEdgeofComp after::\n");
+      for(int i=0;i<V;i++){
+        printf("%d ",comp[i]);
+      }
+      printf("\n");
+    }
 
     // cudaEventRecord(start, 0);
     cudaMemcpyToSymbol(::noNewComp, &noNewComp, sizeof(bool), 0, cudaMemcpyHostToDevice);
+    // std::cout<<"before = "<<noNewComp<<std::endl;
     Boruvka_kernel_6<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_minEdgeOfComp,d_color,d_nodeId,d_isMSTEdge);
     cudaDeviceSynchronize();
     cudaMemcpyFromSymbol(&noNewComp, ::noNewComp, sizeof(bool), 0, cudaMemcpyDeviceToHost);
+    // std::cout<<"after = "<<noNewComp<<std::endl;
     // cudaEventRecord(stop, 0);  cudaEventSynchronize(stop);  cudaEventElapsedTime(&time, start, stop);
     // printf("Boruvka Kernel 6 %.3f\n", time);
 
@@ -197,7 +260,6 @@ void Boruvka(graph& g)
     //BEGIN FIXED POINT
     initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
     while(!finished) {
-
       // cudaEventRecord(start, 0);
       finished = true;
       cudaMemcpyToSymbol(::finished, &finished, sizeof(bool), 0, cudaMemcpyHostToDevice);
@@ -227,7 +289,8 @@ void Boruvka(graph& g)
       // printf("Single Iteration Symbol copy %.3f\n", time);
   
     } // END FIXED POINT
-
+    x++;
+    // std::cout<<x<<std::endl;
     // cudaEventRecord(start, 0);
     //cudaFree up!! all propVars in this BLOCK!
     cudaFree(d_minEdgeOfComp);
@@ -260,19 +323,11 @@ void Boruvka(graph& g)
   cudaFree(d_nodeId);
 } //end FUN
 
-int main(int argc, char** argv) {
-  time_t start, end;
-	time(&start);
-  char* inp = argv[1];
-  bool isWeighted = atoi(argv[2]) ? true : false;
-  printf("Taking input from: %s\n", inp);
-  graph g(inp);
-  g.parseGraph(isWeighted);
+int main(int argc,char* argv[])
+{
+  char *file_name = argv[1];
+  graph g(file_name);
+  g.parseGraph();
   Boruvka(g);
-	time(&end);
-	double time_taken = double(end - start);
-  cout << "Time taken by program is : " << fixed
-        << time_taken << setprecision(5);
-  cout << " sec " << endl;
   return 0;
 }
