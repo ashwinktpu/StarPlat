@@ -83,7 +83,8 @@ void Compute_BC(graph &g, float *BC, std::set<int> &sourceSet)
   int NUM_THREADS = 1048576;
   int stride = NUM_THREADS;
 
-  // TODO: TIMER START
+  // TIMER START
+  std::chrono::steady_clock::time_point tic = std::chrono::steady_clock::now();
 
   // DECLAR DEVICE AND HOST vars in params
   float *d_BC;
@@ -103,8 +104,8 @@ void Compute_BC(graph &g, float *BC, std::set<int> &sourceSet)
   for (itr = sourceSet.begin(); itr != sourceSet.end(); itr++)
   {
     int src = *itr;
-    double *d_sigma;
-    d_sigma = malloc_device<double>(V, Q);
+    float *d_sigma;
+    d_sigma = malloc_device<float>(V, Q);
 
     float *d_delta;
     d_delta = malloc_device<float>(V, Q);
@@ -118,12 +119,12 @@ void Compute_BC(graph &g, float *BC, std::set<int> &sourceSet)
     Q.submit([&](handler &h)
              { h.parallel_for(NUM_THREADS, [=](id<1> i)
                               {
-  for (; i < V; i += stride) d_sigma[i] = (double)0; }); })
+  for (; i < V; i += stride) d_sigma[i] = (float)0; }); })
         .wait();
 
     Q.submit([&](handler &h)
              { h.single_task([=]()
-                             { d_sigma[src] = (double)1; }); })
+                             { d_sigma[src] = (float)1; }); })
         .wait(); // InitIndexDevice
 
     // EXTRA vars for ITBFS AND REVBFS
@@ -174,7 +175,7 @@ if(d_level[w] == -1) {
 }
 if(d_level[w] == *d_hops_from_source + 1) {
   // atomic update
-  atomic_ref<double, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data(d_sigma[w]);
+  atomic_ref<float, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data(d_sigma[w]);
   atomic_data +=  d_sigma[v];
 
 }
@@ -234,11 +235,15 @@ d_BC[v] = d_BC[v] + d_delta[v];
     free(d_sigma, Q);
   }
 
+  // TIMER STOP
+  std::chrono::steady_clock::time_point toc = std::chrono::steady_clock::now();
+  std::cout << "Time required: " << std::chrono::duration_cast<std::chrono::microseconds>(toc - tic).count() << "[µs]" << std::endl;
+
   Q.submit([&](handler &h)
            { h.memcpy(BC, d_BC, sizeof(float) * (V)); })
       .wait();
-  for (int i = 0; i < V; i++)
-    std::cout << i << " " << BC[i] / 2.0 << std::endl;
+  // for (int i = 0; i < V; i++)
+  //   std::cout << i << " " << BC[i] / 2.0 << std::endl;
 
 } // end FUN
 
@@ -246,12 +251,19 @@ int main(int argc, char **argv)
 {
   graph G1(argv[1]);
   G1.parseGraph();
-  std::set<int> sourceSet;
-  for (int i = 0; i < 9; i++)
-    sourceSet.insert(i);
   float *BC;
-  BC = (float *)malloc(G1.num_nodes() * sizeof(float));
-  Compute_BC(G1, BC, sourceSet);
+  std::vector<int> sourceSize = {1, 20, 80, 150};
+  for (auto size : sourceSize)
+  {
+    std::set<int> sourceSet;
+    for (int i = 0; i < size; i++)
+      sourceSet.insert(i);
+    std::cout << "Num sources: " << size << std::endl;
+    BC = (float *)malloc(G1.num_nodes() * sizeof(float));
+    Compute_BC(G1, BC, sourceSet);
+    free(BC);
+  }
+
   return 0;
 }
 #endif
