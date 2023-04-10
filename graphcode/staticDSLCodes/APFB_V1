@@ -9,7 +9,7 @@ function APFB (Graph g, int nc)
     g.attachNodeProperty(cmatch = -1);
     
     bool noNewPaths = False;
-    fixedPoint until (noNewPaths : !modified) {
+    fixedPoint until (noNewPaths : !modified){
         int L0 = 0;
         
         propNode<int> bfsArray;

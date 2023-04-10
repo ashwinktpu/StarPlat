@@ -12,6 +12,7 @@ namespace spmultigpu{
 const char* globalLoopVar; 
 map<char*,int> declInForAll;
 char MODIFIED[100];
+int pullBased = 0;
  void dsl_cpp_generator::generateInitkernel(const char *name)
 {
   char strBuffer[1024];
@@ -68,6 +69,7 @@ main.NewLine();
   sprintf(strBuffer, "}");
 
   main.pushString(strBuffer);
+  main.NewLine();
   main.pushstr_newL("for(int i=0;i<devicecount;i++){");
   main.pushstr_newL("cudaSetDevice(i);");
   main.pushstr_newL("cudaDeviceSynchronize();");
@@ -674,6 +676,35 @@ void dsl_cpp_generator::generateBody(reductionCallStmt *stmt,bool isMainFile){
     Type* type = stmt->getAssignedId()->getSymbolInfo()->getType()->getInnerTargetType();
     char* type_name = (char*)convertToCppType(type);
     char* iden = stmt->getAssignedId()->getIdentifier();
+    sprintf(strBuffer,"//global loop var %s iden %s",globalLoopVar,stmt->getTargetPropId()->getIdentifier1()->getIdentifier());
+    main.pushstr_newL(strBuffer);
+    if(strcmp(globalLoopVar,stmt->getTargetPropId()->getIdentifier1()->getIdentifier())==0){
+      main.pushstr_newL("//pull based\n");
+      pullBased=1;
+      main.pushstr_newL("for(int i=0;i<devicecount;i++){");
+      main.pushstr_newL("cudaSetDevice(i);");
+      sprintf(strBuffer,"cudaMemcpyAsync(h_%s[devicecount]+h_vertex_partition[i],d_%s[i]+h_vertex_partition[i],sizeof(%s)*(h_vertex_partition[i+1]-h_vertex_partition[i]),cudaMemcpyDeviceToHost);",iden,iden,type_name);
+      main.pushstr_newL(strBuffer);
+      main.pushstr_newL("}");
+      main.pushstr_newL("for(int i=0;i<devicecount;i++){");
+      main.pushstr_newL("cudaSetDevice(i);");
+      main.pushstr_newL("cudaDeviceSynchronize();");
+      main.pushstr_newL("}");
+      main.pushstr_newL("for(int i=0;i<devicecount;i++){");
+      main.pushstr_newL("cudaSetDevice(i);");
+      sprintf(strBuffer,"cudaMemcpyAsync(d_%s[i],h_%s[devicecount],sizeof(%s)*(V+1),cudaMemcpyHostToDevice);",iden,iden,type_name);
+      main.pushstr_newL(strBuffer);
+      main.pushstr_newL("}");
+      main.pushstr_newL("for(int i=0;i<devicecount;i++){");
+      main.pushstr_newL("cudaSetDevice(i);");
+      main.pushstr_newL("cudaDeviceSynchronize();");
+      main.pushstr_newL("}");
+      
+
+    }
+    else{
+      pullBased=0;
+    main.pushstr_newL("//push based\n");
     main.pushstr_newL("cudaSetDevice(0);");
     sprintf(strBuffer,"%s* d_%s_temp;",type_name,stmt->getAssignedId()->getIdentifier());
     main.pushstr_newL(strBuffer);
@@ -702,6 +733,8 @@ void dsl_cpp_generator::generateBody(reductionCallStmt *stmt,bool isMainFile){
     main.pushstr_newL("cudaSetDevice(i);");
     main.pushstr_newL("cudaDeviceSynchronize();");
     main.pushstr_newL("}");
+    }
+
 
   }
 }
@@ -816,7 +849,9 @@ void dsl_cpp_generator::generateReductionCallStmt(reductionCallStmt *stmt,
 
       targetFile.pushString("atomicMin(&");
       generate_exprPropId(stmt->getTargetPropId(), isMainFile);
+
       sprintf(strBuffer, ",%s_new);", stmt->getAssignedId()->getIdentifier());
+
       targetFile.pushstr_newL(strBuffer);
       // sprintf(strBuffer,"if(%s > ","oldValue");
       // targetFile.pushString(strBuffer);
@@ -825,6 +860,8 @@ void dsl_cpp_generator::generateReductionCallStmt(reductionCallStmt *stmt,
       // targetFile.pushstr_newL("{");
       Identifier* id2 = stmt->getTargetPropId()->getIdentifier2();
       Type* type = id2->getSymbolInfo()->getType();
+      if(strcmp(globalLoopVar,stmt->getTargetPropId()->getIdentifier1()->getIdentifier())!=0){
+      main.pushstr_newL("//push based");
       main.pushstr_newL("for(int i=0;i<devicecount;i++){");
       main.pushstr_newL("cudaSetDevice(i);");
       sprintf(strBuffer,"cudaMemcpyAsync(h_%s[i],d_%s[i],sizeof(%s)*(V+1),cudaMemcpyDeviceToHost);",id2->getIdentifier(),id2->getIdentifier(),convertToCppType(type->getInnerTargetType()));
@@ -833,8 +870,8 @@ void dsl_cpp_generator::generateReductionCallStmt(reductionCallStmt *stmt,
       main.pushstr_newL("for(int i=0;i<devicecount;i++){");
       main.pushstr_newL("cudaSetDevice(i);");
       main.pushstr_newL("cudaDeviceSynchronize();");
-       main.pushstr_newL("}");
-     
+      main.pushstr_newL("}");
+      }
       itr1 = leftList.begin();
       itr1++;
       for (; itr1 != leftList.end(); itr1++)
@@ -850,19 +887,18 @@ void dsl_cpp_generator::generateReductionCallStmt(reductionCallStmt *stmt,
           generate_exprPropId((PropAccess *)node, isMainFile);
         }
         targetFile.space();
-        targetFile.pushstr_space("=");
+        targetFile.pushstr_space("= true");
         if (node->getTypeofNode() == NODE_ID)
         {
-          generate_exprIdentifier((Identifier *)node, isMainFile);
+          // generate_exprIdentifier((Identifier *)node, isMainFile);
           affected_Id = (Identifier *)node;
         }
         if (node->getTypeofNode() == NODE_PROPACCESS) // here
         {
-          generate_exprIdentifier(((PropAccess *)node)->getIdentifier2(),
-                                  isMainFile);
+          // generate_exprIdentifier(((PropAccess *)node)->getIdentifier2(),isMainFile);
           affected_Id = ((PropAccess *)node)->getIdentifier2();
         }
-        targetFile.pushString("_new");
+        // targetFile.pushString("_new");
         targetFile.pushstr_newL(";");
 
         if (affected_Id->getSymbolInfo()->getId()->get_fp_association())
@@ -1290,9 +1326,9 @@ void dsl_cpp_generator::generateAtomicDeviceAssignmentStmt(assignment *asmt,
         targetFile.pushstr_newL("for(int i=0;i<devicecount;i++){");
        targetFile.pushstr_newL("cudaSetDevice(i);");
        targetFile.pushstr_newL("//printed here\n");
-      sprintf(strBuffer, "initKernel<%s> <<<1,1>>>(1,d_%s[i],(%s)",convertToCppType(type), inVarName,convertToCppType(type));
+      sprintf(strBuffer, "initKernel<%s> <<<1,1>>>(1,d_%s[i],(%s)%s",convertToCppType(type), inVarName,convertToCppType(type),inVarName);
       targetFile.pushString(strBuffer);
-      generateExpr(exprAssigned,isMainFile); // asssuming int/float const literal // OUTPUTS INIT VALUE
+      // generateExpr(exprAssigned,isMainFile); // asssuming int/float const literal // OUTPUTS INIT VALUE
       targetFile.pushstr_newL(");");
       targetFile.pushstr_newL("}");
       targetFile.pushstr_newL("for(int i=0;i<devicecount;i++){");
@@ -1315,13 +1351,15 @@ void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment *asmt,
   char strBuffer[300];
   if (asmt->lhs_isIdentifier())
   {
+
     Identifier *id = asmt->getId();
-    targetFile.pushString("hi\n");
+    targetFile.pushString("//hi\n");
     targetFile.pushString(id->getIdentifier());
   }
   else if (asmt->lhs_isProp()) // the check for node and edge property to be
                                // carried out.
   {
+    targetFile.pushString("//hi2\n");
     PropAccess *propId = asmt->getPropId();
 
     if (asmt->isDeviceAssignment())
@@ -1348,8 +1386,17 @@ void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment *asmt,
       if(isForall){
         sprintf(strBuffer,"d_%s[%s] = ",propId->getIdentifier2()->getIdentifier(),propId->getIdentifier1()->getIdentifier());
         targetFile.pushString(strBuffer);
+        helper(propId->getIdentifier2(),propId->getIdentifier1());
       }
       else{
+        sprintf(strBuffer,"for(int i=0;i<devicecount;i++)");
+        targetFile.pushString(strBuffer);
+        targetFile.pushstr_newL("{");
+        sprintf(strBuffer,"h_%s[i][%s]=",propId->getIdentifier2()->getIdentifier(),propId->getIdentifier1()->getIdentifier());
+        targetFile.pushString(strBuffer);
+        generateExpr(asmt->getExpr(), isMainFile);
+        targetFile.pushstr_newL(";");
+        targetFile.pushstr_newL("}");
         sprintf(strBuffer,"for(int i=0;i<devicecount;i++)");
         targetFile.pushString(strBuffer);
         targetFile.pushstr_newL("{");
@@ -1398,7 +1445,7 @@ void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment *asmt,
   generateExpr(asmt->getExpr(), isMainFile);
 
   if (isMainFile){
-    targetFile.pushstr_newL("hi");
+    // targetFile.pushstr_newL("hi");
     targetFile.pushstr_newL("); //InitIndexDevice");
     targetFile.pushstr_newL("}");
   }
@@ -3281,47 +3328,76 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt *fixedPointConstruct, 
         // generateCudaMemCpySymbol(fixPointVar, fixPointVarType, false);
         //~ targetFile.pushstr_newL( "Compute_SSSP_kernel<<<num_blocks,block_size>>>(gpu_OA,gpu_edgeList, gpu_edgeLen ,gpu_dist,src, V " ",MAX_VAL , gpu_modified_prev, gpu_modified_next, gpu_finished);");
         if(modified_used==true){
-        main.pushstr_newL("for(int i=0;i<devicecount;i++){");
-        main.pushstr_newL("cudaSetDevice(i);");
-        sprintf(strBuffer,"cudaMemcpyAsync(h_%s[i],d_%s_next[i],sizeof(%s)*(V+1),cudaMemcpyDeviceToHost);",modifiedVar,modifiedVar,modifiedVarType);
-        main.pushstr_newL(strBuffer);
-        main.pushstr_newL("}");
-        
-        main.pushstr_newL("for(int i=0;i<devicecount;i++){");
-        main.pushstr_newL("cudaSetDevice(i);");
-        main.pushstr_newL("cudaDeviceSynchronize();");
-        main.pushstr_newL("}");
-        targetFile.pushstr_newL("cudaSetDevice(0);");
-        sprintf(strBuffer,"bool* d_%s_temp;",modifiedVar);
-        targetFile.pushstr_newL(strBuffer);
-        sprintf(strBuffer,"bool* d_%s_temp1;",modifiedVar);
-        targetFile.pushstr_newL(strBuffer);
-        sprintf(strBuffer,"cudaMalloc(&d_%s_temp,(V+1)*sizeof(%s));",modifiedVar,modifiedVarType);
-        targetFile.pushstr_newL(strBuffer);
-        sprintf(strBuffer,"cudaMalloc(&d_%s_temp1,(devicecount)*(V+1)*sizeof(%s));",modifiedVar,modifiedVarType);
-        targetFile.pushstr_newL(strBuffer);
-        sprintf(strBuffer,"initKernel<%s><<<numBlocks,threadsPerBlock>>>(V+1,d_%s_temp,false);",modifiedVarType,modifiedVar);
-        targetFile.pushstr_newL(strBuffer);
-        sprintf(strBuffer,"for(int i=0;i<devicecount;i++){");
-        targetFile.pushstr_newL(strBuffer);
-        sprintf(strBuffer,"cudaMemcpy(d_%s_temp1+i*(V+1),h_%s[i],sizeof(%s)*(V+1),cudaMemcpyHostToDevice);",modifiedVar,modifiedVar,modifiedVarType);
-        targetFile.pushstr_newL(strBuffer);
-        targetFile.pushstr_newL("}");
-        sprintf(strBuffer,"Compute_Or<<<numBlocks,threadsPerBlock>>>(d_%s_temp1,d_%s_temp,V,devicecount);",modifiedVar,modifiedVar);
-        targetFile.pushstr_newL(strBuffer);
-        sprintf(strBuffer,"cudaMemcpy(h_%s[devicecount],d_%s_temp,sizeof(%s)*(V+1),cudaMemcpyDeviceToHost);",modifiedVar,modifiedVar,modifiedVarType);
-        targetFile.pushstr_newL(strBuffer);
-        targetFile.pushstr_newL("for(int i=0;i<devicecount;i++){");
-        targetFile.pushstr_newL("cudaSetDevice(i);");
-        targetFile.pushstr_newL("cudaDeviceSynchronize();");
-        targetFile.pushstr_newL("}");
-        
-        sprintf(strBuffer, "for(int i = 0 ; i < devicecount ; i++){");
-        targetFile.pushstr_newL(strBuffer);
-        targetFile.pushstr_newL("cudaSetDevice(i);");
-        sprintf(strBuffer, "cudaMemcpyAsync(d_%s[i],h_%s[devicecount],sizeof(%s)*(V+1),cudaMemcpyHostToDevice);", modifiedVar, modifiedVar, fixPointVarType);
-        targetFile.pushstr_newL(strBuffer);
-        targetFile.pushstr_newL("}");
+          if(pullBased){
+            main.pushstr_newL("for(int i=0;i<devicecount;i++){");
+            main.pushstr_newL("cudaSetDevice(i);");
+            sprintf(strBuffer,"cudaMemcpyAsync(h_%s[devicecount]+h_vertex_partition[i],d_%s_next[i]+h_vertex_partition[i],sizeof(%s)*(h_vertex_partition[i+1]-h_vertex_partition[i]),cudaMemcpyDeviceToHost);",modifiedVar,modifiedVar,modifiedVarType);
+            main.pushstr_newL(strBuffer);
+            main.pushstr_newL("}");
+            main.pushstr_newL("for(int i=0;i<devicecount;i++){");
+            main.pushstr_newL("cudaSetDevice(i);");
+            main.pushstr_newL("cudaDeviceSynchronize();");
+            main.pushstr_newL("}");
+
+            
+          }
+          else{
+            main.pushstr_newL("for(int i=0;i<devicecount;i++){");
+            main.pushstr_newL("cudaSetDevice(i);");
+            sprintf(strBuffer,"cudaMemcpyAsync(h_%s[i],d_%s_next[i],sizeof(%s)*(V+1),cudaMemcpyDeviceToHost);",modifiedVar,modifiedVar,modifiedVarType);
+            main.pushstr_newL(strBuffer);
+            main.pushstr_newL("}");
+            main.pushstr_newL("for(int i=0;i<devicecount;i++){");
+            main.pushstr_newL("cudaSetDevice(i);");
+            main.pushstr_newL("cudaDeviceSynchronize();");
+            main.pushstr_newL("}");
+            targetFile.pushstr_newL("cudaSetDevice(0);");
+            sprintf(strBuffer,"bool* d_%s_temp;",modifiedVar);
+            targetFile.pushstr_newL(strBuffer);
+            sprintf(strBuffer,"bool* d_%s_temp1;",modifiedVar);
+            targetFile.pushstr_newL(strBuffer);
+            sprintf(strBuffer,"cudaMalloc(&d_%s_temp,(V+1)*sizeof(%s));",modifiedVar,modifiedVarType);
+            targetFile.pushstr_newL(strBuffer);
+            sprintf(strBuffer,"cudaMalloc(&d_%s_temp1,(devicecount)*(V+1)*sizeof(%s));",modifiedVar,modifiedVarType);
+            targetFile.pushstr_newL(strBuffer);
+            sprintf(strBuffer,"initKernel<%s><<<numBlocks,threadsPerBlock>>>(V+1,d_%s_temp,false);",modifiedVarType,modifiedVar);
+            targetFile.pushstr_newL(strBuffer);
+            sprintf(strBuffer,"for(int i=0;i<devicecount;i++){");
+            targetFile.pushstr_newL(strBuffer);
+            sprintf(strBuffer,"cudaMemcpy(d_%s_temp1+i*(V+1),h_%s[i],sizeof(%s)*(V+1),cudaMemcpyHostToDevice);",modifiedVar,modifiedVar,modifiedVarType);
+            targetFile.pushstr_newL(strBuffer);
+            targetFile.pushstr_newL("}");
+            sprintf(strBuffer,"Compute_Or<<<numBlocks,threadsPerBlock>>>(d_%s_temp1,d_%s_temp,V,devicecount);",modifiedVar,modifiedVar);
+            targetFile.pushstr_newL(strBuffer);
+            sprintf(strBuffer,"cudaMemcpy(h_%s[devicecount],d_%s_temp,sizeof(%s)*(V+1),cudaMemcpyDeviceToHost);",modifiedVar,modifiedVar,modifiedVarType);
+            targetFile.pushstr_newL(strBuffer);
+            targetFile.pushstr_newL("for(int i=0;i<devicecount;i++){");
+            targetFile.pushstr_newL("cudaSetDevice(i);");
+            targetFile.pushstr_newL("cudaDeviceSynchronize();");
+            targetFile.pushstr_newL("}");
+          }
+          sprintf(strBuffer, "for(int i = 0 ; i < devicecount ; i++){");
+          targetFile.pushstr_newL(strBuffer);
+          targetFile.pushstr_newL("cudaSetDevice(i);");
+          sprintf(strBuffer, "cudaMemcpyAsync(d_%s[i],h_%s[devicecount],sizeof(%s)*(V+1),cudaMemcpyHostToDevice);", modifiedVar, modifiedVar, fixPointVarType);
+          targetFile.pushstr_newL(strBuffer);
+          targetFile.pushstr_newL("}");
+          targetFile.pushstr_newL("for(int i=0;i<devicecount;i++){");
+          targetFile.pushstr_newL("cudaSetDevice(i);");
+          targetFile.pushstr_newL("cudaDeviceSynchronize();");
+          targetFile.pushstr_newL("}");
+          sprintf(strBuffer, "for(int i = 0 ; i < devicecount ; i++){");
+          targetFile.pushstr_newL(strBuffer);
+          sprintf(strBuffer, "cudaSetDevice(i);"); 
+          targetFile.pushstr_newL(strBuffer); 
+          sprintf(strBuffer, "initKernel<%s> <<<numBlocks,threadsPerBlock>>>(V, %s[i], false);", modifiedVarType, modifiedVarNext);
+          targetFile.pushstr_newL(strBuffer);
+          sprintf(strBuffer, "}") ; 
+          targetFile.pushstr_newL(strBuffer);
+          targetFile.pushstr_newL("for(int i=0;i<devicecount;i++){");
+          targetFile.pushstr_newL("cudaSetDevice(i);");
+          targetFile.pushstr_newL("cudaDeviceSynchronize();");
+          targetFile.pushstr_newL("}");        
         }
         // sprintf(strBuffer, "cudaMemcpy(d_%s, %s, sizeof(%s)*V, cudaMemcpyDeviceToDevice)", modifiedVar,
                 // modifiedVarNext, fixPointVarType);

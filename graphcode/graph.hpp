@@ -394,7 +394,7 @@ class graph
             ss>>destination;
             if(destination>nodesTotal)
                nodesTotal=destination;  
-          //ss>>weightVal; //for edgelists having weight too.      
+          ss>>weightVal; //for edgelists having weight too.      
            e.source=source;
            e.destination=destination;
            e.weight=weightVal;
