@@ -72,10 +72,6 @@ void APFB(graph& g,int nc)
   d_src = (int**) malloc(devicecount*sizeof(int*));
   d_rev_meta = (int**) malloc(devicecount*sizeof(int*));
 
-  int perdevicevertices;
-  int lastleftvertices;
-  perdevicevertices = V / devicecount ;
-  lastleftvertices = V % devicecount;
   for(int i=0;i<devicecount;i++)	
   {
     cudaSetDevice(i);
@@ -139,14 +135,6 @@ void APFB(graph& g,int nc)
     cudaSetDevice(i);
     cudaMalloc(&d_modified[i], sizeof(bool)*(V+1));
   }
-
-  bool* h_modified_temp1 = (bool*)malloc((V+1)*(devicecount)*sizeof(bool));
-  cudaSetDevice(0);
-  bool* d_modified_temp1;
-  cudaMalloc(&d_modified_temp1,(V+1)*(devicecount)*sizeof(bool));
-  bool* d_modified_temp2;
-  cudaMalloc(&d_modified_temp2,(V+1)*(devicecount)*sizeof(bool));
-
 
   for(int i=0;i<devicecount;i++)
   {
@@ -622,7 +610,7 @@ void APFB(graph& g,int nc)
         cudaSetDevice(i);
         //printed here
 
-        initKernel<int> <<<1,1>>>(1,d_bfsLevel[i],(int)bfsLevel + 1);
+        initKernel<int> <<<1,1>>>(1,d_bfsLevel[i],(int)bfsLevel);
       }
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
@@ -661,14 +649,6 @@ void APFB(graph& g,int nc)
       cudaSetDevice(i);
       cudaMalloc(&d_compress[i], sizeof(bool)*(V+1));
     }
-
-    bool* h_compress_temp1 = (bool*)malloc((V+1)*(devicecount)*sizeof(bool));
-    cudaSetDevice(0);
-    bool* d_compress_temp1;
-    cudaMalloc(&d_compress_temp1,(V+1)*(devicecount)*sizeof(bool));
-    bool* d_compress_temp2;
-    cudaMalloc(&d_compress_temp2,(V+1)*(devicecount)*sizeof(bool));
-
 
     bool** h_compress_next;
     h_compress_next = (bool**)malloc(sizeof(bool*)*(devicecount+1));

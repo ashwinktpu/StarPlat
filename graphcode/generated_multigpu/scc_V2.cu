@@ -826,7 +826,7 @@ void vHong(graph& g)
     for(int i=0;i<devicecount;i++)
     {
       cudaSetDevice(i);
-      vHong_kernel5<<<numBlocks, threadsPerBlock>>>(h_vertex_partition[i],h_vertex_partition[i+1],V,E,d_offset[i],d_edges[i],d_weight[i],d_src[i],d_rev_meta[i],d_visitBw[i],d_propFw[i],d_visitFw[i],d_scc[i],d_propBw[i],d_range[i],d_fpoint2[i]);
+      vHong_kernel5<<<numBlocks, threadsPerBlock>>>(h_vertex_partition[i],h_vertex_partition[i+1],V,E,d_offset[i],d_edges[i],d_weight[i],d_src[i],d_rev_meta[i],d_propBw[i],d_visitBw[i],d_propFw[i],d_visitFw[i],d_scc[i],d_range[i],d_fpoint2[i]);
     }
 
     for(int i=0;i<devicecount;i++)
@@ -1127,7 +1127,7 @@ void vHong(graph& g)
     cudaSetDevice(i);
     //printed here
 
-    initKernel<bool> <<<1,1>>>(1,d_fpoint1[i],(bool)false);
+    initKernel<bool> <<<1,1>>>(1,d_fpoint1[i],(bool)fpoint1);
   }
   for(int i=0;i<devicecount;i++){
     cudaSetDevice(i);
@@ -1606,7 +1606,7 @@ void vHong(graph& g)
       cudaSetDevice(i);
       //printed here
 
-      initKernel<bool> <<<1,1>>>(1,d_fpoint2[i],(bool)false);
+      initKernel<bool> <<<1,1>>>(1,d_fpoint2[i],(bool)fpoint2);
     }
     for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
@@ -1637,7 +1637,7 @@ void vHong(graph& g)
       for(int i=0;i<devicecount;i++)
       {
         cudaSetDevice(i);
-        vHong_kernel13<<<numBlocks, threadsPerBlock>>>(h_vertex_partition[i],h_vertex_partition[i+1],V,E,d_offset[i],d_edges[i],d_weight[i],d_src[i],d_rev_meta[i],d_visitBw[i],d_propFw[i],d_visitFw[i],d_scc[i],d_propBw[i],d_range[i],d_fpoint2[i]);
+        vHong_kernel13<<<numBlocks, threadsPerBlock>>>(h_vertex_partition[i],h_vertex_partition[i+1],V,E,d_offset[i],d_edges[i],d_weight[i],d_src[i],d_rev_meta[i],d_propBw[i],d_visitBw[i],d_propFw[i],d_visitFw[i],d_scc[i],d_range[i],d_fpoint2[i]);
       }
 
       for(int i=0;i<devicecount;i++)

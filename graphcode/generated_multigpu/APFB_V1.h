@@ -16,7 +16,6 @@ void APFB(graph& g,int nc);
 
 
 __global__ void APFB_kernel1(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_nc,int* d_cmatch,int* d_L0,int* d_bfsArray,bool* d_noNewPaths){ // BEGIN KER FUN via ADDKERNEL
-  float num_nodes  = V;
   unsigned c = blockIdx.x * blockDim.x + threadIdx.x;
   int num_vertices = end-start;
   if( c < num_vertices) {
@@ -29,7 +28,6 @@ __global__ void APFB_kernel1(int start,int end,int V, int E, int* d_meta, int* d
   }
 } // end KER FUNC
 __global__ void APFB_kernel2(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_nc,int* d_bfsLevel,int* d_bfsArray,int* d_rmatch,int* d_NOT_VISITED,bool* d_noNewVertices,bool* d_noNewPaths,int* d_predeccesor){ // BEGIN KER FUN via ADDKERNEL
-  float num_nodes  = V;
   unsigned col_vertex = blockIdx.x * blockDim.x + threadIdx.x;
   int num_vertices = end-start;
   if( col_vertex < num_vertices) {
@@ -59,7 +57,6 @@ __global__ void APFB_kernel2(int start,int end,int V, int E, int* d_meta, int* d
   }
 } // end KER FUNC
 __global__ void APFB_kernel3(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_nc,int* d_rmatch,bool* d_compress){ // BEGIN KER FUN via ADDKERNEL
-  float num_nodes  = V;
   unsigned r = blockIdx.x * blockDim.x + threadIdx.x;
   int num_vertices = end-start;
   if( r < num_vertices) {
@@ -70,7 +67,6 @@ __global__ void APFB_kernel3(int start,int end,int V, int E, int* d_meta, int* d
   }
 } // end KER FUNC
 __global__ void APFB_kernel4(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,bool* d_compress,int* d_nc,int* d_cmatch,int* d_predeccesor,bool* d_compressed,bool* d_compress_next,int* d_rmatch){ // BEGIN KER FUN via ADDKERNEL
-  float num_nodes  = V;
   unsigned row_vertex = blockIdx.x * blockDim.x + threadIdx.x;
   int num_vertices = end-start;
   if( row_vertex < num_vertices) {
@@ -98,7 +94,6 @@ __global__ void APFB_kernel4(int start,int end,int V, int E, int* d_meta, int* d
   }
 } // end KER FUNC
 __global__ void APFB_kernel5(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_nc,bool* d_compress_next,bool* d_compress,bool* d_compressed){ // BEGIN KER FUN via ADDKERNEL
-  float num_nodes  = V;
   unsigned row_vertex = blockIdx.x * blockDim.x + threadIdx.x;
   int num_vertices = end-start;
   if( row_vertex < num_vertices) {
@@ -110,7 +105,6 @@ __global__ void APFB_kernel5(int start,int end,int V, int E, int* d_meta, int* d
   }
 } // end KER FUNC
 __global__ void APFB_kernel6(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_nc,int* d_cmatch,int* d_rmatch){ // BEGIN KER FUN via ADDKERNEL
-  float num_nodes  = V;
   unsigned r = blockIdx.x * blockDim.x + threadIdx.x;
   int num_vertices = end-start;
   if( r < num_vertices) {
