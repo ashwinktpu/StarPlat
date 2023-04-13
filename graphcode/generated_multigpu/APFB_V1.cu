@@ -140,7 +140,8 @@ void APFB(graph& g,int nc)
   {
     cudaSetDevice(i);
     initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_modified[i],(bool)false);
-  }for(int i=0;i<devicecount;i++){
+  }
+  for(int i=0;i<devicecount;i++){
     cudaSetDevice(i);
     cudaDeviceSynchronize();
   }
@@ -197,7 +198,8 @@ void APFB(graph& g,int nc)
   {
     cudaSetDevice(i);
     initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_rmatch[i],(int)-1);
-  }for(int i=0;i<devicecount;i++){
+  }
+  for(int i=0;i<devicecount;i++){
     cudaSetDevice(i);
     cudaDeviceSynchronize();
   }
@@ -214,7 +216,8 @@ void APFB(graph& g,int nc)
   {
     cudaSetDevice(i);
     initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_cmatch[i],(int)-1);
-  }for(int i=0;i<devicecount;i++){
+  }
+  for(int i=0;i<devicecount;i++){
     cudaSetDevice(i);
     cudaDeviceSynchronize();
   }
@@ -245,6 +248,78 @@ void APFB(graph& g,int nc)
     cudaSetDevice(i);
     cudaDeviceSynchronize();
   }
+
+
+  int** h_bfsArray;
+  h_bfsArray = (int**)malloc(sizeof(int*)*(devicecount+1));
+  for(int i=0;i<=devicecount;i++){
+    h_bfsArray[i]=(int*)malloc(sizeof(int)*(V+1));
+  }
+  int** d_bfsArray;
+  d_bfsArray = (int**)malloc(sizeof(int*)*devicecount);
+  for (int i = 0; i < devicecount; i++) {
+    cudaSetDevice(i);
+    cudaMalloc(&d_bfsArray[i], sizeof(int)*(V+1));
+  }
+
+  int* h_bfsArray_temp1 = (int*)malloc((V+1)*(devicecount)*sizeof(int));
+  cudaSetDevice(0);
+  int* d_bfsArray_temp1;
+  cudaMalloc(&d_bfsArray_temp1,(V+1)*(devicecount)*sizeof(int));
+  int* d_bfsArray_temp2;
+  cudaMalloc(&d_bfsArray_temp2,(V+1)*(devicecount)*sizeof(int));
+
+
+  int** h_predeccesor;
+  h_predeccesor = (int**)malloc(sizeof(int*)*(devicecount+1));
+  for(int i=0;i<=devicecount;i++){
+    h_predeccesor[i]=(int*)malloc(sizeof(int)*(V+1));
+  }
+  int** d_predeccesor;
+  d_predeccesor = (int**)malloc(sizeof(int*)*devicecount);
+  for (int i = 0; i < devicecount; i++) {
+    cudaSetDevice(i);
+    cudaMalloc(&d_predeccesor[i], sizeof(int)*(V+1));
+  }
+
+  int* h_predeccesor_temp1 = (int*)malloc((V+1)*(devicecount)*sizeof(int));
+  cudaSetDevice(0);
+  int* d_predeccesor_temp1;
+  cudaMalloc(&d_predeccesor_temp1,(V+1)*(devicecount)*sizeof(int));
+  int* d_predeccesor_temp2;
+  cudaMalloc(&d_predeccesor_temp2,(V+1)*(devicecount)*sizeof(int));
+
+
+  bool** h_compress;
+  h_compress = (bool**)malloc(sizeof(bool*)*(devicecount+1));
+  for(int i=0;i<=devicecount;i++){
+    h_compress[i]=(bool*)malloc(sizeof(bool)*(V+1));
+  }
+  bool** d_compress;
+  d_compress = (bool**)malloc(sizeof(bool*)*devicecount);
+  for (int i = 0; i < devicecount; i++) {
+    cudaSetDevice(i);
+    cudaMalloc(&d_compress[i], sizeof(bool)*(V+1));
+  }
+
+  bool** h_compress_next;
+  h_compress_next = (bool**)malloc(sizeof(bool*)*(devicecount+1));
+  for(int i=0;i<=devicecount;i++){
+    h_compress_next[i]=(bool*)malloc(sizeof(bool)*(V+1));
+  }
+  bool** d_compress_next;
+  d_compress_next = (bool**)malloc(sizeof(bool*)*devicecount);
+  for (int i = 0; i < devicecount; i++) {
+    cudaSetDevice(i);
+    cudaMalloc(&d_compress_next[i], sizeof(bool)*(V+1));
+  }
+
+  bool* h_compress_next_temp1 = (bool*)malloc((V+1)*(devicecount)*sizeof(bool));
+  cudaSetDevice(0);
+  bool* d_compress_next_temp1;
+  cudaMalloc(&d_compress_next_temp1,(V+1)*(devicecount)*sizeof(bool));
+  bool* d_compress_next_temp2;
+  cudaMalloc(&d_compress_next_temp2,(V+1)*(devicecount)*sizeof(bool));
 
 
   bool** d_modified_next;
@@ -297,26 +372,6 @@ void APFB(graph& g,int nc)
     }
 
 
-    int** h_bfsArray;
-    h_bfsArray = (int**)malloc(sizeof(int*)*(devicecount+1));
-    for(int i=0;i<=devicecount;i++){
-      h_bfsArray[i]=(int*)malloc(sizeof(int)*(V+1));
-    }
-    int** d_bfsArray;
-    d_bfsArray = (int**)malloc(sizeof(int*)*devicecount);
-    for (int i = 0; i < devicecount; i++) {
-      cudaSetDevice(i);
-      cudaMalloc(&d_bfsArray[i], sizeof(int)*(V+1));
-    }
-
-    int* h_bfsArray_temp1 = (int*)malloc((V+1)*(devicecount)*sizeof(int));
-    cudaSetDevice(0);
-    int* d_bfsArray_temp1;
-    cudaMalloc(&d_bfsArray_temp1,(V+1)*(devicecount)*sizeof(int));
-    int* d_bfsArray_temp2;
-    cudaMalloc(&d_bfsArray_temp2,(V+1)*(devicecount)*sizeof(int));
-
-
     int NOT_VISITED = L0 - 1; // asst in .cu 
     int** h_NOT_VISITED;
     h_NOT_VISITED = (int**)malloc(sizeof(int*)*(devicecount+1));
@@ -341,7 +396,8 @@ void APFB(graph& g,int nc)
     {
       cudaSetDevice(i);
       initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_bfsArray[i],(int)NOT_VISITED);
-    }for(int i=0;i<devicecount;i++){
+    }
+    for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
@@ -390,31 +446,12 @@ void APFB(graph& g,int nc)
       cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
-    int** h_predeccesor;
-    h_predeccesor = (int**)malloc(sizeof(int*)*(devicecount+1));
-    for(int i=0;i<=devicecount;i++){
-      h_predeccesor[i]=(int*)malloc(sizeof(int)*(V+1));
-    }
-    int** d_predeccesor;
-    d_predeccesor = (int**)malloc(sizeof(int*)*devicecount);
-    for (int i = 0; i < devicecount; i++) {
-      cudaSetDevice(i);
-      cudaMalloc(&d_predeccesor[i], sizeof(int)*(V+1));
-    }
-
-    int* h_predeccesor_temp1 = (int*)malloc((V+1)*(devicecount)*sizeof(int));
-    cudaSetDevice(0);
-    int* d_predeccesor_temp1;
-    cudaMalloc(&d_predeccesor_temp1,(V+1)*(devicecount)*sizeof(int));
-    int* d_predeccesor_temp2;
-    cudaMalloc(&d_predeccesor_temp2,(V+1)*(devicecount)*sizeof(int));
-
-
     for(int i=0;i<devicecount;i++)
     {
       cudaSetDevice(i);
       initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_predeccesor[i],(int)-1);
-    }for(int i=0;i<devicecount;i++){
+    }
+    for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
@@ -492,7 +529,7 @@ void APFB(graph& g,int nc)
       for(int i=0;i<devicecount;i++)
       {
         cudaSetDevice(i);
-        APFB_kernel2<<<numBlocks, threadsPerBlock>>>(h_vertex_partition[i],h_vertex_partition[i+1],V,E,d_offset[i],d_edges[i],d_weight[i],d_src[i],d_rev_meta[i],d_nc[i],d_bfsLevel[i],d_bfsArray[i],d_rmatch[i],d_NOT_VISITED[i],d_noNewVertices[i],d_noNewPaths[i],d_predeccesor[i]);
+        APFB_kernel2<<<numBlocks, threadsPerBlock>>>(h_vertex_partition[i],h_vertex_partition[i+1],V,E,d_offset[i],d_edges[i],d_weight[i],d_src[i],d_rev_meta[i],d_nc[i],d_bfsArray[i],d_bfsLevel[i],d_rmatch[i],d_NOT_VISITED[i],d_noNewVertices[i],d_predeccesor[i],d_noNewPaths[i]);
       }
 
       for(int i=0;i<devicecount;i++)
@@ -638,43 +675,12 @@ void APFB(graph& g,int nc)
       }
     } // END FIXED POINT
 
-    bool** h_compress;
-    h_compress = (bool**)malloc(sizeof(bool*)*(devicecount+1));
-    for(int i=0;i<=devicecount;i++){
-      h_compress[i]=(bool*)malloc(sizeof(bool)*(V+1));
-    }
-    bool** d_compress;
-    d_compress = (bool**)malloc(sizeof(bool*)*devicecount);
-    for (int i = 0; i < devicecount; i++) {
-      cudaSetDevice(i);
-      cudaMalloc(&d_compress[i], sizeof(bool)*(V+1));
-    }
-
-    bool** h_compress_next;
-    h_compress_next = (bool**)malloc(sizeof(bool*)*(devicecount+1));
-    for(int i=0;i<=devicecount;i++){
-      h_compress_next[i]=(bool*)malloc(sizeof(bool)*(V+1));
-    }
-    bool** d_compress_next;
-    d_compress_next = (bool**)malloc(sizeof(bool*)*devicecount);
-    for (int i = 0; i < devicecount; i++) {
-      cudaSetDevice(i);
-      cudaMalloc(&d_compress_next[i], sizeof(bool)*(V+1));
-    }
-
-    bool* h_compress_next_temp1 = (bool*)malloc((V+1)*(devicecount)*sizeof(bool));
-    cudaSetDevice(0);
-    bool* d_compress_next_temp1;
-    cudaMalloc(&d_compress_next_temp1,(V+1)*(devicecount)*sizeof(bool));
-    bool* d_compress_next_temp2;
-    cudaMalloc(&d_compress_next_temp2,(V+1)*(devicecount)*sizeof(bool));
-
-
     for(int i=0;i<devicecount;i++)
     {
       cudaSetDevice(i);
       initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_compress[i],(bool)false);
-    }for(int i=0;i<devicecount;i++){
+    }
+    for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
@@ -691,7 +697,8 @@ void APFB(graph& g,int nc)
     {
       cudaSetDevice(i);
       initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_compress_next[i],(bool)false);
-    }for(int i=0;i<devicecount;i++){
+    }
+    for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
       cudaDeviceSynchronize();
     }

@@ -1,5 +1,5 @@
 // FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
-#include "graphColoring.h"
+#include "graphColoringNew.h"
 
 void colorGraph(graph& g)
 
@@ -266,6 +266,66 @@ void colorGraph(graph& g)
   }
 
 
+  int diff = 0; // asst in .cu 
+  int** h_diff;
+  h_diff = (int**)malloc(sizeof(int*)*(devicecount+1));
+  for(int i=0;i<=devicecount;i+=1){
+    h_diff[i] = (int*)malloc(sizeof(int));
+  }
+
+  int** d_diff;
+  d_diff = (int**)malloc(sizeof(int*)*devicecount);
+  for(int i = 0 ; i < devicecount ; i++){
+    cudaSetDevice(i);
+    cudaMalloc(&d_diff[i],sizeof(int));
+    initKernel<int> <<<1,1>>>(1,d_diff[i],0);
+  }
+  for(int i=0;i<devicecount;i++){
+    cudaSetDevice(i);
+    cudaDeviceSynchronize();
+  }
+
+
+  int diff_old = 0; // asst in .cu 
+  int** h_diff_old;
+  h_diff_old = (int**)malloc(sizeof(int*)*(devicecount+1));
+  for(int i=0;i<=devicecount;i+=1){
+    h_diff_old[i] = (int*)malloc(sizeof(int));
+  }
+
+  int** d_diff_old;
+  d_diff_old = (int**)malloc(sizeof(int*)*devicecount);
+  for(int i = 0 ; i < devicecount ; i++){
+    cudaSetDevice(i);
+    cudaMalloc(&d_diff_old[i],sizeof(int));
+    initKernel<int> <<<1,1>>>(1,d_diff_old[i],0);
+  }
+  for(int i=0;i<devicecount;i++){
+    cudaSetDevice(i);
+    cudaDeviceSynchronize();
+  }
+
+
+  int cnt = 0; // asst in .cu 
+  int** h_cnt;
+  h_cnt = (int**)malloc(sizeof(int*)*(devicecount+1));
+  for(int i=0;i<=devicecount;i+=1){
+    h_cnt[i] = (int*)malloc(sizeof(int));
+  }
+
+  int** d_cnt;
+  d_cnt = (int**)malloc(sizeof(int*)*devicecount);
+  for(int i = 0 ; i < devicecount ; i++){
+    cudaSetDevice(i);
+    cudaMalloc(&d_cnt[i],sizeof(int));
+    initKernel<int> <<<1,1>>>(1,d_cnt[i],0);
+  }
+  for(int i=0;i<devicecount;i++){
+    cudaSetDevice(i);
+    cudaDeviceSynchronize();
+  }
+
+
   int iter = 0; // asst in .cu 
   int** h_iter;
   h_iter = (int**)malloc(sizeof(int*)*(devicecount+1));
@@ -388,6 +448,79 @@ void colorGraph(graph& g)
       cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
+    diff_old = diff;
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
+      //printed here
+
+      initKernel<int> <<<1,1>>>(1,d_diff_old[i],(int)diff_old);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
+      cudaDeviceSynchronize();
+    }
+    diff = fpoint1 - iter;
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
+      //printed here
+
+      initKernel<int> <<<1,1>>>(1,d_diff[i],(int)diff);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
+      cudaDeviceSynchronize();
+    }
+    if (diff == diff_old){ // if filter begin 
+      cnt = cnt + 1;
+      for(int i=0;i<devicecount;i++){
+        cudaSetDevice(i);
+        //printed here
+
+        initKernel<int> <<<1,1>>>(1,d_cnt[i],(int)cnt);
+      }
+      for(int i=0;i<devicecount;i++){
+        cudaSetDevice(i);
+        cudaDeviceSynchronize();
+      }
+    } // if filter end
+    else
+    if (diff != diff_old){ // if filter begin 
+      cnt = 0;
+      for(int i=0;i<devicecount;i++){
+        cudaSetDevice(i);
+        //printed here
+
+        initKernel<int> <<<1,1>>>(1,d_cnt[i],(int)cnt);
+      }
+      for(int i=0;i<devicecount;i++){
+        cudaSetDevice(i);
+        cudaDeviceSynchronize();
+      }
+    } // if filter end
+    if (cnt == 3){ // if filter begin 
+      iter = iter + numNodes - fpoint1;
+      for(int i=0;i<devicecount;i++){
+        cudaSetDevice(i);
+        //printed here
+
+        initKernel<int> <<<1,1>>>(1,d_iter[i],(int)iter);
+      }
+      for(int i=0;i<devicecount;i++){
+        cudaSetDevice(i);
+        cudaDeviceSynchronize();
+      }
+      fpoint1 = numNodes;
+      for(int i=0;i<devicecount;i++){
+        cudaSetDevice(i);
+        //printed here
+
+        initKernel<int> <<<1,1>>>(1,d_fpoint1[i],(int)fpoint1);
+      }
+      for(int i=0;i<devicecount;i++){
+        cudaSetDevice(i);
+        cudaDeviceSynchronize();
+      }
+    } // if filter end
   }while(fpoint1 < numNodes);
   //TIMER STOP
   cudaEventRecord(stop,0);

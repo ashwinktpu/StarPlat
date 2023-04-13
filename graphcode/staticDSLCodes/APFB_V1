@@ -9,21 +9,22 @@ function APFB (Graph g, int nc)
     g.attachNodeProperty(cmatch = -1);
     
     bool noNewPaths = False;
-    fixedPoint until (noNewPaths : !modified){
-        int L0 = 0;
-        
-        propNode<int> bfsArray;
+    propNode<int> bfsArray;
+    propNode<int> predeccesor;
+    
+    propNode<bool> compress;
+    propNode<bool> compress_next;
+    fixedPoint until (noNewPaths : !modified) {
+        int L0 = 0; 
         int NOT_VISITED = L0 - 1;
         g.attachNodeProperty(bfsArray = NOT_VISITED);
         forall(c in g.nodes()){
-    
-        if(c < nc){
+            if(c < nc){
                 if(c.cmatch == -1){
                     c.bfsArray = L0;
                 }
             }
         }
-        propNode<int> predeccesor;
         g.attachNodeProperty(predeccesor = -1); 
         
         int bfsLevel = L0;
@@ -55,8 +56,7 @@ function APFB (Graph g, int nc)
             bfsLevel = bfsLevel + 1;
         }
         
-        propNode<bool> compress;
-        propNode<bool> compress_next;
+        
         g.attachNodeProperty(compress = False);
         g.attachNodeProperty(compress_next = False);
         
