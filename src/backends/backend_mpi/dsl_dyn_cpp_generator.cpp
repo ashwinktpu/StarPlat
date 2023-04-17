@@ -12,7 +12,7 @@ namespace spdynmpi{
 
         if(methodId == "currentBatch")
         {   
-            sprintf(strBuffer, "for(Update u : %s.%s().%s())",updatesId->getIdentifier(),"getCurrentDeleteBatch","getUpdates");
+            sprintf(strBuffer, "for(Update u : %s->%s()->%s())",updatesId->getIdentifier(),"getCurrentDeleteBatch","getUpdates");
             main.pushstr_newL(strBuffer);
             main.pushstr_newL("{");
             generateBlock(onDeleteStmt->getStatements(),false);
@@ -32,7 +32,7 @@ namespace spdynmpi{
 
         if(methodId == "currentBatch")
         {   
-            sprintf(strBuffer, "for(Update u : %s.%s().%s())",updatesId->getIdentifier(),"getCurrentAddBatch","getUpdates");
+            sprintf(strBuffer, "for(Update u : %s->%s()->%s())",updatesId->getIdentifier(),"getCurrentAddBatch","getUpdates");
             main.pushstr_newL(strBuffer);
             main.pushstr_newL("{");
             generateBlock(onAddStmt->getStatements(),false);
@@ -50,13 +50,13 @@ namespace spdynmpi{
   
          if(updateId != NULL)
             {
-                sprintf(strBuffer, "%s.%s(",updateId->getIdentifier(), "splitIntoSmallerBatches");
+                sprintf(strBuffer, "%s->%s(",updateId->getIdentifier(), "splitIntoSmallerBatches");
                 main.pushString(strBuffer);
                 generateExpr(batchStmt->getBatchSizeExpr());
                 
                 main.pushstr_newL(");");
 
-                sprintf(strBuffer,"while(%s.%s())",updateId->getIdentifier(),"nextBatch");
+                sprintf(strBuffer,"while(%s->%s())",updateId->getIdentifier(),"nextBatch");
                 main.pushstr_newL(strBuffer);
                 main.pushstr_newL("{");
                 
@@ -164,9 +164,9 @@ namespace spdynmpi{
             assert(updateId->getSymbolInfo()->getType()->gettypeId() == TYPE_UPDATES);
             
             if(methodId == "updateCSRAdd")
-                sprintf(strBuffer,"%s.%s(&%s)",updateId->getIdentifier(),"updateCsrAdd",objectId->getIdentifier());
+                sprintf(strBuffer,"%s->%s(&%s)",updateId->getIdentifier(),"updateCsrAdd",objectId->getIdentifier());
             else
-                sprintf(strBuffer,"%s.%s(&%s)",updateId->getIdentifier(),"updateCsrDel",objectId->getIdentifier());
+                sprintf(strBuffer,"%s->%s(&%s)",updateId->getIdentifier(),"updateCsrDel",objectId->getIdentifier());
             main.pushString(strBuffer);
 
         }
@@ -179,9 +179,9 @@ namespace spdynmpi{
           int updateType = argList.front()->getExpr()->getIntegerConstant();
 
           if(updateType == 0)
-             sprintf(strBuffer,"%s.%s()",proc->getId1()->getIdentifier(),"getCurrentDeleteBatch");
+             sprintf(strBuffer,"%s->%s()",proc->getId1()->getIdentifier(),"getCurrentDeleteBatch");
           else
-             sprintf(strBuffer,"%s.%s()",proc->getId1()->getIdentifier(),"getCurrentAddBatch");
+             sprintf(strBuffer,"%s->%s()",proc->getId1()->getIdentifier(),"getCurrentAddBatch");
           main.pushString(strBuffer);   
 
         }   
@@ -321,7 +321,7 @@ namespace spdynmpi{
     {std::cout<<"reached dyn func"<<std::endl;
 
         Function* function = (Function*)func;
-        if(function->getFuncType() == STATIC_FUNC)
+        if(function->getFuncType() == STATIC_FUNC ||function->getFuncType() == GEN_FUNC)
         {
             dsl_cpp_generator::generateFunc(function);
         }

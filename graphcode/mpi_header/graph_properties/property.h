@@ -2,6 +2,7 @@
 #define MPI_PROPERTY_HEADER
 
 #include <type_traits>
+#include <cstdint>
 #include<vector>
 #include<mpi.h>
 class Property

@@ -233,9 +233,9 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
            assignment* assign=(assignment*)stmt;
            Expression* exprAssigned = assign->getExpr();
            string backend(backendTarget);
-
+           printf("inside node_assign\n");
            if(assign->lhs_isIdentifier())
-             {
+             {printf("inside node_assign1\n");
                  Identifier* id=assign->getId();
                  searchSuccess=findSymbolId(id);
                 if(backend.compare("mpi") == 0 && IdsInsideParallelFilter.find(id->getSymbolInfo()) != IdsInsideParallelFilter.end()) {
@@ -279,18 +279,30 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                 }
              }
              else if(assign->lhs_isProp())
-             {
+             {  printf("inside node_assign2\n");
                  PropAccess* propId = assign->getPropId();
                  searchSuccess = findSymbolPropId(propId);
-                 if(backend.compare("mpi") == 0 && IdsInsideParallelFilter.find(propId->getIdentifier2()->getSymbolInfo()) != IdsInsideParallelFilter.end()) {
-                    propId->getIdentifier2()->getSymbolInfo()->getId()->set_used_inside_forall_filter_and_changed_inside_forall_body();
+                 if(backend.compare("mpi") == 0 ) {
+                  if(propId->isPropertyExpression())
+                  {
+                      Expression * propExpr = propId->getPropExpr();
+                      if(propExpr->getMapExpr()->isIdentifierExpr())
+                        if(IdsInsideParallelFilter.find(propExpr->getMapExpr()->getId()->getSymbolInfo()) != IdsInsideParallelFilter.end())
+                          propExpr->getMapExpr()->getId()->getSymbolInfo()->getId()->set_used_inside_forall_filter_and_changed_inside_forall_body();
+                  }
+                  else{
+                    if(IdsInsideParallelFilter.find(propId->getIdentifier2()->getSymbolInfo()) != IdsInsideParallelFilter.end())
+                      propId->getIdentifier2()->getSymbolInfo()->getId()->set_used_inside_forall_filter_and_changed_inside_forall_body();
+                  }
+                    
                   }
              }
              else if(assign->lhs_isIndexAccess()){
-
+                printf("inside node_assign3\n");
                 Expression* expr = assign->getIndexAccess();
+                printf("reached here0\n");
                 checkForExpressions(expr);
-
+                printf("reached here\n");
              }
               
              if(backend.compare("cuda")== 0  && assign->lhs_isProp()){  // This flags device assingments OUTSIDE for
@@ -815,6 +827,12 @@ bool SymbolTableBuilder::checkForArguments(list<argument*> argList)
              ids.insert(expr->getPropId()->getIdentifier1()->getSymbolInfo());
              ids.insert(expr->getPropId()->getIdentifier2()->getSymbolInfo());
              break;
+         }
+
+         case EXPR_MAPGET:
+         {
+            getIdsInsideExpression(expr->getMapExpr(),ids);
+            getIdsInsideExpression(expr->getIndexExpr(),ids);
          }
      }
  }
