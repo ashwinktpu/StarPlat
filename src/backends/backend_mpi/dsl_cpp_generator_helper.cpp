@@ -10,26 +10,36 @@ namespace spmpi {
 
 
     /* convertToCppType converts GraphDSL type to the corresponding cpp type */
-    const char* dsl_cpp_generator::convertToCppType(Type* type) 
-    {
+    const char* dsl_cpp_generator::convertToCppType(Type* type, bool is_reference) 
+    {   
+        char * cppType = new char [1024];
+        string cppString;
+        bool isUpdatesType = false;
         if (type->isPrimitiveType()) 
         {
             int typeId = type->gettypeId();
             switch (typeId) {
                 case TYPE_INT:
-                    return "int";
+                    cppString = "int";
+                    break;
                 case TYPE_BOOL:
-                    return "bool";
+                    cppString = "bool";
+                    break;
                 case TYPE_LONG:
-                    return "long";
+                    cppString = "long";
+                    break;
                 case TYPE_FLOAT:
-                    return "float";
+                    cppString = "float";
+                    break;
                 case TYPE_DOUBLE:
-                    return "double";
+                    cppString = "double";
+                    break;
                 case TYPE_NODE:
-                    return "int";
+                    cppString = "int";
+                    break;
                 case TYPE_EDGE:
-                    return "int";
+                    cppString = "int";
+                    break;
                 default:
                     assert(false);
             }
@@ -37,6 +47,7 @@ namespace spmpi {
         else if (type->isPropType()) 
         {
             Type* targetType = type->getInnerTargetType();
+            
             if (targetType->isPrimitiveType()) 
             {
                 int typeId = targetType->gettypeId();
@@ -44,32 +55,42 @@ namespace spmpi {
                 switch (typeId) 
                 {
                     case TYPE_INT:
-                        return type->gettypeId()==TYPE_PROPNODE ? "NodeProperty<int>" : "EdgeProperty<int>";
+                        cppString = type->gettypeId()==TYPE_PROPNODE ? "NodeProperty<int>" : "EdgeProperty<int>";
+                        break;
                     case TYPE_BOOL:
-                        return type->gettypeId()==TYPE_PROPNODE ? "NodeProperty<bool>" : "EdgeProperty<bool>";
+                        cppString = type->gettypeId()==TYPE_PROPNODE ? "NodeProperty<bool>" : "EdgeProperty<bool>";
+                        break;
                     case TYPE_LONG:
-                        return type->gettypeId()==TYPE_PROPNODE ? "NodeProperty<long>" : "EdgeProperty<long>";
+                        cppString = type->gettypeId()==TYPE_PROPNODE ? "NodeProperty<long>" : "EdgeProperty<long>";
+                        break;
                     case TYPE_FLOAT:
-                        return type->gettypeId()==TYPE_PROPNODE ? "NodeProperty<float>" : "EdgeProperty<float>";
+                        cppString = type->gettypeId()==TYPE_PROPNODE ? "NodeProperty<float>" : "EdgeProperty<float>";
+                        break;
                     case TYPE_DOUBLE:
-                        return type->gettypeId()==TYPE_PROPNODE ? "NodeProperty<double>" : "EdgeProperty<double>";
+                        cppString = type->gettypeId()==TYPE_PROPNODE ? "NodeProperty<double>" : "EdgeProperty<double>";
+                        break;
                     default:
                         assert(false);
                 }
             }
+            else if(targetType->isNodeType())
+            {
+                cppString = "NodeProperty<int>";
+            }
+            else    
+                assert(false);
         } 
         // TODO : (Atharva) Correct this for new mpi header 
         else if (type->isNodeEdgeType()) 
         {
             if (type->isEdgeType() )
-                return "Edge";
+                cppString = "Edge";
             else
-                return "int";  //need to be modified.
-
+                cppString = "int";  //need to be modified.
         } 
         else if (type->isGraphType()) 
         {
-            return "Graph&";
+            cppString = "Graph";
         } 
         else if (type->isCollectionType()) 
         {
@@ -79,15 +100,51 @@ namespace spmpi {
             switch (typeId) 
             {
                 case TYPE_SETN:
-                    return "std::set<int>&";
+                    cppString = "std::set<int>";
+                    break;
                 case TYPE_UPDATES:
-                    return "Updates &";
+                    isUpdatesType = true;
+                    cppString = "Updates *";
+                    break;
+                case TYPE_NODEMAP:
+                {  
+                    char* newS = new char[1024];
+                    string mapString = "std::map<int, ";   
+
+                    char* valType = (char*)convertToCppType(type->getInnerTargetType() , false);
+                    string keyString = valType;
+                    mapString = mapString + keyString;
+                    mapString = mapString + ">";
+                    cppString = mapString;
+                    break;
+                 }
+                case TYPE_CONTAINER:
+                {
+                    string vecString = "Container<";   
+
+                    char* valType = (char*)convertToCppType(type->getInnerTargetType() , false);
+                    string innerString = valType;
+                    vecString = vecString + innerString;
+                    vecString = vecString + ">";
+                    cppString = vecString;
+                    break;
+                }
                 default:
                     assert(false);
             }
         }
+        else{
+            assert(false);
+        }
 
-        return "NA";
+        if(is_reference && !type->isPrimitiveType() && !type->isNodeEdgeType() && !isUpdatesType )
+        {
+            cppString+="&";
+        }
+
+        copy(cppString.begin(),cppString.end(),cppType);
+        cppType[cppString.size()]='\0';
+        return cppType;
     }
 
 
@@ -254,10 +311,20 @@ namespace spmpi {
                     assert(false);
             }
         }
-        // TODO : (Atharva) Verify whether this is correct 
+        else if(type->isNodeEdgeType())
+        {
+            int typeId = type->gettypeId();
+            switch (typeId) {
+                case TYPE_NODE:
+                    return "MPI_INT";
+                default :
+                    assert(false); // add for other types if required    
+            }        
+        }
+         
         else 
         {
-            assert(false);
+            assert(false); 
         } 
 
     }
@@ -271,9 +338,17 @@ namespace spmpi {
         for (itr = argList.begin(); itr != argList.end(); itr++) {
             commaCounts++;
             argument* arg = *itr;
-            Identifier* id = arg->getExpr()->getId();
-            sprintf(strBuffer, "%s", id->getIdentifier());
-            main.pushString(strBuffer);
+            if(arg->isAssignExpr())
+            {
+                // arguments supplied in the type  arg = value; 
+                // TO BE ADDED GENERATION WHEN REQUIRED
+                assert(false);
+            }
+            else if(arg->isExpr())
+            {
+                generateExpr((Expression*) arg->getExpr());
+            }
+            
 
         if (commaCounts < argListSize)
             main.pushString(",");

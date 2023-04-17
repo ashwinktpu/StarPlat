@@ -60,7 +60,12 @@ class Updates
 
 
   public:
-  Updates(char* file,boost::mpi::communicator world, Graph * g);
+  Updates()
+  {
+
+  }
+  
+  Updates(char* file,boost::mpi::communicator world, Graph * g, float percent_updates=100);
 
   void splitIntoSmallerBatches(int size);
   
@@ -75,17 +80,17 @@ class Updates
     return updates;
   }
 
-  Updates & getBatch()
+  Updates * getBatch()
   {
-    return *currentBatch;
+    return currentBatch;
   }
-  Updates & getCurrentAddBatch()
+  Updates * getCurrentAddBatch()
   {
-    return *currentAddBatch;
+    return currentAddBatch;
   }
-  Updates & getCurrentDeleteBatch()
+  Updates * getCurrentDeleteBatch()
   {
-    return *currentDelBatch;
+    return currentDelBatch;
   }
 
   ~Updates()
