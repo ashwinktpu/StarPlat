@@ -83,23 +83,18 @@ void colorGraph(graph& g)
   int numNodes = g.num_nodes( ); // asst in .cu
 
   long* d_color;
-  color PULL
   cudaMalloc(&d_color, sizeof(long)*(V));
 
   int* d_color1;
-  color1 PULL
   cudaMalloc(&d_color1, sizeof(int)*(V));
 
   int* d_color2;
-  color2 PULL
   cudaMalloc(&d_color2, sizeof(int)*(V));
 
   bool* d_modified;
-  modified PULL
   cudaMalloc(&d_modified, sizeof(bool)*(V));
 
   bool* d_modified_next;
-  modified_next PULL
   cudaMalloc(&d_modified_next, sizeof(bool)*(V));
 
   initKernel<long> <<<numBlocks,threadsPerBlock>>>(V,d_color,(long)0);

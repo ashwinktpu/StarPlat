@@ -5,6 +5,7 @@
 #include "../../ast/ASTHelper.cpp"
 #include "dsl_cpp_generator.h"
 #include "getUsedVars.cpp"
+#include "getUsedVarsCpu.cpp"
 
 bool flag_for_device_var = 0;  //temporary fix to accomodate device variable and
 
@@ -796,7 +797,7 @@ void dsl_cpp_generator::generateReductionCallStmt(reductionCallStmt* stmt,
 void dsl_cpp_generator::generateReductionOpStmt(reductionCallStmt* stmt,
                                                 bool isMainFile) {
   dslCodePad& targetFile = isMainFile ? main : header;
-
+ 
   char strBuffer[1024];
 
   if (stmt->isLeftIdentifier()) {
@@ -839,13 +840,41 @@ void dsl_cpp_generator::generateReductionOpStmt(reductionCallStmt* stmt,
     targetFile.pushstr_newL(");");
 
   } else {
-    generate_exprPropId(stmt->getPropAccess(), isMainFile);
-    targetFile.pushString(" = ");
-    generate_exprPropId(stmt->getPropAccess(), isMainFile);
-    const char* operatorString = getOperatorString(stmt->reduction_op());
-    targetFile.pushstr_space(operatorString);
+    // generate_exprPropId(stmt->getPropAccess(), isMainFile);
+    // targetFile.pushString(" = ");
+    // generate_exprPropId(stmt->getPropAccess(), isMainFile);
+    // const char* operatorString = getOperatorString(stmt->reduction_op());
+    // targetFile.pushstr_space(operatorString);
+    // generateExpr(stmt->getRightSide(), isMainFile);
+    // targetFile.pushstr_newL(";");
+
+    const char *typVar = convertToCppType(stmt->getPropAccess()->getIdentifier2()->getSymbolInfo()->getType());
+    int size= sizeof(typVar);
+    std::string str = typVar;
+    str.pop_back(); // Remove last character
+    const char *cstr = str.c_str();
+
+    //~ if(strcmp("long",typVar)==0)
+    //~ sprintf(strBuffer, "atomicAdd(& %s, (long %s int)",id->getIdentifier(), typVar);
+    //~ else
+    // sprintf(strBuffer, "atomicAdd(& %s, (%s)", id->getIdentifier(), typVar);
+    if (strcmp(typVar, "long") == 0 || strcmp(typVar, "long long") == 0 || strcmp(typVar, "long int") == 0 || strcmp(typVar, "long long int") == 0)
+    {
+      sprintf(strBuffer, "atomicAdd((unsigned long long*)&");
+      targetFile.pushString(strBuffer);
+      generate_exprPropId(stmt->getPropAccess(), isMainFile);
+      sprintf(strBuffer,",(unsigned long long)");
+    }
+    else
+    {
+      sprintf(strBuffer, "atomicAdd(&");
+      targetFile.pushString(strBuffer);
+      generate_exprPropId(stmt->getPropAccess(), isMainFile);
+      sprintf(strBuffer, ",(%s)", cstr);
+    }
+    targetFile.pushString(strBuffer);
     generateExpr(stmt->getRightSide(), isMainFile);
-    targetFile.pushstr_newL(";");
+    targetFile.pushstr_newL(");");
   }
 }
 
@@ -872,25 +901,30 @@ void dsl_cpp_generator::generateDoWhileStmt(dowhileStmt* doWhile,
   blockStatement *block = (blockStatement* )doWhile->getBody();
   if (isOptimized)
   {
-    usedVariables usedvarswhile = getVarsDoWhile(doWhile);
-    list<statement *> currStmts = block->returnStatements();
-    for (statement *bstmt : currStmts)
-    {
-      if (bstmt->getTypeofNode() == NODE_FORALLSTMT)
-      {
-        forallStmt *forAll = (forallStmt *)bstmt;
-        usedVariables usedVars = getVarsForAll(forAll);
-        list<Identifier *> readvars = usedVars.getVariables(1);
-        for (Identifier *iden : readvars)
-        {
-          Type *type = iden->getSymbolInfo()->getType();
-          if (type->isPrimitiveType() && !usedvarswhile.isUsedVar(iden,2))
-          {
-            generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), true);
-          }
-        }
-      }
+    list<Identifier*> cudavars = doWhile->getvars_cudamemcpy();
+    for(Identifier* var:cudavars){
+      Type *type = var->getSymbolInfo()->getType();
+      generateCudaMemCpySymbol(var->getIdentifier(), convertToCppType(type), true);
     }
+    // usedVariables usedvarswhile = getVarsDoWhile(doWhile);
+    // list<statement *> currStmts = block->returnStatements();
+    // for (statement *bstmt : currStmts)
+    // {
+    //   if (bstmt->getTypeofNode() == NODE_FORALLSTMT)
+    //   {
+    //     forallStmt *forAll = (forallStmt *)bstmt;
+    //     usedVariables usedVars = getVarsForAll(forAll);
+    //     list<Identifier *> readvars = usedVars.getVariables(1);
+    //     for (Identifier *iden : readvars)
+    //     {
+    //       Type *type = iden->getSymbolInfo()->getType();
+    //       if (type->isPrimitiveType() && !usedvarswhile.isUsedVar(iden,2))
+    //       {
+    //         generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), true);
+    //       }
+    //     }
+    //   }
+    // }
   }
   /**************************************************/
   targetFile.pushstr_newL("do{");
@@ -1748,40 +1782,62 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
       }
     }
     else{
-      std::cout << "============EARLIER IN OPT=============" << '\n';
-      usedVariables usedVars = getVarsForAll(forAll);
-      list<Identifier *> readvars = usedVars.getVariables(1);
-      list<Identifier *> writevars = usedVars.getVariables(2);
-      blockStatement *bstm = (blockStatement *)((statement *)forAll)->getParent();
-      cout<<forAll->getParent()->getTypeofNode()<<endl;
-      statement *stm =(statement*)bstm->getParent();
-      // cout << forAll->getParent()->getParent()->getParent()->getTypeofNode() << endl;
-      if ((stm->getTypeofNode() == NODE_DOWHILESTMT || stm->getTypeofNode() == NODE_FIXEDPTSTMT))
-      {
-          usedVariables usedvarsparent=getVarsStatement(stm);
-          
-          for (Identifier *iden : readvars)
-          {
-            
-            Type *type = iden->getSymbolInfo()->getType();
-            if (type->isPrimitiveType() && usedvarsparent.isUsedVar(iden, 2))
-            {
-              generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), true);
-            }
-          }
-          
+      //optimisations for readexpressions
+      list<declaration*> readexprdecls = forAll->getreadexprdecls();
+      for(declaration* readexprdecl: readexprdecls){
+        Expression *rhs = readexprdecl->getExpressionAssigned();
+        rhs->setwriteexpr();
+        generateVariableDecl(readexprdecl, true);
+        char *varName = readexprdecl->getdeclId()->getIdentifier();
+        generateCudaMemCpySymbol(varName, convertToCppType(readexprdecl->getType()), true);
+        rhs->setreadexpr();
       }
 
-      for (Identifier *iden : writevars)
-      {
-          if (usedVars.isUsedVar(iden, 1))
-          {
-            continue;
-          }
-          Type *type = iden->getSymbolInfo()->getType();
-          if (type->isPrimitiveType())
-            generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), true);
+
+
+      //optimisations for cudamemcpy
+      std::cout << "============EARLIER IN OPT=============" << '\n';
+      list<Identifier*> vars = forAll->getvars_cudamemcpy();
+      for(Identifier* iden:vars){
+        Type *type = iden->getSymbolInfo()->getType();
+        if (type->isPrimitiveType())
+        {
+          generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), true);
+        }
       }
+      // usedVariables usedVars = getVarsForAll(forAll);
+      // list<Identifier *> readvars = usedVars.getVariables(1);
+      // list<Identifier *> writevars = usedVars.getVariables(2);
+      // blockStatement *bstm = (blockStatement *)((statement *)forAll)->getParent();
+      // cout<<forAll->getParent()->getTypeofNode()<<endl;
+      // statement *stm =(statement*)bstm->getParent();
+      // // cout << forAll->getParent()->getParent()->getParent()->getTypeofNode() << endl;
+      // if ((stm->getTypeofNode() == NODE_DOWHILESTMT || stm->getTypeofNode() == NODE_FIXEDPTSTMT))
+      // {
+      //     usedVariables usedvarsparent=getVarsStatement(stm);
+          
+      //     for (Identifier *iden : readvars)
+      //     {
+            
+      //       Type *type = iden->getSymbolInfo()->getType();
+      //       if (type->isPrimitiveType() && usedvarsparent.isUsedVar(iden, 2))
+      //       {
+      //         generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), true);
+      //       }
+      //     }
+          
+      // }
+
+      // for (Identifier *iden : writevars)
+      // {
+      //     if (usedVars.isUsedVar(iden, 1))
+      //     {
+      //       continue;
+      //     }
+      //     Type *type = iden->getSymbolInfo()->getType();
+      //     if (type->isPrimitiveType())
+      //       generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), true);
+      // }
     }
     /*memcpy to symbol*/
     
@@ -2110,15 +2166,15 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
       main.pushString("d_");
       main.pushString(declStmt->getdeclId()->getIdentifier());
       main.pushstr_newL(";");
-      if (push_map[string(declStmt->getdeclId()->getIdentifier())]==1)
-      {
-        main.pushString(declStmt->getdeclId()->getIdentifier());
-        main.pushstr_newL(" PUSH");
-      }
-      else{
-        main.pushString(declStmt->getdeclId()->getIdentifier());
-        main.pushstr_newL(" PULL");
-      }
+      // if (push_map[string(declStmt->getdeclId()->getIdentifier())]==1)
+      // {
+      //   main.pushString(declStmt->getdeclId()->getIdentifier());
+      //   main.pushstr_newL(" PUSH");
+      // }
+      // else{
+      //   main.pushString(declStmt->getdeclId()->getIdentifier());
+      //   main.pushstr_newL(" PULL");
+      // }
        
       //~ cout << "B4 adding: " << str << " Size:" << vvList.size() << '\n';
       //~ vars *v = new vars("int *", str,false);
@@ -2183,6 +2239,7 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
     targetFile.pushString(stringBuffer);
     targetFile.pushString(";");
     */
+   
     if (isMainFile == true) {  //to fix the PageRank we are doing this
       if (isOptimized) {
         if (declStmt->getInGPU()) {
@@ -2194,6 +2251,7 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
         header.pushString(strBuffer);
       }
     }
+  
     /// REPLICATE ON HOST AND DEVICE
     sprintf(strBuffer, "%s %s", varType, varName);
     targetFile.pushString(strBuffer);
@@ -2216,6 +2274,7 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
         Identifier* methodId = pExpr->getMethodId();
         castIfRequired(type, methodId, main);
       }
+      
       generateExpr(declStmt->getExpressionAssigned(), isMainFile);  // PRINTS RHS? YES
       /*if(flag_for_device_var ==0){
         generateExpr(declStmt->getExpressionAssigned(), true);
@@ -2458,6 +2517,19 @@ void dsl_cpp_generator::generate_exprIdentifier(Identifier* id,
 void dsl_cpp_generator::generateExpr(Expression* expr, bool isMainFile, bool isAtomic) {  //isAtomic default to false
   //~ dslCodePad& targetFile = isMainFile ? main : header;
 
+  /*************************************************READ EXPRESSION OPTIMISATION********************************/
+  //OPTIMIZATION
+  if(isOptimized){
+    if (expr->isreadexprs() && !expr->isIdentifierExpr() && !expr->isLiteral() && !expr->isInfinity())
+    {
+        cout << 1 << endl;
+        dslCodePad &targetFile = isMainFile ? main : header;
+        targetFile.pushString(expr->getnewidassigned()->getIdentifier());
+        return;
+    }
+  }
+  /**************************************************************************************************************/
+ 
   if (expr->isLiteral()) {
     // std::cout << "INSIDE THIS FOR LITERAL"<< "\n";
     // std::cout<< "------>PROP LIT"  << '\n';
@@ -2778,25 +2850,30 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,
         blockStatement *block = (blockStatement *)fixedPointConstruct->getBody();
         if (isOptimized)
         {
-          usedVariables usedvarsfixed = getVarsFixedPoint(fixedPointConstruct);
-          list<statement *> currStmts = block->returnStatements();
-          for (statement *bstmt : currStmts)
-          {
-              if (bstmt->getTypeofNode() == NODE_FORALLSTMT)
-              {
-                forallStmt *forAll = (forallStmt *)bstmt;
-                usedVariables usedVars = getVarsForAll(forAll);
-                list<Identifier *> readvars = usedVars.getVariables(1);
-                for (Identifier *iden : readvars)
-                {
-                  Type *type = iden->getSymbolInfo()->getType();
-                  if (type->isPrimitiveType() && !usedvarsfixed.isUsedVar(iden, 2))
-                  {
-                    generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), true);
-                  }
-                }
-              }
+          list<Identifier*> cudavars = fixedPointConstruct->getvars_cudamemcpy();
+          for(Identifier* var:cudavars){
+            Type *type = var->getSymbolInfo()->getType();
+            generateCudaMemCpySymbol(var->getIdentifier(), convertToCppType(type), true);
           }
+          // usedVariables usedvarsfixed = getVarsFixedPoint(fixedPointConstruct);
+          // list<statement *> currStmts = block->returnStatements();
+          // for (statement *bstmt : currStmts)
+          // {
+          //     if (bstmt->getTypeofNode() == NODE_FORALLSTMT)
+          //     {
+          //       forallStmt *forAll = (forallStmt *)bstmt;
+          //       usedVariables usedVars = getVarsForAll(forAll);
+          //       list<Identifier *> readvars = usedVars.getVariables(1);
+          //       for (Identifier *iden : readvars)
+          //       {
+          //         Type *type = iden->getSymbolInfo()->getType();
+          //         if (type->isPrimitiveType() && !usedvarsfixed.isUsedVar(iden, 2))
+          //         {
+          //           generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), true);
+          //         }
+          //       }
+          //     }
+          // }
         }
         /**************************************************/
         sprintf(strBuffer, "while(!%s) {", fixPointVar);
@@ -3149,6 +3226,7 @@ void dsl_cpp_generator::generateFunc(ASTNode* proc) {
   main.pushstr_newL("//BEGIN DSL PARSING ");
 
   generateBlock(func->getBlockStatement(), false);
+
 
   // Assuming one function!
   main.pushstr_newL("//TIMER STOP");
@@ -3746,6 +3824,11 @@ bool dsl_cpp_generator::generate() {
   // cout<<"FRONTEND
   // VALUES"<<frontEndContext.getFuncList().front()->getBlockStatement()->returnStatements().size();
   // //openFileforOutput();
+  // cout<<endl;
+  // for(string s:allGpuUsedVars){
+  //   cout<<s<<" ";
+  // }
+  // cout<<endl;
   if (!openFileforOutput()) return false;
   generation_begin();
 
@@ -3753,6 +3836,15 @@ bool dsl_cpp_generator::generate() {
   for (Function* func : funcList) {
     setCurrentFunc(func);
     generateFunc(func);
+    blockStatement* body = func->getBlockStatement();
+    list<statement *> stmtList = body->returnStatements();
+    for(statement* stmt : stmtList){
+      usedVariables vars = getVarsStatementCpu(stmt);
+      list<Identifier* >ids = vars.getVariables();
+      for(Identifier* id:ids){
+        cout<<stmt->getTypeofNode()<<" hello       "<<id->getIdentifier()<<endl;
+      }
+    }
   }
 
   generation_end();

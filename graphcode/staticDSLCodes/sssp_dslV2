@@ -7,12 +7,12 @@ function Compute_SSSP(Graph g, propNode<int> dist, node src)
      bool finished = False;
      fixedPoint until(finished : !modified)
      {
-          forall(pp in g.nodes().filter(modified == True))
+          forall(pp in g.nodes())
           {
-               forall(nbr in g.neighbors(pp))
+               forall(nbr in g.nodes_to(pp).filter(modified == True))
                {
                     edge e = g.get_edge(pp, nbr);
-                    <nbr.dist,nbr.modified> = <Min(nbr.dist, pp.dist + e.weight), True>;
+                    <pp.dist,pp.modified> = <Min(pp.dist, nbr.dist + e.weight), True>;
                }
           }
      }

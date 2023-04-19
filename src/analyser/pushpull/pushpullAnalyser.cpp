@@ -1,4 +1,5 @@
 #include "pushpullAnalyser.h"
+#include "../../backends/backend_cuda/getUsedVars.h"
 #include <string.h>
 #include <list>
 
@@ -84,7 +85,7 @@ int pushpullAnalyser::analysereductioninfor(reductionCallStmt* stmt, Identifier 
     return ans;
 }
 
-int pushpullAnalyser::analyseexprinfor(unary_stmt* input,Identifier *ownvertex){
+int pushpullAnalyser::analyseunaryinfor(unary_stmt* input,Identifier *ownvertex){
     cout << "   expression" << endl;
     Expression* stmt = input->getUnaryExpr();
     while (stmt->isUnary())
@@ -139,7 +140,7 @@ int pushpullAnalyser::analyseStatementinForAll(statement* stmt,Identifier *ownve
             }
             case NODE_UNARYSTMT:
             {
-                return analyseexprinfor((unary_stmt*)stmt,ownvertex);
+                return analyseunaryinfor((unary_stmt*)stmt,ownvertex);
             }
             case NODE_IFSTMT:
             {
@@ -188,10 +189,17 @@ void pushpullAnalyser::analyseStatement(statement *stmt)
        }
     case NODE_FORALLSTMT:
         {
-        cout << "forall" << endl;
-        forallStmt *forStmt = (forallStmt *)stmt;
-        if (forStmt->isForall())
-        {
+            cout << "forall" << endl;
+            forallStmt *forStmt = (forallStmt *)stmt;
+            if (forStmt->isForall())
+            {
+            usedVariables usedVars = getVarsForAll(forStmt);
+            list<Identifier *> vars = usedVars.getVariables();
+            for (Identifier *iden : vars)
+            {
+                allGpuUsedVars.insert(string(iden->getIdentifier()));
+            }
+            
             int pushorpull = analyseForAll((forallStmt *)stmt);
             }
             else analyseBlock((blockStatement *)forStmt->getBody());

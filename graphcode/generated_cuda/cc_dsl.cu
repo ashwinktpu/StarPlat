@@ -1,5 +1,5 @@
 // FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
-#include "CC.h"
+#include "cc_dsl.h"
 
 void Compute_CC(graph& g,float* CC)
 
@@ -66,7 +66,6 @@ void Compute_CC(graph& g,float* CC)
   const unsigned threadsPerBlock = 512;
   unsigned numThreads   = (V < threadsPerBlock)? 512: V;
   unsigned numBlocks    = (V+threadsPerBlock-1)/threadsPerBlock;
-  unsigned numBlocks_Edge    = (E+threadsPerBlock-1)/threadsPerBlock;
 
 
   // TIMER START
@@ -85,10 +84,9 @@ void Compute_CC(graph& g,float* CC)
   //BEGIN DSL PARSING 
   initKernel<float> <<<numBlocks,threadsPerBlock>>>(V,d_CC,(float)0);
 
-  int V = g.num_nodes( ); // asst in .cu
+  // int V = g.num_nodes( ); // asst in .cu
 
-  int src = 0; // asst in .cu
-
+  int src = 0;
   do{
     int* d_dist;
     cudaMalloc(&d_dist, sizeof(int)*(V));
@@ -107,11 +105,12 @@ void Compute_CC(graph& g,float* CC)
     // FIXED POINT variables
     //BEGIN FIXED POINT
     initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
+    int k=0; // #fixpt-Iterations
     while(!finished) {
 
       finished = true;
       cudaMemcpyToSymbol(::finished, &finished, sizeof(bool), 0, cudaMemcpyHostToDevice);
-      Compute_CC_kernel_1<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_modified,d_dist);
+      Compute_CC_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_modified,d_dist);
       cudaDeviceSynchronize();
 
 
@@ -120,12 +119,13 @@ void Compute_CC(graph& g,float* CC)
       cudaMemcpyFromSymbol(&finished, ::finished, sizeof(bool), 0, cudaMemcpyDeviceToHost);
       cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
       initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
+      k++;
     } // END FIXED POINT
 
     float temp = 0; // asst in .cu
 
     cudaMemcpyToSymbol(::temp, &temp, sizeof(float), 0, cudaMemcpyHostToDevice);
-    Compute_CC_kernel_2<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_dist);
+    Compute_CC_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_dist);
     cudaDeviceSynchronize();
     cudaMemcpyFromSymbol(&temp, ::temp, sizeof(float), 0, cudaMemcpyDeviceToHost);
 
@@ -148,3 +148,18 @@ void Compute_CC(graph& g,float* CC)
 
   cudaMemcpy(      CC,     d_CC, sizeof(float)*(V), cudaMemcpyDeviceToHost);
 } //end FUN
+
+int main(int argc, char *argv[])
+{
+  char *filename = argv[1];
+  graph g(filename);
+  g.parseGraph();
+  float *CC = (float *)malloc((g.num_nodes()) * sizeof(float));
+  Compute_CC(g, CC);
+
+  for (int i = 0 ; i < g.num_nodes(); i++)
+  {
+    std::cout << i << " " << CC[i] << std::endl;
+  }
+  std::cout << std::endl;
+}

@@ -93,11 +93,11 @@ void vHong(graph& g)
   cudaMalloc(&d_inDeg, sizeof(int)*(V));
 
   bool* d_visitFw;
-  visitFw PULL
+  visitFw PUSH
   cudaMalloc(&d_visitFw, sizeof(bool)*(V));
 
   bool* d_visitBw;
-  visitBw PULL
+  visitBw PUSH
   cudaMalloc(&d_visitBw, sizeof(bool)*(V));
 
   bool* d_propFw;
@@ -121,7 +121,7 @@ void vHong(graph& g)
   cudaMalloc(&d_range, sizeof(int)*(V));
 
   int* d_pivotField;
-  pivotField PULL
+  pivotField PUSH
   cudaMalloc(&d_pivotField, sizeof(int)*(V));
 
   initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_modified,(int)false);

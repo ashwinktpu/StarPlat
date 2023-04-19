@@ -8,6 +8,8 @@
 	#include "../analyser/dataRace/dataRaceAnalyser.h"
 	#include "../analyser/deviceVars/deviceVarsAnalyser.h"
 	#include "../analyser/pushpull/pushpullAnalyser.h"
+	#include "../analyser/readExpression/readExpressionAnalyser.h"
+	#include "../analyser/cudaMemcpy/cudaMemcpyAnalyser.h"
 	#include<getopt.h>
 	//#include "../symbolutil/SymbolTableBuilder.cpp"
      
@@ -24,6 +26,7 @@
 	FrontEndContext frontEndContext;
 	map<string, int>push_map;
 	map<string,int> atomicAdd_map;
+	set<string> allGpuUsedVars;
 	
 	char* backendTarget ;
     vector<Identifier*> tempIds; //stores graph vars in current function's param list.
@@ -210,15 +213,9 @@ declaration : type1 id   {
 						    Util::storeGraphId(id);
 
                          $$=Util::createNormalDeclNode($1,$2);};
-	| type1 id '=' rhs  {//Identifier* id=(Identifier*)Util::createIdentifierNode($2);
-	                    
-	                    $$=Util::createAssignedDeclNode($1,$2,$4);};
-	| type2 id  {//Identifier* id=(Identifier*)Util::createIdentifierNode($2);
-	            
-                         $$=Util::createNormalDeclNode($1,$2); };
-	| type2 id '=' rhs {//Identifier* id=(Identifier*)Util::createIdentifierNode($2);
-	                   
-	                    $$=Util::createAssignedDeclNode($1,$2,$4);};
+	| type1 id '=' rhs  {$$=Util::createAssignedDeclNode($1,$2,$4);};
+	| type2 id  { $$=Util::createNormalDeclNode($1,$2); };
+	| type2 id '=' rhs {$$=Util::createAssignedDeclNode($1,$2,$4);};
 
 type1: primitive {$$=$1; };
 	| graph {$$=$1;};
@@ -581,6 +578,13 @@ int main(int argc,char **argv)
 	}
 		pushpullAnalyser ppAnalyser;
 		ppAnalyser.analyse(frontEndContext.getFuncList());
+
+        cudaMemcpyAnalyser cmAnalyser;
+		cmAnalyser.analyse(frontEndContext.getFuncList());
+		
+		readExpressionAnalyser reAnalyser;
+		reAnalyser.analyse(frontEndContext.getFuncList());
+		
         cpp_backend.generate();
       } 
       else if (strcmp(backendTarget, "omp") == 0) {

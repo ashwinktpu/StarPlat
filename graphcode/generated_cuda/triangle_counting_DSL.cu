@@ -92,6 +92,16 @@ void Compute_TC(graph& g)
   cudaEventRecord(stop,0);
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&milliseconds, start, stop);
+  printf("triangle counting: %ld\n",triangle_count);
   printf("GPU Time: %.6f ms\n", milliseconds);
 
 } //end FUN
+
+int main(int argc, char *argv[])
+{
+  char *filename = argv[1];
+  graph g(filename);
+  g.parseGraph();
+  Compute_TC(g);
+ 
+}

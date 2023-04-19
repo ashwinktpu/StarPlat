@@ -40,12 +40,15 @@ __global__ void Compute_CC_kernel_1(int V, int E, int* d_meta, int* d_data, int*
 
   } // if filter end
 } // end KER FUNC
-__global__ void Compute_CC_kernel_2(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,float* d_CC,int* d_dist){ // BEGIN KER FUN via ADDKERNEL
+__device__ float temp ; // DEVICE ASSTMENT in .h
+
+__global__ void Compute_CC_kernel_2(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_dist){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned dst = blockIdx.x * blockDim.x + threadIdx.x;
   if(dst >= V) return;
   if (d_dist[dst] != INT_MAX){ // if filter begin 
-    d_CC[src] = d_CC[src] + 1.000000 / d_dist[dst];
+    Hi
+    atomicAdd(& temp, (float)d_dist[dst]);
 
   } // if filter end
 } // end KER FUNC

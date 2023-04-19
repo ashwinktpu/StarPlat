@@ -31,6 +31,7 @@ extern vector<map<int,vector<Identifier*>>> graphId;
 class varTransferStmt;
 extern map<string,int> push_map;
 extern map<string,int> atomicAdd_map;
+extern set<string> allGpuUsedVars;
 class argument
 {  
   private:
@@ -777,7 +778,8 @@ class formalParam:public ASTNode
     Identifier* id;
     PropAccess* propId;
     bool enclosedBrackets;
-
+    bool isreadexpr;
+    Identifier* newidassigned;
     public:
 
     Expression()
@@ -789,8 +791,43 @@ class formalParam:public ASTNode
       typeofNode=NODE_EXPR;
       overallType=-1;
       enclosedBrackets=false;
+      isreadexpr = false;
+      newidassigned = NULL;
     }
 
+    Expression(const Expression& assigned){
+      left = new Expression();
+      *left = *(assigned.left);
+      right=new Expression();
+      *right = *(assigned.right);
+      id = new Identifier();
+      *id = *(assigned.id);
+      propId = new PropAccess();
+      *propId = *(assigned.propId);
+      typeofNode = NODE_EXPR;
+      overallType = assigned.operatorType;
+      enclosedBrackets = assigned.enclosedBrackets;
+      // isreadexpr = assigned.isreadexpr;
+    }
+
+    void setreadexpr(){
+      isreadexpr=true;
+    }
+
+    void setwriteexpr(){
+      isreadexpr=false;
+    }
+    bool isreadexprs(){
+      return isreadexpr;
+    }
+
+    void setnewidassigned(Identifier* idassign){
+          newidassigned=idassign;
+    }
+
+    Identifier* getnewidassigned(){
+      return newidassigned;
+    }
     static Expression* nodeForArithmeticExpr(Expression* left,Expression* right,int arithmeticOperator)
     {
       Expression* arithmeticExpr=new Expression();
@@ -1369,6 +1406,7 @@ class whileStmt:public statement
   private:
   Expression* iterCondition;
   blockStatement* body;
+  list<Identifier*> vars_cudamemcpy;
 
   public:
 
@@ -1377,6 +1415,14 @@ class whileStmt:public statement
       iterCondition=NULL;
       body=NULL;
       statementType="WhileStmt";
+    }
+
+    list<Identifier*> getvars_cudamemcpy(){
+      return vars_cudamemcpy;
+    }
+
+    void insert_vars_cudamemcpy(Identifier* id){
+        vars_cudamemcpy.push_back(id);
     }
 
     static dowhileStmt* create_dowhileStmt(Expression* iterConditionSent,blockStatement* bodySent)
@@ -1416,8 +1462,9 @@ class fixedPointStmt:public statement
     Expression* dependentProp;
     Identifier* fixedPointId;
     blockStatement* body;
+    list<Identifier *> vars_cudamemcpy;
 
-    public:
+  public:
     fixedPointStmt()
     {
       dependentProp=NULL;
@@ -1427,7 +1474,15 @@ class fixedPointStmt:public statement
 
 
     }
+    list<Identifier *> getvars_cudamemcpy()
+    {
+      return vars_cudamemcpy;
+    }
 
+    void insert_vars_cudamemcpy(Identifier *id)
+    {
+      vars_cudamemcpy.push_back(id);
+    }
     static fixedPointStmt *createforfixedPointStmt(Identifier *fixedPointIdSent, Expression *dependentPropSent, blockStatement *body)
     {
       fixedPointStmt* new_fixedPointStmt=new fixedPointStmt();
@@ -1908,7 +1963,10 @@ class fixedPointStmt:public statement
     Expression* assocExpr;
     
     list<Identifier*> usedVars;
-    public:
+    list<declaration*> declofreadexprs;
+    list<Identifier *> vars_cudamemcpy;
+
+  public:
     forallStmt()
     {
       iterator=NULL;
@@ -1922,6 +1980,16 @@ class fixedPointStmt:public statement
       isSourceId=false;
       createSymbTab();
       filterExprAssoc = false; 
+    }
+
+    list<Identifier *> getvars_cudamemcpy()
+    {
+      return vars_cudamemcpy;
+    }
+
+    void insert_vars_cudamemcpy(Identifier *id)
+    {
+      vars_cudamemcpy.push_back(id);
     }
 
     static forallStmt* createforallStmt(Identifier* iterator,Identifier* sourceGraph,proc_callExpr* extractElemFunc,statement* body,Expression* filterExpr,bool isforall)
@@ -2095,6 +2163,13 @@ class fixedPointStmt:public statement
       return this->usedVars;
     }
 
+    void addreadexprdecls(declaration* newdecl){
+        declofreadexprs.push_front(newdecl);
+    }
+    
+    list<declaration*> getreadexprdecls(){
+      return this->declofreadexprs;
+    }
     void addDeviceAssignment(){
       blockStatement* block=(blockStatement*)body;
         for(statement* stmt:block->returnStatements())

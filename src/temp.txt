@@ -1,121 +1,254 @@
-fileName ../graphcode/staticDSLCodes/graphColoring
+fileName ../graphcode/staticDSLCodes/PageRankDSLV21
 Backend Target cuda
 Type: function
 '('Graph Type
 
+','Type: float
+
+','Type: float
+
+','Type: int
+
+','Node Property'<'Type: float'>'
 ')'currentFuncType check!!0
 tempID g funccount 0
 
-'{'Type: int
+'{'Type: float
 
 '='
-'.''('')'';'Node Property'<'Type: long'>'
-';'Node Property'<'Type: int'>'
-';'Node Property'<'Type: int'>'
-';'Node Property'<'Type: bool'>'
-';'Node Property'<'Type: bool'>'
-';''.''(''='')'';'TYPE OF NODE OF STATEMENT1'.''(''='Type Bool: False')'';'TYPE OF NODE OF STATEMENT1'.''(''='Type Bool: False')'';'TYPE OF NODE OF STATEMENT1Type: int
-
-'='
-';'Type: int
-'='
-';'Keyword do: do'{''=''+'';''.''('','')'';'TYPE OF NODE OF STATEMENT1'.''('','','')'';'TYPE OF NODE OF STATEMENT1Keyword-forall: forall'('
+'.''('')'';'Node Property'<'Type: float'>'
+';''.''(''=''/'')'';'TYPE OF NODE OF STATEMENT1Type: int
+'='';'Type: float
+';'Keyword do: do'{''='';'Keyword-forall: forall'('
 Keyword in 
-'.''('')'')''{'Keyword if: if'(''.'EQ_OPType Bool: False')''{'Type: int
-
-'='
-';'Type: int
-
-'='
-';'For: for'('
+'.''('')'')''{'Type: float
+'='';'For: for'('
 Keyword in 
-'.''('')'')''{''=''+'';'Keyword if: if'('EQ_OP')''{''=''+'';''}'Keyword else: else
-Keyword if: if'(''.'EQ_OPType Bool: True')''{''=''+'';''}'Keyword else: else
-Keyword if: if'(''.''>''.'')''{''=''+'';''}''}'For: for'('
-Keyword in 
-'.''('')'')''{''=''+'';'Keyword if: if'('EQ_OP')''{''=''+'';''}'Keyword else: else
-Keyword if: if'(''.'EQ_OPType Bool: True')''{''=''+'';''}'Keyword else: else
-Keyword if: if'(''.''>''.'')''{''=''+'';''}''}'Keyword if: if'('EQ_OP')''{''.'
+'.''('')'')''{''=''+''.''/''.''('')'';''}'Type: float
+'=''(''-'')''/''+''*'';'ADD_ASSIGN '.''-'';''.''='';''}'
 '='
-Type Bool: True';'ADD_ASSIGN ';''}''}''}'
-'='
-';''}'Keyword while: while'(''<'')'';'
 
-'}'error val 0
+';'INC_OP';''}'
+Keyword while: while'(''(''>'')'AND_OP'(''<'')'')'';''}'
+error val 0
 at 1
 FORALL par   NAME1:6
 FORALL ParPar NAME2:10
 FORALL ParParPar NAME3:6
 FORALL par   NAME1:6
-FORALL ParPar NAME2:12
-FORALL ParParPar NAME3:6
-FORALL par   NAME1:6
-FORALL ParPar NAME2:12
+FORALL ParPar NAME2:18
 FORALL ParParPar NAME3:6
 ANAME1:6
-ANAME2:12
+ANAME2:18
 at 2
+Function Compute_PR
+	{
+		Declaration
+		Declaration
+		Procedure Call
+		Declaration
+		Declaration
+		Do While
+			{
+				Assignment
+				For all
+					{
+						Declaration
+						For all
+							{
+								Assignment
+							}
+						Declaration
+						Reduction
+						Assignment
+					}
+				Assignment
+				Unary statment
+			}
+	}
+Initializing 0x55d7c30f0120 6
+Initializing 0x55d7c30f0650 7
+Initializing 0x55d7c30f04b0 7
+Initializing 0x55d7c30f0cc0 17
+Initializing 0x55d7c30f0ea0 7
+Initializing 0x55d7c30f1020 7
+Initializing 0x55d7c30f45e0 10
+Initializing 0x55d7c30f10b0 6
+Initializing 0x55d7c30f12b0 8
+Initializing 0x55d7c30f3980 18
+Initializing 0x55d7c30f3d00 8
+Initializing 0x55d7c30f3f40 21
+Analysing 0x55d7c30f0120 6
+Analysing 0x55d7c30f0650 7
+Analysing 0x55d7c30f04b0 7
+Analysing 0x55d7c30f0cc0 17
+Analysing 0x55d7c30f0ea0 7
+Analysing 0x55d7c30f1020 7
+Analysing 0x55d7c30f45e0 10
+Analysing 0x55d7c30f10b0 6
+Analysing 0x55d7c30f12b0 8
+Analysing 0x55d7c30f3980 18
+Analysing 0x55d7c30f3d00 8
+Analysing 0x55d7c30f3f40 21
+Analysing 0x55d7c30f10b0 6
+Analysing 0x55d7c30f12b0 8
+Analysing 0x55d7c30f3980 18
+Analysing 0x55d7c30f3d00 8
+Analysing 0x55d7c30f3f40 21
+Transfering 0x55d7c30f0650 7
+decl
+Transfering 0x55d7c30f04b0 7
+decl
+Transfering 0x55d7c30f0cc0 17
+proccall
+Transfering 0x55d7c30f0ea0 7
+decl
+Transfering 0x55d7c30f1020 7
+decl
+Transfering 0x55d7c30f45e0 10
+dowhile
+Transfering 0x55d7c30f10b0 6
+block
+Transfering 0x55d7c30f12b0 8
+assign
+Transfering 0x55d7c30f3980 18
+forall
+Transfering 0x55d7c30f3d00 8
+assign
+Transfering 0x55d7c30f3f40 21
+unary
+{
+	Declaration
+	Declaration
+	Tranfer statement
+		pageRank CPU to GPU
+	Procedure Call
+	Declaration
+	Declaration
+	Do While
+		{
+			Assignment
+			Tranfer statement
+				diff CPU to GPU
+			Tranfer statement
+				num_nodes CPU to GPU
+			Tranfer statement
+				pageRank_nxt CPU to GPU
+			Tranfer statement
+				delta CPU to GPU
+			For all
+				{
+					Declaration
+					For all
+						{
+							Assignment
+						}
+					Declaration
+					Reduction
+					Assignment
+				}
+			Tranfer statement
+				pageRank GPU to CPU
+			Tranfer statement
+				pageRank_nxt GPU to CPU
+			Assignment
+			Unary statment
+		}
+}
 block
 dowhile
 forall
- if
    for
    assign
- if
+   reduction
    assign
- else
- if
-   assign
- else
- if
-   assign
+                               v pageRank_nxt v 
+READ EXPRESSION ANALYSER
+block
+dowhile
+forall
+   declaration
+   expression
+   expression2 1
    for
+    assign
+   expression
+   expression
+   expression
+   expression
+   expression
+   expression2 0
+   expression2 0
+   expression2 0
+   expression2 0
+   expression2 0
+   declaration
+   expression
+   expression
+   expression
+   expression
+   expression
+   expression
+   expression
+   expression
+   expression
+   expression2 0
+   expression2 1
+Hello 1
+   expression2 1
+Hello 1
+   expression2 1
+   expression2 1
+   expression2 1
+   expression2 0
+   expression2 1
+   expression2 0
+   reduction
    assign
- if
-   assign
- else
- if
-   assign
- else
- if
-   assign
- if
-   assign
-                               v modified_next v    reduction
-fileName graphColoring
+   expression
+   expression2 0
+fileName PageRankDSLV21
 param :g
 paramD:d_g
 ========== SET TRUE
+param :beta
+paramD:d_beta
+param :delta
+paramD:d_delta
+param :maxIter
+paramD:d_maxIter
+param :pageRank
+paramD:d_pageRank
 param :g
 paramD:d_g
-	==VARSIZE:5
+param :beta
+paramD:d_beta
+param :delta
+paramD:d_delta
+param :maxIter
+paramD:d_maxIter
+param :pageRank
+paramD:d_pageRank
+	==VARSIZE:1
+varT:float
+varN:num_nodes
+varName:pageRank
 varT:int
-varN:numNodes
-varName:color
-varName:modified
-varName:modified_next
-varT:int
-varN:fpoint1
-varT:int
-varN:iter
+varN:iterCount
+varT:float
+varN:diff
 	==VARSIZE:0
 	ASST
 STMT: For
 isMainFile val 1
 Entered here for forall 
-============EARLIER NOT OPT=============
-varName:modified
-varName:fpoint1
-varName:color
-varName:modified_next
-NOT OPTIMESED ---------------
+============EARLIER IN OPT=============
+6
+-----------------INN OPTIMESED ---------------
+diff
 start of kernel block 
-=======IF FILTER
-	==VARSIZE:0
-varT:int
-varN:cnt
-varT:int
-varN:total
+varT:float
+varN:sum
 STMT: For
 isMainFile val 0
 GenerateForAllSignature = 0
@@ -123,35 +256,34 @@ GenerateForAllSignature = 0
 src:nbr
 	==VARSIZE:0
 	ASST
-=======IF FILTER
-	==VARSIZE:0
-	ASST
-=======IF FILTER
-	==VARSIZE:0
-	ASST
-=======IF FILTER
-	==VARSIZE:0
-	ASST
 FOR BODY END
-STMT: For
-isMainFile val 0
-GenerateForAllSignature = 0
-	 ITERATE Neighbour 
-src:par
-	==VARSIZE:0
-	ASST
-=======IF FILTER
-	==VARSIZE:0
-	ASST
-=======IF FILTER
-	==VARSIZE:0
-	ASST
-=======IF FILTER
-	==VARSIZE:0
-	ASST
-FOR BODY END
-=======IF FILTER
-	==VARSIZE:0
+varT:float
+varN:val
+1
 	ASST
 	ASST
+7
+7
+26
+17
+7
+7
+10
+6
+8
+26
+26
+26
+26
+18
+26
+26
+8
+21
+10 hello       pageRank_nxt
+10 hello       iterCount
+10 hello       maxIter
+10 hello       beta
+10 hello       diff
+10 hello       pageRank
 finished successfully

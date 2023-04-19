@@ -4,7 +4,7 @@ ANALYSER = bin/dataRaceAnalyser.o
 PROGRAMS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/cu_dsl_cpp_generator.o  bin/ac_dsl_cpp_generator.o bin/om_dsl_cpp_generator.o bin/mpi_dsl_cpp_generator.o bin/om_dyn_dsl_cpp_generator.o
 #bin/ac_dsl_cpp_generator.o 
 #bin/om_dsl_cpp_generator.o
-A_PROGRAM = bin/attachPropAnalyser.o bin/dataRaceAnalyser.o bin/deviceVarsAnalyser.o bin/analyserUtil.o bin/pushpullAnalyser.o
+A_PROGRAM = bin/attachPropAnalyser.o bin/dataRaceAnalyser.o bin/deviceVarsAnalyser.o bin/analyserUtil.o bin/pushpullAnalyser.o bin/readExpressionAnalyser.o bin/cudaMemcpyAnalyser.o
 
 CFLAGS  = -g 
 CC = g++ -std=c++11 #-Wall # -Wno-unused-variable #-fsanitize=address
@@ -74,7 +74,13 @@ bin/dataRaceAnalyser.o: analyser/dataRace/dataRaceAnalyser.cpp analyser/dataRace
 	$(CC) $(CFLAGS) -c analyser/dataRace/dataRaceAnalyser.cpp -o bin/dataRaceAnalyser.o    
 
 bin/pushpullAnalyser.o: analyser/pushpull/pushpullAnalyser.cpp analyser/pushpull/pushpullAnalyser.h 
-	$(CC) $(CFLAGS) -c analyser/pushpull/pushpullAnalyser.cpp -o bin/pushpullAnalyser.o    
+	$(CC) $(CFLAGS) -c analyser/pushpull/pushpullAnalyser.cpp -o bin/pushpullAnalyser.o
+
+bin/cudaMemcpyAnalyser.o: analyser/cudaMemcpy/CudaMemcpyAnalyser.cpp analyser/cudaMemcpy/cudaMemcpyAnalyser.h 
+	$(CC) $(CFLAGS) -c analyser/cudaMemcpy/cudaMemcpyAnalyser.cpp -o bin/cudaMemcpyAnalyser.o    
+
+bin/readExpressionAnalyser.o: analyser/readExpression/readExpressionAnalyser.cpp analyser/readExpression/readExpressionAnalyser.h
+	$(CC) $(CFLAGS) -c analyser/readExpression/readExpressionAnalyser.cpp -o bin/readExpressionAnalyser.o 
 
 bin/deviceVarsAnalyser.o: bin/dv1.o bin/dv2.o bin/dv3.o bin/dv4.o bin/dv5.o
 	ld -r bin/dv1.o bin/dv2.o bin/dv3.o bin/dv4.o bin/dv5.o -o bin/deviceVarsAnalyser.o  

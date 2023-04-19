@@ -23,6 +23,10 @@ __device__ float num_nodes ; // DEVICE ASSTMENT in .h
 
 __device__ float diff ; // DEVICE ASSTMENT in .h
 
+__device__ float tempVar_1 ; // DEVICE ASSTMENT in .h
+
+__device__ float tempVar_0 ; // DEVICE ASSTMENT in .h
+
 __global__ void Compute_PR_kernel_1(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,float* d_pageRank,float* d_pageRank_nxt){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
@@ -34,7 +38,7 @@ __global__ void Compute_PR_kernel_1(int V, int E, int* d_meta, int* d_data, int*
     sum = sum + d_pageRank[nbr] / (d_meta[nbr+1]-d_meta[nbr]);
 
   } //  end FOR NBR ITR. TMP FIX!
-  float val = (1 - delta) / num_nodes + delta * sum; // DEVICE ASSTMENT in .h
+  float val = tempVar_0 + delta * sum; // DEVICE ASSTMENT in .h
 
   atomicAdd(& diff, (float)d_pageRank[v] - val);
   d_pageRank_nxt[v] = val;

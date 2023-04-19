@@ -18,9 +18,11 @@ function Compute_CC ( Graph g,propNode <float> CC){
                 }
             }
         }   
+        float temp=0;
         forall (dst in g.nodes().filter(dist != INF)) {
-            src.CC = src.CC+ 1.0 / dst.dist;
+            temp += dst.dist;
         }
+        src.CC = (1/temp);
         src=src+1 ; 
     }while(src<V);
 }

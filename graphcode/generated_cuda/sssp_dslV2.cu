@@ -84,7 +84,6 @@ void Compute_SSSP(graph& g,int* dist,int src)
 
   //BEGIN DSL PARSING 
   bool* d_modified;
-  modified PULL
   cudaMalloc(&d_modified, sizeof(bool)*(V));
 
   initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_dist,(int)INT_MAX);
@@ -102,7 +101,7 @@ void Compute_SSSP(graph& g,int* dist,int src)
 
     finished = true;
     cudaMemcpyToSymbol(::finished, &finished, sizeof(bool), 0, cudaMemcpyHostToDevice);
-    Compute_SSSP_kernel_1<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_modified,d_dist);
+    Compute_SSSP_kernel_1<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_dist,d_modified);
     cudaDeviceSynchronize();
 
 
