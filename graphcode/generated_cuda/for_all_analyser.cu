@@ -1,7 +1,8 @@
 // FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
-#include "triangle_counting_dsl.h"
-
-void Compute_TC(graph& g)
+#include "for_all_analyser.h"
+#include <iostream>
+using namespace std;
+void for_loop(graph& g,std::set<int>& sourceSet)
 
 {
   // CSR BEGIN
@@ -78,15 +79,36 @@ void Compute_TC(graph& g)
 
   //DECLAR DEVICE AND HOST vars in params
 
-  //BEGIN DSL PARSING 
-  long triangle_count = 0; // asst in .cu
+  //BEGIN DSL PARSING
+  int* d_prop1;
+  cudaMalloc(&d_prop1, sizeof(int)*(V));
 
-  cudaMemcpyToSymbol(::triangle_count, &triangle_count, sizeof(long), 0, cudaMemcpyHostToDevice);
-  Compute_TC_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next);
+  int* d_count_prop;
+  cudaMalloc(&d_count_prop, sizeof(int)*(V));
+
+  initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_count_prop,(int)1);
+
+  //FOR SIGNATURE of SET - Assumes set for on .cu only
+  std::set<int>::iterator itr;
+  for(itr=sourceSet.begin();itr!=sourceSet.end();itr++)
+  {
+    int src = *itr;
+    initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_prop1,(int)1);
+
+
+  }
+  int count = 0; // asst in .cu
+
+  cudaMemcpyToSymbol(::count, &count, sizeof(int), 0, cudaMemcpyHostToDevice);
+  for_loop_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_count_prop);
   cudaDeviceSynchronize();
 
 
 
+
+  //cudaFree up!! all propVars in this BLOCK!
+  cudaFree(d_count_prop);
+  cudaFree(d_prop1);
 
   //TIMER STOP
   cudaEventRecord(stop,0);
@@ -95,3 +117,15 @@ void Compute_TC(graph& g)
   printf("GPU Time: %.6f ms\n", milliseconds);
 
 } //end FUN
+
+int main(int argc, char *argv[])
+{
+  char *filename = argv[1];
+  graph g(filename);
+  g.parseGraph();
+  set<int> source_set;
+  for(int i=1;i<g.num_nodes();i++){
+    source_set.insert(i);
+  }
+  for_loop(g,source_set);
+}

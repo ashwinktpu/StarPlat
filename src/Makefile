@@ -4,7 +4,7 @@ ANALYSER = bin/dataRaceAnalyser.o
 PROGRAMS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/cu_dsl_cpp_generator.o  bin/ac_dsl_cpp_generator.o bin/om_dsl_cpp_generator.o bin/mpi_dsl_cpp_generator.o
 #bin/ac_dsl_cpp_generator.o
 #bin/om_dsl_cpp_generator.o
-A_PROGRAM = bin/attachPropAnalyser.o bin/dataRaceAnalyser.o bin/deviceVarsAnalyser.o bin/analyserUtil.o bin/ForLoopFusionAnalyser.o
+A_PROGRAM = bin/attachPropAnalyser.o bin/dataRaceAnalyser.o bin/deviceVarsAnalyser.o bin/analyserUtil.o bin/ForLoopPropInitAnalyser.o bin/ForLoopFusionAnalyser.o
 
 CFLAGS  = -g
 CC = g++ -std=c++11 #-Wall # -Wno-unused-variable #-fsanitize=address
@@ -69,9 +69,11 @@ bin/attachPropAnalyser.o: analyser/attachProp/attachPropAnalyser.cpp analyser/at
 bin/dataRaceAnalyser.o: analyser/dataRace/dataRaceAnalyser.cpp analyser/dataRace/dataRaceAnalyser.h
 	$(CC) $(CFLAGS) -c analyser/dataRace/dataRaceAnalyser.cpp -o bin/dataRaceAnalyser.o
 
-bin/ForLoopFusionAnalyser.o: analyser/ForLoopFusion/ForLoopFusionAnalyser.cpp analyser/ForLoopFusion/ForLoopFusionAnalyser.h
-	$(CC) $(CFLAGS) -c analyser/ForLoopFusion/ForLoopFusionAnalyser.cpp -o bin/ForLoopFusionAnalyser.o
+bin/ForLoopPropInitAnalyser.o: analyser/ForLoopPropInit/ForLoopPropInitAnalyser.cpp analyser/ForLoopPropInit/ForLoopPropInitAnalyser.h
+	$(CC) $(CFLAGS) -c analyser/ForLoopPropInit/ForLoopPropInitAnalyser.cpp -o bin/ForLoopPropInitAnalyser.o
 
+bin/ForLoopFusionAnalyser.o : analyser/ForLoopFusion/ForLoopFusionAnalyser.cpp analyser/ForLoopFusion/ForLoopFusionAnalyser.h
+	$(CC) $(CFLAGS) -c analyser/ForLoopFusion/ForLoopFusionAnalyser.cpp -o bin/ForLoopFusionAnalyser.o
 bin/deviceVarsAnalyser.o: bin/dv1.o bin/dv2.o bin/dv3.o bin/dv4.o bin/dv5.o
 	ld -r bin/dv1.o bin/dv2.o bin/dv3.o bin/dv4.o bin/dv5.o -o bin/deviceVarsAnalyser.o
 

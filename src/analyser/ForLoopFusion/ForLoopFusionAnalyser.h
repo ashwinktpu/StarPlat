@@ -2,12 +2,14 @@
 #define FOR_LOOP_FUSION_ANALYSER
 #include "../../ast/ASTNodeTypes.hpp"
 class ForLoopFusionAnalyser{
-    void analyseFunc(Function* func);
-    void analyseBlockStatement(blockStatement* stmt);
+    void analyseFunc(ASTNode* proc);
     void analyseStatement(statement* stmt);
+    void analyseBlock(blockStatement* blockStmt);
     public:
     ForLoopFusionAnalyser(){
     }
-    void analyse(list<Function *> funcList);
+    void analyse(list<Function*> funclist);
+
+
 };
 #endif

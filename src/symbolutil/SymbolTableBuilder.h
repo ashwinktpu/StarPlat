@@ -14,10 +14,10 @@ class SymbolTableBuilder
  list<SymbolTable*> propSymbolTables;
  SymbolTable* currVarSymbT;
  SymbolTable* currPropSymbT;
- Function* currentFunc; 
+ Function* currentFunc;
 
- 
- 
+
+
 
  public:
  vector<ASTNode*> parallelConstruct;
@@ -44,7 +44,7 @@ class SymbolTableBuilder
  }*/
 
  void delete_curr_SymbolTable();
- /*{ 
+ /*{
      currVarSymbT=variableSymbolTables.back();
      currPropSymbT=propSymbolTables.back();
 
@@ -59,7 +59,7 @@ void buildST(list<Function*> funcList);
     for(itr=funcList.begin();itr!=funcList.end();itr++)
        buildForProc((*itr));
 } */
-  
+
 void buildForProc(Function* func);
 void buildForStatements(statement* stmt);
 void checkReductionExpr(reductionCall* reduce);

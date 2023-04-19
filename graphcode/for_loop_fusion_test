@@ -1,0 +1,14 @@
+function for_loop_fusion (Graph g,SetN<g> sourceSet)
+{
+    propNode<int> count_prop_1;
+    propNode<int> count_prop_2;
+    g.attachNodeProperty(count_prop_1=1,count_prop_2=2);
+    int count1 = 0;
+    int count2 = 0;
+    forall(v in g.nodes()){
+        count1 = 1;
+    }
+    forall(v in g.nodes()){
+        count2 = 1;
+    }
+}

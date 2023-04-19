@@ -8,15 +8,38 @@
 #include "../graph.hpp"
 #include "../libcuda.cuh"
 #include <cooperative_groups.h>
-
-void Compute_SSSP(graph& g,int* dist,int* weight,int src
-);
+void Compute_SSSP(graph& g,int* dist,int src);
 
 
 
+__global__ void merged_kernel_1(unsigned V, int* array_1, int val_1, bool* array_2, bool val_2, bool* array_3,int index_3, bool val_3, int* array_4,int index_4, int val_4){
+    unsigned id = threadIdx.x + blockDim.x * blockIdx.x;
+    if (id < V) {
+        array_1[id] = val_1;
+        array_2[id] = val_2;
+    }
+    if(index_3==id){
+        array_3[index_3] = val_3;
+    }
+    if(index_4==id){
+        array_4[index_4] = val_4;
+    }
+}
 __device__ bool finished ; // DEVICE ASSTMENT in .h
 
-__global__ void Compute_SSSP_kernel(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,bool* d_modified,int* d_weight,int* d_dist){ // BEGIN KER FUN via ADDKERNEL
+; // DEVICE ASSTMENT in .h
+
+; // DEVICE ASSTMENT in .h
+
+__global__ void merged_kernel_2(unsigned V,bool array_1,int index_1,bool val_1,int array_2,int index_2,int val_2){
+    if(index_1 < V){
+        array_1[index_1] = val_1
+    }
+    if(index_2 < V){
+        array_2[index_2] = val_2
+    }
+}
+__global__ void Compute_SSSP_kernel(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,bool* d_modified,int* d_dist){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
   if(v >= V) return;

@@ -1,7 +1,7 @@
 // FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
-#include "bc_dsl_v3.h"
+#include "bc_dslV2.h"
 
-void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
+void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
 
 {
   // CSR BEGIN
@@ -27,20 +27,17 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
   for(int i=0; i<= V; i++) {
     int temp = g.indexofNodes[i];
     h_meta[i] = temp;
+    temp = g.rev_indexofNodes[i];
+    h_rev_meta[i] = temp;
   }
 
   for(int i=0; i< E; i++) {
     int temp = g.edgeList[i];
     h_data[i] = temp;
-    temp = srcList[i];
+    temp = g.srcList[i];
     h_src[i] = temp;
     temp = edgeLen[i];
     h_weight[i] = temp;
-  }
-
-  for(int i=0; i<= V; i++) {
-    int temp = g.rev_indexofNodes[i];
-    h_rev_meta[i] = temp;
   }
 
 
@@ -67,7 +64,7 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
   // CSR END
   //LAUNCH CONFIG
   const unsigned threadsPerBlock = 512;
-  unsigned numThreads   = (V < threadsPerBlock)? V: 512;
+  unsigned numThreads   = (V < threadsPerBlock)? 512: V;
   unsigned numBlocks    = (V+threadsPerBlock-1)/threadsPerBlock;
 
 
@@ -80,29 +77,27 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
 
 
   //DECLAR DEVICE AND HOST vars in params
-  double* d_BC;
-  cudaMalloc(&d_BC, sizeof(double)*(V));
+  float* d_BC;
+  cudaMalloc(&d_BC, sizeof(float)*(V));
 
 
   //BEGIN DSL PARSING 
-  initKernel<double> <<<numBlocks,threadsPerBlock>>>(V,d_BC,(double)0);
+  float* d_sigma;
+  cudaMalloc(&d_sigma, sizeof(float)*(V));
 
-  double* d_sigma;
-  cudaMalloc(&d_sigma, sizeof(double)*(V));
+  float* d_delta;
+  cudaMalloc(&d_delta, sizeof(float)*(V));
 
-  double* d_delta;
-  cudaMalloc(&d_delta, sizeof(double)*(V));
+  initKernel<float> <<<numBlocks,threadsPerBlock>>>(V,d_BC,(float)0);
+
+  int temp = 0; // asst in .cu
 
   //FOR SIGNATURE of SET - Assumes set for on .cu only
   std::set<int>::iterator itr;
   for(itr=sourceSet.begin();itr!=sourceSet.end();itr++) 
   {
     int src = *itr;
-    initKernel<double> <<<numBlocks,threadsPerBlock>>>(V,d_delta,(double)0);
-
-    initKernel<double> <<<numBlocks,threadsPerBlock>>>(V,d_sigma,(double)0);
-
-    initIndex<double><<<1,1>>>(V,d_sigma,src,(double)1); //InitIndexDevice
+    merged_kernel_1<<<numBlocks,threadsPerBlock>>>(V, d_delta, (float)0, d_sigma, (float)0, d_sigma, src, (float)1);
 
     //EXTRA vars for ITBFS AND REVBFS
     bool finished;
@@ -121,7 +116,7 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
       cudaMemcpy(d_finished, &finished, sizeof(bool)*(1), cudaMemcpyHostToDevice);
 
       //Kernel LAUNCH
-      fwd_pass<<<numBlocks,threadsPerBlock>>>(V, d_meta, d_data,d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished, d_BC); ///TODO from varList
+      fwd_pass<<<numBlocks,threadsPerBlock>>>(V, d_meta, d_data,d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished,d_BC); ///DONE from varList
 
       incrementDeviceVar<<<1,1>>>(d_hops_from_source);
       cudaDeviceSynchronize(); //MUST - rupesh
@@ -138,18 +133,25 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
     while(hops_from_source > 1) {
 
       //KERNEL Launch
-      back_pass<<<numBlocks,threadsPerBlock>>>(V, d_meta, d_data, d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished, d_BC); ///TODO from varList
+      back_pass<<<numBlocks,threadsPerBlock>>>(V, d_meta, d_data, d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished
+        ,d_BC); ///DONE from varList
 
       hops_from_source--;
       cudaMemcpy(d_hops_from_source, &hops_from_source, sizeof(int)*(1), cudaMemcpyHostToDevice);
     }
     //accumulate_bc<<<numBlocks,threadsPerBlock>>>(V,d_delta, d_BC, d_level, src);
+
   }
+
+  //cudaFree up!! all propVars in this BLOCK!
+  cudaFree(d_delta);
+  cudaFree(d_sigma);
+
   //TIMER STOP
   cudaEventRecord(stop,0);
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&milliseconds, start, stop);
   printf("GPU Time: %.6f ms\n", milliseconds);
 
-  cudaMemcpy(      BC,     d_BC, sizeof(double)*(V), cudaMemcpyDeviceToHost);
+  cudaMemcpy(      BC,     d_BC, sizeof(float)*(V), cudaMemcpyDeviceToHost);
 } //end FUN

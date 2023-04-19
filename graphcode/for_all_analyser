@@ -1,0 +1,13 @@
+function for_loop (Graph g,SetN<g> sourceSet)
+{
+    propNode<int> count_prop;
+    g.attachNodeProperty(count_prop=1);
+    for (src in sourceSet){
+        propNode<int> prop1;
+        g.attachNodeProperty(prop1=1);
+    }
+    int count = 0;
+    forall(v in g.nodes()){
+        count += v.count_prop;
+    }
+}

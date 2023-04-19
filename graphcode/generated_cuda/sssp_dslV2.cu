@@ -1,8 +1,7 @@
 // FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
 #include "sssp_dslV2.h"
 
-void Compute_SSSP(graph& g,int* dist,int* weight,int src
-)
+void Compute_SSSP(graph& g,int* dist,int src)
 
 {
   // CSR BEGIN
@@ -81,22 +80,19 @@ void Compute_SSSP(graph& g,int* dist,int* weight,int src
   int* d_dist;
   cudaMalloc(&d_dist, sizeof(int)*(V));
 
-  int* d_weight;
-  cudaMalloc(&d_weight, sizeof(int)*(E));
-
 
   //BEGIN DSL PARSING 
   bool* d_modified;
   cudaMalloc(&d_modified, sizeof(bool)*(V));
 
-  initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_dist,(int)INT_MAX);
-
-  initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_modified,(bool)false);
-
-  initIndex<bool><<<1,1>>>(V,d_modified,src,(bool)true); //InitIndexDevice
-  initIndex<int><<<1,1>>>(V,d_dist,src,(int)0); //InitIndexDevice
+  merged_kernel_1<<<numBlocks,threadsPerBlock>>>(V, d_dist, (int)INT_MAX, d_modified, (bool)false, d_modified, src, (bool)true, d_dist, src, (int)0);
   bool finished = false; // asst in .cu
 
+  int x = 11; // asst in .cu
+
+  bool flag = false; // asst in .cu
+
+  merged_kernel_2<<<1,1>>>(V,d_modified,src,(bool)flag,d_dist,src,(int)x);
   // FIXED POINT variables
   //BEGIN FIXED POINT
   initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
@@ -105,7 +101,7 @@ void Compute_SSSP(graph& g,int* dist,int* weight,int src
 
     finished = true;
     cudaMemcpyToSymbol(::finished, &finished, sizeof(bool), 0, cudaMemcpyHostToDevice);
-    Compute_SSSP_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_modified,d_weight,d_dist);
+    Compute_SSSP_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_modified,d_dist);
     cudaDeviceSynchronize();
 
 
@@ -128,5 +124,4 @@ void Compute_SSSP(graph& g,int* dist,int* weight,int src
   printf("GPU Time: %.6f ms\n", milliseconds);
 
   cudaMemcpy(    dist,   d_dist, sizeof(int)*(V), cudaMemcpyDeviceToHost);
-  cudaMemcpy(  weight, d_weight, sizeof(int)*(E), cudaMemcpyDeviceToHost);
 } //end FUN

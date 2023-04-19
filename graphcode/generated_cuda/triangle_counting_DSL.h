@@ -8,12 +8,11 @@
 #include "../graph.hpp"
 #include "../libcuda.cuh"
 #include <cooperative_groups.h>
-
 void Compute_TC(graph& g);
 
 
 
-__device__ int triangle_count ; // DEVICE ASSTMENT in .h
+__device__ long triangle_count ; // DEVICE ASSTMENT in .h
 
 __global__ void Compute_TC_kernel(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
@@ -26,7 +25,7 @@ __global__ void Compute_TC_kernel(int V, int E, int* d_meta, int* d_data, int* d
         int w = d_data[edge];
         if (w > v){ // if filter begin 
           if (findNeighborSorted(u, w, d_meta, d_data)){ // if filter begin 
-            atomicAdd(& triangle_count, (int)1);
+            atomicAdd((unsigned long long*)& triangle_count, (unsigned long long)1);
 
           } // if filter end
 

@@ -8,6 +8,7 @@
 	#include "../analyser/attachProp/attachPropAnalyser.h"
 	#include "../analyser/dataRace/dataRaceAnalyser.h"
 	#include "../analyser/deviceVars/deviceVarsAnalyser.h"
+	#include "../analyser/ForLoopPropInit/ForLoopPropInitAnalyser.h"
 	#include "../analyser/ForLoopFusion/ForLoopFusionAnalyser.h"
 
 	//#include "../symbolutil/SymbolTableBuilder.cpp"
@@ -567,8 +568,11 @@ int main(int argc,char **argv)
 				if (optimize) {
 					cpp_backend.setOptimized();
 
-					ForLoopFusionAnalyser flAnalyser;
-					flAnalyser.analyse(frontEndContext.getFuncList());
+					ForLoopPropInitAnalyser fiAnalyser;
+					fiAnalyser.analyse(frontEndContext.getFuncList());
+
+					ForLoopFusionAnalyser ffAnalyser;
+					ffAnalyser.analyse(frontEndContext.getFuncList());
 
 					attachPropAnalyser apAnalyser(1);
 					apAnalyser.analyse(frontEndContext.getFuncList());

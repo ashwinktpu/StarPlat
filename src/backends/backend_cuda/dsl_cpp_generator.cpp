@@ -903,10 +903,11 @@ void dsl_cpp_generator::generateAssignmentStmt(assignment* asmt, bool isMainFile
       targetFile.pushstr_newL(strBuffer);
       targetFile.pushstr_newL("}");
 
-    } else
+    } else{
       //~ if(prefixNeed)
       //~ targetFile.pushString("d_");
       targetFile.pushString(id->getIdentifier());
+    }
 
   } else if (asmt->lhs_isProp())  // the check for node and edge property to be
                                   // carried out.
@@ -2216,10 +2217,9 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
       //getDefaultValueforTypes(type->gettypeId());
      // targetFile.pushstr_newL(";");
     }*/
-    if(is_declared_in_header){
-      header.pushstr_newL("; // DEVICE ASSTMENT in .h");
-      header.NewLine();
-    }
+    header.pushstr_newL("; // DEVICE ASSTMENT in .h");
+    header.NewLine();
+
 
     main.pushstr_newL("; // asst in .cu");
     main.NewLine();

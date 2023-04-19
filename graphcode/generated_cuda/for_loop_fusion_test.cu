@@ -1,8 +1,7 @@
 // FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
-#include "PageRank_DSL_V2.h"
+#include "for_loop_fusion_test.h"
 
-void Compute_PR(graph& g,float beta,float delta,int maxIter,
-  float* pageRank)
+void for_loop_fusion(graph& g,std::set<int>& sourceSet)
 
 {
   // CSR BEGIN
@@ -28,20 +27,17 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
   for(int i=0; i<= V; i++) {
     int temp = g.indexofNodes[i];
     h_meta[i] = temp;
+    temp = g.rev_indexofNodes[i];
+    h_rev_meta[i] = temp;
   }
 
   for(int i=0; i< E; i++) {
     int temp = g.edgeList[i];
     h_data[i] = temp;
-    temp = srcList[i];
+    temp = g.srcList[i];
     h_src[i] = temp;
     temp = edgeLen[i];
     h_weight[i] = temp;
-  }
-
-  for(int i=0; i<= V; i++) {
-    int temp = g.rev_indexofNodes[i];
-    h_rev_meta[i] = temp;
   }
 
 
@@ -68,7 +64,7 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
   // CSR END
   //LAUNCH CONFIG
   const unsigned threadsPerBlock = 512;
-  unsigned numThreads   = (V < threadsPerBlock)? V: 512;
+  unsigned numThreads   = (V < threadsPerBlock)? 512: V;
   unsigned numBlocks    = (V+threadsPerBlock-1)/threadsPerBlock;
 
 
@@ -81,46 +77,35 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
 
 
   //DECLAR DEVICE AND HOST vars in params
-  float* d_pageRank;
-  cudaMalloc(&d_pageRank, sizeof(float)*(V));
-
 
   //BEGIN DSL PARSING 
-  float num_nodes = (float)g.num_nodes( ); // asst in .cu
+  int* d_count_prop_1;
+  cudaMalloc(&d_count_prop_1, sizeof(int)*(V));
 
-  float* d_pageRank_nxt;
-  cudaMalloc(&d_pageRank_nxt, sizeof(float)*(V));
+  int* d_count_prop_2;
+  cudaMalloc(&d_count_prop_2, sizeof(int)*(V));
 
-  initKernel<float> <<<numBlocks,threadsPerBlock>>>(V,d_pageRank,(float)1 / num_nodes);
+  merged_kernel_1<<<numBlocks,threadsPerBlock>>>(V, d_count_prop_1, (int)1, d_count_prop_2, (int)2);
+  int count1 = 0; // asst in .cu
 
-  int iterCount = 0; // asst in .cu
+  int count2 = 0; // asst in .cu
 
-  float diff; // asst in .cu
-
-  do
-  {diff = 0.000000;
-    cudaMemcpyToSymbol(::diff, &diff, sizeof(float), 0, cudaMemcpyHostToDevice);
-    cudaMemcpyToSymbol(::delta, &delta, sizeof(float), 0, cudaMemcpyHostToDevice);
-    cudaMemcpyToSymbol(::num_nodes, &num_nodes, sizeof(float), 0, cudaMemcpyHostToDevice);
-    Compute_PR_kernel<<<numBlocks, numThreads>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_pageRank,d_pageRank_nxt);
-    cudaDeviceSynchronize();
-    cudaMemcpyFromSymbol(&diff, ::diff, sizeof(float), 0, cudaMemcpyDeviceToHost);
-    cudaMemcpyFromSymbol(&delta, ::delta, sizeof(float), 0, cudaMemcpyDeviceToHost);
-    cudaMemcpyFromSymbol(&num_nodes, ::num_nodes, sizeof(float), 0, cudaMemcpyDeviceToHost);
+  cudaMemcpyToSymbol(::count1, &count1, sizeof(int), 0, cudaMemcpyHostToDevice);
+  cudaMemcpyToSymbol(::count2, &count2, sizeof(int), 0, cudaMemcpyHostToDevice);
+  for_loop_fusion_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next);
+  cudaDeviceSynchronize();
 
 
 
-    ; // asst in .cu
 
-    ; // asst in .cu
+  //cudaFree up!! all propVars in this BLOCK!
+  cudaFree(d_count_prop_2);
+  cudaFree(d_count_prop_1);
 
-    cudaMemcpy(d_pageRank, d_pageRank_nxt, sizeof(float)*V, cudaMemcpyDeviceToDevice);
-    iterCount++;
-  }while((diff > beta) && (iterCount < maxIter));//TIMER STOP
+  //TIMER STOP
   cudaEventRecord(stop,0);
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&milliseconds, start, stop);
   printf("GPU Time: %.6f ms\n", milliseconds);
 
-  cudaMemcpy(pageRank, d_pageRank, sizeof(float)*(V), cudaMemcpyDeviceToHost);
 } //end FUN
