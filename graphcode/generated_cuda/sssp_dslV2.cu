@@ -89,12 +89,7 @@ void Compute_SSSP(graph& g,int* dist,int* weight,int src
   bool* d_modified;
   cudaMalloc(&d_modified, sizeof(bool)*(V));
 
-  initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_dist,(int)INT_MAX);
-
-  initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_modified,(bool)false);
-
-  initIndex<bool><<<1,1>>>(V,d_modified,src,(bool)true); //InitIndexDevice
-  initIndex<int><<<1,1>>>(V,d_dist,src,(int)0); //InitIndexDevice
+  merged_kernel_1<<<numBlocks,threadsPerBlock>>>(V, d_dist, (int)INT_MAX, d_modified, (bool)false, d_modified, src, (bool)true, d_dist, src, (int)0);
   bool finished = false; // asst in .cu
 
   // FIXED POINT variables
