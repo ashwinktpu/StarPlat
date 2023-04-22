@@ -1,7 +1,8 @@
 // FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
-#include "triangle_counting_dsl.h"
+#include "sssp_dslV3.h"
 
-void Compute_TC(graph& g)
+void Compute_SSSP(graph& g,int* dist,int* weight,int src
+)
 
 {
   // CSR BEGIN
@@ -77,16 +78,50 @@ void Compute_TC(graph& g)
 
 
   //DECLAR DEVICE AND HOST vars in params
+  int* d_dist;
+  cudaMalloc(&d_dist, sizeof(int)*(V));
+
+  int* d_weight;
+  cudaMalloc(&d_weight, sizeof(int)*(E));
+
 
   //BEGIN DSL PARSING 
-  long triangle_count = 0; // asst in .cu
+  bool* d_modified;
+  cudaMalloc(&d_modified, sizeof(bool)*(V));
 
-  cudaMemcpyToSymbol(::triangle_count, &triangle_count, sizeof(long), 0, cudaMemcpyHostToDevice);
-  Compute_TC_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next);
-  cudaDeviceSynchronize();
+  bool* d_modified_nxt;
+  cudaMalloc(&d_modified_nxt, sizeof(bool)*(V));
+
+  merged_kernel_1<<<numBlocks,threadsPerBlock>>>(V, d_dist, (int)INT_MAX, d_modified, (bool)false, d_modified_nxt, (bool)false, d_modified, src, (bool)true, d_dist, src, (int)0);
+  bool finished = false; // asst in .cu
+
+  // FIXED POINT variables
+  //BEGIN FIXED POINT
+  initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
+  int k=0; // #fixpt-Iterations
+  while(!finished) {
+
+    finished = true;
+    cudaMemcpyToSymbol(::finished, &finished, sizeof(bool), 0, cudaMemcpyHostToDevice);
+    Compute_SSSP_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_modified,d_weight,d_dist,d_modified_nxt);
+    cudaDeviceSynchronize();
 
 
 
+    cudaMemcpy(d_modified, d_modified_nxt, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
+    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_modified_nxt,(bool)false);
+
+
+    cudaMemcpyFromSymbol(&finished, ::finished, sizeof(bool), 0, cudaMemcpyDeviceToHost);
+    cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
+    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
+    k++;
+  } // END FIXED POINT
+
+
+  //cudaFree up!! all propVars in this BLOCK!
+  cudaFree(d_modified_nxt);
+  cudaFree(d_modified);
 
   //TIMER STOP
   cudaEventRecord(stop,0);
@@ -94,4 +129,6 @@ void Compute_TC(graph& g)
   cudaEventElapsedTime(&milliseconds, start, stop);
   printf("GPU Time: %.6f ms\n", milliseconds);
 
+  cudaMemcpy(    dist,   d_dist, sizeof(int)*(V), cudaMemcpyDeviceToHost);
+  cudaMemcpy(  weight, d_weight, sizeof(int)*(E), cudaMemcpyDeviceToHost);
 } //end FUN

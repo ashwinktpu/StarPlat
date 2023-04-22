@@ -5,8 +5,14 @@
 
 class attachPropAnalyser
 {
+  private:
+  int backend;  //backend = 1 for cuda, and for other backends set this value when required
   public:
   attachPropAnalyser(){
+    backend = -1;
+  }
+  attachPropAnalyser(int backend){
+    this->backend = backend;
   }
 
   //Analyses all the functions to merge the possible attachNodeProp for-all statements

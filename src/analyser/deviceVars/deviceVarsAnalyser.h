@@ -9,7 +9,7 @@
 //#include "../../symbolutil/SymbolTable.h"
 
 class lattice
-{ 
+{
 public:
   //Location of a variable
   enum PointType{
@@ -168,7 +168,7 @@ public:
           break;
         }
         break;
-      
+
       case GPU_ONLY:
         switch (acType)
         {
@@ -186,7 +186,7 @@ public:
           break;
         }
         break;
-      
+
       case CPU_ONLY:
         switch (acType)
         {
@@ -284,7 +284,10 @@ class deviceVarsAnalyser
   char* getTempVar()
   {
     string var = "tempVar_" + to_string(tempVar++);
-    return const_cast<char*>(var.c_str());
+    int len = var.length();
+    char* s = new char(len+1);
+    strcpy(s,var.c_str());
+    return s;
   }
 
   public:
