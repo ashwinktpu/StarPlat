@@ -1,7 +1,7 @@
 EXPENDABLES_WINDOWS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c bin/deviceVarsAnalyser.o bin/analyserUtil.o bin/dv*.o bin/bv*.o
 EXPENDABLES = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c  bin/deviceVarsAnalyser.o bin/blockVarsAnalyser.o
 ANALYSER = bin/dataRaceAnalyser.o
-PROGRAMS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/cu_dsl_cpp_generator.o  bin/ac_dsl_cpp_generator.o bin/om_dsl_cpp_generator.o bin/mpi_dsl_cpp_generator.o
+PROGRAMS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/cu_dsl_cpp_generator.o  bin/ac_dsl_cpp_generator.o bin/om_dsl_cpp_generator.o bin/mpi_dsl_cpp_generator.o bin/om_dyn_dsl_cpp_generator.o bin/mpi_dsl_cpp_generator_helper.o bin/mpi_dsl_cpp_expression_generator.o bin/mpi_dsl_cpp_statement_generator.o bin/mpi_dsl_dyn_cpp_generator.o
 #bin/ac_dsl_cpp_generator.o 
 #bin/om_dsl_cpp_generator.o
 A_PROGRAM = bin/attachPropAnalyser.o bin/dataRaceAnalyser.o bin/deviceVarsAnalyser.o bin/blockVarsAnalyser.o bin/analyserUtil.o
@@ -36,8 +36,24 @@ bin/om_dsl_cpp_generator.o: backends/backend_omp/dsl_cpp_generator.cpp backends/
 	$(CC) $(CFLAGS) -c backends/backend_omp/dsl_cpp_generator.cpp -o bin/om_dsl_cpp_generator.o
 
 #mpi
-bin/mpi_dsl_cpp_generator.o: backends/backend_mpi/dsl_cpp_generator.cpp backends/dslCodePad.h
+bin/mpi_dsl_cpp_generator.o: backends/backend_mpi/dsl_cpp_generator.h backends/backend_mpi/dsl_cpp_generator.cpp backends/dslCodePad.h
 	$(CC) $(CFLAGS) -c backends/backend_mpi/dsl_cpp_generator.cpp -o bin/mpi_dsl_cpp_generator.o
+
+#dyn OMP
+bin/om_dyn_dsl_cpp_generator.o: backends/backend_omp/dsl_dyn_cpp_generator.cpp backends/dslCodePad.h
+	$(CC) $(CFLAGS) -c backends/backend_omp/dsl_dyn_cpp_generator.cpp -o bin/om_dyn_dsl_cpp_generator.o
+
+bin/mpi_dsl_cpp_generator_helper.o: backends/backend_mpi/dsl_cpp_generator.h backends/backend_mpi/dsl_cpp_generator_helper.cpp backends/dslCodePad.h
+	$(CC) $(CFLAGS) -c backends/backend_mpi/dsl_cpp_generator_helper.cpp -o bin/mpi_dsl_cpp_generator_helper.o
+
+bin/mpi_dsl_cpp_expression_generator.o: backends/backend_mpi/dsl_cpp_generator.h backends/backend_mpi/dsl_cpp_expression_generator.cpp backends/dslCodePad.h
+	$(CC) $(CFLAGS) -c backends/backend_mpi/dsl_cpp_expression_generator.cpp -o bin/mpi_dsl_cpp_expression_generator.o
+
+bin/mpi_dsl_cpp_statement_generator.o: backends/backend_mpi/dsl_cpp_generator.h backends/backend_mpi/dsl_cpp_statement_generator.cpp backends/dslCodePad.h
+	$(CC) $(CFLAGS) -c backends/backend_mpi/dsl_cpp_statement_generator.cpp -o bin/mpi_dsl_cpp_statement_generator.o
+
+bin/mpi_dsl_dyn_cpp_generator.o : backends/backend_mpi/dsl_cpp_generator.h backends/backend_mpi/dsl_cpp_statement_generator.cpp backends/backend_mpi/dsl_dyn_cpp_generator.h backends/backend_mpi/dsl_dyn_cpp_generator.cpp backends/dslCodePad.h
+	$(CC) $(CFLAGS) -c backends/backend_mpi/dsl_dyn_cpp_generator.cpp -o bin/mpi_dsl_dyn_cpp_generator.o
 
 starplat: bin $(PROGRAMS) $(A_PROGRAM) 
 	$(CC)  $(PROGRAMS) $(A_PROGRAM) -o StarPlat

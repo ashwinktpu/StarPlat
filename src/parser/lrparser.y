@@ -48,9 +48,9 @@
 %token T_FORALL T_FOR  T_P_INF  T_INF T_N_INF
 %token T_FUNC T_IF T_ELSE T_WHILE T_RETURN T_DO T_IN T_FIXEDPOINT T_UNTIL T_FILTER
 %token T_ADD_ASSIGN T_SUB_ASSIGN T_MUL_ASSIGN T_DIV_ASSIGN T_MOD_ASSIGN T_AND_ASSIGN T_XOR_ASSIGN
-%token T_OR_ASSIGN T_RIGHT_OP T_LEFT_OP T_INC_OP T_DEC_OP T_PTR_OP T_AND_OP T_OR_OP T_LE_OP T_GE_OP T_EQ_OP T_NE_OP
+%token T_OR_ASSIGN T_INC_OP T_DEC_OP T_PTR_OP T_AND_OP T_OR_OP T_LE_OP T_GE_OP T_EQ_OP T_NE_OP
 %token T_AND T_OR T_SUM T_AVG T_COUNT T_PRODUCT T_MAX T_MIN
-%token T_GRAPH T_DIR_GRAPH  T_NODE T_EDGE T_UPDATES
+%token T_GRAPH T_DIR_GRAPH  T_NODE T_EDGE T_UPDATES T_CONTAINER T_NODEMAP
 %token T_NP  T_EP
 %token T_LIST T_SET_NODES T_SET_EDGES  T_FROM
 %token T_BFS T_REVERSE
@@ -64,12 +64,12 @@
 %token <bval> BOOL_VAL
 %token <cval> CHAR_VAL
 
-%type <node> function_def function_data function_body param
+%type <node> function_def function_data  return_func function_body param
 %type <pList> paramList
 %type <node> statement blockstatements assignment declaration proc_call control_flow reduction return_stmt batch_blockstmt on_add_blockstmt on_delete_blockstmt
-%type <node> type1 type2
-%type <node> primitive graph collections property
-%type <node> id leftSide rhs expression oid val boolean_expr unary_expr tid 
+%type <node> type type1 type2
+%type <node> primitive graph collections property container nodemap
+%type <node> id leftSide rhs expression oid val boolean_expr unary_expr indexExpr tid  
 %type <node> bfs_abstraction filterExpr reverse_abstraction
 %type <nodeList> leftList rightList
 %type <node> iteration_cf selection_cf
@@ -134,11 +134,15 @@ function_data: T_FUNC id '(' paramList ')' {
                                             Util::setCurrentFuncType(DYNAMIC_FUNC);
 											Util::resetTemp(tempIds);
 											tempIds.clear();
-											};								  					  								  							  
+											};	
+			  // | return_func {$$ = $1};	
 
 paramList: param {$$=Util::createPList($1);};
                | param ',' paramList {$$=Util::addToPList($3,$1); 
 			                           };
+
+type: type1 {$$ = $1;}
+    | type2 {$$ = $1;}
 
 param : type1 id {  //Identifier* id=(Identifier*)Util::createIdentifierNode($2);
                         Type* type=(Type*)$1;
@@ -232,12 +236,20 @@ graph : T_GRAPH { $$=Util::createGraphTypeNode(TYPE_GRAPH,NULL);};
 	|T_DIR_GRAPH {$$=Util::createGraphTypeNode(TYPE_DIRGRAPH,NULL);};
 
 collections : T_LIST { $$=Util::createCollectionTypeNode(TYPE_LIST,NULL);};
-		|T_SET_NODES '<' id '>' {//Identifier* id=(Identifier*)Util::createIdentifierNode($3);
+		| T_SET_NODES '<' id '>' {//Identifier* id=(Identifier*)Util::createIdentifierNode($3);
 			                     $$=Util::createCollectionTypeNode(TYPE_SETN,$3);};
-                | T_SET_EDGES '<' id '>' {// Identifier* id=(Identifier*)Util::createIdentifierNode($3);
+        | T_SET_EDGES '<' id '>' {// Identifier* id=(Identifier*)Util::createIdentifierNode($3);
 					                    $$=Util::createCollectionTypeNode(TYPE_SETE,$3);};
-				| T_UPDATES '<' id '>'   { $$=Util::createCollectionTypeNode(TYPE_UPDATES,$3);}
+		| T_UPDATES '<' id '>'   { $$=Util::createCollectionTypeNode(TYPE_UPDATES,$3);}
+	    | container {$$ = $1;}
+		| nodemap   {$$ = $1;}
 
+container : T_CONTAINER '<' type '>' '(' arg_list ',' type ')' {$$ = Util::createContainerTypeNode(TYPE_CONTAINER, $3, $6->AList, $8);}
+          | T_CONTAINER '<' type '>' '(' arg_list ')' { $$ =  Util::createContainerTypeNode(TYPE_CONTAINER, $3, $6->AList, NULL);}
+          | T_CONTAINER '<' type '>' { list<argument*> argList;
+			                          $$ = Util::createContainerTypeNode(TYPE_CONTAINER, $3, argList, NULL);}		
+
+nodemap : T_NODEMAP '(' type ')' {$$ = Util::createNodeMapTypeNode(TYPE_NODEMAP, $3);}
 
 type2 : T_NODE {$$=Util::createNodeEdgeTypeNode(TYPE_NODE) ;};
        | T_EDGE {$$=Util::createNodeEdgeTypeNode(TYPE_EDGE);};
@@ -247,8 +259,13 @@ property : T_NP '<' primitive '>' { $$=Util::createPropertyTypeNode(TYPE_PROPNOD
               | T_EP '<' primitive '>' { $$=Util::createPropertyTypeNode(TYPE_PROPEDGE,$3); };
 			  | T_NP '<' collections '>'{  $$=Util::createPropertyTypeNode(TYPE_PROPNODE,$3); };
 			  | T_EP '<' collections '>' {$$=Util::createPropertyTypeNode(TYPE_PROPEDGE,$3);};
+              | T_NP '<' T_NODE '>' {ASTNode* type = Util::createNodeEdgeTypeNode(TYPE_NODE);
+			                         $$=Util::createPropertyTypeNode(TYPE_PROPNODE, type); }
+			  | T_NP '<' T_EDGE '>' {ASTNode* type = Util::createNodeEdgeTypeNode(TYPE_EDGE);
+			                         $$=Util::createPropertyTypeNode(TYPE_PROPNODE, type); }	
 
-assignment :  leftSide '=' rhs  { $$=Util::createAssignmentNode($1,$3);};
+assignment :  leftSide '=' rhs  { printf("testassign\n");$$=Util::createAssignmentNode($1,$3);};
+              | indexExpr '=' rhs { $$=Util::createAssignmentNode($1 , $3);};        
 
 rhs : expression { $$=$1;};
 
@@ -272,23 +289,32 @@ expression : proc_call { $$=$1;};
 	         | val {$$=$1;};
 			 | leftSide { $$=Util::createNodeForId($1);};
 			 | unary_expr {$$=$1;};
+			 | indexExpr {$$ = $1;};
+
+indexExpr : expression '[' expression ']' {printf("first done this \n");$$ = Util::createNodeForIndexExpr($1, $3, OPERATOR_INDEX);};
 
 unary_expr :   expression T_INC_OP {$$=Util::createNodeForUnaryExpr($1,OPERATOR_INC);};
 			 |  expression T_DEC_OP {$$=Util::createNodeForUnaryExpr($1,OPERATOR_DEC);}; 			 
 
 proc_call : leftSide '(' arg_list ')' { 
                                        
-                                       $$ = Util::createNodeForProcCall($1,$3->AList); 
+                                       $$ = Util::createNodeForProcCall($1,$3->AList,NULL); 
 
 									    };
 			| T_INCREMENTAL '(' arg_list ')' { ASTNode* id = Util::createIdentifierNode("Incremental");
-			                                   $$ = Util::createNodeForProcCall(id, $3->AList); 
+			                                   $$ = Util::createNodeForProcCall(id, $3->AList,NULL); 
 
 				                               };
 			| T_DECREMENTAL '(' arg_list ')' { ASTNode* id = Util::createIdentifierNode("Decremental");
-			                                   $$ = Util::createNodeForProcCall(id, $3->AList); 
+			                                   $$ = Util::createNodeForProcCall(id, $3->AList,NULL); 
 
-				                               };								   
+				                               };	
+			| indexExpr '.' leftSide '(' arg_list ')' {
+                                                   
+													 Expression* expr = (Expression*)$1;
+                                                     $$ = Util::createNodeForProcCall($3 , $5->AList, expr); 
+
+									                 };								   							   
 											   					
 		
 
@@ -313,6 +339,8 @@ iteration_cf : T_FIXEDPOINT T_UNTIL '(' id ':' expression ')' blockstatements { 
 		| T_FORALL '(' id T_IN leftSide ')' blockstatements	{ $$=Util::createNodeForForStmt($3,$5,$7,true);};																	
 		| T_FOR '(' id T_IN leftSide ')' blockstatements { $$=Util::createNodeForForStmt($3,$5,$7,false);};
 		| T_FOR '(' id T_IN id '.' proc_call  filterExpr')' blockstatements {$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,false);};
+		| T_FOR '(' id T_IN indexExpr ')' blockstatements {$$ = Util::createNodeForForStmt($3, $5, $7, false);};
+		| T_FORALL '(' id T_IN indexExpr ')' blockstatements {$$ = Util::createNodeForForStmt($3, $5, $7, true);};
 
 filterExpr  :         { $$=NULL;};
             |'.' T_FILTER '(' boolean_expr ')'{ $$=$4;};
@@ -361,8 +389,9 @@ reduction_calls : T_SUM { $$=REDUCE_SUM;};
 	         | T_MIN {$$=REDUCE_MIN;};
 
 leftSide : id { $$=$1; };
-         | oid {  $$=$1; };
-         | tid {$$ = $1; };
+         | oid { printf("Here hello \n"); $$=$1; };
+         | tid {$$ = $1; };	
+		  
 
 arg_list :    {
                  argList* aList=new argList();
@@ -406,8 +435,7 @@ arg_list :    {
 
 
 bfs_abstraction	: T_BFS '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr blockstatements reverse_abstraction{$$=Util::createIterateInBFSNode($3,$5,$7,$9,$11,$12,$13) ;};
-			| T_BFS '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr blockstatements {//$$=Util::createIterateInBFSNode($3,$6,$8,$9,$10) ;
-			};
+			| T_BFS '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr blockstatements {$$=Util::createIterateInBFSNode($3,$5,$7,$9,$11,$12,NULL) ; };
 
 
 
@@ -415,10 +443,16 @@ reverse_abstraction :  T_REVERSE blockstatements {$$=Util::createIterateInRevers
                      | T_REVERSE '(' boolean_expr ')'  blockstatements {$$=Util::createIterateInReverseBFSNode($3,$5);};
 
 
-oid : id '.' id { //Identifier* id1=(Identifier*)Util::createIdentifierNode($1);
+oid :  id '.' id { //Identifier* id1=(Identifier*)Util::createIdentifierNode($1);
                   // Identifier* id2=(Identifier*)Util::createIdentifierNode($1);
-				   $$=Util::createPropIdNode($1,$3);
-				    };
+				   $$ = Util::createPropIdNode($1,$3);
+				    };	
+	 | id '.' id '[' id ']' { ASTNode* expr1 = Util::createNodeForId($3);
+	                          ASTNode* expr2 = Util::createNodeForId($5);
+							  ASTNode* indexexpr =  Util::createNodeForIndexExpr(expr1, expr2, OPERATOR_INDEX);
+	                          $$ = Util::createPropIdNode($1 , indexexpr);};					
+    				
+					 
 
 tid : id '.' id '.' id {// Identifier* id1=(Identifier*)Util::createIdentifierNode($1);
                   // Identifier* id2=(Identifier*)Util::createIdentifierNode($1);
@@ -536,6 +570,7 @@ int main(int argc,char **argv)
      //TODO: redirect to different backend generator after comparing with the 'b' option
     std::cout << "at 1" << std::endl;
 	stBuilder.buildST(frontEndContext.getFuncList());
+	frontEndContext.setDynamicLinkFuncs(stBuilder.getDynamicLinkedFuncs());
 	std::cout << "at 2" << std::endl;
 
 	if(staticGen)
@@ -601,20 +636,25 @@ int main(int argc,char **argv)
         cpp_backend.generate();
       }
       else
-	std::cout<< "invalid backend" << '\n';
-	
+	    std::cout<< "invalid backend" << '\n';
 	  }
-	/*else
+	else
 	 {
-		 /*
-		 printf("static graphsize %d\n",graphId[2][0].size());
-		 dsl_dyn_cpp_generator cpp_dyn_gen;
-		 cpp_dyn_gen.setFileName(fileName);
-		 cpp_dyn_gen.generate();
-
-	 }*/
+		if(strcmp(backendTarget, "omp") == 0) {
+		   spdynomp::dsl_dyn_cpp_generator cpp_dyn_gen;
+		   cpp_dyn_gen.setFileName(fileName);
+	       cpp_dyn_gen.generate();
+		}
+		if(strcmp(backendTarget, "mpi") == 0){
+		   spdynmpi::dsl_dyn_cpp_generator cpp_dyn_gen;
+		   std::cout<<"created dyn mpi"<<std::endl;
+		   cpp_dyn_gen.setFileName(fileName);
+		   std::cout<<"file name set"<<std::endl;
+	       cpp_dyn_gen.generate();	
+		}
+	 }
 	
-	}
+   }
 
 	printf("finished successfully\n");
    

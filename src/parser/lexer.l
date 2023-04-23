@@ -1,4 +1,3 @@
-
 DIGIT       [0-9]
 ALPHANUM    [a-zA-Z][a-zA-Z0-9_]*
 WS  [ \t\v\n\f]
@@ -65,8 +64,6 @@ NEGATE [-]
 "&="					{ printf ( "AND_ASSIGN");  return T_AND_ASSIGN;}
 "^="					{ printf ( "XOR_ASSIGN"); return T_XOR_ASSIGN;}
 "|="					{ printf ( "OR_ASSIGN"); return T_OR_ASSIGN;}
-">>"					{ printf ( "RIGHT_OP"); return T_RIGHT_OP;}
-"<<"					{ printf ( "LEFT_OP"); return T_LEFT_OP;}
 "++"					{ printf ( "INC_OP");  return T_INC_OP;}
 "--"					{ printf ( "DEC_OP");  return T_DEC_OP;}
 "->"					{ printf ( "PTR_OP");  return T_PTR_OP;}
@@ -127,6 +124,8 @@ NEGATE [-]
 "SetE" 	{printf("Set of Edges"); return T_SET_EDGES;}
 "list" {printf("list type"); return T_LIST;}
 "updates" {printf("updates type"); return T_UPDATES;}
+"container" {printf("container type"); return T_CONTAINER;}
+"nodeMap"  {printf("nodeMap type"); return T_NODEMAP;}
 
 
  /* Numbers and Identifies */
@@ -147,3 +146,4 @@ NEGATE [-]
 int yywrap(void) {
     return 1;
 }
+
