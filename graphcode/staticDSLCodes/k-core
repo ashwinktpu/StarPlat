@@ -6,20 +6,20 @@ function k_core(Graph g, int k)
     propNode <int> indeg;
     propNode <int> indeg_prev;
 
-    forall(u in g.nodes())
+    forall(v in g.nodes())
     {
-        u.indeg = g.common_nbrscount(u,u);
-        u.indeg_prev = u.indeg;
+        v.indeg = g.count_outNbrs(nbr);
+        v.indeg_prev = v.indeg;
     }
 
-    forall(u in g.nodes())
+    forall(v in g.nodes())
     {
-        if(u.indeg_prev >= k)
+        if(v.indeg_prev >= k)
         {
-            node f = u;
-            forall(v in g.neighbors(u))
+            node f = v;
+            forall(nbr in g.neighbors(v))
             {
-                if(v.indeg_prev < k && f.indeg >= k)
+                if(nbr.indeg_prev < k && f.indeg >= k)
                 {
                     f.indeg--;
                 }
@@ -27,11 +27,11 @@ function k_core(Graph g, int k)
         }
     }
 
-    forall(u in g.nodes())
+    forall(v in g.nodes())
     {
-        if(u.indeg_prev < k)
+        if(v.indeg_prev < k)
         {
-            u.indeg = 0;
+            v.indeg = 0;
         }
     }
 
@@ -39,18 +39,18 @@ function k_core(Graph g, int k)
     {
         update_count = 0;
 
-        forall(u in g.nodes())
+        forall(v in g.nodes())
         {
-            if(u.indeg < k && u.indeg != 0)
+            if(v.indeg < k && v.indeg != 0)
             {
-                node f = u;
-                u.indeg = 0;
+                node f = v;
+                v.indeg = 0;
 
-                forall(v in g.neighbors(u))
+                forall(nbr in g.neighbors(v))
                 {
-                    if(v.indeg >= k)
+                    if(nbr.indeg >= k)
                     {
-                        v.indeg--;
+                        nbr.indeg--;
                         update_count++;
                     }
                 }
@@ -60,9 +60,9 @@ function k_core(Graph g, int k)
     }while(update_count > 0);
 
 
-    forall(u in g.nodes())
+    forall(v in g.nodes())
     {
-        if(u.indeg >= k)
+        if(v.indeg >= k)
         {
             kcore_count++;
         }
