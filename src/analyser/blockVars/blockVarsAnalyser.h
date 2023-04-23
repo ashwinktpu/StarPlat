@@ -2,103 +2,85 @@
 #define BLOCK_VARS_ANALYSER_H
 
 
-#include "../analyserUtil.cpp"
+#include "analyserUtil.h"
 #include "../../ast/ASTHelper.cpp"
 
 class ASTNodeBlock 
 {
     ASTNode* node;                  // the block node
 
-    list<Identifier*> use;          // list of variables used in the block
-    list<Identifier*> def;          // list of variables defined in the block
-    list<Identifier*> in;           // list of variables needed to be sent to the block
-    list<Identifier*> out;          // list of variables needed to be sent from the block
+    set<TableEntry*> use;          // set of variables used in the block
+    set<TableEntry*> def;          // set of variables defined in the block
+    set<TableEntry*> in;           // set of variables needed to be sent to the block
+    set<TableEntry*> out;          // set of variables needed to be sent from the block
 
-    list<ASTNodeBlock*> succ;       // list of successor blocks
+    set<ASTNodeBlock*> succ;       // set of successor blocks
 
     public:
     
-    ASTNodeBlock(ASTNode* node) {
-        this->node = node;
-        use = list<Identifier*>();
-        def = list<Identifier*>();
-        in = list<Identifier*>();
-        out = list<Identifier*>();
-        succ = list<ASTNodeBlock*>();
-    }
-
-    ASTNode* getNode() {
-        return node;
-    }
-
-    list<Identifier*> getUse() {
-        return use;
-    }
-
-    list<Identifier*> getDef() {
-        return def;
-    }
-
-    list<Identifier*> getIn() {
-        return in;
-    }
-
-    list<Identifier*> getOut() {
-        return out;
-    }
-
-    list<ASTNodeBlock*> getSucc() {
-        return succ;
-    }
-
-    void addUse(Identifier* id) {
-        use.push_back(id);
-    }
-
-    void addDef(Identifier* id) {
-        def.push_back(id);
-    }
-
-    void addIn(Identifier* id) {
-        in.push_back(id);
-    }
-
-    void addOut(Identifier* id) {
-        out.push_back(id);
-    }
-
-    void addSucc(ASTNodeBlock* block) {
-        if(block != NULL) succ.push_back(block);
-    }
-
-    void addVars(usedVariables usedVars) {
-        for(Identifier* id : usedVars.getVariables(READ))
-            use.push_back(id);
-        
-        for(Identifier* id : usedVars.getVariables(WRITE))
-            def.push_back(id);
-    }
+    ASTNodeBlock();
+    ASTNodeBlock(ASTNode* node);
+    ASTNode* getNode();
+    set<TableEntry*> getUse();
+    set<TableEntry*> getDef();
+    set<TableEntry*> getIn();
+    set<TableEntry*> getOut();
+    set<ASTNodeBlock*> getSucc();
+    void addUse(Identifier* id);
+    void addDef(Identifier* id);
+    void addIn(Identifier* id);
+    void addIn(set<TableEntry*> ids);
+    void removeIn(Identifier* id);
+    void removeIn(set<TableEntry*> ids);
+    void addOut(Identifier* id);
+    void addOut(set<TableEntry*> ids);
+    void removeOut(Identifier* id);
+    void removeOut(set<Identifier*> ids);
+    void addSucc(ASTNodeBlock* block);
+    void addVars(usedVariables_t vars);
 };
 
-class blockVarsAnalyser {
+class NodeBlockData
+{
+    ASTNode* node;                  // the block node
+    ASTNodeBlock* block;                    // Index of the block
+    ASTNodeBlock* startBlock;               // Index of the start block, Only for loops (for, while, do-while)
+    ASTNodeBlock* endBlock;                 // Index of the end block, Only for loops (for, while, do-while)
+    
+    public:
+    
+    NodeBlockData();
+    NodeBlockData(ASTNode* node);
+    NodeBlockData(ASTNode* node, ASTNodeBlock* Block);
+    NodeBlockData(ASTNode* node, ASTNodeBlock* startBlock, ASTNodeBlock* endBlock);
+    NodeBlockData(ASTNode* node, ASTNodeBlock* Block, ASTNodeBlock* startBlock, ASTNodeBlock* endBlock);
+    void setNodeDataBlock();
+
+    ASTNode* getNode();
+    ASTNodeBlock* getBlock();
+    ASTNodeBlock* getStartBlock();
+    ASTNodeBlock* getEndBlock();
+    void setBlock(ASTNodeBlock* block);
+    void setStartBlock(ASTNodeBlock* startBlock);
+    void setEndBlock(ASTNodeBlock* endBlock);
+};
+
+class blockVarsAnalyser 
+{
     private:
-    ASTNodeBlock* initBlockNode(ASTNode* node) 
-    {
-        ASTNodeBlock* blockNode = new ASTNodeBlock(node);
-        return blockNode;
-    }
+    ASTNodeBlock* initBlockNode();
+    ASTNodeBlock* initBlockNode(ASTNode* node);
 
     list<ASTNodeBlock*> blockNodes;
-    map<ASTNode*, ASTNodeBlock*> blockNodeMap;
+    unordered_map<ASTNode*, NodeBlockData*> blockNodeMap;
 
     public:
-    blockVarsAnalyser() {}
+    blockVarsAnalyser();
 
-    void addBlockNode(ASTNode* node, ASTNodeBlock* blockNode) 
-    {
-        blockNodes.push_back(blockNode);
-        blockNodeMap[node] = blockNode;
-    }
+    void addBlockNode(ASTNode* node, ASTNodeBlock* blockNode);
+    void addBlockNode(ASTNode* node, ASTNodeBlock* startBlock, ASTNodeBlock* endBlock);
+
+    NodeBlockData* getBlockData(ASTNode* node);
 
     void toString(NODETYPE);    // Prints the type of the node verbose
     void printBlockNodes();     // Prints the block nodes
@@ -140,21 +122,27 @@ class blockVarsAnalyser {
     ASTNodeBlock* initReturn(returnStmt*, ASTNodeBlock*);
 
     //Returns the used variables in each statment
-    usedVariables getVarsStatement(statement* stmt);
-    usedVariables getVarsBlock(blockStatement* stmt);
-    usedVariables getVarsForAll(forallStmt* stmt);
-    usedVariables getVarsUnary(unary_stmt* stmt);
-    usedVariables getVarsDeclaration(declaration* stmt);
-    usedVariables getVarsWhile(whileStmt* stmt);
-    usedVariables getVarsDoWhile(dowhileStmt* stmt);
-    usedVariables getVarsAssignment(assignment* stmt);
-    usedVariables getVarsIf(ifStmt* stmt);
-    usedVariables getVarsExpr(Expression* stmt);
-    usedVariables getVarsReduction(reductionCallStmt *stmt);
-    usedVariables getVarsFixedPoint(fixedPointStmt *stmt);
-    usedVariables getVarsBFS(iterateBFS *stmt);
-    usedVariables getVarsProcCall(proc_callStmt *stmt);
-    usedVariables getVarsExprProcCall(proc_callExpr *stmt);
+    usedVariables_t getVarsStatement(statement*);
+    usedVariables_t getVarsBlock(blockStatement*);
+    usedVariables_t getVarsForAll(forallStmt*);
+    usedVariables_t getVarsUnary(unary_stmt*);
+    usedVariables_t getVarsDeclaration(declaration*);
+    usedVariables_t getVarsWhile(whileStmt*);
+    usedVariables_t getVarsDoWhile(dowhileStmt*);
+    usedVariables_t getVarsAssignment(assignment*);
+    usedVariables_t getVarsIf(ifStmt*);
+    usedVariables_t getVarsExpr(Expression*);
+    usedVariables_t getVarsReduction(reductionCallStmt*);
+    usedVariables_t getVarsFixedPoint(fixedPointStmt*);
+    usedVariables_t getVarsBFS(iterateBFS*);
+    usedVariables_t getVarsProcCall(proc_callStmt*);
+    usedVariables_t getVarsExprProcCall(proc_callExpr*);
+
+    void setVarsInParallelStatment(statement*);  // Sets the flag of tableentry of the variables in the parallel section in the statement
+    void setVarsInParallelBlock(blockStatement*);  // Sets the flag of tableentry of the variables in the parallel section in the block
+    void setVarsInParallelForAll(forallStmt*);  // Sets the flag of tableentry of the variables in the parallel section in the forall
+    void setVarsInParallelBFS(iterateBFS*);  // Sets the flag of tableentry of the variables in the parallel section in the BFS
+    void setVarsInParallelAssign(assignment*);  // Sets the flag of tableentry of the variables in the parallel section in the assignment
 };
 
 #endif

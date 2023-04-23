@@ -7,6 +7,10 @@ usedVariables deviceVarsAnalyser::getVarsExpr(Expression *expr)
     if (expr->isIdentifierExpr())
     {
         Identifier *iden = expr->getId();
+        if (iden)
+          cout << "Identifier: " << iden->getIdentifier() << endl;
+        else 
+          cout << "Identifier is NULL" << endl;
         result.addVariable(iden, READ);
     }
     else if (expr->isPropIdExpr())

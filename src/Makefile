@@ -1,5 +1,5 @@
-EXPENDABLES_WINDOWS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c bin/deviceVarsAnalyser.o bin/analyserUtil.o bin/dv*.o
-EXPENDABLES = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c  bin/deviceVarsAnalyser.o
+EXPENDABLES_WINDOWS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c bin/deviceVarsAnalyser.o bin/analyserUtil.o bin/dv*.o bin/bv*.o
+EXPENDABLES = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c  bin/deviceVarsAnalyser.o bin/blockVarsAnalyser.o
 ANALYSER = bin/dataRaceAnalyser.o
 PROGRAMS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/cu_dsl_cpp_generator.o  bin/ac_dsl_cpp_generator.o bin/om_dsl_cpp_generator.o bin/mpi_dsl_cpp_generator.o
 #bin/ac_dsl_cpp_generator.o 
@@ -87,17 +87,26 @@ bin/dv4.o: analyser/deviceVars/deviceVarsTransfer.cpp analyser/deviceVars/device
 bin/dv5.o: analyser/deviceVars/getUsedVars.cpp analyser/deviceVars/deviceVarsAnalyser.h analyser/analyserUtil.cpp
 	$(CC) $(CFLAGS) -c analyser/deviceVars/getUsedVars.cpp -o bin/dv5.o
 
-bin/blockVarsAnalyser.o: bin/bv1.o bin/bv2.o bin/bv3.o
-	ld -r bin/bv1.o bin/bv2.o bin/bv3.o -o bin/blockVarsAnalyser.o
+bin/blockVarsAnalyser.o: bin/bv1.o bin/bv2.o bin/bv3.o bin/bv4.o bin/bv5.o bin/bv6.o.o
+	ld -r bin/bv1.o bin/bv2.o bin/bv3.o bin/bv4.o bin/bv5.o bin/bv6.o.o -o bin/blockVarsAnalyser.o
 
-bin/bv1.o: analyser/blockVars/blockVarsAnalyser.cpp analyser/blockVars/blockVarsAnalyser.h analyser/analyserUtil.cpp
+bin/bv1.o: analyser/blockVars/blockVarsAnalyser.cpp analyser/blockVars/blockVarsAnalyser.h
 	$(CC) $(CFLAGS) -c analyser/blockVars/blockVarsAnalyser.cpp -o bin/bv1.o
 
-bin/bv2.o: analyser/blockVars/blockVarsInit.cpp analyser/blockVars/blockVarsAnalyser.h analyser/analyserUtil.cpp
+bin/bv2.o: analyser/blockVars/blockVarsInit.cpp analyser/blockVars/blockVarsAnalyser.h
 	$(CC) $(CFLAGS) -c analyser/blockVars/blockVarsInit.cpp -o bin/bv2.o
 
-bin/bv3.o: analyser/blockVars/getUsedVars.cpp analyser/blockVars/blockVarsAnalyser.h analyser/analyserUtil.cpp
+bin/bv3.o: analyser/blockVars/getUsedVars.cpp analyser/blockVars/blockVarsAnalyser.h
 	$(CC) $(CFLAGS) -c analyser/blockVars/getUsedVars.cpp -o bin/bv3.o
+
+bin/bv4.o: analyser/blockVars/NodeBlockData.cpp analyser/blockVars/blockVarsAnalyser.h
+	$(CC) $(CFLAGS) -c analyser/blockVars/NodeBlockData.cpp -o bin/bv4.o
+
+bin/bv5.o: analyser/blockVars/setVarsInParallel.cpp analyser/blockVars/blockVarsAnalyser.h
+	$(CC) $(CFLAGS) -c analyser/blockVars/setVarsInParallel.cpp -o bin/bv5.o
+
+bin/bv6.o.o: analyser/blockVars/analyserUtil.cpp analyser/blockVars/analyserUtil.h
+	$(CC) $(CFLAGS) -c analyser/blockVars/analyserUtil.cpp -o bin/bv6.o.o
 
 bin/analyserUtil.o: analyser/analyserUtil.cpp
 	$(CC) $(CFLAGS) -c analyser/analyserUtil.cpp -o bin/analyserUtil.o

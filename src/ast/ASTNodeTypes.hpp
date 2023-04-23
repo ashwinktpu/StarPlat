@@ -11,6 +11,7 @@
 #include<set>
 #include<queue>
 #include "../maincontext/enum_def.hpp"
+#include "MetaDataUsed.hpp"
 
 
 
@@ -418,11 +419,7 @@ class Function:public ASTNode
   bool hasReturn;                          
   int funcType ;
 
-  bool isMetaUsed; // if d_meta is used in function
-  bool isDataUsed; // if d_data is used in function
-  bool isSrcUsed; // if d_src is used in function
-  bool isWeightUsed; // if d_weight is used in function
-  bool isRevMetaUsed; // if d_rev_meta is used in function
+  MetaDataUsed metadata;
   public:
   Function()
   { 
@@ -431,11 +428,7 @@ class Function:public ASTNode
     funcType = 0;
     initialLockDecl = false;
     createSymbTab();
-    isMetaUsed = false;
-    isDataUsed = false;
-    isSrcUsed = false; 
-    isWeightUsed = false;
-    isRevMetaUsed = false;
+    metadata = MetaDataUsed();
   }
 
   static Function* createFunctionNode(Identifier* funcId,list<formalParam*> paramList)
@@ -556,45 +549,48 @@ class Function:public ASTNode
 
    
     bool getIsMetaUsed() {
-      return isMetaUsed;
+      return metadata.isMetaUsed;
     }
 
     void setIsMetaUsed() {
-      this->isMetaUsed = true;
+      metadata.isMetaUsed = true;
     }
 
     bool getIsDataUsed() {
-      return isDataUsed;
+      return metadata.isDataUsed;
     }
 
     void setIsDataUsed() {
-      this->isDataUsed = true;
+      metadata.isDataUsed = true;
     }
 
     bool getIsSrcUsed() {
-      return isSrcUsed;
+      return metadata.isSrcUsed;
     }
 
     void setIsSrcUsed() {
-      this->isSrcUsed = true;
+      metadata.isSrcUsed = true;
     }
 
     bool getIsWeightUsed() {
-      return isWeightUsed;
+      return metadata.isWeightUsed;
     }
 
     void setIsWeightUsed() {
-      this->isWeightUsed = true;
+      metadata.isWeightUsed = true;
     }
 
     bool getIsRevMetaUsed() {
-      return isRevMetaUsed;
+      return metadata.isRevMetaUsed;
     }
 
     void setIsRevMetaUsed() {
-      this->isRevMetaUsed = true;
+      metadata.isRevMetaUsed = true;
     }
-  
+
+    MetaDataUsed getMetaDataUsed() {
+      return metadata;
+    }
 };
 
 class Type:public ASTNode
@@ -1952,11 +1948,7 @@ class fixedPointStmt:public statement
     list<Identifier*> usedVars;
     list<Identifier*> doubleBufferVars; // the propnodes which need to be double buffered
 
-    bool isMetaUsed; // if d_meta is used in forall
-    bool isDataUsed; // if d_data is used in forall
-    bool isSrcUsed; // if d_src is used in forall
-    bool isWeightUsed; // if d_weight is used in forall
-    bool isRevMetaUsed; // if d_rev_meta is used in forall
+    MetaDataUsed metadata;
     public:
     forallStmt()
     {
@@ -1971,11 +1963,7 @@ class fixedPointStmt:public statement
       isSourceId=false;
       createSymbTab();
       filterExprAssoc = false; 
-      isMetaUsed = false;
-      isDataUsed = false;
-      isSrcUsed = false;
-      isWeightUsed = false;
-      isRevMetaUsed = false;
+      metadata = MetaDataUsed();
     }
 
     static forallStmt* createforallStmt(Identifier* iterator,Identifier* sourceGraph,proc_callExpr* extractElemFunc,statement* body,Expression* filterExpr,bool isforall)
@@ -2168,43 +2156,43 @@ class fixedPointStmt:public statement
     }
 
     bool getIsMetaUsed() {
-      return isMetaUsed;
+      return metadata.isMetaUsed;
     }
 
     void setIsMetaUsed() {
-      this->isMetaUsed = true;
+      metadata.isMetaUsed = true;
     }
 
     bool getIsDataUsed() {
-      return isDataUsed;
+      return metadata.isDataUsed;
     }
 
     void setIsDataUsed() {
-      this->isDataUsed = true;
+      metadata.isDataUsed = true;
     }
 
     bool getIsSrcUsed() {
-      return isSrcUsed;
+      return metadata.isSrcUsed;
     }
 
     void setIsSrcUsed() {
-      this->isSrcUsed = true;
+      metadata.isSrcUsed = true;
     }
 
     bool getIsWeightUsed() {
-      return isWeightUsed;
+      return metadata.isWeightUsed;
     }
 
     void setIsWeightUsed() {
-      this->isWeightUsed = true;
+      metadata.isWeightUsed = true;
     }
 
     bool getIsRevMetaUsed() {
-      return isRevMetaUsed;
+      return metadata.isRevMetaUsed;
     }
 
     void setIsRevMetaUsed() {
-      this->isRevMetaUsed = true;
+      metadata.isRevMetaUsed = true;
     }
 
     void addDoubleBufferVar(Identifier* var) {
@@ -2213,6 +2201,10 @@ class fixedPointStmt:public statement
 
     list<Identifier*> getDoubleBufferVars() {
       return doubleBufferVars;
+    }
+
+    MetaDataUsed getMetaDataUsed() {
+      return metadata;
     }
   
 };

@@ -16,9 +16,10 @@ class TableEntry
   private:
   Identifier* id;
   Type* type;
-  bool isArgument;
+  bool isArgument;      
+  bool inParallelSection = false;
 
-  TableEntry():id(nullptr), type(nullptr),isArgument(false){
+  TableEntry():id(nullptr), type(nullptr),isArgument(false), inParallelSection(false){
 
   }
  
@@ -42,6 +43,16 @@ public:
  bool isArg()
  {
      return isArgument;
+ }
+
+ void setInParallelSection(bool inParallel)
+ {
+     inParallelSection = inParallel;
+ }
+
+ bool isInParallelSection()
+ {
+     return inParallelSection;
  }
 
 };

@@ -1,19 +1,19 @@
 #include "blockVarsAnalyser.h"
 
-usedVariables blockVarsAnalyser::getVarsExpr(Expression *expr)
+usedVariables_t blockVarsAnalyser::getVarsExpr(Expression *expr)
 {
-    usedVariables result;
+    usedVariables_t result;
 
     if (expr->isIdentifierExpr())
     {
         Identifier *iden = expr->getId();
-        result.addVariable(iden, READ);
+        result.addVariable(iden, USED);
     }
     else if (expr->isPropIdExpr())
     {
         PropAccess *propExpr = expr->getPropId();
-        result.addVariable(propExpr->getIdentifier1(), READ);
-        result.addVariable(propExpr->getIdentifier2(), READ);
+        result.addVariable(propExpr->getIdentifier1(), USED);
+        result.addVariable(propExpr->getIdentifier2(), USED);
     }
     else if (expr->isUnary())
     {
@@ -23,12 +23,12 @@ usedVariables blockVarsAnalyser::getVarsExpr(Expression *expr)
         {
             Expression *uExpr = expr->getUnaryExpr();
             if (uExpr->isIdentifierExpr())
-                result.addVariable(uExpr->getId(), READ_WRITE);
+                result.addVariable(uExpr->getId(), USED_DEFINED);
             else if (uExpr->isPropIdExpr())
             {
                 PropAccess* propId = uExpr->getPropId();
-                result.addVariable(propId->getIdentifier1(), READ);
-                result.addVariable(propId->getIdentifier2(), READ_WRITE);
+                result.addVariable(propId->getIdentifier1(), USED);
+                result.addVariable(propId->getIdentifier2(), USED_DEFINED);
             }
         }
     }
@@ -43,58 +43,53 @@ usedVariables blockVarsAnalyser::getVarsExpr(Expression *expr)
     return result;
 }
 
-
-usedVariables blockVarsAnalyser::getVarsWhile(whileStmt *stmt)
+usedVariables_t blockVarsAnalyser::getVarsWhile(whileStmt *stmt)
 {
-  usedVariables currVars = getVarsExpr(stmt->getCondition());
+  usedVariables_t currVars = getVarsExpr(stmt->getCondition());
   currVars.merge(getVarsStatement(stmt->getBody()));
-
   return currVars;
 }
 
-
-usedVariables blockVarsAnalyser::getVarsDoWhile(dowhileStmt *stmt)
+usedVariables_t blockVarsAnalyser::getVarsDoWhile(dowhileStmt *stmt)
 {
-  usedVariables currVars = getVarsExpr(stmt->getCondition());
+  usedVariables_t currVars = getVarsExpr(stmt->getCondition());
   currVars.merge(getVarsStatement(stmt->getBody()));
-
   return currVars;
 }
 
-usedVariables blockVarsAnalyser::getVarsDeclaration(declaration *stmt)
+usedVariables_t blockVarsAnalyser::getVarsDeclaration(declaration *stmt)
 {
-  usedVariables currVars;
-  currVars.addVariable(stmt->getdeclId(), WRITE);
-    
+  usedVariables_t currVars;
+  currVars.addVariable(stmt->getdeclId(), DEFINED);
   if(stmt->isInitialized())
   {
-    usedVariables exprVars = getVarsExpr(stmt->getExpressionAssigned());
+    usedVariables_t exprVars = getVarsExpr(stmt->getExpressionAssigned());
     currVars.merge(exprVars);
   }
 
   return currVars;
 }
 
-usedVariables blockVarsAnalyser::getVarsAssignment(assignment *stmt)
+usedVariables_t blockVarsAnalyser::getVarsAssignment(assignment *stmt)
 {
-  usedVariables currVars;
+  usedVariables_t currVars;
   if (stmt->lhs_isProp())
   {
     PropAccess *propId = stmt->getPropId();
-    currVars.addVariable(propId->getIdentifier1(), READ);
-    currVars.addVariable(propId->getIdentifier2(), WRITE);
+    currVars.addVariable(propId->getIdentifier1(), USED);
+    currVars.addVariable(propId->getIdentifier2(), DEFINED);
   }
   else if (stmt->lhs_isIdentifier())
-    currVars.addVariable(stmt->getId(), WRITE);
+    currVars.addVariable(stmt->getId(), DEFINED);
 
-  usedVariables exprVars = getVarsExpr(stmt->getExpr());
+  usedVariables_t exprVars = getVarsExpr(stmt->getExpr());
   currVars.merge(exprVars);
   return currVars;
 }
 
-usedVariables blockVarsAnalyser::getVarsIf(ifStmt *stmt)
+usedVariables_t blockVarsAnalyser::getVarsIf(ifStmt *stmt)
 {
-  usedVariables currVars = getVarsExpr(stmt->getCondition());
+  usedVariables_t currVars = getVarsExpr(stmt->getCondition());
   currVars.merge(getVarsStatement(stmt->getIfBody()));
   if (stmt->getElseBody() != NULL)
     currVars.merge(getVarsStatement(stmt->getElseBody()));
@@ -102,34 +97,34 @@ usedVariables blockVarsAnalyser::getVarsIf(ifStmt *stmt)
   return currVars;
 }
 
-usedVariables blockVarsAnalyser::getVarsFixedPoint(fixedPointStmt *stmt)
+usedVariables_t blockVarsAnalyser::getVarsFixedPoint(fixedPointStmt *stmt)
 {
-  usedVariables currVars = getVarsExpr(stmt->getDependentProp());
-  currVars.addVariable(stmt->getFixedPointId(), READ_WRITE);
+  usedVariables_t currVars = getVarsExpr(stmt->getDependentProp());
+  currVars.addVariable(stmt->getFixedPointId(), USED_DEFINED);
   currVars.merge(getVarsStatement(stmt->getBody()));
   return currVars;
 }
 
-usedVariables blockVarsAnalyser::getVarsUnary(unary_stmt *stmt)
+usedVariables_t blockVarsAnalyser::getVarsUnary(unary_stmt *stmt)
 {
   Expression *unaryExpr = stmt->getUnaryExpr();
   Expression *varExpr = unaryExpr->getUnaryExpr();
 
-  usedVariables currUsed;
+  usedVariables_t currUsed;
   if (varExpr->isIdentifierExpr())
-    currUsed.addVariable(varExpr->getId(), READ_WRITE);
+    currUsed.addVariable(varExpr->getId(), USED_DEFINED);
   else if (varExpr->isPropIdExpr())
   {
-    currUsed.addVariable(varExpr->getPropId()->getIdentifier1(), READ);
-    currUsed.addVariable(varExpr->getPropId()->getIdentifier2(), WRITE);
+    currUsed.addVariable(varExpr->getPropId()->getIdentifier1(), USED);
+    currUsed.addVariable(varExpr->getPropId()->getIdentifier2(), DEFINED);
   }
 
   return currUsed;
 }
 
-usedVariables blockVarsAnalyser::getVarsBFS(iterateBFS *stmt)
+usedVariables_t blockVarsAnalyser::getVarsBFS(iterateBFS *stmt)
 {
-  usedVariables currVars = getVarsStatement(stmt->getBody());
+  usedVariables_t currVars = getVarsStatement(stmt->getBody());
   if (stmt->getRBFS() != nullptr)
   {
     iterateReverseBFS *RBFSstmt = stmt->getRBFS();
@@ -141,10 +136,10 @@ usedVariables blockVarsAnalyser::getVarsBFS(iterateBFS *stmt)
   return currVars;
 }
 
-usedVariables blockVarsAnalyser::getVarsForAll(forallStmt *stmt)
+usedVariables_t blockVarsAnalyser::getVarsForAll(forallStmt *stmt)
 {
-  usedVariables currVars = getVarsStatement(stmt->getBody());
-  currVars.removeVariable(stmt->getIterator(), READ_WRITE);
+  usedVariables_t currVars = getVarsStatement(stmt->getBody());
+  currVars.removeVariable(stmt->getIterator(), USED_DEFINED);
 
   if(stmt->isSourceProcCall())
   {
@@ -157,12 +152,12 @@ usedVariables blockVarsAnalyser::getVarsForAll(forallStmt *stmt)
   else if(!stmt->isSourceField())
   {
       Identifier *iden = stmt->getSource();
-      currVars.addVariable(iden, READ);
+      currVars.addVariable(iden, USED);
   }
   else
   {
       PropAccess *propId = stmt->getPropSource();
-      currVars.addVariable(propId->getIdentifier1(), READ);
+      currVars.addVariable(propId->getIdentifier1(), USED);
   }
 
   if (stmt->hasFilterExpr())
@@ -171,12 +166,12 @@ usedVariables blockVarsAnalyser::getVarsForAll(forallStmt *stmt)
   return currVars;
 }
 
-usedVariables blockVarsAnalyser::getVarsBlock(blockStatement *blockStmt)
+usedVariables_t blockVarsAnalyser::getVarsBlock(blockStatement *blockStmt)
 {
   list<statement *> stmtList = blockStmt->returnStatements();
   list<Identifier *> declVars;
 
-  usedVariables currVars;
+  usedVariables_t currVars;
   for (statement *stmt : stmtList)
   {
     if (stmt->getTypeofNode() == NODE_DECL)
@@ -186,29 +181,26 @@ usedVariables blockVarsAnalyser::getVarsBlock(blockStatement *blockStmt)
 
       if (decl->isInitialized())
       {
-        usedVariables exprVars = getVarsExpr(decl->getExpressionAssigned());
-        for (Identifier *dVars : declVars)
-          exprVars.removeVariable(dVars, READ_WRITE);
-
+        usedVariables_t exprVars = getVarsExpr(decl->getExpressionAssigned());
         currVars.merge(exprVars);
       }
     }
     else
     {
-      usedVariables stmtVars = getVarsStatement(stmt);
-      for (Identifier *dVars : declVars)
-        stmtVars.removeVariable(dVars, READ_WRITE);
-
+      usedVariables_t stmtVars = getVarsStatement(stmt);
       currVars.merge(stmtVars);
     }
   }
 
+  for (Identifier *dVars : declVars)
+    currVars.removeVariable(dVars, USED_DEFINED);
+
   return currVars;
 }
 
-usedVariables blockVarsAnalyser::getVarsReduction(reductionCallStmt *stmt)
+usedVariables_t blockVarsAnalyser::getVarsReduction(reductionCallStmt *stmt)
 {
-  usedVariables currVars;
+  usedVariables_t currVars;
 
   auto getVarsReductionCall = [this, &currVars](reductionCall* callExpr) -> void
   {
@@ -222,14 +214,14 @@ usedVariables blockVarsAnalyser::getVarsReduction(reductionCallStmt *stmt)
   {
     if(stmt->getLhsType() == 1)
     {
-        currVars.addVariable(stmt->getLeftId(), WRITE);
+        currVars.addVariable(stmt->getLeftId(), DEFINED);
         getVarsReductionCall(stmt->getReducCall());
     }
     else if(stmt->getLhsType() == 2)
     {
       PropAccess* propId = stmt->getPropAccess();
-      currVars.addVariable(propId->getIdentifier1(), READ);
-      currVars.addVariable(propId->getIdentifier2(), WRITE);
+      currVars.addVariable(propId->getIdentifier1(), USED);
+      currVars.addVariable(propId->getIdentifier2(), DEFINED);
 
       getVarsReductionCall(stmt->getReducCall());
     }
@@ -241,20 +233,20 @@ usedVariables blockVarsAnalyser::getVarsReduction(reductionCallStmt *stmt)
         if(node->getTypeofNode() == NODE_ID)
         {
           Identifier* iden = (Identifier*)node;
-          currVars.addVariable(iden, WRITE);
+          currVars.addVariable(iden, DEFINED);
           affectedId = iden;
         }
         else if(node->getTypeofNode() == NODE_PROPACCESS)
         {
           PropAccess* propId = (PropAccess*)node;
-          currVars.addVariable(propId->getIdentifier1(), READ);
-          currVars.addVariable(propId->getIdentifier2(), WRITE);
+          currVars.addVariable(propId->getIdentifier1(), USED);
+          currVars.addVariable(propId->getIdentifier2(), DEFINED);
           affectedId = propId->getIdentifier2();
         }
 
         if(affectedId->getSymbolInfo()->getId()->get_fp_association()) {
           Identifier* fpId = affectedId->getSymbolInfo()->getId()->get_fpIdNode();
-          currVars.addVariable(fpId, WRITE);
+          currVars.addVariable(fpId, DEFINED);
         }
       }
       getVarsReductionCall(stmt->getReducCall());
@@ -264,13 +256,13 @@ usedVariables blockVarsAnalyser::getVarsReduction(reductionCallStmt *stmt)
         if(node->getTypeofNode() == NODE_ID)
         {
           Identifier* iden = (Identifier*)node;
-          currVars.addVariable(iden, WRITE);
+          currVars.addVariable(iden, DEFINED);
         }
         else if(node->getTypeofNode() == NODE_PROPACCESS)
         {
           PropAccess* propId = (PropAccess*)node;
-          currVars.addVariable(propId->getIdentifier1(), READ);
-          currVars.addVariable(propId->getIdentifier2(), WRITE);
+          currVars.addVariable(propId->getIdentifier1(), USED);
+          currVars.addVariable(propId->getIdentifier2(), DEFINED);
         }
       }
     }
@@ -279,14 +271,14 @@ usedVariables blockVarsAnalyser::getVarsReduction(reductionCallStmt *stmt)
   {
     if(stmt->isLeftIdentifier())
     {
-      currVars.addVariable(stmt->getLeftId(), READ_WRITE);
+      currVars.addVariable(stmt->getLeftId(), USED_DEFINED);
       currVars.merge(getVarsExpr(stmt->getRightSide()));
     }
     else
     {
       PropAccess* propId = stmt->getPropAccess();
-      currVars.addVariable(propId->getIdentifier1(), READ);
-      currVars.addVariable(propId->getIdentifier2(), READ_WRITE);
+      currVars.addVariable(propId->getIdentifier1(), USED);
+      currVars.addVariable(propId->getIdentifier2(), USED_DEFINED);
 
       currVars.merge(getVarsExpr(stmt->getRightSide()));
     }
@@ -294,27 +286,29 @@ usedVariables blockVarsAnalyser::getVarsReduction(reductionCallStmt *stmt)
   return currVars;
 }
 
-usedVariables blockVarsAnalyser::getVarsProcCall(proc_callStmt *procCall)
+usedVariables_t blockVarsAnalyser::getVarsProcCall(proc_callStmt *procCall)
 {
   proc_callExpr *callExpr = procCall->getProcCallExpr();
   return getVarsExprProcCall(callExpr);
 }
 
-usedVariables blockVarsAnalyser::getVarsExprProcCall(proc_callExpr *procCall)
+usedVariables_t blockVarsAnalyser::getVarsExprProcCall(proc_callExpr *procCall)
 {
-  usedVariables currVars;
-  if(procCall->getId1() != NULL)
-    currVars.addVariable(procCall->getId1(), READ);
+  usedVariables_t currVars;
+  // if(procCall->getId1() != NULL)
+  //   currVars.addVariable(procCall->getId1(), USED);
   for (argument *arg : procCall->getArgList())
   {
     if (arg->isExpr())
       currVars.merge(getVarsExpr(arg->getExpr()));
+    else if (arg->isAssignExpr())
+      currVars.merge(getVarsAssignment(arg->getAssignExpr()));
   }
   
   return currVars;
 }
 
-usedVariables blockVarsAnalyser::getVarsStatement(statement *stmt)
+usedVariables_t blockVarsAnalyser::getVarsStatement(statement *stmt)
 {
   switch (stmt->getTypeofNode())
   {
@@ -345,8 +339,8 @@ usedVariables blockVarsAnalyser::getVarsStatement(statement *stmt)
   case NODE_REDUCTIONCALLSTMT:
     return getVarsReduction((reductionCallStmt *)stmt);
 
-  // case NODE_ITRBFS:
-    // return getVarsBFS((iterateBFS *)stmt);
+  case NODE_ITRBFS:
+    return getVarsBFS((iterateBFS *)stmt);
 
   case NODE_FIXEDPTSTMT:
     return getVarsFixedPoint((fixedPointStmt *)stmt);
@@ -355,5 +349,5 @@ usedVariables blockVarsAnalyser::getVarsStatement(statement *stmt)
     return getVarsProcCall((proc_callStmt *)stmt);
   }
 
-  return usedVariables();
+  return usedVariables_t();
 }

@@ -812,7 +812,11 @@ void dsl_cpp_generator::generateReductionOpStmt(reductionCallStmt* stmt,
     //~ if(strcmp("long",typVar)==0)
     //~ sprintf(strBuffer, "atomicAdd(& %s, (long %s int)",id->getIdentifier(), typVar);
     //~ else
-    sprintf(strBuffer, "atomicAdd(& %s, (%s)", id->getIdentifier(), typVar);
+    if (strcmp("long", typVar) == 0) {
+      sprintf(strBuffer, "atomicAdd((unsigned long long*)& %s, (unsigned long long)", id->getIdentifier());
+    } else {
+      sprintf(strBuffer, "atomicAdd(& %s, (%s)", id->getIdentifier(), typVar);
+    }
     targetFile.pushString(strBuffer);
     generateExpr(stmt->getRightSide(), isMainFile);
     targetFile.pushstr_newL(");");
@@ -3171,8 +3175,9 @@ void dsl_cpp_generator::generateCSRArrays(const char* gId, Function* func) {
 
   if(func->getIsMetaUsed() || func->getIsRevMetaUsed()) {
     main.pushstr_newL("for(int i=0; i<= V; i++) {");
+    main.pushstr_newL("int temp;");
     if(func->getIsMetaUsed()) {
-      sprintf(strBuffer, "int temp = %s.indexofNodes[i];", gId);
+      sprintf(strBuffer, "temp = %s.indexofNodes[i];", gId);
       main.pushstr_newL(strBuffer);
       main.pushstr_newL("h_meta[i] = temp;");
     }
@@ -3187,8 +3192,9 @@ void dsl_cpp_generator::generateCSRArrays(const char* gId, Function* func) {
 
   if(func->getIsDataUsed() || func->getIsSrcUsed() || func->getIsWeightUsed()) {
     main.pushstr_newL("for(int i=0; i< E; i++) {");
+    main.pushstr_newL("int temp;");
     if(func->getIsDataUsed()) {
-      sprintf(strBuffer, "int temp = %s.edgeList[i];", gId);
+      sprintf(strBuffer, "temp = %s.edgeList[i];", gId);
       main.pushstr_newL(strBuffer);
       main.pushstr_newL("h_data[i] = temp;");
     }

@@ -1,9 +1,25 @@
 #include "dsl_cpp_generator.h"
 #include "../../ast/ASTHelper.cpp"
-#include<string.h>
+#include<string>
 #include<cassert>
 
-extern usedVariables getVarsStatement(statement* stmt);
+#include "getMetaDataUsed.cpp"
+
+extern usedVariables getVarsStatement(statement*);
+extern usedVariables getVarsExpr(Expression*);
+
+bool presentInSet(set<TableEntry*> currAccVars, TableEntry* var) {
+  return currAccVars.find(var) != currAccVars.end();
+}
+
+bool presentInOut(statement* stmt, Identifier* var) {
+  set<TableEntry*> out = stmt->getBlockData()->getBlock()->getOut();
+  return out.find(var->getSymbolInfo()) != out.end();
+}
+
+void insertInSet(set<TableEntry*>& currAccVars, TableEntry* var) {
+  currAccVars.insert(var);
+}
 
 //~ using namespace spacc;
 namespace spacc{
@@ -731,17 +747,28 @@ void dsl_cpp_generator::generateDoWhileStmt(dowhileStmt* doWhile)
   char strBuffer[1024];
   vector<Identifier*> graph_arr = graphId[curFuncType][curFuncCount()];
   char* graph_name = graph_arr[0]->getIdentifier();  //Graph variable name identifier
-  
+  MetaDataUsed prevMetaDataUsed = currMetaAccVars; // to restore the previous metadata used
+  set<TableEntry*> prevAccVars = currAccVars; // to restore the previous acc vars used
+
   //----------------------------These data copies are particularly for PR--------------
+  // sprintf(strBuffer, "#pragma acc data copyin(%s)", graph_name);
+  // main.pushstr_newL(strBuffer);
+  // main.pushstr_newL("{");  //Start of outer openAcc data body
+  // sprintf(strBuffer, "#pragma acc data copyin( %s.srcList[0:%s.num_edges()+1], %s.indexofNodes[:%s.num_nodes()+1], %s.rev_indexofNodes[:%s.num_nodes()+1] )", graph_name, graph_name, graph_name, graph_name, graph_name, graph_name);
+  // main.pushstr_space(strBuffer);
+  // sprintf(strBuffer,"copy(pageRank[0 : %s.num_nodes()]) copyin(pageRank_nxt[0 : %s.num_nodes()])", graph_name, graph_name);  //NOTE: pageRank can be taken from AST???
+  // main.pushstr_newL(strBuffer);
+  // main.pushstr_newL("{");  //Start of inner openAcc data body
+  //-------------------------------------------------------------------
+
   sprintf(strBuffer, "#pragma acc data copyin(%s)", graph_name);
   main.pushstr_newL(strBuffer);
   main.pushstr_newL("{");  //Start of outer openAcc data body
-  sprintf(strBuffer, "#pragma acc data copyin( %s.srcList[0:%s.num_edges()+1], %s.indexofNodes[:%s.num_nodes()+1], %s.rev_indexofNodes[:%s.num_nodes()+1] )", graph_name, graph_name, graph_name, graph_name, graph_name, graph_name);
-  main.pushstr_space(strBuffer);
-  sprintf(strBuffer,"copy(pageRank[0 : %s.num_nodes()]) copyin(pageRank_nxt[0 : %s.num_nodes()])", graph_name, graph_name);  //NOTE: pageRank can be taken from AST???
-  main.pushstr_newL(strBuffer);
+
+  main.pushString("#pragma acc data");  // start openACC data directive
+  generateDataDirectiveForStatment(doWhile);
+
   main.pushstr_newL("{");  //Start of inner openAcc data body
-  //-------------------------------------------------------------------
 
   main.pushstr_newL("do");
   generateStatement(doWhile->getBody());
@@ -751,9 +778,11 @@ void dsl_cpp_generator::generateDoWhileStmt(dowhileStmt* doWhile)
   
   //-------------OPENACC DATA CLOSE--------------------------------------
   main.NewLine();
-  main.pushstr_newL("}");  //End of inner openacc data body
+  main.pushstr_newL("}");  //End of inner openacc data body (for metaDataUsed)
   main.pushstr_newL("}");  //End of 1st openACC data body (for copy(g))
 
+  currMetaAccVars = prevMetaDataUsed;  // restore the previous metadata used
+  currAccVars = prevAccVars;
 }
 
 void dsl_cpp_generator::generateIfStmt(ifStmt* ifstmt)
@@ -854,7 +883,7 @@ void dsl_cpp_generator::generateAssignmentStmt(assignment* asmt)  //When propnod
    char strBuffer[1024];
    Expression* exprAssigned = asmt->getExpr();
    vector<Identifier*> graphIds = graphId[curFuncType][curFuncCount()];
-
+   char* graph_name = graphIds[0]->getIdentifier();
 
    if(asmt->lhs_isIdentifier())
    { 
@@ -866,12 +895,18 @@ void dsl_cpp_generator::generateAssignmentStmt(assignment* asmt)  //When propnod
          Identifier* rhsPropId2 = exprAssigned->getId();
          
          main.NewLine();
-         //main.pushstr_newL("#pragma acc data copyin (g)");
-         //main.pushstr_newL("{");
+        //  sprintf(strBuffer, "#pragma acc data copyin(%s)", graph_name);
+        //  main.pushstr_newL(strBuffer);
+        //  main.pushstr_newL("{");
+
+         main.pushstr_space("#pragma acc data");
+         generateDataDirectiveForStatment(asmt);
+         main.pushstr_newL("{");
+
          //main.pushstr_newL("#pragma acc data copyout( modified[0: num_nodes], modified_nxt[0: num_nodes], dist[0: num_nodes+1] )");
          //main.pushstr_newL("{");
          main.pushstr_newL("#pragma acc parallel loop");
-         sprintf(strBuffer,"for (%s %s = 0; %s < %s.%s(); %s ++) ","int", "node" ,"node",graphIds[0]->getIdentifier(),"num_nodes","node");
+         sprintf(strBuffer,"for (%s %s = 0; %s < %s.%s(); %s ++) ","int", "node" ,"node",graph_name,"num_nodes","node");
          main.pushstr_newL(strBuffer);     
                                                                                         /* the graph associated                          */
          main.pushstr_newL("{");
@@ -879,8 +914,8 @@ void dsl_cpp_generator::generateAssignmentStmt(assignment* asmt)  //When propnod
          main.pushstr_newL(strBuffer);
          main.pushstr_newL("}");
 
-         //main.pushstr_newL("}"); //-----openacc data close
-         //main.pushstr_newL("}"); //-----openacc data close
+         main.pushstr_newL("}"); //-----openacc data close
+        //  main.pushstr_newL("}"); //-----openacc data close
 
        }
        else
@@ -981,36 +1016,84 @@ void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt)   //Attac
           
         //++++++++++++++++++++++Generate data pragma for this attachNodeProperty() procedureCall with all the array names+++++++++++++++++++++++++++++++++++++++++++++++++++
           main.NewLine();
-          sprintf(strBuffer, "#pragma acc data copyin(%s)", graph_name);    //Copy the graph object to GPU first (shallow-copy)
-          main.pushstr_newL(strBuffer);
-          main.pushstr_newL("{");  //opening bracket for 1st outer data region
+          // sprintf(strBuffer, "#pragma acc data copyin(%s)", graph_name);    //Copy the graph object to GPU first (shallow-copy)
+          // main.pushstr_newL(strBuffer);
+          // main.pushstr_newL("{");  //opening bracket for 1st outer data region
 
-          main.pushString("#pragma acc data copyout( ");   //Since we are just setting values to arrays, it it sufficient to copyout
+          main.pushString("#pragma acc data copyout(");   //Since we are just setting values to arrays, it it sufficient to copyout
 
+          bool first = true;   //To generate comma before every array except the first one
           //Iterate all the arguments inside the attachNodeProperty(--) or attachEdgeProperty(--) procedure calls. (Example: dist=INF)
           for(itr=argList.begin();itr!=argList.end();itr++)
           {
-            //To generate comma before every array except the first one
-            if(itr != argList.begin())
-            {
-                main.pushString(", ");
-            } 
-
             assignment* assign=(*itr)->getAssignExpr();   //Get the Assignment statement AST node
             Identifier* lhsId=assign->getId();   //Get LHS identifier. Example: dist
             Expression* exprAssigned = assign->getExpr();   //Get RHS expression assigned. Here Example: INF
-            sprintf(strBuffer,"%s[0: %s.num_nodes()]",lhsId->getIdentifier(), graph_name);   //num_nodes() because this is attachNodePropoperty, need to apply to values of all nodes
-            main.pushString(strBuffer);
 
-            if(lhsId->getSymbolInfo()->getId()->require_redecl())   //If a lhs array requires redclaration: Example: modified requires modified_nxt
+            if (presentInOut(proc_callStmt, lhsId))
             {
-                  main.pushString(", ");
-                  sprintf(strBuffer,"%s_nxt[0: %s.num_nodes()]",lhsId->getIdentifier(),graph_name);
-                  main.pushString(strBuffer);
-            }
-            
+              //To generate comma before every array except the first one
+              if(first) first = false;
+              else main.pushString(", ");
+              
+              sprintf(strBuffer,"%s[0: %s.num_nodes()]",lhsId->getIdentifier(), graph_name);   //num_nodes() because this is attachNodePropoperty, need to apply to values of all nodes
+              main.pushString(strBuffer);
+
+              if(lhsId->getSymbolInfo()->getId()->require_redecl())   //If a lhs array requires redclaration: Example: modified requires modified_nxt
+              {
+                    main.pushString(", ");
+                    sprintf(strBuffer,"%s_nxt[0: %s.num_nodes()]",lhsId->getIdentifier(),graph_name);
+                    main.pushString(strBuffer);
+              }
+            }            
           }
-          main.pushstr_newL(" )");  //Close bracket for #pragma acc data copyout(----
+          main.pushstr_space(")");  //Close bracket for #pragma acc data copyout(----
+
+          first = true;
+
+          main.pushstr_space(" copyin(");  // Getiing the values used to set the lhs
+          //Iterate all the arguments inside the attachNodeProperty(--) or attachEdgeProperty(--) procedure calls. (Example: dist=INF)
+          for(itr=argList.begin();itr!=argList.end();itr++)
+          {
+            assignment* assign=(*itr)->getAssignExpr();   //Get the Assignment statement AST node
+            Identifier* lhsId=assign->getId();   //Get LHS identifier. Example: dist
+            Expression* exprAssigned = assign->getExpr();   //Get RHS expression assigned. Here Example: INF
+
+            usedVariables rhsUsedVars = getVarsExpr(exprAssigned);
+            for (Identifier* rhsId: rhsUsedVars.getVariables()) 
+            {
+              if (!presentInSet(currAccVars, rhsId->getSymbolInfo()))
+              {
+                //To generate comma before every array except the first one
+                if(first) first = false;
+                else main.pushString(", ");
+
+                Type* type = rhsId->getSymbolInfo()->getType();
+                if (type->isPropNodeType()) 
+                {
+                  sprintf(strBuffer,"%s[0: %s.num_nodes()]",rhsId->getIdentifier(), graph_name);   //num_nodes() because this is attachNodePropoperty, need to apply to values of all nodes
+                  main.pushString(strBuffer);
+                }
+                else if (type->isPropEdgeType())
+                {
+                  sprintf(strBuffer,"%s[0: %s.num_edges()]",rhsId->getIdentifier(), graph_name);   //num_nodes() because this is attachNodePropoperty, need to apply to values of all nodes
+                  main.pushString(strBuffer);
+                }
+                else {
+                  sprintf(strBuffer,"%s",rhsId->getIdentifier());   //num_nodes() because this is attachNodePropoperty, need to apply to values of all nodes
+                  main.pushString(strBuffer);
+                }
+
+                if(rhsId->getSymbolInfo()->getId()->require_redecl())   //If a lhs array requires redclaration: Example: modified requires modified_nxt
+                {
+                      main.pushString(", ");
+                      sprintf(strBuffer,"%s_nxt[0: %s.num_nodes()]",rhsId->getIdentifier(),graph_name);
+                      main.pushString(strBuffer);
+                }
+              }
+            }            
+          }
+          main.pushstr_newL(")");
 
           main.pushstr_newL("{");  //opening bracket for 2nd data region
         
@@ -1044,7 +1127,7 @@ void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt)   //Attac
         main.pushstr_newL("}");   //Close for loop
 
         main.pushstr_newL("}");  ///OpenAcc data region close
-        main.pushstr_newL("}");   ///OpenAcc data region close
+        // main.pushstr_newL("}");   ///OpenAcc data region close
         main.NewLine();
 
     }
@@ -1097,8 +1180,8 @@ void dsl_cpp_generator::generatePropertyDefination(Type* type,char* Id)
 { 
   Type* targetType=type->getInnerTargetType();
   vector<Identifier*> graphIds = graphId[curFuncType][curFuncCount()];
-  printf("currentFuncType %d\n",curFuncType);
-  printf("currentFuncCount %d graphIds[0] %ld\n",curFuncCount(), graphIds.size());
+  // printf("currentFuncType %d\n",curFuncType);
+  // printf("currentFuncCount %d graphIds[0] %ld\n",curFuncCount(), graphIds.size());
 
   if(targetType->gettypeId()==TYPE_INT)
   {
@@ -1242,8 +1325,7 @@ void dsl_cpp_generator::generatePropertyDefination(Type* type,char* Id)
 
   }
 
-void dsl_cpp_generator::
-generateForAll_header(forallStmt* forAll)    //Required only if there is reduction operation
+void dsl_cpp_generator::generateForAll_header(forallStmt* forAll)    //Required only if there is reduction operation
 {
   //main.pushString("#pragma omp parallel for"); //This needs to be changed to checked for 'For' inside a parallel section.
 
@@ -1253,104 +1335,23 @@ generateForAll_header(forallStmt* forAll)    //Required only if there is reducti
     vector<Identifier*> graph_arr = graphId[curFuncType][curFuncCount()];
     char* graph_name = graph_arr[0]->getIdentifier();  //Graph variable name identifier
 
-    sprintf(strBuffer1,"#pragma acc data copyin(%s)", graph_name);
+    // sprintf(strBuffer1,"#pragma acc data copyin(%s)", graph_name);
+    // main.pushstr_newL(strBuffer1);
+    // main.pushstr_newL("{"); //---------------------------------------------
+    // //main.pushString("#pragma acc data copyin(g)"); main.NewLine();
+    // // sprintf(strBuffer1, "#pragma acc data copyin( %s.indexofNodes[:%s.num_nodes()+1], %s.edgeList[0:%s.num_edges()] )", graph_name, graph_name, graph_name, graph_name ); 
+    // // main.pushString(strBuffer1);
+    // // main.space();
+
+    //-----------------------------generating code only for the variables used in the forall loop------------------
+    sprintf(strBuffer1, "#pragma acc data copyin(%s)", graph_name);
     main.pushstr_newL(strBuffer1);
     main.pushstr_newL("{"); //---------------------------------------------
-    //main.pushString("#pragma acc data copyin(g)"); main.NewLine();
-    // sprintf(strBuffer1, "#pragma acc data copyin( %s.indexofNodes[:%s.num_nodes()+1], %s.edgeList[0:%s.num_edges()] )", graph_name, graph_name, graph_name, graph_name ); 
-    // main.pushString(strBuffer1);
-    // main.space();
-    sprintf(strBuffer1, "#pragma acc data copyin(");
-    main.pushString(strBuffer1);
-    main.space();
 
-    bool isFirstVar = true;
-    if(forAll->getIsMetaUsed()) {
-      if(!isFirstVar) main.push(',');
-      sprintf(strBuffer1, "%s.indexOfNodes[:%s.num_nodes()+1]", graph_name, graph_name);
-      main.pushString(strBuffer1);
-      main.space();
-      isFirstVar = false;
-    }
-    if(forAll->getIsRevMetaUsed()) {
-      if(!isFirstVar) main.push(',');
-      sprintf(strBuffer1, "%s.rev_indexOfNodes[:%s.num_nodes()+1]", graph_name, graph_name);
-      main.pushString(strBuffer1);
-      main.space();
-      isFirstVar = false;
-    }
-    if(forAll->getIsDataUsed()) {
-      if(!isFirstVar) main.push(',');
-      sprintf(strBuffer1, "%s.edgeList[:%s.num_edges()+1]", graph_name, graph_name);
-      main.pushString(strBuffer1);
-      main.space();
-      isFirstVar = false;
-    }
-    if(forAll->getIsSrcUsed()) {
-      if(!isFirstVar) main.push(',');
-      sprintf(strBuffer1, "%s.srcList[:%s.num_edges()+1]", graph_name, graph_name);
-      main.pushString(strBuffer1);
-      main.space();
-      isFirstVar = false;
-    }
-    if(forAll->getIsWeightUsed()) {
-      if(!isFirstVar) main.push(',');
-      sprintf(strBuffer1, "%s.edgeLen[:%s.num_edges()+1]", graph_name, graph_name);
-      main.pushString(strBuffer1);
-      main.space();
-      isFirstVar = false;
-    }
-    main.push(')');
-    main.space();
+    main.pushString("#pragma acc data");  // start of pragma acc data
+    generateDataDirectiveForStatment(forAll);
 
-    //main.pushstr_newL("{");  
-
-    usedVariables usedVars = getVarsStatement(forAll->getBody());
-    usedVars.removeVariable(forAll->getIterator(), READ_WRITE);
-    for(Identifier* id: usedVars.getVariables(READ_ONLY)) {
-      cout << "read only " << id->getIdentifier() << endl;
-      Type* type = id->getSymbolInfo()->getType();
-      if(type->isPropType()) {
-        sprintf(strBuffer1, "copyin( %s.%s[:%s.%s()] )", graph_name, id->getIdentifier(), graph_name, id->getIdentifier() );
-        main.pushString(strBuffer1);
-        main.space();
-      }
-      else if(type->isPrimitiveType()) {
-        sprintf(strBuffer1, "copyin( %s )", id->getIdentifier() );
-        main.pushString(strBuffer1);
-        main.space();
-      }
-    }
-    for(Identifier* id: usedVars.getVariables(WRITE_ONLY)) {
-      cout << "write only " << id->getIdentifier() << endl;
-      Type* type = id->getSymbolInfo()->getType();
-      if(type->isPropType()) {
-        sprintf(strBuffer1, "copyout( %s.%s[:%s.%s()] )", graph_name, id->getIdentifier(), graph_name, id->getIdentifier() );
-        main.pushString(strBuffer1);
-        main.space();
-      }
-      else if(type->isPrimitiveType()) {
-        sprintf(strBuffer1, "copyout( %s )", id->getIdentifier() );
-        main.pushString(strBuffer1);
-        main.space();
-      }
-    }
-    for(Identifier* id: usedVars.getVariables(READ_AND_WRITE)) {
-      cout << "read and write" << id->getIdentifier() << endl;
-      Type* type = id->getSymbolInfo()->getType();
-      if(type->isPropType()) {
-        sprintf(strBuffer1, "copy( %s.%s[:%s.%s()] )", graph_name, id->getIdentifier(), graph_name, id->getIdentifier() );
-        main.pushString(strBuffer1);
-        main.space();
-      }
-      else if(type->isPrimitiveType()) {
-        sprintf(strBuffer1, "copy( %s )", id->getIdentifier() );
-        main.pushString(strBuffer1);
-        main.space();
-      }
-    }
-
-    main.pushstr_newL("");
+  //--------------------sent only useful data to acc-------------------------
 
   //------- Generate----  copy(reduce_key1, reduce_key2....) if required..  NOTE: #pragma acc data copyin() for each respective algorithm is already generated above. Only "copy(reduce_keys)" to be generated.
       /*set<int> reduce_Keys=forAll->get_reduceKeys();
@@ -1378,7 +1379,7 @@ generateForAll_header(forallStmt* forAll)    //Required only if there is reducti
   main.pushstr_newL("{");
   main.pushString("");
   main.pushString("#pragma acc parallel loop");   //What is the purpose of this??
-  
+
   //--------Generate reduction() for all the reduction keys---------------------
   if(forAll->get_reduceKeys().size()>0)
     { 
@@ -1386,7 +1387,7 @@ generateForAll_header(forallStmt* forAll)    //Required only if there is reducti
       //Here, adding openAcc parallel pragma for forAll loops with reduction()
       //main.pushString("#pragma acc parallel loop");//-----------------
 
-      printf("INSIDE GENERATE FOR ALL FOR KEYS\n");
+      // printf("INSIDE GENERATE FOR ALL FOR KEYS\n");
       
       set<int> reduce_Keys=forAll->get_reduceKeys();
       assert(reduce_Keys.size()==1);
@@ -1452,7 +1453,7 @@ void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll)
       string s(methodId);
       if(s.compare("nodes")==0)
       {
-        cout<<"INSIDE NODES VALUE"<<"\n";
+        // cout<<"INSIDE NODES VALUE"<<"\n";
         sprintf(strBuffer,"for (%s %s = 0; %s < %s.%s(); %s ++) ","int",iterator->getIdentifier(),iterator->getIdentifier(),graphId,"num_nodes",iterator->getIdentifier());
       }
       else
@@ -1648,6 +1649,7 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll)
      iteratorMethodId=extractElemFunc->getMethodId();
     statement* body=forAll->getBody();
      char strBuffer[1024];
+     MetaDataUsed prevMetaDataUsed = currMetaAccVars;
 
   if(forAll->isForall())    //Check if it is a non-nested graph forall, or nested graph forall,  or a plain for-loop. Only non-nested graph for-all will be parallelised. This entire if clause is to generate header for forall
   { 
@@ -1664,7 +1666,7 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll)
           Identifier* filterId=lhs->isIdentifierExpr()?lhs->getId():NULL;     //filterId == "Modified" identifier in case of SSSP
           TableEntry* tableEntry=filterId!=NULL?filterId->getSymbolInfo():NULL;
           
-          if(tableEntry!=NULL && tableEntry->getId()->get_fp_association())   //THIS IF BLOCK IS MAINLY FOR SSSP ALGO
+          if(tableEntry!=NULL && tableEntry->getId()->get_fp_association() && false)   //THIS IF BLOCK IS MAINLY FOR SSSP ALGO
           {
 
             //printf("finished id for filterval %s\n",tableEntry->getId()->get_fpId());
@@ -1787,6 +1789,8 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll)
 
             checkAndGenerateFixedPtFilter(forAll);   
       }
+
+      currMetaAccVars = prevMetaDataUsed;
     
       forallStack.pop_back();
       
@@ -1872,7 +1876,7 @@ void dsl_cpp_generator::generatefixedpt_filter(Expression* filterExpr)
   printf("size %d\n",graphIds.size());*/
 
   if(lhs->isIdentifierExpr())
-    {
+  {
       Identifier* filterId = lhs->getId();
       TableEntry* tableEntry = filterId->getSymbolInfo();
       if(tableEntry->getId()->get_fp_association())
@@ -1881,7 +1885,7 @@ void dsl_cpp_generator::generatefixedpt_filter(Expression* filterExpr)
             main.pushstr_newL("#pragma acc parallel loop");  //Openacc loop, may be need to add num_gangs
             sprintf(strBuffer,"for (%s %s = 0; %s < %s.%s(); %s ++) ","int","v","v",graphIds[0]->getIdentifier(),"num_nodes","v");
             main.pushstr_newL(strBuffer);
-            main.pushstr_space("{");
+            main.pushstr_newL("{");  // Open bracket for the for loop
             sprintf(strBuffer,"%s[%s] =  %s_nxt[%s] ;",filterId->getIdentifier(),"v",filterId->getIdentifier(),"v");
             main.pushstr_newL(strBuffer);
           /*  Expression* initializer = filterId->getSymbolInfo()->getId()->get_assignedExpr();
@@ -1942,8 +1946,8 @@ void dsl_cpp_generator:: generateVariableDecl(declaration* declStmt)
        main.space();
        main.pushString(declStmt->getdeclId()->getIdentifier());
        generatePropertyDefination(type,declStmt->getdeclId()->getIdentifier());
-       printf("added symbol %s\n",declStmt->getdeclId()->getIdentifier());
-       printf("value requ %d\n",declStmt->getdeclId()->getSymbolInfo()->getId()->require_redecl());
+      //  printf("added symbol %s\n",declStmt->getdeclId()->getIdentifier());
+      //  printf("value requ %d\n",declStmt->getdeclId()->getSymbolInfo()->getId()->require_redecl());
        /* decl with variable name as var_nxt is required for double buffering
           ex :- In case of fixedpoint */
        if(declStmt->getdeclId()->getSymbolInfo()->getId()->require_redecl())
@@ -1957,8 +1961,36 @@ void dsl_cpp_generator:: generateVariableDecl(declaration* declStmt)
 
         }
 
+        // printf("initialization %d\n",declStmt->isInitialized());
         /*placeholder for adding code for declarations that are initialized as well*/
-      
+        if(declStmt->isInitialized()) /* Needs further modification */
+        {
+          // if the declaration is initialized, then the expression is a property type
+          if (declStmt->getExpressionAssigned()->getExpressionFamily() == EXPR_ID && declStmt->getExpressionAssigned()->getId()->getSymbolInfo()->getType()->gettypeId() == type->gettypeId()) {
+            Identifier* propId = declStmt->getExpressionAssigned()->getId();
+            vector<Identifier*> graph_arr = graphId[curFuncType][curFuncCount()];
+            char* graph_name = graph_arr[0]->getIdentifier();  //Graph variable name identifier
+            char buffer[1024];
+
+            main.pushstr_space("#pragma acc data");
+            generateDataDirectiveForStatment(declStmt);
+
+            main.pushstr_newL("{");   // start of data region
+            main.pushstr_newL("#pragma acc parallel loop");
+
+            if (type->isPropNodeType())   // for each node, copy the property value
+              sprintf(buffer, "for (int t = 0; t < %s.num_nodes(); t++)", graph_name);
+            else if (type->isPropEdgeType())  // for each edge, copy the property value
+              sprintf(buffer, "for (int t = 0; t < %s.num_edges(); t++)", graph_name);
+            main.pushstr_newL(buffer);
+            main.pushstr_newL("{");
+            sprintf(buffer, "%s[t] = %s[t];", declStmt->getdeclId()->getIdentifier(), propId->getIdentifier());
+            main.pushstr_newL(buffer);
+            main.pushstr_newL("}");     // end of parallel loop
+
+            main.pushstr_newL("}");     // end of data region
+          }
+        }
       
      }
 
@@ -2457,14 +2489,22 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct)
     char* graph_name = graph_arr[0]->getIdentifier();  //Graph variable name identifier
   //----------------------------------DATA COPY PRAGMA FOR FOR SSSP ONLY HARDCODED---------------------------------------ANALYSIS TO BE DONE----
     //OpenAcc data copyin constructs: For general graph data structures
+    // sprintf(strBuffer,"#pragma acc data copyin(%s)", graph_name);
+    // main.pushstr_newL(strBuffer);
+    // main.pushstr_newL("{"); 
+    //main.pushString("#pragma acc data copyin(g)"); main.NewLine();
+    // sprintf(strBuffer, "#pragma acc data copyin( %s.edgeList[0:%s.num_edges()], %s.indexofNodes[:%s.num_nodes()+1], weight[0: %s.num_edges()], modified[0: %s.num_nodes()],  modified_nxt[0:%s.num_nodes()] ) copy(dist[0:%s.num_nodes()])", graph_name, graph_name, graph_name, graph_name, graph_name, graph_name,  graph_name, graph_name); 
+    // main.pushstr_newL(strBuffer);
+    // main.pushstr_newL("{");  
+  //-------------------------------++++++++++++++++++++++-------------------------------------------------------------------
+
     sprintf(strBuffer,"#pragma acc data copyin(%s)", graph_name);
     main.pushstr_newL(strBuffer);
-    main.pushstr_newL("{"); 
-    //main.pushString("#pragma acc data copyin(g)"); main.NewLine();
-    sprintf(strBuffer, "#pragma acc data copyin( %s.edgeList[0:%s.num_edges()], %s.indexofNodes[:%s.num_nodes()+1], weight[0: %s.num_edges()], modified[0: %s.num_nodes()],  modified_nxt[0:%s.num_nodes()] ) copy(dist[0:%s.num_nodes()])", graph_name, graph_name, graph_name, graph_name, graph_name, graph_name,  graph_name, graph_name); 
-    main.pushstr_newL(strBuffer);
-    main.pushstr_newL("{");  
-  //-------------------------------++++++++++++++++++++++-------------------------------------------------------------------
+    main.pushstr_newL("{");     // start of 1st data directive
+
+    main.pushstr_space("#pragma acc data");
+    generateDataDirectiveForStatment(fixedPointConstruct);
+    main.pushstr_newL("{");     // start of 2nd data directive
 
     main.pushString("while ( ");
     main.push('!');
@@ -2540,8 +2580,8 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct)
       }*/
       
     main.pushstr_newL("}");    //Close while loop
-    main.pushstr_newL("}");   //----Close the openACC data region at the end of fixedpoint body 
-    main.pushstr_newL("}");   //-----For same purpose as above
+    main.pushstr_newL("}");   //----Close the openACC data region at the end of fixedpoint body  2nd
+    main.pushstr_newL("}");   //------Close the openACC data region at the end of fixedpoint body 1st
 
     fixedPointEnv = NULL;
 
@@ -2697,7 +2737,7 @@ const char* dsl_cpp_generator:: convertToCppType(Type* type)
     if(targetType->isPrimitiveType())
     { 
       int typeId=targetType->gettypeId();
-      cout<<"TYPEID IN CPP"<<typeId<<"\n";
+      // cout<<"TYPEID IN CPP"<<typeId<<"\n";
       switch(typeId)
       {
         case TYPE_INT:
@@ -2940,4 +2980,331 @@ bool dsl_cpp_generator::generate()
 
   }
 
+  void dsl_cpp_generator::setOptimized() {
+    isOptimized=true;
+  }
+
+  void dsl_cpp_generator::generateDataDirectiveForStatment(statement* stmt) 
+  {
+    char strBuffer[1024];
+    vector<Identifier*> graphIds = graphId[curFuncType][curFuncCount()];
+    char* graph_name = graphIds[0]->getIdentifier();
+    
+    switch (stmt->getTypeofNode()) {
+      case NODE_DOWHILESTMT: 
+      {
+        dowhileStmt* doWhile = (dowhileStmt*) stmt;
+
+        MetaDataUsed metaUsed = getMetaDataUsedDoWhile(doWhile);
+        generateDataDirectiveForMetaVars(metaUsed);
+
+        set<TableEntry*> in = doWhile->getBlockData()->getStartBlock()->getOut();
+        set<TableEntry*> out = doWhile->getBlockData()->getEndBlock()->getIn();
+
+        usedVariables usedVars = getVarsStatement(doWhile);
+        list<Identifier*> readVarsList = usedVars.getVariables(READ_ONLY);
+        list<Identifier*> writeVarsList = usedVars.getVariables(WRITE_ONLY);
+        list<Identifier*> readWriteVarsList = usedVars.getVariables(READ_AND_WRITE);
+
+        set<TableEntry*> readVars;
+        set<TableEntry*> writeVars;
+        set<TableEntry*> readWriteVars;
+
+        for (Identifier* id: readVarsList) {
+          TableEntry* te = id->getSymbolInfo();
+          if (presentInSet(in, te))
+            continue;
+          if (in.find(te) != in.end())
+            readVars.insert(te);
+        }
+
+        for (Identifier* id: writeVarsList) {
+          TableEntry* te = id->getSymbolInfo();
+          if (out.find(te) != out.end())
+            writeVars.insert(te);
+        }
+
+        for (Identifier* id: readWriteVarsList) {
+          TableEntry* te = id->getSymbolInfo();  
+          if (!presentInSet(in, te) && presentInSet(out, te))
+            writeVars.insert(te);
+          else if (presentInSet(in, te))
+            continue;
+          else if (in.find(te) != in.end() && out.find(te) != out.end())
+            readWriteVars.insert(te);
+          else if (in.find(te) != in.end())
+            readVars.insert(te);
+        }
+
+        generateDataDirectiveForVars(readVars, READ);
+        generateDataDirectiveForVars(writeVars, WRITE);
+        generateDataDirectiveForVars(readWriteVars, READ_WRITE);
+
+        main.pushstr_newL("");
+        break;
+      }
+    
+      case NODE_FORALLSTMT: 
+      {
+        forallStmt* forAll = (forallStmt*) stmt;
+
+        MetaDataUsed metaUsed = forAll->getMetaDataUsed();
+        generateDataDirectiveForMetaVars(metaUsed);
+
+        set<TableEntry*> in = forAll->getBlockData()->getStartBlock()->getOut();
+        set<TableEntry*> out = forAll->getBlockData()->getEndBlock()->getIn();
+
+        usedVariables usedVars = getVarsStatement(forAll->getBody());
+        usedVars.removeVariable(forAll->getIterator(), READ_WRITE);
+        
+        list<Identifier*> readVarsList = usedVars.getVariables(READ_ONLY);
+        list<Identifier*> writeVarsList = usedVars.getVariables(WRITE_ONLY);
+        list<Identifier*> readWriteVarsList = usedVars.getVariables(READ_AND_WRITE);
+
+        set<TableEntry*> readVars;
+        set<TableEntry*> writeVars;
+        set<TableEntry*> readWriteVars;
+
+        for (Identifier* id: readVarsList) {
+          TableEntry* te = id->getSymbolInfo();
+          if (presentInSet(in, te))
+            continue;
+          if (in.find(te) != in.end())
+            readVars.insert(te);
+        }
+
+        for (Identifier* id: writeVarsList) {
+          TableEntry* te = id->getSymbolInfo();
+          if (out.find(te) != out.end())
+            writeVars.insert(te);
+        }
+
+        for (Identifier* id: readWriteVarsList) {
+          TableEntry* te = id->getSymbolInfo();  
+          if (!presentInSet(in, te) && presentInSet(out, te))
+            writeVars.insert(te);
+          else if (presentInSet(in, te))
+            continue;
+          else if (in.find(te) != in.end() && out.find(te) != out.end())
+            readWriteVars.insert(te);
+          else if (in.find(te) != in.end())
+            readVars.insert(te);
+        }
+
+        generateDataDirectiveForVars(readVars, READ);
+        generateDataDirectiveForVars(writeVars, WRITE);
+        generateDataDirectiveForVars(readWriteVars, READ_WRITE);
+
+        main.pushstr_newL("");
+        break;
+      }
+
+      case NODE_ASSIGN:
+      {
+        assignment* assign = (assignment*) stmt;
+
+        // get rhs id
+        Identifier* rhsId = assign->getExpr()->getId();
+        if (!presentInSet(currAccVars, rhsId->getSymbolInfo())) {
+          if (rhsId->getSymbolInfo()->getType()->isPropNodeType())
+            sprintf(strBuffer, "copyin(%s[0:%s.num_nodes()+1])", rhsId->getIdentifier(), graph_name);
+          else if (rhsId->getSymbolInfo()->getType()->isPropEdgeType())
+            sprintf(strBuffer, "copyin(%s[0:%s.num_edges()+1])", rhsId->getIdentifier(), graph_name);
+          main.pushstr_space(strBuffer);
+        }
+
+        // get lhs id
+        Identifier* lhsId = assign->getId();
+        set<TableEntry*> out = assign->getBlockData()->getBlock()->getOut();
+        if (out.find(lhsId->getSymbolInfo()) != out.end()) {
+          if (lhsId->getSymbolInfo()->getType()->isPropNodeType())
+            sprintf(strBuffer, "copyout(%s[0:%s.num_nodes()+1])", lhsId->getIdentifier(), graph_name);
+          else if (lhsId->getSymbolInfo()->getType()->isPropEdgeType())
+            sprintf(strBuffer, "copyout(%s[0:%s.num_edges()+1])", lhsId->getIdentifier(), graph_name);
+          main.pushstr_space(strBuffer);
+        }
+
+        main.pushstr_newL("");
+        break;
+      }
+
+      case NODE_DECL:
+      {
+        declaration* declStmt = (declaration*) stmt;
+        
+        Identifier* propId = declStmt->getExpressionAssigned()->getId();
+        if (!presentInSet(currAccVars, propId->getSymbolInfo())) {
+          Type* type = propId->getSymbolInfo()->getType();
+          if (type->isPropNodeType())   // for each node, copy the property value
+            sprintf(strBuffer, "copyin(%s[0:%s.num_nodes()])", propId->getIdentifier(), graph_name);
+          else if (type->isPropEdgeType())  // for each edge, copy the property value
+            sprintf(strBuffer, "copyin(%s[0:%s.num_edges()])", propId->getIdentifier(), graph_name);
+          main.pushstr_space(strBuffer);
+        }
+        
+        set<TableEntry*> out = declStmt->getBlockData()->getBlock()->getOut();
+        TableEntry* te_decl = declStmt->getdeclId()->getSymbolInfo();
+        if (out.find(te_decl) != out.end()) {
+          Type* type = te_decl->getType();
+          if (type->isPropNodeType())   // for each node, copy the property value
+            sprintf(strBuffer, "copyout(%s[0:%s.num_nodes()])", declStmt->getdeclId()->getIdentifier(), graph_name);
+          else if (type->isPropEdgeType())  // for each edge, copy the property value
+            sprintf(strBuffer, "copyout(%s[0:%s.num_edges()])", declStmt->getdeclId()->getIdentifier(), graph_name);
+          main.pushstr_space(strBuffer);
+        }
+
+        main.pushstr_newL("");
+      }
+
+      case NODE_FIXEDPTSTMT:
+      {
+        fixedPointStmt* fixedPtStmt = (fixedPointStmt*) stmt;
+
+        // get metadata used
+        MetaDataUsed metadataUsed = getMetaDataUsedStatement(fixedPtStmt->getBody());
+        generateDataDirectiveForMetaVars(metadataUsed);
+
+        // get in and out variables
+        set<TableEntry*> in = fixedPtStmt->getBlockData()->getStartBlock()->getOut();
+        set<TableEntry*> out = fixedPtStmt->getBlockData()->getEndBlock()->getIn();
+
+        // get used variables
+        usedVariables usedVars = getVarsStatement(fixedPtStmt->getBody());
+
+        // get read-only, write-only and read-write variables
+        list<Identifier*> readVarsList = usedVars.getVariables(READ_ONLY);
+        list<Identifier*> writeVarsList = usedVars.getVariables(WRITE_ONLY);
+        list<Identifier*> readWriteVarsList = usedVars.getVariables(READ_AND_WRITE);
+
+        set<TableEntry*> readVars;
+        set<TableEntry*> writeVars;
+        set<TableEntry*> readWriteVars;
+
+        for (Identifier* id: readVarsList) {
+          TableEntry* te = id->getSymbolInfo();
+          if (presentInSet(in, te))
+            continue;
+          if (in.find(te) != in.end())
+            readVars.insert(te);
+        }
+
+        for (Identifier* id: writeVarsList) {
+          TableEntry* te = id->getSymbolInfo();
+          if (out.find(te) != out.end())
+            writeVars.insert(te);
+        }
+
+        for (Identifier* id: readWriteVarsList) {
+          TableEntry* te = id->getSymbolInfo();  
+          if (!presentInSet(in, te) && presentInSet(out, te))
+            writeVars.insert(te);
+          else if (presentInSet(in, te))
+            continue;
+          else if (in.find(te) != in.end() && out.find(te) != out.end())
+            readWriteVars.insert(te);
+          else if (in.find(te) != in.end())
+            readVars.insert(te);
+        }
+
+        generateDataDirectiveForVars(readVars, READ);
+        generateDataDirectiveForVars(writeVars, WRITE);
+        generateDataDirectiveForVars(readWriteVars, READ_WRITE);
+
+        main.pushstr_newL("");
+      }
+    }
+  }
+
+  // This function is used to generate the data directive to copy inthe meta variables.
+  void dsl_cpp_generator::generateDataDirectiveForMetaVars(MetaDataUsed metaUsed)
+  {
+    char strBuffer[1024];
+    vector<Identifier*> graph_arr = graphId[curFuncType][curFuncCount()];
+    char* graph_name = graph_arr[0]->getIdentifier();  //Graph variable name identifier
+    
+    if (metaUsed == false) return;
+    if (currMetaAccVars == (currMetaAccVars | metaUsed)) return;
+
+    sprintf(strBuffer, "copyin("); // Start of inner openAcc data body
+    main.pushString(strBuffer);
+    bool first = true;
+    if (metaUsed.isMetaUsed && !currMetaAccVars.isMetaUsed) {
+      if (!first) main.pushString(", "); first = false;
+      sprintf(strBuffer, "%s.indexofNodes[0:%s.num_nodes()+1]", graph_name, graph_name);
+      main.pushString(strBuffer);
+    }
+    if (metaUsed.isRevMetaUsed && !currMetaAccVars.isRevMetaUsed) {
+      if (!first) main.pushString(", "); first = false;
+      sprintf(strBuffer, "%s.rev_indexofNodes[0:%s.num_nodes()+1]", graph_name, graph_name);
+      main.pushString(strBuffer);
+    }
+    if (metaUsed.isDataUsed && !currMetaAccVars.isDataUsed) {
+      if (!first) main.pushString(", "); first = false;
+      sprintf(strBuffer, "%s.edgeList[0:%s.num_edges()+1]", graph_name, graph_name);
+      main.pushString(strBuffer);
+    }
+    if (metaUsed.isSrcUsed && !currMetaAccVars.isSrcUsed) {
+      if (!first) main.pushString(", "); first = false;
+      sprintf(strBuffer, "%s.srcList[0:%s.num_edges()+1]", graph_name, graph_name);
+      main.pushString(strBuffer);
+    }
+    if (metaUsed.isWeightUsed && !currMetaAccVars.isWeightUsed) {
+      if (!first) main.pushString(", "); first = false;
+      sprintf(strBuffer, "%s.getEdgeLen[0:%s.num_edges()+1]", graph_name, graph_name);
+      main.pushString(strBuffer);
+    }
+    currMetaAccVars |= metaUsed;
+    main.pushString(")"); // End of copyin
+  }
+
+  void dsl_cpp_generator::generateDataDirectiveForVars(set<TableEntry*> vars, int accessType)
+  {
+    if (vars.empty()) return;
+
+    char strBuffer[1024];
+    vector<Identifier*> graph_arr = graphId[curFuncType][curFuncCount()];
+    char* graph_name = graph_arr[0]->getIdentifier();  //Graph variable name identifier
+
+    bool first = true;
+
+    if (accessType == READ) {
+      main.pushString(" copyin(");
+    } else if (accessType == WRITE) {
+      main.pushString(" copyout(");
+    } else if (accessType == READ_WRITE) {
+      main.pushString(" copy(");
+    }
+
+    for (TableEntry* te: vars) {
+      if (te == NULL) continue;
+      
+      if (accessType & READ)
+      {
+        if (presentInSet(currAccVars, te)) continue;
+        currAccVars.insert(te);
+      }
+      else if (accessType & WRITE)
+      {
+        currAccVars.erase(te);
+      }
+
+      Type* type = te->getType();
+      Identifier* id = te->getId();
+      if (!first) main.pushString(", "); first = false;
+      
+      if (type->isPropNodeType()) {
+        sprintf(strBuffer, "%s[0:%s.num_nodes()+1]", id->getIdentifier(), graph_name);
+        main.pushString(strBuffer);
+      }
+      else if (type->isPropEdgeType()) {
+        sprintf(strBuffer, "%s[0:%s.num_edges()+1]", id->getIdentifier(), graph_name);
+        main.pushString(strBuffer);
+      }
+      else {
+        sprintf(strBuffer, "%s", id->getIdentifier());
+        main.pushString(strBuffer);
+      }
+    }
+    main.pushString(")"); // end of copy clause
+  }
 }
