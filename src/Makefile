@@ -2,11 +2,11 @@ EXPENDABLES_WINDOWS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o
 EXPENDABLES = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c  bin/deviceVarsAnalyser.o
 ANALYSER = bin/dataRaceAnalyser.o
 PROGRAMS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/cu_dsl_cpp_generator.o  bin/ac_dsl_cpp_generator.o bin/om_dsl_cpp_generator.o bin/mpi_dsl_cpp_generator.o bin/om_dyn_dsl_cpp_generator.o bin/mpi_dsl_cpp_generator_helper.o bin/mpi_dsl_cpp_expression_generator.o bin/mpi_dsl_cpp_statement_generator.o bin/mpi_dsl_dyn_cpp_generator.o
-#bin/ac_dsl_cpp_generator.o
+#bin/ac_dsl_cpp_generator.o 
 #bin/om_dsl_cpp_generator.o
-A_PROGRAM = bin/attachPropAnalyser.o bin/dataRaceAnalyser.o bin/deviceVarsAnalyser.o bin/analyserUtil.o bin/ForLoopPropInitAnalyser.o bin/ForLoopFusionAnalyser.o
+A_PROGRAM = bin/attachPropAnalyser.o bin/dataRaceAnalyser.o bin/deviceVarsAnalyser.o bin/analyserUtil.o
 
-CFLAGS  = -g
+CFLAGS  = -g 
 CC = g++ -std=c++11 #-Wall # -Wno-unused-variable #-fsanitize=address
 
 all: starplat
@@ -30,7 +30,7 @@ bin/cu_dsl_cpp_generator.o: backends/backend_cuda/dsl_cpp_generator.cpp backends
 #openACC
 bin/ac_dsl_cpp_generator.o: backends/backend_openACC/dsl_cpp_generator.cpp backends/dslCodePad.h
 	$(CC) $(CFLAGS) -c backends/backend_openACC/dsl_cpp_generator.cpp -o bin/ac_dsl_cpp_generator.o
-
+	
 #omp
 bin/om_dsl_cpp_generator.o: backends/backend_omp/dsl_cpp_generator.cpp backends/dslCodePad.h
 	$(CC) $(CFLAGS) -c backends/backend_omp/dsl_cpp_generator.cpp -o bin/om_dsl_cpp_generator.o
@@ -55,7 +55,7 @@ bin/mpi_dsl_cpp_statement_generator.o: backends/backend_mpi/dsl_cpp_generator.h 
 bin/mpi_dsl_dyn_cpp_generator.o : backends/backend_mpi/dsl_cpp_generator.h backends/backend_mpi/dsl_cpp_statement_generator.cpp backends/backend_mpi/dsl_dyn_cpp_generator.h backends/backend_mpi/dsl_dyn_cpp_generator.cpp backends/dslCodePad.h
 	$(CC) $(CFLAGS) -c backends/backend_mpi/dsl_dyn_cpp_generator.cpp -o bin/mpi_dsl_dyn_cpp_generator.o
 
-starplat: bin $(PROGRAMS) $(A_PROGRAM)
+starplat: bin $(PROGRAMS) $(A_PROGRAM) 
 	$(CC)  $(PROGRAMS) $(A_PROGRAM) -o StarPlat
 
 
@@ -65,7 +65,7 @@ starplat: bin $(PROGRAMS) $(A_PROGRAM)
 bin/MainContext.o: maincontext/MainContext.cpp maincontext/MainContext.hpp
 	$(CC) $(CFLAGS) -c maincontext/MainContext.cpp -o bin/MainContext.o
 
-bin/ASTHelper.o: ast/ASTHelper.cpp ast/ASTNode.hpp
+bin/ASTHelper.o: ast/ASTHelper.cpp ast/ASTNode.hpp 
 	$(CC) $(CFLAGS) -c ast/ASTHelper.cpp -o bin/ASTHelper.o
 
 bin/SymbolTableBuilder.o: symbolutil/SymbolTableBuilder.cpp symbolutil/SymbolTableBuilder.h
@@ -75,7 +75,7 @@ bin/SymbolTableBuilder.o: symbolutil/SymbolTableBuilder.cpp symbolutil/SymbolTab
 #~ 	$(CC) -c backends/backend_omp/dsl_cpp_generator.cpp -o bin/dsl_cpp_generator.o
 
 
-bin/SymbolTableNew.o: symbolutil/SymbolTableNew.cpp  symbolutil/SymbolTable.h
+bin/SymbolTableNew.o: symbolutil/SymbolTableNew.cpp  symbolutil/SymbolTable.h 
 	$(CC) $(CFLAGS) -c symbolutil/SymbolTableNew.cpp -o bin/SymbolTableNew.o
 
 
@@ -83,16 +83,10 @@ bin/attachPropAnalyser.o: analyser/attachProp/attachPropAnalyser.cpp analyser/at
 	$(CC) $(CFLAGS) -c analyser/attachProp/attachPropAnalyser.cpp -o bin/attachPropAnalyser.o
 
 bin/dataRaceAnalyser.o: analyser/dataRace/dataRaceAnalyser.cpp analyser/dataRace/dataRaceAnalyser.h
-	$(CC) $(CFLAGS) -c analyser/dataRace/dataRaceAnalyser.cpp -o bin/dataRaceAnalyser.o
-
-bin/ForLoopPropInitAnalyser.o: analyser/ForLoopPropInit/ForLoopPropInitAnalyser.cpp analyser/ForLoopPropInit/ForLoopPropInitAnalyser.h
-	$(CC) $(CFLAGS) -c analyser/ForLoopPropInit/ForLoopPropInitAnalyser.cpp -o bin/ForLoopPropInitAnalyser.o
-
-bin/ForLoopFusionAnalyser.o : analyser/ForLoopFusion/ForLoopFusionAnalyser.cpp analyser/ForLoopFusion/ForLoopFusionAnalyser.h
-	$(CC) $(CFLAGS) -c analyser/ForLoopFusion/ForLoopFusionAnalyser.cpp -o bin/ForLoopFusionAnalyser.o
+	$(CC) $(CFLAGS) -c analyser/dataRace/dataRaceAnalyser.cpp -o bin/dataRaceAnalyser.o                       
 
 bin/deviceVarsAnalyser.o: bin/dv1.o bin/dv2.o bin/dv3.o bin/dv4.o bin/dv5.o
-	ld -r bin/dv1.o bin/dv2.o bin/dv3.o bin/dv4.o bin/dv5.o -o bin/deviceVarsAnalyser.o
+	ld -r bin/dv1.o bin/dv2.o bin/dv3.o bin/dv4.o bin/dv5.o -o bin/deviceVarsAnalyser.o 
 
 bin/dv1.o: analyser/deviceVars/deviceVarsAnalyser.cpp analyser/deviceVars/deviceVarsAnalyser.h analyser/analyserUtil.cpp
 	$(CC) $(CFLAGS) -c analyser/deviceVars/deviceVarsAnalyser.cpp -o bin/dv1.o

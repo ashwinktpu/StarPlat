@@ -17,20 +17,16 @@ list<statement*> transferStatements(lattice &inp, lattice &out)
         {
             if((outType == lattice::GPU_ONLY) || (outType == lattice::CPU_GPU_SHARED))
             {
-                if(vars.first){
-                    varTransferStmt* transferStmt = new varTransferStmt(vars.first->getId(), 0);
-                    transferStatements.push_back(transferStmt);
-                }
+                varTransferStmt* transferStmt = new varTransferStmt(vars.first->getId(), 0);
+                transferStatements.push_back(transferStmt);
             }
         }
         else if(inpType == lattice::GPU_ONLY)
         {
             if((outType == lattice::CPU_ONLY) || (outType == lattice::CPU_GPU_SHARED))
             {
-                if(vars.first){
-                    varTransferStmt* transferStmt = new varTransferStmt(vars.first->getId(), 1);
-                    transferStatements.push_back(transferStmt);
-                }
+                varTransferStmt* transferStmt = new varTransferStmt(vars.first->getId(), 1);
+                transferStatements.push_back(transferStmt);
             }
         }
     }
@@ -40,7 +36,7 @@ list<statement*> transferStatements(lattice &inp, lattice &out)
 statement* deviceVarsAnalyser::transferVarsStatement(statement* stmt, blockStatement* parBlock)
 {
     printf("Transfering %p %d\n", stmt, stmt->getTypeofNode());
-
+    
     switch (stmt->getTypeofNode())
     {
     case NODE_DECL:
@@ -97,11 +93,11 @@ statement* deviceVarsAnalyser::transferVarsFor(forallStmt* stmt, blockStatement*
     blockStatement* newBody = (blockStatement*) transferVarsStatement(stmt->getBody(), parBlock);
     lattice bodyOut = getWrapNode(stmt->getBody())->outMap;
     bodyOut.removeVariable(stmt->getIterator());
-
+    
     transferStmts = transferStatements(bodyOut, wrapNode->outMap);
     for(statement* bstmt: transferStmts)
         newBody->addStmtToBlock(bstmt);
-
+    
     stmt->setBody(newBody);
     return stmt;
 }
@@ -111,7 +107,7 @@ statement* deviceVarsAnalyser::transferVarsUnary(unary_stmt* stmt, blockStatemen
     list<statement*> transferStmts = transferStatements(wrapNode->inMap, wrapNode->outMap);
     for(statement* stmt: transferStmts)
         parBlock->addStmtToBlock(stmt);
-
+    
     return stmt;
 }
 statement* deviceVarsAnalyser::transferVarsBlock(blockStatement* stmt, blockStatement* parBlock)
@@ -131,7 +127,7 @@ statement* deviceVarsAnalyser::transferVarsDeclaration(declaration* stmt, blockS
     list<statement*> transferStmts = transferStatements(wrapNode->inMap, wrapNode->outMap);
     for(statement* bstmt: transferStmts)
         parBlock->addStmtToBlock(bstmt);
-
+    
     gpuUsedVars.isUsedVar(stmt->getdeclId()) ? stmt->setInGPU(true) : stmt->setInGPU(false);
     return stmt;
 }
@@ -191,7 +187,7 @@ statement* deviceVarsAnalyser::transferVarsDoWhile(dowhileStmt* stmt, blockState
         ifStmt* varTransfer = (ifStmt*) Util::createNodeForIfStmt(Util::createNodeForId(ifCond), ifBody, NULL);
         newBody->addToFront(varTransfer);
     }
-
+    
     lattice bodyOut = getWrapNode(stmt->getBody())->outMap;
     for(statement *bstmt: transferStatements(bodyOut, condNode->outMap)){
         newBody->addStmtToBlock(bstmt);
@@ -210,7 +206,7 @@ statement* deviceVarsAnalyser::transferVarsAssignment(assignment* stmt, blockSta
     list<statement*> transferStmts = transferStatements(wrapNode->inMap, wrapNode->outMap);
     for(statement* bstmt: transferStmts)
         parBlock->addStmtToBlock(bstmt);
-
+    
     return stmt;
 }
 statement* deviceVarsAnalyser::transferVarsIfElse(ifStmt* stmt, blockStatement* parBlock)
@@ -249,7 +245,7 @@ statement* deviceVarsAnalyser::transferVarsIfElse(ifStmt* stmt, blockStatement* 
         for(statement* bstmt: transferStatements(ifOut, wrapNode->outMap)){
             ifBody->addStmtToBlock(bstmt);
         }
-
+        
         blockStatement* elseBody = (blockStatement*) blockStatement::createnewBlock();
         for(statement* bstmt: transferStatements(condWrap->outMap, wrapNode->outMap))
             elseBody->addStmtToBlock(bstmt);
@@ -284,7 +280,7 @@ statement* deviceVarsAnalyser::transferVarsProcCall(proc_callStmt *stmt, blockSt
     list<statement*> transferStmts = transferStatements(wrapNode->inMap, wrapNode->outMap);
     for(statement* bstmt: transferStmts)
         parBlock->addStmtToBlock(bstmt);
-
+    
     return stmt;
 }
 
@@ -294,7 +290,7 @@ statement* deviceVarsAnalyser::transferVarsReduction(reductionCallStmt* stmt, bl
     list<statement*> transferStmts = transferStatements(wrapNode->inMap, wrapNode->outMap);
     for(statement* bstmt: transferStmts)
         parBlock->addStmtToBlock(bstmt);
-
+    
     return stmt;
 }
 
@@ -302,7 +298,7 @@ statement* deviceVarsAnalyser::transferVarsItrBFS(iterateBFS* stmt, blockStateme
 {
     ASTNodeWrap* wrapNode = getWrapNode(stmt);
     for(statement* bstmt: transferStatements(wrapNode->inMap, wrapNode->outMap))
-        parBlock->addStmtToBlock(bstmt);
+        parBlock->addStmtToBlock(bstmt);    
 
     return stmt;
 }
