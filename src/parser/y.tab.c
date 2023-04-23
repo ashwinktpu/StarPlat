@@ -76,6 +76,7 @@
 	#include "../analyser/attachProp/attachPropAnalyser.h"
 	#include "../analyser/dataRace/dataRaceAnalyser.h"
 	#include "../analyser/deviceVars/deviceVarsAnalyser.h"
+	#include "../analyser/blockVars/blockVarsAnalyser.h"
 	#include<getopt.h>
 	//#include "../symbolutil/SymbolTableBuilder.cpp"
      
@@ -94,6 +95,7 @@
     vector<Identifier*> tempIds; //stores graph vars in current function's param list.
     //symbTab=new SymbolTable();
 	//symbolTableList.push_back(new SymbolTable());
+
 
 #line 99 "y.tab.c"
 
@@ -295,7 +297,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 33 "lrparser.y"
+#line 34 "lrparser.y"
 
     int  info;
     long ival;
@@ -311,6 +313,7 @@ union YYSTYPE
      
 
 #line 314 "y.tab.c"
+
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -692,21 +695,21 @@ static const yytype_int8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,    98,    98,    99,   101,   108,   114,   120,   126,   132,
-     138,   139,   142,   153,   157,   166,   169,   170,   172,   173,
-     174,   175,   176,   177,   178,   179,   180,   181,   182,   183,
-     186,   188,   190,   192,   194,   196,   198,   201,   209,   212,
-     215,   219,   220,   221,   224,   225,   226,   227,   228,   230,
-     231,   233,   234,   236,   238,   241,   242,   243,   245,   246,
-     247,   248,   250,   252,   254,   255,   256,   257,   258,   259,
-     260,   261,   262,   263,   264,   265,   266,   267,   268,   271,
-     272,   273,   275,   276,   278,   283,   287,   296,   297,   298,
-     299,   300,   301,   304,   305,   307,   308,   309,   310,   312,
-     313,   314,   316,   317,   319,   321,   322,   325,   326,   328,
-     331,   332,   333,   334,   335,   337,   339,   341,   342,   344,
-     345,   354,   356,   357,   358,   359,   360,   362,   363,   364,
-     366,   370,   387,   394,   399,   407,   408,   413,   414,   417,
-     422,   426
+       0,    99,    99,   100,   102,   109,   115,   121,   127,   133,
+     139,   140,   143,   154,   158,   167,   170,   171,   173,   174,
+     175,   176,   177,   178,   179,   180,   181,   182,   183,   184,
+     187,   189,   191,   193,   195,   197,   199,   202,   210,   213,
+     216,   220,   221,   222,   225,   226,   227,   228,   229,   231,
+     232,   234,   235,   237,   239,   242,   243,   244,   246,   247,
+     248,   249,   251,   253,   255,   256,   257,   258,   259,   260,
+     261,   262,   263,   264,   265,   266,   267,   268,   269,   272,
+     273,   274,   276,   277,   279,   284,   288,   297,   298,   299,
+     300,   301,   302,   305,   306,   308,   309,   310,   311,   313,
+     314,   315,   317,   318,   320,   322,   323,   326,   327,   329,
+     332,   333,   334,   335,   336,   338,   340,   342,   343,   345,
+     346,   355,   357,   358,   359,   360,   361,   363,   364,   365,
+     367,   371,   388,   395,   400,   408,   409,   414,   415,   418,
+     423,   427
 };
 #endif
 
@@ -1774,6 +1777,7 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
+
   case 3:
 #line 99 "lrparser.y"
                                {/* printf("LIST SIZE %d",frontEndContext.getFuncList().size())  ;*/ }
@@ -1782,66 +1786,78 @@ yyreduce:
 
   case 4:
 #line 101 "lrparser.y"
+
                                             { 
 	                                          Function* func=(Function*)(yyvsp[-1].node);
                                               blockStatement* block=(blockStatement*)(yyvsp[0].node);
                                               func->setBlockStatement(block);
 											   Util::addFuncToList(func);
 											}
+
 #line 1792 "y.tab.c"
     break;
 
   case 5:
 #line 108 "lrparser.y"
+
                                            { 
 										   (yyval.node)=Util::createFuncNode((yyvsp[-3].node),(yyvsp[-1].pList)->PList);
                                            Util::setCurrentFuncType(GEN_FUNC);
 										   Util::resetTemp(tempIds);
 										   tempIds.clear();
 	                                      }
+
 #line 1803 "y.tab.c"
     break;
 
   case 6:
 #line 114 "lrparser.y"
+
                                                            { 
 										   (yyval.node)=Util::createStaticFuncNode((yyvsp[-3].node),(yyvsp[-1].pList)->PList);
                                             Util::setCurrentFuncType(STATIC_FUNC);
 											Util::resetTemp(tempIds);
 											tempIds.clear();
 	                                      }
+
 #line 1814 "y.tab.c"
     break;
 
   case 7:
 #line 120 "lrparser.y"
+
                                                      { 
 										   (yyval.node)=Util::createIncrementalNode((yyvsp[-1].pList)->PList);
                                             Util::setCurrentFuncType(INCREMENTAL_FUNC);
 											Util::resetTemp(tempIds);
 											tempIds.clear();
 	                                      }
+
 #line 1825 "y.tab.c"
     break;
 
   case 8:
 #line 126 "lrparser.y"
+
                                                              { 
 										   (yyval.node)=Util::createDecrementalNode((yyvsp[-1].pList)->PList);
                                             Util::setCurrentFuncType(DECREMENTAL_FUNC);
 											Util::resetTemp(tempIds);
 											tempIds.clear();
 	                                      }
+
 #line 1836 "y.tab.c"
     break;
 
   case 9:
 #line 132 "lrparser.y"
+
                                                         { (yyval.node)=Util::createDynamicFuncNode((yyvsp[-3].node),(yyvsp[-1].pList)->PList);
                                             Util::setCurrentFuncType(DYNAMIC_FUNC);
 											Util::resetTemp(tempIds);
 											tempIds.clear();
 											}
+
 #line 1846 "y.tab.c"
     break;
 
@@ -1860,6 +1876,7 @@ yyreduce:
 
   case 12:
 #line 142 "lrparser.y"
+
                  {  //Identifier* id=(Identifier*)Util::createIdentifierNode($2);
                         Type* type=(Type*)(yyvsp[-1].node);
 	                     Identifier* id=(Identifier*)(yyvsp[0].node);
@@ -1871,20 +1888,24 @@ yyreduce:
 							}
 					printf("\n");
                     (yyval.node)=Util::createParamNode((yyvsp[-1].node),(yyvsp[0].node)); }
+
 #line 1875 "y.tab.c"
     break;
 
   case 13:
 #line 153 "lrparser.y"
+
                           { // Identifier* id=(Identifier*)Util::createIdentifierNode($2);
 			  
 					
                              (yyval.node)=Util::createParamNode((yyvsp[-1].node),(yyvsp[0].node));}
+
 #line 1884 "y.tab.c"
     break;
 
   case 14:
 #line 157 "lrparser.y"
+
                                                  { // Identifier* id1=(Identifier*)Util::createIdentifierNode($4);
 			                            //Identifier* id=(Identifier*)Util::createIdentifierNode($2);
 				                        Type* tempType=(Type*)(yyvsp[-4].node);
@@ -1892,6 +1913,7 @@ yyreduce:
 										  tempType->addSourceGraph((yyvsp[-1].node));
 				                         (yyval.node)=Util::createParamNode(tempType,(yyvsp[-3].node));
 									 }
+
 #line 1896 "y.tab.c"
     break;
 
@@ -2023,6 +2045,7 @@ yyreduce:
 
   case 37:
 #line 201 "lrparser.y"
+
                          {
 	                     Type* type=(Type*)(yyvsp[-1].node);
 	                     Identifier* id=(Identifier*)(yyvsp[0].node);
@@ -2031,6 +2054,7 @@ yyreduce:
 						    Util::storeGraphId(id);
 
                          (yyval.node)=Util::createNormalDeclNode((yyvsp[-1].node),(yyvsp[0].node));}
+
 #line 2035 "y.tab.c"
     break;
 
@@ -2322,29 +2346,35 @@ yyreduce:
 
   case 84:
 #line 278 "lrparser.y"
+
                                       { 
                                        
                                        (yyval.node) = Util::createNodeForProcCall((yyvsp[-3].node),(yyvsp[-1].aList)->AList); 
 
 									    }
+
 #line 2331 "y.tab.c"
     break;
 
   case 85:
 #line 283 "lrparser.y"
+
                                                          { ASTNode* id = Util::createIdentifierNode("Incremental");
 			                                   (yyval.node) = Util::createNodeForProcCall(id, (yyvsp[-1].aList)->AList); 
 
 				                               }
+
 #line 2340 "y.tab.c"
     break;
 
   case 86:
 #line 287 "lrparser.y"
+
                                                          { ASTNode* id = Util::createIdentifierNode("Decremental");
 			                                   (yyval.node) = Util::createNodeForProcCall(id, (yyvsp[-1].aList)->AList); 
 
 				                               }
+
 #line 2349 "y.tab.c"
     break;
 
@@ -2621,6 +2651,7 @@ yyreduce:
 
   case 131:
 #line 370 "lrparser.y"
+
                                          {argument* a1=new argument();
 		                          assignment* assign=(assignment*)(yyvsp[-2].node);
 		                     a1->setAssign(assign);
@@ -2636,11 +2667,13 @@ yyreduce:
 						  */ 
 						  
                           }
+
 #line 2640 "y.tab.c"
     break;
 
   case 132:
 #line 387 "lrparser.y"
+
                                              {argument* a1=new argument();
 		                                Expression* expr=(Expression*)(yyvsp[-2].node);
 										a1->setExpression(expr);
@@ -2648,27 +2681,32 @@ yyreduce:
 						               // a1->expressionflag=true;
 										 (yyval.aList)=Util::addToAList((yyvsp[0].aList),a1);
 						                }
+
 #line 2652 "y.tab.c"
     break;
 
   case 133:
 #line 394 "lrparser.y"
+
                             {argument* a1=new argument();
 		                 Expression* expr=(Expression*)(yyvsp[0].node);
 						 a1->setExpression(expr);
 						a1->setExpressionFlag();
 						  (yyval.aList)=Util::createAList(a1); }
+
 #line 2662 "y.tab.c"
     break;
 
   case 134:
 #line 399 "lrparser.y"
+
                             { argument* a1=new argument();
 		                   assignment* assign=(assignment*)(yyvsp[0].node);
 		                     a1->setAssign(assign);
 							 a1->setAssignFlag();
 						   (yyval.aList)=Util::createAList(a1);
 						   }
+
 #line 2673 "y.tab.c"
     break;
 
@@ -2699,34 +2737,41 @@ yyreduce:
 
   case 139:
 #line 417 "lrparser.y"
+
                 { //Identifier* id1=(Identifier*)Util::createIdentifierNode($1);
                   // Identifier* id2=(Identifier*)Util::createIdentifierNode($1);
 				   (yyval.node)=Util::createPropIdNode((yyvsp[-2].node),(yyvsp[0].node));
 				    }
+
 #line 2707 "y.tab.c"
     break;
 
   case 140:
 #line 422 "lrparser.y"
+
                        {// Identifier* id1=(Identifier*)Util::createIdentifierNode($1);
                   // Identifier* id2=(Identifier*)Util::createIdentifierNode($1);
 				   (yyval.node)=Util::createPropIdNode((yyvsp[-4].node),(yyvsp[-2].node));
 				    }
+
 #line 2716 "y.tab.c"
     break;
 
   case 141:
 #line 426 "lrparser.y"
+
           { 
 	         (yyval.node)=Util::createIdentifierNode((yyvsp[0].text));  
 
             
             }
+
 #line 2726 "y.tab.c"
     break;
 
 
 #line 2730 "y.tab.c"
+
 
       default: break;
     }
@@ -2958,7 +3003,9 @@ yyreturn:
 #endif
   return yyresult;
 }
+
 #line 434 "lrparser.y"
+
 
 
 
@@ -3099,8 +3146,8 @@ int main(int argc,char **argv)
 	  drAnalyser.analyse(frontEndContext.getFuncList());
 
 	  deviceVarsAnalyser dvAnalyser;
-	  //cpp_backend.setOptimized();
 	  dvAnalyser.analyse(frontEndContext.getFuncList());
+	  cpp_backend.setOptimized();
 	}
 		  
         cpp_backend.generate();
@@ -3120,6 +3167,11 @@ int main(int argc,char **argv)
       else if (strcmp(backendTarget, "acc") == 0) {
         spacc::dsl_cpp_generator cpp_backend;
         cpp_backend.setFileName(fileName);
+		if(optimize) {
+			cpp_backend.setOptimized();
+			blockVarsAnalyser bvAnalyser;
+			bvAnalyser.analyse(frontEndContext.getFuncList());
+		}
         cpp_backend.generate();
       }
       else

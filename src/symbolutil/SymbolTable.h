@@ -15,10 +15,13 @@ class TableEntry
   private:
   Identifier* id;
   Type* type;
+
   bool isArgument;
   bool isGlobalVar;
+  bool inParallelSection = false;
 
-  TableEntry():id(nullptr), type(nullptr),isArgument(false), isGlobalVar(false){
+  TableEntry():id(nullptr), type(nullptr),isArgument(false), isGlobalVar(false), inParallelSection(false){
+
 
   }
  
@@ -44,6 +47,18 @@ public:
      return isArgument;
  }
 
+
+ void setInParallelSection(bool inParallel)
+ {
+     inParallelSection = inParallel;
+ }
+
+ bool isInParallelSection()
+ {
+     return inParallelSection;
+ }
+
+
  void setGlobalVariable()
  {
     isGlobalVar = true;
@@ -53,6 +68,7 @@ public:
  {
     return isGlobalVar;
  }
+
 };
 
 class SymbolTable

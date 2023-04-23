@@ -264,7 +264,7 @@ void dsl_cpp_generator::generatePropParams(list<formalParam*> paramList, bool is
 void dsl_cpp_generator::addCudaRevBFSIterKernel(list<statement*>& statementList) {
   //~ var v
   //~ var w
-  //~   __global__ void back_pass(int n, int* d_meta,int* d_data,int* d_weight, double* d_delta, double* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished, double* d_bc) {
+  //~   __global__ void back_pass(int n, int* d_meta,int* d_data,int* d_weight, double* d_delta, float* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished, double* d_bc) {
   //~ unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
   //~ if(v >= n) return;
 
@@ -285,7 +285,7 @@ void dsl_cpp_generator::addCudaRevBFSIterKernel(list<statement*>& statementList)
   //~ assert(body->getTypeofNode() == NODE_BLOCKSTMT);
   //~ blockStatement* block = (blockStatement*)body;
   //~ list<statement*> statementList = block->returnStatements();
-  sprintf(strBuffer, "__global__ void back_pass(int n, int* d_meta,int* d_data,int* d_weight, float* d_delta, double* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished");
+  sprintf(strBuffer, "__global__ void back_pass(int n, int* d_meta,int* d_data,int* d_weight, float* d_delta, float* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished");
   header.pushString(strBuffer);
 
   generatePropParams(getCurrentFunc()->getParamList(), true, false);  // true: typeneed false:inMainfile
@@ -314,7 +314,7 @@ void dsl_cpp_generator::addCudaRevBFSIterKernel(list<statement*>& statementList)
 void dsl_cpp_generator::addCudaBFSIterKernel(iterateBFS* bfsAbstraction) {
   //~ var v
   //~ var w
-  //~ __global__ void fwd_pass(int n, int* d_meta,int* d_data,int* d_weight, double* d_delta, double* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished, double* d_bc) {
+  //~ __global__ void fwd_pass(int n, int* d_meta,int* d_data,int* d_weight, double* d_delta, float* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished, double* d_bc) {
   //~ unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
   //~ if(v >= n) return;
   //~ if(d_level[v] == *d_hops_from_source) {
@@ -339,7 +339,7 @@ void dsl_cpp_generator::addCudaBFSIterKernel(iterateBFS* bfsAbstraction) {
   blockStatement* block = (blockStatement*)body;
   list<statement*> statementList = block->returnStatements();
 
-  header.pushString("__global__ void fwd_pass(int n, int* d_meta,int* d_data,int* d_weight, float* d_delta, double* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished");
+  header.pushString("__global__ void fwd_pass(int n, int* d_meta,int* d_data,int* d_weight, float* d_delta, float* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished");
 
   generatePropParams(getCurrentFunc()->getParamList(), true, false);  // true: typeneed false:inMainfile
 
@@ -552,7 +552,6 @@ void dsl_cpp_generator::generateBFSAbstraction(iterateBFS* bfsAbstraction,
   main.pushstr_newL("}");
   main.pushstr_newL("//accumulate_bc<<<numBlocks,threadsPerBlock>>>(V,d_delta, d_BC, d_level, src);");
   //~ main.NewLine();
-
   //~ main.pushstr_newL("}while(!finished);");
   //~ main.pushstr_newL("}");
   //~ main.pushstr_newL("phase = phase - 1 ;");
@@ -813,7 +812,11 @@ void dsl_cpp_generator::generateReductionOpStmt(reductionCallStmt* stmt,
     //~ if(strcmp("long",typVar)==0)
     //~ sprintf(strBuffer, "atomicAdd(& %s, (long %s int)",id->getIdentifier(), typVar);
     //~ else
-    sprintf(strBuffer, "atomicAdd(& %s, (%s)", id->getIdentifier(), typVar);
+    if (strcmp("long", typVar) == 0) {
+      sprintf(strBuffer, "atomicAdd((unsigned long long*)& %s, (unsigned long long)", id->getIdentifier());
+    } else {
+      sprintf(strBuffer, "atomicAdd(& %s, (%s)", id->getIdentifier(), typVar);
+    }
     targetFile.pushString(strBuffer);
     generateExpr(stmt->getRightSide(), isMainFile);
     targetFile.pushstr_newL(");");
@@ -1359,7 +1362,7 @@ void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll, bool isMainF
         Identifier* nodeNbr = argList.front()->getExpr()->getId();
         sprintf(strBuffer, "for (%s %s = %s[%s]; %s < %s[%s+1]; %s++)", "int", "edge", "d_rev_meta", nodeNbr->getIdentifier(), "edge", "d_rev_meta", nodeNbr->getIdentifier(), "edge");
         targetFile.pushstr_newL(strBuffer);
-        targetFile.pushString("{");
+        targetFile.pushstr_newL("{");
         sprintf(strBuffer, "%s %s = %s[%s] ;", "int", iterator->getIdentifier(), "d_src", "edge");  //needs to move the addition of
         targetFile.pushstr_newL(strBuffer);
       }  //statement to  a different method.
@@ -1549,7 +1552,19 @@ void dsl_cpp_generator ::addCudaKernel(forallStmt* forAll) {
   header.pushString(getCurrentFunc()->getIdentifier()->getIdentifier());
   header.pushString("_kernel");
 
-  header.pushString("(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next");
+  header.pushString("(int V, int E");
+  if(forAll->getIsMetaUsed())
+    header.pushString(", int* d_meta");
+  if(forAll->getIsDataUsed())
+    header.pushString(", int* d_data");
+  if(forAll->getIsSrcUsed())
+    header.pushString(", int* d_src");
+  if(forAll->getIsWeightUsed())
+    header.pushString(", int* d_weight");
+  if(forAll->getIsRevMetaUsed())
+    header.pushString(", int *d_rev_meta");
+  // header.pushString(",bool *d_modified_next");
+
   /*if(currentFunc->getParamList().size()!=0)
     {
       header.pushString(" ,");
@@ -1561,6 +1576,10 @@ void dsl_cpp_generator ::addCudaKernel(forallStmt* forAll) {
       char strBuffer[1024];
       sprintf(strBuffer, ",%s d_%s", convertToCppType(type), iden->getIdentifier());
       header.pushString(/*createParamName(*/ strBuffer);
+      if(iden->getSymbolInfo()->getId()->get_fp_association()) { // If id has a fp association then _next must also be added as a parameter
+        sprintf(strBuffer, ",%s d_%s_next", convertToCppType(type), iden->getIdentifier());
+        header.pushString(/*createParamName(*/ strBuffer);
+      }
     }
   }
 
@@ -1667,7 +1686,18 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
     main.pushString("numBlocks, threadsPerBlock");
     main.pushString(">>>");
     main.push('(');
-    main.pushString("V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next");
+    main.pushString("V,E");
+    if(forAll->getIsMetaUsed())                                       // if d_meta is used
+      main.pushString(",d_meta");
+    if(forAll->getIsDataUsed())                                       // if d_data is used, i.e. neighbors or is_an_edge is called          
+      main.pushString(",d_data");
+    if(forAll->getIsSrcUsed())                                        // if d_src is used, i.e. nodes_to is called
+      main.pushString(",d_src");
+    if(forAll->getIsWeightUsed())                                    // if d_weight is used, can never be used as of now
+      main.pushString(",d_weight");
+    if(forAll->getIsRevMetaUsed())                                   // if d_rev_meta is used, i.e. nodes_to is called
+      main.pushString(",d_rev_meta");
+    // main.pushString(",d_modified_next");
     //  if(currentFunc->getParamList().size()!=0)
     // main.pushString(",");
     if (!isOptimized) {
@@ -1691,6 +1721,11 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
           main.pushString(",");
           main.pushString("d_");
           main.pushString(/*createParamName(*/ iden->getIdentifier());
+          if(iden->getSymbolInfo()->getId()->get_fp_association()) { // If id has a fp association then _next must also be added as a parameter
+            char strBuffer[1024];
+            sprintf(strBuffer, ",d_%s_next", iden->getIdentifier());
+            main.pushString(/*createParamName(*/ strBuffer);
+          }
         }
       }
     }
@@ -2007,6 +2042,21 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
 
       /*placeholder for adding code for declarations that are initialized as
        * well*/
+
+      //~ /* decl with variable name as var_nxt is required for double buffering
+      //~ ex :- In case of fixedpoint */
+      if(declStmt->getdeclId()->getSymbolInfo()->getId()->require_redecl())
+      {
+        char strBuffer[1024];
+        main.pushString(convertToCppType(innerType)); //convertToCppType need to be modified. 
+        main.pushString("*"); 
+        main.space();
+        main.pushString("d_");
+        sprintf(strBuffer,"%s_next",declStmt->getdeclId()->getIdentifier());
+        main.pushString(strBuffer);
+        main.pushstr_newL(";");
+        generateCudaMalloc(type, strBuffer);
+      }
     }
   }
 
@@ -2018,6 +2068,8 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
     const char* varName = declStmt->getdeclId()->getIdentifier();
     cout << "varT:" << varType << endl;
     cout << "varN:" << varName << endl;
+
+    bool declInHeader = !isMainFile;  // if variable is declared in header file, to stop generating unnecessary commas and newline
 
     //~ generateExtraDeviceVariable(varType,varName,"1");
     //~ generateHeaderDeviceVariable(varType,varName);
@@ -2035,10 +2087,12 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
         if (declStmt->getInGPU()) {
           sprintf(strBuffer, "__device__ %s %s ", varType, varName);
           header.pushString(strBuffer);
+          declInHeader = true;
         }
       } else {
         sprintf(strBuffer, "__device__ %s %s ", varType, varName);
         header.pushString(strBuffer);
+        declInHeader = true;
       }
     }
     /// REPLICATE ON HOST AND DEVICE
@@ -2077,8 +2131,10 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
       //getDefaultValueforTypes(type->gettypeId());
      // targetFile.pushstr_newL(";");
     }*/
-    header.pushstr_newL("; // DEVICE ASSTMENT in .h");
-    header.NewLine();
+    if(declInHeader) {
+      header.pushstr_newL("; // DEVICE ASSTMENT in .h");
+      header.NewLine();
+    }
 
     main.pushstr_newL("; // asst in .cu");
     main.NewLine();
@@ -3074,7 +3130,7 @@ void dsl_cpp_generator::generateCudaMemcpy(const char* dVar, const char* cVar,
   //~ main.NewLine();
 }
 
-void dsl_cpp_generator::generateCSRArrays(const char* gId) {
+void dsl_cpp_generator::generateCSRArrays(const char* gId, Function* func) {
   char strBuffer[1024];
 
   sprintf(strBuffer, "int V = %s.num_nodes();",
@@ -3085,7 +3141,7 @@ void dsl_cpp_generator::generateCSRArrays(const char* gId) {
   main.NewLine();
 
   main.pushstr_newL("printf(\"#nodes:%d\\n\",V);");
-  main.pushstr_newL("printf(\"#edges:\%d\\n\",E);");
+  main.pushstr_newL("printf(\"#edges:%d\\n\",E);");
   //~ main.pushstr_newL("printf(\"#srces:\%d\\n\",sourceSet.size()); /// TODO get from var");
 
   sprintf(strBuffer, "int* edgeLen = %s.getEdgeLen();",
@@ -3093,42 +3149,68 @@ void dsl_cpp_generator::generateCSRArrays(const char* gId) {
   main.pushstr_newL(strBuffer);
   main.NewLine();
 
-  // These H & D arrays of CSR do not change. Hence hardcoded!
-  main.pushstr_newL("int *h_meta;");
-  main.pushstr_newL("int *h_data;");
-  main.pushstr_newL("int *h_src;");
-  main.pushstr_newL("int *h_weight;");
-  main.pushstr_newL("int *h_rev_meta;");  //done only to handle PR since other doesn't uses it
+  // These H & D arrays of CSR do not change. Hence hardcoded!. NOTE: not anymore
+  if(func->getIsMetaUsed())
+    main.pushstr_newL("int *h_meta;");
+  if(func->getIsDataUsed())
+    main.pushstr_newL("int *h_data;");
+  if(func->getIsSrcUsed())
+    main.pushstr_newL("int *h_src;");
+  if(func->getIsWeightUsed())
+    main.pushstr_newL("int *h_weight;");
+  if(func->getIsRevMetaUsed())
+    main.pushstr_newL("int *h_rev_meta;");  //done only to handle PR since other don't use it
   main.NewLine();
 
-  main.pushstr_newL("h_meta = (int *)malloc( (V+1)*sizeof(int));");
-  main.pushstr_newL("h_data = (int *)malloc( (E)*sizeof(int));");
-  main.pushstr_newL("h_src = (int *)malloc( (E)*sizeof(int));");
-  main.pushstr_newL("h_weight = (int *)malloc( (E)*sizeof(int));");
-  main.pushstr_newL("h_rev_meta = (int *)malloc( (V+1)*sizeof(int));");
+  if(func->getIsMetaUsed())
+    main.pushstr_newL("h_meta = (int *)malloc( (V+1)*sizeof(int));");
+  if(func->getIsDataUsed())
+    main.pushstr_newL("h_data = (int *)malloc( (E)*sizeof(int));");
+  if(func->getIsSrcUsed())
+    main.pushstr_newL("h_src = (int *)malloc( (E)*sizeof(int));");
+  if(func->getIsWeightUsed()) 
+    main.pushstr_newL("h_weight = (int *)malloc( (E)*sizeof(int));");
+  if(func->getIsRevMetaUsed())
+    main.pushstr_newL("h_rev_meta = (int *)malloc( (V+1)*sizeof(int));");
   main.NewLine();
 
-  main.pushstr_newL("for(int i=0; i<= V; i++) {");
-  sprintf(strBuffer, "int temp = %s.indexofNodes[i];", gId);
-  main.pushstr_newL(strBuffer);
-  main.pushstr_newL("h_meta[i] = temp;");
-  sprintf(strBuffer, "temp = %s.rev_indexofNodes[i];", gId);
-  main.pushstr_newL(strBuffer);
-  main.pushstr_newL("h_rev_meta[i] = temp;");
-  main.pushstr_newL("}");
-  main.NewLine();
+  if(func->getIsMetaUsed() || func->getIsRevMetaUsed()) {
+    main.pushstr_newL("for(int i=0; i<= V; i++) {");
+    main.pushstr_newL("int temp;");
+    if(func->getIsMetaUsed()) {
+      sprintf(strBuffer, "temp = %s.indexofNodes[i];", gId);
+      main.pushstr_newL(strBuffer);
+      main.pushstr_newL("h_meta[i] = temp;");
+    }
+    if(func->getIsRevMetaUsed()) {
+      sprintf(strBuffer, "temp = %s.rev_indexofNodes[i];", gId);
+      main.pushstr_newL(strBuffer);
+      main.pushstr_newL("h_rev_meta[i] = temp;");
+    }
+    main.pushstr_newL("}");
+    main.NewLine();
+  }
 
-  main.pushstr_newL("for(int i=0; i< E; i++) {");
-  sprintf(strBuffer, "int temp = %s.edgeList[i];", gId);
-  main.pushstr_newL(strBuffer);
-  main.pushstr_newL("h_data[i] = temp;");
-  sprintf(strBuffer, "temp = %s.srcList[i];", gId);
-  main.pushstr_newL(strBuffer);
-  main.pushstr_newL("h_src[i] = temp;");
-  main.pushstr_newL("temp = edgeLen[i];");
-  main.pushstr_newL("h_weight[i] = temp;");
-  main.pushstr_newL("}");
-  main.NewLine();
+  if(func->getIsDataUsed() || func->getIsSrcUsed() || func->getIsWeightUsed()) {
+    main.pushstr_newL("for(int i=0; i< E; i++) {");
+    main.pushstr_newL("int temp;");
+    if(func->getIsDataUsed()) {
+      sprintf(strBuffer, "temp = %s.edgeList[i];", gId);
+      main.pushstr_newL(strBuffer);
+      main.pushstr_newL("h_data[i] = temp;");
+    }
+    if(func->getIsSrcUsed()) {
+      sprintf(strBuffer, "temp = %s.srcList[i];", gId);
+      main.pushstr_newL(strBuffer);
+      main.pushstr_newL("h_src[i] = temp;");
+    }
+    if(func->getIsWeightUsed()) {
+      main.pushstr_newL("temp = edgeLen[i];");
+      main.pushstr_newL("h_weight[i] = temp;");
+    }
+    main.pushstr_newL("}");
+    main.NewLine();
+  }
 
   //to handle rev_offset array for pageRank only // MOVED TO PREV FOR LOOP
   //~ main.pushstr_newL("for(int i=0; i<= V; i++) {");
@@ -3210,7 +3292,7 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
 
   if (genCSR) {
     main.pushstr_newL("// CSR BEGIN");
-    generateCSRArrays(gId);
+    generateCSRArrays(gId, proc);
 
     //~ sprintf(strBuffer,"int MAX_VAL = 2147483647 ;");
     //~ main.pushstr_newL(strBuffer);
@@ -3286,36 +3368,53 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
 
     main.NewLine();
 
-    sprintf(strBuffer, "int* d_meta;");
-    main.pushstr_newL(strBuffer);
-    sprintf(strBuffer, "int* d_data;");
-    main.pushstr_newL(strBuffer);
-    sprintf(strBuffer, "int* d_src;");
-    main.pushstr_newL(strBuffer);
-    sprintf(strBuffer, "int* d_weight;");
-    main.pushstr_newL(strBuffer);
-    sprintf(strBuffer, "int* d_rev_meta;");
-    main.pushstr_newL(strBuffer);
-    sprintf(strBuffer, "bool* d_modified_next;");
-    main.pushstr_newL(strBuffer);
+    if(currentFunc->getIsMetaUsed()) { // checking if meta is used
+      sprintf(strBuffer, "int* d_meta;");
+      main.pushstr_newL(strBuffer);
+    }
+    if(currentFunc->getIsDataUsed()) { // checking if data is used
+      sprintf(strBuffer, "int* d_data;");
+      main.pushstr_newL(strBuffer);
+    }
+    if(currentFunc->getIsSrcUsed()) { // checking if src is used
+      sprintf(strBuffer, "int* d_src;");
+      main.pushstr_newL(strBuffer);
+    }
+    if(currentFunc->getIsWeightUsed()) { // checking if weight is used
+      sprintf(strBuffer, "int* d_weight;");
+      main.pushstr_newL(strBuffer);
+    }
+    if(currentFunc->getIsRevMetaUsed()) {  // checking if rev_meta is used
+      sprintf(strBuffer, "int* d_rev_meta;");
+      main.pushstr_newL(strBuffer);
+    }
     main.NewLine();
 
-    generateCudaMallocStr("d_meta", "int", "(1+V)");
-    generateCudaMallocStr("d_data", "int", "(E)");
-    generateCudaMallocStr("d_src", "int", "(E)");
-    generateCudaMallocStr("d_weight", "int", "(E)");
-    generateCudaMallocStr("d_rev_meta", "int", "(V+1)");
-    generateCudaMallocStr("d_modified_next", "bool", "(V)");
+    if(currentFunc->getIsMetaUsed())  // checking if meta is used
+      generateCudaMallocStr("d_meta", "int", "(1+V)");
+    if(currentFunc->getIsDataUsed())  // checking if data is used
+      generateCudaMallocStr("d_data", "int", "(E)");
+    if(currentFunc->getIsSrcUsed())  // checking if src is used
+      generateCudaMallocStr("d_src", "int", "(E)");
+    if(currentFunc->getIsWeightUsed())  // checking if weight is used
+      generateCudaMallocStr("d_weight", "int", "(E)");
+    if(currentFunc->getIsRevMetaUsed()) // checking if rev_meta is used
+      generateCudaMallocStr("d_rev_meta", "int", "(V+1)");
 
     main.NewLine();
 
     // h_meta h_data h_weight has to be populated!
 
-    generateCudaMemCpyStr("d_meta", "h_meta", "int", "V+1");
-    generateCudaMemCpyStr("d_data", "h_data", "int", "E");
-    generateCudaMemCpyStr("d_src", "h_src", "int", "E");
-    generateCudaMemCpyStr("d_weight", "h_weight", "int", "E");
-    generateCudaMemCpyStr("d_rev_meta", "h_rev_meta", "int", "(V+1)");
+    if(currentFunc->getIsMetaUsed())  // checking if meta is used
+      generateCudaMemCpyStr("d_meta", "h_meta", "int", "V+1");
+    if(currentFunc->getIsDataUsed())  // checking if data is used
+      generateCudaMemCpyStr("d_data", "h_data", "int", "E");
+    if(currentFunc->getIsSrcUsed())  // checking if src is used
+      generateCudaMemCpyStr("d_src", "h_src", "int", "E");
+    if(currentFunc->getIsWeightUsed())  // checking if weight is used
+      generateCudaMemCpyStr("d_weight", "h_weight", "int", "E");
+    if(currentFunc->getIsRevMetaUsed())  // checking if rev_meta is used
+      generateCudaMemCpyStr("d_rev_meta", "h_rev_meta", "int", "(V+1)");
     main.NewLine();
 
     main.pushstr_newL("// CSR END");

@@ -206,10 +206,12 @@ bool deviceVarsAnalyser::initItrBFS(iterateBFS *stmt, list<Identifier *> &vars)
         for (Identifier *iden : vars)
             bVars.removeVariable(iden, READ_WRITE);
 
-        Identifier *itr = bVars.getVariables(READ_WRITE).front();
-
         revNode->usedVars = getVarsStatement(revStmt->getBody());
-        revNode->usedVars.removeVariable(itr, READ_WRITE);
+
+        if (bVars.getVariables().size() > 0) {
+            Identifier *itr = bVars.getVariables(READ_WRITE).front();
+            revNode->usedVars.removeVariable(itr, READ_WRITE);
+        }
 
         revStmt->initUsedVariable(revNode->usedVars.getVariables());
         gpuUsedVars.merge(revNode->usedVars);

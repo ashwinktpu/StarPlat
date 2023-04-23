@@ -5,6 +5,6 @@
 #include<limits.h>
 #include"../graph.hpp"
 
-void Compute_TC(graph& g);
+auto Compute_TC(graph& g);
 
 #endif
