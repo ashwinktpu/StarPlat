@@ -14,7 +14,7 @@ namespace spcuda {
 void dsl_cpp_generator::generateInitkernel(const char* name) {
   char strBuffer[1024];
   header.pushstr_newL("template <typename T>");
-  sprintf(strBuffer, "__global__ void initKernel(unsigned %s, T* d_array, T initVal) {", name);
+  sprintf(strBuffer, "__gl+++obal__ void initKernel(unsigned %s, T* d_array, T initVal) {", name);
   header.pushstr_newL(strBuffer);
   header.pushstr_newL("unsigned id = threadIdx.x + blockDim.x * blockIdx.x;");
   sprintf(strBuffer, "if(id < %s) {", name);
@@ -813,12 +813,7 @@ void dsl_cpp_generator::generateReductionOpStmt(reductionCallStmt* stmt,
     //~ if(strcmp("long",typVar)==0)
     //~ sprintf(strBuffer, "atomicAdd(& %s, (long %s int)",id->getIdentifier(), typVar);
     //~ else
-    if(strcmp(typVar,"long")==0 || strcmp(typVar,"long long")==0 || strcmp(typVar,"long int")==0 || strcmp(typVar,"long long int")==0){
-      sprintf(strBuffer, "atomicAdd((unsigned long long*)& %s, (unsigned long long)", id->getIdentifier());
-    }
-    else{
-      sprintf(strBuffer, "atomicAdd(& %s, (%s)", id->getIdentifier(), typVar);
-    }
+    sprintf(strBuffer, "atomicAdd(& %s, (%s)", id->getIdentifier(), typVar);
     targetFile.pushString(strBuffer);
     generateExpr(stmt->getRightSide(), isMainFile);
     targetFile.pushstr_newL(");");
@@ -1001,7 +996,7 @@ void dsl_cpp_generator::generateAtomicDeviceAssignmentStmt(assignment* asmt,
 void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment* asmt,
                                                      bool isMainFile) {
   dslCodePad& targetFile = isMainFile ? main : header;
-  // bool isDevice = false;
+  bool isDevice = false;
   std::cout << "\tASST \n";
   char strBuffer[300];
   if (asmt->lhs_isIdentifier()) {
@@ -1014,94 +1009,64 @@ void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment* asmt,
     PropAccess* propId = asmt->getPropId();
 
     if (asmt->isDeviceAssignment()) {
+      isDevice = true;
+      //~ src.dist = 0; ===>  initIndex<int><<<1,1>>>(V,d_dist,src, 0);
+      //                                  1              2     3   4
       Type* typeB = propId->getIdentifier2()->getSymbolInfo()->getType()->getInnerTargetType();
+      //~ Type *typeA = propId->getIdentifier1()->getSymbolInfo()->getType();
+
+      //~ targetFile.pushstr_newL(convertToCppType(typeB));
+      //~ targetFile.pushstr_newL(convertToCppType(typeA));
+
       const char* varType = convertToCppType(typeB);  //DONE: get the type from id
-      if(asmt->get_merged_device_assignments().size()==0){
-        sprintf(strBuffer, "initIndex<%s><<<1,1>>>(V,d_%s,%s,(%s)",
+      sprintf(strBuffer, "initIndex<%s><<<1,1>>>(V,d_%s,%s,(%s)",
               varType,
               propId->getIdentifier2()->getIdentifier(),
               propId->getIdentifier1()->getIdentifier(),
               varType);
-        targetFile.pushString(strBuffer);
-        generateExpr(asmt->getExpr(), isMainFile);
-        targetFile.pushstr_newL("); //InitIndexDevice");
-        std::cout << "\tDEVICE ASST" << '\n';
-      }
-      else{
-        merged_kernel_count++;
-        sprintf(strBuffer,"merged_kernel_%d<<<1,1>>>(V",merged_kernel_count);
-        targetFile.pushString(strBuffer);
-        sprintf(strBuffer,"__global__ void merged_kernel_%d(unsigned V",merged_kernel_count);
-        header.pushString(strBuffer);
-        sprintf(strBuffer,",d_%s,%s,(%s)",
-              propId->getIdentifier2()->getIdentifier(),
-              propId->getIdentifier1()->getIdentifier(),
-              varType);
-        targetFile.pushString(strBuffer);
-        int id_count = 1;
-        sprintf(strBuffer,",%s array_%d,int index_%d,%s val_%d",varType,id_count,id_count,varType,id_count);
-        header.pushString(strBuffer);
-        id_count++;
-        generateExpr(asmt->getExpr(), isMainFile);
-        for(auto Asmt:asmt->get_merged_device_assignments()){
-          PropAccess* PropId = Asmt->getPropId();
-          Type* TypeB = PropId->getIdentifier2()->getSymbolInfo()->getType()->getInnerTargetType();
-          const char* VarType = convertToCppType(TypeB);
-          sprintf(strBuffer,",d_%s,%s,(%s)",
-              PropId->getIdentifier2()->getIdentifier(),
-              PropId->getIdentifier1()->getIdentifier(),
-              VarType);
-          targetFile.pushString(strBuffer);
-          generateExpr(Asmt->getExpr(),isMainFile);
-          sprintf(strBuffer,",%s array_%d,int index_%d,%s val_%d",VarType,id_count,id_count,VarType,id_count);
-          header.pushString(strBuffer);
-          id_count++;
-        }
-        targetFile.pushstr_newL(");");
-        header.pushstr_newL("){");
-        header.insert_indent();
-        id_count = 1;
-        sprintf(strBuffer,"if(index_%d < V){",id_count);
-        header.pushstr_newL(strBuffer);
-        header.insert_indent();
-        sprintf(strBuffer,"array_%d[index_%d] = val_%d",id_count,id_count,id_count);
-        id_count++;
-        header.pushString(strBuffer);
-        header.NewLine();
-        header.decrease_indent();
-        header.pushstr_newL("}");
-        for(auto Asmt:asmt->get_merged_device_assignments()){
-          sprintf(strBuffer,"if(index_%d < V){",id_count);
-          header.pushstr_newL(strBuffer);
-          header.insert_indent();
-          sprintf(strBuffer,"array_%d[index_%d] = val_%d",id_count,id_count,id_count);
-          id_count++;
-          header.pushString(strBuffer);
-          header.NewLine();
-          header.decrease_indent();
-          header.pushstr_newL("}");
-        }
-        header.decrease_indent();
-        header.pushstr_newL("}");
+      std::cout << "\tDEVICE ASST" << '\n';
 
-      }
+      //~ Type *typeB = propId->getIdentifier2()->getSymbolInfo()->getType()->getInnerTargetType();
+      //~ Type *typeA = propId->getIdentifier1()->getSymbolInfo()->getType();
 
+      //~ targetFile.pushstr_newL(convertToCppType(typeB));
+      //~ targetFile.pushstr_newL(convertToCppType(typeA));
+
+      //~ targetFile.pushString("initIndex<<<1,1>>>(V,");
+
+      //~ targetFile.push('(');
+
+      //~ targetFile.pushString("d_"); /// IMPORTANT
+      //~ targetFile.pushString(propId->getIdentifier2()->getIdentifier());
+      //~ targetFile.pushString(", ");
+      //~ targetFile.pushString(propId->getIdentifier1()->getIdentifier());
+      //~ convertToCppType(propId->getIdentifier1()->getSymbolInfo()->getType());
+      targetFile.pushString(strBuffer);
     } else {
       targetFile.pushString("d_");  /// IMPORTANT
       targetFile.pushString(propId->getIdentifier2()->getIdentifier());
       targetFile.push('[');
       targetFile.pushString(propId->getIdentifier1()->getIdentifier());
       targetFile.push(']');
-      targetFile.pushString(" = ");
-      generateExpr(asmt->getExpr(), isMainFile);
-      targetFile.pushstr_newL("; //InitIndex");
     }
   }
+
+  if (!isDevice)
+    //~ targetFile.pushString(",");
+    //~ else
+    targetFile.pushString(" = ");
+
+  generateExpr(asmt->getExpr(), isMainFile);
+
+  if (isDevice)
+    targetFile.pushstr_newL("); //InitIndexDevice");
+  else
+    targetFile.pushstr_newL("; //InitIndex");
 }
 
 void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt,
                                          bool isMainFile) {
-  dslCodePad& targetFile = isMainFile ? main : header;
+  //~ dslCodePad& targetFile = isMainFile ? main : header;
   // cout<<"INSIDE PROCCALL OF GENERATION"<<"\n";
   proc_callExpr* procedure = proc_callStmt->getProcCallExpr();
   // cout<<"FUNCTION NAME"<<procedure->getMethodId()->getIdentifier();
@@ -1113,104 +1078,68 @@ void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt,
     //~ char strBuffer[1024];
     list<argument*> argList = procedure->getArgList();
     list<argument*>::iterator itr;
-    if(argList.size()==1){
-      generateInitkernel1((assignment*)(*argList.begin())->getAssignExpr(),isMainFile);
-    }
-    else{
-      merged_kernel_count++;
-      // defining the function in the header
-      char strBuffer[1024];
-      sprintf(strBuffer,"__global__ void merged_kernel_%d(unsigned V",merged_kernel_count);
-      header.pushString(strBuffer);
-      int arg_count = 0;
-      for(itr=argList.begin();itr!=argList.end();itr++){
-        assignment* assign = (*itr)->getAssignExpr();
-        if(!(*itr)->isDevAssign()){
-          arg_count++;
-          Identifier* inId = assign->getId();
-          Expression* exprAssigned = assign->getExpr();
-          const char* inVarType = convertToCppType(inId->getSymbolInfo()->getType()->getInnerTargetType());
-          sprintf(strBuffer,", %s* array_%d, %s val_%d",inVarType,arg_count,inVarType,arg_count);
-          header.pushString(strBuffer);
-        }
-      }
-      for(itr=argList.begin();itr!=argList.end();itr++){
-        assignment* assign = (*itr)->getAssignExpr();
-        if((*itr)->isDevAssign()){
-          arg_count++;
-          PropAccess* propId = assign->getPropId();
-          Type* typeB = propId->getIdentifier2()->getSymbolInfo()->getType()->getInnerTargetType();
-          const char* inVarType = convertToCppType(typeB);
-          sprintf(strBuffer,", %s* array_%d,int index_%d, %s val_%d",inVarType,arg_count,arg_count,inVarType,arg_count);
-          header.pushString(strBuffer);
-        }
-      }
-      sprintf(strBuffer,"){");
-      header.pushstr_newL(strBuffer);
-      header.insert_indent();
-      sprintf(strBuffer,"unsigned id = threadIdx.x + blockDim.x * blockIdx.x;");
-      header.pushstr_newL(strBuffer);
-      sprintf(strBuffer,"if (id < V) {");
-      header.pushstr_newL(strBuffer);
-      header.insert_indent();
-      arg_count = 0;
-      for(itr=argList.begin();itr!=argList.end();itr++){
-        assignment* assign = (*itr)->getAssignExpr();
-        if(!(*itr)->isDevAssign()){
-          arg_count++;
-          Identifier* inId = assign->getId();
-          Expression* exprAssigned = assign->getExpr();
-          sprintf(strBuffer,"array_%d[id] = val_%d;",arg_count,arg_count);
-          header.pushstr_newL(strBuffer);
-        }
-      }
-      header.decrease_indent();
-      header.pushstr_newL("}");
-      for(itr=argList.begin();itr!=argList.end();itr++){
-        assignment* assign = (*itr)->getAssignExpr();
-        if((*itr)->isDevAssign()){
-          arg_count++;
-          sprintf(strBuffer,"if(index_%d==id){",arg_count);
-          header.pushstr_newL(strBuffer);
-          header.insert_indent();
-          sprintf(strBuffer,"array_%d[index_%d] = val_%d;",arg_count,arg_count,arg_count);
-          header.pushstr_newL(strBuffer);
-          header.decrease_indent();
-          header.pushstr_newL("}");
-        }
-      }
-      header.decrease_indent();
-      header.pushstr_newL("}");
-      sprintf(strBuffer,"merged_kernel_%d<<<numBlocks,threadsPerBlock>>>(V",merged_kernel_count);
-      targetFile.pushString(strBuffer);
-      for(itr=argList.begin();itr!=argList.end();itr++){
-        assignment* assign = (*itr)->getAssignExpr();
-        if(!(*itr)->isDevAssign()){
-          Identifier* inId = assign->getId();
-          Expression* exprAssigned = assign->getExpr();
-          const char* inVarType = convertToCppType(inId->getSymbolInfo()->getType()->getInnerTargetType());
-          const char* inVarName = inId->getIdentifier();
-          sprintf(strBuffer,", d_%s, (%s)",inVarName,inVarType);
-          targetFile.pushString(strBuffer);
-          generateExpr(exprAssigned, isMainFile);
 
-        }
+    for (itr = argList.begin(); itr != argList.end(); itr++) {
+      assignment* assign = (*itr)->getAssignExpr();
+
+      if (argList.size() == 1) {
+        generateInitkernel1(assign, isMainFile);
+        //~ std::cout << "%%%%%%%%%%" << '\n';
+
+        /// initKernel<double> <<<numBlocks,threadsPerBlock>>>(V,d_BC, 0);
+      } else if (argList.size() == 2) {
+        //~ std::cout << "===============" << '\n';
+        generateInitkernel1(assign, isMainFile);
+        //~ std::cout<< "initType:" <<
+        //convertToCppType(lhsId->getSymbolInfo()->getType()) << '\n'; ~
+        //std::cout<< "===============" << '\n'; ~
+        //generateInitkernel1(lhsId,"0"); //TODO
       }
-      for(itr=argList.begin();itr!=argList.end();itr++){
-        assignment* assign = (*itr)->getAssignExpr();
-        if((*itr)->isDevAssign()){
-          PropAccess* propId = assign->getPropId();
-          Type* typeB = propId->getIdentifier2()->getSymbolInfo()->getType()->getInnerTargetType();
-          const char* inVarType = convertToCppType(typeB);
-          sprintf(strBuffer,", d_%s, %s, (%s)",propId->getIdentifier2()->getIdentifier(),propId->getIdentifier1()->getIdentifier(),inVarType);
-          targetFile.pushString(strBuffer);
-          generateExpr(assign->getExpr(), isMainFile);
-        }
-      }
-      targetFile.pushString(");");
-      targetFile.NewLine();
     }
   }
+  /*
+   if(x==0)
+       {
+         // cout<<"MADE IT TILL HERE";
+          char strBuffer[1024];
+          list<argument*> argList=procedure->getArgList();
+          list<argument*>::iterator itr;
+         // targetFile.pushstr_newL("#pragma omp parallel for");
+          //sprintf(strBuffer,"for (%s %s = 0; %s < V; %s ++)
+   ","int","t","t",procedure->getId1()->getIdentifier(),"num_nodes","t");
+          // to ashwina, there is something wrong in above! commenting it. -rajz
+          sprintf(strBuffer,"for (%s %s = 0; %s < V; %s ++)
+   ","int","t","t","t"); targetFile.pushstr_newL(strBuffer);
+          targetFile.pushstr_newL("{");
+          targetFile.pushstr_newL("");
+          for(itr=argList.begin();itr!=argList.end();itr++)
+              {
+                assignment* assign=(*itr)->getAssignExpr();
+                Identifier* lhsId=assign->getId();
+                Expression* exprAssigned=assign->getExpr();
+                sprintf(strBuffer,"%s[%s] = ",lhsId->getIdentifier(),"t");
+                targetFile.pushString(strBuffer);
+                generateExpr(exprAssigned, isMainFile);
+
+                targetFile.pushstr_newL(";");
+
+                if(lhsId->getSymbolInfo()->getId()->require_redecl())
+                   {
+                     sprintf(strBuffer,"%s_nxt[%s] =
+   ",lhsId->getIdentifier(),"t"); targetFile.pushString(strBuffer);
+                     generateExpr(exprAssigned, isMainFile);
+                     targetFile.pushstr_newL(";");
+                   }
+                sprintf(strBuffer,"***  %s",lhsId->getIdentifier());
+                targetFile.pushString(strBuffer);
+                sprintf(strBuffer,"***  %d",lhsId->getSymbolInfo()->getType());
+                targetFile.pushString(strBuffer);
+              }
+
+        targetFile.pushstr_newL("}");
+
+       }
+       */
 }
 
 void dsl_cpp_generator::generatePropertyDefination(Type* type, char* Id,
@@ -1713,8 +1642,8 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
       std::cout<< "============EARLIER NOT OPT=============" << '\n';
       usedVariables usedVars = getVarsForAll(forAll);
       list<Identifier*> vars = usedVars.getVariables();
-
-
+      
+      
 
       for (Identifier* iden : vars) {
         std::cout<< "varName:" << iden->getIdentifier() << '\n';

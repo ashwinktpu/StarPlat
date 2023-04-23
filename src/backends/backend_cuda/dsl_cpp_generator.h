@@ -30,7 +30,6 @@ class dsl_cpp_generator {
 
   bool isHeader;
   bool isOptimized;
-  int merged_kernel_count;
 
  public:
   dsl_cpp_generator() {
@@ -50,7 +49,6 @@ class dsl_cpp_generator {
     staticFuncCount = 0;
     inFuncCount = 0;
     decFuncCount = 0;
-    merged_kernel_count = 0;
   }
 
   void generateParamList(list<formalParam*> paramList, dslCodePad& targetFile);

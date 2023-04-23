@@ -23,21 +23,20 @@ class formalParam;
 class Type;
 class blockStatement;
 class Identifier;
-extern vector<map<int,vector<Identifier*>>> graphId;
-                                                      /*store the graph variables
+extern vector<map<int,vector<Identifier*>>> graphId; 
+                                                      /*store the graph variables 
                                                        referenced in current function,
-                                                       where the graphId vector is
+                                                       where the graphId vector is 
                                                        separated across different function type*/
 class varTransferStmt;
 
 class argument
-{
+{  
   private:
   Expression* expression;
   assignment* assignExpr;
   bool expressionflag;
   bool assign;
-  bool DevAssign;
 
   public:
   argument()
@@ -46,13 +45,11 @@ class argument
     assignExpr=NULL;
     expressionflag=false;
     assign=false;
-    DevAssign = false;
   }
 
-  void setAssign(assignment* assign,bool DevAssign=false)
+  void setAssign(assignment* assign)
   {
     assignExpr=assign;
-    this->DevAssign = DevAssign;
   }
   void setExpression(Expression* expr)
   {
@@ -79,10 +76,6 @@ class argument
   bool isAssignExpr()
   {
     return assign;
-  }
-
-  bool isDevAssign(){
-    return DevAssign;
   }
 
   bool isExpr()
@@ -132,12 +125,12 @@ class Identifier:public ASTNode
   char* identifier;
 
   Expression* assignedExpr; /*added to store node/edge property initialized values.
-                             - Used in SymbolTable phase for storing metadata.
+                             - Used in SymbolTable phase for storing metadata. 
                              - This field is more of a code generation utility.  */
   bool redecl; /* added for fixedPoint.(node property parameter)
                 - This field is populated during SymbolTable creation.
                 - it checks if double buffering is required for a node/edge prop.*/
-
+ 
   bool fp_association; /*checks if the identifier as a node/edge property
                          is used as a dependent for fixedpoint.*/
 
@@ -147,19 +140,19 @@ class Identifier:public ASTNode
   Expression* dependentExpr; /*the expression in fixedPoint of which the current
                                identifier is a part of*/
   Identifier* updates_association; /* for update.source/destination, get the updates to
-                                      which this update belongs to.*/
+                                      which this update belongs to.*/                             
 
-  bool localMap;
-  bool forall_filter_association;
+  bool localMap;  
+  bool forall_filter_association; 
   bool used_inside_forall_filter_and_changed_inside_forall_body;
 
-
-
-  public:
-
+                                                        
+   
+  public: 
+ 
   static Identifier* createIdNode(const char* id)
    {
-
+   
      Identifier* idNode=new Identifier();
      idNode->identifier=new char[strlen(id)+1];
      strcpy(idNode->identifier,id);
@@ -208,7 +201,7 @@ class Identifier:public ASTNode
 
      return copyId;
    }
-
+   
    void set_redecl()
    {
      redecl=true;
@@ -219,11 +212,11 @@ class Identifier:public ASTNode
      return redecl;
    }
    void set_used_inside_forall_filter_and_changed_inside_forall_body(){
-    used_inside_forall_filter_and_changed_inside_forall_body = true;
+    used_inside_forall_filter_and_changed_inside_forall_body = true; 
    }
    bool get_used_inside_forall_filter_and_changed_inside_forall_body(){
     return used_inside_forall_filter_and_changed_inside_forall_body ;
-   }
+   } 
    void set_forall_filter_association()
    {
      forall_filter_association=true;
@@ -246,7 +239,7 @@ class Identifier:public ASTNode
 
    void setLocalMapReq()
    {
-
+    
      localMap = true;
 
    }
@@ -308,7 +301,7 @@ class PropAccess:public ASTNode
   Expression* propExpr;
   int accessType;
 
-  public:
+  public: 
   PropAccess()
   {
     identifier1 = NULL;
@@ -343,7 +336,7 @@ class PropAccess:public ASTNode
      if(propExpr != NULL)
         return true;
 
-      return false;
+      return false;   
    }
 
    int getAccessType()
@@ -359,12 +352,12 @@ class PropAccess:public ASTNode
    {
      return identifier2;
    }
-
+  
    Expression* getPropExpr()
    {
-
+    
     return propExpr;
-
+      
    }
 
 };
@@ -392,7 +385,7 @@ class statement:public ASTNode
   {
     return statementType;
   }
-
+  
   };
 
   class blockStatement:public statement
@@ -479,14 +472,14 @@ class Function:public ASTNode
   blockStatement* blockstmt;
   bool initialLockDecl; /* If omp_locks required in some part of function body,
                            set this to initialize the omp_locks in 1st part of func body*/
-  bool hasReturn;
+  bool hasReturn;                          
   int funcType ;
 
 
   public:
 
   Function()
-  {
+  { 
     functionId=NULL;
     blockstmt=NULL;
     funcType = 0;
@@ -508,7 +501,7 @@ class Function:public ASTNode
   }
   static Function*  createStaticFunctionNode(Identifier* funcId,list<formalParam*> paramList)
   {
-
+   
     Function* staticFunc = new Function();
     staticFunc->functionId = funcId;
     staticFunc->paramList = paramList;
@@ -517,14 +510,14 @@ class Function:public ASTNode
    // staticFunc->retType = retType;
 
     return staticFunc;
-
+ 
 
   }
 
 
   static Function*  createDynamicFunctionNode(Identifier* funcId,list<formalParam*> paramList)
   {
-
+   
     Function* dynamicFunc = new Function();
     dynamicFunc->functionId = funcId;
     dynamicFunc->paramList = paramList;
@@ -533,13 +526,13 @@ class Function:public ASTNode
    // dynamicFunc->retType = retType;
 
     return dynamicFunc;
-
+ 
 
   }
 
   static Function*  createIncrementalNode(list<formalParam*> paramList)
   {
-
+   
     Function* incrementalFunc = new Function();
     incrementalFunc->paramList = paramList;
     incrementalFunc->setTypeofNode(NODE_FUNC);
@@ -552,7 +545,7 @@ class Function:public ASTNode
 
   static Function*  createDecrementalNode(list<formalParam*> paramList)
   {
-
+   
     Function* decrementalFunc = new Function();
     decrementalFunc->paramList = paramList;
     decrementalFunc->setTypeofNode(NODE_FUNC);
@@ -568,7 +561,7 @@ class Function:public ASTNode
   {
     funcType = type;
   }
-
+  
    void setBlockStatement(blockStatement* blockStmtSent)
    {
      blockstmt=blockStmtSent;
@@ -595,7 +588,7 @@ class Function:public ASTNode
    }
 
    void setInitialLockDecl()
-     {
+     { 
        //printf("INSIDE THIS FOR LOCKSET\n");
        initialLockDecl = true;
      }
@@ -603,20 +596,20 @@ class Function:public ASTNode
    bool getInitialLockDecl()
       {
         return initialLockDecl ;
-      }
+      } 
 
    void flagReturn()
      {
 
         hasReturn = true ;
 
-     }
+     }    
 
   bool containsReturn() {
 
        return hasReturn ;
 
-     }
+     }  
 
 
 
@@ -633,7 +626,7 @@ class Type:public ASTNode
   list<char*> graphPropList;
   list<argument*> sizeExprList;
   Type* innerTypeSize;
-
+  
  public:
  Type()
  {
@@ -689,7 +682,7 @@ class Type:public ASTNode
 
 
   static Type* createForContainerType(int typeIdSent, Type* innerType, list<argument*> argList, Type* innerTypeSize){
-
+  
    Type* type=new Type();
    type->typeId=typeIdSent;
    type->innerTargetType = innerType;
@@ -697,27 +690,27 @@ class Type:public ASTNode
    type->innerTypeSize = innerTypeSize;
 
    return type;
-  }
+  } 
 
-
+  
   static Type* createForNodeMapType(int typeIdSent, Type* innerType){
-
+  
    Type* type=new Type();
    type->typeId=typeIdSent;
    type->innerTargetType = innerType;
 
    return type;
-  }
+  } 
 
   Type* copy()
-  {
+  {  
      Type* copyType = new Type();
      copyType->typeId = typeId;
      copyType->TargetGraph = (this->TargetGraph==NULL) ? NULL : this->TargetGraph->copy();
      copyType->sourceGraph = (this->sourceGraph==NULL) ? NULL : this->sourceGraph->copy();
      copyType->innerTargetType = (this->innerTargetType==NULL) ? NULL : this->innerTargetType->copy();
      copyType->innerTypeSize = (this->innerTypeSize == NULL) ? NULL : this->innerTypeSize->copy();
-
+     
      if(sizeExprList.size() > 0){
         list<argument*> sizeExprListNew;
 
@@ -977,8 +970,8 @@ class formalParam:public ASTNode
    expr->parent = indexExpression;
    indexExpr->parent = indexExpression;
     cout<<"find map expr "<<indexExpression->mapExpr->getId()->getIdentifier()<<"\n";
-   return indexExpression;
-
+   return indexExpression; 
+  
 
    }
 
@@ -1095,19 +1088,19 @@ class formalParam:public ASTNode
      }
      bool isIndexExpr()
      {
-        return (typeofExpr == EXPR_MAPGET);
+        return (typeofExpr == EXPR_MAPGET);     
 
      }
 
      Expression* getIndexExpr()
      {
          return indexExpr;
-
+       
      }
 
      Expression* getMapExpr()
      {
-       return mapExpr;
+       return mapExpr;      
      }
 
      Expression* getUnaryExpr()
@@ -1186,7 +1179,7 @@ class formalParam:public ASTNode
      {
        return typeofExpr;
      }
-
+     
      void setEnclosedBrackets()
      {
        enclosedBrackets=true;
@@ -1210,7 +1203,7 @@ class formalParam:public ASTNode
       {
         returnExpression = NULL;
       }
-
+     
      static returnStmt* createNodeForReturnStmt(Expression* returnExpressionSent)
         {
             returnStmt* returnStmtNode = new returnStmt();
@@ -1223,7 +1216,7 @@ class formalParam:public ASTNode
      Expression* getReturnExpression()
        {
          return returnExpression;
-       }
+       }   
 
 
    };
@@ -1231,7 +1224,7 @@ class formalParam:public ASTNode
 
 
 
-
+  
 
   class batchBlock:public statement
   {
@@ -1253,7 +1246,7 @@ class formalParam:public ASTNode
             batchBlock* batchBlockNode = new batchBlock();
             batchBlockNode->statements = (blockStatement*)statements_sent;
             batchBlockNode->batchSizeExpr = batchSizeExprSent;
-            batchBlockNode->updateId = updatesIdSent;
+            batchBlockNode->updateId = updatesIdSent; 
             batchBlockNode->setTypeofNode(NODE_BATCHBLOCKSTMT);
             updatesIdSent->setParent(batchBlockNode);
             batchSizeExprSent->setParent(batchBlockNode);
@@ -1269,11 +1262,11 @@ class formalParam:public ASTNode
 
     Expression* getBatchSizeExpr()
      {
-
+      
       return batchSizeExpr;
 
-     }
-
+     }   
+     
      /*void setUpdateId(Identifier* updateIdSent)
       {
         updateId = updateIdSent;
@@ -1285,7 +1278,7 @@ class formalParam:public ASTNode
        }
 
 
-
+  
   } ;
 
   class declaration:public statement
@@ -1308,8 +1301,8 @@ class formalParam:public ASTNode
         inGPU = false;
         propCopy = false;
         mapPropCopy = false;
-
-
+        
+       
     }
 
     static declaration* normal_Declaration(Type* typeSent,Identifier* identifierSent)
@@ -1381,7 +1374,7 @@ class formalParam:public ASTNode
     }
 
     bool isPropCopy(){
-
+     
      return propCopy;
 
     }
@@ -1399,7 +1392,6 @@ class formalParam:public ASTNode
      bool deviceVariable;
      bool accumulateKernel;
      int lhsType;
-     list<assignment*> merged_device_assignments;
 
      public:
      assignment()
@@ -1413,14 +1405,6 @@ class formalParam:public ASTNode
          accumulateKernel=false;
         indexAccess = NULL;
         isPropCopy = false;
-    }
-
-    void add_device_assignment(assignment* asst){
-      merged_device_assignments.push_back(asst);
-    }
-
-    list<assignment*> get_merged_device_assignments(){
-      return merged_device_assignments;
     }
 
      static assignment* id_assignExpr(Identifier* identifierSent,Expression* expressionSent)
@@ -1476,7 +1460,7 @@ class formalParam:public ASTNode
      }
 
      bool lhs_isIndexAccess(){
-
+    
        return (lhsType == 3);
 
      }
@@ -1580,7 +1564,7 @@ class whileStmt:public statement
     {
        body=bodySent;
     }
-  };
+  }; 
   class dowhileStmt:public statement
 {
   private:
@@ -1735,7 +1719,7 @@ class fixedPointStmt:public statement
 
     list<Identifier*> usedVars;
     std::set<TableEntry *> modifiedGlobalVars;
-    public:
+    public: 
     iterateReverseBFS()
     {
       filterExpr=NULL;
@@ -1767,7 +1751,7 @@ class fixedPointStmt:public statement
     {
       return booleanExpr;
     }
-
+    
     bool hasFilter()
     {
       if(booleanExpr!=NULL)
@@ -1779,7 +1763,7 @@ class fixedPointStmt:public statement
     void initUsedVariable(list<Identifier*> usedVars){
       this->usedVars = usedVars;
     }
-
+    
     /*void addVarTransfer(varTransferStmt* tstmt){
       this->revTransfer.push_back(tstmt);
     }*/
@@ -1816,7 +1800,7 @@ class fixedPointStmt:public statement
     Identifier* methodId;
     list<argument*> argList;
     Expression* indexExpr;
-
+    
     public:
     proc_callExpr()
     {
@@ -1827,7 +1811,7 @@ class fixedPointStmt:public statement
       indexExpr = NULL;
     }
 
-
+    
     static proc_callExpr* nodeForProc_Call(Identifier* id1,Identifier* id2,Identifier* methodId,list<argument*> argList, Expression* indexExprSent)
     {
           proc_callExpr* procExpr=new proc_callExpr();
@@ -1846,12 +1830,12 @@ class fixedPointStmt:public statement
     {
       return methodId;
     }
-
+    
     Identifier* getId1()
     {
       return id1;
     }
-
+    
     Identifier* getId2()
     {
       return id2;
@@ -1873,11 +1857,11 @@ class fixedPointStmt:public statement
 
     }
 
-
+    
   };
 
 
-
+  
   class onDeleteBlock:public statement
   {
 
@@ -1915,23 +1899,23 @@ class fixedPointStmt:public statement
     blockStatement* getStatements()
      {
        return statements;
-     }
+     }   
 
      Identifier* getIteratorId()
      {
        return itertorId;
-     }
+     }  
 
      Identifier* getUpdateId()
      {
        return updateId;
      }
-
+    
     proc_callExpr* getUpdateFunc()
     {
       return updateFunc;
     }
-
+ 
 
   };
 
@@ -1971,25 +1955,25 @@ class fixedPointStmt:public statement
     blockStatement* getStatements()
      {
        return statements;
-     }
+     }  
 
      Identifier* getIteratorId()
      {
        return itertorId;
-     }
+     }  
 
      Identifier* getUpdateId()
      {
        return updateId;
      }
-
+    
     proc_callExpr* getUpdateFunc()
     {
       return updateFunc;
     }
 
   };
-
+  
   class iterateBFS:public statement
   {   private:
       Identifier* iterator;
@@ -2015,7 +1999,7 @@ class fixedPointStmt:public statement
         revBFS=NULL;
         statementType="IterateInBFS";
       }
-
+    
       static iterateBFS* nodeForIterateBFS(Identifier* iterator,Identifier* graphId,proc_callExpr* nodeCall,Identifier* rootNode,Expression* filterExpr,statement* body,iterateReverseBFS* revBFS)
       {
         iterateBFS* new_iterBFS=new iterateBFS();
@@ -2076,7 +2060,7 @@ class fixedPointStmt:public statement
       return modifiedGlobalVars;
     }
   };
-
+  
   class unary_stmt:public statement
   {
     private:
@@ -2089,7 +2073,7 @@ class fixedPointStmt:public statement
       statementType="UnaryStatement";
       typeofNode=NODE_UNARYSTMT;
     }
-
+  
      static unary_stmt* nodeForUnaryStmt(Expression* unaryExpr)
     {
       unary_stmt* unary_stmtNode=new unary_stmt();
@@ -2105,7 +2089,7 @@ class fixedPointStmt:public statement
 
   };
 
-
+  
   class proc_callStmt:public statement
   {
     private:
@@ -2156,7 +2140,7 @@ class fixedPointStmt:public statement
     statement * reductionStatement;
     bool containsreductionStatement;
     list<Identifier*> usedVars;
-    set<Identifier*> mapLocals;
+    set<Identifier*> mapLocals;  
 
     std::set<TableEntry *> modifiedGlobalVars;
     public:
@@ -2172,7 +2156,7 @@ class fixedPointStmt:public statement
       isforall=false;
       isSourceId=false;
       createSymbTab();
-      filterExprAssoc = false;
+      filterExprAssoc = false; 
       sourceExpr = NULL;
       reductionStatement = NULL;
       containsreductionStatement = false;
@@ -2243,11 +2227,11 @@ class fixedPointStmt:public statement
     {
       return isforall;
     }
-
+    
     /* disable parallelization of for
        for specific instances*/
-    void disableForall()
-    {
+    void disableForall() 
+    {                     
       isforall=false;
     }
 
@@ -2257,7 +2241,7 @@ class fixedPointStmt:public statement
     }
 
     Expression* getSourceExpr(){
-
+  
      return sourceExpr;
 
     }
@@ -2292,7 +2276,7 @@ class fixedPointStmt:public statement
     {
       return (extractElemFunc!=NULL);
     }
-
+    
     bool isSourceExpr(){
 
      return (sourceExpr != NULL);
@@ -2330,7 +2314,7 @@ class fixedPointStmt:public statement
      {
        filterExprAssoc = true;
      }
-
+    
      bool hasFilterExprAssoc()
       {
         return filterExprAssoc;
@@ -2357,14 +2341,14 @@ class fixedPointStmt:public statement
     set<int> get_reduceKeys()
     {
       return reduc_keys;
-    }
-
+    } 
+    
     list<Identifier*> get_reduceIds(int key)
     {
       return reduction_map[key];
     }
-
-
+    
+   
 
     void addAtomicSignalToStatements()
     {
@@ -2525,7 +2509,7 @@ class reductionCallStmt:public statement
          return reducCallStmtNode;
 
      }
-
+      
      static reductionCallStmt* leftList_reducCallStmt(list<ASTNode*> llist,reductionCall* reducCall,list<ASTNode*> exprListSent)
      {
       // cout<<"REDUC CALL TYPE "<<(reducCall->getReductionType()==REDUCE_MIN)<<"\n";
@@ -2635,7 +2619,7 @@ class reductionCallStmt:public statement
       if(reducCall!=NULL)
         return true;
 
-      return false;
+      return false;  
     }
 
 
@@ -2656,6 +2640,6 @@ class varTransferStmt: public statement
     this->transferVar = iden;
     this->direction = dir;
     setTypeofNode(NODE_TRANSFERSTMT);
-  }
+  } 
 };
 #endif
