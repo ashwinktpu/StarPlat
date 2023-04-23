@@ -20,23 +20,23 @@ void Compute_SSSP(graph& g,int* dist,int* wt,int src
   h_data = (int *)malloc( (E)*sizeof(int));
 
   for(int i=0; i<= V; i++) {
-    int temp = g.indexofNodes[i];
+    int temp;
+    temp = g.indexofNodes[i];
     h_meta[i] = temp;
   }
 
   for(int i=0; i< E; i++) {
-    int temp = g.edgeList[i];
+    int temp;
+    temp = g.edgeList[i];
     h_data[i] = temp;
   }
 
 
   int* d_meta;
   int* d_data;
-  bool* d_modified_next;
 
   cudaMalloc(&d_meta, sizeof(int)*(1+V));
   cudaMalloc(&d_data, sizeof(int)*(E));
-  cudaMalloc(&d_modified_next, sizeof(bool)*(V));
 
   cudaMemcpy(  d_meta,   h_meta, sizeof(int)*(V+1), cudaMemcpyHostToDevice);
   cudaMemcpy(  d_data,   h_data, sizeof(int)*(E), cudaMemcpyHostToDevice);
@@ -67,6 +67,9 @@ void Compute_SSSP(graph& g,int* dist,int* wt,int src
   //BEGIN DSL PARSING 
   bool* d_modified;
   cudaMalloc(&d_modified, sizeof(bool)*(V));
+
+  bool* d_modified_next;
+  cudaMalloc(&d_modified_next, sizeof(bool)*(V));
 
   initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_dist,(int)INT_MAX);
 

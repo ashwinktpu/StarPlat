@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-class MetaDataUsed
+struct MetaDataUsed
 {
   public:
   bool isMetaUsed;      // if d_meta is used in the ASTNode

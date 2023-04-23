@@ -341,6 +341,8 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                  /* the assignment statements(arithmetic & logical) within the block of a for statement that
                     is itself within a IterateInBFS abstraction are signaled to become atomic while code
                     generation. */
+                  iterateBFS* parent = (iterateBFS*)parallelConstruct[0];
+                  cout << "parent type: " << parent->getTypeofNode() << endl;
                   proc_callExpr* extractElem = forAll->getExtractElementFunc();
                   if(extractElem!=NULL)
                    {
@@ -348,27 +350,36 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                      list<argument*> argList = extractElem->getArgList();
                      if(methodString == nbrCall)
                        {  
-
                         forAll->addAtomicSignalToStatements();
+                        parent->setIsMetaUsed();
+                        currentFunc->setIsMetaUsed();
+                        parent->setIsDataUsed();
+                        currentFunc->setIsDataUsed();
+                       }
+                      else if(methodString == nodesToCall)
+                       {
+                        parent->setIsRevMetaUsed();
+                        currentFunc->setIsRevMetaUsed();
+                        parent->setIsSrcUsed();
+                        currentFunc->setIsSrcUsed();
                        }
                    }
                }
-              else { // if for all statement has a proc call
+            else { // if for all statement has a proc call
                 proc_callExpr* extractElemFunc = forAll->getExtractElementFunc();
                 if(extractElemFunc != NULL && parallelConstruct.size() > 0) {
+                  forallStmt* parent = (forallStmt*) parallelConstruct.back();
                   Identifier* iteratorMethodId = extractElemFunc->getMethodId();
                   string iteratorMethodString(iteratorMethodId->getIdentifier());
-                  if(iteratorMethodString.compare("nodes_to") == 0) { // if the proc call is nodes_to, d_rev_meta is needed
-                    forallStmt* parentForall = (forallStmt*) parallelConstruct[0];
-                    parentForall->setIsRevMetaUsed();
+                  if(iteratorMethodString == nodesToCall) { // if the proc call is nodes_to, d_rev_meta is needed
+                    parent->setIsRevMetaUsed();
                     currentFunc->setIsRevMetaUsed();
-                    parentForall->setIsSrcUsed();
+                    parent->setIsSrcUsed();
                     currentFunc->setIsSrcUsed();
-                  } else if(iteratorMethodString.compare("neighbors") == 0) { // if the proc call is neighbors, d_data is needed
-                    forallStmt* parentForall = (forallStmt*) parallelConstruct[0];
-                    parentForall->setIsMetaUsed();
+                  } else if(iteratorMethodString == nbrCall) { // if the proc call is neighbors, d_data is needed
+                    parent->setIsMetaUsed();
                     currentFunc->setIsMetaUsed();
-                    parentForall->setIsDataUsed();
+                    parent->setIsDataUsed();
                     currentFunc->setIsDataUsed();
                   }
                 }
@@ -556,8 +567,11 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
              }     
           
           currentFunc->setIsMetaUsed(); // d_meta is used in itrbfs
+          iBFS->setIsMetaUsed(); // d_meta is used in itrbfs
           currentFunc->setIsDataUsed(); // d_data is used in itrbfs
+          iBFS->setIsDataUsed(); // d_data is used in itrbfs
           currentFunc->setIsWeightUsed(); // d_weight is used in itrbfs
+          iBFS->setIsWeightUsed(); // d_weight is used in itrbfs
 
           buildForStatements(iBFS->getBody());
           iterateReverseBFS* iRevBFS = iBFS->getRBFS();
@@ -716,7 +730,7 @@ void SymbolTableBuilder::checkForArguments(list<argument*> argList)
                    string idString(id->getIdentifier());
                    assert(idString.compare(updatesString) == 0);
                  }
-              if(s.compare("is_an_edge") == 0)
+              if(s.compare(isAnEdgeCall) == 0)
                 {
                   forallStmt* parentForAll = (forallStmt*)parallelConstruct[0];
                   parentForAll->setIsMetaUsed();
@@ -724,7 +738,7 @@ void SymbolTableBuilder::checkForArguments(list<argument*> argList)
                   parentForAll->setIsDataUsed();
                   currentFunc->setIsDataUsed();
                 }
-              if(s.compare("count_outNbrs") == 0)
+              if(s.compare(countOutNbrCall) == 0)
                 {
                   forallStmt* parentForAll = (forallStmt*)parallelConstruct[0];
                   parentForAll->setIsMetaUsed();

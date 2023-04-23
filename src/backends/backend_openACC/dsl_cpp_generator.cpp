@@ -109,7 +109,7 @@ void add_InitialDeclarations(dslCodePad* main,iterateBFS* bfsAbstraction)
   main->pushstr_newL(strBuffer);
   main->pushstr_newL("{");
   main->pushstr_newL("#pragma acc parallel loop");
-  sprintf(strBuffer, "for(int int t=0; t<%s.%s(); t++)", graphId, "num_nodes");
+  sprintf(strBuffer, "for(int t=0; t<%s.%s(); t++)", graphId, "num_nodes");
   main->pushstr_newL(strBuffer);
   main->pushstr_newL("{");
   main->pushstr_newL("level[t] = -1;");
@@ -228,9 +228,12 @@ void add_InitialDeclarations(dslCodePad* main,iterateBFS* bfsAbstraction)
    main.pushstr_newL(strBuffer);
    main.pushstr_newL("{");  //Opening bracket for data copy (g)
 
-  //-------------------DATA COPY PRAGMA FOR BC ALGO ONLY (NEED TO BE ANALYSED AND GENERATED)------------------------------------
-  sprintf(strBuffer, "#pragma acc copyin(src, offset[0:%s.num_nodes()+1], edge_array[0:%s.num_edges()]) copy(delta[0:%s.num_nodes()], sigma[0:%s.num_nodes()], level[0:%s.num_nodes()], BC[0:%s.num_nodes()])", graphId, graphId, graphId, graphId, graphId, graphId);
-  main.pushstr_newL(strBuffer);
+  // Analyzed and Generated Data Copy Pragmas
+  sprintf(strBuffer, "#pragma acc data");
+  main.pushstr_space(strBuffer);
+  generateDataDirectiveForStatment(bfsAbstraction);
+  // sprintf(strBuffer, "#pragma acc copyin(src, offset[0:%s.num_nodes()+1], edge_array[0:%s.num_edges()]) copy(delta[0:%s.num_nodes()], sigma[0:%s.num_nodes()], level[0:%s.num_nodes()], BC[0:%s.num_nodes()])", graphId, graphId, graphId, graphId, graphId, graphId);
+  // main.pushstr_newL(strBuffer);
   main.pushstr_newL("{");    //Open bracket for data copy around BFS AND RBFS
   //-------------------------------------------------------------------------------------
 
@@ -765,7 +768,7 @@ void dsl_cpp_generator::generateDoWhileStmt(dowhileStmt* doWhile)
   main.pushstr_newL(strBuffer);
   main.pushstr_newL("{");  //Start of outer openAcc data body
 
-  main.pushString("#pragma acc data");  // start openACC data directive
+  main.pushstr_space("#pragma acc data");  // start openACC data directive
   generateDataDirectiveForStatment(doWhile);
 
   main.pushstr_newL("{");  //Start of inner openAcc data body
@@ -920,6 +923,8 @@ void dsl_cpp_generator::generateAssignmentStmt(assignment* asmt)  //When propnod
        }
        else
         main.pushString(id->getIdentifier());
+
+      currAccVars.erase(id->getSymbolInfo());
    }
    else if(asmt->lhs_isProp())  //If lhs is not an identifier //the check for node and edge property to be carried out.
    {
@@ -940,7 +945,8 @@ void dsl_cpp_generator::generateAssignmentStmt(assignment* asmt)  //When propnod
       }
 
       generate_exprPropId(propId);
-
+      
+      // TODO: Have to check if prop Id need to be erased from currAccVars
   }
    
    if(!asmt->hasPropCopy())
@@ -1020,6 +1026,9 @@ void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt)   //Attac
           // main.pushstr_newL(strBuffer);
           // main.pushstr_newL("{");  //opening bracket for 1st outer data region
 
+          sprintf(strBuffer, "#pragma acc data copyin(%s)", graph_name);    //Copy the graph object to GPU first (shallow-copy)
+          main.pushstr_newL(strBuffer);
+          main.pushstr_newL("{");  //opening bracket for 1st outer data region
           main.pushString("#pragma acc data copyout(");   //Since we are just setting values to arrays, it it sufficient to copyout
 
           bool first = true;   //To generate comma before every array except the first one
@@ -1051,7 +1060,7 @@ void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt)   //Attac
 
           first = true;
 
-          main.pushstr_space(" copyin(");  // Getiing the values used to set the lhs
+          main.pushString("copyin(");  // Getiing the values used to set the lhs
           //Iterate all the arguments inside the attachNodeProperty(--) or attachEdgeProperty(--) procedure calls. (Example: dist=INF)
           for(itr=argList.begin();itr!=argList.end();itr++)
           {
@@ -1127,7 +1136,7 @@ void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt)   //Attac
         main.pushstr_newL("}");   //Close for loop
 
         main.pushstr_newL("}");  ///OpenAcc data region close
-        // main.pushstr_newL("}");   ///OpenAcc data region close
+        main.pushstr_newL("}");   ///OpenAcc data region close (copyin(g))
         main.NewLine();
 
     }
@@ -1348,7 +1357,7 @@ void dsl_cpp_generator::generateForAll_header(forallStmt* forAll)    //Required 
     main.pushstr_newL(strBuffer1);
     main.pushstr_newL("{"); //---------------------------------------------
 
-    main.pushString("#pragma acc data");  // start of pragma acc data
+    main.pushstr_space("#pragma acc data");  // start of pragma acc data
     generateDataDirectiveForStatment(forAll);
 
   //--------------------sent only useful data to acc-------------------------
@@ -1475,7 +1484,7 @@ void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll)
           Identifier* nodeNbr=argList.front()->getExpr()->getId();
           sprintf(strBuffer,"for (%s %s = %s.%s[%s]; %s < %s.%s[%s+1]; %s ++) ","int","edge",graphId,"indexofNodes",nodeNbr->getIdentifier(),"edge",graphId,"indexofNodes",nodeNbr->getIdentifier(),"edge");
           main.pushstr_newL(strBuffer);
-          main.pushString("{");
+          main.pushstr_newL("{");
           sprintf(strBuffer,"%s %s = %s.%s[%s] ;","int",iterator->getIdentifier(),graphId,"edgeList","edge"); //needs to move the addition of
           main.pushstr_newL(strBuffer);
        }
@@ -1488,7 +1497,7 @@ void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll)
           Identifier* nodeNbr=argList.front()->getExpr()->getId();
           sprintf(strBuffer,"for (%s %s = %s.%s[%s]; %s < %s.%s[%s+1]; %s ++) ","int","edge",graphId,"rev_indexofNodes",nodeNbr->getIdentifier(),"edge",graphId,"rev_indexofNodes",nodeNbr->getIdentifier(),"edge");
           main.pushstr_newL(strBuffer);
-          main.pushString("{");
+          main.pushstr_newL("{");
           sprintf(strBuffer,"%s %s = %s.%s[%s] ;","int",iterator->getIdentifier(),graphId,"srcList","edge"); //needs to move the addition of
           main.pushstr_newL(strBuffer);
           
@@ -2514,6 +2523,9 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct)
     sprintf(strBuffer,"%s = %s;",fixedPointId->getIdentifier(),"true");  //LINE: finished=true
     main.pushstr_newL(strBuffer);
 
+    cout << "fpid: " << fixedPointId->getIdentifier() << endl;
+    currAccVars.erase(fixedPointId->getSymbolInfo()); // Since the variable(finished) is getting modified it is invalid to be used in the data copyin directive.
+
     //OpenAcc data pragma
     //sprintf(strBuffer,"#pragma acc data copy(%s);", fixedPointId->getIdentifier());
     //main.pushstr_newL(strBuffer);
@@ -2696,6 +2708,12 @@ void dsl_cpp_generator::generateFunc(ASTNode* proc)
    sprintf(strBuffer,"omp_init_lock(&lock[%s]);","v");
    main.pushstr_newL(strBuffer);*/ 
    //including locks before hand in the body of function.
+
+   if(func->getIsWeightUsed())
+   {
+    main.pushstr_newL("int* edgeWeight = g.getEdgeLen(); // shallow copy of edge weight");
+   }
+
    generateBlock(func->getBlockStatement(),false);
    main.NewLine();
    main.pushstr_newL("}");
@@ -3012,15 +3030,15 @@ bool dsl_cpp_generator::generate()
 
         for (Identifier* id: readVarsList) {
           TableEntry* te = id->getSymbolInfo();
-          if (presentInSet(in, te))
+          if (presentInSet(currAccVars, te))
             continue;
-          if (in.find(te) != in.end())
+          if (presentInSet(in, te))
             readVars.insert(te);
         }
 
         for (Identifier* id: writeVarsList) {
           TableEntry* te = id->getSymbolInfo();
-          if (out.find(te) != out.end())
+          if (presentInSet(out, te))
             writeVars.insert(te);
         }
 
@@ -3028,11 +3046,13 @@ bool dsl_cpp_generator::generate()
           TableEntry* te = id->getSymbolInfo();  
           if (!presentInSet(in, te) && presentInSet(out, te))
             writeVars.insert(te);
-          else if (presentInSet(in, te))
-            continue;
-          else if (in.find(te) != in.end() && out.find(te) != out.end())
-            readWriteVars.insert(te);
-          else if (in.find(te) != in.end())
+          else if (presentInSet(in, te) && presentInSet(out, te)) {
+            if (presentInSet(currAccVars, te))
+              writeVars.insert(te);
+            else
+              readWriteVars.insert(te);
+          }
+          else if (presentInSet(in, te) && !presentInSet(out, te) && !presentInSet(currAccVars, te))
             readVars.insert(te);
         }
 
@@ -3067,15 +3087,15 @@ bool dsl_cpp_generator::generate()
 
         for (Identifier* id: readVarsList) {
           TableEntry* te = id->getSymbolInfo();
-          if (presentInSet(in, te))
+          if (presentInSet(currAccVars, te))
             continue;
-          if (in.find(te) != in.end())
+          if (presentInSet(in, te))
             readVars.insert(te);
         }
 
         for (Identifier* id: writeVarsList) {
           TableEntry* te = id->getSymbolInfo();
-          if (out.find(te) != out.end())
+          if (presentInSet(out, te))
             writeVars.insert(te);
         }
 
@@ -3083,11 +3103,13 @@ bool dsl_cpp_generator::generate()
           TableEntry* te = id->getSymbolInfo();  
           if (!presentInSet(in, te) && presentInSet(out, te))
             writeVars.insert(te);
-          else if (presentInSet(in, te))
-            continue;
-          else if (in.find(te) != in.end() && out.find(te) != out.end())
-            readWriteVars.insert(te);
-          else if (in.find(te) != in.end())
+          else if (presentInSet(in, te) && presentInSet(out, te)) {
+            if (presentInSet(currAccVars, te))
+              writeVars.insert(te);
+            else
+              readWriteVars.insert(te);
+          }
+          else if (presentInSet(in, te) && !presentInSet(out, te) && !presentInSet(currAccVars, te))
             readVars.insert(te);
         }
 
@@ -3154,6 +3176,7 @@ bool dsl_cpp_generator::generate()
         }
 
         main.pushstr_newL("");
+        break;
       }
 
       case NODE_FIXEDPTSTMT:
@@ -3169,7 +3192,7 @@ bool dsl_cpp_generator::generate()
         set<TableEntry*> out = fixedPtStmt->getBlockData()->getEndBlock()->getIn();
 
         // get used variables
-        usedVariables usedVars = getVarsStatement(fixedPtStmt->getBody());
+        usedVariables usedVars = getVarsStatement(fixedPtStmt);
 
         // get read-only, write-only and read-write variables
         list<Identifier*> readVarsList = usedVars.getVariables(READ_ONLY);
@@ -3182,27 +3205,29 @@ bool dsl_cpp_generator::generate()
 
         for (Identifier* id: readVarsList) {
           TableEntry* te = id->getSymbolInfo();
-          if (presentInSet(in, te))
+          if (presentInSet(currAccVars, te))
             continue;
-          if (in.find(te) != in.end())
+          if (presentInSet(in, te))
             readVars.insert(te);
         }
 
         for (Identifier* id: writeVarsList) {
           TableEntry* te = id->getSymbolInfo();
-          if (out.find(te) != out.end())
+          if (presentInSet(out, te))
             writeVars.insert(te);
         }
 
         for (Identifier* id: readWriteVarsList) {
-          TableEntry* te = id->getSymbolInfo();  
+          TableEntry* te = id->getSymbolInfo();
           if (!presentInSet(in, te) && presentInSet(out, te))
             writeVars.insert(te);
-          else if (presentInSet(in, te))
-            continue;
-          else if (in.find(te) != in.end() && out.find(te) != out.end())
-            readWriteVars.insert(te);
-          else if (in.find(te) != in.end())
+          else if (presentInSet(in, te) && presentInSet(out, te)) {
+            if (presentInSet(currAccVars, te))
+              writeVars.insert(te);
+            else
+              readWriteVars.insert(te);
+          }
+          else if (presentInSet(in, te) && !presentInSet(out, te) && !presentInSet(currAccVars, te))
             readVars.insert(te);
         }
 
@@ -3211,6 +3236,63 @@ bool dsl_cpp_generator::generate()
         generateDataDirectiveForVars(readWriteVars, READ_WRITE);
 
         main.pushstr_newL("");
+        break;
+      }
+
+      case NODE_ITRBFS:
+      {
+        iterateBFS* itrBFS = (iterateBFS*) stmt;
+        
+        // get metadata used
+        MetaDataUsed metadataUsed = getMetaDataUsedStatement(itrBFS);
+        generateDataDirectiveForMetaVars(metadataUsed);
+
+        // get in and out variables
+        set<TableEntry*> in = itrBFS->getBlockData()->getStartBlock()->getOut();
+        set<TableEntry*> out = itrBFS->getBlockData()->getEndBlock()->getIn();
+
+        // get used variables
+        usedVariables usedVars = getVarsStatement(itrBFS);
+
+        // get read-only, write-only and read-write variables
+        list<Identifier*> readVarsList = usedVars.getVariables(READ_ONLY);
+        list<Identifier*> writeVarsList = usedVars.getVariables(WRITE_ONLY);
+        list<Identifier*> readWriteVarsList = usedVars.getVariables(READ_AND_WRITE);
+
+        set<TableEntry*> readVars;
+        set<TableEntry*> writeVars;
+        set<TableEntry*> readWriteVars;
+
+        for (Identifier* id: readVarsList) {
+          TableEntry* te = id->getSymbolInfo();
+          if (presentInSet(currAccVars, te))
+            continue;
+          if (presentInSet(in, te))
+            readVars.insert(te);
+        }
+
+        for (Identifier* id: writeVarsList) {
+          TableEntry* te = id->getSymbolInfo();
+          if (presentInSet(out, te))
+            writeVars.insert(te);
+        }
+
+        for (Identifier* id: readWriteVarsList) {
+          TableEntry* te = id->getSymbolInfo();  
+          if (!presentInSet(in, te) && presentInSet(out, te))
+            writeVars.insert(te);
+          else if (presentInSet(in, te) && presentInSet(out, te)) {
+            if (presentInSet(currAccVars, te))
+              writeVars.insert(te);
+            else
+              readWriteVars.insert(te);
+          }
+          else if (presentInSet(in, te) && !presentInSet(out, te) && !presentInSet(currAccVars, te))
+            readVars.insert(te);
+        }
+
+        main.pushstr_newL("");
+        break;
       }
     }
   }
@@ -3250,7 +3332,7 @@ bool dsl_cpp_generator::generate()
     }
     if (metaUsed.isWeightUsed && !currMetaAccVars.isWeightUsed) {
       if (!first) main.pushString(", "); first = false;
-      sprintf(strBuffer, "%s.getEdgeLen[0:%s.num_edges()+1]", graph_name, graph_name);
+      sprintf(strBuffer, "%s.edgeWeight[0:%s.num_edges()+1]", graph_name, graph_name);
       main.pushString(strBuffer);
     }
     currMetaAccVars |= metaUsed;

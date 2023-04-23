@@ -26,7 +26,7 @@ __global__ void Compute_TC_kernel(int V, int E, int* d_meta, int* d_data){ // BE
         int w = d_data[edge];
         if (w > v){ // if filter begin 
           if (findNeighborSorted(u, w, d_meta, d_data)){ // if filter begin 
-            atomicAdd(& triangle_count, (long)1);
+            atomicAdd((unsigned long long*)& triangle_count, (unsigned long long)1);
 
           } // if filter end
 

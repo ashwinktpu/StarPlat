@@ -2051,7 +2051,8 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
         main.pushString(convertToCppType(innerType)); //convertToCppType need to be modified. 
         main.pushString("*"); 
         main.space();
-        sprintf(strBuffer,"%s_nxt",declStmt->getdeclId()->getIdentifier());
+        main.pushString("d_");
+        sprintf(strBuffer,"%s_next",declStmt->getdeclId()->getIdentifier());
         main.pushString(strBuffer);
         main.pushstr_newL(";");
         generateCudaMalloc(type, strBuffer);

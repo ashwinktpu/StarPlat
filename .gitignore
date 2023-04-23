@@ -18,3 +18,7 @@ dump
 *.pdf
 To_be_done.txt
 .github/
+dump/
+*.starplat
+runtests.sh
+cudadump/

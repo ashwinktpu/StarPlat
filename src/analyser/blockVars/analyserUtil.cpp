@@ -12,6 +12,8 @@ usedVariables_t::usedVariables_t() {}
 
 void usedVariables_t::addVariable(Identifier *iden, int type)
 {
+    if (iden->getSymbolInfo() == nullptr)
+        return;
     if (type & 1)
         readVars.insert({iden->getSymbolInfo(), iden});
     if (type & 2)
