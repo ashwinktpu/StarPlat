@@ -1,0 +1,65 @@
+function scc(Graph g)
+{
+    propNode <bool> vis;
+    propNode <int> tim;
+    propNode <int> low;
+    g.attachNodeProperty(vis = False,tim = -1,low = -1);
+    int cur_t=0;
+
+    forall(u in g.nodes().filter(tim == -1))
+    {
+        dfs(u,vis,tim,low,g,cur_t);
+
+    }
+
+
+}
+
+function dfs(node u, propNode<bool> vis, propNode<int> tim,propNode<int> low,Graph g,int cur_t)
+{
+    u.vis = True;
+    u.tim = cur_t;
+    u.low = cur_t;
+    cur_t = cur_t + 1;
+    forall(v in g.neighbors(u))
+    {
+        if(v.tim == -1)
+        {
+            cur_t = dfs(v,vis,tim,low,g,cur_t);
+            if(u.low > v.low)
+            {
+                u.low = v.low;
+            }
+
+        }
+        else if(v.vis == True)
+        {
+            if(v.tim < u.low)
+            {
+                u.low = v.tim;
+            }
+        }
+
+
+    }
+
+    if(u.low == u.tim)
+    {
+        dfs1(u,g,vis);
+        //Create a global variable and increment it to get count of SCC
+    }
+    return(cur_t);
+
+}
+
+
+function dfs1(node u, Graph g, propNode<bool> vis)
+{
+    u.vis = False;
+    forall(v in g.neighbors(u).filter(vis == True))
+    {
+        dfs1(v,g,vis);
+    }
+}
+
+
