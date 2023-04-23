@@ -1,7 +1,7 @@
 // FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
-#include "triangle_counting_dsl.h"
+#include "patil.h"
 
-void Compute_TC(graph& g)
+void mf(graph& g)
 
 {
   // CSR BEGIN
@@ -58,14 +58,40 @@ void Compute_TC(graph& g)
   //DECLAR DEVICE AND HOST vars in params
 
   //BEGIN DSL PARSING 
-  long triangle_count = 0; // asst in .cu
+  int* d_indeg;
+  cudaMalloc(&d_indeg, sizeof(int)*(V));
 
-  cudaMemcpyToSymbol(::triangle_count, &triangle_count, sizeof(long), 0, cudaMemcpyHostToDevice);
-  Compute_TC_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data);
+  int* d_indeg_prev;
+  cudaMalloc(&d_indeg_prev, sizeof(int)*(V));
+
+  int kcore_count = 0; // asst in .cu
+
+  int update_count = 0; // asst in .cu
+
+  initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_indeg,(int)0);
+
+  initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_indeg_prev,(int)0);
+
+  mf_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_indeg,d_indeg_prev);
   cudaDeviceSynchronize();
 
 
 
+  mf_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_indeg,d_indeg_prev);
+  cudaDeviceSynchronize();
+
+
+
+  ;
+  mf_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_indeg_prev,d_indeg);
+  cudaDeviceSynchronize();
+
+
+
+
+  //cudaFree up!! all propVars in this BLOCK!
+  cudaFree(d_indeg_prev);
+  cudaFree(d_indeg);
 
   //TIMER STOP
   cudaEventRecord(stop,0);

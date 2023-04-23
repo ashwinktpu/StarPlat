@@ -8,8 +8,16 @@ void blockVarsAnalyser::setVarsInParallelStatment(statement* stmt)
             setVarsInParallelBlock((blockStatement*)stmt); break;
         case NODE_ASSIGN:
             setVarsInParallelAssign((assignment*)stmt); break;
+        case NODE_DECL:
+            setVarsInParallelDeclaration((declaration*)stmt); break;
         case NODE_FORALLSTMT:
             setVarsInParallelForAll((forallStmt*)stmt); break;
+        case NODE_DOWHILESTMT:
+            setVarsInParallelDoWhile((dowhileStmt*)stmt); break;
+        case NODE_WHILESTMT:
+            setVarsInParallelWhile((whileStmt*)stmt); break;
+        case NODE_FIXEDPTSTMT:
+            setVarsInParallelFixedPoint((fixedPointStmt*)stmt); break;
         case NODE_ITRBFS:
             setVarsInParallelBFS((iterateBFS*)stmt); break;
         default:
@@ -44,6 +52,28 @@ void blockVarsAnalyser::setVarsInParallelAssign(assignment* assign)
     }
 }
 
+void blockVarsAnalyser::setVarsInParallelDeclaration(declaration* declStmt)
+{
+    // Check if the declaration is a parallel declaration initialisation
+    if(!declStmt->isInitialized()) return;
+    Type* type=declStmt->getType();
+    if(type->isPropType())
+    {
+        if(type->getInnerTargetType()->isPrimitiveType())
+        {
+            if (declStmt->getExpressionAssigned()->getExpressionFamily() == EXPR_ID && declStmt->getExpressionAssigned()->getId()->getSymbolInfo()->getType()->gettypeId() == type->gettypeId())
+            {
+                // get propid
+                Identifier* lhs = declStmt->getdeclId();
+                Identifier* rhs = declStmt->getExpressionAssigned()->getId();
+                // Set lhs and rhs identifiers as parallel
+                lhs->getSymbolInfo()->setInParallelSection(true);
+                rhs->getSymbolInfo()->setInParallelSection(true);
+            }
+        }
+    }
+}
+
 void blockVarsAnalyser::setVarsInParallelForAll(forallStmt* forall)
 {
     // Check if the statement is a forall
@@ -53,8 +83,37 @@ void blockVarsAnalyser::setVarsInParallelForAll(forallStmt* forall)
     // get used variables in the forall body
     usedVariables_t usedVars = getVarsStatement(forall->getBody());
     // Set the flag of the tableentry of the variables in the parallel section
-    for (auto var: usedVars.getVariables())
+    for (auto var: usedVars.getVariables()) {
         var->getSymbolInfo()->setInParallelSection(true);
+    }
+}
+
+void blockVarsAnalyser::setVarsInParallelDoWhile(dowhileStmt* dowhile)
+{
+    // get used variables in the dowhile body
+    setVarsInParallelStatment(dowhile->getBody());
+}
+
+void blockVarsAnalyser::setVarsInParallelWhile(whileStmt* whileStmt)
+{
+    // get used variables in the while body
+    setVarsInParallelStatment(whileStmt->getBody());
+}
+
+void blockVarsAnalyser::setVarsInParallelFixedPoint(fixedPointStmt* fixedpoint)
+{
+    // get used variables in the fixedpoint body
+    setVarsInParallelStatment(fixedpoint->getBody());
+}
+
+void blockVarsAnalyser::setVarsInParallelProcCall(proc_callStmt* proc)
+{
+    // get used variables in the procedure call
+    usedVariables_t usedVars = getVarsProcCall(proc);
+    // Set the flag of the tableentry of the variables in the parallel section
+    for (auto var: usedVars.getVariables()) {
+        var->getSymbolInfo()->setInParallelSection(true);
+    }
 }
 
 void blockVarsAnalyser::setVarsInParallelBFS(iterateBFS* bfs)
@@ -73,6 +132,6 @@ void blockVarsAnalyser::setVarsInParallelBFS(iterateBFS* bfs)
     }
 
     // Set the flag of the tableentry of the variables in the parallel section
-    for (auto var: usedVars.getVariables())
+    for (auto var: usedVars.getVariables()) 
         var->getSymbolInfo()->setInParallelSection(true);
 }

@@ -136,19 +136,16 @@ ASTNodeBlock* blockVarsAnalyser::initForAll(forallStmt* forAllStmt, ASTNodeBlock
     forAllEndNode->addSucc(blockNode);
     blockNodes.push_back(forAllEndNode);
 
-    // Add this node to the list of block nodes
-    addBlockNode(forAllStmt->getBody(), forAllCondNode);
-
     // Add the forall statement as a succ of the new cond block
     ASTNodeBlock* forAllBodyNode = initStatement(forAllStmt->getBody(), forAllEndNode);
     forAllCondNode->addSucc(forAllBodyNode);
 
+    // Add this node to the list of block nodes
+    addBlockNode(forAllStmt->getBody(), forAllCondNode);
+
     // Add the cond block as a succ for the forall statement start block
     forAllStartNode->addSucc(forAllCondNode);
     blockNodes.push_back(forAllStartNode);
-
-    // Add the forall statement as a succ of the new block
-    forAllCondNode->addSucc(initStatement(forAllStmt->getBody(), forAllCondNode));
 
     // Map the forall statement's start and end block
     addBlockNode(forAllStmt, forAllStartNode, forAllEndNode);
@@ -201,12 +198,12 @@ ASTNodeBlock* blockVarsAnalyser::initWhile(whileStmt* whileStmt, ASTNodeBlock* b
     whileEndNode->addSucc(blockNode);
     blockNodes.push_back(whileEndNode);
 
-    // Add the while statement to the list of block nodes
-    addBlockNode(whileStmt->getCondition(), whileCondNode);
-
     // Add the while statement as a succ of the new block
     ASTNodeBlock* whileBodyNode = initStatement(whileStmt->getBody(), whileEndNode);
     whileCondNode->addSucc(whileBodyNode);
+
+    // Add the while statement to the list of block nodes
+    addBlockNode(whileStmt->getCondition(), whileCondNode);
 
     // Add the cond block as a succ of the while statement start block
     whileStartNode->addSucc(whileCondNode);
@@ -299,7 +296,6 @@ ASTNodeBlock* blockVarsAnalyser::initFixedPoint(fixedPointStmt* fixedPointStmt, 
 
     // Map the fixed point statement's start and end block
     addBlockNode(fixedPointStmt, fixedPointStartNode, fixedPointEndNode);
-
     return fixedPointStartNode;
 }
 
@@ -320,25 +316,97 @@ ASTNodeBlock* blockVarsAnalyser::initReduction(reductionCallStmt* reductionCallS
     return reductionNode;
 }
 
-/* TODO: This function is not properly implemented */
 ASTNodeBlock* blockVarsAnalyser::initItrBFS(iterateBFS* iterateBFS, ASTNodeBlock* blockNode)
 {
+    // Create a new block node for start and enc block of the iterateBFS + iterateReverseBFS statement
+    ASTNodeBlock* itr_BFS_RBFS_Start = new ASTNodeBlock();
+    ASTNodeBlock* itr_BFS_RBFS_End = new ASTNodeBlock();
+
+    // Create a new block node for start and end block of the iterateBFS statement
+    ASTNodeBlock* iterateBFSStartNode = new ASTNodeBlock();
+    ASTNodeBlock* iterateBFSEndNode = new ASTNodeBlock();
+
+    // Add the start of the iterateBFS statement as a succ of the start block
+    itr_BFS_RBFS_Start->addSucc(iterateBFSStartNode);
+
     // Create a new block node for the iterateBFS statement
-    ASTNodeBlock* iterateBFSNode = new ASTNodeBlock(iterateBFS);
+    ASTNodeBlock* iterateBFSCondNode = new ASTNodeBlock(iterateBFS->getIteratorNode()); // it acts like a do while loop
 
     // Add the used and def variables to use set of the new block
-    usedVariables_t usedVars = getVarsStatement(iterateBFS);
-    iterateBFSNode->addVars(usedVars);
+    /* No used Variables in the condnode */
 
     // Add the passed block as succ of the new block
-    iterateBFSNode->addSucc(blockNode);
+    itr_BFS_RBFS_End->addSucc(blockNode);
 
-    // Add the iterateBFS statement as a succ of the new block
-    iterateBFSNode->addSucc(initStatement(iterateBFS->getBody(), blockNode));
+    // Add the outer end block to the list of block nodes
+    blockNodes.push_back(itr_BFS_RBFS_End);
 
-    // Add this node to the list of block nodes
-    addBlockNode(iterateBFS, iterateBFSNode);
-    return iterateBFSNode;
+    // If RBFS is present, add it as a succ of the iterateBFS end block
+    if(iterateBFS->getRBFS() != NULL)
+        iterateBFSEndNode->addSucc(initItrRBFS(iterateBFS->getRBFS(), itr_BFS_RBFS_End));
+    else
+        iterateBFSEndNode->addSucc(itr_BFS_RBFS_End);
+    blockNodes.push_back(iterateBFSEndNode);
+
+    // Add the iterateBFS end node as a succ of the iterateBFS cond block
+    iterateBFSCondNode->addSucc(iterateBFSEndNode);
+    blockNodes.push_back(iterateBFSCondNode);
+
+    // Add the iterateBFS statement as a succ of the iterateBFS start block and cond block
+    ASTNodeBlock* iterateBFSBodyStartNode = initStatement(iterateBFS->getBody(), iterateBFSCondNode);
+    iterateBFSCondNode->addSucc(iterateBFSBodyStartNode);
+    iterateBFSStartNode->addSucc(iterateBFSBodyStartNode);
+
+    // Add the iterateBFS start block to the list of block nodes
+    blockNodes.push_back(iterateBFSStartNode);
+
+    // Map the iterateBFS statement's start and end block
+    addBlockNode(iterateBFS->getIteratorNode(), iterateBFSStartNode, iterateBFSEndNode);
+
+    // Add the iterateBFS statement as a succ of the outer start block
+    itr_BFS_RBFS_Start->addSucc(iterateBFSStartNode);
+    blockNodes.push_back(itr_BFS_RBFS_Start);
+
+    // Map the outer iterateBFS statement's start and end block
+    addBlockNode(iterateBFS, itr_BFS_RBFS_Start, itr_BFS_RBFS_End);
+    return itr_BFS_RBFS_Start;
+}
+
+ASTNodeBlock* blockVarsAnalyser::initItrRBFS(iterateReverseBFS* iterateRBFS, ASTNodeBlock* blockNode)
+{
+    // Create a new block node for start and end block of the iterateReverseBFS statement
+    ASTNodeBlock* iterateRBFSStartNode = new ASTNodeBlock();
+    ASTNodeBlock* iterateRBFSEndNode = new ASTNodeBlock();
+
+    // Create a new block node for the iterateReverseBFS statement
+    ASTNodeBlock* iterateRBFSCondNode = new ASTNodeBlock(iterateRBFS->getBFSFilter());
+
+    // Add the used and def variables to use set of the new block
+    usedVariables_t usedVars = getVarsExpr(iterateRBFS->getBFSFilter());
+    iterateRBFSCondNode->addVars(usedVars);
+
+    // Add the end block as succ of the new block
+    iterateRBFSCondNode->addSucc(iterateRBFSEndNode);
+
+    // Add the passed block as succ of the end block
+    iterateRBFSEndNode->addSucc(blockNode);
+    blockNodes.push_back(iterateRBFSEndNode);
+
+    // Add the iterateRBFS statement as a succ of the new block
+    ASTNodeBlock* iterateRBFSBodyNode = initStatement(iterateRBFS->getBody(), iterateRBFSEndNode);
+    iterateRBFSCondNode->addSucc(iterateRBFSBodyNode);
+
+    // Add the iterateRBFS statement to the list of block nodes
+    addBlockNode(iterateRBFS->getBFSFilter(), iterateRBFSCondNode);
+
+    // Add the cond block as a succ of the iterateRBFS statement start block
+    iterateRBFSStartNode->addSucc(iterateRBFSCondNode);
+    blockNodes.push_back(iterateRBFSStartNode);
+
+    // Map the iterateRBFS statement's start and end block 
+    addBlockNode(iterateRBFS, iterateRBFSStartNode, iterateRBFSEndNode);
+    return iterateRBFSStartNode;
+
 }
 
 ASTNodeBlock* blockVarsAnalyser::initReturn(returnStmt* returnStmt, ASTNodeBlock* blockNode)

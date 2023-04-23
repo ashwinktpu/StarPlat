@@ -125,12 +125,15 @@ usedVariables_t blockVarsAnalyser::getVarsUnary(unary_stmt *stmt)
 usedVariables_t blockVarsAnalyser::getVarsBFS(iterateBFS *stmt)
 {
   usedVariables_t currVars = getVarsStatement(stmt->getBody());
-  if (stmt->getRBFS() != nullptr)
+  return currVars;
+}
+
+usedVariables_t blockVarsAnalyser::getVarsRBFS(iterateReverseBFS *stmt)
+{
+  usedVariables_t currVars = getVarsStatement(stmt->getBody());
+  if(stmt->hasFilter())
   {
-    iterateReverseBFS *RBFSstmt = stmt->getRBFS();
-    if (RBFSstmt->getBFSFilter() != nullptr)
-      currVars.merge(getVarsExpr(RBFSstmt->getBFSFilter()));
-    currVars.merge(getVarsStatement(RBFSstmt->getBody()));
+    currVars.merge(getVarsExpr(stmt->getBFSFilter()));
   }
 
   return currVars;
@@ -341,6 +344,9 @@ usedVariables_t blockVarsAnalyser::getVarsStatement(statement *stmt)
 
   case NODE_ITRBFS:
     return getVarsBFS((iterateBFS *)stmt);
+
+  case NODE_ITRRBFS:
+    return getVarsRBFS((iterateReverseBFS *)stmt);
 
   case NODE_FIXEDPTSTMT:
     return getVarsFixedPoint((fixedPointStmt *)stmt);

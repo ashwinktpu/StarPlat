@@ -80,14 +80,14 @@ void blockVarsAnalyser::printBlockNodes()
         else
             toString(blockNode->getNode()->getTypeofNode());
         cout << endl;
-        for (TableEntry* id : blockNode->getDef()) 
-            cout << "Def: " << id->getId()->getIdentifier() << endl;
-        for (TableEntry* id : blockNode->getUse()) 
-            cout << "Use: " << id->getId()->getIdentifier() << endl;
-        for (TableEntry* id : blockNode->getIn()) 
-            cout << "In: " << id->getId()->getIdentifier() << endl;
-        for (TableEntry* id : blockNode->getOut()) 
-            cout << "Out: " << id->getId()->getIdentifier() << endl;
+        for (TableEntry* te : blockNode->getDef()) 
+            cout << "Def: " << te->getId()->getIdentifier() << endl;
+        for (TableEntry* te : blockNode->getUse()) 
+            cout << "Use: " << te->getId()->getIdentifier() << endl;
+        for (TableEntry* te : blockNode->getIn()) 
+            cout << "In: " << te->getId()->getIdentifier() << endl;
+        for (TableEntry* te : blockNode->getOut()) 
+            cout << "Out: " << te->getId()->getIdentifier() << endl;
         for (ASTNodeBlock* succ : blockNode->getSucc()) 
         {
             cout << "Succ: ";
@@ -149,8 +149,7 @@ void blockVarsAnalyser::analyseFunc(ASTNode* proc)
     addBlockNode(func, blockNode);
 
     analyseBlockNodes();
-
-    printBlockNodes();
+    // printBlockNodes();   
 }
 
 void blockVarsAnalyser::analyse(list<Function*> functions) 

@@ -85,24 +85,10 @@ class blockVarsAnalyser
     void toString(NODETYPE);    // Prints the type of the node verbose
     void printBlockNodes();     // Prints the block nodes
 
+    // Performs liveness analysis on the block nodes
     void analyse(list<Function*>);
     void analyseFunc(ASTNode* func);
     void analyseBlockNodes();
-
-    void analyseStatement(statement*);
-    void analyseBlock(blockStatement*);
-    void analyseUnary(unary_stmt*);
-    void analyseIfElse(ifStmt*);
-    void analyseAssignment(assignment*);
-    void analyseDeclaration(declaration*);
-    void analyseForAll(forallStmt*);
-    void analyseWhile(whileStmt*);
-    void analyseDoWhile(dowhileStmt*);
-    void analyseFor(forallStmt*);
-    void analyseFixedPoint(fixedPointStmt*);
-    void analyseProcCall(proc_callStmt*);
-    void analyseReduction(reductionCallStmt*);
-    void analyseItrBFS(iterateBFS*);
 
     // Initialise the basic block node
     ASTNodeBlock* initStatement(statement*, ASTNodeBlock*);
@@ -114,11 +100,11 @@ class blockVarsAnalyser
     ASTNodeBlock* initForAll(forallStmt*, ASTNodeBlock*);
     ASTNodeBlock* initWhile(whileStmt*, ASTNodeBlock*);
     ASTNodeBlock* initDoWhile(dowhileStmt*, ASTNodeBlock*);
-    ASTNodeBlock* initFor(forallStmt*, ASTNodeBlock*);
     ASTNodeBlock* initFixedPoint(fixedPointStmt*, ASTNodeBlock*);
     ASTNodeBlock* initProcCall(proc_callStmt*, ASTNodeBlock*);
     ASTNodeBlock* initReduction(reductionCallStmt*, ASTNodeBlock*);
     ASTNodeBlock* initItrBFS(iterateBFS*, ASTNodeBlock*);
+    ASTNodeBlock* initItrRBFS(iterateReverseBFS*, ASTNodeBlock*);
     ASTNodeBlock* initReturn(returnStmt*, ASTNodeBlock*);
 
     //Returns the used variables in each statment
@@ -135,14 +121,21 @@ class blockVarsAnalyser
     usedVariables_t getVarsReduction(reductionCallStmt*);
     usedVariables_t getVarsFixedPoint(fixedPointStmt*);
     usedVariables_t getVarsBFS(iterateBFS*);
+    usedVariables_t getVarsRBFS(iterateReverseBFS*);
     usedVariables_t getVarsProcCall(proc_callStmt*);
     usedVariables_t getVarsExprProcCall(proc_callExpr*);
 
-    void setVarsInParallelStatment(statement*);  // Sets the flag of tableentry of the variables in the parallel section in the statement
-    void setVarsInParallelBlock(blockStatement*);  // Sets the flag of tableentry of the variables in the parallel section in the block
-    void setVarsInParallelForAll(forallStmt*);  // Sets the flag of tableentry of the variables in the parallel section in the forall
-    void setVarsInParallelBFS(iterateBFS*);  // Sets the flag of tableentry of the variables in the parallel section in the BFS
-    void setVarsInParallelAssign(assignment*);  // Sets the flag of tableentry of the variables in the parallel section in the assignment
+    // Sets the flag of tableentry of the variables in the parallel section of the statement
+    void setVarsInParallelStatment(statement*);
+    void setVarsInParallelBlock(blockStatement*);
+    void setVarsInParallelForAll(forallStmt*);
+    void setVarsInParallelBFS(iterateBFS*);
+    void setVarsInParallelAssign(assignment*);
+    void setVarsInParallelDeclaration(declaration*);
+    void setVarsInParallelProcCall(proc_callStmt*);
+    void setVarsInParallelFixedPoint(fixedPointStmt*);
+    void setVarsInParallelDoWhile(dowhileStmt*);
+    void setVarsInParallelWhile(whileStmt*);
 };
 
 #endif

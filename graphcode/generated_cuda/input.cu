@@ -1,7 +1,7 @@
 // FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
-#include "triangle_counting_dsl.h"
+#include "input.h"
 
-void Compute_TC(graph& g)
+void test(graph& g)
 
 {
   // CSR BEGIN
@@ -12,33 +12,11 @@ void Compute_TC(graph& g)
   printf("#edges:%d\n",E);
   int* edgeLen = g.getEdgeLen();
 
-  int *h_meta;
-  int *h_data;
-
-  h_meta = (int *)malloc( (V+1)*sizeof(int));
-  h_data = (int *)malloc( (E)*sizeof(int));
-
-  for(int i=0; i<= V; i++) {
-    int temp;
-    temp = g.indexofNodes[i];
-    h_meta[i] = temp;
-  }
-
-  for(int i=0; i< E; i++) {
-    int temp;
-    temp = g.edgeList[i];
-    h_data[i] = temp;
-  }
 
 
-  int* d_meta;
-  int* d_data;
 
-  cudaMalloc(&d_meta, sizeof(int)*(1+V));
-  cudaMalloc(&d_data, sizeof(int)*(E));
 
-  cudaMemcpy(  d_meta,   h_meta, sizeof(int)*(V+1), cudaMemcpyHostToDevice);
-  cudaMemcpy(  d_data,   h_data, sizeof(int)*(E), cudaMemcpyHostToDevice);
+
 
   // CSR END
   //LAUNCH CONFIG
@@ -58,14 +36,22 @@ void Compute_TC(graph& g)
   //DECLAR DEVICE AND HOST vars in params
 
   //BEGIN DSL PARSING 
-  long triangle_count = 0; // asst in .cu
+  int* d_prop;
+  cudaMalloc(&d_prop, sizeof(int)*(V));
 
-  cudaMemcpyToSymbol(::triangle_count, &triangle_count, sizeof(long), 0, cudaMemcpyHostToDevice);
-  Compute_TC_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data);
+  int x = 0; // asst in .cu
+
+  initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_prop,(int)10);
+
+  cudaMemcpyToSymbol(::x, &x, sizeof(int), 0, cudaMemcpyHostToDevice);
+  test_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_prop);
   cudaDeviceSynchronize();
 
 
 
+
+  //cudaFree up!! all propVars in this BLOCK!
+  cudaFree(d_prop);
 
   //TIMER STOP
   cudaEventRecord(stop,0);

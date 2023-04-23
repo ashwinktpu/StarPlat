@@ -395,14 +395,14 @@ class graph
             if(destination>nodesTotal)
                nodesTotal=destination;  
 
+           ss>>weightVal; //for edgelists having weight too.      
            e.source=source;
            e.destination=destination;
-           e.weight=1;
-
+           e.weight=weightVal;
+           
            edges[source].push_back(e);
            graph_edge.push_back(e);
 
-           ss>>weightVal; //for edgelists having weight too.      
            
      }
 

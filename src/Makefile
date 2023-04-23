@@ -28,7 +28,7 @@ bin/cu_dsl_cpp_generator.o: backends/backend_cuda/dsl_cpp_generator.cpp backends
 	$(CC) $(CFLAGS) -c backends/backend_cuda/dsl_cpp_generator.cpp -o bin/cu_dsl_cpp_generator.o
 
 #openACC
-bin/ac_dsl_cpp_generator.o: backends/backend_openACC/dsl_cpp_generator.cpp backends/dslCodePad.h
+bin/ac_dsl_cpp_generator.o: backends/backend_openACC/dsl_cpp_generator.cpp backends/dslCodePad.h backends/backend_openACC/getMetaDataUsed.cpp
 	$(CC) $(CFLAGS) -c backends/backend_openACC/dsl_cpp_generator.cpp -o bin/ac_dsl_cpp_generator.o
 	
 #omp

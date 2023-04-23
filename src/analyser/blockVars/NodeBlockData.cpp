@@ -143,20 +143,24 @@ set<ASTNodeBlock*> ASTNodeBlock::getSucc() {
 }
 
 void ASTNodeBlock::addUse(Identifier* id) {
+    if (!id->getSymbolInfo()) return;
     use.insert(id->getSymbolInfo());
 }
 
 void ASTNodeBlock::addDef(Identifier* id) {
+    if (!id->getSymbolInfo()) return;
     def.insert(id->getSymbolInfo());
 }
 
 void ASTNodeBlock::addIn(Identifier* id) {
+    if (!id->getSymbolInfo()) return;
     in.insert(id->getSymbolInfo());
 }
 
 void ASTNodeBlock::addIn(set<TableEntry*> ids) {
     for(TableEntry* id : ids)
-        in.insert(id);
+        if (id != NULL)
+            in.insert(id);
 }
 
 void ASTNodeBlock::removeIn(Identifier* id) {
@@ -169,6 +173,7 @@ void ASTNodeBlock::removeIn(set<TableEntry*> ids) {
 }
 
 void ASTNodeBlock::addOut(Identifier* id) {
+    if (!id->getSymbolInfo()) return;
     out.insert(id->getSymbolInfo());
 }
 

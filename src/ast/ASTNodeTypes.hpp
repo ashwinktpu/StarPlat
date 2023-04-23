@@ -1805,6 +1805,8 @@ class fixedPointStmt:public statement
       iterateReverseBFS* revBFS;
 
       list<Identifier*> usedVars;
+
+      MetaDataUsed metadata;
       public:
 
       iterateBFS()
@@ -1865,9 +1867,55 @@ class fixedPointStmt:public statement
         return nodeCall;
       }
 
-      void initUsedVariable(list<Identifier*> usedVars){
-      this->usedVars = usedVars;
-    }
+      void initUsedVariable(list<Identifier*> usedVars)
+      {
+        this->usedVars = usedVars;
+      }
+
+      bool getIsMetaUsed() {
+        return metadata.isMetaUsed;
+      }
+
+      void setIsMetaUsed() {
+        metadata.isMetaUsed = true;
+      }
+
+      bool getIsDataUsed() {
+        return metadata.isDataUsed;
+      }
+
+      void setIsDataUsed() {
+        metadata.isDataUsed = true;
+      }
+
+      bool getIsSrcUsed() {
+        return metadata.isSrcUsed;
+      }
+
+      void setIsSrcUsed() {
+        metadata.isSrcUsed = true;
+      }
+
+      bool getIsWeightUsed() {
+        return metadata.isWeightUsed;
+      }
+
+      void setIsWeightUsed() {
+        metadata.isWeightUsed = true;
+      }
+
+      bool getIsRevMetaUsed() {
+        return metadata.isRevMetaUsed;
+      }
+
+      void setIsRevMetaUsed() {
+        metadata.isRevMetaUsed = true;
+      }
+
+      MetaDataUsed getMetaDataUsed() {
+        return metadata;
+      }
+
   };
   
   class unary_stmt:public statement
