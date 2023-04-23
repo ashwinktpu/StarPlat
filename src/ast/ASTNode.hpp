@@ -20,6 +20,7 @@ class ASTNode
   SymbolTable* var_symbTab;
   SymbolTable* prop_symbTab;
   NodeBlockData* blockData;
+
   public:
   ASTNode()
   {

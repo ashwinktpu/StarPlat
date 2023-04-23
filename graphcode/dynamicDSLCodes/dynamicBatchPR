@@ -1,0 +1,155 @@
+Static staticPR(Graph g,float beta,float delta,int maxIter,propNode<float> pageRank)
+{
+ float num_nodes = g.num_nodes();
+ propNode<float> pageRank_nxt;
+ g.attachNodeProperty(pageRank = 1/num_nodes, pageRank_nxt = 0);
+ int iterCount=0;
+ 
+ float diff;
+ do
+  {
+    diff=0.0;
+
+    forall(v in g.nodes())
+    {    
+        float sum=0.0;
+ 
+        for(nbr in g.nodes_to(v))
+         {
+            sum=sum+nbr.pageRank/g.count_outNbrs(nbr);
+         }
+
+         float val=(1-delta)/num_nodes+delta*sum;
+         diff+=val-v.pageRank; 
+         v.pageRank_nxt=val;
+
+    }
+     
+    pageRank = pageRank_nxt ; 
+    iterCount++;
+
+
+  } while((diff>beta)&&(iterCount<maxIter));
+
+}
+Incremental(Graph g,float beta,float delta,int maxIter,propNode<float> pageRank, propNode<bool> modified)
+ {
+
+ propNode<float> pageRank_nxt;
+ g.attachNodeProperty(pageRank_nxt = 0);
+ int iterCount=0;
+ float diff;
+
+ do
+  {
+    diff=0.0;
+
+    forall(v in g.nodes().filter(modified == True))
+    {    
+        float sum=0.0;
+ 
+        for(nbr in g.nodes_to(v))
+         {
+            sum = sum + nbr.pageRank/g.count_outNbrs(nbr);
+         }
+
+         float val = (1-delta)/g.num_nodes()+delta*sum;
+         diff += val - v.pageRank; 
+         v.pageRank_nxt = val;
+
+    }
+     
+    forall(v in g.nodes().filter(modified == True)) 
+        {
+          v.pageRank = v.pageRank_nxt ; 
+        }
+
+    iterCount++;
+
+
+  } while((diff>beta)&&(iterCount<maxIter));
+
+ } 
+
+Decremental(Graph g,float beta,float delta,int maxIter,propNode<float> pageRank, propNode<bool> modified)
+ {
+
+ propNode<float> pageRank_nxt;
+ g.attachNodeProperty(pageRank_nxt = 0);
+ int iterCount=0;
+ float diff;
+
+ do
+  {
+    diff=0.0;
+
+    forall(v in g.nodes().filter(modified == True))
+    {    
+        float sum=0.0;
+ 
+        for(nbr in g.nodes_to(v))
+         {
+            sum = sum + nbr.pageRank/g.count_outNbrs(nbr);
+         }
+
+         float val = (1-delta)/g.num_nodes() + delta*sum;
+         diff += val - v.pageRank; 
+         v.pageRank_nxt = val;
+
+    }
+     
+    forall(v in g.nodes().filter(modified == True)) 
+        {
+          v.pageRank = v.pageRank_nxt ; 
+        }
+
+    iterCount++;
+
+  } while((diff>beta)&&(iterCount<maxIter));
+
+ } 
+
+ Dynamic DynPR(Graph g, float beta, float delta, int maxIter, propNode<float> pageRank, updates<g> updateBatch, int batchSize)
+ {  
+   staticPR(g, beta, delta, maxIter, pageRank);
+
+   Batch(updateBatch:batchSize)
+    {
+       propNode<bool> modified;
+       propNode<bool> modified_add;
+
+      g.attachNodeProperty(modified = False, modified_add = False);
+
+     updates<g> deleteBatch = updateBatch.currentBatch(0);
+     updates<g> addBatch = updateBatch.currentBatch(1);
+
+     OnDelete(u in updateBatch.currentBatch()):
+          { 
+            node src = u.source;
+            node dest = u.destination;
+
+            dest.modified = True;
+
+          }
+
+      g.propagateNodeFlags(modified);
+      g.updateCSRDel(updateBatch); 
+      Decremental(g, beta, delta, maxIter, pageRank, modified);
+
+
+      OnAdd(u in updateBatch.currentBatch()): 
+         {
+               node src = u.source;
+               node dest = u.destination;
+               
+               dest.modified_add = True;
+                 
+             }  
+      
+          g.propagateNodeFlags(modified_add);
+          g.updateCSRAdd(updateBatch);      
+          Incremental(g, beta, delta, maxIter, pageRank, modified_add);
+
+    }
+
+ }

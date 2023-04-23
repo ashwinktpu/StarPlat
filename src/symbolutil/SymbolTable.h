@@ -3,7 +3,6 @@
 
 #include <cstddef> //for NULL in gcc 6
 #include<list>
-#include <cstddef>
 
 using namespace std;
 
@@ -16,10 +15,13 @@ class TableEntry
   private:
   Identifier* id;
   Type* type;
-  bool isArgument;      
+
+  bool isArgument;
+  bool isGlobalVar;
   bool inParallelSection = false;
 
-  TableEntry():id(nullptr), type(nullptr),isArgument(false), inParallelSection(false){
+  TableEntry():id(nullptr), type(nullptr),isArgument(false), isGlobalVar(false), inParallelSection(false){
+
 
   }
  
@@ -39,11 +41,12 @@ public:
  {
     isArgument=ifArg;
  }
-
+ 
  bool isArg()
  {
      return isArgument;
  }
+
 
  void setInParallelSection(bool inParallel)
  {
@@ -53,6 +56,17 @@ public:
  bool isInParallelSection()
  {
      return inParallelSection;
+ }
+
+
+ void setGlobalVariable()
+ {
+    isGlobalVar = true;
+ }
+ 
+ bool isGlobalVariable()
+ {
+    return isGlobalVar;
  }
 
 };
@@ -140,11 +154,6 @@ bool check_conflicts_and_add(SymbolTable* sTab,Identifier* id,Type* type);
 
 
  }*/
-
-
-
-
-
 
 };
 
