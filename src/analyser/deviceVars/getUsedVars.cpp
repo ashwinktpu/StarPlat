@@ -7,6 +7,10 @@ usedVariables deviceVarsAnalyser::getVarsExpr(Expression *expr)
     if (expr->isIdentifierExpr())
     {
         Identifier *iden = expr->getId();
+        if (iden)
+          cout << "Identifier: " << iden->getIdentifier() << endl;
+        else 
+          cout << "Identifier is NULL" << endl;
         result.addVariable(iden, READ);
     }
     else if (expr->isPropIdExpr())
@@ -227,16 +231,24 @@ usedVariables deviceVarsAnalyser::getVarsReduction(reductionCallStmt *stmt)
     {
       for(ASTNode* node: stmt->getLeftList())
       {
+        Identifier* affectedId = NULL;
         if(node->getTypeofNode() == NODE_ID)
         {
           Identifier* iden = (Identifier*)node;
           currVars.addVariable(iden, WRITE);
+          affectedId = iden;
         }
         else if(node->getTypeofNode() == NODE_PROPACCESS)
         {
           PropAccess* propId = (PropAccess*)node;
           currVars.addVariable(propId->getIdentifier1(), READ);
           currVars.addVariable(propId->getIdentifier2(), WRITE);
+          affectedId = propId->getIdentifier2();
+        }
+
+        if(affectedId->getSymbolInfo()->getId()->get_fp_association()) {
+          Identifier* fpId = affectedId->getSymbolInfo()->getId()->get_fpIdNode();
+          currVars.addVariable(fpId, WRITE);
         }
       }
       getVarsReductionCall(stmt->getReducCall());

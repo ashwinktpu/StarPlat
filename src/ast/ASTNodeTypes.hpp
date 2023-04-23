@@ -11,6 +11,7 @@
 #include<set>
 #include<queue>
 #include "../maincontext/enum_def.hpp"
+#include "MetaDataUsed.hpp"
 
 
 
@@ -136,6 +137,9 @@ class Identifier:public ASTNode
 
   char* fpId;          /*If the identifier is associated with a fixedpoint,
                          the field stores the fixedpoint id name*/
+  Identifier* fpIdNode; /*If the identifier is associated with a fixedpoint,
+                         the field stores the fixedpoint id node*/
+
   TableEntry* idInfo;
   Expression* dependentExpr; /*the expression in fixedPoint of which the current
                                identifier is a part of*/
@@ -258,6 +262,16 @@ class Identifier:public ASTNode
    char* get_fpId()
    {
      return fpId;
+   }
+
+   void set_fpIdNode(Identifier* fp_sentIdNode)
+   {
+     fpIdNode=fp_sentIdNode;
+   }
+
+   Identifier* get_fpIdNode()
+   {
+     return fpIdNode;
    }
 
    void set_assignedExpr(Expression* assignExprSent)
@@ -475,9 +489,8 @@ class Function:public ASTNode
   bool hasReturn;                          
   int funcType ;
 
-
+  MetaDataUsed metadata;
   public:
-
   Function()
   { 
     functionId=NULL;
@@ -485,6 +498,7 @@ class Function:public ASTNode
     funcType = 0;
     initialLockDecl = false;
     createSymbTab();
+    metadata = MetaDataUsed();
   }
 
   static Function* createFunctionNode(Identifier* funcId,list<formalParam*> paramList)
@@ -612,7 +626,50 @@ class Function:public ASTNode
      }  
 
 
+   
+    bool getIsMetaUsed() {
+      return metadata.isMetaUsed;
+    }
 
+    void setIsMetaUsed() {
+      metadata.isMetaUsed = true;
+    }
+
+    bool getIsDataUsed() {
+      return metadata.isDataUsed;
+    }
+
+    void setIsDataUsed() {
+      metadata.isDataUsed = true;
+    }
+
+    bool getIsSrcUsed() {
+      return metadata.isSrcUsed;
+    }
+
+    void setIsSrcUsed() {
+      metadata.isSrcUsed = true;
+    }
+
+    bool getIsWeightUsed() {
+      return metadata.isWeightUsed;
+    }
+
+    void setIsWeightUsed() {
+      metadata.isWeightUsed = true;
+    }
+
+    bool getIsRevMetaUsed() {
+      return metadata.isRevMetaUsed;
+    }
+
+    void setIsRevMetaUsed() {
+      metadata.isRevMetaUsed = true;
+    }
+
+    MetaDataUsed getMetaDataUsed() {
+      return metadata;
+    }
 };
 
 class Type:public ASTNode
@@ -1985,7 +2042,9 @@ class fixedPointStmt:public statement
       iterateReverseBFS* revBFS;
 
       list<Identifier*> usedVars;
+      MetaDataUsed metadata;
       std::set<TableEntry *> modifiedGlobalVars;
+
       public:
 
       iterateBFS()
@@ -2047,6 +2106,57 @@ class fixedPointStmt:public statement
         return nodeCall;
       }
 
+
+      void initUsedVariable(list<Identifier*> usedVars)
+      {
+        this->usedVars = usedVars;
+      }
+
+      bool getIsMetaUsed() {
+        return metadata.isMetaUsed;
+      }
+
+      void setIsMetaUsed() {
+        metadata.isMetaUsed = true;
+      }
+
+      bool getIsDataUsed() {
+        return metadata.isDataUsed;
+      }
+
+      void setIsDataUsed() {
+        metadata.isDataUsed = true;
+      }
+
+      bool getIsSrcUsed() {
+        return metadata.isSrcUsed;
+      }
+
+      void setIsSrcUsed() {
+        metadata.isSrcUsed = true;
+      }
+
+      bool getIsWeightUsed() {
+        return metadata.isWeightUsed;
+      }
+
+      void setIsWeightUsed() {
+        metadata.isWeightUsed = true;
+      }
+
+      bool getIsRevMetaUsed() {
+        return metadata.isRevMetaUsed;
+      }
+
+      void setIsRevMetaUsed() {
+        metadata.isRevMetaUsed = true;
+      }
+
+      MetaDataUsed getMetaDataUsed() {
+        return metadata;
+      }
+
+
       void initUsedVariable(list<Identifier*> usedVars){
       this->usedVars = usedVars;
     }
@@ -2059,6 +2169,7 @@ class fixedPointStmt:public statement
     {
       return modifiedGlobalVars;
     }
+
   };
   
   class unary_stmt:public statement
@@ -2140,9 +2251,12 @@ class fixedPointStmt:public statement
     statement * reductionStatement;
     bool containsreductionStatement;
     list<Identifier*> usedVars;
-    set<Identifier*> mapLocals;  
 
+    list<Identifier*> doubleBufferVars; // the propnodes which need to be double buffered
+    MetaDataUsed metadata;
+    set<Identifier*> mapLocals;  
     std::set<TableEntry *> modifiedGlobalVars;
+
     public:
     forallStmt()
     {
@@ -2157,6 +2271,7 @@ class fixedPointStmt:public statement
       isSourceId=false;
       createSymbTab();
       filterExprAssoc = false; 
+      metadata = MetaDataUsed();
       sourceExpr = NULL;
       reductionStatement = NULL;
       containsreductionStatement = false;
@@ -2391,6 +2506,58 @@ class fixedPointStmt:public statement
          }
     }
   void pushMapLocals(Identifier* id){
+    bool getIsMetaUsed() {
+      return metadata.isMetaUsed;
+    }
+
+    void setIsMetaUsed() {
+      metadata.isMetaUsed = true;
+    }
+
+    bool getIsDataUsed() {
+      return metadata.isDataUsed;
+    }
+
+    void setIsDataUsed() {
+      metadata.isDataUsed = true;
+    }
+
+    bool getIsSrcUsed() {
+      return metadata.isSrcUsed;
+    }
+
+    void setIsSrcUsed() {
+      metadata.isSrcUsed = true;
+    }
+
+    bool getIsWeightUsed() {
+      return metadata.isWeightUsed;
+    }
+
+    void setIsWeightUsed() {
+      metadata.isWeightUsed = true;
+    }
+
+    bool getIsRevMetaUsed() {
+      return metadata.isRevMetaUsed;
+    }
+
+    void setIsRevMetaUsed() {
+      metadata.isRevMetaUsed = true;
+    }
+
+    void addDoubleBufferVar(Identifier* var) {
+      doubleBufferVars.push_back(var);
+    }
+
+    list<Identifier*> getDoubleBufferVars() {
+      return doubleBufferVars;
+    }
+
+    MetaDataUsed getMetaDataUsed() {
+      return metadata;
+    }
+  
 
     mapLocals.insert(id);
 
@@ -2412,6 +2579,7 @@ class fixedPointStmt:public statement
     {
       return modifiedGlobalVars;
     }
+
 };
   class reductionCall:public ASTNode
   {

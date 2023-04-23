@@ -356,6 +356,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                      tableId->set_redecl(); //explained in the ASTNodeTypes
                      tableId->set_fpassociation(); //explained in the ASTNodeTypes
                      tableId->set_fpId(fixedPointId->getIdentifier()); //explained in the ASTNodeTypes
+                     tableId->set_fpIdNode(fixedPointId); //explained in the ASTNodeTypes
                      tableId->set_dependentExpr(fpStmt->getDependentProp());
                  }
            }
@@ -396,7 +397,8 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                the forall is checked for its existence inside 
                another forall which is to be generated with 
                omp parallel pragma, and then disable the parallel loop*/
-            if((backend.compare("omp")==0) || (backend.compare("cuda")==0) || (backend.compare("openACC")==0) || (backend.compare("mpi")==0))
+
+            if( (backend.compare("omp")==0) || (backend.compare("cuda")==0) || (backend.compare("acc")==0) || (backend.compare("mpi")==0) )
              {  
                  if(parallelConstruct.size()>0)
                   {  
@@ -439,6 +441,8 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                  /* the assignment statements(arithmetic & logical) within the block of a for statement that
                     is itself within a IterateInBFS abstraction are signaled to become atomic while code 
                     generation. */
+                  iterateBFS* parent = (iterateBFS*)parallelConstruct[0];
+                  cout << "parent type: " << parent->getTypeofNode() << endl;
                   proc_callExpr* extractElem = forAll->getExtractElementFunc();
                   if(extractElem!=NULL)
                    {
@@ -446,16 +450,45 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                      list<argument*> argList = extractElem->getArgList();
                      if(methodString == nbrCall)
                        {  
-
                         forAll->addAtomicSignalToStatements();
+                        parent->setIsMetaUsed();
+                        currentFunc->setIsMetaUsed();
+                        parent->setIsDataUsed();
+                        currentFunc->setIsDataUsed();
+                       }
+                      else if(methodString == nodesToCall)
+                       {
+                        parent->setIsRevMetaUsed();
+                        currentFunc->setIsRevMetaUsed();
+                        parent->setIsSrcUsed();
+                        currentFunc->setIsSrcUsed();
                        }
                    }
                }
+            else { // if for all statement has a proc call
+                proc_callExpr* extractElemFunc = forAll->getExtractElementFunc();
+                if(extractElemFunc != NULL && parallelConstruct.size() > 0) {
+                  forallStmt* parent = (forallStmt*) parallelConstruct.back();
+                  Identifier* iteratorMethodId = extractElemFunc->getMethodId();
+                  string iteratorMethodString(iteratorMethodId->getIdentifier());
+                  if(iteratorMethodString == nodesToCall) { // if the proc call is nodes_to, d_rev_meta is needed
+                    parent->setIsRevMetaUsed();
+                    currentFunc->setIsRevMetaUsed();
+                    parent->setIsSrcUsed();
+                    currentFunc->setIsSrcUsed();
+                  } else if(iteratorMethodString == nbrCall) { // if the proc call is neighbors, d_data is needed
+                    parent->setIsMetaUsed();
+                    currentFunc->setIsMetaUsed();
+                    parent->setIsDataUsed();
+                    currentFunc->setIsDataUsed();
+                  }
+                }
+              }
 
               buildForStatements(forAll->getBody());  
               
            //----------------------MERGE CONFLICT OCCURRED HERE (WORKING BRANCH <---- OPENACC)----------------------------------
-               //~ if((backend.compare("omp")==0 || backend.compare("openACC")==0 ) && forAll->isForall())
+               //~ if((backend.compare("omp")==0 || backend.compare("acc")==0 ) && forAll->isForall())
                     //~ {  
                         //~ parallelConstruct.pop_back();
                     //~ } 
@@ -463,13 +496,15 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
               //~ delete_curr_SymbolTable();
 
 
-               if((backend.compare("omp")==0 || backend.compare("cuda")==0 || backend.compare("openACC")==0   || backend.compare("mpi")==0) &&forAll->isForall())
+
+               if((backend.compare("omp")==0 || backend.compare("cuda")==0 || backend.compare("acc")==0   || backend.compare("mpi")==0) &&forAll->isForall())
                     {
                        if(forAll->isForall())
                        {
                           parallelConstruct.pop_back();
                           IdsInsideParallelFilter.clear();
                        }  
+
                     }
               break;
        }
@@ -514,7 +549,9 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
              count++;
           }
 
-          if(flag&&(backend.compare("omp")==0 || backend.compare("openACC")==0 ) )
+
+          if(flag&&(backend.compare("omp")==0 || backend.compare("acc")==0 ) )
+
           { 
             iterateBFS* itrbFS=(iterateBFS*)(*itrIBFS);  
             Identifier* id=Identifier::createIdNode("bfsDist");
@@ -590,7 +627,9 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
             if(leftList.size() > 2)
                {
                    string backend(backendTarget);
-                   if(backend.compare("omp") == 0 || backend.compare("openACC"))
+
+                   if(backend.compare("omp") == 0 || backend.compare("acc"))
+
                      {
                         currentFunc->setInitialLockDecl();
                      }   
@@ -635,13 +674,23 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
        {
           iterateBFS* iBFS=(iterateBFS*)stmt;
           string backend(backendTarget);
-            if((backend.compare("omp")==0) || (backend.compare("cuda")==0) || (backend.compare("openACC")==0) || (backend.compare("mpi")==0))
+
+            if((backend.compare("omp")==0) || (backend.compare("cuda")==0) || (backend.compare("acc")==0) || (backend.compare("mpi")==0))
+
              { 
                parallelConstruct.push_back(iBFS);
                
              }     
           
+          currentFunc->setIsMetaUsed(); // d_meta is used in itrbfs
+          iBFS->setIsMetaUsed(); // d_meta is used in itrbfs
+          currentFunc->setIsDataUsed(); // d_data is used in itrbfs
+          iBFS->setIsDataUsed(); // d_data is used in itrbfs
+          currentFunc->setIsWeightUsed(); // d_weight is used in itrbfs
+          iBFS->setIsWeightUsed(); // d_weight is used in itrbfs
+
           buildForStatements(iBFS->getBody());
+
 
           
            iterateReverseBFS* iRevBFS = iBFS->getRBFS();
@@ -650,7 +699,8 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
             iRevBFS->addAccumulateAssignment();
             buildForStatements(iRevBFS->getBody());
           }
-          if((backend.compare("omp")==0) || (backend.compare("cuda")==0) || (backend.compare("openACC")==0) || (backend.compare("mpi")==0))
+          if((backend.compare("omp")==0) || (backend.compare("cuda")==0) || (backend.compare("acc")==0) || (backend.compare("mpi")==0))
+
              { 
               parallelConstruct.pop_back();
                
@@ -861,6 +911,22 @@ bool SymbolTableBuilder::checkForArguments(list<argument*> argList)
                    assert(idString.compare(updatesString) == 0);
                  }
 
+              if(s.compare(isAnEdgeCall) == 0)
+                {
+                  forallStmt* parentForAll = (forallStmt*)parallelConstruct[0];
+                  parentForAll->setIsMetaUsed();
+                  currentFunc->setIsMetaUsed();
+                  parentForAll->setIsDataUsed();
+                  currentFunc->setIsDataUsed();
+                }
+              if(s.compare(countOutNbrCall) == 0)
+                {
+                  forallStmt* parentForAll = (forallStmt*)parallelConstruct[0];
+                  parentForAll->setIsMetaUsed();
+                  currentFunc->setIsMetaUsed();
+                }
+
+
             /*check if procedure call inside a dynamic func */
            string procIdString(procId); 
            if(curFuncType == DYNAMIC_FUNC || curFuncType == INCREMENTAL_FUNC || curFuncType == DECREMENTAL_FUNC){   
@@ -914,6 +980,7 @@ bool SymbolTableBuilder::checkForArguments(list<argument*> argList)
               }
            
           }
+
              break;   
          }  
          case EXPR_UNARY:
@@ -978,7 +1045,10 @@ bool SymbolTableBuilder::checkForArguments(list<argument*> argList)
      else
        search_and_connect_toId(currPropSymbT,id2); //need to change..ideally this should search in prop.
      
+      return isFine; //to be changed!
+
        
+
  }
 
  bool SymbolTableBuilder::findSymbolId(Identifier* id)

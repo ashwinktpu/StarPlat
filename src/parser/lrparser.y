@@ -7,6 +7,7 @@
 	#include "../analyser/attachProp/attachPropAnalyser.h"
 	#include "../analyser/dataRace/dataRaceAnalyser.h"
 	#include "../analyser/deviceVars/deviceVarsAnalyser.h"
+	#include "../analyser/blockVars/blockVarsAnalyser.h"
 	#include<getopt.h>
 	//#include "../symbolutil/SymbolTableBuilder.cpp"
      
@@ -606,8 +607,8 @@ int main(int argc,char **argv)
 	  drAnalyser.analyse(frontEndContext.getFuncList());
 
 	  deviceVarsAnalyser dvAnalyser;
-	  //cpp_backend.setOptimized();
 	  dvAnalyser.analyse(frontEndContext.getFuncList());
+	  cpp_backend.setOptimized();
 	}
 		  
         cpp_backend.generate();
@@ -627,6 +628,11 @@ int main(int argc,char **argv)
       else if (strcmp(backendTarget, "acc") == 0) {
         spacc::dsl_cpp_generator cpp_backend;
         cpp_backend.setFileName(fileName);
+		if(optimize) {
+			cpp_backend.setOptimized();
+			blockVarsAnalyser bvAnalyser;
+			bvAnalyser.analyse(frontEndContext.getFuncList());
+		}
         cpp_backend.generate();
       }
       else

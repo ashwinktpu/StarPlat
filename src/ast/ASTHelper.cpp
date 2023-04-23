@@ -1,3 +1,6 @@
+#ifndef AST_HELPER_H
+#define AST_HELPER_H
+
 #include "../maincontext/MainContext.hpp"
 #include  "ASTNode.hpp"
 #include  "../maincontext/enum_def.hpp"
@@ -620,3 +623,5 @@ static ASTNode* createIterateInBFSNode(ASTNode* iterator,ASTNode* graphId,ASTNod
     return iterateBFSNode;
 }
 };
+
+#endif
