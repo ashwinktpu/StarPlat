@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <cuda.h>
-#include "../graph.hpp"
-#include "../libcuda.cuh"
+#include "graph.hpp"
+#include "libcuda.cuh"
 #include <curand.h>
 #include <cooperative_groups.h>
 
@@ -14,14 +14,16 @@ void vHong(graph& g);
 
 
 
-__global__ void vHong_kernel1(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_outDeg,int* d_inDeg){ // BEGIN KER FUN via ADDKERNEL
+__global__ void vHong_kernel1(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_inDeg,int* d_outDeg){ // BEGIN KER FUN via ADDKERNEL
   unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
   int num_vertices = end-start;
   if( src < num_vertices) {
     src+=start;
     int nxtSrc = src + 1; // asst in .cu 
-    d_inDeg[src] = d_inDeg[src]+ d_rev_meta[nxtSrc] - d_rev_meta[src];
-    d_outDeg[src] = d_outDeg[src]+ d_meta[nxtSrc] - d_meta[src];
+    //hi2
+    d_inDeg[src] = d_inDeg[src] + d_rev_meta[nxtSrc] - d_rev_meta[src]; //InitIndex
+    //hi2
+    d_outDeg[src] = d_inDeg[src] + d_meta[nxtSrc] - d_meta[src]; //InitIndex
   }
 } // end KER FUNC
 __global__ void vHong_kernel2(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_range,int* d_scc,bool* d_fpoint1,bool* d_isPivot){ // BEGIN KER FUN via ADDKERNEL
@@ -91,7 +93,7 @@ __global__ void vHong_kernel4(int start,int end,int V, int E, int* d_meta, int* 
     } // if filter end
   }
 } // end KER FUNC
-__global__ void vHong_kernel5(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,bool* d_propBw,bool* d_visitBw,bool* d_propFw,bool* d_visitFw,int* d_scc,int* d_range,bool* d_fpoint2){ // BEGIN KER FUN via ADDKERNEL
+__global__ void vHong_kernel5(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,bool* d_visitBw,bool* d_propFw,bool* d_visitFw,int* d_scc,bool* d_propBw,int* d_range,bool* d_fpoint2){ // BEGIN KER FUN via ADDKERNEL
   unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
   int num_vertices = end-start;
   if( src < num_vertices) {
@@ -140,7 +142,8 @@ __global__ void vHong_kernel6(int start,int end,int V, int E, int* d_meta, int* 
         if (d_visitBw[src] == false){ // if filter begin 
           ext2 = 1;
         } // if filter end
-        d_range[src] = 3 * d_range[src] + ext1 + ext2;
+        int newRange = 3 * d_range[src] + ext1 + ext2; // asst in .cu 
+        d_range[src] = newRange;
         d_visitFw[src] = false;
         d_visitBw[src] = false;
         d_propFw[src] = false;
@@ -189,7 +192,8 @@ __global__ void vHong_kernel8(int start,int end,int V, int E, int* d_meta, int* 
   int num_vertices = end-start;
   if( src < num_vertices) {
     src+=start;
-    d_range[src] = d_range[src]+ src;
+    //hi2
+    d_range[src] = d_range[src] + src; //InitIndex
   }
 } // end KER FUNC
 __global__ void vHong_kernel9(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_range,int* d_scc,bool* d_fpoint4){ // BEGIN KER FUN via ADDKERNEL
@@ -259,7 +263,7 @@ __global__ void vHong_kernel12(int start,int end,int V, int E, int* d_meta, int*
     } // if filter end
   }
 } // end KER FUNC
-__global__ void vHong_kernel13(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,bool* d_propBw,bool* d_visitBw,bool* d_propFw,bool* d_visitFw,int* d_scc,int* d_range,bool* d_fpoint2){ // BEGIN KER FUN via ADDKERNEL
+__global__ void vHong_kernel13(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,bool* d_visitBw,bool* d_propFw,bool* d_visitFw,int* d_scc,bool* d_propBw,int* d_range,bool* d_fpoint2){ // BEGIN KER FUN via ADDKERNEL
   unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
   int num_vertices = end-start;
   if( src < num_vertices) {
@@ -293,7 +297,7 @@ __global__ void vHong_kernel13(int start,int end,int V, int E, int* d_meta, int*
     } // if filter end
   }
 } // end KER FUNC
-__global__ void vHong_kernel14(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_scc,bool* d_visitFw,bool* d_visitBw,int* d_range,bool* d_propFw,bool* d_propBw,bool* d_fpoint5){ // BEGIN KER FUN via ADDKERNEL
+__global__ void vHong_kernel14(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_scc,bool* d_visitFw,bool* d_visitBw,int* d_range,bool* d_propBw,bool* d_propFw,bool* d_fpoint5){ // BEGIN KER FUN via ADDKERNEL
   unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
   int num_vertices = end-start;
   if( src < num_vertices) {
@@ -309,9 +313,9 @@ __global__ void vHong_kernel14(int start,int end,int V, int E, int* d_meta, int*
         if (d_visitBw[src] == false){ // if filter begin 
           ext2 = 1;
         } // if filter end
-        int newRange = 3 * d_range[src]; // asst in .cu 
+        int newRange = 3 * d_range[src] + ext1 + ext2; // asst in .cu 
         newRange = newRange - (newRange / V) * V;
-        d_range[src] = newRange + ext1 + ext2;
+        d_range[src] = newRange;
         d_visitFw[src] = false;
         d_visitBw[src] = false;
         d_propFw[src] = false;

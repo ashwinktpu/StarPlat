@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <cuda.h>
-#include "graph.hpp"
-#include "libcuda.cuh"
+#include "../graph.hpp"
+#include "../libcuda.cuh"
 #include <curand.h>
 #include <cooperative_groups.h>
 

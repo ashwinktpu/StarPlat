@@ -15,7 +15,6 @@ void Compute_TC(graph& g);
 
 
 __global__ void Compute_TC_kernel1(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,long* d_triangle_count){ // BEGIN KER FUN via ADDKERNEL
-  float num_nodes  = V;
   unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
   int num_vertices = end-start;
   if( v < num_vertices) {
