@@ -72,10 +72,6 @@ void Compute_TC(graph& g)
   d_src = (int**) malloc(devicecount*sizeof(int*));
   d_rev_meta = (int**) malloc(devicecount*sizeof(int*));
 
-  int perdevicevertices;
-  int lastleftvertices;
-  perdevicevertices = V / devicecount ;
-  lastleftvertices = V % devicecount;
   for(int i=0;i<devicecount;i++)	
   {
     cudaSetDevice(i);

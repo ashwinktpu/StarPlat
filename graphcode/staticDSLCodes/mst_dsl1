@@ -1,0 +1,131 @@
+function Boruvka (Graph g)
+{
+    propNode<int> nodeId;
+    propNode<int> color; 
+    propEdge<bool> isMSTEdge; 
+    
+    g.attachNodeProperty(nodeId = -1);
+    g.attachNodeProperty(color = -1);
+    g.attachEdgeProperty(isMSTEdge = False);
+    
+    forall(u in g.nodes()){
+        u.nodeId = u;
+        u.color = u;
+    }
+    
+    propNode<bool> modified;
+    g.attachNodeProperty(modified = False);
+
+    propNode<int> minEdgeOfComp;
+    propNode<int> minEdge; 
+
+    bool noNewComp = False;
+    fixedPoint until (noNewComp : !modified) {
+        g.attachNodeProperty(minEdge=-1);
+        forall(src in g.nodes())
+        {
+            for(dst in g.neighbors(src))
+            {
+                if(src.color != dst.color) 
+                {
+                    edge e = g.get_edge(dummy, dummy);
+                    edge minEdge = src.minEdge;
+                    if(minEdge == -1) {
+                        src.minEdge = e;
+                    }
+                    if(minEdge != -1){
+                        
+                        node minDst = minEdge.data;
+                        if(e.weight < minEdge.weight || (e.weight == minEdge.weight && dst.color < minDst.color)) {
+                            src.minEdge = e;
+                        }
+                    }
+                }
+            }
+        }
+        
+        g.attachNodeProperty(minEdgeOfComp=-1);
+        
+        bool finishedMinEdge = False;
+        fixedPoint until (finishedMinEdge: !modified) {
+            forall(u in g.nodes()){
+                int comp = u.color;
+                int minEdge = comp.minEdgeOfComp;
+                int e = u.minEdge;
+                
+                if(e != -1){
+                    int dst = e.data;
+                    if(minEdge == -1) {
+                        comp.minEdgeOfComp = e;
+                        finishedMinEdge = False;
+                    }
+                    if(minEdge != -1){
+                        node minDst = minEdge.data;
+                        if(e.weight < minEdge.weight || (e.weight == minEdge.weight && dst.color < minDst.color)) {
+                            comp.minEdgeOfComp = e;
+                            finishedMinEdge = False;
+                        }
+                    }
+                }
+            }
+        }
+
+        forall(src in g.nodes())
+        {
+            if(src.color == src.nodeId){
+                edge srcMinEdge = src.minEdgeOfComp;
+                if(srcMinEdge != -1)
+                {
+                    node dst = srcMinEdge.data; 
+                    node dstLead = dst.color;
+                    edge dstMinEdge = dstLead.minEdgeOfComp;
+                    if(dstMinEdge != -1)
+                    {
+                        node dstOfDst = dstMinEdge.data;
+                        node dstOfDstLead = dstOfDst.color;
+                        if(src.color == dstOfDstLead.color && src.color > dstLead.color)
+                        {
+                            dstLead.minEdgeOfComp = -1;
+                        }
+                    }
+                }
+            }
+        }
+        
+        forall(src in g.nodes()){
+            if(src.color == src.nodeId){
+                edge srcMinEdge = src.minEdgeOfComp;
+                if(srcMinEdge != -1)
+                {
+                    srcMinEdge.isMSTEdge = True;
+                }
+            }
+        }
+        
+        forall(src in g.nodes()){
+            if(src.color == src.nodeId){
+                edge srcMinEdge = src.minEdgeOfComp;
+                if(srcMinEdge != -1)
+                {
+                    noNewComp = False;
+                    node dst = srcMinEdge.data;
+                    src.color = dst.color;
+                }
+            }
+        }
+        
+        bool finished = False;
+        fixedPoint until (finished: !modified) {
+            forall(u in g.nodes()) {
+                int my_color = u.color;
+                int other_color = my_color.color;
+
+                if(my_color != other_color)
+                {
+                    finished = False;
+                    u.color = other_color;
+                }
+            }
+        }
+    }   
+}

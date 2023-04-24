@@ -221,10 +221,26 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
               std::cout<<"ANAME1:"<< assign->getParent()->getTypeofNode() << '\n';
               std::cout<< "ANAME2:"<< assign->getParent()->getParent()->getTypeofNode() << '\n';
               //~ std::cout<< "ANAME3:"<< assign->getParent()->getParent()->getParent()->getTypeofNode() << '\n';
-              if(assign->getParent()->getParent()->getTypeofNode()==NODE_FUNC || (assign->getParent()->getParent()->getTypeofNode()!=NODE_FUNC && assign->getParent()->getParent()->getParent()->getTypeofNode()==NODE_FUNC)){
-                std::cout<< "\t\tSetting device bool" << '\n';
+              // if(assign->getParent()->getParent()->getTypeofNode()==NODE_FUNC || (assign->getParent()->getParent()->getTypeofNode()!=NODE_FUNC && assign->getParent()->getParent()->getParent()->getTypeofNode()==NODE_FUNC)){
+              //   std::cout<< "\t\tSetting device bool" << '\n';
+              //   assign->flagAsDeviceVariable();
+              // }
+              int flag = 0;
+              assignment *assign1 = assign;
+              while (assign1->getTypeofNode() != NODE_FUNC)
+              {
+                if (assign1->getTypeofNode() == NODE_FORALLSTMT)
+                {
+                  flag = 1;
+                }
+                assign1 = (assignment *)assign1->getParent();
+              }
+              if (flag == 0)
+              {
+                std::cout << "\t\tSetting device bool" << '\n';
                 assign->flagAsDeviceVariable();
               }
+             
              }
 
             Expression* exprAssigned = assign->getExpr();

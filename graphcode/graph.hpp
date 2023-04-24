@@ -375,12 +375,13 @@ class graph
 
         edgesTotal++;
          
-        //edgesTotal++; //TO BE REMOVED 
+        edgesTotal++; //TO BE REMOVED 
 
         //edgesTotal++; //TO BE REMOVED
 
 
         edge e;
+        edge e1;
         
     
         int32_t source;
@@ -395,12 +396,12 @@ class graph
             if(destination>nodesTotal)
                nodesTotal=destination;  
           ss>>weightVal; //for edgelists having weight too.      
-           e.source=source;
-           e.destination=destination;
-           e.weight=weightVal;
+           e.source=source;e1.source = destination;
+           e.destination=destination;e1.destination = source;
+           e.weight=weightVal;e1.weight = weightVal;
 
-           edges[source].push_back(e);
-           graph_edge.push_back(e);
+           edges[source].push_back(e);edges[destination].push_back(e1);
+           graph_edge.push_back(e);graph_edge.push_back(e1);
 
            
            

@@ -1,4 +1,4 @@
-function vHong(Graph g){
+function vHong(Graph g) {
     propNode<int> modified;
     propNode<int> outDeg; propNode<int> inDeg;
     propNode<bool> visitFw; propNode<bool> visitBw;
@@ -19,9 +19,11 @@ function vHong(Graph g){
     g.attachNodeProperty(pivotField = -1);
     forall(src in g.nodes()) {
         int nxtSrc = src + 1;
-        src.inDeg += nxtSrc.rev_meta - src.rev_meta;
-        src.outDeg += nxtSrc.meta - src.meta;
+        src.inDeg = src.inDeg + nxtSrc.rev_meta - src.rev_meta;
+        src.outDeg = src.inDeg + nxtSrc.meta - src.meta;
     }
+    
+    
     bool fpoint1 = False;
     fixedPoint until (fpoint1: !modified) {
         forall(src in g.nodes().filter(scc == -1)) {
@@ -65,7 +67,7 @@ function vHong(Graph g){
         }
     }
 
-     bool fpoint2 = False;
+    bool fpoint2 = False;
     fixedPoint until (fpoint2 : !modified) {
         forall(src in g.nodes().filter(scc == -1)) {
             int myrange = src.range;
@@ -93,12 +95,13 @@ function vHong(Graph g){
     }
 
     forall(src in g.nodes().filter(scc == -1)) {
-        if(src.visitFw == False || src.visitBw == False){
-            int ext1 = 0;int ext2 = 0;
-            if(src.visitFw == False ) {ext1 = 1;}
+        if(src.visitFw == False || src.visitBw == False) {
+            int ext1 = 0;
+            int ext2 = 0;
+            if(src.visitFw == False) {ext1 = 1;}
             if(src.visitBw == False) {ext2 = 1;}
-            
-            src.range = 3 * src.range + ext1 + ext2;
+            int newRange = 3 * src.range + ext1 + ext2;
+            src.range = newRange;
             src.visitFw = False;
             src.visitBw = False;
             src.propFw = False;
@@ -133,10 +136,11 @@ function vHong(Graph g){
 
     g.attachNodeProperty(range = 0);
     forall(src in g.nodes()) {
-        src.range += src;
+        src.range = src.range + src;
     }
 
-        bool fpoint4 = False;
+
+    bool fpoint4 = False;
     fixedPoint until (fpoint4 : !modified) {
         forall(src in g.nodes().filter(scc == -1)) {
             for(dst in g.neighbors(src).filter(scc == -1)) {
@@ -148,16 +152,16 @@ function vHong(Graph g){
         }
         forall(src in g.nodes().filter(scc==-1)){
             int myrange = src.range;
-            if((myrange!=src)&&(myrange!=myrange.range)){
+            if ((myrange != src) && (myrange != myrange.range)){
                 src.range = myrange.range;
-                fpoint4 = False;   
+                fpoint4 = False;
             }
         }
-
     }
 
     bool fpoint5 = False;
     fixedPoint until (fpoint5 : !modified) {
+
         forall(src in g.nodes().filter(scc == -1)) {
             int color = src.range;
             int index = (color) - (color/V)*V;
@@ -213,9 +217,9 @@ function vHong(Graph g){
                 int ext2 = 0;
                 if(src.visitFw == False) {ext1 = 1;}
                 if(src.visitBw == False) {ext2 = 1;}
-                int newRange = 3 * src.range;
+                int newRange = 3 * src.range + ext1 + ext2;
                 newRange = (newRange) - (newRange/V)*V;
-                src.range = newRange + ext1 + ext2;
+                src.range = newRange;
                 src.visitFw = False;
                 src.visitBw = False;
                 src.propFw = False;
@@ -224,9 +228,6 @@ function vHong(Graph g){
             if(src.visitFw == True && src.visitBw == True) {
                 src.scc = src;
             }
-        } 
-
+        }
     }
 }
-
-
