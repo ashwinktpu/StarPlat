@@ -2,10 +2,11 @@
 #define SYMBOLTABLEBUILDER_H
 
 
+
 #include "../ast/ASTNodeTypes.hpp"
 #include "../maincontext/MainContext.hpp"
 #include <cassert>
-#include <unordered_set>
+
 extern char* backendTarget;
 class SymbolTableBuilder
 {
@@ -14,22 +15,15 @@ class SymbolTableBuilder
  list<SymbolTable*> propSymbolTables;
  SymbolTable* currVarSymbT;
  SymbolTable* currPropSymbT;
- Function* currentFunc; 
- map<string, bool> dynamicLinkedFunc;
-
  
- public:
- vector<ASTNode*> parallelConstruct;
- std::unordered_set<TableEntry *> IdsInsideParallelFilter;
- ASTNode* batchBlockEnv;
- ASTNode* preprocessEnv;
+ 
 
+ public:
+ stack<ASTNode*> parallelConstruct;
  SymbolTableBuilder()
  {
      currVarSymbT=NULL;
      currPropSymbT=NULL;
-     batchBlockEnv = NULL;
-     preprocessEnv = NULL;
  }
 
  void init_curr_SymbolTable(ASTNode* node);
@@ -68,8 +62,6 @@ bool checkHeaderSymbols(Identifier* src,PropAccess* propId,forallStmt* forall);
 bool findSymbolId(Identifier* id);
 bool findSymbolPropId(PropAccess* propId);
 bool checkForArguments(list<argument*> arglist);
-void getIdsInsideExpression(Expression* expr, std::unordered_set<TableEntry *>& ids);
-map<string, bool> getDynamicLinkedFuncs();
 char* getbackendTarget();
 
 };

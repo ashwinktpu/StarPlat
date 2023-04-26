@@ -17,11 +17,7 @@ enum TYPE
  TYPE_NODE,
  TYPE_EDGE,
  TYPE_PROPNODE,
- TYPE_PROPEDGE,
- TYPE_NONE,
- TYPE_UPDATES,
- TYPE_CONTAINER,
- TYPE_NODEMAP,
+ TYPE_PROPEDGE
 
 };
 
@@ -35,7 +31,7 @@ inline bool check_isPropType(int typeId)
 }
 inline bool check_isCollectionType(int typeId)
 {
-  return ((typeId == TYPE_LIST)||(typeId==TYPE_SETE)||(typeId==TYPE_SETN)||(typeId == TYPE_UPDATES) || (typeId == TYPE_NODEMAP) || (typeId == TYPE_CONTAINER));
+  return ((typeId==TYPE_LIST)||(typeId==TYPE_SETE)||(typeId==TYPE_SETN));
 }
 inline bool check_isGraphType(int typeId)
 {
@@ -65,23 +61,11 @@ inline bool check_isSetCollectionType(int typeId)
 }
 inline bool check_isNodeType(int typeId)
 {
-  return typeId == TYPE_NODE;
+  return typeId==TYPE_NODE;
 }
 inline bool check_isEdgeType(int typeId)
 {
-  return typeId == TYPE_EDGE;
-}
-inline bool check_isContainerType(int typeId)
-{
-
- return typeId == TYPE_CONTAINER;
-   
-}
-inline bool check_isNodeMapType(int typeId)
-{
- 
-return typeId == TYPE_NODEMAP;
-
+  return typeId==TYPE_EDGE;
 }
 
 enum REDUCE
@@ -91,7 +75,7 @@ enum REDUCE
     REDUCE_PRODUCT,
     REDUCE_MAX,
     REDUCE_MIN,
-   
+
 
 };
 
@@ -118,18 +102,8 @@ enum OPERATOR
  OPERATOR_ORASSIGN,
  OPERATOR_ANDASSIGN,
  OPERATOR_SUBASSIGN,
- OPERATOR_INDEX,
 
-};
 
-enum FUNCTYPE
-{
-  GEN_FUNC,
-  STATIC_FUNC,
-  INCREMENTAL_FUNC,
-  DECREMENTAL_FUNC,
-  DYNAMIC_FUNC,
-  
 };
 
 enum NODETYPE{
@@ -155,11 +129,6 @@ enum NODETYPE{
   NODE_REDUCTIONCALL,
   NODE_REDUCTIONCALLSTMT,
   NODE_UNARYSTMT,
-  NODE_RETURN,
-  NODE_BATCHBLOCKSTMT,
-  NODE_ONADDBLOCK,
-  NODE_ONDELETEBLOCK,
-  NODE_TRANSFERSTMT,
 };
 
 
@@ -179,18 +148,5 @@ enum EXPR
    EXPR_INFINITY,
    EXPR_PROCCALL,
    EXPR_DEPENDENT,
-   EXPR_MAPGET,
 };
-
-static const char *currentBatch = "currentBatch";
-static const char *attachNodeCall = "attachNodeProperty";
-static const char *attachEdgeCall = "attachEdgeProperty" ;
-static const char* nbrCall = "neighbors" ;
-static const char* edgeCall   = "get_edge" ;
-static const char* countOutNbrCall = "count_outNbrs";
-static const char* isAnEdgeCall = "is_an_edge"; 
-static const char* nodesToCall = "nodes_to";
-static const char* nodesCall = "nodes";
-
 #endif
-

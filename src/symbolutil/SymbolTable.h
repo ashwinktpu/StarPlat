@@ -15,13 +15,9 @@ class TableEntry
   private:
   Identifier* id;
   Type* type;
-
   bool isArgument;
-  bool isGlobalVar;
-  bool inParallelSection = false;
 
-  TableEntry():id(nullptr), type(nullptr),isArgument(false), isGlobalVar(false), inParallelSection(false){
-
+  TableEntry():id(NULL), type(NULL),isArgument(false){
 
   }
  
@@ -41,32 +37,10 @@ public:
  {
     isArgument=ifArg;
  }
- 
+
  bool isArg()
  {
      return isArgument;
- }
-
-
- void setInParallelSection(bool inParallel)
- {
-     inParallelSection = inParallel;
- }
-
- bool isInParallelSection()
- {
-     return inParallelSection;
- }
-
-
- void setGlobalVariable()
- {
-    isGlobalVar = true;
- }
- 
- bool isGlobalVariable()
- {
-    return isGlobalVar;
  }
 
 };
@@ -84,7 +58,7 @@ public:
 
 SymbolTable(ASTNode* ownerNode,int symbTabType)
 {
-    parent=nullptr;
+    parent=NULL;
     symbTabOwner=ownerNode;
     sTtype=symbTabType;
     
@@ -154,6 +128,11 @@ bool check_conflicts_and_add(SymbolTable* sTab,Identifier* id,Type* type);
 
 
  }*/
+
+
+
+
+
 
 };
 

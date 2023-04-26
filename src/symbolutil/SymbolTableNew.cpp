@@ -6,7 +6,6 @@ TableEntry::TableEntry(Identifier* idSent,Type* typeSent)
  {
      id=idSent;
      type=typeSent;
-     isGlobalVar = false;
      id->setSymbolInfo(this);
      assert(type!=NULL);
      assert(id->getIdentifier()!=NULL);

@@ -9,9 +9,7 @@
 #include<stack>
 #include<map>
 #include<set>
-#include<queue>
 #include "../maincontext/enum_def.hpp"
-#include "MetaDataUsed.hpp"
 
 
 
@@ -24,15 +22,11 @@ class formalParam;
 class Type;
 class blockStatement;
 class Identifier;
-extern vector<map<int,vector<Identifier*>>> graphId; 
-                                                      /*store the graph variables 
-                                                       referenced in current function,
-                                                       where the graphId vector is 
-                                                       separated across different function type*/
-class varTransferStmt;
+extern vector<Identifier*> graphId;
+
 
 class argument
-{  
+{
   private:
   Expression* expression;
   assignment* assignExpr;
@@ -119,44 +113,30 @@ class ASTNodeList
 
 
 class Identifier:public ASTNode
+
 {
   private:
 
   int accessType;
   char* identifier;
-
   Expression* assignedExpr; /*added to store node/edge property initialized values.
-                             - Used in SymbolTable phase for storing metadata. 
+                             - Used in SymbolTable phase for storing metadata.
                              - This field is more of a code generation utility.  */
-  bool redecl; /* added for fixedPoint.(node property parameter)
+  bool redecl; /*added for fixedPoint.(node property parameter)
                 - This field is populated during SymbolTable creation.
                 - it checks if double buffering is required for a node/edge prop.*/
- 
   bool fp_association; /*checks if the identifier as a node/edge property
                          is used as a dependent for fixedpoint.*/
-
   char* fpId;          /*If the identifier is associated with a fixedpoint,
                          the field stores the fixedpoint id name*/
-  Identifier* fpIdNode; /*If the identifier is associated with a fixedpoint,
-                         the field stores the fixedpoint id node*/
-
   TableEntry* idInfo;
-  Expression* dependentExpr; /*the expression in fixedPoint of which the current
-                               identifier is a part of*/
-  Identifier* updates_association; /* for update.source/destination, get the updates to
-                                      which this update belongs to.*/                             
 
-  bool localMap;  
-  bool forall_filter_association; 
-  bool used_inside_forall_filter_and_changed_inside_forall_body;
+  public:
 
-                                                        
-   
-  public: 
- 
   static Identifier* createIdNode(const char* id)
    {
-   
+
+
      Identifier* idNode=new Identifier();
      idNode->identifier=new char[strlen(id)+1];
      strcpy(idNode->identifier,id);
@@ -165,10 +145,6 @@ class Identifier:public ASTNode
      idNode->redecl=false;
      idNode->fp_association = false;
      idNode->assignedExpr = NULL;
-     idNode->dependentExpr = NULL;
-     idNode->localMap = false;
-     idNode->forall_filter_association = false;
-     idNode->used_inside_forall_filter_and_changed_inside_forall_body = false;
    // std::cout<<"IDENTIFIER = "<<idNode->getIdentifier()<<" "<<strlen(idNode->getIdentifier());
      return idNode;
 
@@ -205,7 +181,7 @@ class Identifier:public ASTNode
 
      return copyId;
    }
-   
+
    void set_redecl()
    {
      redecl=true;
@@ -214,21 +190,6 @@ class Identifier:public ASTNode
    bool require_redecl()
    {
      return redecl;
-   }
-   void set_used_inside_forall_filter_and_changed_inside_forall_body(){
-    used_inside_forall_filter_and_changed_inside_forall_body = true; 
-   }
-   bool get_used_inside_forall_filter_and_changed_inside_forall_body(){
-    return used_inside_forall_filter_and_changed_inside_forall_body ;
-   } 
-   void set_forall_filter_association()
-   {
-     forall_filter_association=true;
-   }
-
-   bool get_forall_filter_association()
-   {
-     return forall_filter_association;
    }
 
    void set_fpassociation()
@@ -241,19 +202,6 @@ class Identifier:public ASTNode
      return fp_association;
    }
 
-   void setLocalMapReq()
-   {
-    
-     localMap = true;
-
-   }
-
-   bool isLocalMapReq(){
-
-    return localMap;
-
-   }
-
    void set_fpId(char* fp_sentId)
    {
      fpId=fp_sentId;
@@ -262,16 +210,6 @@ class Identifier:public ASTNode
    char* get_fpId()
    {
      return fpId;
-   }
-
-   void set_fpIdNode(Identifier* fp_sentIdNode)
-   {
-     fpIdNode=fp_sentIdNode;
-   }
-
-   Identifier* get_fpIdNode()
-   {
-     return fpIdNode;
    }
 
    void set_assignedExpr(Expression* assignExprSent)
@@ -284,45 +222,17 @@ class Identifier:public ASTNode
      return assignedExpr;
    }
 
-   void set_dependentExpr(Expression* dependExpr) //Expression in fixedPoint of which the identifier
-                                                  // is part of
-   {
-     dependentExpr = dependExpr;
-   }
-
-   Expression* get_dependentExpr()
-   {
-     return dependentExpr;
-   }
-
-   void setUpdateAssociation(Identifier* updateId_sent)
-    {
-      updates_association = updateId_sent;
-    }
-
-   Identifier* getUpdateAssociation()
-     {
-       return updates_association;
-     }
-
 };
 
 class PropAccess:public ASTNode
+
 {
   private:
   Identifier* identifier1;
   Identifier* identifier2;
-  Expression* propExpr;
   int accessType;
 
-  public: 
-  PropAccess()
-  {
-    identifier1 = NULL;
-    identifier2 = NULL;
-    propExpr = NULL;
-  }
-
+  public:
   static PropAccess* createPropAccessNode(Identifier* id1, Identifier* id2)
    {
      PropAccess* propAccessNode=new PropAccess();
@@ -332,25 +242,6 @@ class PropAccess:public ASTNode
      propAccessNode->setTypeofNode(NODE_PROPACCESS);
      return propAccessNode;
 
-   }
-
-   static PropAccess* createPropAccessNode(Identifier* id1, Expression* propExpr)
-   {
-     PropAccess* propAccessNode = new PropAccess();
-     propAccessNode->identifier1 = id1;
-     propAccessNode->propExpr = propExpr;
-     propAccessNode->accessType = 1;
-     propAccessNode->setTypeofNode(NODE_PROPACCESS);
-     return propAccessNode;
-
-   }
-
-   bool isPropertyExpression()
-   {
-     if(propExpr != NULL)
-        return true;
-
-      return false;   
    }
 
    int getAccessType()
@@ -366,13 +257,7 @@ class PropAccess:public ASTNode
    {
      return identifier2;
    }
-  
-   Expression* getPropExpr()
-   {
-    
-    return propExpr;
-      
-   }
+
 
 };
 
@@ -399,7 +284,11 @@ class statement:public ASTNode
   {
     return statementType;
   }
-  
+
+
+
+
+
   };
 
   class blockStatement:public statement
@@ -468,13 +357,7 @@ class statement:public ASTNode
         return statements;
       }
 
-      void removeStatement(statement* stmt){
-          statements.remove(stmt);
-      }
 
-      void clearStatements(){
-        statements.clear();
-      }
   };
 
 class Function:public ASTNode
@@ -484,21 +367,13 @@ class Function:public ASTNode
   Identifier* functionId;
   list<formalParam*> paramList;
   blockStatement* blockstmt;
-  bool initialLockDecl; /* If omp_locks required in some part of function body,
-                           set this to initialize the omp_locks in 1st part of func body*/
-  bool hasReturn;                          
-  int funcType ;
 
-  MetaDataUsed metadata;
   public:
+
   Function()
-  { 
-    functionId=NULL;
+  { functionId=NULL;
     blockstmt=NULL;
-    funcType = 0;
-    initialLockDecl = false;
     createSymbTab();
-    metadata = MetaDataUsed();
   }
 
   static Function* createFunctionNode(Identifier* funcId,list<formalParam*> paramList)
@@ -507,75 +382,10 @@ class Function:public ASTNode
       func->functionId=funcId;
       func->paramList=paramList;
       func->setTypeofNode(NODE_FUNC);
-      func->setFuncType(GEN_FUNC);
-      //func->retType = retType;
-
       return func;
 
   }
-  static Function*  createStaticFunctionNode(Identifier* funcId,list<formalParam*> paramList)
-  {
-   
-    Function* staticFunc = new Function();
-    staticFunc->functionId = funcId;
-    staticFunc->paramList = paramList;
-    staticFunc->setTypeofNode(NODE_FUNC);
-    staticFunc->setFuncType(STATIC_FUNC);
-   // staticFunc->retType = retType;
 
-    return staticFunc;
- 
-
-  }
-
-
-  static Function*  createDynamicFunctionNode(Identifier* funcId,list<formalParam*> paramList)
-  {
-   
-    Function* dynamicFunc = new Function();
-    dynamicFunc->functionId = funcId;
-    dynamicFunc->paramList = paramList;
-    dynamicFunc->setTypeofNode(NODE_FUNC);
-    dynamicFunc->setFuncType(DYNAMIC_FUNC);
-   // dynamicFunc->retType = retType;
-
-    return dynamicFunc;
- 
-
-  }
-
-  static Function*  createIncrementalNode(list<formalParam*> paramList)
-  {
-   
-    Function* incrementalFunc = new Function();
-    incrementalFunc->paramList = paramList;
-    incrementalFunc->setTypeofNode(NODE_FUNC);
-    incrementalFunc->setFuncType(INCREMENTAL_FUNC);
-    //incrementalFunc->retType = retType;
-
-    return incrementalFunc;
-
-  }
-
-  static Function*  createDecrementalNode(list<formalParam*> paramList)
-  {
-   
-    Function* decrementalFunc = new Function();
-    decrementalFunc->paramList = paramList;
-    decrementalFunc->setTypeofNode(NODE_FUNC);
-    decrementalFunc->setFuncType(DECREMENTAL_FUNC);
-    //decrementalFunc->retType = retType;
-
-    return decrementalFunc;
-
-  }
-
-
-  void setFuncType(FUNCTYPE type)
-  {
-    funcType = type;
-  }
-  
    void setBlockStatement(blockStatement* blockStmtSent)
    {
      blockstmt=blockStmtSent;
@@ -596,80 +406,7 @@ class Function:public ASTNode
      return blockstmt;
    }
 
-   int getFuncType()
-   {
-     return funcType;
-   }
 
-   void setInitialLockDecl()
-     { 
-       //printf("INSIDE THIS FOR LOCKSET\n");
-       initialLockDecl = true;
-     }
-
-   bool getInitialLockDecl()
-      {
-        return initialLockDecl ;
-      } 
-
-   void flagReturn()
-     {
-
-        hasReturn = true ;
-
-     }    
-
-  bool containsReturn() {
-
-       return hasReturn ;
-
-     }  
-
-
-   
-    bool getIsMetaUsed() {
-      return metadata.isMetaUsed;
-    }
-
-    void setIsMetaUsed() {
-      metadata.isMetaUsed = true;
-    }
-
-    bool getIsDataUsed() {
-      return metadata.isDataUsed;
-    }
-
-    void setIsDataUsed() {
-      metadata.isDataUsed = true;
-    }
-
-    bool getIsSrcUsed() {
-      return metadata.isSrcUsed;
-    }
-
-    void setIsSrcUsed() {
-      metadata.isSrcUsed = true;
-    }
-
-    bool getIsWeightUsed() {
-      return metadata.isWeightUsed;
-    }
-
-    void setIsWeightUsed() {
-      metadata.isWeightUsed = true;
-    }
-
-    bool getIsRevMetaUsed() {
-      return metadata.isRevMetaUsed;
-    }
-
-    void setIsRevMetaUsed() {
-      metadata.isRevMetaUsed = true;
-    }
-
-    MetaDataUsed getMetaDataUsed() {
-      return metadata;
-    }
 };
 
 class Type:public ASTNode
@@ -681,13 +418,11 @@ class Type:public ASTNode
   Type* innerTargetType;
   Identifier* sourceGraph;
   list<char*> graphPropList;
-  list<argument*> sizeExprList;
-  Type* innerTypeSize;
-  
+
  public:
  Type()
  {
-     typeId = TYPE_NONE;
+     typeId=-1;
      TargetGraph=NULL;
      innerTargetType=NULL;
      sourceGraph=NULL;
@@ -737,46 +472,13 @@ class Type:public ASTNode
     return type;
   }
 
-
-  static Type* createForContainerType(int typeIdSent, Type* innerType, list<argument*> argList, Type* innerTypeSize){
-  
-   Type* type=new Type();
-   type->typeId=typeIdSent;
-   type->innerTargetType = innerType;
-   type->sizeExprList = argList;
-   type->innerTypeSize = innerTypeSize;
-
-   return type;
-  } 
-
-  
-  static Type* createForNodeMapType(int typeIdSent, Type* innerType){
-  
-   Type* type=new Type();
-   type->typeId=typeIdSent;
-   type->innerTargetType = innerType;
-
-   return type;
-  } 
-
   Type* copy()
-  {  
-     Type* copyType = new Type();
-     copyType->typeId = typeId;
-     copyType->TargetGraph = (this->TargetGraph==NULL) ? NULL : this->TargetGraph->copy();
-     copyType->sourceGraph = (this->sourceGraph==NULL) ? NULL : this->sourceGraph->copy();
-     copyType->innerTargetType = (this->innerTargetType==NULL) ? NULL : this->innerTargetType->copy();
-     copyType->innerTypeSize = (this->innerTypeSize == NULL) ? NULL : this->innerTypeSize->copy();
-     
-     if(sizeExprList.size() > 0){
-        list<argument*> sizeExprListNew;
-
-        for(auto it = sizeExprList.begin() ; it != sizeExprList.end() ; ++it){
-          sizeExprListNew.push_back(*it);
-        }
-
-       copyType->sizeExprList = sizeExprListNew;
-     }
+  {
+     Type* copyType=new Type();
+     copyType->typeId=typeId;
+     copyType->TargetGraph=(this->TargetGraph==NULL)?NULL:this->TargetGraph->copy();
+     copyType->sourceGraph=(this->sourceGraph==NULL)?NULL:this->sourceGraph->copy();
+     copyType->innerTargetType=(this->innerTargetType==NULL)?NULL:this->innerTargetType->copy();
      return copyType;
   }
   int getRootType()
@@ -874,17 +576,6 @@ class Type:public ASTNode
 
   }
 
-  Type* getInnerTargetSize(){
-
-        return innerTypeSize;
-  }
-
-  list<argument*> getArgList(){
-
-      return sizeExprList;
-
-  }
-
 };
 class formalParam:public ASTNode
 {
@@ -933,13 +624,10 @@ class formalParam:public ASTNode
     Expression* left;
     Expression* right;
     Expression* unaryExpr;
-    Expression* mapExpr;
-    Expression* indexExpr;
     int overallType;
     long integerConstant;
     double floatConstant;
     bool booleanConstant;
-    char charConstant;
     bool infinityType;
     int operatorType;
     int typeofExpr;
@@ -958,8 +646,6 @@ class formalParam:public ASTNode
       typeofNode=NODE_EXPR;
       overallType=-1;
       enclosedBrackets=false;
-      mapExpr = NULL;
-      indexExpr = NULL;
     }
 
     static Expression* nodeForArithmeticExpr(Expression* left,Expression* right,int arithmeticOperator)
@@ -1010,36 +696,11 @@ class formalParam:public ASTNode
       Expression* unaryExpression=new Expression();
       unaryExpression->unaryExpr=expr;
       unaryExpression->operatorType=operatorType;
-      unaryExpression->typeofExpr = EXPR_UNARY;
+      unaryExpression->typeofExpr=EXPR_UNARY;
       expr->parent=unaryExpression;
 
       return unaryExpression;
     }
-
-   static Expression* nodeForIndexExpr(Expression* expr, Expression* indexExpr, int operatorType){
-
-   cout<<"inside this for node creation of index"<<"\n";
-   Expression* indexExpression = new Expression();
-   indexExpression->mapExpr = expr;
-   indexExpression->indexExpr = indexExpr;
-   indexExpression->operatorType = operatorType;
-   indexExpression->typeofExpr = EXPR_MAPGET;
-   expr->parent = indexExpression;
-   indexExpr->parent = indexExpression;
-    cout<<"find map expr "<<indexExpression->mapExpr->getId()->getIdentifier()<<"\n";
-   return indexExpression; 
-  
-
-   }
-
-
-    /*static Expression* nodeForChar(char charVal)
-      {
-        Expression* charValExpr = new Expression();
-        charValExpr->charConstant = charVal;
-        charValExpr->typeofExpr = EXPR_CHARCONSTANT;
-        return charValExpr;
-      }*/
 
     static Expression* nodeForIntegerConstant(long integerValue)
     {
@@ -1060,9 +721,9 @@ class formalParam:public ASTNode
     }
      static Expression* nodeForBooleanConstant(bool boolValue)
     {
-       Expression* boolExpr = new Expression();
+       Expression* boolExpr=new Expression();
        boolExpr->booleanConstant=boolValue;
-       boolExpr->typeofExpr = EXPR_BOOLCONSTANT;
+       boolExpr->typeofExpr=EXPR_BOOLCONSTANT;
        return boolExpr;
 
     }
@@ -1141,23 +802,7 @@ class formalParam:public ASTNode
     }
     bool isProcCallExpr()
      {
-       return (typeofExpr == EXPR_PROCCALL);
-     }
-     bool isIndexExpr()
-     {
-        return (typeofExpr == EXPR_MAPGET);     
-
-     }
-
-     Expression* getIndexExpr()
-     {
-         return indexExpr;
-       
-     }
-
-     Expression* getMapExpr()
-     {
-       return mapExpr;      
+       return (typeofExpr==EXPR_PROCCALL);
      }
 
      Expression* getUnaryExpr()
@@ -1207,7 +852,6 @@ class formalParam:public ASTNode
        return floatConstant;
      }
 
-
      bool isPositiveInfinity()
      {
 
@@ -1236,7 +880,7 @@ class formalParam:public ASTNode
      {
        return typeofExpr;
      }
-     
+
      void setEnclosedBrackets()
      {
        enclosedBrackets=true;
@@ -1247,106 +891,16 @@ class formalParam:public ASTNode
        return enclosedBrackets;
      }
 
+
+
+
   };
-
-
-  class returnStmt:public statement
-   {
-     private:
-     Expression* returnExpression;
-
-     public:
-     returnStmt()
-      {
-        returnExpression = NULL;
-      }
-     
-     static returnStmt* createNodeForReturnStmt(Expression* returnExpressionSent)
-        {
-            returnStmt* returnStmtNode = new returnStmt();
-            returnStmtNode->returnExpression = returnExpressionSent;
-            returnStmtNode->setTypeofNode(NODE_RETURN);
-            returnExpressionSent->setParent(returnStmtNode);
-            return returnStmtNode;
-        }
-
-     Expression* getReturnExpression()
-       {
-         return returnExpression;
-       }   
-
-
-   };
-
-
-
-
-  
-
-  class batchBlock:public statement
-  {
-    private:
-    blockStatement* statements;
-    Identifier* updateId; /* contains the update Id over which this batchblock operates on */
-    Expression* batchSizeExpr;
-
-    public:
-    batchBlock()
-      {
-        statements = NULL;
-        batchSizeExpr = NULL;
-        updateId = NULL;
-      }
-
-    static batchBlock* createNodeForBatchBlock(Identifier* updatesIdSent, Expression* batchSizeExprSent, statement* statements_sent)
-        {
-            batchBlock* batchBlockNode = new batchBlock();
-            batchBlockNode->statements = (blockStatement*)statements_sent;
-            batchBlockNode->batchSizeExpr = batchSizeExprSent;
-            batchBlockNode->updateId = updatesIdSent; 
-            batchBlockNode->setTypeofNode(NODE_BATCHBLOCKSTMT);
-            updatesIdSent->setParent(batchBlockNode);
-            batchSizeExprSent->setParent(batchBlockNode);
-            statements_sent->setParent(batchBlockNode);
-            return batchBlockNode;
-        }
-
-
-    blockStatement* getStatements()
-     {
-       return statements;
-     }
-
-    Expression* getBatchSizeExpr()
-     {
-      
-      return batchSizeExpr;
-
-     }   
-     
-     /*void setUpdateId(Identifier* updateIdSent)
-      {
-        updateId = updateIdSent;
-      }*/
-
-      Identifier* getUpdateId()
-       {
-         return updateId;
-       }
-
-
-  
-  } ;
-
   class declaration:public statement
   {
     private:
     Type* type;
     Identifier* identifier;
     Expression* exprAssigned;
-    bool inGPU;
-    bool propCopy;
-    bool mapPropCopy;
 
     public:
     declaration()
@@ -1355,11 +909,8 @@ class formalParam:public ASTNode
         identifier=NULL;
         exprAssigned=NULL;
         statementType="declaration";
-        inGPU = false;
-        propCopy = false;
-        mapPropCopy = false;
-        
-       
+
+
     }
 
     static declaration* normal_Declaration(Type* typeSent,Identifier* identifierSent)
@@ -1405,50 +956,18 @@ class formalParam:public ASTNode
       return (exprAssigned!=NULL);
     }
 
-    void setInGPU(bool inGPU){
-      this->inGPU = inGPU;
-    }
-
-    bool getInGPU(){
-      return inGPU;
-    }
-    bool setPropCopy(){
-
-      propCopy = true;
-
-    }
-
-    bool setMapPropCopy(){
-
-      mapPropCopy = true;
-
-    }
-
-    bool isMapPropCopy(){
-
-     return mapPropCopy;
-
-    }
-
-    bool isPropCopy(){
-     
-     return propCopy;
-
-    }
-
   };
   class assignment:public statement
   {
      private:
      Identifier* identifier;
      PropAccess* propId;
-     Expression* indexAccess;
      Expression* exprAssigned;
-     bool isPropCopy ;
      bool atomicSignal;
      bool deviceVariable;
      bool accumulateKernel;
      int lhsType;
+      bool isPropCopy;
 
      public:
      assignment()
@@ -1460,7 +979,6 @@ class formalParam:public ASTNode
          atomicSignal=false;
          deviceVariable=false;
          accumulateKernel=false;
-        indexAccess = NULL;
         isPropCopy = false;
     }
 
@@ -1493,19 +1011,6 @@ class formalParam:public ASTNode
 
      }
 
-     static assignment* indexAccess_assignExpr(Expression* indexAccess, Expression* expressionSent){
-
-        assignment* assign = new assignment();
-        assign->indexAccess = indexAccess;
-        assign->exprAssigned = expressionSent;
-        assign->lhsType = 3;
-        assign->setTypeofNode(NODE_ASSIGN);
-        indexAccess->setParent(assign);
-        expressionSent->setParent(assign);
-
-        return assign;
-     }
-
      bool lhs_isIdentifier()
      {
        return (lhsType==1);
@@ -1514,12 +1019,6 @@ class formalParam:public ASTNode
      bool lhs_isProp()
      {
        return (lhsType==2);
-     }
-
-     bool lhs_isIndexAccess(){
-    
-       return (lhsType == 3);
-
      }
 
      Identifier* getId()
@@ -1531,13 +1030,6 @@ class formalParam:public ASTNode
      {
        return propId;
      }
-
-    Expression* getIndexAccess(){
-
-      return indexAccess;
-
-    }
-
      Expression* getExpr()
      {
        return exprAssigned;
@@ -1556,7 +1048,6 @@ class formalParam:public ASTNode
      {
        return atomicSignal;
      }
-
 
      void flagAsDeviceVariable(){
         //~ if(exprAssigned->isArithmetic()||exprAssigned->isLogical())
@@ -1617,11 +1108,7 @@ class whileStmt:public statement
       return body;
     }
 
-    void setBody(blockStatement* bodySent)
-    {
-       body=bodySent;
-    }
-  }; 
+  };
   class dowhileStmt:public statement
 {
   private:
@@ -1658,10 +1145,6 @@ class whileStmt:public statement
       return body;
     }
 
-    void setBody(blockStatement* bodySent)
-    {
-       body=bodySent;
-    }
   };
 
 
@@ -1711,10 +1194,7 @@ class fixedPointStmt:public statement
      {
        return body;
      }
-    void setBody(statement* body)
-    {
-      this->body = body;
-    }
+
 
 };
 
@@ -1772,11 +1252,8 @@ class fixedPointStmt:public statement
     Expression* booleanExpr;
     Expression* filterExpr;
     statement* body;
-    //list<varTransferStmt*> revTransfer;
 
-    list<Identifier*> usedVars;
-    std::set<TableEntry *> modifiedGlobalVars;
-    public: 
+    public:
     iterateReverseBFS()
     {
       filterExpr=NULL;
@@ -1808,22 +1285,7 @@ class fixedPointStmt:public statement
     {
       return booleanExpr;
     }
-    
-    bool hasFilter()
-    {
-      if(booleanExpr!=NULL)
-        return true;
-      else
-        return false;
-    }
 
-    void initUsedVariable(list<Identifier*> usedVars){
-      this->usedVars = usedVars;
-    }
-    
-    /*void addVarTransfer(varTransferStmt* tstmt){
-      this->revTransfer.push_back(tstmt);
-    }*/
     void addAccumulateAssignment(){
       blockStatement* block=(blockStatement*)body;
        //~ int i=0;
@@ -1838,16 +1300,10 @@ class fixedPointStmt:public statement
          }
     }
 
-    void pushModifiedGlobalVariable(TableEntry * te)
-    {
-      modifiedGlobalVars.insert(te);
-    }
-
-    std::set<TableEntry *> getModifiedGlobalVariables()
-    {
-      return modifiedGlobalVars;
-    }
   };
+
+
+
 
   class proc_callExpr:public Expression
   {
@@ -1856,8 +1312,7 @@ class fixedPointStmt:public statement
     Identifier* id2;
     Identifier* methodId;
     list<argument*> argList;
-    Expression* indexExpr;
-    
+
     public:
     proc_callExpr()
     {
@@ -1865,11 +1320,10 @@ class fixedPointStmt:public statement
       id2=NULL;
       methodId=NULL;
       typeofNode=NODE_PROCCALLEXPR;
-      indexExpr = NULL;
     }
 
-    
-    static proc_callExpr* nodeForProc_Call(Identifier* id1,Identifier* id2,Identifier* methodId,list<argument*> argList, Expression* indexExprSent)
+
+    static proc_callExpr* nodeForProc_Call(Identifier* id1,Identifier* id2,Identifier* methodId,list<argument*> argList)
     {
           proc_callExpr* procExpr=new proc_callExpr();
           procExpr->id1=id1;
@@ -1877,7 +1331,6 @@ class fixedPointStmt:public statement
           procExpr->methodId=methodId;
           procExpr->argList=argList;
           procExpr->setExpressionFamily(EXPR_PROCCALL);
-          procExpr->indexExpr = indexExprSent;
           return procExpr;
 
 
@@ -1887,12 +1340,12 @@ class fixedPointStmt:public statement
     {
       return methodId;
     }
-    
+
     Identifier* getId1()
     {
       return id1;
     }
-    
+
     Identifier* getId2()
     {
       return id2;
@@ -1908,129 +1361,9 @@ class fixedPointStmt:public statement
          argList.push_back(arg);
     }
 
-    Expression* getIndexExpr(){
-
-     return indexExpr;
-
-    }
-
-    
-  };
-
-
-  
-  class onDeleteBlock:public statement
-  {
-
-    private:
-    Identifier* itertorId;
-    Identifier* updateId;
-    proc_callExpr* updateFunc;
-    blockStatement* statements;
-
-    public:
-    onDeleteBlock()
-      {
-
-        itertorId = NULL;
-        updateId = NULL;
-        updateFunc = NULL;
-        statements = NULL;
-      }
-
-    static onDeleteBlock* createNodeForOnDeleteBlock(Identifier* iteratorSent, Identifier* sourceId, proc_callExpr* sourceFunc,statement* statements_sent)
-        {
-            onDeleteBlock* onDeleteNode = new onDeleteBlock();
-            onDeleteNode->itertorId = iteratorSent;
-            onDeleteNode->updateId = sourceId;
-            onDeleteNode->updateFunc = sourceFunc;
-            onDeleteNode->statements = (blockStatement*)statements_sent;
-            onDeleteNode->setTypeofNode(NODE_ONDELETEBLOCK);
-            statements_sent->setParent(onDeleteNode);
-            iteratorSent->setParent(onDeleteNode);
-            sourceId->setParent(onDeleteNode);
-            sourceFunc->setParent(onDeleteNode);
-            return onDeleteNode;
-        }
-
-    blockStatement* getStatements()
-     {
-       return statements;
-     }   
-
-     Identifier* getIteratorId()
-     {
-       return itertorId;
-     }  
-
-     Identifier* getUpdateId()
-     {
-       return updateId;
-     }
-    
-    proc_callExpr* getUpdateFunc()
-    {
-      return updateFunc;
-    }
- 
 
   };
 
-  class onAddBlock:public statement
-  {
-
-    private:
-    Identifier* itertorId;
-    Identifier* updateId;
-    proc_callExpr* updateFunc;
-    blockStatement* statements;
-
-    public:
-    onAddBlock()
-      {
-        itertorId = NULL;
-        updateId = NULL;
-        updateFunc = NULL;
-        statements = NULL;
-      }
-
-    static onAddBlock* createNodeForOnAddBlock(Identifier* iteratorSent, Identifier* sourceId, proc_callExpr* sourceFunc, statement* statements_sent)
-        {
-            onAddBlock* onAddNode = new onAddBlock();
-            onAddNode->statements = (blockStatement*)statements_sent;
-            onAddNode->itertorId = iteratorSent;
-            onAddNode->updateId = sourceId;
-            onAddNode->updateFunc = sourceFunc;
-            onAddNode->setTypeofNode(NODE_ONADDBLOCK);
-            statements_sent->setParent(onAddNode);
-            iteratorSent->setParent(onAddNode);
-            sourceId->setParent(onAddNode);
-            sourceFunc->setParent(onAddNode);
-            return onAddNode;
-        }
-
-    blockStatement* getStatements()
-     {
-       return statements;
-     }  
-
-     Identifier* getIteratorId()
-     {
-       return itertorId;
-     }  
-
-     Identifier* getUpdateId()
-     {
-       return updateId;
-     }
-    
-    proc_callExpr* getUpdateFunc()
-    {
-      return updateFunc;
-    }
-
-  };
-  
   class iterateBFS:public statement
   {   private:
       Identifier* iterator;
@@ -2041,9 +1374,6 @@ class fixedPointStmt:public statement
       statement* body;
       iterateReverseBFS* revBFS;
 
-      list<Identifier*> usedVars;
-      MetaDataUsed metadata;
-      std::set<TableEntry *> modifiedGlobalVars;
 
       public:
 
@@ -2058,7 +1388,7 @@ class fixedPointStmt:public statement
         revBFS=NULL;
         statementType="IterateInBFS";
       }
-    
+
       static iterateBFS* nodeForIterateBFS(Identifier* iterator,Identifier* graphId,proc_callExpr* nodeCall,Identifier* rootNode,Expression* filterExpr,statement* body,iterateReverseBFS* revBFS)
       {
         iterateBFS* new_iterBFS=new iterateBFS();
@@ -2071,8 +1401,7 @@ class fixedPointStmt:public statement
         new_iterBFS->revBFS=revBFS;
         new_iterBFS->setTypeofNode(NODE_ITRBFS);
         body->setParent(new_iterBFS);
-        if(revBFS != NULL)
-          revBFS->setParent(new_iterBFS);
+        revBFS->setParent(new_iterBFS);
         return new_iterBFS;
       }
 
@@ -2107,71 +1436,10 @@ class fixedPointStmt:public statement
       }
 
 
-      void initUsedVariable(list<Identifier*> usedVars)
-      {
-        this->usedVars = usedVars;
-      }
 
-      bool getIsMetaUsed() {
-        return metadata.isMetaUsed;
-      }
-
-      void setIsMetaUsed() {
-        metadata.isMetaUsed = true;
-      }
-
-      bool getIsDataUsed() {
-        return metadata.isDataUsed;
-      }
-
-      void setIsDataUsed() {
-        metadata.isDataUsed = true;
-      }
-
-      bool getIsSrcUsed() {
-        return metadata.isSrcUsed;
-      }
-
-      void setIsSrcUsed() {
-        metadata.isSrcUsed = true;
-      }
-
-      bool getIsWeightUsed() {
-        return metadata.isWeightUsed;
-      }
-
-      void setIsWeightUsed() {
-        metadata.isWeightUsed = true;
-      }
-
-      bool getIsRevMetaUsed() {
-        return metadata.isRevMetaUsed;
-      }
-
-      void setIsRevMetaUsed() {
-        metadata.isRevMetaUsed = true;
-      }
-
-      MetaDataUsed getMetaDataUsed() {
-        return metadata;
-      }
-
-
-      void initUsedVariable(list<Identifier*> usedVars){
-      this->usedVars = usedVars;
-    }
-    void pushModifiedGlobalVariable(TableEntry * te)
-    {
-      modifiedGlobalVars.insert(te);
-    }
-
-    std::set<TableEntry *> getModifiedGlobalVariables()
-    {
-      return modifiedGlobalVars;
-    }
 
   };
-  
+
   class unary_stmt:public statement
   {
     private:
@@ -2184,7 +1452,7 @@ class fixedPointStmt:public statement
       statementType="UnaryStatement";
       typeofNode=NODE_UNARYSTMT;
     }
-  
+
      static unary_stmt* nodeForUnaryStmt(Expression* unaryExpr)
     {
       unary_stmt* unary_stmtNode=new unary_stmt();
@@ -2200,7 +1468,7 @@ class fixedPointStmt:public statement
 
   };
 
-  
+
   class proc_callStmt:public statement
   {
     private:
@@ -2229,7 +1497,6 @@ class fixedPointStmt:public statement
     }
 
 };
-
   class forallStmt:public statement
   {
 
@@ -2238,7 +1505,6 @@ class fixedPointStmt:public statement
     Identifier* sourceGraph;
     Identifier* source;
     PropAccess* sourceProp;
-    Expression* sourceExpr;
     proc_callExpr*  extractElemFunc;
     statement* body;
     Expression* filterExpr;
@@ -2246,16 +1512,6 @@ class fixedPointStmt:public statement
     bool isforall;
     map<int,list<Identifier*>> reduction_map;
     set<int> reduc_keys;
-    bool filterExprAssoc;
-    Expression* assocExpr;
-    statement * reductionStatement;
-    bool containsreductionStatement;
-    list<Identifier*> usedVars;
-
-    list<Identifier*> doubleBufferVars; // the propnodes which need to be double buffered
-    MetaDataUsed metadata;
-    set<Identifier*> mapLocals;  
-    std::set<TableEntry *> modifiedGlobalVars;
 
     public:
     forallStmt()
@@ -2269,12 +1525,6 @@ class fixedPointStmt:public statement
       typeofNode=NODE_FORALLSTMT;
       isforall=false;
       isSourceId=false;
-      createSymbTab();
-      filterExprAssoc = false; 
-      metadata = MetaDataUsed();
-      sourceExpr = NULL;
-      reductionStatement = NULL;
-      containsreductionStatement = false;
     }
 
     static forallStmt* createforallStmt(Identifier* iterator,Identifier* sourceGraph,proc_callExpr* extractElemFunc,statement* body,Expression* filterExpr,bool isforall)
@@ -2323,42 +1573,21 @@ class fixedPointStmt:public statement
       return new_forallStmt;
     }
 
-    static forallStmt* indexExpr_createforForStmt(Identifier* iterator, Expression* indexExpr, statement* body, bool isforall){
-
-
-    forallStmt* new_forallStmt = new forallStmt();
-    new_forallStmt->iterator = iterator;
-    new_forallStmt->sourceExpr = indexExpr;
-    new_forallStmt->body = body;
-    new_forallStmt->isforall = isforall;
-    body->setParent(new_forallStmt);
-    return new_forallStmt;
-
-
-
-    }
-
     bool isForall()
     {
       return isforall;
     }
-    
+
     /* disable parallelization of for
        for specific instances*/
-    void disableForall() 
-    {                     
+    void disableForall()
+    {
       isforall=false;
     }
 
     proc_callExpr* getExtractElementFunc()
     {
        return extractElemFunc;
-    }
-
-    Expression* getSourceExpr(){
-  
-     return sourceExpr;
-
     }
 
     Identifier* getIterator()
@@ -2383,57 +1612,19 @@ class fixedPointStmt:public statement
 
     bool isSourceField()
     {
-      return (!isSourceId && !isSourceExpr() && !isSourceProcCall());
-
+      return (!isSourceId);
     }
 
     bool isSourceProcCall()
     {
       return (extractElemFunc!=NULL);
     }
-    
-    bool isSourceExpr(){
-
-     return (sourceExpr != NULL);
-
-    }
 
     bool hasFilterExpr()
     {
       return (filterExpr!=NULL);
     }
-    void setReductionStatement(statement * stmt)
-    {
-      containsreductionStatement = true;
-      reductionStatement = stmt;
-    }
-    bool containsReductionStatement()
-    {
-      return containsreductionStatement;
-    }
-    statement * getReductionStatement()
-    {
-      return reductionStatement;
-    }
-    void setAssocExpr(Expression* filterExprSent)
-     {
-       assocExpr = filterExprSent;
-     }
 
-     Expression* getAssocExpr()
-       {
-          return assocExpr;
-       }
-
-     void setFilterExprAssoc()
-     {
-       filterExprAssoc = true;
-     }
-    
-     bool hasFilterExprAssoc()
-      {
-        return filterExprAssoc;
-      }
     statement* getBody()
     {
       return body;
@@ -2456,14 +1647,14 @@ class fixedPointStmt:public statement
     set<int> get_reduceKeys()
     {
       return reduc_keys;
-    } 
-    
+    }
+
     list<Identifier*> get_reduceIds(int key)
     {
       return reduction_map[key];
     }
-    
-   
+
+
 
     void addAtomicSignalToStatements()
     {
@@ -2478,13 +1669,6 @@ class fixedPointStmt:public statement
              }
          }
 
-    }
-
-    void initUsedVariable(list<Identifier*> usedVars){
-      this->usedVars = usedVars;
-    }
-    list<Identifier*> getUsedVariables(){
-      return this->usedVars;
     }
 
     void addDeviceAssignment(){
@@ -2504,80 +1688,6 @@ class fixedPointStmt:public statement
                //~ assign->flagAccumulateKernel();
               //~ }
          }
-    }
-  void pushMapLocals(Identifier* id){
-    bool getIsMetaUsed() {
-      return metadata.isMetaUsed;
-    }
-
-    void setIsMetaUsed() {
-      metadata.isMetaUsed = true;
-    }
-
-    bool getIsDataUsed() {
-      return metadata.isDataUsed;
-    }
-
-    void setIsDataUsed() {
-      metadata.isDataUsed = true;
-    }
-
-    bool getIsSrcUsed() {
-      return metadata.isSrcUsed;
-    }
-
-    void setIsSrcUsed() {
-      metadata.isSrcUsed = true;
-    }
-
-    bool getIsWeightUsed() {
-      return metadata.isWeightUsed;
-    }
-
-    void setIsWeightUsed() {
-      metadata.isWeightUsed = true;
-    }
-
-    bool getIsRevMetaUsed() {
-      return metadata.isRevMetaUsed;
-    }
-
-    void setIsRevMetaUsed() {
-      metadata.isRevMetaUsed = true;
-    }
-
-    void addDoubleBufferVar(Identifier* var) {
-      doubleBufferVars.push_back(var);
-    }
-
-    list<Identifier*> getDoubleBufferVars() {
-      return doubleBufferVars;
-    }
-
-    MetaDataUsed getMetaDataUsed() {
-      return metadata;
-    }
-  
-
-    mapLocals.insert(id);
-
-    }
-
-  set<Identifier*> getMapLocal( ){
-
-   return mapLocals;
-
-  }
-
-    void pushModifiedGlobalVariable(TableEntry * te)
-    {
-      printf("inside push gvar1 %s\n", te->getId()->getIdentifier());
-      modifiedGlobalVars.insert(te);
-    }
-
-    std::set<TableEntry *> getModifiedGlobalVariables()
-    {
-      return modifiedGlobalVars;
     }
 
 };
@@ -2677,7 +1787,7 @@ class reductionCallStmt:public statement
          return reducCallStmtNode;
 
      }
-      
+
      static reductionCallStmt* leftList_reducCallStmt(list<ASTNode*> llist,reductionCall* reducCall,list<ASTNode*> exprListSent)
      {
       // cout<<"REDUC CALL TYPE "<<(reducCall->getReductionType()==REDUCE_MIN)<<"\n";
@@ -2787,27 +1897,9 @@ class reductionCallStmt:public statement
       if(reducCall!=NULL)
         return true;
 
-      return false;  
+      return false;
     }
 
 
-};
-
-class varTransferStmt: public statement
-{
-  public:
-
-  Identifier* transferVar;
-  bool direction;
-  /* 0 -> CPU to GPU
-    1 -> GPU to CPU
-  */
-
-  varTransferStmt(Identifier* iden, bool dir)
-  {
-    this->transferVar = iden;
-    this->direction = dir;
-    setTypeofNode(NODE_TRANSFERSTMT);
-  } 
 };
 #endif

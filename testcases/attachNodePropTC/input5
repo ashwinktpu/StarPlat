@@ -1,8 +1,0 @@
-function test(Graph g, node src)
-{
-    propNode<int> prop;
-    propNode<int> prop1;
-    
-    g.attachNodeProperty(prop = 110);
-    g.attachNodeProperty(prop1 = src.prop);
-}

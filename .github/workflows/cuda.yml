@@ -1,4 +1,4 @@
-name: CUDA Build
+name: CUDA Branch
 
 on:
   push:

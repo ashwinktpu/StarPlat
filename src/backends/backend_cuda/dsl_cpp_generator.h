@@ -1,14 +1,12 @@
-#ifndef CU_DSL_CPP_GENERATOR
-#define CU_DSL_CPP_GENERATOR
+#ifndef DSL_CPP_GENERATOR
+#define DSL_CPP_GENERATOR
 
 #include <cstdio>
-
 #include "../../ast/ASTNodeTypes.hpp"
+#include "../../parser/includeHeader.hpp"
 #include "../dslCodePad.h"
-//~ #include "../../parser/includeHeader.hpp"
-#include "../../analyser/analyserUtil.cpp"
 
-namespace spcuda {
+
 class dsl_cpp_generator {
  private:
   dslCodePad header;
@@ -17,20 +15,14 @@ class dsl_cpp_generator {
   FILE* bodyFile;
   char* fileName;
 
-  int genFuncCount;
-  int staticFuncCount;
-  int inFuncCount;
-  int decFuncCount;
-  int curFuncType;
-
   // added here
   bool genCSR;
   char* gName;
   int kernelCount;
   Function* currentFunc;
 
+
   bool isHeader;
-  bool isOptimized;
 
  public:
   dsl_cpp_generator() {
@@ -44,14 +36,17 @@ class dsl_cpp_generator {
     bodyFile = NULL;
     fileName = new char[1024];
     currentFunc = NULL;
-    isOptimized = false;
 
-    genFuncCount = 0;
-    staticFuncCount = 0;
-    inFuncCount = 0;
-    decFuncCount = 0;
   }
 
+
+  /**************************************************************amd*************************/
+  void generateGetPlatforms();
+  void generateGetDevices();
+  void generateCreateContext();
+  void generateCreateCommandQueue();
+
+  /********************************************End AMD****************************************/
   void generateParamList(list<formalParam*> paramList, dslCodePad& targetFile);
   void setCurrentFunc(Function* func);
   Function* getCurrentFunc();
@@ -76,14 +71,12 @@ class dsl_cpp_generator {
   void generateIfStmt(ifStmt* ifstmt, bool isMainFile);
   void generateDoWhileStmt(dowhileStmt* doWhile, bool isMainFile);
   void generateBFS();
-  void generateBlock(blockStatement* blockStmt, bool includeBrace = true, bool isMainFile = true);
+  void generateBlock(blockStatement* blockStmt, bool includeBrace = true,bool isMainFile = true);
   void generateReductionStmt(reductionCallStmt* reductnStmt, bool isMainFile);
   void generateBFSAbstraction(iterateBFS* bfsAbstraction, bool isMainFile);
   void generateRevBFSAbstraction(iterateBFS* bfsAbstraction,
                                  bool isMainFile);  // reverse
 
-  void incFuncCount(int funcType);
-  int curFuncCount();
 
   void generateExpr(Expression* expr, bool isMainFile, bool isAtomic = false);
   void generate_exprArL(Expression* expr, bool isMainFile, bool isAtomic = false);
@@ -132,7 +125,6 @@ class dsl_cpp_generator {
   void generate_exprUnary(Expression* expr, bool isMainFile);
   void generateForAll_header(forallStmt* forAll, bool isMainFile);
   void generatefixedpt_filter(Expression* filterExpr, bool isMainFile);
-  void generateTransferStmt(varTransferStmt* stmt);
 
   bool elementsIteration(char* extractId);
   //~ void generateCudaMalloc(Type* type, const char* identifier);
@@ -153,7 +145,7 @@ class dsl_cpp_generator {
 
   void generateInitkernelStr(const char* inVarType, const char* inVarName, const char* initVal);
 
-  void generateCSRArrays(const char*, Function*);
+  void generateCSRArrays(const char*);
   void generateInitkernel(const char* name);
   void generateLaunchConfig(const char* name);
   void generateCudaDeviceSync();
@@ -183,7 +175,7 @@ class dsl_cpp_generator {
   void generateCudaMemCpyParams(list<formalParam*> paramList);
   void generateHeaderDeviceVariable(const char* typeStr, const char* dVar);
   void generateExtraDeviceVariableNoD(const char* typeStr, const char* dVar, const char* sizeVal);
-  void generatePropParams(list<formalParam*> paramList, bool isNeedType, bool isMainFile);
+  void generatePropParams(list<formalParam*> paramList, bool isNeedType,bool isMainFile);
   //~ void setGenCSR(bool yes = true) { genCSR = yes; }
   //~ bool isGenCSR() { return genCSR; }
   //~ void setGName(const char* str) {
@@ -193,12 +185,10 @@ class dsl_cpp_generator {
   //~ char* getGName() { return gName; }
   void IncrementKCount() { kernelCount++; }
   int getKCount() { return kernelCount; }
-  void setOptimized() { isOptimized = true; }
 };
 
 static const char* INTALLOCATION = "new int";
 static const char* BOOLALLOCATION = "new bool";
 static const char* FLOATALLOCATION = "new float";
 static const char* DOUBLEALLOCATION = "new double";
-}  // namespace spcuda
 #endif

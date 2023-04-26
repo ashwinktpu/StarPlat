@@ -4,12 +4,9 @@
 #include <string>
 #include "../maincontext/enum_def.hpp"
 #include "../symbolutil/SymbolTable.h"
-#include<assert.h>
 
 
 using namespace std;
-
-class NodeBlockData;
 
 class ASTNode
 {
@@ -19,8 +16,6 @@ class ASTNode
   NODETYPE typeofNode;
   SymbolTable* var_symbTab;
   SymbolTable* prop_symbTab;
-  NodeBlockData* blockData;
-
   public:
   ASTNode()
   {
@@ -58,15 +53,7 @@ class ASTNode
     return prop_symbTab;
   }
 
-  void setBlockData(NodeBlockData* blockData)
-  {
-    this->blockData = blockData;
-  }
 
-  NodeBlockData* getBlockData()
-  {
-    return blockData;
-  }
 
 };
 
