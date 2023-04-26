@@ -11,8 +11,10 @@ class dsl_cpp_generator {
  private:
   dslCodePad header;
   dslCodePad main;
+  dslCodePad kernel;
   FILE* headerFile;
   FILE* bodyFile;
+  FILE* kernelFile;
   char* fileName;
 
   // added here
@@ -34,6 +36,7 @@ class dsl_cpp_generator {
 
     headerFile = NULL;
     bodyFile = NULL;
+    kernelFile = NULL;
     fileName = new char[1024];
     currentFunc = NULL;
 
@@ -45,7 +48,7 @@ class dsl_cpp_generator {
   void generateGetDevices();
   void generateCreateContext();
   void generateCreateCommandQueue();
-
+  dslCodePad& getTargetFile(int isMainFile);
   /********************************************End AMD****************************************/
   void generateParamList(list<formalParam*> paramList, dslCodePad& targetFile);
   void setCurrentFunc(Function* func);
@@ -59,34 +62,34 @@ class dsl_cpp_generator {
   const char* convertToCppType(Type* type);
   const char* getOperatorString(int operatorId);
   void generateFunc(ASTNode* proc);
-  void generateFuncHeader(Function* proc, bool isMainFile);
-  void generateProcCall(proc_callStmt* procCall, bool isMainFile);
-  void generateVariableDecl(declaration* decl, bool isMainFile);
-  void generateStatement(statement* stmt, bool isMainFile);
+  void generateFuncHeader(Function* proc, int isMainFile);
+  void generateProcCall(proc_callStmt* procCall, int isMainFile);
+  void generateVariableDecl(declaration* decl, int isMainFile);
+  void generateStatement(statement* stmt, int isMainFile);
   // void generateAssignmentStmt(assignment* assignStmt);
-  void generateAssignmentStmt(assignment* assignStmt, bool isMainFile);
+  void generateAssignmentStmt(assignment* assignStmt, int isMainFile);
   void generateWhileStmt(whileStmt* whilestmt);
-  void generateForAll(forallStmt* forAll, bool isMainFile);
-  void generateFixedPoint(fixedPointStmt* fixedPoint, bool isMainFile);
-  void generateIfStmt(ifStmt* ifstmt, bool isMainFile);
-  void generateDoWhileStmt(dowhileStmt* doWhile, bool isMainFile);
+  void generateForAll(forallStmt* forAll, int isMainFile);
+  void generateFixedPoint(fixedPointStmt* fixedPoint, int isMainFile);
+  void generateIfStmt(ifStmt* ifstmt, int isMainFile);
+  void generateDoWhileStmt(dowhileStmt* doWhile, int isMainFile);
   void generateBFS();
-  void generateBlock(blockStatement* blockStmt, bool includeBrace = true,bool isMainFile = true);
-  void generateReductionStmt(reductionCallStmt* reductnStmt, bool isMainFile);
-  void generateBFSAbstraction(iterateBFS* bfsAbstraction, bool isMainFile);
+  void generateBlock(blockStatement* blockStmt, bool includeBrace = true,int isMainFile = 1);
+  void generateReductionStmt(reductionCallStmt* reductnStmt, int isMainFile);
+  void generateBFSAbstraction(iterateBFS* bfsAbstraction, int isMainFile);
   void generateRevBFSAbstraction(iterateBFS* bfsAbstraction,
-                                 bool isMainFile);  // reverse
+                                 int isMainFile);  // reverse
 
 
-  void generateExpr(Expression* expr, bool isMainFile, bool isAtomic = false);
-  void generate_exprArL(Expression* expr, bool isMainFile, bool isAtomic = false);
+  void generateExpr(Expression* expr, int isMainFile, bool isAtomic = false);
+  void generate_exprArL(Expression* expr, int isMainFile, bool isAtomic = false);
 
-  void generate_exprRelational(Expression* expr, bool isMainFile);
-  void generate_exprInfinity(Expression* expr, bool isMainFile);
-  void generate_exprLiteral(Expression* expr, bool isMainFile);
-  void generate_exprIdentifier(Identifier* id, bool isMainFile);
-  void generate_exprPropId(PropAccess* propId, bool isMainFile);
-  void generate_exprProcCall(Expression* expr, bool isMainFile);
+  void generate_exprRelational(Expression* expr, int isMainFile);
+  void generate_exprInfinity(Expression* expr, int isMainFile);
+  void generate_exprLiteral(Expression* expr, int isMainFile);
+  void generate_exprIdentifier(Identifier* id, int isMainFile);
+  void generate_exprPropId(PropAccess* propId, int isMainFile);
+  void generate_exprProcCall(Expression* expr, int isMainFile);
 
   void generateForAll_header();
   void generateForAllSignature(forallStmt* forAll, bool isKernel);
@@ -99,7 +102,7 @@ class dsl_cpp_generator {
   void generateOid();
   void addIncludeToFile(const char* includeName, dslCodePad& file,
                         bool isCPPLib);
-  void generatePropertyDefination(Type* type, char* Id, bool isMainFile);
+  void generatePropertyDefination(Type* type, char* Id, int isMainFile);
   void findTargetGraph(vector<Identifier*> graphTypes, Type* type);
   void getDefaultValueforTypes(int type);
 
@@ -115,16 +118,16 @@ class dsl_cpp_generator {
   void generateFuncTerminatingConditionForSSSP();
   // newly added for cuda speific handlings index
   void generateCudaIndex();
-  void generateAtomicBlock(bool isMainFile);
+  void generateAtomicBlock(int isMainFile);
   void generateVariableDeclForEdge(declaration* declStmt);
   void generateLocalInitForID();
   // new
   void castIfRequired(Type* type, Identifier* methodID, dslCodePad& main);
-  void generateReductionCallStmt(reductionCallStmt* stmt, bool isMainFile);
-  void generateReductionOpStmt(reductionCallStmt* stmt, bool isMainFile);
-  void generate_exprUnary(Expression* expr, bool isMainFile);
-  void generateForAll_header(forallStmt* forAll, bool isMainFile);
-  void generatefixedpt_filter(Expression* filterExpr, bool isMainFile);
+  void generateReductionCallStmt(reductionCallStmt* stmt, int isMainFile);
+  void generateReductionOpStmt(reductionCallStmt* stmt, int isMainFile);
+  void generate_exprUnary(Expression* expr, int isMainFile);
+  void generateForAll_header(forallStmt* forAll, int isMainFile);
+  void generatefixedpt_filter(Expression* filterExpr, int isMainFile);
 
   bool elementsIteration(char* extractId);
   //~ void generateCudaMalloc(Type* type, const char* identifier);
@@ -132,16 +135,16 @@ class dsl_cpp_generator {
   // isMainFile);
   void generateCudaMemcpy(const char* dVar, const char* cVar,
                           const char* typeStr, const char* sizeOfType,
-                          bool isMainFile, const char* from);
+                          int isMainFile, const char* from);
 
   // for algorithm specific function implementation headers
 
   void generatePrintAnswer();
   void generateGPUTimerStop();
   void generateGPUTimerStart();
-  void generateCudaMemCpyStr(const char*, const char*, const char*, const char*,
+  void generateCudaMemcpyStr(const char*, const char*, const char*, const char*,
                              bool);
-  void generateInitkernel1(assignment*, bool);
+  void generateInitkernel1(assignment*, int);
 
   void generateInitkernelStr(const char* inVarType, const char* inVarName, const char* initVal);
 
@@ -157,7 +160,7 @@ class dsl_cpp_generator {
   void generateCudaMallocStr(const char* dVar, const char* type,
                              const char* sizeOfType);
   void generateThreadId(const char* str);
-  void generateFuncBody(Function* proc, bool isMainFile);
+  void generateFuncBody(Function* proc, int isMainFile);
 
   void generateStartTimer();
   void generateStopTimer();
@@ -167,15 +170,15 @@ class dsl_cpp_generator {
   void generateExtraDeviceVariable(const char* typeStr, const char* dVar, const char* sizeVal);
   void addCudaBFSIterKernel(iterateBFS* bfsAbstraction);
   void addCudaRevBFSIterKernel(list<statement*>& revStmtList);
-  void generateAtomicDeviceAssignmentStmt(assignment* asmt, bool isMainFile);
-  void generateDeviceAssignmentStmt(assignment* asmt, bool isMainFile);
+  void generateAtomicDeviceAssignmentStmt(assignment* asmt, int isMainFile);
+  void generateDeviceAssignmentStmt(assignment* asmt, int isMainFile);
   void addCudaKernel(forallStmt* forAll);
   void generateCallList(list<formalParam*> paramList, dslCodePad& targetFile);
   void generateCudaMallocParams(list<formalParam*> paramList);
   void generateCudaMemCpyParams(list<formalParam*> paramList);
   void generateHeaderDeviceVariable(const char* typeStr, const char* dVar);
   void generateExtraDeviceVariableNoD(const char* typeStr, const char* dVar, const char* sizeVal);
-  void generatePropParams(list<formalParam*> paramList, bool isNeedType,bool isMainFile);
+  void generatePropParams(list<formalParam*> paramList, bool isNeedType,int isMainFile);
   //~ void setGenCSR(bool yes = true) { genCSR = yes; }
   //~ bool isGenCSR() { return genCSR; }
   //~ void setGName(const char* str) {

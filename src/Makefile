@@ -6,7 +6,12 @@ all: finalcode clean
 
 cuda: bin generator_cuda finalcode_cuda clean
 
+amd: bin generated_amd finalcode_amd clean
+
 finalcode_cuda: bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o
+	$(CC) bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o -o finalcode
+
+finalcode_amd: bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o
 	$(CC) bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o -o finalcode
 
 #~ Earlier finalcode
@@ -31,6 +36,9 @@ bin/dsl_cpp_generator.o: backends/backend_omp/dsl_cpp_generator.cpp backends/dsl
 
 generator_cuda: backends/backend_cuda/dsl_cpp_generator.cpp backends/dslCodePad.h
 	$(CC) -c backends/backend_cuda/dsl_cpp_generator.cpp -o bin/dsl_cpp_generator.o
+
+generated_amd: backends/backend_amd/dsl_cpp_generator.cpp backends/dslCodePad.h
+	$(CC) -c backends/backend_amd/dsl_cpp_generator.cpp -o bin/dsl_cpp_generator.o
 
 bin/y.tab.o:
 	$(MAKE) -C parser

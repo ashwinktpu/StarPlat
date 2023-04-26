@@ -3,6 +3,44 @@
 #include "dsl_cpp_generator.h"
 #include "getUsedVars.cpp"
 
+void dsl_cpp_generator::generateGetPlatforms()
+{
+  main.pushstr_newL("//Getting platforms");
+  main.pushstr_newL("cl_int status;");
+  main.pushstr_newL("cl_platform_id *platforms = NULL;");
+  main.pushstr_newL("cl_uint number_of_platforms;");
+  main.pushstr_newL("status = clGetPlatformIDs(0, NULL, &number_of_platforms);");
+  main.pushstr_newL("platforms = (cl_platform_id *)malloc(number_of_platforms*sizeof(cl_platform_id));");
+  main.pushstr_newL("status = clGetPlatformIDs(number_of_platforms, platforms, NULL);");
+  main.NewLine();
+  return ;
+}
+void dsl_cpp_generator::generateGetDevices()
+{
+  main.pushstr_newL("//Getting Devices present on platform");
+   main.pushstr_newL("cl_device_id *devices= NULL;");
+   main.pushstr_newL("cl_uint number_of_devices;");
+   main.pushstr_newL("status = clGetDeviceIDs(platforms[0],CL_DEVICE_TYPE_GPU, 0, NULL, &number_of_devices);");
+   main.pushstr_newL("devices = (cl_device_id *)malloc(number_of_devices*sizeof(cl_device_id));");
+   main.pushstr_newL("status = clGetDeviceIDs(platforms[0], CL_DEVICE_TYPE_GPU, number_of_devices, devices, NULL);");
+  main.NewLine();
+  return ;
+}
+void dsl_cpp_generator::generateCreateContext()
+{
+  main.pushstr_newL("//Creating context");
+  main.pushstr_newL("cl_context context;");
+  main.pushstr_newL("context = clCreateContext(NULL, number_of_devices, devices, NULL, NULL, &status);");
+  main.NewLine();
+}
+void dsl_cpp_generator::generateCreateCommandQueue()
+{
+  main.pushstr_newL("//Creating command queue");
+  main.pushstr_newL("cl_command_queue command_queue ;");
+  main.pushstr_newL("command_queue = clCreateCommandQueue(context, devices[0], CL_QUEUE_PROFILING_ENABLE , &status);");
+  main.NewLine();
+}
+
 bool flag_for_device_var = 0;  //temporary fix to accomodate device variable and
 
 void dsl_cpp_generator::generateInitkernel(const char* name) {
@@ -78,13 +116,20 @@ void dsl_cpp_generator::generateCudaMemCpyStr(const char* sVarName,
                                               const char* type,
                                               const char* sizeV,
                                               bool isH2D = true) {
-  //~ cudaMemcpy(  d_data,   h_data, sizeof(int)*(   E),
-  //cudaMemcpyHostToDevice);
-  //                1         2               3       4       5
+  /*status = clEnqueueWriteBuffer(command_queue, d_data, 
+  CL_TRUE,0, (e)*sizeof(int), h_data,0,NULL, NULL);*/
+  /*status = clEnqueueReadBuffer(command_queue, d_data ,
+   CL_TRUE, 0, n*sizeof(int), h_data, 0, NULL, NULL);
+*/
   char strBuffer[1024];
-  sprintf(strBuffer, "cudaMemcpy(%8s, %8s, sizeof(%3s)*(%s), %s);", sVarName,
-          tVarName, type, sizeV,
-          (isH2D ? "cudaMemcpyHostToDevice" : "cudaMemcpyDeviceToHost"));
+  if(isH2D)
+  {
+    sprintf(strBuffer, "status = clEnqueueWriteBuffer(command_queue, %8s , CL_TRUE, 0, sizeof(%3s)*%s, %8s, 0, NULL, NULL );", sVarName, type, sizeV, tVarName);
+  }
+  else
+  {
+    sprintf(strBuffer, "clEnqueueReadBuffer(command_queue, %s , CL_TRUE, 0, sizeof(%s)*%s, %s, 0, NULL, NULL );", sVarName, type, sizeV, tVarName);
+  }
   main.pushstr_newL(strBuffer);
 }
 
@@ -1556,7 +1601,7 @@ void dsl_cpp_generator:: generateParamList(list<formalParam*> paramList, dslCode
 
 void dsl_cpp_generator :: addCudaKernel(forallStmt* forAll)
 {
-  const char* loopVar = "v";
+  const char* loopVar = "v";// but it could be 'e' also
   char strBuffer[1024];
 
 
@@ -1565,11 +1610,13 @@ void dsl_cpp_generator :: addCudaKernel(forallStmt* forAll)
   usedVariables usedVars = getVarsForAll(forAll);
   list<Identifier*> vars = usedVars.getVariables();
 
-   header.pushString("__global__ void ");
+   header.pushString("__kernel__ void ");
    header.pushString(getCurrentFunc()->getIdentifier()->getIdentifier());
    header.pushString("_kernel");
 
-  header.pushString("(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next");
+  header.pushString("(int V,  int E, __global int* d_meta, __global int* d_data, __global int* d_src,");
+  header.NewLine();
+  header.pushString("__global int* d_weight,__global int* d_rev_meta,__global bool* d_modified_next, __global int* finished");
   /*if(currentFunc->getParamList().size()!=0)
     {
       header.pushString(" ,");
@@ -1581,15 +1628,15 @@ void dsl_cpp_generator :: addCudaKernel(forallStmt* forAll)
     if(type->isPropType())
     {
       char strBuffer[1024];
-      sprintf(strBuffer, ",%s d_%s", convertToCppType(type), iden->getIdentifier());
+      sprintf(strBuffer, ",__global %s d_%s", convertToCppType(type), iden->getIdentifier());
       header.pushString(/*createParamName(*/strBuffer);
     }
   }
 
   header.pushstr_newL("){ // BEGIN KER FUN via ADDKERNEL");
 
-  sprintf(strBuffer, "unsigned %s = blockIdx.x * blockDim.x + threadIdx.x;", loopVar);
-  header.pushstr_newL("float num_nodes  = V;");
+  sprintf(strBuffer, "unsigned %s = get_global_id(0);", loopVar);
+  header.pushstr_newL("int num_nodes  = V;");
   header.pushstr_newL(strBuffer);
 
   sprintf(strBuffer, "if(%s >= V) return;", loopVar);
@@ -2868,14 +2915,17 @@ void dsl_cpp_generator::generateFunc(ASTNode* proc) {
   Function* func = (Function*)proc;
   generateFuncHeader(func, false);  //.h or header file | adds prototype of main function and std headers files
   generateFuncHeader(func, true);   // .cu or main file
-
+  
   // to genearte the function body of the algorithm
   // Note that this we can change later point of time if required
 
   //~ char outVarName[] = "BC";  //inner type
   //~ char outVarType[] = "double";
   main.pushstr_newL("{");
-
+  generateGetPlatforms();
+  generateGetDevices();
+  generateCreateContext();
+  generateCreateCommandQueue();
   generateFuncBody(func, false);  // GEnerates CSR ..bool is meaningless
 
   main.NewLine();
@@ -3003,11 +3053,8 @@ void dsl_cpp_generator::generateCudaMallocStr(const char* dVar,
                                               const char* typeStr,
                                               const char* sizeOfType) {
   char strBuffer[1024];
-  // cudaMalloc(&d_ nodeVal ,sizeof( int ) * V );
-  //                   1             2      3
-  sprintf(strBuffer, "cudaMalloc(&%s, sizeof(%s)*%s);", dVar, typeStr,
-          sizeOfType);  // this assumes PropNode type  IS PROPNODE? V : E //else
-                        // might error later
+  //cl_mem vertices_device = clCreateBuffer(context, CL_MEM_READ_ONLY, (n+1)*sizeof(int), NULL, &status);
+  sprintf(strBuffer, "cl_mem %s = clCreateBuffer(context, CL_MEM_READ_WRITE, %s*sizeof(%s), NULL, &status);",dVar, sizeOfType,typeStr);  
   main.pushstr_newL(strBuffer);
   //~ main.NewLine();
 }
@@ -3018,7 +3065,7 @@ void dsl_cpp_generator::generateCudaMalloc(Type* type, const char* identifier) {
   //~ Type* targetType = type->getInnerTargetType();
   // cudaMalloc(&d_ nodeVal ,sizeof( int ) * V );
   //                   1             2      3
-  sprintf(strBuffer, "cudaMalloc(&d_%s, sizeof(%s)*(%s));", identifier,
+  sprintf(strBuffer, "cl_mem d_%s = clCreateBuffer(context,CL_MEM_READ_WRITE,(%s)*sizeof(%s),NULL, &status);", identifier,
           convertToCppType(type->getInnerTargetType()),
           (type->isPropNodeType())
               ? "V"
@@ -3170,7 +3217,6 @@ void dsl_cpp_generator::generateCSRArrays(const char* gId) {
 }
 
 void dsl_cpp_generator::generateFuncBody(Function* proc, bool isMainFile) {
-  //~ dslCodePad& targetFile = isMainFile ? main : header;
   char strBuffer[1024];
 
   int maximum_arginline = 4;
@@ -3490,7 +3536,11 @@ Function* dsl_cpp_generator::getCurrentFunc()
 {
   return currentFunc;
 }
-
+void generation_begin()
+{
+  cout<<"Generation Begin"<<endl;
+  
+}
 bool dsl_cpp_generator::generate() {
   // cout<<"FRONTEND
   // VALUES"<<frontEndContext.getFuncList().front()->getBlockStatement()->returnStatements().size();
