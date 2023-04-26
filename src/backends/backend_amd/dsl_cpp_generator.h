@@ -30,6 +30,7 @@ class dsl_cpp_generator {
     vector<char*>memObjects;
     vector<char*>kernelObjects;
     vector<char*>hostMemObjects;
+    vector<char*>premitivePassToKernel;
   /***************************************************************/
  public:
   dsl_cpp_generator() {

@@ -27,7 +27,7 @@ __kernel void initd_modified_next_kernel(__global int *d_modified_next, int val 
   }
 }
 __kernel void Compute_SSSP_kernel(int V,  int E, __global int* d_meta, __global int* d_data, __global int* d_src,
-  __global int* d_weight,__global int* d_rev_meta,__global int* d_modified_next, __global int* finished,__global int * d_modified,__global int* d_dist){ // BEGIN KER FUN via ADDKERNEL
+  __global int* d_weight,__global int* d_rev_meta,__global int *finished,__global int *d_modified_next,__global int * d_modified,__global int* d_dist){ // BEGIN KER FUN via ADDKERNEL
   int num_nodes  = V;
   unsigned int v = get_global_id(0);
   if(v >= V) return;

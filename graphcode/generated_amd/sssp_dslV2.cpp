@@ -115,8 +115,12 @@ void Compute_SSSP(graph& g,int* dist,int src)
   printf(" Program building completed, status = %d \n ",status);
 
   //Variable for launch configuration
-  size_t global_size;
-  size_t local_size;
+  size_t global_size, global_size1;
+  size_t local_size, local_size1;
+  local_size = 128;
+  global_size = (V + local_size -1)/ local_size * local_size;
+  local_size1 = 1;
+  global_size1 = 1;
   // Creating initdist_kernel  Kernel
   cl_kernel initdist_kernel = clCreateKernel(program, "initdist_kernel", &status);
 
@@ -125,8 +129,6 @@ void Compute_SSSP(graph& g,int* dist,int src)
   status = clSetKernelArg(initdist_kernel, 0 , sizeof(cl_mem), (void *)& d_dist);
   status = clSetKernelArg(initdist_kernel, 1, sizeof(int) , (void*)& distValue);
   status = clSetKernelArg(initdist_kernel, 2, sizeof(int), (void*)&V);
-  local_size = 32;
-  global_size = V;
   status = clEnqueueNDRangeKernel(command_queue, initdist_kernel, 1, NULL, &global_size, &local_size, 0,NULL,&event);
 
   clWaitForEvents(1,&event);
@@ -134,6 +136,7 @@ void Compute_SSSP(graph& g,int* dist,int src)
   status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, NULL);
   kernelTime = (double)(end-start)/convertToMS;
   totalTime = totalTime+ kernelTime;
+  status = clReleaseKernel(initdist_kernel);
   printf(" time  spent in initdist_kernel kernel = %lf ms \n ", kernelTime);
   // Creating initmodified_kernel  Kernel
   cl_kernel initmodified_kernel = clCreateKernel(program, "initmodified_kernel", &status);
@@ -143,8 +146,6 @@ void Compute_SSSP(graph& g,int* dist,int src)
   status = clSetKernelArg(initmodified_kernel, 0 , sizeof(cl_mem), (void *)& d_modified);
   status = clSetKernelArg(initmodified_kernel, 1, sizeof(int) , (void*)& modifiedValue);
   status = clSetKernelArg(initmodified_kernel, 2, sizeof(int), (void*)&V);
-  local_size = 32;
-  global_size = V;
   status = clEnqueueNDRangeKernel(command_queue, initmodified_kernel, 1, NULL, &global_size, &local_size, 0,NULL,&event);
 
   clWaitForEvents(1,&event);
@@ -152,6 +153,7 @@ void Compute_SSSP(graph& g,int* dist,int src)
   status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, NULL);
   kernelTime = (double)(end-start)/convertToMS;
   totalTime = totalTime+ kernelTime;
+  status = clReleaseKernel(initmodified_kernel);
   printf(" time  spent in initmodified_kernel kernel = %lf ms \n ", kernelTime);
   cl_kernel initIndexmodified_kernel = clCreateKernel(program, "initIndexmodified_kernel", &status);
   //Indexmodified src initialization
@@ -159,71 +161,71 @@ void Compute_SSSP(graph& g,int* dist,int src)
   status = clSetKernelArg(initIndexmodified_kernel , 0,sizeof(cl_mem) ,(void *)&d_modified);
   status = clSetKernelArg(initIndexmodified_kernel, 1,sizeof(int), (void*)&src);
   status = clSetKernelArg(initIndexmodified_kernel, 2, sizeof(int),(void *)&initmodifiedvalsrc);
-  global_size = local_size = 1;
-  status  = clEnqueueNDRangeKernel(command_queue, initIndexmodified_kernel,1,NULL, &global_size, &local_size, 0, NULL, &event);
+  status  = clEnqueueNDRangeKernel(command_queue, initIndexmodified_kernel,1,NULL, &global_size1, &local_size1, 0, NULL, &event);
   clWaitForEvents(1,&event);
   status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, NULL);
   status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, NULL);
   kernelTime = (double)(end-start)/convertToMS;
   totalTime = totalTime+ kernelTime;
 
+  status = clReleaseKernel(initIndexmodified_kernel);
   cl_kernel initIndexdist_kernel = clCreateKernel(program, "initIndexdist_kernel", &status);
   //Indexdist src initialization
   int initdistvalsrc = 0;
   status = clSetKernelArg(initIndexdist_kernel , 0,sizeof(cl_mem) ,(void *)&d_dist);
   status = clSetKernelArg(initIndexdist_kernel, 1,sizeof(int), (void*)&src);
   status = clSetKernelArg(initIndexdist_kernel, 2, sizeof(int),(void *)&initdistvalsrc);
-  global_size = local_size = 1;
-  status  = clEnqueueNDRangeKernel(command_queue, initIndexdist_kernel,1,NULL, &global_size, &local_size, 0, NULL, &event);
+  status  = clEnqueueNDRangeKernel(command_queue, initIndexdist_kernel,1,NULL, &global_size1, &local_size1, 0, NULL, &event);
   clWaitForEvents(1,&event);
   status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, NULL);
   status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, NULL);
   kernelTime = (double)(end-start)/convertToMS;
   totalTime = totalTime+ kernelTime;
 
-  int *h_finished ;
-  int finished = false; 
-  // Start of fixed point
+  status = clReleaseKernel(initIndexdist_kernel);
+  cl_mem d_finished = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(int), NULL, &status)
 
+  int finished
+   = false; 
+  // Start of fixed point
   cl_mem d_finished = clCreateBuffer(context, CL_MEM_READ_WRITE|CL_MEM_ALLOC_HOST_PTR,sizeof(int), NULL, &status);
-  h_finished = (int *)clEnqueueMapBuffer(command_queue, d_finished , CL_TRUE, CL_MAP_READ|CL_MAP_WRITE, 0,sizeof(int),0,NULL,NULL,&status);
-  // creating %s kernel
+  cl_mem d_modified_next = clCreateBuffer(context, CL_MEM_READ_WRITE,V*sizeof(int), NULL, &status);
+
+  // creating initd_modified_next kernel
   cl_kernel initd_modified_next = clCreateKernel(program, "initd_modified_next_kernel", &status);
   status = clSetKernelArg(initd_modified_next, 0,sizeof(cl_mem),(void*)&d_modified_next);
   int d_modified_nextValue = false;
   status = clSetKernelArg(initd_modified_next, 1,sizeof(int) ,(void*)&d_modified_nextValue);
   status = clSetKernelArg(initd_modified_next, 2 , sizeof(int),(void*)&V);
-  global_size = V;
-  local_size = 32;
+
   status = clEnqueueNDRangeKernel(command_queue, initd_modified_next , 1, NULL , &global_size , &local_size ,0, NULL, &event);
   clWaitForEvents(1,&event);
   status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, NULL);
   status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, NULL);
   kernelTime = (double)(end-start)/convertToMS;
   totalTime = totalTime+ kernelTime;
-
-  // Creating kaernel from program file
-  cl_kernel Compute_SSSP = clCreateKernel(program,"Compute_SSSP_kernel",&status);
-  status = clSetKernelArg(Compute_SSSP, 0, sizeof(int) , (void*)&V);
-  status = clSetKernelArg(Compute_SSSP, 1, sizeof(int) , (void*)&E);
-  status = clSetKernelArg(Compute_SSSP, 2, sizeof(cl_mem) , (void*)&d_meta);
-  status = clSetKernelArg(Compute_SSSP, 3, sizeof(cl_mem) , (void*)&d_data);
-  status = clSetKernelArg(Compute_SSSP, 4, sizeof(cl_mem) , (void*)&d_src);
-  status = clSetKernelArg(Compute_SSSP, 5, sizeof(cl_mem) , (void*)&d_weight);
-  status = clSetKernelArg(Compute_SSSP, 6, sizeof(cl_mem) , (void*)&d_rev_meta);
-  status = clSetKernelArg(Compute_SSSP, 7, sizeof(cl_mem) , (void*)&d_modified_next);
-  status = clSetKernelArg(Compute_SSSP, 8 , sizeof(cl_mem), (void*)&d_finished);
-  status = clSetKernelArg(Compute_SSSP, 9 , sizeof(cl_mem) , (void*)&d_modified);
-  status = clSetKernelArg(Compute_SSSP, 10 , sizeof(cl_mem) , (void*)&d_dist);
+  status = clReleaseKernel(initd_modified_next);
 
   int k = 0;
-  *h_finished = false;
-  while(!(*h_finished)){
-    *h_finished = true;
+  finished = false;
+  while(!(finished)){
+    finished = true;
+    status  = clEnqueueWriteBuffer(command_queue,d_finished, CL_TRUE, 0,sizeof(int), &finished,0,0,NULL);
 
     //ForAll started here
-    global_size = V;
-    local_size =32;
+    cl_kernel Compute_SSSP = clCreateKernel(program, "cl_kernel %s = clCreateKernel(program, "%s" , &status);" , &status);
+     status = clSetKernelArg(Compute_SSSP, 0, sizeof(int), (void *) &V);
+     status = clSetKernelArg(Compute_SSSP, 1, sizeof(int), (void *) &E);
+     status = clSetKernelArg(Compute_SSSP, 2, sizeof(cl_mem), (void *) &d_meta);
+     status = clSetKernelArg(Compute_SSSP, 3, sizeof(cl_mem), (void *) &d_data);
+     status = clSetKernelArg(Compute_SSSP, 4, sizeof(cl_mem), (void *) &d_src);
+     status = clSetKernelArg(Compute_SSSP, 5, sizeof(cl_mem), (void *) &d_weight);
+     status = clSetKernelArg(Compute_SSSP, 6, sizeof(cl_mem), (void *) &d_rev_meta);
+     status = clSetKernelArg(Compute_SSSP, 7, sizeof(cl_mem), (void *) &d_meta);
+     status = clSetKernelArg(Compute_SSSP, 8, sizeof(cl_mem), (void *) &finished);
+     status = clSetKernelArg(Compute_SSSP, 9, sizeof(cl_mem), (void *) &d_modified_next);
+     status = clSetKernelArg(Compute_SSSP, 10, sizeof(cl_mem), (void *) &d_modified);
+     status = clSetKernelArg(Compute_SSSP, 11, sizeof(cl_mem), (void *) &d_dist);
     status = clEnqueueNDRangeKernel(command_queue,Compute_SSSP, 1,NULL, &global_size, &local_size , 0,NULL,&event);
     clWaitForEvents(1,&event);
     status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, NULL);
@@ -231,20 +233,29 @@ void Compute_SSSP(graph& g,int* dist,int src)
     kernelTime = (double)(end-start)/convertToMS;
     totalTime = totalTime+ kernelTime;
 
+    status = cleReleaseKernel(Compute_SSSP);
 
     status = clEnqueueCopyBuffer(command_queue, d_modified_next ,d_modified, 0,0, V*sizeof(int),0,NULL, NULL);
-    global_size = V;
-    local_size = 32;
+    cl_kernel initd_modified_next = clCreateKernel(program, "initd_modified_next_kernel", &status);
+    status = clSetKernelArg(initd_modified_next, 0,sizeof(cl_mem),(void*)&d_modified_next);
+    int d_modified_nextValue = false;
+    status = clSetKernelArg(initd_modified_next, 1,sizeof(int) ,(void*)&d_modified_nextValue);
+    status = clSetKernelArg(initd_modified_next, 2 , sizeof(int),(void*)&V);
+
     status = clEnqueueNDRangeKernel(command_queue, initd_modified_next , 1,NULL, &global_size , &local_size ,0, NULL, &event);
     clWaitForEvents(1,&event);
     status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, NULL);
     status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, NULL);
     kernelTime = (double)(end-start)/convertToMS;
     totalTime = totalTime+ kernelTime;
+    status = clReleaseKernel(initd_modified_next);
+    //Copy back the fixed flag
+     status =clEnqueueReadBuffer(command_queue, d_finished , CL_TRUE, 0, sizeof(int), &finished, 0, NULL, NULL );
+
     k++;
   }
-  //Unmapping the mapped memory
-  clEnqueueUnmapMemObject(command_queue, d_finished, h_finished, 0, NULL, NULL);
+   status = clReleaseMemObject(d_modified_next);
+   status = clReleaseMemObject(d_finished);
   // END FIXED POINT
 
 
@@ -266,13 +277,6 @@ void Compute_SSSP(graph& g,int* dist,int src)
   status = clReleaseMemObject(d_modified_next);
   status = clReleaseMemObject(d_dist);
   status = clReleaseMemObject(d_modified);
-  status = clReleaseMemObject(d_finished);
-  status = clReleaseKernel(initdist_kernel);
-  status = clReleaseKernel(initmodified_kernel);
-  status = clReleaseKernel(initIndexmodified_kernel);
-  status = clReleaseKernel(initIndexdist_kernel);
-  status = clReleaseKernel(initd_modified_next);
-  status = clReleaseKernel(Compute_SSSP);
   status = clFlush(command_queue);
   status = clFinish(command_queue);
   status = clReleaseCommandQueue(command_queue);

@@ -80,8 +80,12 @@ void dsl_cpp_generator:: addKernelObject(char* obj)
 
     // If we have kernel we are gonna use global size and local size
     main.pushstr_newL("//Variable for launch configuration");
-    main.pushstr_newL("size_t global_size;");
-    main.pushstr_newL("size_t local_size;");
+    main.pushstr_newL("size_t global_size, global_size1;");
+    main.pushstr_newL("size_t local_size, local_size1;");
+    main.pushstr_newL("local_size = 128;");
+    main.pushstr_newL("global_size = (V + local_size -1)/ local_size * local_size;");
+    main.pushstr_newL("local_size1 = 1;");
+    main.pushstr_newL("global_size1 = 1;");
 
 
     // Add header to kernel.cl file
@@ -401,18 +405,18 @@ void dsl_cpp_generator::generateFuncHeader(Function* proc, int isMainFile) {
   //cout<<"I am inside generate Function Header"<<endl;
   dslCodePad& targetFile = getTargetFile(isMainFile);
 
-  //~ char strBuffer[1024];
+  //Heade Generation in kernel file
+  if(isMainFile==2)
+  {
+    targetFile.pushstr_newL("#include \"libOpenCL.h\" ");
+    targetFile.NewLine();
+  }
 
-  //~ if (!isMainFile) {
-  //~ targetFile.pushString("__global__ void");
-  //~ targetFile.push(' ');
-  //~ }
+  
   targetFile.pushString("void");
   targetFile.pushString(" ");
   targetFile.pushString(proc->getIdentifier()->getIdentifier());
-  //~ if (!isMainFile) {
-  //~ targetFile.pushString("_kernel");
-  //~ }
+ 
 
   targetFile.push('(');
 
@@ -479,10 +483,7 @@ void dsl_cpp_generator::generateFuncHeader(Function* proc, int isMainFile) {
   {
     targetFile.pushString(";");
   }
-  //~ if (!isMainFile) {
-  //~ targetFile.NewLine();
-  //~ targetFile.pushString("{");
-  //~ }
+  
 
   targetFile.NewLine();
   return;
@@ -638,8 +639,8 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
       sprintf(strBuffer, "%s *h_%s = (%s *)malloc(%s*sizeof(%s));", convertToCppType(innerType), 
             declStmt->getdeclId()->getIdentifier(), convertToCppType(innerType) , type->isPropNodeType()?"V":"E",
             convertToCppType(innerType));
-      main.pushString(strBuffer);
-      main.NewLine();
+      targetFile.pushString(strBuffer);
+      targetFile.NewLine();
       generateCudaMalloc(type, declStmt->getdeclId()->getIdentifier());
       char *str = (char*)malloc(100*sizeof(char));
       strcpy(str,"h_");
@@ -655,17 +656,21 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
     const char * varName = declStmt->getdeclId()->getIdentifier();
     cout << "varT:" << varType << endl;
     cout << "varN:" << varName << endl;
-    sprintf(strBuffer, "%s *h_%s ;", varType, varName);
-    main.pushString(strBuffer);
-    main.NewLine();
+    
+
+    // corresponding space in device only if this declaration is in main;
+    if(isMainFile==1)
+    {
+      sprintf(strBuffer, "cl_mem d_%s = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(%s), NULL, &status);", varName, varType);
+      targetFile.pushstr_newL(strBuffer);
+    }
+    targetFile.NewLine();
     sprintf(strBuffer, "%s %s", varType, varName);
     targetFile.pushString(strBuffer);
-    /*
-    char* str = (char*)malloc(100*sizeof(char));
-    strcpy(str, "h_");
-    strcat(str,varName);
-    hostMemObjects.push_back(str);
-    */
+
+    
+
+    
     if (declStmt->isInitialized()) {
         // targetFile =
       // targetFile.pushString(" = ");
@@ -820,7 +825,7 @@ void dsl_cpp_generator::generate_exprPropId(
     sprintf(strBuffer, "d_%s_next[%s]", id2->getIdentifier(),
             id1->getIdentifier());
   } else {
-    if (isMainFile==3)
+    if (isMainFile==2)
       sprintf(strBuffer, "d_%s[%s]", id2->getIdentifier(), id1->getIdentifier());  // PREFIX D
     else
       sprintf(strBuffer, "%s[%s]", id2->getIdentifier(), id1->getIdentifier());
@@ -874,7 +879,7 @@ void dsl_cpp_generator::generate_exprProcCall(Expression* expr,
     Identifier* srcId = argList.front()->getExpr()->getId();
     Identifier* destId = argList.back()->getExpr()->getId();
     //~ Identifier* objectId = proc->getId1();
-    sprintf(strBuffer, "%s(%s, %s, %s, %s)", "findNeighborSorted", srcId->getIdentifier(), destId->getIdentifier(),"d_meta","d_data");
+    sprintf(strBuffer, "%s(%s, %s, %s, %s)", " isNeighbour", srcId->getIdentifier(), destId->getIdentifier(),"d_meta","d_data");
     targetFile.pushString(strBuffer);
 
   } else {
@@ -1104,14 +1109,13 @@ void dsl_cpp_generator::generateInitkernel1(assignment* assign, int isMainFile) 
   main.pushString(strBuffer);
   main.NewLine();
   //Launch the kernel from main
-  main.pushstr_newL("local_size = 32;");
-  sprintf(strBuffer,"global_size = %s;",inId->getSymbolInfo()->getType()->isPropNodeType()?"V":"E" );
-  main.pushstr_newL(strBuffer);
-
  sprintf(strBuffer , "status = clEnqueueNDRangeKernel(command_queue, %s, 1, NULL, &global_size, &local_size, 0,NULL,&event);",kernelName);
  main.pushstr_newL(strBuffer);
  main.NewLine();
  addProfilling("event");
+ sprintf(strBuffer, "status = clReleaseKernel(%s);", kernelName);
+ main.pushstr_newL(strBuffer);
+
  sprintf(strBuffer,"printf(\" time  spent in %s kernel = ", kernelName);
  main.pushString(strBuffer);
  main.pushString("%lf ms \\n \", kernelTime);");
@@ -1147,6 +1151,16 @@ void dsl_cpp_generator::generateCudaMallocParams(list<formalParam*> paramList)
         generateCudaMalloc(type, (*itr)->getIdentifier()->getIdentifier());
 
       }
+    }
+    else if(type->isPrimitiveType())
+    {
+      // Allocate Memory do copy H2D
+      const char *varN = (*itr)->getIdentifier()->getIdentifier();
+      const char *varT = convertToCppType(type);
+      sprintf(strBuffer, "cl_mem d_%s = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(%s), NULL, &status );", varN, varT);
+      main.pushstr_newL(strBuffer);
+      sprintf(strBuffer, " status = clEnqueueWriteBuffer(command_queue,   d_%s , CL_TRUE, 0, sizeof(%s), &%s, 0, NULL, NULL );", varN, varT, varN);
+      main.pushstr_newL(strBuffer);
     }
   }
 }
@@ -1225,13 +1239,14 @@ void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment* asmt, int isMai
             kernelName,varTypeB ,propId->getIdentifier2()->getIdentifier(), propId->getIdentifier1()->getIdentifier());
         main.pushstr_newL(strBuffer);
         // Launch the kernel with (1,1)
-        main.pushstr_newL("global_size = local_size = 1;");
-        sprintf(strBuffer, "status  = clEnqueueNDRangeKernel(command_queue, %s,1,NULL, &global_size, &local_size, 0, NULL, &event);", 
+        sprintf(strBuffer, "status  = clEnqueueNDRangeKernel(command_queue, %s,1,NULL, &global_size1, &local_size1, 0, NULL, &event);", 
                       kernelName);
         main.pushString(strBuffer);
         main.NewLine();
         addProfilling("event");
         main.NewLine();
+        sprintf(strBuffer, "status = clReleaseKernel(%s);", kernelName);
+        main.pushstr_newL(strBuffer);
     }
     else {
       targetFile.pushString("d_");  /// IMPORTANT
@@ -1386,17 +1401,21 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,i
         targetFile.NewLine();
         // create clmem corresponding to fixPointVar in main codepad and to mapping/implement pinned memory
         sprintf(strBuffer,"cl_mem d_%s = clCreateBuffer(context, CL_MEM_READ_WRITE|CL_MEM_ALLOC_HOST_PTR,sizeof(int), NULL, &status);", fixPointVar);
-        main.NewLine();
-        main.pushString(strBuffer);
+
+        main.pushstr_newL(strBuffer);
+        sprintf(strBuffer,"cl_mem %s = clCreateBuffer(context, CL_MEM_READ_WRITE,V*sizeof(int), NULL, &status);", modifiedVarNext);
+        main.pushstr_newL(strBuffer);
+
         // Add the memory object to list
         char *str = (char*)malloc(100*sizeof(char));
         strcpy(str,"d_");
         strcat(str, fixPointVar);
-        addMemObject(str);
-        main.NewLine();
-        sprintf(strBuffer, "h_%s = (%s *)clEnqueueMapBuffer(command_queue, d_%s , CL_TRUE, CL_MAP_READ|CL_MAP_WRITE, 0,sizeof(%s),0,NULL,NULL,&status);",
-            fixPointVar, fixPointVarType, fixPointVar,fixPointVarType);
-        main.pushString(strBuffer);
+        // main.NewLine();
+        // sprintf(strBuffer, "h_%s = (%s *)clEnqueueMapBuffer(command_queue, d_%s , CL_TRUE, CL_MAP_READ|CL_MAP_WRITE, 0,sizeof(%s),0,NULL,NULL,&status);",
+        //     fixPointVar, fixPointVarType, fixPointVar,fixPointVarType);
+        // main.pushString(strBuffer);
+        /*****Now Following mapping , Problem with NViDIA GPUs****/
+
         main.NewLine();
         // initailize modified_next
         // Create kernel for modified_next
@@ -1426,7 +1445,8 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,i
             kernel.push('}');
             kernel.NewLine();
             // need to create kernel in main file
-            main.pushstr_newL("// creating %s kernel");
+            sprintf(strBuffer,"// creating %s kernel", kernelName);
+            main.pushstr_newL(strBuffer);
             sprintf(strBuffer,"cl_kernel %s = clCreateKernel(program, \"%s_kernel\", &status);", kernelName,kernelName);
             main.pushstr_newL(strBuffer);
         }
@@ -1446,32 +1466,35 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,i
         main.pushString(strBuffer);
         main.NewLine();
         //call the kernel of modified_next
-        main.pushString("global_size = V;");
-        main.NewLine();
-        main.pushString("local_size = 32;");
+        
         main.NewLine();
         sprintf(strBuffer, "status = clEnqueueNDRangeKernel(command_queue, init%s , 1, NULL , &global_size , &local_size ,0, NULL, &event);",
                   modifiedVarNext);
         main.pushString(strBuffer);
         main.NewLine();
         addProfilling("event");
+        sprintf(strBuffer,"status = clReleaseKernel(init%s);", modifiedVarNext);
+        targetFile.pushstr_newL(strBuffer);
         // Check for ForAll statement if yes then generate create kernel and set kernel argument
-        checkForAllAndGenerate((blockStatement*)fixedPointConstruct->getBody(),1);
+        //checkForAllAndGenerate((blockStatement*)fixedPointConstruct->getBody(),1);
         //Generate while
         targetFile.NewLine();
         targetFile.pushString("int k = 0;");
         targetFile.NewLine();
-        sprintf(strBuffer,"*h_%s = false;",fixPointVar );
+        sprintf(strBuffer,"%s = false;",fixPointVar );
         targetFile.pushString(strBuffer);
         targetFile.NewLine();
-        sprintf(strBuffer,"while(!(*h_%s)){", fixPointVar);
+        sprintf(strBuffer,"while(!(%s)){", fixPointVar);
         targetFile.pushString(strBuffer);
         targetFile.NewLine();
 
         assert(graphId.size() == 1);
-        sprintf(strBuffer,"*h_%s = true;", fixPointVar);
+        sprintf(strBuffer,"%s = true;", fixPointVar);
         targetFile.pushString(strBuffer);
         targetFile.NewLine();
+        sprintf(strBuffer, "status  = clEnqueueWriteBuffer(command_queue,d_%s, CL_TRUE, 0,sizeof(int), &%s,0,0,NULL);",fixPointVar, fixPointVar);
+        targetFile.pushstr_newL(strBuffer);
+
         //Generates Inner parts of fixedPoint
         if (fixedPointConstruct->getBody()->getTypeofNode() != NODE_BLOCKSTMT)
             generateStatement(fixedPointConstruct->getBody(), isMainFile);
@@ -1481,34 +1504,62 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,i
           }
             
         // generate clEnqueReadBuffer for d_modifiednext->h_modified;
+
         sprintf(strBuffer,"status = clEnqueueCopyBuffer(command_queue, %s ,d_%s, 0,0, %s*sizeof(%s),0,NULL, NULL);",
                 modifiedVarNext,modifiedVar,dependentId->getSymbolInfo()->getType()->isPropNodeType()?"V":"E", 
                 convertToCppType(dependentId->getSymbolInfo()->getType()->getInnerTargetType()));
         targetFile.pushString(strBuffer);
         targetFile.NewLine();
-        targetFile.pushString("global_size = V;");
-        targetFile.NewLine();
-        targetFile.pushString("local_size = 32;");
-        targetFile.NewLine();
+
+       // Set kernel Argumant for init_d_modified_next
+        sprintf(strBuffer,"cl_kernel %s = clCreateKernel(program, \"%s_kernel\", &status);", kernelName,kernelName);
+        main.pushstr_newL(strBuffer);
+       //Set kernel arguments in main for modified_next
+        sprintf(strBuffer, "status = clSetKernelArg(init%s, 0,sizeof(cl_mem),(void*)&%s);", modifiedVarNext, modifiedVarNext);
+        main.pushString(strBuffer);
+        main.NewLine();
+        sprintf(strBuffer,"%s %sValue = false;", fixPointVarType, modifiedVarNext);
+        main.pushString(strBuffer);
+        main.NewLine();
+        sprintf(strBuffer,"status = clSetKernelArg(init%s, 1,sizeof(%s) ,(void*)&%sValue);", modifiedVarNext,fixPointVarType, modifiedVarNext);
+        main.pushString(strBuffer);
+        main.NewLine();
+        sprintf(strBuffer, "status = clSetKernelArg(init%s, 2 , sizeof(int),(void*)&V);", modifiedVarNext);
+        main.pushString(strBuffer);
+        main.NewLine();
+
+        main.NewLine();
+
         sprintf(strBuffer, "status = clEnqueueNDRangeKernel(command_queue, init%s , 1,NULL, &global_size , &local_size ,0, NULL, &event);",
                   modifiedVarNext);
         targetFile.pushString(strBuffer);
         targetFile.NewLine();
         addProfilling("event");
         // something is there to do
-        
+        sprintf(strBuffer,"status = clReleaseKernel(init%s);", modifiedVarNext);
+        targetFile.pushstr_newL(strBuffer);
+         // COpy fixed point variable D->H
 
+         main.pushstr_newL("//Copy back the fixed flag");
+        sprintf(strBuffer," status =clEnqueueReadBuffer(command_queue, d_%s , CL_TRUE, 0, sizeof(int), &%s, 0, NULL, NULL );", fixPointVar, fixPointVar);
+        main.pushstr_newL(strBuffer);
+        main.NewLine();
         targetFile.pushString("k++;");
         targetFile.NewLine();
         targetFile.push('}');
         targetFile.NewLine();
+
+
         // Unmap the mapped memory
-        targetFile.pushString("//Unmapping the mapped memory");
-        targetFile.NewLine();
-        sprintf(strBuffer,"clEnqueueUnmapMemObject(command_queue, d_%s, h_%s, 0, NULL, NULL);",fixPointVar,fixPointVar);
-        targetFile.pushString(strBuffer);
-        targetFile.NewLine();
-        
+        //targetFile.pushString("//Unmapping the mapped memory");
+        // targetFile.NewLine();
+        // sprintf(strBuffer,"clEnqueueUnmapMemObject(command_queue, d_%s, h_%s, 0, NULL, NULL);",fixPointVar,fixPointVar);
+        // targetFile.pushString(strBuffer);
+        //targetFile.NewLine();
+        sprintf(strBuffer," status = clReleaseMemObject(%s);", modifiedVarNext);
+        targetFile.pushstr_newL(strBuffer);
+        sprintf(strBuffer," status = clReleaseMemObject(d_%s);", fixPointVar);
+        targetFile.pushstr_newL(strBuffer);
       }
     }
   }
@@ -1603,21 +1654,68 @@ void dsl_cpp_generator::addCudaKernel(forallStmt* forAll)
   kernel.pushString("_kernel");
   kernel.pushString("(int V,  int E, __global int* d_meta, __global int* d_data, __global int* d_src,");
   kernel.NewLine();
-  kernel.pushString("__global int* d_weight,__global int* d_rev_meta,__global int* d_modified_next, __global int* finished");
+  kernel.pushString("__global int* d_weight,__global int* d_rev_meta");
+
+  // Check if parent is fixed point then pass only pass finished and modified next
+  ASTNode* p = forAll->getParent()->getParent();
+  if(p!=NULL && (p->getTypeofNode() == NODE_FIXEDPTSTMT))
+  {
+    cout<<"parent is not NULL, It is fixedPoint"<<endl;
+    statement *stmt = (statement*)p;
+    fixedPointStmt* fixP = (fixedPointStmt*)stmt;
+    Expression* convergeExpr = fixP->getDependentProp();
+    Identifier* fixedPointId = fixP->getFixedPointId();
+
+
+      //~ statement* blockStmt = fixedPointConstruct->getBody();
+      assert(convergeExpr->getExpressionFamily() == EXPR_UNARY ||
+         convergeExpr->getExpressionFamily() == EXPR_ID);
+
+
+      Identifier* dependentId = NULL;
+      //~ bool isNot = false;
+      assert(convergeExpr->getExpressionFamily() == EXPR_UNARY ||
+         convergeExpr->getExpressionFamily() == EXPR_ID);
+      if (convergeExpr->getExpressionFamily() == EXPR_UNARY) {
+          if (convergeExpr->getUnaryExpr()->getExpressionFamily() == EXPR_ID) {
+              dependentId = convergeExpr->getUnaryExpr()->getId();
+            //~ isNot = true;
+          }
+      }
+     
+
+      const char *modifiedVar   = dependentId->getIdentifier();
+      char *fixPointVar = fixedPointId->getIdentifier();
+      char modifiedVarNext[80] = "d_" ;
+      strcat(modifiedVarNext, modifiedVar);strcat(modifiedVarNext, "_next");
+      sprintf(strBuffer,",__global int *%s", fixPointVar);
+      kernel.pushString(strBuffer); 
+      sprintf(strBuffer,",__global int *%s", modifiedVarNext);
+      kernel.pushString(strBuffer);
+
+      premitivePassToKernel.push_back(fixPointVar);
+
+  }
+
+
   for(Identifier* iden: vars)
   {
     if(iden->getSymbolInfo()==NULL) continue; 
     Type* type = iden->getSymbolInfo()->getType();
     if(type->isPropType())
     {
-      char strBuffer[1024];
       sprintf(strBuffer, ",__global %s d_%s", convertToCppType(type), iden->getIdentifier());
       kernel.pushString(/*createParamName(*/strBuffer);
+    }
+    else if(type->isPrimitiveType())
+    {
+      sprintf(strBuffer, ",__global %s *d_%s", convertToCppType(type), iden->getIdentifier());
+      kernel.pushString(strBuffer);
     }
   }
   kernel.pushstr_newL("){ // BEGIN KER FUN via ADDKERNEL");
   sprintf(strBuffer, "unsigned int %s = get_global_id(0);", loopVar);
-  kernel.pushstr_newL("int num_nodes  = V;");
+  //kernel.pushstr_newL("int num_nodes  = V;");
   kernel.pushstr_newL(strBuffer);
 
   sprintf(strBuffer, "if(%s >= V) return;", loopVar);
@@ -1634,7 +1732,7 @@ void dsl_cpp_generator::addCudaKernel(forallStmt* forAll)
   blockStatement* block = (blockStatement*)body;
   list<statement*>statementList = block->returnStatements();
 
-  printf("start of kernel block \n");
+  printf("\nstart of kernel block \n");
 
   for (statement* stmt : statementList) {
     generateStatement(stmt, 2);      //2 means in kernelFile. All these stmts should be inside kernel
@@ -1766,7 +1864,9 @@ void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll, int isMainFi
 void dsl_cpp_generator::generateForAll(forallStmt* forAll, int isMainFile) 
 {
   dslCodePad& targetFile = getTargetFile(isMainFile);
+  cout<<"Inside genrate ForAll , isMainFile = "<<isMainFile<<endl;
   targetFile.NewLine();
+
   targetFile.pushString("//ForAll started here");
   targetFile.NewLine();
   proc_callExpr* extractElemFunc = forAll->getExtractElementFunc();
@@ -1808,20 +1908,101 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, int isMainFile)
         // For proptype data need to Create clSetKernelArg
         
     }
-    //Create a kernel Event
+    // generate functionName_kernel in kernel.cl
+    addCudaKernel(forAll);
+
+    //Create a kernel
+    char kernelName[120];
+    strcpy(kernelName, getCurrentFunc()->getIdentifier()->getIdentifier()); 
     char strBuffer[1024];
-    
-    main.pushstr_newL("global_size = V;");
-    main.pushstr_newL("local_size =32;");
+
+    //Create Kernel and set Kernel Argument
+    sprintf(strBuffer,"cl_kernel %s = clCreateKernel(program, \"%s\" , &status);", kernelName);
+    main.pushstr_newL(strBuffer);
+    int argcnt=0;
+    // int V,  int E, __global int* d_meta, __global int* d_data, __global int* d_src,
+  // __global int* d_weight,__global int* d_rev_meta,
+    sprintf(strBuffer, " status = clSetKernelArg(%s, %d, sizeof(int), (void *) &V);", kernelName, argcnt++);
+    main.pushstr_newL(strBuffer);
+    sprintf(strBuffer, " status = clSetKernelArg(%s, %d, sizeof(int), (void *) &E);", kernelName, argcnt++);
+    main.pushstr_newL(strBuffer);
+    sprintf(strBuffer, " status = clSetKernelArg(%s, %d, sizeof(cl_mem), (void *) &d_meta);", kernelName, argcnt++);
+    main.pushstr_newL(strBuffer);
+    sprintf(strBuffer, " status = clSetKernelArg(%s, %d, sizeof(cl_mem), (void *) &d_data);", kernelName, argcnt++);
+    main.pushstr_newL(strBuffer);
+    sprintf(strBuffer, " status = clSetKernelArg(%s, %d, sizeof(cl_mem), (void *) &d_src);", kernelName, argcnt++);
+    main.pushstr_newL(strBuffer);
+    sprintf(strBuffer, " status = clSetKernelArg(%s, %d, sizeof(cl_mem), (void *) &d_weight);", kernelName, argcnt++);
+    main.pushstr_newL(strBuffer);
+    sprintf(strBuffer, " status = clSetKernelArg(%s, %d, sizeof(cl_mem), (void *) &d_rev_meta);", kernelName, argcnt++);
+    main.pushstr_newL(strBuffer);
+    sprintf(strBuffer, " status = clSetKernelArg(%s, %d, sizeof(cl_mem), (void *) &d_meta);", kernelName, argcnt++);
+    main.pushstr_newL(strBuffer);
+
+  // Check if parent is fixed point then pass only pass finished and modified next
+  ASTNode* p = forAll->getParent()->getParent();
+    if(p!=NULL && (p->getTypeofNode() == NODE_FIXEDPTSTMT))
+    {
+      cout<<"parent is not NULL, It is fixedPoint"<<endl;
+      statement *stmt = (statement*)p;
+      fixedPointStmt* fixP = (fixedPointStmt*)stmt;
+      Expression* convergeExpr = fixP->getDependentProp();
+      Identifier* fixedPointId = fixP->getFixedPointId();
+
+
+        //~ statement* blockStmt = fixedPointConstruct->getBody();
+        assert(convergeExpr->getExpressionFamily() == EXPR_UNARY ||
+          convergeExpr->getExpressionFamily() == EXPR_ID);
+
+
+        Identifier* dependentId = NULL;
+        //~ bool isNot = false;
+        assert(convergeExpr->getExpressionFamily() == EXPR_UNARY ||
+          convergeExpr->getExpressionFamily() == EXPR_ID);
+        if (convergeExpr->getExpressionFamily() == EXPR_UNARY) {
+            if (convergeExpr->getUnaryExpr()->getExpressionFamily() == EXPR_ID) {
+                dependentId = convergeExpr->getUnaryExpr()->getId();
+              //~ isNot = true;
+            }
+        }
+      
+
+        const char *modifiedVar   = dependentId->getIdentifier();
+        char *fixPointVar = fixedPointId->getIdentifier();
+        char modifiedVarNext[80] = "d_" ;
+        strcat(modifiedVarNext, modifiedVar);strcat(modifiedVarNext, "_next");
+
+        sprintf(strBuffer, " status = clSetKernelArg(%s, %d, sizeof(cl_mem), (void *) &%s);", kernelName, argcnt++, fixPointVar);
+        main.pushstr_newL(strBuffer);
+        sprintf(strBuffer, " status = clSetKernelArg(%s, %d, sizeof(cl_mem), (void *) &%s);", kernelName, argcnt++, modifiedVarNext);
+        main.pushstr_newL(strBuffer);
+    }
+    for(Identifier* iden: vars)
+    {
+      if(iden->getSymbolInfo()==NULL) continue; 
+      Type* type = iden->getSymbolInfo()->getType();
+      if(type->isPropType())
+      {
+        sprintf(strBuffer, " status = clSetKernelArg(%s, %d, sizeof(cl_mem), (void *) &d_%s);", kernelName, argcnt++,iden->getIdentifier() );
+        main.pushstr_newL(strBuffer);
+      }
+      else if(type->isPrimitiveType())
+      {
+        sprintf(strBuffer, " status = clSetKernelArg(%s, %d, sizeof(%s), (void *) &%s);", kernelName, argcnt++,convertToCppType(type),iden->getIdentifier() );
+        main.pushstr_newL(strBuffer);
+      }
+    }
+
     // Call/Invoke the kernel from here
     sprintf(strBuffer,"status = clEnqueueNDRangeKernel(command_queue,%s, 1,NULL, &global_size, &local_size , 0,NULL,&event);",
           getCurrentFunc()->getIdentifier()->getIdentifier());
     main.pushstr_newL(strBuffer);
     addProfilling("event");
-    main.NewLine();
-    // generate functionName_kernel in kernel.cl
 
-    addCudaKernel(forAll);
+    main.NewLine();
+    sprintf(strBuffer, "status = cleReleaseKernel(%s);", kernelName);
+    main.pushstr_newL(strBuffer);
+    
     cout<<"Exiting ForAll"<<endl;
   }
   else{ //IS FOR
@@ -1869,7 +2050,7 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, int isMainFile)
           targetFile.pushstr_newL(strBuffer);
           targetFile.pushstr_newL("{");
           //Generate all the statement present in For
-          generateBlock((blockStatement*)forAll->getBody(), false, 3); // In kernelFile
+          generateBlock((blockStatement*)forAll->getBody(), false, 2); // In kernelFile
 
           targetFile.pushstr_newL("}");
 
@@ -1891,7 +2072,7 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, int isMainFile)
         targetFile.pushstr_newL(strBuffer);
         targetFile.pushstr_newL("{");
         //Generate statements of forAll Block
-        generateBlock((blockStatement*)forAll->getBody(), false, 3);
+        generateBlock((blockStatement*)forAll->getBody(), false, 2);
         targetFile.pushstr_newL("} // end IF  ");
         targetFile.pushstr_newL("} // end FOR");
         targetFile.pushstr_newL("barrier(CLK_GLOBAL_MEM_FENCE);");
@@ -1910,7 +2091,7 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, int isMainFile)
       else
       {
          printf("FOR NORML");
-        generateStatement(forAll->getBody(), 3);
+        generateStatement(forAll->getBody(), 2);
       }
     }
     else
@@ -1930,7 +2111,7 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, int isMainFile)
           }
           else
           {
-            generateStatement(forAll->getBody(), 3);
+            generateStatement(forAll->getBody(), 2);
           }
 
       }
@@ -2093,8 +2274,34 @@ void dsl_cpp_generator::generateReductionCallStmt(reductionCallStmt* stmt, int i
 }
 void dsl_cpp_generator::generateReductionOpStmt(reductionCallStmt* stmt, int isMainFile)
 {
-  cout<<"Inside generate Reduction operation Statement:Yet to implement"<<endl;
-  //implement later 
+  cout<<"Inside generate Reduction operation Statement"<<endl;
+   dslCodePad& targetFile = getTargetFile(isMainFile);
+
+  char strBuffer[1024];
+
+  if (stmt->isLeftIdentifier()) {
+   Identifier* id=stmt->getLeftId(); 
+
+       // SAMPLE: atomicAdd(&triangle_count,(long)1);
+       //TODO need to generalized for other atomics (sub mul div min max) later!
+       const char *typVar = convertToCppType(id->getSymbolInfo()->getType());
+       //~ if(strcmp("long",typVar)==0)
+        //~ sprintf(strBuffer, "atomicAdd(& %s, (long %s int)",id->getIdentifier(), typVar);
+       //~ else
+       sprintf(strBuffer, "%s(& %s, (%s)",getAtomicFromType(id->getSymbolInfo()->getType(), 0),id->getIdentifier(), typVar);
+       targetFile.pushString(strBuffer);
+       generateExpr(stmt->getRightSide(), isMainFile);
+       targetFile.pushstr_newL(");");
+
+  } else {
+    generate_exprPropId(stmt->getPropAccess(), isMainFile);
+    targetFile.pushString(" = ");
+    generate_exprPropId(stmt->getPropAccess(), isMainFile);
+    const char* operatorString = getOperatorString(stmt->reduction_op());
+    targetFile.pushstr_space(operatorString);
+    generateExpr(stmt->getRightSide(), isMainFile);
+    targetFile.pushstr_newL(";");
+  }
 }
 
 
@@ -2184,7 +2391,7 @@ void dsl_cpp_generator::addCudaBFSIterKernel(iterateBFS* bfsAbstraction)
   // generate rest of prop Parameters
   //Kernel name not required
   char kernelName[2] = ".";
-  generatePropParams(getCurrentFunc()->getParamList(), kernelName, true, 3, 9); // true: typeneed 3:kernel file(0:header file, 1: main file)
+  generatePropParams(getCurrentFunc()->getParamList(), kernelName, true, 2, 9); // true: typeneed 2:kernel file(0:header file, 1: main file)
   kernel.push(')');
   kernel.NewLine();
   kernel.pushstr_newL("{");
@@ -2199,7 +2406,7 @@ void dsl_cpp_generator::addCudaBFSIterKernel(iterateBFS* bfsAbstraction)
 
   for (statement* stmt : statementList)
   {
-    generateStatement(stmt, 3);  //3:kernel, All these stmts should be inside kernel
+    generateStatement(stmt, 2);  //2:kernel, All these stmts should be inside kernel
   
   }
 
@@ -2219,7 +2426,7 @@ void dsl_cpp_generator::addCudaRevBFSIterKernel(iterateBFS* bfsAbstraction)
   //backward Pass kernel
   kernel.pushString("__global__ void back_pass(int V, __global int* d_meta, __global int* d_data, __global int* d_weight, __global float* d_delta, __global double* d_sigma, __global int* d_level, __global int* d_hops_from_source, __global int* d_finished");
   char kernelName[2] = ".";
-  generatePropParams(getCurrentFunc()->getParamList(), kernelName, true, 3, 9); // true: typeneed 3:kernel file(0:header file, 1: main file)
+  generatePropParams(getCurrentFunc()->getParamList(), kernelName, true, 2, 9); // true: typeneed 2:kernel file(0:header file, 1: main file)
   kernel.push(')');
   kernel.NewLine();
   kernel.pushstr_newL("{");
@@ -2234,7 +2441,7 @@ void dsl_cpp_generator::addCudaRevBFSIterKernel(iterateBFS* bfsAbstraction)
   cout<<"Generating statement from revIterateBFS"<<endl;
   for(statement* stmt:revStmtList)
   {
-    generateStatement(stmt,3);// 3:kernel file
+    generateStatement(stmt,2);// 2:kernel file
   }
   kernel.pushstr_newL("}//end of if");
   kernel.pushstr_newL("}//end of kernel");
@@ -2272,13 +2479,15 @@ void dsl_cpp_generator::addCudaBFSIterationLoop(iterateBFS* bfsAbstraction)
   strcpy(kernelName, "fwd_pass_kernel");
   generatePropParams(getCurrentFunc()->getParamList(), kernelName, false, 1, 9); // true: typeneed 1:inMainfile
   // Now call the fwd_pass kernel from main
-  main.pushstr_newL("glbal_size = V;");
-  main.pushstr_newL("local_size = 128;");
+  
   sprintf(strBuffer,"status = clEnqueueNDRangeKernel(command_queue, %s, 1, NULL, &global_size, &local_size, 0, NULL, &event);", kernelName);
   main.pushString(strBuffer);
   addProfilling("event");
 
-  main.pushstr_newL("*hop_from_source = *hop_from_source + 1;");
+  sprintf(strBuffer, "status = clReleaseKernel(%s);",kernelName);
+  main.pushstr_newL(strBuffer);
+
+  main.pushstr_newL("hop_from_source = hop_from_source + 1;");
   
   addCudaBFSIterKernel(bfsAbstraction);  // KERNEL BODY!!!
 }
@@ -2311,12 +2520,13 @@ void dsl_cpp_generator::addCudaRevBFSIterationLoop(iterateBFS* bfsAbstraction)
   generatePropParams(getCurrentFunc()->getParamList(), kernelName, false, 1, 9); // true: typeneed 1:inMainfile
    // Now call the back_pass kernel from main
   main.NewLine();
-  main.pushstr_newL("glbal_size = V;");
-  main.pushstr_newL("local_size = 128;");
+ 
+ 
   sprintf(strBuffer,"status = clEnqueueNDRangeKernel(command_queue, %s, 1, NULL, &global_size, &local_size, 0, NULL, &event);", kernelName);
   main.pushString(strBuffer);
   addProfilling("event");
-
+  sprintf(strBuffer, "status = clReleaseKernel(%s);",kernelName);
+  main.pushstr_newL(strBuffer);
   main.pushstr_newL("(*hop_from_source)--;");
   main.NewLine();
 
@@ -2363,10 +2573,10 @@ void dsl_cpp_generator::generateBFSAbstraction(iterateBFS* bfsAbstraction,int is
   main.pushstr_newL("}");
   main.pushstr_newL("status = clSetKernelArg(initd_level_kernel , 0, sizeof(cl_mem) ,(void *)&d_level);");
   main.pushstr_newL("status = clSetKernelArg(initd_level_kernel , 1, sizeof(int) ,(void *)&V);");
-  main.pushstr_newL("global_size = V;");
-  main.pushstr_newL("local_size = 128;");
+
   main.pushstr_newL("status  = clEnqueueNDRangeKernel(command_queue, initd_level_kernel,1,NULL, &global_size, &local_size, 0, NULL, &event);");
   addProfilling("event");
+  main.pushstr_newL("status = clReleaseKernel(initd_level_kernel);");
   //  begin While loop of ITRBFS
   main.pushstr_newL("*finished = 1;");
   main.pushstr_newL("*hop_from_source = 0;");
@@ -2593,6 +2803,7 @@ void dsl_cpp_generator::generateFunc(ASTNode* proc) {
   Function* func = (Function*)proc;
   generateFuncHeader(func, 0); // header file
   generateFuncHeader(func, 1);   // main file
+  generateFuncHeader(func, 2); // kernel file
   
   // to genearte the function body of the algorithm
   // Note that this we can change later point of time if required
@@ -2706,7 +2917,21 @@ void dsl_cpp_generator::generateCudaMemCpyParams(list<formalParam*> paramList)
          * well*/
       }
     }
+    else if(type->isPrimitiveType())
+    {
+        const char * temp = "d_";
+        char* temp1 = (*itr)->getIdentifier()->getIdentifier();
+        char* temp2 = (char*)malloc(1+strlen(temp) + strlen(temp1));
+        strcpy(temp2,temp);
+        strcat(temp2,temp1);
+        char* hostvar = (char*)malloc((5+strlen(temp1))*sizeof(char));
+        strcpy(hostvar,temp1);
+      generateCudaMemcpyStr(hostvar, temp2,convertToCppType(type), "1", 0 );
+    }
   }
+
+
+
 }
 
 
@@ -2736,6 +2961,7 @@ void dsl_cpp_generator:: releaseObjects(int isMainFile)
     free(*itr);
   }
   // Release kernel objects
+  /*
   vector<char*>::iterator kitr;
     for(kitr = kernelObjects.begin(); kitr!= kernelObjects.end(); kitr++)
     {
@@ -2745,6 +2971,7 @@ void dsl_cpp_generator:: releaseObjects(int isMainFile)
       targefile.NewLine();
       free(*kitr);
     }
+    */
   // Release program
   /*
     targefile.pushString("status = clReleaseProgram(program);");
