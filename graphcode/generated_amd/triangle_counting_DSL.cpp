@@ -96,6 +96,35 @@ void Compute_TC(graph& g)
   //ForAll started here
 
   status = clEnqueueWriteBuffer(command_queue, d_triangle_count, CL_TRUE, 0, sizeof(int),&triangle_count , 0, NULL, NULL)
+
+  //Reading kernel file
+  FILE* kernelfp = fopen("triangle_counting_DSL.cl", "rb"); 
+  size_t program_size;
+  fseek(kernelfp, 0, SEEK_END);
+  program_size = ftell(kernelfp);
+  rewind(kernelfp);
+  char* kernelSource;
+  kernelSource = (char *)malloc((program_size+1)* sizeof(char));
+  fread(kernelSource, sizeof(char), program_size, kernelfp);
+  kernelSource[program_size] = (char)NULL ;
+  fclose(kernelfp);
+
+  //Creating program from source(Create and build Program)
+  cl_program program = clCreateProgramWithSource(context, 1, (const char **)&kernelSource, NULL, &status);
+  printf("Progran created from source, statuc = %d \n", status);
+  status = clBuildProgram(program, number_of_devices, devices, " -I ./", NULL, NULL);
+  if(status!=CL_SUCCESS){
+    printf(" Program building Failed, status = %d \n ",status);
+    exit(0);
+  }
+
+  //Variable for launch configuration
+  size_t global_size, global_size1;
+  size_t local_size, local_size1;
+  local_size = 128;
+  global_size = (V + local_size -1)/ local_size * local_size;
+  local_size1 = 1;
+  global_size1 = 1;
   cl_kernel Compute_TC = clCreateKernel(program, "cl_kernel %s = clCreateKernel(program, "%s" , &status);" , &status);
    status = clSetKernelArg(Compute_TC, 0, sizeof(int), (void *) &V);
    status = clSetKernelArg(Compute_TC, 1, sizeof(int), (void *) &E);

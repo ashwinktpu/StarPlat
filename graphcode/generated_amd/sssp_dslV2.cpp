@@ -112,7 +112,10 @@ void Compute_SSSP(graph& g,int* dist,int src)
   cl_program program = clCreateProgramWithSource(context, 1, (const char **)&kernelSource, NULL, &status);
   printf("Progran created from source, statuc = %d \n", status);
   status = clBuildProgram(program, number_of_devices, devices, " -I ./", NULL, NULL);
-  printf(" Program building completed, status = %d \n ",status);
+  if(status!=CL_SUCCESS){
+    printf(" Program building Failed, status = %d \n ",status);
+    exit(0);
+  }
 
   //Variable for launch configuration
   size_t global_size, global_size1;
@@ -183,10 +186,9 @@ void Compute_SSSP(graph& g,int* dist,int src)
   totalTime = totalTime+ kernelTime;
 
   status = clReleaseKernel(initIndexdist_kernel);
-  cl_mem d_finished = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(int), NULL, &status)
+  cl_mem d_finished = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(int), NULL, &status);
 
-  int finished
-   = false; 
+  int finished = false; 
   // Start of fixed point
   cl_mem d_finished = clCreateBuffer(context, CL_MEM_READ_WRITE|CL_MEM_ALLOC_HOST_PTR,sizeof(int), NULL, &status);
   cl_mem d_modified_next = clCreateBuffer(context, CL_MEM_READ_WRITE,V*sizeof(int), NULL, &status);

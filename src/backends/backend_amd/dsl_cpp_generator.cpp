@@ -75,7 +75,10 @@ void dsl_cpp_generator:: addKernelObject(char* obj)
     main.pushstr_newL("cl_program program = clCreateProgramWithSource(context, 1, (const char **)&kernelSource, NULL, &status);");
     main.pushstr_newL("printf(\"Progran created from source, statuc = %d \\n\", status);");
     main.pushstr_newL("status = clBuildProgram(program, number_of_devices, devices, \" -I ./\", NULL, NULL);");
-    main.pushstr_newL("printf(\" Program building completed, status = %d \\n \",status);");
+    main.pushstr_newL("if(status!=CL_SUCCESS){");
+    main.pushstr_newL("printf(\" Program building Failed, status = %d \\n \",status);");
+    main.pushstr_newL("exit(0);");
+    main.pushstr_newL("}");
     main.NewLine();
 
     // If we have kernel we are gonna use global size and local size
@@ -405,12 +408,6 @@ void dsl_cpp_generator::generateFuncHeader(Function* proc, int isMainFile) {
   //cout<<"I am inside generate Function Header"<<endl;
   dslCodePad& targetFile = getTargetFile(isMainFile);
 
-  //Heade Generation in kernel file
-  if(isMainFile==2)
-  {
-    targetFile.pushstr_newL("#include \"libOpenCL.h\" ");
-    targetFile.NewLine();
-  }
 
   
   targetFile.pushString("void");
@@ -619,8 +616,11 @@ const char* dsl_cpp_generator::getOperatorString(int operatorId) {
 void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
                                              int isMainFile) {
   dslCodePad& targetFile = getTargetFile(isMainFile);
-  
-
+  // Any variable declared in main to be stored to pass to fwd_pass and back_pass of BFSAbstraction
+  if(isMainFile==1)
+  {
+    declVaribles.push_back(declStmt->getdeclId());
+  }
   Type* type = declStmt->getType();
   //~ char strBuffer[1024];
   //~ if (type->isPrimitiveType()){
@@ -1512,6 +1512,11 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,i
         targetFile.NewLine();
 
        // Set kernel Argumant for init_d_modified_next
+        if(!isKenelPresent(kernelName))
+        {
+          addKernelObject(kernelName);
+        }
+
         sprintf(strBuffer,"cl_kernel %s = clCreateKernel(program, \"%s_kernel\", &status);", kernelName,kernelName);
         main.pushstr_newL(strBuffer);
        //Set kernel arguments in main for modified_next
@@ -1917,6 +1922,10 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, int isMainFile)
     char strBuffer[1024];
 
     //Create Kernel and set Kernel Argument
+    if(!isKenelPresent(kernelName))
+    {
+      addKernelObject(kernelName);
+    }
     sprintf(strBuffer,"cl_kernel %s = clCreateKernel(program, \"%s\" , &status);", kernelName);
     main.pushstr_newL(strBuffer);
     int argcnt=0;
@@ -2373,6 +2382,49 @@ void dsl_cpp_generator::generatePropParams(list<formalParam*> paramList,char *ke
   cout<<"leaving generateProParams "<<endl;
 }
 
+int dsl_cpp_generator::generateBFSVars(list<Identifier*> vars, int isMainFile, int argCount)
+{
+  char strBuffer[1024];
+    dslCodePad& targetFile = getTargetFile(isMainFile);
+    cout<<"Used variable size:  "<< vars.size()<<endl;
+    for(auto iden: vars)
+    {
+      //Check if used variable is also declare previously then only pass that variable
+      for(auto decIden:declVaribles)
+      {
+        if(strcmp(iden->getIdentifier(), decIden->getIdentifier())==0)
+        {
+          cout<<"var:"<<iden->getIdentifier()<<endl;
+          //Now generate it
+          if(isMainFile==2)
+          {
+            sprintf(strBuffer,",__global %s d_%s", convertToCppType(iden->getSymbolInfo()->getType()), iden->getIdentifier());
+            targetFile.pushString(strBuffer);
+          }
+          
+          else if(isMainFile==1)
+          {
+            Type* type = iden->getSymbolInfo()->getType();
+            if(type->isPropType())
+              {
+               sprintf(strBuffer, "status = clSetKernelArg(fwd_pass_kernel, %d, sizeof(cl_mem), (void *)&d_%s);",argCount++,iden->getIdentifier());
+              }
+              else if(type->isPrimitiveType())
+              {
+                sprintf(strBuffer, "status = clSetKernelArg(fwd_pass_kernel, %d, sizeof(%s), (void *)&%s);",argCount++,convertToCppType(type),iden->getIdentifier());
+              }
+              targetFile.pushstr_newL(strBuffer);
+          }
+
+          
+        }
+      }
+      
+    }
+    return argCount;
+}
+
+
 void dsl_cpp_generator::addCudaBFSIterKernel(iterateBFS* bfsAbstraction)
 {
   char strBuffer[1024];
@@ -2387,7 +2439,13 @@ void dsl_cpp_generator::addCudaBFSIterKernel(iterateBFS* bfsAbstraction)
   blockStatement* block = (blockStatement*)body;
   list<statement*> statementList = block->returnStatements();
 
-  kernel.pushString("__global__ void fwd_pass(int V, __global int* d_meta, __global int* d_data, __global int* d_weight, __global float* d_delta, __global double* d_sigma, __global int* d_level, __global int* d_hops_from_source, __global int* d_finished");
+  kernel.pushString("__global__ void fwd_pass(int V, __global int* d_meta, __global int* d_data, __global int* d_weight, __global int* d_level, __global int* d_hops_from_source, __global int* d_finished");
+  //Pass other variables declare
+  statement* stmt = (statement*)bfsAbstraction->getBody();
+  usedVariables usedVars = getVarsStatement(stmt);
+  list<Identifier*> vars = usedVars.getVariables();
+  generateBFSVars(vars, 2, 0);
+
   // generate rest of prop Parameters
   //Kernel name not required
   char kernelName[2] = ".";
@@ -2418,13 +2476,22 @@ void dsl_cpp_generator::addCudaBFSIterKernel(iterateBFS* bfsAbstraction)
 
 void dsl_cpp_generator::addCudaRevBFSIterKernel(iterateBFS* bfsAbstraction)
 {
+  cout<<"*********Inside revBFSIterKernel********"<<endl;
   char strBuffer[1024];
 
   blockStatement* revBlock = (blockStatement*)bfsAbstraction->getRBFS()->getBody();
   list<statement*> revStmtList = revBlock->returnStatements();
   const char* loopVar = bfsAbstraction->getIteratorNode()->getIdentifier();
   //backward Pass kernel
-  kernel.pushString("__global__ void back_pass(int V, __global int* d_meta, __global int* d_data, __global int* d_weight, __global float* d_delta, __global double* d_sigma, __global int* d_level, __global int* d_hops_from_source, __global int* d_finished");
+  kernel.pushString("__global__ void back_pass(int V, __global int* d_meta, __global int* d_data, __global int* d_weight, __global int* d_level, __global int* d_hops_from_source, __global int* d_finished");
+  
+  //Pass other variables declare
+    for(auto iden:declVaribles)
+    {
+      sprintf(strBuffer,",__global %s d_%s", convertToCppType(iden->getSymbolInfo()->getType()), iden->getIdentifier());
+      kernel.pushString(strBuffer);
+    }
+  
   char kernelName[2] = ".";
   generatePropParams(getCurrentFunc()->getParamList(), kernelName, true, 2, 9); // true: typeneed 2:kernel file(0:header file, 1: main file)
   kernel.push(')');
@@ -2453,12 +2520,18 @@ void dsl_cpp_generator::addCudaRevBFSIterKernel(iterateBFS* bfsAbstraction)
 void dsl_cpp_generator::addCudaBFSIterationLoop(iterateBFS* bfsAbstraction)
 {
   char strBuffer[1024];
-  main.pushstr_newL("*finished = 0;");
-  main.NewLine();
+  
   main.pushstr_newL("//Forward Pass");
   // Create forward pass kernel from program
   //forwardPass(V, d_meta, d_data,d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished,..Other variable..);
-  main.pushstr_newL("cl_kernel fwd_pass_kernel = clCreateKernel(program, \"forwardPass_kernel\", &status);");
+  char *kernelName = (char *)malloc(20*sizeof(char));
+  strcpy(kernelName, "fwd_pass_kernel");
+  if(!isKenelPresent(kernelName))
+  {
+    addKernelObject(kernelName);
+  }
+  sprintf(strBuffer ,"cl_kernel %s = clCreateKernel(program, \"%s\", &status);",kernelName, kernelName);
+  main.pushstr_newL(strBuffer);
   main.pushstr_newL("if(status != CL_SUCCESS)");
   main.pushstr_newL("{");
   main.pushstr_newL("cout<<\"Failed to create fwd_pass_kernel\"<<endl;");
@@ -2468,18 +2541,21 @@ void dsl_cpp_generator::addCudaBFSIterationLoop(iterateBFS* bfsAbstraction)
   main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 1, sizeof(cl_mem), (void *)&d_meta);");
   main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 2, sizeof(cl_mem), (void *)&d_data);");
   main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 3, sizeof(cl_mem), (void *)&d_weight);");
-  // delta and sigma are hard coded. what if user uses a different name?
-  main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 4, sizeof(cl_mem), (void *)&d_delta);");
-  main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 5, sizeof(cl_mem), (void *)&d_sigma);");
-  main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 6, sizeof(cl_mem), (void *)&d_level);");
-  main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 7, sizeof(cl_mem), (void *)&d_hops_from_source);");
-  main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 8, sizeof(cl_mem), (void *)&d_finished);");
+  main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 4, sizeof(cl_mem), (void *)&d_level);");
+  main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 5, sizeof(cl_mem), (void *)&d_hops_from_source);");
+  main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 6, sizeof(cl_mem), (void *)&d_finished);");
+  int argCount = 7;
+  //Pass other variables declare
+  statement* stmt = (statement*)bfsAbstraction->getBody();
+  usedVariables usedVars = getVarsStatement(stmt);
+  list<Identifier*> vars = usedVars.getVariables();
+  argCount = generateBFSVars(vars, 1, argCount);
+
+
   //Pass parameters of the function
-  char *kernelName = (char *)malloc(20* sizeof(char));
-  strcpy(kernelName, "fwd_pass_kernel");
-  generatePropParams(getCurrentFunc()->getParamList(), kernelName, false, 1, 9); // true: typeneed 1:inMainfile
+  generatePropParams(getCurrentFunc()->getParamList(), kernelName, false, 1, argCount); // true: typeneed 1:inMainfile
   // Now call the fwd_pass kernel from main
-  
+  main.NewLine();
   sprintf(strBuffer,"status = clEnqueueNDRangeKernel(command_queue, %s, 1, NULL, &global_size, &local_size, 0, NULL, &event);", kernelName);
   main.pushString(strBuffer);
   addProfilling("event");
@@ -2496,39 +2572,56 @@ void dsl_cpp_generator::addCudaBFSIterationLoop(iterateBFS* bfsAbstraction)
 void dsl_cpp_generator::addCudaRevBFSIterationLoop(iterateBFS* bfsAbstraction)
 {
   char strBuffer[1024];
-
+  char *kernelName = (char *)malloc(20*sizeof(char));
+  strcpy(kernelName, "back_pass_kernel");
+  if(!isKenelPresent(kernelName))
+  {
+    addKernelObject(kernelName);
+  }
   main.pushstr_newL("cl_kernel back_pass_kernel = clCreateKernel(program,\"back_pass\", &status);");
   //set kernel arguments
   //back_pass(V, d_meta, d_data, d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished,...")
   main.pushstr_newL("if(status != CL_SUCCESS)");
   main.pushstr_newL("{");
-  main.pushstr_newL("cout<<\"Failed to create fwd_pass_kernel\"<<endl;");
+  main.pushstr_newL("cout<<\"Failed to create back_pass_kernel\"<<endl;");
   main.pushstr_newL("}");
   //Set kernel arguments
-  main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 0, sizeof(int), (void *)&V);");
-  main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 1, sizeof(cl_mem), (void *)&d_meta);");
-  main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 2, sizeof(cl_mem), (void *)&d_data);");
-  main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 3, sizeof(cl_mem), (void *)&d_weight);");
-  main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 4, sizeof(cl_mem), (void *)&d_delta);");
-  main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 5, sizeof(cl_mem), (void *)&d_sigma);");
-  main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 6, sizeof(cl_mem), (void *)&d_level);");
-  main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 7, sizeof(cl_mem), (void *)&d_hops_from_source);");
-  main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 8, sizeof(cl_mem), (void *)&d_finished);");
+  main.pushstr_newL("status = clSetKernelArg(back_pass_kernel, 0, sizeof(int), (void *)&V);");
+  main.pushstr_newL("status = clSetKernelArg(back_pass_kernel, 1, sizeof(cl_mem), (void *)&d_meta);");
+  main.pushstr_newL("status = clSetKernelArg(back_pass_kernel, 2, sizeof(cl_mem), (void *)&d_data);");
+  main.pushstr_newL("status = clSetKernelArg(back_pass_kernel, 3, sizeof(cl_mem), (void *)&d_weight);");
+  main.pushstr_newL("status = clSetKernelArg(back_pass_kernel, 4, sizeof(cl_mem), (void *)&d_level);");
+  main.pushstr_newL("status = clSetKernelArg(back_pass_kernel, 5, sizeof(cl_mem), (void *)&d_hops_from_source);");
+  main.pushstr_newL("status = clSetKernelArg(back_pass_kernel, 6, sizeof(cl_mem), (void *)&d_finished);");
+  
+  //Pass other variables declare
+  int argcount = 7;
+    for(auto iden:declVaribles)
+    {
+      Type* type = iden->getSymbolInfo()->getType();
+      if(type->isPrimitiveType())
+      {
+        sprintf(strBuffer,"status = clSetKernelArg(back_pass_kernel, %d, sizeof(%s), (void *)&%s)",argcount++,  convertToCppType(type), iden->getIdentifier());
+      }
+      else if(type->isPropType())
+      {
+        sprintf(strBuffer,"status = clSetKernelArg(back_pass_kernel, %d, sizeof(cl_mem), (void *)&d_%s)",argcount++, iden->getIdentifier());
+      }
+      main.pushstr_newL(strBuffer);
+    }
+  
   // from properties
-  char *kernelName = (char *)malloc(20* sizeof(char));
-  strcpy(kernelName, "back_pass_kernel");
-  generatePropParams(getCurrentFunc()->getParamList(), kernelName, false, 1, 9); // true: typeneed 1:inMainfile
+  generatePropParams(getCurrentFunc()->getParamList(), kernelName, false, 1, argcount); // true: typeneed 1:inMainfile
    // Now call the back_pass kernel from main
   main.NewLine();
  
  
   sprintf(strBuffer,"status = clEnqueueNDRangeKernel(command_queue, %s, 1, NULL, &global_size, &local_size, 0, NULL, &event);", kernelName);
-  main.pushString(strBuffer);
+  main.pushstr_newL(strBuffer);
   addProfilling("event");
   sprintf(strBuffer, "status = clReleaseKernel(%s);",kernelName);
   main.pushstr_newL(strBuffer);
-  main.pushstr_newL("(*hop_from_source)--;");
-  main.NewLine();
+  
 
   // Add reverseBFS kernel
  
@@ -2550,14 +2643,14 @@ void dsl_cpp_generator::generateBFSAbstraction(iterateBFS* bfsAbstraction,int is
   list<statement*>listStatement = block->returnStatements();
   // Add variable for for BFS and revBFS
 
-  main.pushstr_newL("int *finished;");
-  main.pushstr_newL("int *hop_from_source");
+  main.pushstr_newL("int finished;");
+  main.pushstr_newL("int hops_from_source;");
   main.pushstr_newL("cl_mem d_finished = clCreateBuffer(context, CL_MEM_READ_WRITE|CL_MEM_ALLOC_HOST_PTR,sizeof(int), NULL, &status);");
-  main.pushstr_newL("cl_mem d_hop_from_source = clCreateBuffer(context, CL_MEM_READ_WRITE|CL_MEM_ALLOC_HOST_PTR, sizeof(int), NULL, &status);");
+  main.pushstr_newL("cl_mem d_hops_from_source = clCreateBuffer(context, CL_MEM_READ_WRITE|CL_MEM_ALLOC_HOST_PTR, sizeof(int), NULL, &status);");
   main.pushstr_newL("cl_mem d_level = clCreateBuffer(context, CL_MEM_READ_WRITE, V*sizeof(int), NULL, &status);");
-  main.pushstr_newL("//map these varibles");
-  main.pushstr_newL("finished = (int *)clEnqueueMapBuffer(command_queue, d_finished , CL_TRUE, CL_MAP_READ|CL_MAP_WRITE, 0,sizeof(int),0,NULL,NULL,&status);");
-  main.pushstr_newL("hop_from_source = (int *)clEnqueueMapBuffer(command_queue, d_hop_from_source , CL_TRUE, CL_MAP_READ|CL_MAP_WRITE, 0,sizeof(int),0,NULL,NULL,&status);");
+  //main.pushstr_newL("//map these varibles");
+  // main.pushstr_newL("finished = (int *)clEnqueueMapBuffer(command_queue, d_finished , CL_TRUE, CL_MAP_READ|CL_MAP_WRITE, 0,sizeof(int),0,NULL,NULL,&status);");
+  // main.pushstr_newL("hop_from_source = (int *)clEnqueueMapBuffer(command_queue, d_hop_from_source , CL_TRUE, CL_MAP_READ|CL_MAP_WRITE, 0,sizeof(int),0,NULL,NULL,&status);");
 
   sprintf(strBuffer,"//initialize d_level with -1 and for %s 0", bfsAbstraction->getRootNode()->getIdentifier());
   main.pushstr_newL(strBuffer);
@@ -2578,15 +2671,20 @@ void dsl_cpp_generator::generateBFSAbstraction(iterateBFS* bfsAbstraction,int is
   addProfilling("event");
   main.pushstr_newL("status = clReleaseKernel(initd_level_kernel);");
   //  begin While loop of ITRBFS
-  main.pushstr_newL("*finished = 1;");
-  main.pushstr_newL("*hop_from_source = 0;");
-  main.pushstr_newL("While(*finished)");
+  main.pushstr_newL("finished = 1;");
+  main.pushstr_newL("hops_from_source = 0;");
+  main.pushstr_newL("While(finished)");
   main.pushstr_newL("{");
+  main.pushstr_newL("finished = 0;");
+  //copy finished & hops_from_source H2D
+  main.pushstr_newL("status  = clEnqueueWriteBuffer(command_queue,d_finished, CL_TRUE, 0,sizeof(int), &finished,0,0,NULL);");
+  main.pushstr_newL(" status  = clEnqueueWriteBuffer(command_queue,d_hops_from_source, CL_TRUE, 0,sizeof(int), &hops_from_source,0,0,NULL);");
+  main.NewLine();
 
   // ADDS BODY OF ITERBFS + KERNEL LAUNCH
   addCudaBFSIterationLoop(bfsAbstraction);
 
-
+  main.pushstr_newL("status=clEnqueueReadBuffer(command_queue, d_finished , CL_TRUE, 0, sizeof(int), &finished, 0, NULL, NULL );");
   main.pushstr_newL("}");
   main.NewLine();
   /**************Iterate in Reverse BFS**********/
@@ -2596,14 +2694,19 @@ void dsl_cpp_generator::generateBFSAbstraction(iterateBFS* bfsAbstraction,int is
    Reverse part? what if user only need forward pass?
    */
 
-  main.pushstr_newL("*hop_from_source = (*hop_from_source)-1;");
+  main.pushstr_newL("hops_from_source--;");
   main.NewLine();
   main.pushstr_newL("//Backward Pass");
-  main.pushstr_newL("while(*hops_from_source > 1)");
+  main.pushstr_newL("while(hops_from_source > 1)");
   main.pushstr_newL("{");
   main.NewLine();
+  main.pushstr_newL("status  = clEnqueueWriteBuffer(command_queue,d_hops_from_source, CL_TRUE, 0,sizeof(int), &hops_from_source,0,0,NULL);");
   main.pushstr_newL("//KERNEL Launch");
+
   addCudaRevBFSIterationLoop(bfsAbstraction);
+
+  main.pushstr_newL("(hop_from_source)--;");
+  main.NewLine();
   main.pushstr_newL("}");
 
   return;
@@ -2803,7 +2906,6 @@ void dsl_cpp_generator::generateFunc(ASTNode* proc) {
   Function* func = (Function*)proc;
   generateFuncHeader(func, 0); // header file
   generateFuncHeader(func, 1);   // main file
-  generateFuncHeader(func, 2); // kernel file
   
   // to genearte the function body of the algorithm
   // Note that this we can change later point of time if required

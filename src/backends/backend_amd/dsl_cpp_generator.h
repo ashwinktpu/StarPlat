@@ -31,6 +31,7 @@ class dsl_cpp_generator {
     vector<char*>kernelObjects;
     vector<char*>hostMemObjects;
     vector<char*>premitivePassToKernel;
+    
   /***************************************************************/
  public:
   dsl_cpp_generator() {
@@ -51,6 +52,7 @@ class dsl_cpp_generator {
 
 
   /**************************************************************amd*************************/
+  list<Identifier*>declVaribles;
   void generateGetPlatforms();
   void generateGetDevices();
   void generateCreateContext();
@@ -65,6 +67,7 @@ class dsl_cpp_generator {
   void addProfilling(char* eventName);
   const char* getAtomicFromType(Type *typeofVar, int atomicType);
   // void generateReverseBFS(iterateReverseBFS* stmt, int isMainFile);
+  int generateBFSVars(list<Identifier*> vars , int isMainFile, int argCount);
   /********************************************End AMD****************************************/
   void generateParamList(list<formalParam*> paramList, dslCodePad& targetFile);
   void setCurrentFunc(Function* func);

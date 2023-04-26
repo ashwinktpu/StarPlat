@@ -1,6 +1,3 @@
-#include "libOpenCL.h" 
-
-void Compute_TC(graph& g)
 __kernel void Compute_TC_kernel(int V,  int E, __global int* d_meta, __global int* d_data, __global int* d_src,
   __global int* d_weight,__global int* d_rev_meta,__global int *d_triangle_count){ // BEGIN KER FUN via ADDKERNEL
   unsigned int v = get_global_id(0);
@@ -28,3 +25,4 @@ __kernel void Compute_TC_kernel(int V,  int E, __global int* d_meta, __global in
 
   } //  end FOR NBR ITR. TMP FIX!
 } // end KER FUNC
+#include "libOpenCL.h"
