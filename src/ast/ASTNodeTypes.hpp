@@ -1412,13 +1412,13 @@ class formalParam:public ASTNode
     bool getInGPU(){
       return inGPU;
     }
-    bool setPropCopy(){
+    void setPropCopy(){
 
       propCopy = true;
 
     }
 
-    bool setMapPropCopy(){
+    void setMapPropCopy(){
 
       mapPropCopy = true;
 
@@ -2157,9 +2157,6 @@ class fixedPointStmt:public statement
       }
 
 
-      void initUsedVariable(list<Identifier*> usedVars){
-      this->usedVars = usedVars;
-    }
     void pushModifiedGlobalVariable(TableEntry * te)
     {
       modifiedGlobalVars.insert(te);
@@ -2505,7 +2502,6 @@ class fixedPointStmt:public statement
               //~ }
          }
     }
-  void pushMapLocals(Identifier* id){
     bool getIsMetaUsed() {
       return metadata.isMetaUsed;
     }
@@ -2559,6 +2555,7 @@ class fixedPointStmt:public statement
     }
   
 
+  void pushMapLocals(Identifier* id){
     mapLocals.insert(id);
 
     }
