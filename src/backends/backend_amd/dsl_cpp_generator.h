@@ -25,13 +25,19 @@ class dsl_cpp_generator {
 
 
   bool isHeader;
-
+  /*******************************amd specific**********************/
+    int memObjectCount;
+    vector<char*>memObjects;
+    vector<char*>kernelObjects;
+    vector<char*>hostMemObjects;
+  /***************************************************************/
  public:
   dsl_cpp_generator() {
     // added here
     genCSR = false;
     isHeader = false;
     kernelCount = 0;
+    memObjectCount = 0; // amd specific
     gName = new char[25];
 
     headerFile = NULL;
@@ -49,6 +55,15 @@ class dsl_cpp_generator {
   void generateCreateContext();
   void generateCreateCommandQueue();
   dslCodePad& getTargetFile(int isMainFile);
+  void checkForAllAndGenerate(blockStatement* blockStmt , int isMainFile);
+  void addMemObject( char *str);
+  void addKernelObject(char* str);
+  bool isMemPresent(char* str);
+  bool isKenelPresent(char* str);
+  void releaseObjects(int isMainFile);
+  void addProfilling(char* eventName);
+  const char* getAtomicFromType(Type *typeofVar, int atomicType);
+  // void generateReverseBFS(iterateReverseBFS* stmt, int isMainFile);
   /********************************************End AMD****************************************/
   void generateParamList(list<formalParam*> paramList, dslCodePad& targetFile);
   void setCurrentFunc(Function* func);
@@ -66,7 +81,7 @@ class dsl_cpp_generator {
   void generateProcCall(proc_callStmt* procCall, int isMainFile);
   void generateVariableDecl(declaration* decl, int isMainFile);
   void generateStatement(statement* stmt, int isMainFile);
-  // void generateAssignmentStmt(assignment* assignStmt);
+  //void generateAssignmentStmt(assignment* assignStmt);
   void generateAssignmentStmt(assignment* assignStmt, int isMainFile);
   void generateWhileStmt(whileStmt* whilestmt);
   void generateForAll(forallStmt* forAll, int isMainFile);
@@ -92,7 +107,7 @@ class dsl_cpp_generator {
   void generate_exprProcCall(Expression* expr, int isMainFile);
 
   void generateForAll_header();
-  void generateForAllSignature(forallStmt* forAll, bool isKernel);
+  void generateForAllSignature(forallStmt* forAll, int ismainFile);
   // void includeIfToBlock(forallStmt* forAll);
   bool neighbourIteration(char* methodId);
   bool allGraphIteration(char* methodId);
@@ -146,7 +161,7 @@ class dsl_cpp_generator {
                              bool);
   void generateInitkernel1(assignment*, int);
 
-  void generateInitkernelStr(const char* inVarType, const char* inVarName, const char* initVal);
+  void generateInitkernelStr(const char* inVarType, const char* inVarName, const char* initVal, const char* sizeVE);
 
   void generateCSRArrays(const char*);
   void generateInitkernel(const char* name);
@@ -169,7 +184,7 @@ class dsl_cpp_generator {
   void addCudaBFSIterationLoop(iterateBFS* bfsAbstraction);
   void generateExtraDeviceVariable(const char* typeStr, const char* dVar, const char* sizeVal);
   void addCudaBFSIterKernel(iterateBFS* bfsAbstraction);
-  void addCudaRevBFSIterKernel(list<statement*>& revStmtList);
+  void addCudaRevBFSIterKernel(iterateBFS* bfsAbstraction);
   void generateAtomicDeviceAssignmentStmt(assignment* asmt, int isMainFile);
   void generateDeviceAssignmentStmt(assignment* asmt, int isMainFile);
   void addCudaKernel(forallStmt* forAll);
@@ -178,7 +193,7 @@ class dsl_cpp_generator {
   void generateCudaMemCpyParams(list<formalParam*> paramList);
   void generateHeaderDeviceVariable(const char* typeStr, const char* dVar);
   void generateExtraDeviceVariableNoD(const char* typeStr, const char* dVar, const char* sizeVal);
-  void generatePropParams(list<formalParam*> paramList, bool isNeedType,int isMainFile);
+  void generatePropParams(list<formalParam*> paramList, char *kernelName, bool isNeedType,int isMainFile,  int argnum);
   //~ void setGenCSR(bool yes = true) { genCSR = yes; }
   //~ bool isGenCSR() { return genCSR; }
   //~ void setGName(const char* str) {

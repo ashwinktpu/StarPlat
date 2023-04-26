@@ -131,7 +131,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                   //~ std::cout<< "PROP ASST" << propId->getIdentifier1()->getIdentifier() << '\n';
              }
 
-             if(backend.compare("cuda")== 0  && assign->lhs_isProp()){  // This flags device assingments OUTSIDE for
+             if((backend.compare("cuda")== 0||backend.compare("amd")== 0)&& assign->lhs_isProp()){  // This flags device assingments OUTSIDE for
               //~ std::cout<< "varName1: " << assign->getPropId()->getIdentifier1()->getIdentifier() << '\n';
               //~ std::cout<< "varName2: " << assign->getPropId()->getIdentifier2()->getIdentifier() << '\n';
               std::cout<<"ANAME1:"<< assign->getParent()->getTypeofNode() << '\n';
@@ -217,7 +217,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                the forall is checked for its existence inside
                another forall which is to be generated with
                omp parallel pragma, and then disable the parallel loop*/
-            if((backend.compare("omp")==0) || (backend.compare("cuda")==0))
+            if((backend.compare("omp")==0) || (backend.compare("cuda")==0) || (backend.compare("amd")==0))
              {
                  if(parallelConstruct.size()>0)
                   {
@@ -235,7 +235,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
                     }
              }
 
-             if(backend.compare("cuda")== 0 ){ // This flags device assingments INSIDE for
+             if(backend.compare("cuda")== 0 || backend.compare("amd")==0){ // This flags device assingments INSIDE for
               std::cout<< "FORALL par   NAME1:"<< forAll->getParent()->getTypeofNode() << '\n';
               if(forAll->getParent()->getParent())
                 std::cout<< "FORALL ParPar NAME2:"<< forAll->getParent()->getParent()->getTypeofNode() << '\n';
@@ -264,7 +264,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
 
 
               buildForStatements(forAll->getBody());
-               if((backend.compare("omp")==0 || backend.compare("cuda")==0) &&forAll->isForall())
+               if((backend.compare("omp")==0 || backend.compare("cuda")==0 || backend.compare("amd")==0) &&forAll->isForall())
                     {
                         parallelConstruct.pop();
                     }
