@@ -782,7 +782,7 @@ bool search_and_connect_toId(SymbolTable* sTab,Identifier* id)
 
  }
 
-bool SymbolTableBuilder::checkForArguments(list<argument*> argList)
+void SymbolTableBuilder::checkForArguments(list<argument*> argList)
 {
     /* primarly required for situations where we require to create a alias for the
        variable for double buffering purposes*/
