@@ -988,8 +988,8 @@ void dsl_cpp_generator::generateAtomicDeviceAssignmentStmt(assignment* asmt,
          Identifier* rhsPropId2 = exprAssigned->getId();
          Type* type = id->getSymbolInfo()->getType();
 
-         sprintf(strBuffer, "cudaMemcpy(d_%s, d_%s, sizeof(%s)*V, cudaMemcpyDeviceToDevice)", id->getIdentifier(),
-                      rhsPropId2->getIdentifier(), convertToCppType(type->getInnerTargetType()));
+         sprintf(strBuffer, "cudaMemcpy(d_%s, d_%s, sizeof(%s)*V, cudaMemcpyDeviceToDevice)",rhsPropId2->getIdentifier(),
+                             id->getIdentifier(),convertToCppType(type->getInnerTargetType()));
          targetFile.pushString(strBuffer);
          targetFile.pushstr_newL(";");
        }

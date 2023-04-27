@@ -13,7 +13,7 @@ __kernel void Compute_TC_kernel(int V,  int E, __global int* d_meta, __global in
         int w = d_data[edge];
         if (w > v){ // if filter begin 
           if ( isNeighbour(u, w, d_meta, d_data)){ // if filter begin 
-            atomic_add(& triangle_count, (int)1);
+            atomic_add(d_triangle_count, (int)1);
 
           } // if filter end
 

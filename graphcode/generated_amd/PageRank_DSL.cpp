@@ -1,6 +1,7 @@
-#include "triangle_counting_DSL.h"
+#include "PageRank_DSL.h"
 
-void Compute_TC(graph& g)
+void Compute_PR(graph& g,float beta,float delta,int maxIter,
+  float* pageRank)
 {
   //Getting platforms
   cl_int status;
@@ -88,18 +89,22 @@ void Compute_TC(graph& g)
   cl_ulong convertToMS = 1e6;
 
   //DECLAR DEVICE AND HOST vars in params
+  cl_mem d_beta = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(float), NULL, &status );
+   status = clEnqueueWriteBuffer(command_queue,   d_beta , CL_TRUE, 0, sizeof(float), &beta, 0, NULL, NULL );
+  cl_mem d_delta = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(float), NULL, &status );
+   status = clEnqueueWriteBuffer(command_queue,   d_delta , CL_TRUE, 0, sizeof(float), &delta, 0, NULL, NULL );
+  cl_mem d_maxIter = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(int), NULL, &status );
+   status = clEnqueueWriteBuffer(command_queue,   d_maxIter , CL_TRUE, 0, sizeof(int), &maxIter, 0, NULL, NULL );
+  cl_mem d_pageRank = clCreateBuffer(context,CL_MEM_READ_WRITE,(V)*sizeof(float),NULL, &status);
+
 
   //BEGIN DSL PARSING 
-  cl_mem d_triangle_count = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(int), NULL, &status);
+  cl_mem d_num_nodes = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(float), NULL, &status);
 
-  int triangle_count = 0; 
-
-  //ForAll started here
-
-  status = clEnqueueWriteBuffer(command_queue, d_triangle_count, CL_TRUE, 0, sizeof(int),&triangle_count , 0, NULL, NULL)
+  float num_nodes = (float)g.num_nodes( ); 
 
   //Reading kernel file
-  FILE* kernelfp = fopen("triangle_counting_DSL.cl", "rb"); 
+  FILE* kernelfp = fopen("PageRank_DSL.cl", "rb"); 
   size_t program_size;
   fseek(kernelfp, 0, SEEK_END);
   program_size = ftell(kernelfp);
@@ -126,28 +131,71 @@ void Compute_TC(graph& g)
   global_size = (V + local_size -1)/ local_size * local_size;
   local_size1 = 1;
   global_size1 = 1;
-  cl_kernel Compute_TC = clCreateKernel(program, "Compute_TC" , &status);
-   status = clSetKernelArg(Compute_TC, 0, sizeof(int), (void *) &V);
-   status = clSetKernelArg(Compute_TC, 1, sizeof(int), (void *) &E);
-   status = clSetKernelArg(Compute_TC, 2, sizeof(cl_mem), (void *) &d_meta);
-   status = clSetKernelArg(Compute_TC, 3, sizeof(cl_mem), (void *) &d_data);
-   status = clSetKernelArg(Compute_TC, 4, sizeof(cl_mem), (void *) &d_src);
-   status = clSetKernelArg(Compute_TC, 5, sizeof(cl_mem), (void *) &d_weight);
-   status = clSetKernelArg(Compute_TC, 6, sizeof(cl_mem), (void *) &d_rev_meta);
-   status = clSetKernelArg(Compute_TC, 7, sizeof(cl_mem), (void *) &d_meta);
-   status = clSetKernelArg(Compute_TC, 8, sizeof(int), (void *) &triangle_count);
-  status = clEnqueueNDRangeKernel(command_queue,Compute_TC, 1,NULL, &global_size, &local_size , 0,NULL,&event);
+  // Creating initpageRank_kernel  Kernel
+  cl_kernel initpageRank_kernel = clCreateKernel(program, "initpageRank_kernel", &status);
+
+  // Initialization for pageRank variable
+  float pageRankValue = (float)1 / num_nodes; 
+  status = clSetKernelArg(initpageRank_kernel, 0 , sizeof(cl_mem), (void *)& d_pageRank);
+  status = clSetKernelArg(initpageRank_kernel, 1, sizeof(float) , (void*)& pageRankValue);
+  status = clSetKernelArg(initpageRank_kernel, 2, sizeof(int), (void*)&V);
+  status = clEnqueueNDRangeKernel(command_queue, initpageRank_kernel, 1, NULL, &global_size, &local_size, 0,NULL,&event);
+
   clWaitForEvents(1,&event);
   status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, NULL);
   status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, NULL);
   kernelTime = (double)(end-start)/convertToMS;
   totalTime = totalTime+ kernelTime;
+  status = clReleaseKernel(initpageRank_kernel);
+  cl_mem d_iterCount = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(int), NULL, &status);
 
-  status = cleReleaseKernel(Compute_TC);
+  int iterCount = 0; 
+  cl_mem d_diff = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(float), NULL, &status);
+
+  float diff; 
+
+  do{
+    diff = 0.000000;
+
+    //ForAll started here
+
+    status = clEnqueueWriteBuffer(command_queue, d_diff, CL_TRUE, 0, sizeof(float),&diff , 0, NULL, NULL)
+
+    status = clEnqueueWriteBuffer(command_queue, d_delta, CL_TRUE, 0, sizeof(float),&delta , 0, NULL, NULL)
+
+    status = clEnqueueWriteBuffer(command_queue, d_num_nodes, CL_TRUE, 0, sizeof(float),&num_nodes , 0, NULL, NULL)
+    cl_kernel Compute_PR = clCreateKernel(program, "Compute_PR" , &status);
+     status = clSetKernelArg(Compute_PR, 0, sizeof(int), (void *) &V);
+     status = clSetKernelArg(Compute_PR, 1, sizeof(int), (void *) &E);
+     status = clSetKernelArg(Compute_PR, 2, sizeof(cl_mem), (void *) &d_meta);
+     status = clSetKernelArg(Compute_PR, 3, sizeof(cl_mem), (void *) &d_data);
+     status = clSetKernelArg(Compute_PR, 4, sizeof(cl_mem), (void *) &d_src);
+     status = clSetKernelArg(Compute_PR, 5, sizeof(cl_mem), (void *) &d_weight);
+     status = clSetKernelArg(Compute_PR, 6, sizeof(cl_mem), (void *) &d_rev_meta);
+     status = clSetKernelArg(Compute_PR, 7, sizeof(cl_mem), (void *) &d_meta);
+     status = clSetKernelArg(Compute_PR, 8, sizeof(float), (void *) &diff);
+     status = clSetKernelArg(Compute_PR, 9, sizeof(float), (void *) &delta);
+     status = clSetKernelArg(Compute_PR, 10, sizeof(float), (void *) &num_nodes);
+     status = clSetKernelArg(Compute_PR, 11, sizeof(cl_mem), (void *) &d_pageRank);
+    status = clEnqueueNDRangeKernel(command_queue,Compute_PR, 1,NULL, &global_size, &local_size , 0,NULL,&event);
+    clWaitForEvents(1,&event);
+    status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, NULL);
+    status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, NULL);
+    kernelTime = (double)(end-start)/convertToMS;
+    totalTime = totalTime+ kernelTime;
+
+    status = cleReleaseKernel(Compute_PR);
+    iterCount++;
+
+  }while((diff > beta) && (iterCount < maxIter));
 
   //TIMER STOP
   printf("Total Kernel time = %lf ms.\n ", totalTime);
 
+  clEnqueueReadBuffer(command_queue, d_beta , CL_TRUE, 0, sizeof(float)*1, beta, 0, NULL, NULL );
+  clEnqueueReadBuffer(command_queue, d_delta , CL_TRUE, 0, sizeof(float)*1, delta, 0, NULL, NULL );
+  clEnqueueReadBuffer(command_queue, d_maxIter , CL_TRUE, 0, sizeof(int)*1, maxIter, 0, NULL, NULL );
+  clEnqueueReadBuffer(command_queue, d_pageRank , CL_TRUE, 0, sizeof(float)*V, pageRank, 0, NULL, NULL );
   //Release openCL objects
   printf("Started releasing Objects\n");
   status = clReleaseMemObject(d_meta);

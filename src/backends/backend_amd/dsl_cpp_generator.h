@@ -106,7 +106,7 @@ class dsl_cpp_generator {
   void generate_exprRelational(Expression* expr, int isMainFile);
   void generate_exprInfinity(Expression* expr, int isMainFile);
   void generate_exprLiteral(Expression* expr, int isMainFile);
-  void generate_exprIdentifier(Identifier* id, int isMainFile);
+  void generate_exprIdentifier(Identifier* id, int isMainFile, bool isModified = false);
   void generate_exprPropId(PropAccess* propId, int isMainFile);
   void generate_exprProcCall(Expression* expr, int isMainFile);
 

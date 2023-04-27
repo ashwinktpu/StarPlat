@@ -72,7 +72,7 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
   cl_mem d_rev_meta = clCreateBuffer(context, CL_MEM_READ_WRITE, (V+1)*sizeof(int), NULL, &status);
   cl_mem d_modified_next = clCreateBuffer(context, CL_MEM_READ_WRITE, (V)*sizeof(int), NULL, &status);
 
-  status = clEnqueueWriteBuffer(command_queue,   d_meta , CL_TRUE, 0, sizeof(int)*V+1,   h_meta, 0, NULL, NULL );
+  status = clEnqueueWriteBuffer(command_queue,   d_meta , CL_TRUE, 0, sizeof(int)*(V+1),   h_meta, 0, NULL, NULL );
   status = clEnqueueWriteBuffer(command_queue,   d_data , CL_TRUE, 0, sizeof(int)*E,   h_data, 0, NULL, NULL );
   status = clEnqueueWriteBuffer(command_queue,    d_src , CL_TRUE, 0, sizeof(int)*E,    h_src, 0, NULL, NULL );
   status = clEnqueueWriteBuffer(command_queue, d_weight , CL_TRUE, 0, sizeof(int)*E, h_weight, 0, NULL, NULL );
@@ -137,7 +137,6 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
   kernelTime = (double)(end-start)/convertToMS;
   totalTime = totalTime+ kernelTime;
   status = clReleaseKernel(initBC_kernel);
-  printf(" time  spent in initBC_kernel kernel = %lf ms \n ", kernelTime);
   double *h_sigma = (double *)malloc(V*sizeof(double));
   cl_mem d_sigma = clCreateBuffer(context,CL_MEM_READ_WRITE,(V)*sizeof(double),NULL, &status);
 
@@ -167,7 +166,6 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
     kernelTime = (double)(end-start)/convertToMS;
     totalTime = totalTime+ kernelTime;
     status = clReleaseKernel(initdelta_kernel);
-    printf(" time  spent in initdelta_kernel kernel = %lf ms \n ", kernelTime);
     // Creating initsigma_kernel  Kernel
     cl_kernel initsigma_kernel = clCreateKernel(program, "initsigma_kernel", &status);
 
@@ -184,7 +182,6 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
     kernelTime = (double)(end-start)/convertToMS;
     totalTime = totalTime+ kernelTime;
     status = clReleaseKernel(initsigma_kernel);
-    printf(" time  spent in initsigma_kernel kernel = %lf ms \n ", kernelTime);
     cl_kernel initIndexsigma_kernel = clCreateKernel(program, "initIndexsigma_kernel", &status);
     //Indexsigma src initialization
     double initsigmavalsrc = 1;
@@ -221,6 +218,14 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
     kernelTime = (double)(end-start)/convertToMS;
     totalTime = totalTime+ kernelTime;
     status = clReleaseKernel(initd_level_kernel);
+    cl_kernel initIndexd_level_kernel = clCreateKernel(program,"initIndexd_level_kernel",&status);
+    status = clSetKernelArg(initIndexd_level_kernel, 0, sizeof(cl_mem), (void *)&d_level);
+    status = clSetKernelArg(initIndexd_level_kernel, 1, sizeof(int), (void*)&src);
+    status = clEnqueueNDRangeKernel(command_queue, initIndexd_level_kernel, 1,NULL, &global_size1, &local_size1, 0, NULL, &event); clWaitForEvents(1,&event);
+    status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, NULL);
+    status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, NULL);
+    kernelTime = (double)(end-start)/convertToMS;
+    totalTime = totalTime+ kernelTime;
     finished = 1;
     hops_from_source = 0;
     While(finished)
@@ -244,7 +249,8 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
       status = clSetKernelArg(fwd_pass_kernel, 6, sizeof(cl_mem), (void *)&d_finished);
       status = clSetKernelArg(fwd_pass_kernel, 7, sizeof(cl_mem), (void *)&d_sigma);
       status = clSetKernelArg(fwd_pass_kernel, 8, sizeof(cl_mem), (void*)&d_BC);
-      status = clEnqueueNDRangeKernel(command_queue, fwd_pass_kernel, 1, NULL, &global_size, &local_size, 0, NULL, &event);clWaitForEvents(1,&event);
+      status = clEnqueueNDRangeKernel(command_queue, fwd_pass_kernel, 1, NULL, &global_size, &local_size, 0, NULL, &event);
+      clWaitForEvents(1,&event);
       status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, NULL);
       status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, NULL);
       kernelTime = (double)(end-start)/convertToMS;
@@ -262,7 +268,7 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
 
       status  = clEnqueueWriteBuffer(command_queue,d_hops_from_source, CL_TRUE, 0,sizeof(int), &hops_from_source,0,0,NULL);
       //KERNEL Launch
-      cl_kernel back_pass_kernel = clCreateKernel(program,"back_pass", &status);
+      cl_kernel back_pass_kernel = clCreateKernel(program,"back_pass_kernel", &status);
       if(status != CL_SUCCESS)
       {
         cout<<"Failed to create back_pass_kernel"<<endl;
@@ -274,9 +280,12 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
       status = clSetKernelArg(back_pass_kernel, 4, sizeof(cl_mem), (void *)&d_level);
       status = clSetKernelArg(back_pass_kernel, 5, sizeof(cl_mem), (void *)&d_hops_from_source);
       status = clSetKernelArg(back_pass_kernel, 6, sizeof(cl_mem), (void *)&d_finished);
-      status = clSetKernelArg(back_pass_kernel, 7, sizeof(cl_mem), (void *)&d_sigma)
-      status = clSetKernelArg(back_pass_kernel, 8, sizeof(cl_mem), (void *)&d_delta)
-      status = clSetKernelArg(back_pass_kernel, 9, sizeof(cl_mem), (void*)&d_BC);
+      status = clReleaseKernel(fwd_pass_kernel);
+      status = clSetKernelArg(back_pass_kernel, 7, sizeof(cl_mem), (void *)&d_BC)
+      status = clSetKernelArg(back_pass_kernel, 7, sizeof(cl_mem), (void *)&d_BC)
+      status = clSetKernelArg(back_pass_kernel, 8, sizeof(cl_mem), (void *)&d_sigma)
+      status = clSetKernelArg(back_pass_kernel, 9, sizeof(cl_mem), (void *)&d_delta)
+      status = clSetKernelArg(back_pass_kernel, 10, sizeof(cl_mem), (void*)&d_BC);
       status = clEnqueueNDRangeKernel(command_queue, back_pass_kernel, 1, NULL, &global_size, &local_size, 0, NULL, &event);
       clWaitForEvents(1,&event);
       status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, NULL);
@@ -308,9 +317,6 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
   status = clReleaseMemObject(d_weight);
   status = clReleaseMemObject(d_rev_meta);
   status = clReleaseMemObject(d_modified_next);
-  status = clReleaseMemObject(d_BC);
-  status = clReleaseMemObject(d_sigma);
-  status = clReleaseMemObject(d_delta);
   status = clFlush(command_queue);
   status = clFinish(command_queue);
   status = clReleaseCommandQueue(command_queue);
