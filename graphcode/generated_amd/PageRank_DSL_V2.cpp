@@ -120,7 +120,7 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
 
   //Creating program from source(Create and build Program)
   cl_program program = clCreateProgramWithSource(context, 1, (const char **)&kernelSource, NULL, &status);
-  printf("Progran created from source, statuc = %d \n", status);
+  printf("Progran created from source, status = %d \n", status);
   status = clBuildProgram(program, number_of_devices, devices, " -I ./", NULL, NULL);
   if(status!=CL_SUCCESS){
     printf(" Program building Failed, status = %d \n ",status);
@@ -144,11 +144,16 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
   status = clSetKernelArg(initpageRank_kernel, 2, sizeof(int), (void*)&V);
   status = clEnqueueNDRangeKernel(command_queue, initpageRank_kernel, 1, NULL, &global_size, &local_size, 0,NULL,&event);
 
+  if(status!=CL_SUCCESS){
+    cout<<"failed to launch initpageRank_kernel kernel"<<endl;
+    exit(0);
+  }
   clWaitForEvents(1,&event);
   status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, NULL);
   status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, NULL);
   kernelTime = (double)(end-start)/convertToMS;
   totalTime = totalTime+ kernelTime;
+
   status = clReleaseKernel(initpageRank_kernel);
   cl_mem d_iterCount = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(int), NULL, &status);
 
@@ -162,12 +167,16 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
 
     //ForAll started here
 
-    status = clEnqueueWriteBuffer(command_queue, d_diff, CL_TRUE, 0, sizeof(float),&diff , 0, NULL, NULL)
+    status = clEnqueueWriteBuffer(command_queue, d_diff, CL_TRUE, 0, sizeof(float),&diff , 0, NULL, NULL);
 
-    status = clEnqueueWriteBuffer(command_queue, d_num_nodes, CL_TRUE, 0, sizeof(float),&num_nodes , 0, NULL, NULL)
+    status = clEnqueueWriteBuffer(command_queue, d_delta, CL_TRUE, 0, sizeof(float),&delta , 0, NULL, NULL);
 
-    status = clEnqueueWriteBuffer(command_queue, d_delta, CL_TRUE, 0, sizeof(float),&delta , 0, NULL, NULL)
-    cl_kernel Compute_PR = clCreateKernel(program, "Compute_PR" , &status);
+    status = clEnqueueWriteBuffer(command_queue, d_num_nodes, CL_TRUE, 0, sizeof(float),&num_nodes , 0, NULL, NULL);
+    cl_kernel Compute_PR = clCreateKernel(program, "Compute_PR_kernel" , &status);
+    if(status != CL_SUCCESS){
+       cout<<"Failed to create Compute_PR Kernel "<<endl;
+      exit(0);
+    }
      status = clSetKernelArg(Compute_PR, 0, sizeof(int), (void *) &V);
      status = clSetKernelArg(Compute_PR, 1, sizeof(int), (void *) &E);
      status = clSetKernelArg(Compute_PR, 2, sizeof(cl_mem), (void *) &d_meta);
@@ -175,20 +184,26 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
      status = clSetKernelArg(Compute_PR, 4, sizeof(cl_mem), (void *) &d_src);
      status = clSetKernelArg(Compute_PR, 5, sizeof(cl_mem), (void *) &d_weight);
      status = clSetKernelArg(Compute_PR, 6, sizeof(cl_mem), (void *) &d_rev_meta);
-     status = clSetKernelArg(Compute_PR, 7, sizeof(cl_mem), (void *) &d_meta);
-     status = clSetKernelArg(Compute_PR, 8, sizeof(float), (void *) &diff);
-     status = clSetKernelArg(Compute_PR, 9, sizeof(float), (void *) &num_nodes);
-     status = clSetKernelArg(Compute_PR, 10, sizeof(float), (void *) &delta);
-     status = clSetKernelArg(Compute_PR, 11, sizeof(cl_mem), (void *) &d_pageRank);
-     status = clSetKernelArg(Compute_PR, 12, sizeof(cl_mem), (void *) &d_pageRank_nxt);
+     status = clSetKernelArg(Compute_PR, 7, sizeof(cl_mem), (void *) &d_diff);
+     status = clSetKernelArg(Compute_PR, 8, sizeof(cl_mem), (void *) &d_delta);
+     status = clSetKernelArg(Compute_PR, 9, sizeof(cl_mem), (void *) &d_num_nodes);
+     status = clSetKernelArg(Compute_PR, 10, sizeof(cl_mem), (void *) &d_pageRank);
+     status = clSetKernelArg(Compute_PR, 11, sizeof(cl_mem), (void *) &d_pageRank_nxt);
     status = clEnqueueNDRangeKernel(command_queue,Compute_PR, 1,NULL, &global_size, &local_size , 0,NULL,&event);
+    if(status!=CL_SUCCESS){
+      cout<<"failed to launch Compute_PR kernel"<<endl;
+      exit(0);
+    }
     clWaitForEvents(1,&event);
     status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, NULL);
     status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, NULL);
     kernelTime = (double)(end-start)/convertToMS;
     totalTime = totalTime+ kernelTime;
 
-    status = cleReleaseKernel(Compute_PR);
+    status = clReleaseKernel(Compute_PR);
+     status = clEnqueueReadBuffer(command_queue, d_diff, CL_TRUE, 0, sizeof(float),&diff , 0, NULL, NULL);
+     status = clEnqueueReadBuffer(command_queue, d_delta, CL_TRUE, 0, sizeof(float),&delta , 0, NULL, NULL);
+     status = clEnqueueReadBuffer(command_queue, d_num_nodes, CL_TRUE, 0, sizeof(float),&num_nodes , 0, NULL, NULL);
     status = clEnqueueCopyBuffer(command_queue, d_pageRank_nxt, d_pageRank, 0, 0, V*sizeof(float), 0, NULL, &event);
     iterCount++;
 
@@ -196,14 +211,14 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
 
   //Free up!! all propVars in this BLOCK!
   status = clReleaseMemObject(d_pageRank_nxt);
-  free(h_pageRank_nxt)
+  free(h_pageRank_nxt);
 
   //TIMER STOP
   printf("Total Kernel time = %lf ms.\n ", totalTime);
 
-  clEnqueueReadBuffer(command_queue, d_beta , CL_TRUE, 0, sizeof(float)*1, beta, 0, NULL, NULL );
-  clEnqueueReadBuffer(command_queue, d_delta , CL_TRUE, 0, sizeof(float)*1, delta, 0, NULL, NULL );
-  clEnqueueReadBuffer(command_queue, d_maxIter , CL_TRUE, 0, sizeof(int)*1, maxIter, 0, NULL, NULL );
+  clEnqueueReadBuffer(command_queue, d_beta , CL_TRUE, 0, sizeof(float)*1, &beta, 0, NULL, NULL );
+  clEnqueueReadBuffer(command_queue, d_delta , CL_TRUE, 0, sizeof(float)*1, &delta, 0, NULL, NULL );
+  clEnqueueReadBuffer(command_queue, d_maxIter , CL_TRUE, 0, sizeof(int)*1, &maxIter, 0, NULL, NULL );
   clEnqueueReadBuffer(command_queue, d_pageRank , CL_TRUE, 0, sizeof(float)*V, pageRank, 0, NULL, NULL );
   //Release openCL objects
   printf("Started releasing Objects\n");

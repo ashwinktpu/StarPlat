@@ -32,11 +32,11 @@ __kernel void initIndexd_level_kernel(__global int* d_level, int src)
   d_level[src] = 0;
 }
 
-__global__ void fwd_pass_kernel(int V, __global int* d_meta, __global int* d_data, __global int* d_weight, __global int* d_level, __global int* d_hops_from_source, __global int* d_finished,__global double* d_sigma,__global double* d_BC)
+__kernel void fwd_pass_kernel(int V, __global int* d_meta, __global int* d_data, __global int* d_weight, __global int* d_level, __global int* d_hops_from_source, __global int* d_finished,__global double* d_sigma,__global double* d_BC)
 {
   unsigned int v = get_global_id(0);
   if(v>= V) return ;
-  if(d_level[v]== (*d_hop_from_source))
+  if(d_level[v]== (*d_hops_from_source))
   {
 
     //ForAll started here
@@ -55,11 +55,11 @@ __global__ void fwd_pass_kernel(int V, __global int* d_meta, __global int* d_dat
     }
   }// end of if block
 } // end of kernel
-__global__ void back_pass_kernel(int V, __global int* d_meta, __global int* d_data, __global int* d_weight, __global int* d_level, __global int* d_hops_from_source, __global int* d_finished,__global graph& d_g,__global double* d_BC,__global std::set<int>& d_sourceSet,__global double* d_sigma,__global double* d_delta,__global double* d_BC)
+__kernel void back_pass_kernel(int V, __global int* d_meta, __global int* d_data, __global int* d_weight, __global int* d_level, __global int* d_hops_from_source, __global int* d_finished,__global double* d_BC,__global double* d_sigma,__global double* d_delta)
 {
   unsigned int v = get_global_id(0);
   if(v>= V) return ;
-  if(d_levle[v]==(*d_hop_from_source)-1)
+  if(d_level[v]==(*d_hops_from_source)-1)
   {
 
     //ForAll started here

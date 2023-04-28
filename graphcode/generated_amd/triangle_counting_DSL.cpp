@@ -96,7 +96,7 @@ void Compute_TC(graph& g)
 
   //ForAll started here
 
-  status = clEnqueueWriteBuffer(command_queue, d_triangle_count, CL_TRUE, 0, sizeof(int),&triangle_count , 0, NULL, NULL)
+  status = clEnqueueWriteBuffer(command_queue, d_triangle_count, CL_TRUE, 0, sizeof(int),&triangle_count , 0, NULL, NULL);
 
   //Reading kernel file
   FILE* kernelfp = fopen("triangle_counting_DSL.cl", "rb"); 
@@ -112,7 +112,7 @@ void Compute_TC(graph& g)
 
   //Creating program from source(Create and build Program)
   cl_program program = clCreateProgramWithSource(context, 1, (const char **)&kernelSource, NULL, &status);
-  printf("Progran created from source, statuc = %d \n", status);
+  printf("Progran created from source, status = %d \n", status);
   status = clBuildProgram(program, number_of_devices, devices, " -I ./", NULL, NULL);
   if(status!=CL_SUCCESS){
     printf(" Program building Failed, status = %d \n ",status);
@@ -126,7 +126,11 @@ void Compute_TC(graph& g)
   global_size = (V + local_size -1)/ local_size * local_size;
   local_size1 = 1;
   global_size1 = 1;
-  cl_kernel Compute_TC = clCreateKernel(program, "Compute_TC" , &status);
+  cl_kernel Compute_TC = clCreateKernel(program, "Compute_TC_kernel" , &status);
+  if(status != CL_SUCCESS){
+     cout<<"Failed to create Compute_TC Kernel "<<endl;
+    exit(0);
+  }
    status = clSetKernelArg(Compute_TC, 0, sizeof(int), (void *) &V);
    status = clSetKernelArg(Compute_TC, 1, sizeof(int), (void *) &E);
    status = clSetKernelArg(Compute_TC, 2, sizeof(cl_mem), (void *) &d_meta);
@@ -134,16 +138,20 @@ void Compute_TC(graph& g)
    status = clSetKernelArg(Compute_TC, 4, sizeof(cl_mem), (void *) &d_src);
    status = clSetKernelArg(Compute_TC, 5, sizeof(cl_mem), (void *) &d_weight);
    status = clSetKernelArg(Compute_TC, 6, sizeof(cl_mem), (void *) &d_rev_meta);
-   status = clSetKernelArg(Compute_TC, 7, sizeof(cl_mem), (void *) &d_meta);
-   status = clSetKernelArg(Compute_TC, 8, sizeof(int), (void *) &triangle_count);
+   status = clSetKernelArg(Compute_TC, 7, sizeof(cl_mem), (void *) &d_triangle_count);
   status = clEnqueueNDRangeKernel(command_queue,Compute_TC, 1,NULL, &global_size, &local_size , 0,NULL,&event);
+  if(status!=CL_SUCCESS){
+    cout<<"failed to launch Compute_TC kernel"<<endl;
+    exit(0);
+  }
   clWaitForEvents(1,&event);
   status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, NULL);
   status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, NULL);
   kernelTime = (double)(end-start)/convertToMS;
   totalTime = totalTime+ kernelTime;
 
-  status = cleReleaseKernel(Compute_TC);
+  status = clReleaseKernel(Compute_TC);
+   status = clEnqueueReadBuffer(command_queue, d_triangle_count, CL_TRUE, 0, sizeof(int),&triangle_count , 0, NULL, NULL);
 
   //TIMER STOP
   printf("Total Kernel time = %lf ms.\n ", totalTime);
