@@ -1,22 +1,20 @@
-#ifndef CU_DSL_CPP_GENERATOR
-#define CU_DSL_CPP_GENERATOR
+#ifndef SYCL_DSL_CPP_GENERATOR
+#define SYCL_DSL_CPP_GENERATOR
 
 #include <cstdio>
-
+#include <unordered_set>
 #include "../../ast/ASTNodeTypes.hpp"
 #include "../dslCodePad.h"
 //~ #include "../../parser/includeHeader.hpp"
-#include "../../analyser/analyserUtil.cpp"
 
-namespace spcuda
+namespace spsycl
 {
   class dsl_cpp_generator
   {
   private:
-    dslCodePad header;
     dslCodePad main;
-    FILE *headerFile;
     FILE *bodyFile;
+
     char *fileName;
 
     int genFuncCount;
@@ -43,7 +41,6 @@ namespace spcuda
       kernelCount = 0;
       gName = new char[25];
 
-      headerFile = NULL;
       bodyFile = NULL;
       fileName = new char[1024];
       currentFunc = NULL;
@@ -64,10 +61,10 @@ namespace spcuda
     void generation_end();
     bool openFileforOutput();
     void closeOutputFile();
-    const char *convertToCppType(Type *type);
+    const char *convertToCppType(Type *type, bool isElementOfProp);
     const char *getOperatorString(int operatorId);
     void generateFunc(ASTNode *proc);
-    void generateFuncHeader(Function *proc, bool isMainFile);
+    void generateFuncHeader(Function *proc);
     void generateProcCall(proc_callStmt *procCall, bool isMainFile);
     void generateVariableDecl(declaration *decl, bool isMainFile);
     void generateStatement(statement *stmt, bool isMainFile);
@@ -147,50 +144,42 @@ namespace spcuda
 
     // for algorithm specific function implementation headers
 
-    void generateCSRArrays(const char *, Function *);
-    void generateInitkernel(const char *name);
-    void generateLaunchConfig(const char *name);
-    void generateCudaDeviceSync();
-    void generateForKernel();
-    void generateForKernel(Identifier *);
-    void generateCudaIndex(const char *idName);
-    void generateCudaMemCpySymbol(char *var, const char *typeStr, bool direction);
-    void generateCudaMalloc(Type *type, const char *identifier);
-    void generateCudaMallocStr(const char *dVar, const char *type,
-                               const char *sizeOfType);
-    void generateThreadId(const char *str);
-    void generateFuncBody(Function *proc, bool isMainFile);
+    void generatePrintAnswer();
+    void generateGPUTimerStop();
+    void generateGPUTimerStart();
+    void generateMemCpyStr(const char *, const char *, const char *, const char *);
+    void generateInitkernel1(assignment *, bool, bool);
 
     void generateInitkernelStr(const char *inVarType, const char *inVarName, const char *initVal);
 
     void generateCSRArrays(const char *);
     void generateInitkernel(const char *name);
-    void generateLaunchConfig(const char *name);
+    void generateLaunchConfig();
     void generateCudaDeviceSync();
     void generateForKernel();
     void generateForKernel(Identifier *);
     void generateCudaIndex(const char *idName);
-    void generateCudaMemCpySymbol(char *var, const char *typeStr, bool direction);
-    void generateCudaMalloc(Type *type, const char *identifier);
-    void generateCudaMallocStr(const char *dVar, const char *type,
-                               const char *sizeOfType);
+    void generateMemCpySymbol(char *var, const char *typeStr, bool direction);
+    void generateMallocDevice(Type *type, const char *identifier);
+    void generateMallocDeviceStr(const char *dVar, const char *type,
+                                 const char *sizeOfType);
     void generateThreadId(const char *str);
-    void generateFuncBody(Function *proc, bool isMainFile);
+    void generateFuncBody(Function *proc);
 
     void generateStartTimer();
     void generateStopTimer();
 
-    void addCudaRevBFSIterationLoop(iterateBFS *bfsAbstraction);
-    void addCudaBFSIterationLoop(iterateBFS *bfsAbstraction);
+    void addRevBFSIterationLoop(iterateBFS *bfsAbstraction);
+    void addBFSIterationLoop(iterateBFS *bfsAbstraction);
     void generateExtraDeviceVariable(const char *typeStr, const char *dVar, const char *sizeVal);
-    void addCudaBFSIterKernel(iterateBFS *bfsAbstraction);
-    void addCudaRevBFSIterKernel(list<statement *> &revStmtList);
+    void addBFSIterKernel(iterateBFS *bfsAbstraction);
+    void addRevBFSIterKernel(list<statement *> &revStmtList);
     void generateAtomicDeviceAssignmentStmt(assignment *asmt, bool isMainFile);
     void generateDeviceAssignmentStmt(assignment *asmt, bool isMainFile);
-    void addCudaKernel(forallStmt *forAll);
+    void addKernel(forallStmt *forAll);
     void generateCallList(list<formalParam *> paramList, dslCodePad &targetFile);
-    void generateCudaMallocParams(list<formalParam *> paramList);
-    void generateCudaMemCpyParams(list<formalParam *> paramList);
+    void generateMallocDeviceParams(list<formalParam *> paramList);
+    void generateMemCpyParams(list<formalParam *> paramList);
     void generateHeaderDeviceVariable(const char *typeStr, const char *dVar);
     void generateExtraDeviceVariableNoD(const char *typeStr, const char *dVar, const char *sizeVal);
     void generatePropParams(list<formalParam *> paramList, bool isNeedType, bool isMainFile);
@@ -210,5 +199,5 @@ namespace spcuda
   static const char *BOOLALLOCATION = "new bool";
   static const char *FLOATALLOCATION = "new float";
   static const char *DOUBLEALLOCATION = "new double";
-} // namespace spcuda
+} // namespace spsycl
 #endif

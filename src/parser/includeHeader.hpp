@@ -23,6 +23,9 @@
 /* UNCOMMENT IT TO GENERATE FOR  OPENACC BACKEND */
 #include "../backends/backend_openACC/dsl_cpp_generator.h"
 
+/* UNCOMMENT IT TO GENERATE FOR SYCL BACKEND */
+#include "../backends/backend_sycl/dsl_cpp_generator.h"
+
 #include "../symbolutil/SymbolTableBuilder.h"
 
 extern "C" int yyparse (void);
