@@ -16,4 +16,3 @@ jobs:
         
     - name: make
       run: cd src && make cuda
-
