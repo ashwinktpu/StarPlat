@@ -1,0 +1,354 @@
+function oneLevelDelProcessing(Graph g, propNode<float> BC, nodeMap(propNode<int>) bfsDistMem, nodeMap(propNode<double>) sigmaMem,
+nodeMap(propNode<float>) deltaMem, propNode<int> bfsDistNew, propNode<double> sigmaNew, propNode<float> deltaNew,
+int src, propNode<int> direction, nodeMap(propEdge<bool>) modified, container<int> delEdgeIds, nodeMap(propNode<int>) parentMem,
+propNode<bool> isChanged)
+{
+  bool finished = False;
+
+ while(!finished)
+ {
+   finished = true;
+   forall (v in g.nodes().filter(isChanged == True) )
+    {
+     forall (nbr in g.nodes_to(v))
+             {          
+                edge e = g.get_edge(v, nbr);
+                if(nbr.bfsDistNew != INT_MAX/2)
+                {
+                 if(v.bfsDistNew > nbr.bfsDistNew + e.weight)
+                     {
+                        v.bfsDistNew = nbr.bfsDistNew + e.weight;
+                        v.parentMem[src] = nbr;
+                        finished = false;
+                     }
+                }
+             }
+    }
+  } 
+
+   int maxDist = INT_MIN;
+   for(v in g.nodes())
+     {
+       if(v.bfsDistNew != INT_MAX/2 && v.bfsDistNew > maxDist)
+          maxDist = v.bfsDistNew ;
+     }
+
+
+  container<int> levelNodesLater;
+  container<int>(g.num_nodes(), 0) levelCount;
+  container<int> levelVal;
+  container<container<int>>(g.num_nodes()) levelQueues;
+  int phase = 0;
+
+  for(v in g.nodes(). filter(isChanged == true)){
+
+      if(v.bfsDistNew != INT_MAX/2){
+        levelQueues[v.bfsDistNew].push(v); 
+        levelVal.push(v);
+        levelCount[v.bfsDistNew] = levelCount[v.bfsDistNew] + 1;
+        v.direction = 1;
+        v.sigmaNew = 0;
+      }
+    else {
+
+       v.sigmaNew = 0;
+
+       for(nbr in g.nodes_to(v)){
+          if(nbr.bfsDistMem[src] + 1 == v.bfsDistMem[src]) {
+             if(nbr.bfsDistNew  != INT_MAX/2 && nbr.direction == 0){
+                levelQueues[nbr.bfsDistNew].push(nbr);
+                levelVal.push(nbr);
+                levelCount[nbr.bfsDistNew] = levelCount[nbr.bfsDistNew] + 1;
+                nbr.sigmaNew = 0;
+                nbr.direction = 2;
+             }
+
+          }
+       }
+      levelVal.push(v);
+    }  
+  }
+
+
+     container<container<int>>(g.num_nodes()) levelNodesBack; 
+     
+     while(levelVal){
+   
+     forall(v in levelVal){
+       
+       for(w in g.inOutNbrs(v)){
+            
+           edge e = g.get_edge(v, w) ;
+
+           if((((w.bfsDistNew == v.bfsDistNew + 1) && e.modified[src]) || (w.bfsDistMem[src] == v.bfsDistMem[src] + 1)) && w.direction == 0 && e.dir == 1){
+              
+              if(w.direction == 0 && w.bfsDistNew != INT_MAX/2){
+                 w.direction = 1;
+                 levelNodesBack[w.bfsDistNew].push(w);
+                 w.sigmaNew = 0;
+              }
+           }
+           if(e.modified[src]){
+
+             if((w.bfsDistNew == v.bfsDistNew) && (w.bfsDistMem[src] != v.bfsDistMem[src])){
+                w.direction = 1;
+                levelNodesBack[w.bfsDistNew].push(w);
+                w.sigmaNew = 0;
+             }
+           }
+       }
+     }
+
+      levelVal.clear();
+
+      for(j in g.nodes().filter(j < maxDist)){
+          if(levelNodesBack[j]){
+             levelQueues[j].insert(levelNodesBack[j]);
+             levelVal.insert(levelNodesBack[j]);
+             levelCount[j] = levelCount[j] + levelNodesBack[j].size();
+          }
+      }
+    }
+
+
+   phase = 0;
+
+  while(phase <= maxDist){
+
+   if(levelQueues[phase]){
+
+     forall(v in levelQueues[phase]){
+           
+           v.direction = 1;
+           if(v == src)
+              v.sigmaNew = 1;
+           
+           for(w in g.nodes_to(v)){
+
+               edge e = g.get_edge(v, w);
+               if(e.modified[src]){
+                  if(w.bfsDistNew + 1 == v.bfsDistNew){
+                     
+                     v.sigmaNew = w.sigmaNew + 1;
+                  }
+               }     
+           }
+     }
+
+   }
+    phase = phase + 1;
+
+  } 
+
+
+  phase = g.num_nodes() - 1;
+
+  while(phase >= 0){
+    
+    if(levelQueues[phase]){
+
+       forall(w in levelQueues[phase]){
+            w.deltaNew = w.deltaMem[src];
+      
+            for(v in g.neighbors(w)){
+               
+               edge e = g.get_edge(w, v);
+               if((v.bfsDistNew > w.bfsDistNew) || (v.bfsDistMem[src] == w.bfsDistMem[src] + 1)){
+                  
+                  if(e.modified[src]){
+                     
+                     if(v.sigmaNew > 0 && v.bfsDistNew == w.bfsDistNew + 1){
+                        
+                        if(v.direction == 0){
+                          
+                          v.deltaNew = v.deltaMem[src];
+
+                        }
+                      w.deltaNew = w.deltaNew + w.sigmaNew * (1 + v.deltaNew) / v.sigmaNew;
+                     }
+                  }
+                
+                 float alpha = 0;
+
+                 if(v.sigmaMem[src] > 0 && (v.bfsDistMem[src] == w.bfsDistMem[src] + 1)){
+                   
+                   alpha = w.sigmaMem[src] * (1 + v.deltaMem[src]) / v.sigmaMem[src];
+
+                 }
+                 
+                 w.deltaNew = w.deltaNew - alpha;
+               }
+            }   
+          
+        for(v in g.nodes_to(w)){
+            
+            if(v.bfsDistNew < w.bfsDistNew){
+               
+               if(v.direction == 0){
+
+                  v.direction = 2;
+                  v.deltaNew = v.deltaMem[src];
+                  levelNodesBack[v.bfsDistNew].push(v);
+
+               }
+            }
+        }
+       }
+
+
+     for(j in g.nodes(). filter(j < phase)){
+
+         if(levelNodesBack[j]){
+
+            levelQueues[j].insert(levelNodesBack[j]);
+            levelCount[j] = levelCount[j] + levelNodesBack[j].size();
+            levelNodesBack[j].clear();
+         }
+  
+     }
+    }
+
+    phase = phase - 1;
+
+  }
+
+
+}
+
+
+Decremental(Graph g, propNode<float> BC, SetN<g> seeds, nodeMap(propNode<int>) bfsDistMem, nodeMap(propNode<float>) deltaMem,
+nodeMap(propNode<double>) sigmaMem, nodeMap(propNode<node>) parentMem, nodeMap(propEdge<bool>) modified, nodeMap(propNode<bool>) modifiedMem,
+nodeMap(propNode<bool>) bfsModMem,  container<int> delEdgeIds, updates<g> deleteBatch)
+{
+
+  for(seed in seeds) {
+
+  propNode<double> sigmaNew;
+  propNode<int> bfsDistNew;
+  propNode<float> deltaNew;
+  propNode<int> direction;
+  node src = seed;
+
+  g.attachNodeProperty(bfsDistNew = bfsDistMem[src], sigmaNew = sigmaMem[src], deltaNew = 0, direction = 0);
+
+  forall( v in g.nodes().filter(parentMem[src] == -1 && v != src))
+  { 
+      v.bfsDistNew = INT_MAX/2;
+  }
+
+  bool finished = false;
+
+  while(!finished)
+  {
+    finished = false;
+    forall (v in g.nodes().filter(bfsModMem[src] == False) )
+    {
+       node parent_v = v.parentMem[src];
+       if(parent_v>-1 && parent_v.bfsModMem[src])
+           {
+               v.bfsDistNew = INT_MAX/2;
+               v.bfsModMem[src] = True;
+               v.parentMem[src] = -1;
+               finished = false;
+               v.sigmaNew = 0;
+               v.modifiedMem[src] = true;
+           }
+          
+      }
+    }
+
+  propNode<bool> modifiedNodes = modifiedMem[src];
+  oneLevelDelProcessing(g, BC, bfsDistMem, sigmaMem, deltaMem, bfsDistNew, sigmaNew, deltaNew, src, direction, modified,
+                       delEdgeIds, parentMem, modifiedNodes);
+
+  forall(v in g.nodes()) {
+  
+  v.bfsDistMem[src] = v.bfsDistNew;
+  v.sigmaMem[src] = v.sigmaNew;
+
+  if(v.direction != 0)
+     v.deltaMem[src] = v.deltaNew;
+
+  if(v.bfsDistMem[src] == INT_MAX/2)
+     v.deltaMem[src] = 0;   
+
+  }
+ }
+
+}
+
+Dynamic DynBC(Graph g, propNode<float> BC, SetN<g> seeds, updates<g> updateBatch, int batchSize)
+{
+  nodeMap(propNode<int>) bfsDistMem;
+  nodeMap(propNode<float>) deltaMem;
+  nodeMap(propNode<double>) sigmaMem;
+  nodeMap(propNode<node>) parentMem;
+  nodeMap(propNode<bool>) modifiedMem;
+  nodeMap(propNode<bool>) bfsModMem;
+  nodeMap(propEdge<bool>) modified;
+  container<int> delEdgeIds;
+  updates<g> deleteBatch;
+
+  Batch(updateBatch:batchSize)
+    {
+      deleteBatch = updateBatch.currentBatch(0);
+      for(seed in seeds)
+        {
+           propEdge<bool> srcEdgeFilter;
+           propNode<bool> nodeFlag;
+           propNode<bool> dupNodeFlag;
+
+           g.attachEdgeProperty(srcEdgeFilter = true);
+           g.attachNodeProperty(nodeFlag = false, dupNodeFlag = false);
+
+           modifiedMem[seed] = nodeFlag;
+           bfsModMem[seed] = dupNodeFlag;
+           modified[seed] = srcEdgeFilter;
+        }
+
+     OnDelete(u in updateBatch.currentBatch()):
+      {
+         int src = u.source;
+         int dest = u.destination;
+
+         for(seed in seeds)
+           {
+             propNode<int> bfsVal = bfsDistMem[seed];
+             if(dest.bfsVal == src.bfsVal + 1)
+               {
+                 dest.modifiedMem[seed] = True;
+                 if(dest.parentMem[seed] == src)
+                   {
+                     dest.bfsModMem[seed] = True;
+                     dest.parentMem[seed] = -1;
+                   }
+               }
+           }
+
+           for(nbr in g.neighbors(src))
+             {
+                edge e = g.get_edge(src, nbr);
+                if(nbr == dest)
+                  {
+                    for(seed in seeds)
+                       {
+                          e.modified[seed] = false;
+                          delEdgeIds.push(e.id);
+
+                       }
+                  }
+
+             }
+
+      }
+  
+       
+        Decremental(g, BC, seeds, bfsDistMem, deltaMem, sigmaMem, parentMem, modified,
+                   modifiedMem, bfsModMem, delEdgeIds, deleteBatch);
+
+        g.updateCSRDel(updateBatch);        
+
+    }    
+
+
+}

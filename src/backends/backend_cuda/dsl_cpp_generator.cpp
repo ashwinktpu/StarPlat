@@ -1468,13 +1468,20 @@ namespace spcuda
       if (allGraphIteration(iteratorMethodId->getIdentifier()))
       {
         // char* graphId=sourceGraph->getIdentifier();
-        char *methodId = iteratorMethodId->getIdentifier();
-        string s(methodId);
-        if (s.compare("nodes") == 0)
-        {
-          sprintf(strBuffer, "for (%s %s = 0; %s < %s; %s++) {", "int", iterator->getIdentifier(), iterator->getIdentifier(), "V", iterator->getIdentifier());
-          targetFile.pushstr_newL(strBuffer);
-        }
+        // char* methodId=iteratorMethodId->getIdentifier();
+        // string s(methodId);
+        // if(s.compare("nodes")==0)
+        //{
+        // cout<<"INSIDE NODES VALUE"<<"\n";
+        // sprintf(strBuffer,"for (%s %s = 0; %s < %s.%s(); %s ++)
+        // ","int",iterator->getIdentifier(),iterator->getIdentifier(),graphId,"num_nodes",iterator->getIdentifier());
+        //}
+        // else
+        //;
+        // sprintf(strBuffer,"for (%s %s = 0; %s < %s.%s(); %s ++)
+        // ","int",iterator->getIdentifier(),iterator->getIdentifier(),graphId,"num_edges",iterator->getIdentifier());
+
+        // main.pushstr_newL(strBuffer);
       }
       else if (neighbourIteration(iteratorMethodId->getIdentifier()))
       {
@@ -1487,9 +1494,9 @@ namespace spcuda
         {
           list<argument *> argList = extractElemFunc->getArgList();
           assert(argList.size() == 1);
-          Identifier *nodeNbr = argList.front()->getExpr()->getId();
+          //~ Identifier* nodeNbr=argList.front()->getExpr()->getId();
           //~ sprintf(strBuffer,"for (int edge = d_meta[v]; %s < %s[%s+1]; %s++) { // ","int","edge","d_meta","v","edge","d_meta","v","edge");
-          sprintf(strBuffer, "for (%s %s = %s[%s]; %s < %s[%s+1]; %s++) { // FOR NBR ITR ", "int", "edge", "d_meta", nodeNbr->getIdentifier(), "edge", "d_meta", nodeNbr->getIdentifier(), "edge");
+          sprintf(strBuffer, "for (%s %s = %s[%s]; %s < %s[%s+1]; %s++) { // FOR NBR ITR ", "int", "edge", "d_meta", "v", "edge", "d_meta", "v", "edge");
           targetFile.pushstr_newL(strBuffer);
           //~ targetFile.pushString("{");
           sprintf(strBuffer, "%s %s = %s[%s];", "int", iterator->getIdentifier(), "d_data", "edge"); // needs to move the addition of
@@ -1514,28 +1521,28 @@ namespace spcuda
       Identifier* dsCandidate = sourceField->getIdentifier1();
       Identifier* extractId=sourceField->getIdentifier2();
 
-      if(dsCandidate->getSymbolInfo()->getType()->gettypeId()==TYPE_SETN)
-      {
-
-        main.pushstr_newL("std::set<int>::iterator itr;");
-        sprintf(strBuffer,"for(itr=%s.begin();itr!=%s.end();itr++)",dsCandidate->getIdentifier(),dsCandidate->getIdentifier());
-        main.pushstr_newL(strBuffer);
-
-      }
-
-
-      if(elementsIteration(extractId->getIdentifier()))
+        if(dsCandidate->getSymbolInfo()->getType()->gettypeId()==TYPE_SETN)
         {
-          Identifier* collectionName=forAll->getPropSource()->getIdentifier1();
-          int typeId=collectionName->getSymbolInfo()->getType()->gettypeId();
-          if(typeId==TYPE_SETN)
-          {
-            main.pushstr_newL("std::set<int>::iterator itr;");
-            sprintf(strBuffer,"for(itr=%s.begin();itr!=%s.end();itr++)",collectionName->getIdentifier(),collectionName->getIdentifier());
-            main.pushstr_newL(strBuffer);
-          }
 
-        }*/
+          main.pushstr_newL("std::set<int>::iterator itr;");
+          sprintf(strBuffer,"for(itr=%s.begin();itr!=%s.end();itr++)",dsCandidate->getIdentifier(),dsCandidate->getIdentifier());
+          main.pushstr_newL(strBuffer);
+
+        }
+
+
+        if(elementsIteration(extractId->getIdentifier()))
+          {
+            Identifier* collectionName=forAll->getPropSource()->getIdentifier1();
+            int typeId=collectionName->getSymbolInfo()->getType()->gettypeId();
+            if(typeId==TYPE_SETN)
+            {
+              main.pushstr_newL("std::set<int>::iterator itr;");
+              sprintf(strBuffer,"for(itr=%s.begin();itr!=%s.end();itr++)",collectionName->getIdentifier(),collectionName->getIdentifier());
+              main.pushstr_newL(strBuffer);
+            }
+
+          }*/
     }
     else
     {
@@ -1836,8 +1843,7 @@ namespace spcuda
       /*memcpy to symbol*/
 
       main.pushString(getCurrentFunc()->getIdentifier()->getIdentifier());
-      main.pushString("_kernel_");
-      main.pushString(to_string(cnt_kernels).c_str());
+      main.pushString("_kernel");
       main.pushString("<<<");
       main.pushString("numBlocks, threadsPerBlock");
       main.pushString(">>>");
@@ -1876,7 +1882,8 @@ namespace spcuda
           }
         }
       }
-      main.pushString(");");
+      main.pushString(")");
+      main.push(';');
       main.NewLine();
 
       main.pushString("cudaDeviceSynchronize();");

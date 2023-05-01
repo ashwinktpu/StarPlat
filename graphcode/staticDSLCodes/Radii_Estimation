@@ -1,0 +1,59 @@
+function rad(Graph g, node k)
+{
+    propNode<int> visited;
+    propNode<int> n_visited;
+    propNode<bool> old_front;
+    propNode<bool> new_front;
+    propNode<int> Radii;
+    int round = 0;
+    int j = 1;
+    int t = 0;
+    int co = 0;
+    g.attachNodeProperty(visited = 0,n_visited = 0,Radii = -1,old_front = False,new_front = False);
+
+
+    while(co<k)
+    {
+        co.old_front = True;
+        co.Radii = 0;
+        co.visited = j;
+        j = j * 2;
+        co++;
+    }
+    bool finished = False;
+    fixedPoint until (finished : old_front)
+    {
+        round = round + 1;
+
+        forall(u in g.nodes().filter(old_front == True))
+        {
+            forall(v in g.neighbors(u))
+            {
+                if(u.visited != v.visited)
+                {
+                        v.n_visited = u.visited || v.visited;
+                    
+                        <v.Radii, v.old_front> = <Min(v.Radii,round), True>;
+
+                }
+            }
+        }
+        
+
+        forall(u in g.nodes().filter(old_front == True))
+        {
+            u.n_visited = u.n_visited || u.visited;
+        }
+
+        forall(u in g.nodes())
+        {
+            int t = u.visited;
+            u.visited = u.n_visited;
+            u.n_visited = t;
+        }
+    }
+}
+
+
+
+

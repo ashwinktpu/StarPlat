@@ -434,6 +434,9 @@ void deviceVarsAnalyser::analyseFunc(ASTNode *proc)
     paramVars.push_back(fParam->getIdentifier());
   }
   initStatement(func->getBlockStatement(), paramVars);
+  for (Identifier* id: gpuUsedVars.getVariables()) {
+    id->getSymbolInfo()->setInParallelSection(true);
+  }
 
   lattice inpLattice;
   for(Identifier* iden: paramVars){
