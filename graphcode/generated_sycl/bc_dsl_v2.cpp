@@ -97,15 +97,14 @@ void Compute_BC(graph &g, float *BC, std::set<int> &sourceSet)
     for (; i < V; i += stride) d_BC[i] = (float)0; }); })
       .wait();
 
-  // Generate for all statement
   // for all else part
   // FOR SIGNATURE of SET - Assumes set for on .cu only
   std::set<int>::iterator itr;
   for (itr = sourceSet.begin(); itr != sourceSet.end(); itr++)
   {
     int src = *itr;
-    float *d_sigma;
-    d_sigma = malloc_device<float>(V, Q);
+    double *d_sigma;
+    d_sigma = malloc_device<double>(V, Q);
 
     float *d_delta;
     d_delta = malloc_device<float>(V, Q);
@@ -119,12 +118,12 @@ void Compute_BC(graph &g, float *BC, std::set<int> &sourceSet)
     Q.submit([&](handler &h)
              { h.parallel_for(NUM_THREADS, [=](id<1> i)
                               {
-  for (; i < V; i += stride) d_sigma[i] = (float)0; }); })
+  for (; i < V; i += stride) d_sigma[i] = (double)0; }); })
         .wait();
 
     Q.submit([&](handler &h)
              { h.single_task([=]()
-                             { d_sigma[src] = (float)1; }); })
+                             { d_sigma[src] = (double)1; }); })
         .wait(); // InitIndexDevice
 
     // EXTRA vars for ITBFS AND REVBFS
@@ -165,7 +164,6 @@ for (; i < V; i += stride) d_level[i] = (int)-1; }); })
                { h.parallel_for(NUM_THREADS, [=](id<1> v)
                                 {for (; v < V; v += NUM_THREADS){
 if(d_level[v] == *d_hops_from_source) {
-// Generate for all statement
 // for all else part
 for (int edge = d_meta[v]; edge < d_meta[v+1]; edge++) { // FOR NBR ITR 
 int w = d_data[edge];
@@ -175,7 +173,7 @@ if(d_level[w] == -1) {
 }
 if(d_level[w] == *d_hops_from_source + 1) {
   // atomic update
-  atomic_ref<float, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data(d_sigma[w]);
+  atomic_ref<double, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data(d_sigma[w]);
   atomic_data +=  d_sigma[v];
 
 }
@@ -210,7 +208,6 @@ if(d_level[w] == *d_hops_from_source + 1) {
                { h.parallel_for(NUM_THREADS, [=](id<1> v)
                                 {for (; v < V; v += NUM_THREADS){
 if(d_level[v] == *d_hops_from_source-1) {
-// Generate for all statement
 // for all else part
 for (int edge = d_meta[v]; edge < d_meta[v+1]; edge++) { // FOR NBR ITR 
 int w = d_data[edge];
@@ -230,7 +227,7 @@ d_BC[v] = d_BC[v] + d_delta[v];
           .wait();
     }
 
-    // cudaFree up!! all propVars in this BLOCK!
+    // free up!! all propVars in this BLOCK!
     free(d_delta, Q);
     free(d_sigma, Q);
   }
