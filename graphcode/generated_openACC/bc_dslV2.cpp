@@ -2,10 +2,11 @@
 
 void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
 {
+  int* edgeWeight = g.getEdgeLen(); // shallow copy of edge weight
 
   #pragma acc data copyin(g)
   {
-    #pragma acc data copyout( BC[0: g.num_nodes()] )
+    #pragma acc data copyout(BC[0: g.num_nodes()]) copyin()
     {
       #pragma acc parallel loop
       for (int t = 0; t < g.num_nodes(); t ++) 
@@ -19,13 +20,13 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
   for(itr=sourceSet.begin();itr!=sourceSet.end();itr++)
   {
     int src = *itr;
-    double* sigma=new double[g.num_nodes()];
+    float* sigma=new float[g.num_nodes()];
     int* bfsDist=new int[g.num_nodes()];
     float* delta=new float[g.num_nodes()];
 
     #pragma acc data copyin(g)
     {
-      #pragma acc data copyout( delta[0: g.num_nodes()], bfsDist[0: g.num_nodes()] )
+      #pragma acc data copyout(delta[0: g.num_nodes()]) copyin()
       {
         #pragma acc parallel loop
         for (int t = 0; t < g.num_nodes(); t ++) 
@@ -39,7 +40,7 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
 
     #pragma acc data copyin(g)
     {
-      #pragma acc data copyout( sigma[0: g.num_nodes()] )
+      #pragma acc data copyout() copyin()
       {
         #pragma acc parallel loop
         for (int t = 0; t < g.num_nodes(); t ++) 
@@ -49,7 +50,7 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
       }
     }
 
-    bfsDist[src] = 0;
+    bfsDist[src] = -1;
     sigma[src] = 1;
     int* level = new int[g.num_nodes()];
     int dist_from_source = 0;
@@ -61,7 +62,7 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
       #pragma acc data copy(level[0:g.num_nodes()])
       {
         #pragma acc parallel loop
-        for(int int t=0; t<g.num_nodes(); t++)
+        for(int t=0; t<g.num_nodes(); t++)
         {
           level[t] = -1;
         }
@@ -72,7 +73,7 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
     level[src] = 0;
     #pragma acc data copyin(g)
     {
-      #pragma acc copyin(src, offset[0:g.num_nodes()+1], edge_array[0:g.num_edges()]) copy(delta[0:g.num_nodes()], sigma[0:g.num_nodes()], level[0:g.num_nodes()], BC[0:g.num_nodes()])
+      #pragma acc data copyin(g.indexofNodes[0:g.num_nodes()+1], g.edgeList[0:g.num_edges()+1], g.edgeWeight[0:g.num_edges()+1])
       {
         do
         {
@@ -85,7 +86,8 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
               if(level[v] == dist_from_source)
               {
                 for (int edge = g.indexofNodes[v]; edge < g.indexofNodes[v+1]; edge ++) 
-                {int w = g.edgeList[edge] ;
+                {
+                  int w = g.edgeList[edge] ;
                   if(level[w] == -1)
                   {
                     level[w] = dist_from_source + 1;
@@ -116,9 +118,11 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
               if( level[v] == dist_from_source-1 )
               {
                 for (int edge = g.indexofNodes[v]; edge < g.indexofNodes[v+1]; edge ++) 
-                {int w = g.edgeList[edge] ;
+                {
+                  int w = g.edgeList[edge] ;
                   if(level[w] == dist_from_source)
                   {
+                    #pragma acc atomic update
                     delta[v] = delta[v] + (sigma[v] / sigma[w]) * (1 + delta[w]);
                   }
                 }

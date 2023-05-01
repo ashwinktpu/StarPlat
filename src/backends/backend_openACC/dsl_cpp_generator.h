@@ -6,6 +6,9 @@
 #include "../../ast/ASTNodeTypes.hpp"
 //~ #include "../../parser/includeHeader.hpp"
 #include "../dslCodePad.h"
+#include "../../analyser/analyserUtil.cpp"
+#include "../../analyser/blockVars/blockVarsAnalyser.h"
+#include <set>
 
 namespace spacc {
 class dsl_cpp_generator {
@@ -28,6 +31,8 @@ class dsl_cpp_generator {
   bool insidePreprocessEnv;
   bool insideBatchBlock;
   bool isOptimized;
+  set<TableEntry*> currAccVars;    // Variables that are currently available in the accelerator
+  MetaDataUsed currMetaAccVars;    // Meta Variables that are currently available in the accelerator
 
  public:
   dsl_cpp_generator() {
@@ -43,6 +48,8 @@ class dsl_cpp_generator {
     insideBatchBlock = false;
     insidePreprocessEnv = false;
     isOptimized = false;
+    currAccVars.clear();
+    currMetaAccVars = MetaDataUsed();
   }
 
   void setFileName(char* f);
@@ -107,7 +114,10 @@ class dsl_cpp_generator {
   void generateFixedPointUpdate(PropAccess* propId);
   bool checkFixedPointAssociation(PropAccess* propId);
   void checkAndGenerateFixedPtFilter(forallStmt* forAll);
-  void setOptimized() { isOptimized = true; }
+  void setOptimized();
+  void generateDataDirectiveForMetaVars(MetaDataUsed);
+  void generateDataDirectiveForStatment(statement*);
+  void generateDataDirectiveForVars(set<TableEntry*>, int);
 };
 
 static const char* INTALLOCATION = "new int";

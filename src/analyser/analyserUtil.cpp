@@ -11,7 +11,10 @@ enum variable_type
 {
     READ = 1,
     WRITE,
-    READ_WRITE
+    READ_WRITE,
+    READ_ONLY, 
+    WRITE_ONLY,
+    READ_AND_WRITE
 };
 
 /*
@@ -72,6 +75,8 @@ public:
 
     void addVariable(Identifier *iden, int type)
     {
+        if (iden->getSymbolInfo() == NULL)  // To not include the iterators in the list
+            return;
         if (type & 1)
             readVars.insert({iden->getSymbolInfo(), iden});
         if (type & 2)
@@ -152,6 +157,30 @@ public:
                 result.push_back(iden.second);
             
             for (pair<TableEntry *, Identifier *> iden : writeVars)
+            {
+                if(readVars.find(iden.first) == readVars.end())
+                    result.push_back(iden.second);
+            }
+        }
+        else if(type == READ_AND_WRITE)
+        {
+            for (pair<TableEntry *, Identifier *> iden: writeVars)
+            {
+                if(readVars.find(iden.first) != readVars.end())
+                    result.push_back(iden.second);
+            }
+        }
+        else if(type == READ_ONLY)
+        {
+            for (pair<TableEntry *, Identifier *> iden : readVars)
+            {
+                if(writeVars.find(iden.first) == writeVars.end())
+                    result.push_back(iden.second);
+            }
+        }
+        else if(type == WRITE_ONLY)
+        {
+            for (pair<TableEntry *, Identifier *> iden: writeVars)
             {
                 if(readVars.find(iden.first) == readVars.end())
                     result.push_back(iden.second);
