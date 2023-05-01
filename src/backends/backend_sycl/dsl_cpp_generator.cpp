@@ -84,7 +84,6 @@ namespace spsycl
             if (targetType->isPrimitiveType())
             {
                 int typeId = targetType->gettypeId();
-                //~ cout << "TYPEID IN CPP" << typeId << "\n";
                 switch (typeId)
                 {
                 case TYPE_INT:
@@ -108,7 +107,6 @@ namespace spsycl
             if (targetType->isPrimitiveType())
             {
                 int typeId = targetType->gettypeId();
-                //~ cout << "TYPEID IN CPP" << typeId << "\n";
                 switch (typeId)
                 {
                 case TYPE_INT:
@@ -163,10 +161,8 @@ namespace spsycl
 
         main.pushstr_newL("printf(\"#nodes:%d\\n\",V);");
         main.pushstr_newL("printf(\"#edges:\%d\\n\",E);");
-        //~ main.pushstr_newL("printf(\"#srces:\%d\\n\",sourceSet.size()); /// TODO get from var");
 
-        sprintf(strBuffer, "int* edgeLen = %s.getEdgeLen();",
-                gId); // assuming DSL  do not contain variables as V and E
+        sprintf(strBuffer, "int* edgeLen = %s.getEdgeLen();", gId); // assuming DSL  do not contain variables as V and E
         main.pushstr_newL(strBuffer);
         main.NewLine();
 
@@ -260,26 +256,19 @@ namespace spsycl
     void dsl_cpp_generator::generateMallocDeviceStr(const char *dVar, const char *typeStr, const char *sizeOfType)
     {
         char strBuffer[1024];
-        // dVar=malloc_device<type>(V, Q);
         sprintf(strBuffer, "%s=malloc_device<%s>(%s, Q);", dVar, typeStr, sizeOfType);
         main.pushstr_newL(strBuffer);
-        //~ main.NewLine();
     }
 
     // Only for device variables
     void dsl_cpp_generator::generateMallocDevice(Type *type, const char *identifier)
     {
         char strBuffer[1024];
-        //~ Type* targetType = type->getInnerTargetType();
-        // cudaMalloc(&d_ nodeVal ,sizeof( int ) * V );
-        //                   1             2      3
-        // dVar=malloc_device<type>(V, Q);
         sprintf(strBuffer, "d_%s=malloc_device<%s>(%s, Q);", identifier,
                 convertToCppType(type->getInnerTargetType()),
                 (type->isPropNodeType())
                     ? "V"
-                    : "E"); // this assumes PropNode type  IS PROPNODE? V : E //else
-                            // might error later
+                    : "E"); // this assumes PropNode type  IS PROPNODE? V : E
 
         main.pushstr_newL(strBuffer);
         main.NewLine();
@@ -309,9 +298,6 @@ namespace spsycl
 
     void dsl_cpp_generator::generateMemCpyStr(const char *sVarName, const char *tVarName, const char *type, const char *sizeV)
     {
-        // Q.submit([&](handler &h)
-        //      { h.memcpy(d_data, h_data, sizeof(T) * N); })
-        //.wait();
         char strBuffer[1024];
         sprintf(strBuffer, "Q.submit([&](handler &h)");
         main.pushstr_newL(strBuffer);
@@ -370,8 +356,6 @@ namespace spsycl
             }
         }
 
-        // sprintf(strBuffer, "default_selector d_selector;");
-        // main.pushstr_newL(strBuffer);
         sprintf(strBuffer, "queue Q(default_selector_v);");
         main.pushstr_newL(strBuffer);
         sprintf(strBuffer, "std::cout << \"Selected device: \" << Q.get_device().get_info<info::device::name>() << std::endl;");
@@ -428,8 +412,6 @@ namespace spsycl
 
     void dsl_cpp_generator::castIfRequired(Type *type, Identifier *methodID, dslCodePad &main)
     {
-        /* This needs to be made generalized, extended for all predefined function,
-            made available by the DSL*/
         string predefinedFunc("num_nodes");
         if (predefinedFunc.compare(methodID->getIdentifier()) == 0)
         {
@@ -581,7 +563,6 @@ namespace spsycl
             list<argument *> argList = proc->getArgList();
             assert(argList.size() == 1);
             Identifier *nodeId = argList.front()->getExpr()->getId();
-            //~ Identifier* objectId = proc->getId1();
             sprintf(strBuffer, "(%s[%s+1]-%s[%s])", "d_meta", nodeId->getIdentifier(), "d_meta", nodeId->getIdentifier());
             main.pushString(strBuffer);
         }
@@ -691,7 +672,7 @@ namespace spsycl
             if (type->getInnerTargetType()->isPrimitiveType())
             {
                 Type *innerType = type->getInnerTargetType();
-                main.pushString(convertToCppType(innerType)); // convertToCppType need to be modified.
+                main.pushString(convertToCppType(innerType));
                 main.pushString("*");
                 main.space();
                 main.pushString("d_");
@@ -848,10 +829,6 @@ namespace spsycl
                 main.push('[');
                 main.pushString(propId->getIdentifier1()->getIdentifier());
                 main.push(']');
-                // main.pushString("atomic_data += (");
-                // sprintf(strBuffer, "%s_new);", stmt->getAssignedId()->getIdentifier());
-                // main.pushstr_newL(strBuffer);
-                // main.pushString("atomicAdd(&");
                 isAtomic = true;
                 std::cout << "\t  ATOMIC ASST" << '\n';
             }
@@ -917,19 +894,15 @@ namespace spsycl
     {
         flag_for_device_variable = 1; // done for PR fix
         main.pushstr_newL("do{");
-        //~ targetFile.pushString("{");
         generateStatement(doWhile->getBody(), isMainFile);
-        //~ targetFile.pushString("}");
         main.pushString("}while(");
         generateExpr(doWhile->getCondition(), isMainFile);
         main.pushstr_newL(");");
     }
 
-    void dsl_cpp_generator::generateCudaMemCpySymbol(char *var, const char *typeStr, bool direction)
+    void dsl_cpp_generator::generateMemCpySymbol(char *var, const char *typeStr, bool direction)
     {
         char strBuffer[1024];
-        // cudaMalloc(&d_ nodeVal ,sizeof( int ) * V );
-        //                   1             2      3
         if (direction)
         {
             sprintf(strBuffer, "%s *d_%s = malloc_device<%s>(1, Q);", typeStr, var, typeStr);
@@ -985,7 +958,7 @@ namespace spsycl
         return newBlock;
     }
 
-    void dsl_cpp_generator::addCudaKernel(forallStmt *forAll)
+    void dsl_cpp_generator::addKernel(forallStmt *forAll)
     {
         Identifier *iterator = forAll->getIterator();
         const char *loopVar = iterator->getIdentifier();
@@ -1003,8 +976,6 @@ namespace spsycl
             blockStatement *changedBody = includeIfToBlock(forAll);
             cout << "============CHANGED BODY  TYPE==============" << (changedBody->getTypeofNode() == NODE_BLOCKSTMT);
             forAll->setBody(changedBody);
-            // cout<<"FORALL BODY
-            // TYPE"<<(forAll->getBody()->getTypeofNode()==NODE_BLOCKSTMT);
         }
 
         statement *body = forAll->getBody();
@@ -1054,8 +1025,6 @@ namespace spsycl
 
     void dsl_cpp_generator::generateForAllSignature(forallStmt *forAll, bool isMainFile)
     {
-        cout << "GenerateForAllSignature = " << isMainFile << endl;
-
         char strBuffer[1024];
         Identifier *iterator = forAll->getIterator();
 
@@ -1122,7 +1091,6 @@ namespace spsycl
 
     void dsl_cpp_generator::generateForAll(forallStmt *forAll, bool isMainFile)
     {
-        main.pushstr_newL("// Generate for all statement");
         proc_callExpr *extractElemFunc = forAll->getExtractElementFunc();
         PropAccess *sourceField = forAll->getPropSource();
         Identifier *sourceId = forAll->getSource();
@@ -1158,7 +1126,7 @@ namespace spsycl
 
                     if (type->isPrimitiveType() && (fixedPointVariables.find(iden->getIdentifier()) == fixedPointVariables.end()))
                     {
-                        generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), true);
+                        generateMemCpySymbol(iden->getIdentifier(), convertToCppType(type), true);
                     }
 
                     /*else if(type->isPropType())
@@ -1170,7 +1138,7 @@ namespace spsycl
                 }
             }
 
-            addCudaKernel(forAll);
+            addKernel(forAll);
 
             if (!isOptimized)
             {
@@ -1180,7 +1148,7 @@ namespace spsycl
                 {
                     Type *type = iden->getSymbolInfo()->getType();
                     if (type->isPrimitiveType())
-                        generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), false);
+                        generateMemCpySymbol(iden->getIdentifier(), convertToCppType(type), false);
                     /*else if(type->isPropType())
                     {
                         Type* innerType = type->getInnerTargetType();
@@ -1245,13 +1213,7 @@ namespace spsycl
                         Identifier *nodeNbr = argList.front()->getExpr()->getId();
                         nbrVar = nodeNbr->getIdentifier();
                         std::cout << "V?:" << nbrVar << '\n';
-                        //~ sprintf(strBuffer, "for(int i = d_meta[%s], end = d_meta[%s+1]; i < end; ++i)", nbrVar, nbrVar);
-                        //~ targetFile.pushstr_newL(strBuffer);
 
-                        // HAS ALL THE STMTS IN FOR
-                        //~ targetFile.pushstr_newL("{"); // uncomment after fixing NBR FOR brackets } issues.
-                        //~ sprintf(strBuffer, "int %s = d_data[i];", wItr);
-                        //~ targetFile.pushstr_newL(strBuffer);
                         sprintf(strBuffer, "if(d_level[%s] == *d_hops_from_source) {", wItr);
                         main.pushstr_newL(strBuffer);
                         generateBlock((blockStatement *)forAll->getBody(), false, false);
@@ -1278,8 +1240,7 @@ namespace spsycl
                 { // FOR SET
                     if (body->getTypeofNode() == NODE_BLOCKSTMT)
                     {
-                        main.pushstr_newL("{"); // uncomment after fixing NBR FOR brackets } issues.
-                        //~ targetFile.pushstr_newL("//HERE");
+                        main.pushstr_newL("{");
                         printf("FOR");
                         sprintf(strBuffer, "int %s = *itr;", forAll->getIterator()->getIdentifier());
                         main.pushstr_newL(strBuffer);
@@ -1309,30 +1270,7 @@ namespace spsycl
         //~ char strBuffer[1024];
         if (lhs->isIdentifierExpr())
         {
-            //~ Identifier* filterId = lhs->getId();
-            //~ TableEntry* tableEntry = filterId->getSymbolInfo();
-            /*
-            if(tableEntry->getId()->get_fp_association())
-            {
-                targetFile.pushstr_newL("#pragma omp for");
-                sprintf(strBuffer,"for (%s %s = 0; %s < %s.%s(); %s ++)
-            ","int","v","v",graphId[0]->getIdentifier(),"num_nodes","v");
-                targetFile.pushstr_newL(strBuffer);
-                targetFile.pushstr_space("{");
-                sprintf(strBuffer,"%s[%s] =  %s_nxt[%s]
-            ;",filterId->getIdentifier(),"v",filterId->getIdentifier(),"v");
-                targetFile.pushstr_newL(strBuffer);
-                Expression* initializer =
-            filterId->getSymbolInfo()->getId()->get_assignedExpr();
-                assert(initializer->isBooleanLiteral());
-                sprintf(strBuffer,"%s_nxt[%s] = %s
-            ;",filterId->getIdentifier(),"v",initializer->getBooleanConstant()?"true":"false");
-                targetFile.pushstr_newL(strBuffer);
-                targetFile.pushstr_newL("}");
-                targetFile.pushstr_newL("}");
-
-            }
-            */
+            // TODO
         }
     }
 
@@ -1404,14 +1342,14 @@ namespace spsycl
                     main.pushString(strBuffer);
                     main.pushstr_newL(";");
 
-                    generateCudaMemCpySymbol(fixPointVar, fixPointVarType, true);
+                    generateMemCpySymbol(fixPointVar, fixPointVarType, true);
 
                     if (fixedPointConstruct->getBody()->getTypeofNode() != NODE_BLOCKSTMT)
                         generateStatement(fixedPointConstruct->getBody(), isMainFile);
                     else
                         generateBlock((blockStatement *)fixedPointConstruct->getBody(), false, isMainFile);
 
-                    generateCudaMemCpySymbol(fixPointVar, fixPointVarType, false);
+                    generateMemCpySymbol(fixPointVar, fixPointVarType, false);
 
                     main.pushstr_newL("Q.submit([&](handler &h){ h.parallel_for(NUM_THREADS, [=](id<1> i){");
                     sprintf(strBuffer, "for (; i < V; i += stride) d_%s[i] = %s[i]", modifiedVar, modifiedVarNext);
@@ -1513,9 +1451,7 @@ namespace spsycl
 
                 sprintf(strBuffer, " > %s_new)", stmt->getAssignedId()->getIdentifier());
                 main.pushstr_newL(strBuffer);
-                main.pushstr_newL("{"); // added for testing then doing atomic min.
-                                        /* storing the old value before doing a atomic operation on the node
-                                         * property */
+                main.pushstr_newL("{");
 
                 if (stmt->isTargetId())
                 {
@@ -1532,11 +1468,6 @@ namespace spsycl
                     Type *type = targetProp->getIdentifier2()->getSymbolInfo()->getType();
                     if (type->isPropType())
                     {
-                        // targetFile.pushstr_space(convertToCppType(type->getInnerTargetType()));
-                        // targetFile.pushstr_space("oldValue");
-                        // targetFile.pushstr_space("=");
-                        // generate_exprPropId(stmt->getTargetPropId(), isMainFile);
-                        // targetFile.pushstr_newL(";");
                     }
                 }
 
@@ -1582,12 +1513,9 @@ namespace spsycl
                         sprintf(strBuffer, "*d_%s = %s ;", fpId, "false");
                         std::cout << "FPID ========> " << fpId << '\n';
                         main.pushstr_newL(strBuffer);
-                        //~ targetFile.pushstr_newL("}");  // needs to be removed
-                        //~ targetFile.pushstr_newL("}");  // needs to be removed
                     }
                 }
-                // targetFile.pushstr_newL("}");
-                main.pushstr_newL("}"); // added for testing condition..then atomicmin.
+                main.pushstr_newL("}");
             }
         }
     }
@@ -1621,7 +1549,6 @@ namespace spsycl
 
     void dsl_cpp_generator::generateReductionStmt(reductionCallStmt *stmt, bool isMainFile)
     {
-        main.pushstr_newL("// Generate reduction statement");
         if (stmt->is_reducCall())
         {
             generateReductionCallStmt(stmt, isMainFile);
@@ -1632,10 +1559,9 @@ namespace spsycl
         }
     }
 
-    void dsl_cpp_generator::addCudaBFSIterKernel(iterateBFS *bfsAbstraction)
+    void dsl_cpp_generator::addBFSIterKernel(iterateBFS *bfsAbstraction)
     {
         const char *loopVar = "v";
-        //~ const char* nbbrVar = "w";
         char strBuffer[1024];
         statement *body = bfsAbstraction->getBody();
         assert(body->getTypeofNode() == NODE_BLOCKSTMT);
@@ -1655,20 +1581,20 @@ namespace spsycl
         main.NewLine();
     }
 
-    void dsl_cpp_generator::addCudaBFSIterationLoop(iterateBFS *bfsAbstraction)
+    void dsl_cpp_generator::addBFSIterationLoop(iterateBFS *bfsAbstraction)
     {
         main.pushstr_newL("finished = true;"); // there vars are BFS specific
         generateMemCpyStr("d_finished", "&finished", "bool", "1");
         main.NewLine();
         main.pushstr_newL("//Kernel LAUNCH");
 
-        addCudaBFSIterKernel(bfsAbstraction); // KERNEL BODY!!!
+        addBFSIterKernel(bfsAbstraction); // KERNEL BODY!!!
 
         main.pushstr_newL("Q.submit([&](handler &h){ h.single_task([=](){ *d_hops_from_source += 1; }); }).wait();");
         main.pushstr_newL("++hops_from_source; // updating the level to process in the next iteration");
     }
 
-    void dsl_cpp_generator::addCudaRevBFSIterationLoop(iterateBFS *bfsAbstraction)
+    void dsl_cpp_generator::addRevBFSIterationLoop(iterateBFS *bfsAbstraction)
     {
         main.NewLine();
         main.pushstr_newL("hops_from_source--;");
@@ -1676,7 +1602,7 @@ namespace spsycl
         main.NewLine();
     }
 
-    void dsl_cpp_generator::addCudaRevBFSIterKernel(list<statement *> &statementList)
+    void dsl_cpp_generator::addRevBFSIterKernel(list<statement *> &statementList)
     {
         const char *loopVar = "v";
         char strBuffer[1024];
@@ -1708,23 +1634,10 @@ namespace spsycl
     void dsl_cpp_generator::generateBFSAbstraction(iterateBFS *bfsAbstraction, bool isMainFile)
     {
         char strBuffer[1024];
-        //~ add_InitialDeclarations(&main,bfsAbstraction);
-        // printf("BFS ON GRAPH
-        // %s",bfsAbstraction->getGraphCandidate()->getIdentifier()); ~
-        // add_BFSIterationLoop(&main,bfsAbstraction);
-
         statement *body = bfsAbstraction->getBody();
         assert(body->getTypeofNode() == NODE_BLOCKSTMT);
         blockStatement *block = (blockStatement *)body;
         list<statement *> statementList = block->returnStatements();
-
-        //~ bool* d_finished;       cudaMalloc(&d_finished,sizeof(bool) *(1));
-        //~ int* d_hops_from_source;cudaMalloc(&d_hops_from_source, sizeof(int));
-        //~ int* d_level;           cudaMalloc(&d_level,sizeof(int) *(V));
-
-        //~ generateExtraVariable( "bool","d_finished","1");
-        //~ generateExtraVariable( "int","d_hops_from_source","1");
-        //~ generateExtraVariable( "int","d_level","V");
 
         main.NewLine();
         main.pushstr_newL("//EXTRA vars for ITBFS AND REVBFS"); // NOT IN DSL so hardcode is fine
@@ -1750,44 +1663,18 @@ namespace spsycl
         main.pushstr_newL("// long k =0 ;// For DEBUG");
         main.pushstr_newL("do {");
 
-        addCudaBFSIterationLoop(bfsAbstraction); // ADDS BODY OF ITERBFS + KERNEL LAUNCH
+        addBFSIterationLoop(bfsAbstraction); // ADDS BODY OF ITERBFS + KERNEL LAUNCH
 
         main.NewLine();
-
-        //~ for (statement* stmt : statementList) {
-        //~ generateStatement(stmt, false);
-        //~ }
 
         generateMemCpyStr("&finished", "d_finished", "bool", "1");
 
         main.pushstr_newL("}while(!finished);");
-        //~ main.pushstr_newL("}");
-
-        /*
-        main.pushstr_newL("phase = phase + 1 ;");
-       //~ main.pushstr_newL("levelCount[phase] = bfsCount ;");
-        //~ main.pushstr_newL("
-       levelNodes[phase].assign(levelNodes_later.begin(),levelNodes_later.begin()+bfsCount);");
-        sprintf(strBuffer,"for(int %s = 0;%s <
-       %s();%s++)","i","i","omp_get_max_threads","i"); main.pushstr_newL(strBuffer);
-        main.pushstr_newL("{");
-        sprintf(strBuffer,"
-       levelNodes[phase].insert(levelNodes[phase].end(),levelNodes_later[%s].begin(),levelNodes_later[%s].end());","i","i");
-        main.pushstr_newL(strBuffer);
-        sprintf(strBuffer," bfsCount=bfsCount+levelNodes_later[%s].size();","i");
-        main.pushstr_newL(strBuffer);
-        sprintf(strBuffer," levelNodes_later[%s].clear();","i");
-        main.pushstr_newL(strBuffer);
-        main.pushstr_newL("}");
-        main.pushstr_newL(" levelCount[phase] = bfsCount ;");
-        main.pushstr_newL("}");
-        main.pushstr_newL("phase = phase -1 ;");
-        */
 
         blockStatement *
             revBlock = (blockStatement *)bfsAbstraction->getRBFS()->getBody();
         list<statement *> revStmtList = revBlock->returnStatements();
-        addCudaRevBFSIterationLoop(bfsAbstraction);
+        addRevBFSIterationLoop(bfsAbstraction);
 
         main.pushstr_newL("//BACKWARD PASS");
         main.pushstr_newL("while(hops_from_source > 1) {");
@@ -1796,11 +1683,7 @@ namespace spsycl
         main.pushstr_newL("//KERNEL Launch");
 
         main.NewLine();
-        addCudaRevBFSIterKernel(revStmtList); // KERNEL BODY
-
-        //~ for(statement* stmt:revStmtList) {
-        //~ generateStatement(stmt, false);
-        //~ }
+        addRevBFSIterKernel(revStmtList); // KERNEL BODY
 
         main.pushstr_newL("hops_from_source--;");
         generateMemCpyStr("d_hops_from_source", "&hops_from_source", "int", "1");
@@ -1845,7 +1728,6 @@ namespace spsycl
 
         if (x == 0)
         {
-            //~ char strBuffer[1024];
             list<argument *> argList = procedure->getArgList();
             list<argument *>::iterator itr;
 
@@ -1856,18 +1738,10 @@ namespace spsycl
                 if (argList.size() == 1)
                 {
                     generateInitkernel1(assign, isMainFile);
-                    //~ std::cout << "%%%%%%%%%%" << '\n';
-
-                    /// initKernel<double> <<<numBlocks,threadsPerBlock>>>(V,d_BC, 0);
                 }
                 else if (argList.size() == 2)
                 {
-                    //~ std::cout << "===============" << '\n';
                     generateInitkernel1(assign, isMainFile);
-                    //~ std::cout<< "initType:" <<
-                    // convertToCppType(lhsId->getSymbolInfo()->getType()) << '\n'; ~
-                    // std::cout<< "===============" << '\n'; ~
-                    // generateInitkernel1(lhsId,"0"); //TODO
                 }
             }
         }
@@ -1991,7 +1865,7 @@ namespace spsycl
         if (vars.size() > 0)
         {
             main.NewLine();
-            main.pushstr_newL("//cudaFree up!! all propVars in this BLOCK!");
+            main.pushstr_newL("//free up!! all propVars in this BLOCK!");
         }
         for (Identifier *iden : vars)
         {
@@ -2006,7 +1880,7 @@ namespace spsycl
         }
     }
 
-    void dsl_cpp_generator::generateCudaMemCpyParams(list<formalParam *> paramList)
+    void dsl_cpp_generator::generateMemCpyParams(list<formalParam *> paramList)
     {
         list<formalParam *>::iterator itr;
         for (itr = paramList.begin(); itr != paramList.end(); itr++)
@@ -2044,6 +1918,7 @@ namespace spsycl
         else
             decFuncCount++;
     }
+
     void dsl_cpp_generator::generateStopTimer()
     {
         main.pushstr_newL("std::chrono::steady_clock::time_point toc = std::chrono::steady_clock::now();");
@@ -2080,7 +1955,7 @@ namespace spsycl
         generateStopTimer();
         main.NewLine();
 
-        generateCudaMemCpyParams(func->getParamList());
+        generateMemCpyParams(func->getParamList());
         //~ sprintf(strBuffer, "cudaMemcpy(%s,d_%s , sizeof(%s) * (V), cudaMemcpyDeviceToHost);", outVarName, outVarName, outVarType);
 
         //~ main.pushstr_newL(strBuffer);
