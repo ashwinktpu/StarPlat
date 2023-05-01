@@ -159,7 +159,7 @@ namespace spsycl
     void generateForKernel();
     void generateForKernel(Identifier *);
     void generateCudaIndex(const char *idName);
-    void generateCudaMemCpySymbol(char *var, const char *typeStr, bool direction);
+    void generateMemCpySymbol(char *var, const char *typeStr, bool direction);
     void generateMallocDevice(Type *type, const char *identifier);
     void generateMallocDeviceStr(const char *dVar, const char *type,
                                  const char *sizeOfType);
@@ -169,17 +169,17 @@ namespace spsycl
     void generateStartTimer();
     void generateStopTimer();
 
-    void addCudaRevBFSIterationLoop(iterateBFS *bfsAbstraction);
-    void addCudaBFSIterationLoop(iterateBFS *bfsAbstraction);
+    void addRevBFSIterationLoop(iterateBFS *bfsAbstraction);
+    void addBFSIterationLoop(iterateBFS *bfsAbstraction);
     void generateExtraDeviceVariable(const char *typeStr, const char *dVar, const char *sizeVal);
-    void addCudaBFSIterKernel(iterateBFS *bfsAbstraction);
-    void addCudaRevBFSIterKernel(list<statement *> &revStmtList);
+    void addBFSIterKernel(iterateBFS *bfsAbstraction);
+    void addRevBFSIterKernel(list<statement *> &revStmtList);
     void generateAtomicDeviceAssignmentStmt(assignment *asmt, bool isMainFile);
     void generateDeviceAssignmentStmt(assignment *asmt, bool isMainFile);
-    void addCudaKernel(forallStmt *forAll);
+    void addKernel(forallStmt *forAll);
     void generateCallList(list<formalParam *> paramList, dslCodePad &targetFile);
     void generateMallocDeviceParams(list<formalParam *> paramList);
-    void generateCudaMemCpyParams(list<formalParam *> paramList);
+    void generateMemCpyParams(list<formalParam *> paramList);
     void generateHeaderDeviceVariable(const char *typeStr, const char *dVar);
     void generateExtraDeviceVariableNoD(const char *typeStr, const char *dVar, const char *sizeVal);
     void generatePropParams(list<formalParam *> paramList, bool isNeedType, bool isMainFile);
