@@ -116,13 +116,10 @@ void Boruvka(graph &g)
 for (; i < E; i += stride) d_isMSTEdge[i] = (bool)false; }); })
       .wait();
 
-  // Generate for all statement
   Q.submit([&](handler &h)
            { h.parallel_for(NUM_THREADS, [=](id<1> u)
                             {for (; u < V; u += NUM_THREADS){ // BEGIN KER FUN via ADDKERNEL
-// Generate reduction statement
 d_nodeId[u] = d_nodeId[u]+ u + 1;
-// Generate reduction statement
 d_color[u] = d_color[u]+ u + 1;
 } }); })
       .wait(); // end KER FUNC
@@ -164,11 +161,9 @@ for (; i < V; i += stride) d_modified_next[i] = false; }); })
 for (; i < V; i += stride) d_minEdge[i] = (int)-1; }); })
         .wait();
 
-    // Generate for all statement
     Q.submit([&](handler &h)
              { h.parallel_for(NUM_THREADS, [=](id<1> src)
                               {for (; src < V; src += NUM_THREADS){ // BEGIN KER FUN via ADDKERNEL
-// Generate for all statement
 // for all else part
 for (int edge = d_meta[src]; edge < d_meta[src+1]; edge++) { // FOR NBR ITR 
 int dst = d_data[edge];
@@ -222,7 +217,6 @@ for (; i < V; i += stride) d_modified_next[i] = false; }); })
                { h.memcpy(d_finishedMinEdge, &finishedMinEdge, 1 * sizeof(bool)); })
           .wait();
 
-      // Generate for all statement
       Q.submit([&](handler &h)
                { h.parallel_for(NUM_THREADS, [=](id<1> u)
                                 {for (; u < V; u += NUM_THREADS){ // BEGIN KER FUN via ADDKERNEL
@@ -276,7 +270,6 @@ for (; i < V; i += stride) d_modified_next[i] = false; }); })
 
     } // END FIXED POINT
 
-    // Generate for all statement
     Q.submit([&](handler &h)
              { h.parallel_for(NUM_THREADS, [=](id<1> src)
                               {for (; src < V; src += NUM_THREADS){ // BEGIN KER FUN via ADDKERNEL
@@ -302,7 +295,6 @@ d_minEdgeOfComp[dstLead] = -1;
 } }); })
         .wait(); // end KER FUNC
 
-    // Generate for all statement
     Q.submit([&](handler &h)
              { h.parallel_for(NUM_THREADS, [=](id<1> src)
                               {for (; src < V; src += NUM_THREADS){ // BEGIN KER FUN via ADDKERNEL
@@ -317,7 +309,6 @@ d_isMSTEdge[srcMinEdge] = true;
 } }); })
         .wait(); // end KER FUNC
 
-    // Generate for all statement
     Q.submit([&](handler &h)
              { h.parallel_for(NUM_THREADS, [=](id<1> src)
                               {for (; src < V; src += NUM_THREADS){ // BEGIN KER FUN via ADDKERNEL
@@ -357,7 +348,6 @@ for (; i < V; i += stride) d_modified_next[i] = false; }); })
                { h.memcpy(d_finished, &finished, 1 * sizeof(bool)); })
           .wait();
 
-      // Generate for all statement
       Q.submit([&](handler &h)
                { h.parallel_for(NUM_THREADS, [=](id<1> u)
                                 {for (; u < V; u += NUM_THREADS){ // BEGIN KER FUN via ADDKERNEL
@@ -395,7 +385,7 @@ for (; i < V; i += stride) d_modified_next[i] = false; }); })
 
     } // END FIXED POINT
 
-    // cudaFree up!! all propVars in this BLOCK!
+    // free up!! all propVars in this BLOCK!
     free(d_minEdgeOfComp, Q);
     free(d_minEdge, Q);
 
@@ -436,6 +426,10 @@ for (; i < V; i += stride) d_modified_next[i] = false; }); })
   free(d_modified, Q);
   free(d_color, Q);
   free(d_nodeId, Q);
+
+  // TIMER STOP
+  std::chrono::steady_clock::time_point toc = std::chrono::steady_clock::now();
+  std::cout << "Time required: " << std::chrono::duration_cast<std::chrono::microseconds>(toc - tic).count() << "[µs]" << std::endl;
 
 } // end FUN
 

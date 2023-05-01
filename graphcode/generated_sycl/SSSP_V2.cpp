@@ -135,17 +135,14 @@ for (; i < V; i += stride) d_modified_next[i] = false; }); })
              { h.memcpy(d_finished, &finished, 1 * sizeof(bool)); })
         .wait();
 
-    // Generate for all statement
     Q.submit([&](handler &h)
              { h.parallel_for(NUM_THREADS, [=](id<1> v)
                               {for (; v < V; v += NUM_THREADS){ // BEGIN KER FUN via ADDKERNEL
 if (d_modified[v] == true){ // if filter begin 
-// Generate for all statement
 // for all else part
 for (int edge = d_meta[v]; edge < d_meta[v+1]; edge++) { // FOR NBR ITR 
 int nbr = d_data[edge];
 int e = edge;
-// Generate reduction statement
  int dist_new = d_dist[v] + d_weight[e];
 bool modified_new = true;
 if(d_dist[v]!= INT_MAX && d_dist[nbr] > dist_new)
@@ -180,7 +177,7 @@ for (; i < V; i += stride) d_modified_next[i] = false; }); })
 
   } // END FIXED POINT
 
-  // cudaFree up!! all propVars in this BLOCK!
+  // free up!! all propVars in this BLOCK!
   free(d_modified, Q);
 
   // TIMER STOP

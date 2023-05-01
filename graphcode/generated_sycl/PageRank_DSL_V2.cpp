@@ -110,7 +110,6 @@ void Compute_PR(graph &g, float beta, float delta, int maxIter,
   do
   {
     diff = 0.000000;
-    // Generate for all statement
     float *d_delta = malloc_device<float>(1, Q);
     Q.submit([&](handler &h)
              { h.memcpy(d_delta, &delta, 1 * sizeof(float)); })
@@ -131,7 +130,6 @@ void Compute_PR(graph &g, float beta, float delta, int maxIter,
                               {for (; v < V; v += NUM_THREADS){ // BEGIN KER FUN via ADDKERNEL
     float sum = 0.000000; // asst in main
 
-    // Generate for all statement
     // for all else part
     for (int edge = d_rev_meta[v]; edge < d_rev_meta[v+1]; edge++)
     {int nbr = d_src[edge] ;
@@ -140,9 +138,8 @@ void Compute_PR(graph &g, float beta, float delta, int maxIter,
     } //  end FOR NBR ITR. TMP FIX!
     float val = (1 - delta) / num_nodes + delta * sum; // asst in main
 
-    // Generate reduction statement
     atomic_ref<float, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data(d_diff[0]);
-    atomic_data += abs(val - d_pageRank[v]);
+    atomic_data += val - d_pageRank[v];
     d_pageRank_nxt[v] = val;
   } }); })
         .wait(); // end KER FUNC
@@ -168,7 +165,7 @@ for (; i < V; i += stride) d_pageRank[i] = d_pageRank_nxt[i]; }); })
 
   } while ((diff > beta) && (iterCount < maxIter));
 
-  // cudaFree up!! all propVars in this BLOCK!
+  // free up!! all propVars in this BLOCK!
   free(d_pageRank_nxt, Q);
 
   // TIMER STOP

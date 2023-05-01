@@ -91,7 +91,6 @@ void Compute_TC(graph &g)
   // BEGIN DSL PARSING
   long triangle_count = 0; // asst in main
 
-  // Generate for all statement
   long *d_triangle_count = malloc_device<long>(1, Q);
   Q.submit([&](handler &h)
            { h.memcpy(d_triangle_count, &triangle_count, 1 * sizeof(long)); })
@@ -100,18 +99,15 @@ void Compute_TC(graph &g)
   Q.submit([&](handler &h)
            { h.parallel_for(NUM_THREADS, [=](id<1> v)
                             {for (; v < V; v += NUM_THREADS){ // BEGIN KER FUN via ADDKERNEL
-    // Generate for all statement
     // for all else part
     for (int edge = d_meta[v]; edge < d_meta[v+1]; edge++) { // FOR NBR ITR 
       int u = d_data[edge];
       if (u < v){ // if filter begin 
-        // Generate for all statement
         // for all else part
         for (int edge = d_meta[v]; edge < d_meta[v+1]; edge++) { // FOR NBR ITR 
           int w = d_data[edge];
           if (w > v){ // if filter begin 
             if (findNeighborSorted(u, w, d_meta, d_data)){ // if filter begin 
-              // Generate reduction statement
               atomic_ref<long, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data(d_triangle_count[0]);
               atomic_data += 1;
 
