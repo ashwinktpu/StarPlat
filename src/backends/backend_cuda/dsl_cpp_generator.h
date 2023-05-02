@@ -147,23 +147,16 @@ namespace spcuda
 
     // for algorithm specific function implementation headers
 
-    void generateCSRArrays(const char *, Function *);
-    void generateInitkernel(const char *name);
-    void generateLaunchConfig(const char *name);
-    void generateCudaDeviceSync();
-    void generateForKernel();
-    void generateForKernel(Identifier *);
-    void generateCudaIndex(const char *idName);
-    void generateCudaMemCpySymbol(char *var, const char *typeStr, bool direction);
-    void generateCudaMalloc(Type *type, const char *identifier);
-    void generateCudaMallocStr(const char *dVar, const char *type,
-                               const char *sizeOfType);
-    void generateThreadId(const char *str);
-    void generateFuncBody(Function *proc, bool isMainFile);
+    void generatePrintAnswer();
+    void generateGPUTimerStop();
+    void generateGPUTimerStart();
+    void generateCudaMemCpyStr(const char *, const char *, const char *, const char *,
+                               bool);
+    void generateInitkernel1(assignment *, bool);
 
     void generateInitkernelStr(const char *inVarType, const char *inVarName, const char *initVal);
 
-    void generateCSRArrays(const char *);
+    void generateCSRArrays(const char *, Function *);
     void generateInitkernel(const char *name);
     void generateLaunchConfig(const char *name);
     void generateCudaDeviceSync();
