@@ -282,7 +282,7 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
       checkForExpressions(expr);
     }
 
-    if (backend.compare("cuda") == 0 && assign->lhs_isProp())
+    if ((backend.compare("cuda") == 0 || (backend.compare("sycl") == 0)) && assign->lhs_isProp())
     { // This flags device assingments OUTSIDE for
       //~ std::cout<< "varName1: " << assign->getPropId()->getIdentifier1()->getIdentifier() << '\n';
       //~ std::cout<< "varName2: " << assign->getPropId()->getIdentifier2()->getIdentifier() << '\n';
@@ -383,7 +383,7 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
        another forall which is to be generated with
        omp parallel pragma, and then disable the parallel loop*/
 
-    if ((backend.compare("omp") == 0) || (backend.compare("cuda") == 0) || (backend.compare("acc") == 0) || (backend.compare("mpi") == 0))
+    if ((backend.compare("omp") == 0) || (backend.compare("cuda") == 0) || (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0))
     {
       if (parallelConstruct.size() > 0)
       {
@@ -485,7 +485,7 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
 
     //~ delete_curr_SymbolTable();
 
-    if ((backend.compare("omp") == 0 || backend.compare("cuda") == 0 || backend.compare("acc") == 0 || backend.compare("mpi") == 0) && forAll->isForall())
+    if ((backend.compare("omp") == 0 || backend.compare("cuda") == 0 || backend.compare("acc") == 0 || backend.compare("mpi") == 0 || (backend.compare("sycl") == 0)) && forAll->isForall())
     {
       if (forAll->isForall())
       {
@@ -658,7 +658,7 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
     iterateBFS *iBFS = (iterateBFS *)stmt;
     string backend(backendTarget);
 
-    if ((backend.compare("omp") == 0) || (backend.compare("cuda") == 0) || (backend.compare("acc") == 0) || (backend.compare("mpi") == 0))
+    if ((backend.compare("omp") == 0) || (backend.compare("cuda") == 0) || (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0))
 
     {
       parallelConstruct.push_back(iBFS);
@@ -679,7 +679,7 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
       iRevBFS->addAccumulateAssignment();
       buildForStatements(iRevBFS->getBody());
     }
-    if ((backend.compare("omp") == 0) || (backend.compare("cuda") == 0) || (backend.compare("acc") == 0) || (backend.compare("mpi") == 0))
+    if ((backend.compare("omp") == 0) || (backend.compare("cuda") == 0) || (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0))
 
     {
       parallelConstruct.pop_back();
