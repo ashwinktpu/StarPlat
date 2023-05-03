@@ -803,7 +803,11 @@ void dsl_cpp_generator::generateBFSAbstraction(iterateBFS *bfsAbstraction,
 
 void dsl_cpp_generator::  generateStatement(statement *stmt, bool isMainFile)
 {
-  cout <<  "##### " << (*stmt).getType() << endl ; 
+  // char strBuffer[1024];
+  // sprintf(strBuffer,"//%s",(*stmt).getType().c_str());
+  // dslCodePad &targetFile = isMainFile ? main : header;
+  // targetFile.pushstr_newL(strBuffer);
+  cout <<  "##### " << string((*stmt).getType()) << endl ; 
   if (stmt->getTypeofNode() == NODE_BLOCKSTMT)
   {
     generateBlock((blockStatement *)stmt, false, isMainFile);
@@ -1124,7 +1128,7 @@ void dsl_cpp_generator::generateReductionCallStmt(reductionCallStmt *stmt,
       Identifier* id2 = stmt->getTargetPropId()->getIdentifier2();
       Type* type = id2->getSymbolInfo()->getType();
       if(strcmp(globalLoopVar,stmt->getTargetPropId()->getIdentifier1()->getIdentifier())!=0){
-      sprintf(strBuffer,"%s* h_%s1",convertToCppType(type->getInnerTargetType()),id2->getIdentifier());
+      sprintf(strBuffer,"%s* h_%s1;",convertToCppType(type->getInnerTargetType()),id2->getIdentifier());
       main.pushstr_newL(strBuffer);
       main.pushstr_newL("if(devicecount>1){");
       main.pushstr_newL("//push based");
@@ -1256,7 +1260,10 @@ void dsl_cpp_generator::helper(Identifier* iden,Identifier* loopVar)
         if(type->isPropEdgeType()){
           ch1="E-1";
         }
-
+        char* ch2 = "numBlocks";
+        if(type->isPropEdgeType()){
+          ch2 = "numBlocks_Edge";
+        } 
         if(iden->getSymbolInfo()->getId()->get_fp_association()){
           main.pushstr_newL("if(devicecount==1){");
           sprintf(strBuffer,"cudaMemcpy(d_%s[0],d_%s_next[0],sizeof(%s)*(%s),cudaMemcpyDeviceToDevice);",iden->getIdentifier(),iden->getIdentifier(),convertToCppType(type->getInnerTargetType()),ch);
@@ -1317,7 +1324,7 @@ void dsl_cpp_generator::helper(Identifier* iden,Identifier* loopVar)
           sprintf(strBuffer,"cudaMemcpy(d_%s_temp2+i*(%s),h_%s,sizeof(%s)*(%s),cudaMemcpyHostToDevice);",iden->getIdentifier(),ch,iden->getIdentifier(),convertToCppType(type->getInnerTargetType()),ch);
           main.pushstr_newL(strBuffer);
           main.pushstr_newL("}");
-          sprintf(strBuffer,"Compute_correct<%s><<<numBlocks,threadsPerBlock>>>(d_%s_temp1,d_%s_temp2,%s,devicecount);",convertToCppType(type->getInnerTargetType()),iden->getIdentifier(),iden->getIdentifier(),ch1);
+          sprintf(strBuffer,"Compute_correct<%s><<<%s,threadsPerBlock>>>(d_%s_temp1,d_%s_temp2,%s,devicecount);",convertToCppType(type->getInnerTargetType()),ch2,iden->getIdentifier(),iden->getIdentifier(),ch1);
           main.pushstr_newL(strBuffer);
           sprintf(strBuffer,"cudaMemcpy(h_%s,d_%s_temp1,(%s)*sizeof(%s),cudaMemcpyDeviceToHost);",iden->getIdentifier(),iden->getIdentifier(),ch,convertToCppType(type->getInnerTargetType()));
           main.pushstr_newL(strBuffer);
@@ -1511,6 +1518,7 @@ void dsl_cpp_generator::generateAtomicDeviceAssignmentStmt(assignment *asmt,
         targetFile.pushString("d_");
         targetFile.pushString(id->getIdentifier());
         targetFile.pushString("[0]");
+        
       }
     }
   }
@@ -1566,8 +1574,11 @@ void dsl_cpp_generator::generateAtomicDeviceAssignmentStmt(assignment *asmt,
     char strBuffer[1024];
     Identifier *id = asmt->getId();
     Expression *exprAssigned = asmt->getExpr();
-    
-    if(isForall1==0){
+    int varFound =0;
+    if(allGpuUsedVars.find(id->getIdentifier())!=allGpuUsedVars.end()){
+      varFound = 1;
+    }
+    if(isForall1==0 && varFound==1){
           Type *type = id->getSymbolInfo()->getType();
           cout<<"TYPE : "<<convertToCppType(type)<<endl;
           const char *inVarName = id->getIdentifier();
@@ -2473,15 +2484,7 @@ void dsl_cpp_generator::generateForAll(forallStmt *forAll, bool isMainFile)
 
       if (type->isPrimitiveType())
         generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), true);
-      /*else if(type->isPropType())
-      {
-        Type* innerType = type->getInnerTargetType();
-        string dIden = "d_" + string(iden->getIdentifier());
-        generateCudaMemCpyStr(dIden.c_str(), iden->getIdentifier(), convertToCppType(innerType), "V", true);
-      }*/
     }
-    /*memcpy to symbol*/
-
     main.pushString("for(int i=0;i<devicecount;i++)");
     main.NewLine();
     main.pushString("{");
@@ -2917,7 +2920,18 @@ void dsl_cpp_generator::generateVariableDecl(declaration *declStmt,
     
     targetFile.pushstr_space("; // asst in .cu");
     targetFile.NewLine();
-    if(isForall==1){
+    int varFound = 0;
+    if(allGpuUsedVars.find(varName)!=allGpuUsedVars.end()){
+      cout<<"entered fixed point "<<varName<<endl;
+        varFound = 1; 
+    }
+    main.pushstr_newL("//fixed_pt_var");
+    if(strcmp(varName,fixed_pt_var)==0){
+      cout<<"varFound"<<varFound<<endl;
+      varFound = 1;
+      cout<<"varFound"<<varFound<<endl;
+    }
+    if(isMainFile==1&&varFound==1){
     sprintf(strBuffer, "%s** h_%s;", varType, varName);
     targetFile.pushstr_newL(strBuffer);
     sprintf(strBuffer,"h_%s = (%s**)malloc(sizeof(%s*)*(devicecount+1));",varName,varType,varType);
@@ -2954,6 +2968,7 @@ void dsl_cpp_generator::generateVariableDecl(declaration *declStmt,
 
   else if (type->isNodeEdgeType())
   {
+    cout<<"enterd"<<endl;
     targetFile.pushstr_space(convertToCppType(type));
     targetFile.pushString(declStmt->getdeclId()->getIdentifier());
     if (declStmt->isInitialized())
@@ -3565,11 +3580,11 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt *fixedPointConstruct, 
             
           }
           else{
-            sprintf(strBuffer,"h_%s1 = (%s*)malloc((V+1)*sizeof(%s));",modifiedVar,modifiedVarType,modifiedVarType);
+            sprintf(strBuffer,"h_%s1 = (%s*)malloc((V+1)*(devicecount)*sizeof(%s));",modifiedVar,modifiedVarType,modifiedVarType);
             main.pushstr_newL(strBuffer);
             main.pushstr_newL("for(int i=0;i<devicecount;i++){");
             main.pushstr_newL("cudaSetDevice(i);");
-            sprintf(strBuffer,"cudaMemcpyAsync(h_%s+i*(V+1),d_%s_next[i],sizeof(%s)*(V+1),cudaMemcpyDeviceToHost);",modifiedVar,modifiedVar,modifiedVarType);
+            sprintf(strBuffer,"cudaMemcpyAsync(h_%s1+i*(V+1),d_%s_next[i],sizeof(%s)*(V+1),cudaMemcpyDeviceToHost);",modifiedVar,modifiedVar,modifiedVarType);
             main.pushstr_newL(strBuffer);
             main.pushstr_newL("}");
             main.pushstr_newL("for(int i=0;i<devicecount;i++){");
@@ -3757,7 +3772,6 @@ void dsl_cpp_generator::generateCudaMallocParams(list<formalParam *> paramList)
       if (type->getInnerTargetType()->isPrimitiveType())
       {
         Type *innerType = type->getInnerTargetType();
-        
           main.pushString(convertToCppType(
             innerType)); // convertToCppType need to be modified.
           main.pushString("*");
@@ -3776,7 +3790,7 @@ void dsl_cpp_generator::generateCudaMallocParams(list<formalParam *> paramList)
         strcat(str, convertToCppType(type->getInnerTargetType()));
         strcat(str, ")") ; 
         strcat(str, "*") ; 
-        strcat(str, "(V+1)"); 
+        strcat(str, (type->isPropNodeType()) ? "(V+1)" : "E") ; 
         strcat(str, ");") ; 
         main.pushString(str);
         main.NewLine();
@@ -3816,11 +3830,18 @@ void dsl_cpp_generator::generateCudaMallocParams(list<formalParam *> paramList)
         main.pushstr_newL(str);
         main.pushstr_newL("}");
         main.NewLine(); 
+        
       }
     }
     else if(type->isPrimitiveType()){
       Identifier* iden = (*itr)->getIdentifier();
       char str[80];
+      int varFound = 0;
+        if(allGpuUsedVars.find((*itr)->getIdentifier()->getIdentifier())!=allGpuUsedVars.end()){
+          varFound = 1;
+        }
+        if(varFound==1){
+        
       strcpy(str,convertToCppType(type));
       strcat(str,"** ");
       strcat(str, "d_") ; 
@@ -3894,6 +3915,7 @@ void dsl_cpp_generator::generateCudaMallocParams(list<formalParam *> paramList)
       main.pushString(str);
       main.NewLine();
       main.pushstr_newL("}");
+      }
     } 
   }
 }
@@ -4071,6 +4093,16 @@ const char *dsl_cpp_generator::convertToCppType(Type *type)
 void dsl_cpp_generator::generateCudaMemCpySymbol(char *var, const char *typeStr, bool direction)
 {
   char strBuffer[1024];
+  // main.pushstr_newL("for(int i=0;i<devicecount;i+=1){");
+  // main.pushstr_newL("cudaSetDevice(i);");
+  // sprintf(strBuffer,"d_%s[0]=%s",var,var);
+  // main.pushstr_newL(strBuffer);
+  // main.pushstr_newL("}");
+  // main.pushstr_newL("for(int i=0;i<devicecount;i+=1){");
+  // main.pushstr_newL("cudaSetDevice(i);");
+  // main.pushstr_newL("cudaDeviceSynchronize();");
+  // main.pushstr_newL("}");
+
   // cudaMalloc(&d_ nodeVal ,sizeof( int ) * V );
   //                   1             2      3
   /*

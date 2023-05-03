@@ -30,7 +30,7 @@ extern vector<map<int,vector<Identifier*>>> graphId;
                                                        separated across different function type*/
 class varTransferStmt;
 extern map<string,int> push_map;
-
+extern set<string> allGpuUsedVars;
 class argument
 {  
   private:
