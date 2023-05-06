@@ -1,0 +1,120 @@
+fileName ../graphcode/staticDSLCodes/bc_dslV2
+Backend Target cuda
+Type: function
+
+'('
+Graph Type
+
+','Node Property
+'<'Type: float'>'
+','Set of Nodes'<''>'
+
+')'currentFuncType check!!0
+tempID g funccount 0
+
+'{''.'
+'('
+'='
+')'';'TYPE OF NODE OF STATEMENT1For: for
+'('
+Keyword in 
+')'
+'{'Node Property'<'Type: float'>'
+';'Node Property'<'Type: float'>'
+';''.''(''='')'';'TYPE OF NODE OF STATEMENT1'.''('
+'='
+')'';'TYPE OF NODE OF STATEMENT1'.'
+'='
+';'iterateInBFS'('
+Keyword in 
+'.''('')'
+from
+')''{'For: for'('
+Keyword in 
+'.''('')'')''{''.''=''.''+''.'';''}''}'iterateInReverse'('NE_OP')''{'For: for'('
+Keyword in 
+'.''('')'')''{''.'
+'='
+'.'
+'+'
+'(''.'
+'/'
+'.'')'
+'*'
+'('
+
+'+'
+'.'')'';''}''.'
+'='
+'.'
+'+'
+'.'';''}''}'
+'}'
+error val 0
+at 1
+FORALL par   NAME1:6
+FORALL ParPar NAME2:2
+		TO Set DEVICE BOOL
+		ON: DEV ASST
+RET FALSE
+ANAME1:6
+ANAME2:18
+FORALL par   NAME1:6
+FORALL ParPar NAME2:13
+FORALL ParParPar NAME3:6
+RET FALSE
+ANAME1:6
+ANAME2:18
+		ON ACC ASST STMT IN REV BFS
+FORALL par   NAME1:6
+FORALL ParPar NAME2:14
+FORALL ParParPar NAME3:13
+		TP SET ACC BC BOOL
+RET FALSE
+ANAME1:6
+ANAME2:18
+ANAME1:6
+ANAME2:14
+at 2
+fileName bc_dslV2
+param :g
+paramD:d_g
+========== SET TRUE
+param :BC
+paramD:d_BC
+param :sourceSet
+paramD:d_sourceSet
+param :g
+paramD:d_g
+param :BC
+paramD:d_BC
+param :sourceSet
+paramD:d_sourceSet
+	==VARSIZE:0
+varName:BC
+STMT: For
+isMainFile val 1
+GenerateForAllSignature = 0
+FOR	==VARSIZE:2
+varName:delta
+varName:sigma
+	ASST 
+	DEVICE ASST
+STMT: For
+isMainFile val 0
+GenerateForAllSignature = 0
+	 ITERATE Neighbour 
+src:w
+	==VARSIZE:0
+	ASST
+STMT: For
+isMainFile val 0
+GenerateForAllSignature = 0
+	 ITERATE Neighbour 
+src:w
+V?:v
+	==VARSIZE:0
+	ASST
+	ASST
+	  RESULT NO BC by 2 ASST
+finished successfully
