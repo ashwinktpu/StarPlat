@@ -66,6 +66,7 @@ void Compute_TC(graph& g)
   const unsigned threadsPerBlock = 512;
   unsigned numThreads   = (V < threadsPerBlock)? 512: V;
   unsigned numBlocks    = (V+threadsPerBlock-1)/threadsPerBlock;
+  unsigned numBlocks_Edge    = (E+threadsPerBlock-1)/threadsPerBlock;
 
 
   // TIMER START
@@ -81,7 +82,8 @@ void Compute_TC(graph& g)
   //BEGIN DSL PARSING 
   long triangle_count = 0; // asst in .cu
 
-  Compute_TC_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next);
+  cudaMemcpyToSymbol(::triangle_count, &triangle_count, sizeof(long), 0, cudaMemcpyHostToDevice);
+  Compute_TC_kernel_1<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next);
   cudaDeviceSynchronize();
   cudaMemcpyFromSymbol(&triangle_count, ::triangle_count, sizeof(long), 0, cudaMemcpyDeviceToHost);
 
@@ -92,16 +94,6 @@ void Compute_TC(graph& g)
   cudaEventRecord(stop,0);
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&milliseconds, start, stop);
-  printf("triangle counting: %ld\n",triangle_count);
   printf("GPU Time: %.6f ms\n", milliseconds);
 
 } //end FUN
-
-int main(int argc, char *argv[])
-{
-  char *filename = argv[1];
-  graph g(filename);
-  g.parseGraph();
-  Compute_TC(g);
- 
-}

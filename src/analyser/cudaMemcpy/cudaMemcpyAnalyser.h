@@ -9,8 +9,9 @@ class cudaMemcpyAnalyser{
     void analyseStatement(statement *stmt);
     void analyseBlock(blockStatement *stmt);
     void analyseForAll(forallStmt *stmt);
-    void analysedowhile(dowhileStmt* stmt,list<Identifier*> &primvars);
-    void analysefixedpoint(fixedPointStmt* stmt,list<Identifier*> &primvars);
+    void analysedowhile(dowhileStmt *stmt, list<Identifier *> &primvars);
+    void analysefixedpoint(fixedPointStmt *stmt, list<Identifier *> &primvars);
+
 public:
     void analyse(list<Function *> funcList);
 };

@@ -55,7 +55,9 @@ void cudaMemcpyAnalyser::analyseForAll(forallStmt *forAll)
             // generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), true);
             primvars.push_back(iden);
     }
+
    
+
     list<ASTNode*> parents;
     ASTNode* currstmt = forAll;
     while(currstmt->getTypeofNode()!=NODE_FUNC){
@@ -73,7 +75,6 @@ void cudaMemcpyAnalyser::analyseForAll(forallStmt *forAll)
         if (currnode->getTypeofNode() == NODE_FIXEDPTSTMT)
         {
             analysefixedpoint((fixedPointStmt *)currnode, primvars);
-            
         }
     }
     for(Identifier* iden:primvars){

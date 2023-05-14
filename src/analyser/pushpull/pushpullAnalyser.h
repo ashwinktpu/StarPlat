@@ -11,6 +11,8 @@ class pushpullAnalyser{
     void analyseStatement(statement *stmt);
     void analyseBlock(blockStatement *stmt);
     int analyseForAll(forallStmt *stmt);
+    int analyseitrbfs(iterateBFS *stmt);
+    int analyseitrrevbfs(iterateReverseBFS *stmt);
     int analyseforinfor(forallStmt *stmt, Identifier *ownvertex);
     int analyseassigninfor(assignment *stmt,Identifier *ownvertex);
     int analysereductioninfor(reductionCallStmt *stmt,Identifier *ownvertex);

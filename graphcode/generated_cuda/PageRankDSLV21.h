@@ -23,8 +23,6 @@ __device__ float num_nodes ; // DEVICE ASSTMENT in .h
 
 __device__ float diff ; // DEVICE ASSTMENT in .h
 
-__device__ float tempVar_1 ; // DEVICE ASSTMENT in .h
-
 __device__ float tempVar_0 ; // DEVICE ASSTMENT in .h
 
 __global__ void Compute_PR_kernel_1(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,float* d_pageRank,float* d_pageRank_nxt){ // BEGIN KER FUN via ADDKERNEL
@@ -40,7 +38,13 @@ __global__ void Compute_PR_kernel_1(int V, int E, int* d_meta, int* d_data, int*
   } //  end FOR NBR ITR. TMP FIX!
   float val = tempVar_0 + delta * sum; // DEVICE ASSTMENT in .h
 
-  atomicAdd(& diff, (float)d_pageRank[v] - val);
+  if (d_pageRank[v] - val >= 0){ // if filter begin 
+    atomicAdd(& diff, (float)d_pageRank[v] - val);
+
+  } // if filter end
+  else
+  atomicAdd(& diff, (float)val - d_pageRank[v]);
+
   d_pageRank_nxt[v] = val;
 } // end KER FUNC
 

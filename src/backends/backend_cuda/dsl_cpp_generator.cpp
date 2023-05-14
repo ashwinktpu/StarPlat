@@ -906,25 +906,20 @@ void dsl_cpp_generator::generateDoWhileStmt(dowhileStmt* doWhile,
       Type *type = var->getSymbolInfo()->getType();
       generateCudaMemCpySymbol(var->getIdentifier(), convertToCppType(type), true);
     }
-    // usedVariables usedvarswhile = getVarsDoWhile(doWhile);
-    // list<statement *> currStmts = block->returnStatements();
-    // for (statement *bstmt : currStmts)
-    // {
-    //   if (bstmt->getTypeofNode() == NODE_FORALLSTMT)
-    //   {
-    //     forallStmt *forAll = (forallStmt *)bstmt;
-    //     usedVariables usedVars = getVarsForAll(forAll);
-    //     list<Identifier *> readvars = usedVars.getVariables(1);
-    //     for (Identifier *iden : readvars)
-    //     {
-    //       Type *type = iden->getSymbolInfo()->getType();
-    //       if (type->isPrimitiveType() && !usedvarswhile.isUsedVar(iden,2))
-    //       {
-    //         generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), true);
-    //       }
-    //     }
-    //   }
-    // }
+
+    list<declaration *> readexprdecls = doWhile->getreadexprdecls();
+    for (declaration *readexprdecl : readexprdecls)
+    {
+      Expression *rhs = readexprdecl->getExpressionAssigned();
+      rhs->setwriteexpr();
+      generateVariableDecl(readexprdecl, true);
+      char *varName = readexprdecl->getdeclId()->getIdentifier();
+      if (readexprdecl->getInGPU())
+      {
+        generateCudaMemCpySymbol(varName, convertToCppType(readexprdecl->getType()), true);
+      }
+      rhs->setreadexpr();
+    }
   }
   /**************************************************/
   targetFile.pushstr_newL("do{");
@@ -1405,18 +1400,23 @@ bool dsl_cpp_generator::elementsIteration(char* extractId) {
 
 void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll, bool isMainFile) {
   cout << "GenerateForAllSignature = " << isMainFile << endl;
+ 
   dslCodePad& targetFile = isMainFile ? main : header;
 
   char strBuffer[1024];
   Identifier* iterator = forAll->getIterator();
+ 
   if (forAll->isSourceProcCall())
   {
       //~ Identifier* sourceGraph = forAll->getSourceGraph();
+      
       proc_callExpr *extractElemFunc = forAll->getExtractElementFunc();
       Identifier *iteratorMethodId = extractElemFunc->getMethodId();
       list<argument *> arglist = extractElemFunc->getArgList();
       Identifier *var = (arglist.front()->getExpr()->getId());
       const char *mainloopvar = var->getIdentifier();
+     
+      
       if (allGraphIteration(iteratorMethodId->getIdentifier()))
       {
       // char* graphId=sourceGraph->getIdentifier();
@@ -1440,6 +1440,7 @@ void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll, bool isMainF
       string s(methodId);
       if(s.compare("neighbors")==0)
       {
+        
         list<argument*>  argList=extractElemFunc->getArgList();
         assert(argList.size()==1);
         Identifier* nodeNbr=argList.front()->getExpr()->getId();
@@ -1494,11 +1495,15 @@ void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll, bool isMainF
   }
   else
   {
+    
+    
     //~ std::cout << "+++++++++++++++" << '\n';
     Identifier* sourceId = forAll->getSource();
+    
     if (sourceId != NULL) {
       if (sourceId->getSymbolInfo()->getType()->gettypeId() == TYPE_SETN) {  //FOR SET
         //~ std::cout << "+++++     ++++++++++" << '\n';
+    
         main.pushstr_newL("//FOR SIGNATURE of SET - Assumes set for on .cu only");
         main.pushstr_newL("std::set<int>::iterator itr;");
         sprintf(strBuffer, "for(itr=%s.begin();itr!=%s.end();itr++) ", sourceId->getIdentifier(), sourceId->getIdentifier());
@@ -1789,7 +1794,9 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
         rhs->setwriteexpr();
         generateVariableDecl(readexprdecl, true);
         char *varName = readexprdecl->getdeclId()->getIdentifier();
-        generateCudaMemCpySymbol(varName, convertToCppType(readexprdecl->getType()), true);
+        if(readexprdecl->getInGPU()){
+          generateCudaMemCpySymbol(varName, convertToCppType(readexprdecl->getType()), true);
+        }
         rhs->setreadexpr();
       }
 
@@ -1805,39 +1812,6 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, bool isMainFile) {
           generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), true);
         }
       }
-      // usedVariables usedVars = getVarsForAll(forAll);
-      // list<Identifier *> readvars = usedVars.getVariables(1);
-      // list<Identifier *> writevars = usedVars.getVariables(2);
-      // blockStatement *bstm = (blockStatement *)((statement *)forAll)->getParent();
-      // cout<<forAll->getParent()->getTypeofNode()<<endl;
-      // statement *stm =(statement*)bstm->getParent();
-      // // cout << forAll->getParent()->getParent()->getParent()->getTypeofNode() << endl;
-      // if ((stm->getTypeofNode() == NODE_DOWHILESTMT || stm->getTypeofNode() == NODE_FIXEDPTSTMT))
-      // {
-      //     usedVariables usedvarsparent=getVarsStatement(stm);
-          
-      //     for (Identifier *iden : readvars)
-      //     {
-            
-      //       Type *type = iden->getSymbolInfo()->getType();
-      //       if (type->isPrimitiveType() && usedvarsparent.isUsedVar(iden, 2))
-      //       {
-      //         generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), true);
-      //       }
-      //     }
-          
-      // }
-
-      // for (Identifier *iden : writevars)
-      // {
-      //     if (usedVars.isUsedVar(iden, 1))
-      //     {
-      //       continue;
-      //     }
-      //     Type *type = iden->getSymbolInfo()->getType();
-      //     if (type->isPrimitiveType())
-      //       generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), true);
-      // }
     }
     /*memcpy to symbol*/
     
@@ -2524,7 +2498,9 @@ void dsl_cpp_generator::generateExpr(Expression* expr, bool isMainFile, bool isA
     {
         cout << 1 << endl;
         dslCodePad &targetFile = isMainFile ? main : header;
+      if(expr->getnewidassigned()!=NULL){
         targetFile.pushString(expr->getnewidassigned()->getIdentifier());
+      }
         return;
     }
   }
@@ -2595,6 +2571,7 @@ void dsl_cpp_generator::generate_exprUnary(Expression* expr, bool isMainFile) {
     generateExpr(expr->getUnaryExpr(), isMainFile);
     const char* operatorString = getOperatorString(expr->getOperatorType());
     targetFile.pushString(operatorString);
+    targetFile.pushString(";");
   }
 
   if (expr->hasEnclosedBrackets()) {
@@ -2855,25 +2832,20 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,
             Type *type = var->getSymbolInfo()->getType();
             generateCudaMemCpySymbol(var->getIdentifier(), convertToCppType(type), true);
           }
-          // usedVariables usedvarsfixed = getVarsFixedPoint(fixedPointConstruct);
-          // list<statement *> currStmts = block->returnStatements();
-          // for (statement *bstmt : currStmts)
-          // {
-          //     if (bstmt->getTypeofNode() == NODE_FORALLSTMT)
-          //     {
-          //       forallStmt *forAll = (forallStmt *)bstmt;
-          //       usedVariables usedVars = getVarsForAll(forAll);
-          //       list<Identifier *> readvars = usedVars.getVariables(1);
-          //       for (Identifier *iden : readvars)
-          //       {
-          //         Type *type = iden->getSymbolInfo()->getType();
-          //         if (type->isPrimitiveType() && !usedvarsfixed.isUsedVar(iden, 2))
-          //         {
-          //           generateCudaMemCpySymbol(iden->getIdentifier(), convertToCppType(type), true);
-          //         }
-          //       }
-          //     }
-          // }
+
+          list<declaration *> readexprdecls = fixedPointConstruct->getreadexprdecls();
+          for (declaration *readexprdecl : readexprdecls)
+          {
+            Expression *rhs = readexprdecl->getExpressionAssigned();
+            rhs->setwriteexpr();
+            generateVariableDecl(readexprdecl, true);
+            char *varName = readexprdecl->getdeclId()->getIdentifier();
+            if (readexprdecl->getInGPU())
+            {
+              generateCudaMemCpySymbol(varName, convertToCppType(readexprdecl->getType()), true);
+            }
+            rhs->setreadexpr();
+          }
         }
         /**************************************************/
         sprintf(strBuffer, "while(!%s) {", fixPointVar);

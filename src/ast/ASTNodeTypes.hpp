@@ -1407,11 +1407,11 @@ class whileStmt:public statement
   Expression* iterCondition;
   blockStatement* body;
   list<Identifier*> vars_cudamemcpy;
+  list<declaration *> declofreadexprs;
 
-  public:
-
-    dowhileStmt()
-    {
+public:
+  dowhileStmt()
+  {
       iterCondition=NULL;
       body=NULL;
       statementType="WhileStmt";
@@ -1451,6 +1451,15 @@ class whileStmt:public statement
       body = bodySent;
       body->setParent(this);
     }
+    void addreadexprdecls(declaration *newdecl)
+    {
+      declofreadexprs.push_front(newdecl);
+    }
+
+    list<declaration *> getreadexprdecls()
+    {
+      return this->declofreadexprs;
+    }
   };
 
 
@@ -1463,6 +1472,7 @@ class fixedPointStmt:public statement
     Identifier* fixedPointId;
     blockStatement* body;
     list<Identifier *> vars_cudamemcpy;
+    list<declaration *> declofreadexprs;
 
   public:
     fixedPointStmt()
@@ -1514,7 +1524,15 @@ class fixedPointStmt:public statement
        body->setParent(this);
        this->body = body;
     }
+    void addreadexprdecls(declaration *newdecl)
+    {
+       declofreadexprs.push_front(newdecl);
+    }
 
+    list<declaration *> getreadexprdecls()
+    {
+       return this->declofreadexprs;
+    }
 };
 
   class ifStmt:public statement
@@ -1966,7 +1984,9 @@ class fixedPointStmt:public statement
     list<declaration*> declofreadexprs;
     list<Identifier *> vars_cudamemcpy;
 
+
   public:
+    map<string, int> push_map;
     forallStmt()
     {
       iterator=NULL;

@@ -3110,15 +3110,17 @@ int main(int argc,char **argv)
 	  deviceVarsAnalyser dvAnalyser;
 	  cpp_backend.setOptimized();
 	  dvAnalyser.analyse(frontEndContext.getFuncList());
-	}
-		pushpullAnalyser ppAnalyser;
-		ppAnalyser.analyse(frontEndContext.getFuncList());
 
-        cudaMemcpyAnalyser cmAnalyser;
+	  cudaMemcpyAnalyser cmAnalyser;
 		cmAnalyser.analyse(frontEndContext.getFuncList());
 		
 		readExpressionAnalyser reAnalyser;
 		reAnalyser.analyse(frontEndContext.getFuncList());
+	}
+		pushpullAnalyser ppAnalyser;
+		ppAnalyser.analyse(frontEndContext.getFuncList());
+
+        
 		
         cpp_backend.generate();
       } 

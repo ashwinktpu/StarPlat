@@ -9,17 +9,18 @@ class readExpressionAnalyser{
     
     void analyseFunc(ASTNode *proc);
     void analyseStatement(statement *stmt);
-    void analyseBlock(blockStatement *stmt);
-    void analyseForAll(forallStmt *stmt);
-    void analyseforinfor(forallStmt *stmt,  forallStmt *forstmt);
-    void analyseassigninfor(assignment *stmt,  forallStmt *forstmt);
-    void analysedeclarationinfor(declaration *stmt, forallStmt *parent);
-    void analysereductioninfor(reductionCallStmt *stmt, forallStmt *forstmt);
-    void analyseStatementinForAll(statement *stmt, forallStmt *forstmt);
-    int analyseexprinfor(Expression *stmt, forallStmt *forstmt);
-    void analyseexprinfor_second(Expression *stmt, forallStmt *forstmt,Type* type);
-    void analyseifinfor(ifStmt *stmt, forallStmt *forstmt);
-    void analyseBlockinfor(blockStatement *stmt, forallStmt *forstmt);
+    void analyseBlock(blockStatement *stmt,statement* parent);
+    void analyseBlockfirst(blockStatement *stmt, statement *parent);
+    void analyseforBlock(forallStmt *stmt, statement *forstmt);
+    void analyseassigninBlock(assignment *stmt, statement *forstmt);
+    void analysedeclarationinBlock(declaration *stmt, statement *parent);
+    void analysereductioninBlock(reductionCallStmt *stmt, statement *forstmt);
+    void analyseStatementinBlock(statement *stmt, statement* parent);
+    void analyseStatementinBlockfirst(statement *stmt, statement *parent);
+    int analyseexprinBlock(Expression *stmt, statement *parent);
+    void analyseexprinBlock_second(Expression *stmt, statement *parent, Type *type,statement *fatherparent);
+    void analyseifinBlock(ifStmt *stmt, statement *forstmt);
+    void analyseBlockinBlock(blockStatement *stmt, statement *forstmt);
 
 public:
     void analyse(list<Function *> funcList);

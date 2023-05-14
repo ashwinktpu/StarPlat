@@ -3,6 +3,7 @@
 #include <string.h>
 #include <list>
 
+forallStmt* curr = NULL;
 
 int pushpullAnalyser::analyseforinfor(forallStmt* forstmt,Identifier* ownvertex){
     cout << "   for" << endl;
@@ -26,11 +27,11 @@ int pushpullAnalyser::analyseassigninfor(assignment *stmt, Identifier *ownvertex
     {
         PropAccess *leftprop = stmt->getPropId();
         Identifier *affectedId = leftprop->getIdentifier1();
-        cout<<"                               ";
-        cout<<ownvertex->getIdentifier()<<" "<<leftprop->getIdentifier2()->getIdentifier()<<" "<<affectedId->getIdentifier()<<" ";
+       
         if (strcmp(ownvertex->getIdentifier(), affectedId->getIdentifier()) != 0)
         {
             push_map[string(stmt->getPropId()->getIdentifier2()->getIdentifier())]=1;
+            curr->push_map[string(stmt->getPropId()->getIdentifier2()->getIdentifier())] = 1;
             return 0;
         }
     }
@@ -69,6 +70,7 @@ int pushpullAnalyser::analysereductioninfor(reductionCallStmt* stmt, Identifier 
              {
                  PropAccess* stmt1 = (PropAccess*) stmt;
                  push_map[string(stmt1->getIdentifier2()->getIdentifier())] = 1;
+                 curr->push_map[string(stmt1->getIdentifier2()->getIdentifier())] = 1;
                  ans =0;
              }
         }
@@ -79,6 +81,7 @@ int pushpullAnalyser::analysereductioninfor(reductionCallStmt* stmt, Identifier 
         if (strcmp(ownvertex->getIdentifier(), affectedId->getIdentifier()) != 0)
         {
              push_map[string(leftprop->getIdentifier2()->getIdentifier())] = 1;
+             curr->push_map[string(leftprop->getIdentifier2()->getIdentifier())] = 1;
              ans =0;
         }
     }
@@ -98,6 +101,7 @@ int pushpullAnalyser::analyseunaryinfor(unary_stmt* input,Identifier *ownvertex)
         if (strcmp(ownvertex->getIdentifier(), affectedId->getIdentifier()) != 0)
         {
              push_map[string(propaccess->getIdentifier2()->getIdentifier())] = 1;
+             curr->push_map[string(propaccess->getIdentifier2()->getIdentifier())] = 1;
              return 0;
         }
     }
@@ -167,6 +171,44 @@ int pushpullAnalyser::analyseForAll(forallStmt *forstmt)
     return ans;
 }
 
+int pushpullAnalyser::analyseitrbfs(iterateBFS *stmt)
+{
+    blockStatement *body = (blockStatement *)stmt->getBody();
+    list<statement *> bodystmts = body->returnStatements();
+    Identifier *ownvertex = stmt->getIteratorNode();
+    int ans = 1;
+    for (statement *stmt : bodystmts)
+    {
+        int pushorpull = analyseStatementinForAll(stmt, ownvertex);
+        if (pushorpull == 0)
+        {
+            ans = 0;
+        }
+    }
+    return ans;
+}
+
+int pushpullAnalyser::analyseitrrevbfs(iterateReverseBFS *stmt)
+{
+    blockStatement *body = (blockStatement *)stmt->getBody();
+    list<statement *> bodystmts = body->returnStatements();
+    Expression* expr = (stmt->getBFSFilter())->getLeft();
+    int ans =0;
+    if(expr->isIdentifierExpr()){
+        Identifier *ownvertex = expr->getId();
+        ans = 1;
+        for (statement *stmt : bodystmts)
+        {
+            int pushorpull = analyseStatementinForAll(stmt, ownvertex);
+            if (pushorpull == 0)
+            {
+                 ans = 0;
+            }
+        }
+    }
+    
+    return ans;
+}
 
 void pushpullAnalyser::analyseStatement(statement *stmt)
 {
@@ -199,16 +241,27 @@ void pushpullAnalyser::analyseStatement(statement *stmt)
             {
                 allGpuUsedVars.insert(string(iden->getIdentifier()));
             }
-            
+            curr = (forallStmt*)stmt;
             int pushorpull = analyseForAll((forallStmt *)stmt);
             }
             else analyseBlock((blockStatement *)forStmt->getBody());
             break;
         }
-    case NODE_BLOCKSTMT:
+    case NODE_BLOCKSTMT:{
             cout << "block" << endl;
             analyseBlock((blockStatement *)stmt);
             break;
+    }
+    case NODE_ITRBFS:{
+            cout<<"itbfs"<<endl;
+            int pushorpull= analyseitrbfs((iterateBFS*)stmt);
+            break;
+    }
+    case NODE_ITRRBFS:{
+            cout << "itreversebfs" << endl;
+            int pushorpull = analyseitrrevbfs((iterateReverseBFS*)stmt);
+            break;
+    }
     default:
         return;
     }
@@ -234,6 +287,8 @@ void pushpullAnalyser::analyseFunc(ASTNode *proc)
 
 void pushpullAnalyser::analyse(list<Function *> funcList)
 {
+    cout<<endl<<"PUSH-PULL ANALYSING START"<<endl;
     for (Function *func : funcList)
         analyseFunc(func);
+    cout << "PUSH-PULL ANALYSING END" << endl;
 }

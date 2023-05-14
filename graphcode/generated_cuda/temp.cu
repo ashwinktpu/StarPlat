@@ -83,44 +83,8 @@ void Compute_SSSP(graph& g,int* dist,int src)
 
 
   //BEGIN DSL PARSING 
-  bool* d_modified;
-  cudaMalloc(&d_modified, sizeof(bool)*(V));
+  int x = x + 1; // asst in .cu
 
-  initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_dist,(int)INT_MAX);
-
-  initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_modified,(bool)false);
-
-  initIndex<bool><<<1,1>>>(V,d_modified,src,(bool)true); //InitIndexDevice
-  initIndex<int><<<1,1>>>(V,d_dist,src,(int)0); //InitIndexDevice
-  bool finished = false; // asst in .cu
-
-  do{
-    do{
-      // FIXED POINT variables
-      //BEGIN FIXED POINT
-      initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-      while(!finished) {
-
-        finished = true;
-        cudaMemcpyToSymbol(::finished, &finished, sizeof(bool), 0, cudaMemcpyHostToDevice);
-        Compute_SSSP_kernel_1<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_dist,d_modified);
-        cudaDeviceSynchronize();
-
-
-
-
-        cudaMemcpyFromSymbol(&finished, ::finished, sizeof(bool), 0, cudaMemcpyDeviceToHost);
-        cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
-        initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-      } // END FIXED POINT
-
-
-    }while(true);
-
-  }while(true);
-
-  //cudaFree up!! all propVars in this BLOCK!
-  cudaFree(d_modified);
 
   //TIMER STOP
   cudaEventRecord(stop,0);
