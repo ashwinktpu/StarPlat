@@ -5,7 +5,7 @@ function Compute_SSSP(Graph g, propNode<int> dist, node src)
      g.attachNodeProperty(dist = INF, modified = False);
      src.modified = True;
      src.dist = 0;
-    
+     int a=0;
      bool finished = False;
      fixedPoint until(finished : !modified)
      {

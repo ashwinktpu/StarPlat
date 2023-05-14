@@ -92,6 +92,8 @@ void Compute_SSSP(graph& g,int* dist,int src)
 
   initIndex<bool><<<1,1>>>(V,d_modified,src,(bool)true); //InitIndexDevice
   initIndex<int><<<1,1>>>(V,d_dist,src,(int)0); //InitIndexDevice
+  int a = 0; // asst in .cu
+
   bool finished = false; // asst in .cu
 
   // FIXED POINT variables

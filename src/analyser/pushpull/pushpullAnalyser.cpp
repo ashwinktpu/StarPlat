@@ -3,7 +3,8 @@
 #include <string.h>
 #include <list>
 
-forallStmt* curr = NULL;
+ASTNode* curr =NULL;
+
 
 int pushpullAnalyser::analyseforinfor(forallStmt* forstmt,Identifier* ownvertex){
     cout << "   for" << endl;
@@ -31,7 +32,18 @@ int pushpullAnalyser::analyseassigninfor(assignment *stmt, Identifier *ownvertex
         if (strcmp(ownvertex->getIdentifier(), affectedId->getIdentifier()) != 0)
         {
             push_map[string(stmt->getPropId()->getIdentifier2()->getIdentifier())]=1;
-            curr->push_map[string(stmt->getPropId()->getIdentifier2()->getIdentifier())] = 1;
+            if (curr->getTypeofNode() == NODE_FORALLSTMT)
+            {
+                ((forallStmt *)curr)->push_map[string(stmt->getPropId()->getIdentifier2()->getIdentifier())] = 1;
+            }
+            if (curr->getTypeofNode() == NODE_ITRBFS)
+            {
+                ((iterateBFS *)curr)->push_map[string(stmt->getPropId()->getIdentifier2()->getIdentifier())] = 1;
+            }
+            if (curr->getTypeofNode() == NODE_ITRRBFS)
+            {
+                ((iterateReverseBFS *)curr)->push_map[string(stmt->getPropId()->getIdentifier2()->getIdentifier())] = 1;
+            }
             return 0;
         }
     }
@@ -63,6 +75,7 @@ int pushpullAnalyser::analysereductioninfor(reductionCallStmt* stmt, Identifier 
     cout << "   reduction" << endl;
     list<ASTNode *> leftlist = stmt->getLeftList();
     int ans =1 ;
+    
     for(ASTNode* stmt : leftlist){
         if(stmt->getTypeofNode()==NODE_PROPACCESS){
              Identifier *affectedId = ((PropAccess*)stmt)->getIdentifier1();
@@ -70,18 +83,47 @@ int pushpullAnalyser::analysereductioninfor(reductionCallStmt* stmt, Identifier 
              {
                  PropAccess* stmt1 = (PropAccess*) stmt;
                  push_map[string(stmt1->getIdentifier2()->getIdentifier())] = 1;
-                 curr->push_map[string(stmt1->getIdentifier2()->getIdentifier())] = 1;
+                 if (curr->getTypeofNode() == NODE_FORALLSTMT)
+                 {
+                     ((forallStmt *)curr)->push_map[string(stmt1->getIdentifier2()->getIdentifier())] = 1;
+                 }
+                 if (curr->getTypeofNode() == NODE_ITRBFS)
+                 {
+                     ((iterateBFS *)curr)->push_map[string(stmt1->getIdentifier2()->getIdentifier())] = 1;
+                 }
+                 if (curr->getTypeofNode() == NODE_ITRRBFS)
+                 {
+                     ((iterateReverseBFS *)curr)->push_map[string(stmt1->getIdentifier2()->getIdentifier())] = 1;
+                 }
+
                  ans =0;
              }
         }
     }
+    
     PropAccess* leftprop = stmt->getPropAccess();
+   
     if(leftprop!=NULL){
         Identifier *affectedId = leftprop->getIdentifier1();
+        cout << "HI" << endl;
         if (strcmp(ownvertex->getIdentifier(), affectedId->getIdentifier()) != 0)
         {
+            
              push_map[string(leftprop->getIdentifier2()->getIdentifier())] = 1;
-             curr->push_map[string(leftprop->getIdentifier2()->getIdentifier())] = 1;
+             if (curr->getTypeofNode() == NODE_FORALLSTMT)
+             {
+                 ((forallStmt *)curr)->push_map[string(leftprop->getIdentifier2()->getIdentifier())] = 1;
+             }
+             if (curr->getTypeofNode() == NODE_ITRBFS)
+             {
+                 ((iterateBFS *)curr)->push_map[string(leftprop->getIdentifier2()->getIdentifier())] = 1;
+             }
+             if (curr->getTypeofNode() == NODE_ITRRBFS)
+             {
+                 ((iterateReverseBFS *)curr)->push_map[string(leftprop->getIdentifier2()->getIdentifier())] = 1;
+             }
+             
+             
              ans =0;
         }
     }
@@ -101,7 +143,18 @@ int pushpullAnalyser::analyseunaryinfor(unary_stmt* input,Identifier *ownvertex)
         if (strcmp(ownvertex->getIdentifier(), affectedId->getIdentifier()) != 0)
         {
              push_map[string(propaccess->getIdentifier2()->getIdentifier())] = 1;
-             curr->push_map[string(propaccess->getIdentifier2()->getIdentifier())] = 1;
+             if(curr->getTypeofNode()==NODE_FORALLSTMT){
+                 ((forallStmt*)curr)->push_map[string(propaccess->getIdentifier2()->getIdentifier())] = 1;
+             }
+             if (curr->getTypeofNode() == NODE_ITRBFS)
+             {
+                 ((iterateBFS *)curr)->push_map[string(propaccess->getIdentifier2()->getIdentifier())] = 1;
+             }
+             if (curr->getTypeofNode() == NODE_ITRRBFS)
+             {
+                 ((iterateReverseBFS *)curr)->push_map[string(propaccess->getIdentifier2()->getIdentifier())] = 1;
+             }
+
              return 0;
         }
     }
@@ -254,11 +307,13 @@ void pushpullAnalyser::analyseStatement(statement *stmt)
     }
     case NODE_ITRBFS:{
             cout<<"itbfs"<<endl;
+            curr = (iterateBFS*)stmt;
             int pushorpull= analyseitrbfs((iterateBFS*)stmt);
             break;
     }
     case NODE_ITRRBFS:{
             cout << "itreversebfs" << endl;
+            curr = (iterateReverseBFS*)stmt;
             int pushorpull = analyseitrrevbfs((iterateReverseBFS*)stmt);
             break;
     }

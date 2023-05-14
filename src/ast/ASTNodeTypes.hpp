@@ -1592,9 +1592,10 @@ class fixedPointStmt:public statement
     //list<varTransferStmt*> revTransfer;
 
     list<Identifier*> usedVars;
-    public: 
-    iterateReverseBFS()
-    {
+    public:
+      map<string, int> push_map;
+      iterateReverseBFS()
+      {
       filterExpr=NULL;
       booleanExpr=NULL;
       body=NULL;
@@ -1841,17 +1842,17 @@ class fixedPointStmt:public statement
 
       list<Identifier*> usedVars;
       public:
-
-      iterateBFS()
-      {
-        iterator=NULL;
-        graphId=NULL;
-        nodeCall = NULL;
-        rootNode=NULL;
-        filterExpr=NULL;
-        body=NULL;
-        revBFS=NULL;
-        statementType="IterateInBFS";
+        map<string, int> push_map;
+        iterateBFS()
+        {
+      iterator = NULL;
+      graphId = NULL;
+      nodeCall = NULL;
+      rootNode = NULL;
+      filterExpr = NULL;
+      body = NULL;
+      revBFS = NULL;
+      statementType = "IterateInBFS";
       }
     
       static iterateBFS* nodeForIterateBFS(Identifier* iterator,Identifier* graphId,proc_callExpr* nodeCall,Identifier* rootNode,Expression* filterExpr,statement* body,iterateReverseBFS* revBFS)

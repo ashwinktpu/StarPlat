@@ -97,12 +97,22 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
 
   cudaMemcpyToSymbol(::delta, &delta, sizeof(float), 0, cudaMemcpyHostToDevice);
   cudaMemcpyToSymbol(::num_nodes, &num_nodes, sizeof(float), 0, cudaMemcpyHostToDevice);
+  float tempVar_0 = (1 - delta) / num_nodes; // asst in .cu
+
+  cudaMemcpyToSymbol(::tempVar_0, &tempVar_0, sizeof(float), 0, cudaMemcpyHostToDevice);
   do{
     diff = 0.000000;
     cudaMemcpyToSymbol(::diff, &diff, sizeof(float), 0, cudaMemcpyHostToDevice);
     Compute_PR_kernel_1<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_pageRank,d_pageRank_nxt);
     cudaDeviceSynchronize();
     cudaMemcpyFromSymbol(&diff, ::diff, sizeof(float), 0, cudaMemcpyDeviceToHost);
+
+
+
+    ; // asst in .cu
+
+    ; // asst in .cu
+
     cudaMemcpy(d_pageRank, d_pageRank_nxt, sizeof(float)*V, cudaMemcpyDeviceToDevice);
     iterCount++;;
 
