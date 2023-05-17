@@ -22,6 +22,64 @@ __global__ void initKernel2(unsigned V, T1* init_array1, T1 init_value1, T2* ini
   }
 }
 
+//Only use for reduce_MIN multigpu
+__global__ void Compute_Min(int* array1,int* array2,unsigned V,int devicecount){
+  unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
+  if(v<=V){
+    for(int i=0;i<devicecount;i++){
+      if(array2[v]>array1[i*(V+1)+v]){
+        array2[v] = array1[i*(V+1)+v];
+      }
+    }
+  }
+}
+
+__global__ void Compute_Or(bool* array1,bool* array2,unsigned V,int devicecount){
+  unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
+  if(v<=V){
+    for(int i=0;i<devicecount;i++){
+      if(array1[i*(V+1)+v]==true){
+        array2[v]=true;
+      }
+    }
+  }
+}
+
+template <typename T>
+__global__ void Compute_correct(T* array1,T* array2,unsigned V,int devicecount){
+  unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
+  if(v<=V){
+    T elem;
+    for(int i=0;i<devicecount;i++){
+      if(array1[i*(V+1)+v]!=array2[i*(V+1)+v]){
+        elem = array1[i*(V+1)+v];
+        break;
+      }
+      else{
+        elem = array2[i*(V+1)+v]; 
+      }
+    }
+    for(int i=0;i<devicecount;i++){
+      array1[i*(V+1)+v]=elem;
+      array2[i*(V+1)+v]=elem;
+    }
+  }
+}
+
+
+template<typename T1,typename T2>
+__global__ void combineRandom(int V,T1* d_color,T2* d_color1,T2* d_color2){
+    unsigned v = blockIdx.x*blockDim.x+threadIdx.x;
+    if(v>=V) return;
+    T1 x = (T1)d_color1[v];
+    T1 y = (T1)d_color2[v];
+    for(int i=0;i<32;i++){
+      x = x*(T1)2;
+    }
+    d_color[v]=x+y;
+}
+
+
 //NOT USED
 __global__ void accumulate_bc(unsigned n, double* d_delta, double* d_nodeBC, int* d_level, unsigned s) {
   unsigned tid = blockIdx.x * blockDim.x + threadIdx.x;

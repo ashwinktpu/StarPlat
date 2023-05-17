@@ -1,0 +1,26 @@
+function Compute_CC ( Graph g,propNode <float> CC, SetN<g> sourceSet){
+    g.attachNodeProperty (CC = 0);
+    int numNodes = g.num_nodes();
+    propNode<int> dist;
+    propNode<bool> modified;
+
+    for (src in sourceSet){
+        g.attachNodeProperty(dist = INF, modified = False);
+        src.modified = True;
+        src.dist = 0;
+        bool finished = False;
+        fixedPoint until(finished : !modified){
+            forall(v in g.nodes()){
+                forall(nbr in g.nodes_to(v).filter(modified == True)){
+                    edge e = g.get_edge(v, nbr);
+                    <v.dist, v.modified> = <Min(v.dist, nbr.dist + e.weight), True>;
+                }
+            }
+        }   
+        int temp=0;
+        forall (v in g.nodes().filter(dist != INF)) {
+            temp += v.dist;
+        }
+        src.CC = 1.0/temp;
+    }
+}

@@ -30,7 +30,8 @@ extern vector<map<int,vector<Identifier*>>> graphId;
                                                        where the graphId vector is 
                                                        separated across different function type*/
 class varTransferStmt;
-
+extern map<string,int> push_map;
+extern set<string> allGpuUsedVars;
 class argument
 {  
   private:
@@ -124,7 +125,6 @@ class Identifier:public ASTNode
 
   int accessType;
   char* identifier;
-
   Expression* assignedExpr; /*added to store node/edge property initialized values.
                              - Used in SymbolTable phase for storing metadata. 
                              - This field is more of a code generation utility.  */
@@ -153,7 +153,7 @@ class Identifier:public ASTNode
                                                         
    
   public: 
- 
+  
   static Identifier* createIdNode(const char* id)
    {
    
@@ -166,6 +166,8 @@ class Identifier:public ASTNode
      idNode->fp_association = false;
      idNode->assignedExpr = NULL;
      idNode->dependentExpr = NULL;
+     //idNode->declInForAll = false;
+
      idNode->localMap = false;
      idNode->forall_filter_association = false;
      idNode->used_inside_forall_filter_and_changed_inside_forall_body = false;
@@ -205,7 +207,7 @@ class Identifier:public ASTNode
 
      return copyId;
    }
-   
+
    void set_redecl()
    {
      redecl=true;
