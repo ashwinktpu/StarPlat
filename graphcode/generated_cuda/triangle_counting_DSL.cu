@@ -1,5 +1,5 @@
 // FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
-#include "triangle_counting_DSL.h"
+#include "triangle_counting_dsl.h"
 
 void Compute_TC(graph& g)
 
@@ -79,12 +79,12 @@ void Compute_TC(graph& g)
   //DECLAR DEVICE AND HOST vars in params
 
   //BEGIN DSL PARSING 
-  int triangle_count = 0; // asst in .cu
+  long triangle_count = 0; // asst in .cu
 
-  cudaMemcpyToSymbol(::triangle_count, &triangle_count, sizeof(int), 0, cudaMemcpyHostToDevice);
+  cudaMemcpyToSymbol(::triangle_count, &triangle_count, sizeof(long), 0, cudaMemcpyHostToDevice);
   Compute_TC_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next);
   cudaDeviceSynchronize();
-  cudaMemcpyFromSymbol(&triangle_count, ::triangle_count, sizeof(int), 0, cudaMemcpyDeviceToHost);
+  cudaMemcpyFromSymbol(&triangle_count, ::triangle_count, sizeof(long), 0, cudaMemcpyDeviceToHost);
 
 
 

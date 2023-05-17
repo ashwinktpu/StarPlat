@@ -22,6 +22,9 @@
 /* UNCOMMENT IT TO GENERATE FOR  OPENACC BACKEND */
 #include "../backends/backend_openACC/dsl_cpp_generator.h"
 
+/* UNCOMMENT IT TO GENERATE FOR  multigpu BACKEND */
+#include "../backends/backend_multigpu/dsl_cpp_generator.h"
+
 #include "../symbolutil/SymbolTableBuilder.h"
 
 /* UNCOMMENT IT TO GENERATE FOR SYCL BACKEND */

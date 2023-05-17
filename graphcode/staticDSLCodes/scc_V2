@@ -1,0 +1,233 @@
+function vHong(Graph g) {
+    propNode<int> modified;
+    propNode<int> outDeg; propNode<int> inDeg;
+    propNode<bool> visitFw; propNode<bool> visitBw;
+    propNode<bool> propFw; propNode<bool> propBw;
+    propNode<bool> isPivot;
+    propNode<int> scc;
+    propNode<int> range;
+    propNode<int> pivotField; 
+
+    g.attachNodeProperty(modified = False);
+    g.attachNodeProperty(outDeg = 0, inDeg = 0);
+    g.attachNodeProperty(visitFw = False, visitBw = False);
+    g.attachNodeProperty(propFw = False, propBw = False);
+
+    g.attachNodeProperty(isPivot = False);
+    g.attachNodeProperty(scc = -1);
+    g.attachNodeProperty(range = 0);
+    g.attachNodeProperty(pivotField = -1);
+    forall(src in g.nodes()) {
+        int nxtSrc = src + 1;
+        src.inDeg = src.inDeg + nxtSrc.rev_meta - src.rev_meta;
+        src.outDeg = src.inDeg + nxtSrc.meta - src.meta;
+    }
+    
+    
+    bool fpoint1 = False;
+    fixedPoint until (fpoint1: !modified) {
+        forall(src in g.nodes().filter(scc == -1)) {
+            int havePar = 0; int haveChild = 0;
+            for(par in g.nodes_to(src).filter(scc == -1)) {
+                if(par.range == src.range) {
+                    havePar = 1;
+                }
+            }
+            for(dst in g.neighbors(src).filter(scc == -1)) {
+                if(dst.range == src.range) {
+                    haveChild = 1;
+                }
+            }
+            if((havePar == 0) || (haveChild == 0)) {
+                src.scc = src;
+                src.isPivot = True;
+                fpoint1 = False;
+            }
+        }
+    }
+
+    forall(src in g.nodes().filter(scc == -1)) {
+        int color = src.range;
+        int index = (color) - (color/V)*V;
+        int oldSrcValue = -1; 
+        int oldSrc = index.pivotField;
+        if(oldSrc >= 0) {oldSrcValue = oldSrc.inDeg + oldSrc.outDeg;}
+        if(oldSrcValue < (src.inDeg + src.outDeg)) {
+            index.pivotField = src;
+        }
+    }
+
+    forall(src in g.nodes().filter(scc == -1)) {
+        int color = src.range;
+        int index = (color) - (color/V)*V;
+        if(index.pivotField == src) {
+            src.visitFw = True;
+            src.visitBw = True;
+            src.isPivot = True;
+        }
+    }
+
+    bool fpoint2 = False;
+    fixedPoint until (fpoint2 : !modified) {
+        forall(src in g.nodes().filter(scc == -1)) {
+            int myrange = src.range;
+
+            if(src.propFw == False && src.visitFw == True) {
+                for(dst in g.neighbors(src).filter(scc == -1)) {
+                    if(dst.visitFw == False && dst.range == myrange) {
+                        dst.visitFw = True;
+                        fpoint2 = False;
+                    }
+                }
+                src.propFw = True;
+            }
+
+            if(src.propBw == False && src.visitBw == True) {
+                for(par in g.nodes_to(src).filter(scc == -1)) {
+                    if(par.visitBw == False && par.range == myrange) {
+                        par.visitBw = True;
+                        fpoint2 = False;
+                    }
+                }
+                src.propBw = True;
+            }            
+        }
+    }
+
+    forall(src in g.nodes().filter(scc == -1)) {
+        if(src.visitFw == False || src.visitBw == False) {
+            int ext1 = 0;
+            int ext2 = 0;
+            if(src.visitFw == False) {ext1 = 1;}
+            if(src.visitBw == False) {ext2 = 1;}
+            int newRange = 3 * src.range + ext1 + ext2;
+            src.range = newRange;
+            src.visitFw = False;
+            src.visitBw = False;
+            src.propFw = False;
+            src.propBw = False;
+        }
+        if(src.visitFw == True && src.visitBw == True) {
+            src.scc = src;
+        }
+    }
+
+    fpoint1 = False;
+    fixedPoint until (fpoint1: !modified) {
+        forall(src in g.nodes().filter(scc == -1)) {
+            int havePar = 0; int haveChild = 0;
+            for(par in g.nodes_to(src).filter(scc == -1)) {
+                if(par.range == src.range) {
+                    havePar = 1;
+                }
+            }
+            for(dst in g.neighbors(src).filter(scc == -1)) {
+                if(dst.range == src.range) {
+                    haveChild = 1;
+                }
+            }
+            if((havePar == 0) || (haveChild == 0)) {
+                src.scc = src;
+                src.isPivot = True;
+                fpoint1 = False;
+            }
+        }
+    }
+
+    g.attachNodeProperty(range = 0);
+    forall(src in g.nodes()) {
+        src.range = src.range + src;
+    }
+
+
+    bool fpoint4 = False;
+    fixedPoint until (fpoint4 : !modified) {
+        forall(src in g.nodes().filter(scc == -1)) {
+            for(dst in g.neighbors(src).filter(scc == -1)) {
+                if(dst.range < src.range) {
+                    src.range = dst.range;
+                    fpoint4 = False;
+                }
+            }
+        }
+        forall(src in g.nodes().filter(scc==-1)){
+            int myrange = src.range;
+            if ((myrange != src) && (myrange != myrange.range)){
+                src.range = myrange.range;
+                fpoint4 = False;
+            }
+        }
+    }
+
+    bool fpoint5 = False;
+    fixedPoint until (fpoint5 : !modified) {
+
+        forall(src in g.nodes().filter(scc == -1)) {
+            int color = src.range;
+            int index = (color) - (color/V)*V;
+            int oldSrcValue = -1; 
+            int oldSrc = index.pivotField;
+            if(oldSrc >= 0) {oldSrcValue = oldSrc.inDeg + oldSrc.outDeg;}
+            if(oldSrcValue < (src.inDeg + src.outDeg)) {
+                index.pivotField = src;
+            }
+        }
+
+        forall(src in g.nodes().filter(scc == -1)) {
+            int color = src.range;
+            int index = (color) - (color/V)*V;
+            if(index.pivotField == src) {
+                src.visitFw = True;
+                src.visitBw = True;
+                src.isPivot = True;
+            }
+        }
+
+        fpoint2 = False;
+        fixedPoint until (fpoint2 : !modified) {
+            forall(src in g.nodes().filter(scc == -1)) {
+                int myrange = src.range;
+
+                if(src.propFw == False && src.visitFw == True) {
+                    for(dst in g.neighbors(src).filter(scc == -1)) {
+                        if(dst.visitFw == False && dst.range == myrange) {
+                            dst.visitFw = True;
+                            fpoint2 = False;
+                        }
+                    }
+                    src.propFw = True;
+                }
+
+                if(src.propBw == False && src.visitBw == True) {
+                    for(par in g.nodes_to(src).filter(scc == -1)) {
+                        if(par.visitBw == False && par.range == myrange) {
+                            par.visitBw = True;
+                            fpoint2 = False;
+                        }
+                    }
+                    src.propBw = True;
+                }            
+            }
+        }
+
+        forall(src in g.nodes().filter(scc == -1)) {
+            if(src.visitFw == False || src.visitBw == False) {
+                fpoint5 = False;
+                int ext1 = 0;
+                int ext2 = 0;
+                if(src.visitFw == False) {ext1 = 1;}
+                if(src.visitBw == False) {ext2 = 1;}
+                int newRange = 3 * src.range + ext1 + ext2;
+                newRange = (newRange) - (newRange/V)*V;
+                src.range = newRange;
+                src.visitFw = False;
+                src.visitBw = False;
+                src.propFw = False;
+                src.propBw = False;
+            }
+            if(src.visitFw == True && src.visitBw == True) {
+                src.scc = src;
+            }
+        }
+    }
+}
