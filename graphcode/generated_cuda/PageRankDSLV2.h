@@ -17,9 +17,7 @@ __device__ float delta ;
 __device__ int maxIter ;
 
 
-__device__ float numNodes ; // DEVICE ASSTMENT in .h
-
-__device__ float diff ; // DEVICE ASSTMENT in .h
+__device__ float num_nodes ; // DEVICE ASSTMENT in .h
 
 __global__ void Compute_PR_kernel(int V, int E, int* d_meta, int* d_src, int *d_rev_meta,float* d_pageRank,float* d_pageRank_nxt){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
@@ -33,9 +31,8 @@ __global__ void Compute_PR_kernel(int V, int E, int* d_meta, int* d_src, int *d_
     sum = sum + d_pageRank[nbr] / (d_meta[nbr+1]-d_meta[nbr]);
 
   } //  end FOR NBR ITR. TMP FIX!
-  float val = (1 - delta) / numNodes + delta * sum; // DEVICE ASSTMENT in .h
+  float val = (1 - delta) / num_nodes + delta * sum; // DEVICE ASSTMENT in .h
 
-  atomicAdd(& diff, (float)val - d_pageRank[v]);
   d_pageRank_nxt[v] = val;
 } // end KER FUNC
 

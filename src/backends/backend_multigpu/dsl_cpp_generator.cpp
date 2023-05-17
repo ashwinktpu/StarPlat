@@ -1997,8 +1997,6 @@ void dsl_cpp_generator::getDefaultValueforTypes(int type)
   switch (type)
   {
   case TYPE_INT:
-  case TYPE_UNSIGNED_INT:
-  case TYPE_UNSIGNED_LONG:
   case TYPE_LONG:
     main.pushstr_space("0");
     break;
@@ -4024,10 +4022,6 @@ const char *dsl_cpp_generator::convertToCppType(Type *type)
       return "float";
     case TYPE_DOUBLE:
       return "double";
-    case TYPE_UNSIGNED_INT:
-      return "unsigned int";
-    case TYPE_UNSIGNED_LONG:
-      return "unsigned long";
       
     case TYPE_NODE:
       return "int";
@@ -4049,10 +4043,6 @@ const char *dsl_cpp_generator::convertToCppType(Type *type)
       {
       case TYPE_INT:
         return "int*";
-      case TYPE_UNSIGNED_INT:
-        return "unsigned int*";
-      case TYPE_UNSIGNED_LONG:
-        return "unsigned long*";
       case TYPE_BOOL:
         return "bool*";
       case TYPE_LONG:

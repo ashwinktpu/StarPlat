@@ -42,7 +42,7 @@ inline bool check_isGraphType(int typeId)
 }
 inline bool check_isPrimitiveType(int typeId)
   {
-    return ((typeId==TYPE_BOOL)||(typeId==TYPE_DOUBLE)||(typeId==TYPE_FLOAT)||(typeId==TYPE_LONG)||(typeId==TYPE_INT)||(typeId==TYPE_UNSIGNED_INT)||(typeId==TYPE_UNSIGNED_LONG));
+    return ((typeId==TYPE_BOOL)||(typeId==TYPE_DOUBLE)||(typeId==TYPE_FLOAT)||(typeId==TYPE_LONG)||(typeId==TYPE_INT));
   }
 
  inline bool check_isPropNodeType(int typeId)
