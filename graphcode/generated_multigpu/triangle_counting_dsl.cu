@@ -99,6 +99,12 @@ void Compute_TC(graph& g)
   const unsigned threadsPerBlock = 1024;
   unsigned numThreads   = (V < threadsPerBlock)? V: 1024;
   unsigned numBlocks    = (V+threadsPerBlock-1)/threadsPerBlock;
+  unsigned numBlocksKernel    = (V+threadsPerBlock-1)/threadsPerBlock;
+  unsigned numBlocks_Edge    = (E+threadsPerBlock-1)/threadsPerBlock;
+
+  if(devicecount>1){
+    numBlocksKernel = numBlocksKernel/devicecount+1;
+  }
 
 
   // TIMER START
@@ -135,7 +141,7 @@ void Compute_TC(graph& g)
   for(int i=0;i<devicecount;i++)
   {
     cudaSetDevice(i);
-    Compute_TC_kernel1<<<numBlocks, threadsPerBlock>>>(h_vertex_partition[i],h_vertex_partition[i+1],V,E,d_offset[i],d_edges[i],d_weight[i],d_src[i],d_rev_meta[i],d_triangle_count[i]);
+    Compute_TC_kernel1<<<numBlocksKernel, threadsPerBlock>>>(h_vertex_partition[i],h_vertex_partition[i+1],V,E,d_offset[i],d_edges[i],d_weight[i],d_src[i],d_rev_meta[i],d_triangle_count[i]);
   }
 
   for(int i=0;i<devicecount;i++)

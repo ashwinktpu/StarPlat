@@ -10,7 +10,7 @@
 #include <curand.h>
 #include <cooperative_groups.h>
 
-void Compute_CC(graph& g,float* CC);
+void Compute_CC(graph& g,float* CC,std::set<int>& sourceSet);
 
 
 
@@ -19,8 +19,8 @@ __global__ void Compute_CC_kernel1(int start,int end,int V, int E, int* d_meta, 
   int num_vertices = end-start;
   if( v < num_vertices) {
     v+=start;
-    for (int edge = d_meta[v]; edge < d_meta[v+1]; edge++) { 
-      int nbr = d_data[edge];
+    for (int edge = d_rev_meta[v]; edge < d_rev_meta[v+1]; edge++){
+      int nbr = d_src[edge] ;
       if (d_modified[nbr] == true){ // if filter begin 
         int e = edge;
          int dist_new = d_dist[nbr] + d_weight[e];
@@ -35,13 +35,13 @@ __global__ void Compute_CC_kernel1(int start,int end,int V, int E, int* d_meta, 
     } //  end FOR NBR ITR. TMP FIX!
   }
 } // end KER FUNC
-__global__ void Compute_CC_kernel2(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,float* d_temp,int* d_dist){ // BEGIN KER FUN via ADDKERNEL
+__global__ void Compute_CC_kernel2(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_temp,int* d_dist){ // BEGIN KER FUN via ADDKERNEL
   unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
   int num_vertices = end-start;
   if( v < num_vertices) {
     v+=start;
     if (d_dist[v] != INT_MAX){ // if filter begin 
-      atomicAdd(&d_temp[0], (float)d_dist[v]);
+      atomicAdd(&d_temp[0], (int)d_dist[v]);
     } // if filter end
   }
 } // end KER FUNC

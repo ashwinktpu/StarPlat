@@ -27,7 +27,7 @@ __global__ void APFB_kernel1(int start,int end,int V, int E, int* d_meta, int* d
     } // if filter end
   }
 } // end KER FUNC
-__global__ void APFB_kernel2(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_nc,int* d_bfsArray,int* d_bfsLevel,int* d_rmatch,int* d_NOT_VISITED,bool* d_noNewVertices,int* d_predeccesor,bool* d_noNewPaths){ // BEGIN KER FUN via ADDKERNEL
+__global__ void APFB_kernel2(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_bfsArray,int* d_nc,int* d_bfsLevel,int* d_rmatch,int* d_NOT_VISITED,bool* d_noNewVertices,int* d_predeccesor,bool* d_noNewPaths){ // BEGIN KER FUN via ADDKERNEL
   unsigned col_vertex = blockIdx.x * blockDim.x + threadIdx.x;
   int num_vertices = end-start;
   if( col_vertex < num_vertices) {

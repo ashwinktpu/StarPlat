@@ -99,6 +99,8 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
   const unsigned threadsPerBlock = 1024;
   unsigned numThreads   = (V < threadsPerBlock)? V: 1024;
   unsigned numBlocks    = (V+threadsPerBlock-1)/threadsPerBlock;
+  unsigned numBlocksKernel    = (V+threadsPerBlock-1)/threadsPerBlock;
+  unsigned numBlocks_Edge    = (E+threadsPerBlock-1)/threadsPerBlock;
 
 
   // TIMER START
@@ -110,11 +112,8 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
 
 
   //DECLARE DEVICE AND HOST vars in params
-  float** h_BC;
-  h_BC = (float**)malloc(sizeof(float*)*(devicecount+1));
-  for(int i=0;i<=devicecount;i++){
-    h_BC[i] = (float*)malloc(sizeof(float)*(V+1));
-  }
+  float* h_BC;
+  h_BC= (float*)malloc(sizeof(float)*(V+1));
   float** d_BC;
   d_BC = (float**)malloc(sizeof(float*)*devicecount);
   for (int i = 0; i < devicecount; i++) {
@@ -136,17 +135,14 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
 
   for(int i=0;i<devicecount;i++){
     cudaSetDevice(i);
-    cudaMemcpyAsync(h_BC[i],d_BC[i],(V+1)*sizeof(float),cudaMemcpyDeviceToHost);
+    cudaMemcpyAsync(h_BC+h_vertex_partition[i],d_BC[i]+h_vertex_partition[i],(h_vertex_partition[i+1]-h_vertex_partition[i])*sizeof(float),cudaMemcpyDeviceToHost);
   }
-  for(int i=0;i<devicecount;i++){
+  for(int i=0;i<devicecount;i+=1){
     cudaSetDevice(i);
     cudaDeviceSynchronize();
   }
-  float** h_sigma;
-  h_sigma = (float**)malloc(sizeof(float*)*(devicecount+1));
-  for(int i=0;i<=devicecount;i++){
-    h_sigma[i]=(float*)malloc(sizeof(float)*(V+1));
-  }
+  float* h_sigma;
+  h_sigma=(float*)malloc(sizeof(float)*(V+1));
   float** d_sigma;
   d_sigma = (float**)malloc(sizeof(float*)*devicecount);
   for (int i = 0; i < devicecount; i++) {
@@ -154,11 +150,8 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
     cudaMalloc(&d_sigma[i], sizeof(float)*(V+1));
   }
 
-  float** h_delta;
-  h_delta = (float**)malloc(sizeof(float*)*(devicecount+1));
-  for(int i=0;i<=devicecount;i++){
-    h_delta[i]=(float*)malloc(sizeof(float)*(V+1));
-  }
+  float* h_delta;
+  h_delta=(float*)malloc(sizeof(float)*(V+1));
   float** d_delta;
   d_delta = (float**)malloc(sizeof(float*)*devicecount);
   for (int i = 0; i < devicecount; i++) {
@@ -183,9 +176,9 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
 
     for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
-      cudaMemcpyAsync(h_delta[i],d_delta[i],(V+1)*sizeof(float),cudaMemcpyDeviceToHost);
+      cudaMemcpyAsync(h_delta+h_vertex_partition[i],d_delta[i]+h_vertex_partition[i],(h_vertex_partition[i+1]-h_vertex_partition[i])*sizeof(float),cudaMemcpyDeviceToHost);
     }
-    for(int i=0;i<devicecount;i++){
+    for(int i=0;i<devicecount;i+=1){
       cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
@@ -201,16 +194,14 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
 
     for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
-      cudaMemcpyAsync(h_sigma[i],d_sigma[i],(V+1)*sizeof(float),cudaMemcpyDeviceToHost);
+      cudaMemcpyAsync(h_sigma+h_vertex_partition[i],d_sigma[i]+h_vertex_partition[i],(h_vertex_partition[i+1]-h_vertex_partition[i])*sizeof(float),cudaMemcpyDeviceToHost);
     }
-    for(int i=0;i<devicecount;i++){
+    for(int i=0;i<devicecount;i+=1){
       cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
     //hi2
-    for(int i=0;i<devicecount;i++){
-      h_sigma[i][src]=1;
-    }
+    h_sigma[src]=1;
     for(int i=0;i<devicecount;i++){
       cudaSetDevice(i);
       initIndex<float><<<1,1>>>(V,d_sigma[i],src,(float)1); //InitIndexDevice
@@ -253,9 +244,6 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
 
     int* h_level = (int*)malloc(sizeof(int) * (V+1));
 
-    for (int i = 0 ; i < devicecount ; i++){
-      h_level[i] = -1 ; 
-    }
     //EXTRA vars INITIALIZATION
     for (int i = 0 ; i < devicecount ; i++){
       cudaSetDevice(i);
@@ -266,11 +254,11 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
     }
 
     // long k =0 ;// For DEBUG
-    for (int i = 0 ; i < V ; i++){
-      h_sigma[devicecount][i] = 0 ; 
-    }
-    h_sigma[devicecount][src] = 1 ; 
+    h_sigma[src] = 1;
 
+    for (int i =0  ; i < V ; i++){
+      h_level[i] = -1;
+    }
     do {
       finished = true;
       for(int i = 0 ; i < devicecount ; i++){
@@ -285,7 +273,7 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
       //Kernel LAUNCH
       for(int i = 0 ; i < devicecount ; i++){
         cudaSetDevice(i);
-        fwd_pass<<<numBlocks,threadsPerBlock>>>(V, i, h_vertex_partition[i], h_vertex_partition[i+1], d_offset[i], d_edges[i], d_weight[i], d_delta[i], d_sigma[i], d_level[i], d_hops_from_source[i], d_finished[i],d_BC[i]); ///DONE from varList
+        fwd_pass<<<numBlocksKernel,threadsPerBlock>>>(V, i, h_vertex_partition[i], h_vertex_partition[i+1], d_offset[i], d_edges[i], d_weight[i], d_delta[i], d_sigma[i], d_level[i], d_hops_from_source[i], d_finished[i],d_BC[i]); ///DONE from varList
       }
 
       for(int i = 0 ; i < devicecount ; i++){
@@ -304,23 +292,19 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
       ++hops_from_source; // updating the level to process in the next iteration
       // k++; //DEBUG
 
-      for (int i = 0 ; i < devicecount ; i++){
-        cudaSetDevice(i);
-        cudaMemcpyAsync(h_sigma[i], d_sigma[i], sizeof(float) * (V), cudaMemcpyDeviceToHost);
-      }
+      if (devicecount > 1){
+        for (int i = 0 ; i < devicecount ; i++){
+          cudaSetDevice(i);
+          int s = h_vertex_partition[i], e = h_vertex_partition[i+1] ;
+          cudaMemcpyAsync(h_sigma+s, d_sigma[i]+s, sizeof(float) * (e-s), cudaMemcpyDeviceToHost);
+        }
 
-      for(int i = 0 ; i < devicecount ; i++){
-        cudaSetDevice(i);
-        cudaDeviceSynchronize();
-      }
-
-      for(int ver = 0 ; ver < V ; ver++){
-        if (h_level[ver] == hops_from_source) {
-          for(int device = 0 ; device < devicecount ; device++){
-            h_sigma[devicecount][ver] += h_sigma[device][ver];
-          }
+        for(int i = 0 ; i < devicecount ; i++){
+          cudaSetDevice(i);
+          cudaDeviceSynchronize();
         }
       }
+
 
       for(int i = 0 ; i < devicecount ; i++){
         cudaSetDevice(i);
@@ -336,36 +320,38 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
         finished = finished && h_finished[i];
       }
 
-      for(int i = 0 ; i < devicecount ; i++){
-        cudaSetDevice(i);
-        cudaMemcpyAsync(h_level_temp[i], d_level[i], sizeof(int) * (V), cudaMemcpyDeviceToHost);
-      }
+      if (devicecount > 1){
+        for(int i = 0 ; i < devicecount ; i++){
+          cudaSetDevice(i);
+          cudaMemcpyAsync(h_level_temp[i], d_level[i], sizeof(int) * (V), cudaMemcpyDeviceToHost);
+        }
 
-      for (int i = 0 ; i < devicecount ; i++){
-        cudaSetDevice(i);
-        cudaDeviceSynchronize();
-      }
+        for (int i = 0 ; i < devicecount ; i++){
+          cudaSetDevice(i);
+          cudaDeviceSynchronize();
+        }
 
-      for(int i = 0 ; i < V ; i++){
-        for(int j = 0 ; j < devicecount ; j++){
-          if(h_level_temp[j][i] > h_level[i]){
-            h_level[i] = h_level_temp[j][i];
-            break ; 
+        for(int i = 0 ; i < V ; i++){
+          for(int j = 0 ; j < devicecount ; j++){
+            if(h_level_temp[j][i] > h_level[i]){
+              h_level[i] = h_level_temp[j][i];
+              break ; 
+            }
           }
         }
-      }
 
-      for(int i = 0 ; i < devicecount ; i++){
-        cudaSetDevice(i);
-        cudaMemcpyAsync(d_level[i], h_level, sizeof(float) * (V), cudaMemcpyHostToDevice);
-        cudaMemcpyAsync(d_sigma[i], h_sigma[devicecount], sizeof(float) * (V), cudaMemcpyHostToDevice);
-      }
+        for(int i = 0 ; i < devicecount ; i++){
+          cudaSetDevice(i);
+          cudaMemcpyAsync(d_level[i], h_level, sizeof(int) * (V), cudaMemcpyHostToDevice);
+          cudaMemcpyAsync(d_sigma[i], h_sigma, sizeof(float) * (V), cudaMemcpyHostToDevice);
+        }
 
-      for(int i = 0 ; i < devicecount ; i++){
-        cudaSetDevice(i);
-        cudaDeviceSynchronize();
-      }
+        for(int i = 0 ; i < devicecount ; i++){
+          cudaSetDevice(i);
+          cudaDeviceSynchronize();
+        }
 
+      }
     }while(!finished);
 
     hops_from_source--;
@@ -384,7 +370,7 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
       //KERNEL Launch
       for(int i = 0 ; i < devicecount ; i++){
         cudaSetDevice(i);
-        back_pass<<<numBlocks,threadsPerBlock>>>(V, i, h_vertex_partition[i], h_vertex_partition[i+1], d_meta[i], d_data[i], d_weight[i], d_delta[i], d_sigma[i], d_level[i], d_hops_from_source[i], d_finished[i]
+        back_pass<<<numBlocksKernel,threadsPerBlock>>>(V, i, h_vertex_partition[i], h_vertex_partition[i+1], d_offset[i], d_edges[i], d_weight[i], d_delta[i], d_sigma[i], d_level[i], d_hops_from_source[i], d_finished[i]
           ,d_BC[i]);
       }
 
@@ -402,33 +388,26 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
         cudaSetDevice(i) ; 
         cudaDeviceSynchronize() ; 
       }
-      for (int i = 0 ; i < devicecount ; i++){
-        cudaSetDevice(i);
-        cudaMemcpyAsync(h_delta[i], d_delta[i], sizeof(int) * (V), cudaMemcpyDeviceToHost);
-      }
-      for (int i = 0 ; i < devicecount ; i++){
-        cudaSetDevice(i);
-        cudaDeviceSynchronize();
-      }
-
-      for(int ver = 0 ; ver < V ; ver++){
-        if (h_delta[devicecount][ver] == 0){
-          for(int device = 0 ; device < devicecount ; device++){
-            if(h_delta[device][ver] != 0){
-              h_delta[devicecount][ver] = h_delta[device][ver];
-            }
-          }
+      if (devicecount > 1) {
+        for (int i = 0 ; i < devicecount ; i++){
+          cudaSetDevice(i);
+          int s = h_vertex_partition[i], e = h_vertex_partition[i+1];
+          cudaMemcpyAsync(h_delta+s, d_delta[i]+s, sizeof(float) * (e-s), cudaMemcpyDeviceToHost);
         }
-      }
+        for (int i = 0 ; i < devicecount ; i++){
+          cudaSetDevice(i);
+          cudaDeviceSynchronize();
+        }
 
-      for(int i = 0 ; i < devicecount ; i++){
-        cudaSetDevice(i);
-        cudaMemcpyAsync(d_delta[i], h_delta, sizeof(int) * (V), cudaMemcpyHostToDevice);
-      }
+        for(int i = 0 ; i < devicecount ; i++){
+          cudaSetDevice(i);
+          cudaMemcpyAsync(d_delta[i], h_delta, sizeof(float) * (V), cudaMemcpyHostToDevice);
+        }
 
-      for(int i = 0 ; i < devicecount ; i++){
-        cudaSetDevice(i);
-        cudaDeviceSynchronize();
+        for(int i = 0 ; i < devicecount ; i++){
+          cudaSetDevice(i);
+          cudaDeviceSynchronize();
+        }
       }
 
     }
@@ -440,5 +419,13 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
   cudaEventElapsedTime(&milliseconds, start, stop);
   printf("GPU Time: %.6f ms\n", milliseconds);
 
-  cudaMemcpy(      BC,     d_BC, sizeof(float)*(V), cudaMemcpyDeviceToHost);
+  for(int i = 0 ; i < devicecount ; i++){
+    cudaSetDevice(i);
+    int s = h_vertex_partition[i], e = h_vertex_partition[i+1] ; 
+    cudaMemcpyAsync(      BC + s,     d_BC[i] + s, sizeof(float)*(e-s), cudaMemcpyDeviceToHost);
+  }
+  for (int i = 0 ; i < devicecount; i++){
+    cudaSetDevice(i) ; 
+    cudaDeviceSynchronize();
+  }
 } //end FUN

@@ -23,6 +23,7 @@
 	//extern SymbolTable* symbTab;
 	FrontEndContext frontEndContext;
 	map<string,int> push_map;
+	set<string> allGpuUsedVars;
 	char* backendTarget ;
     vector<Identifier*> tempIds; //stores graph vars in current function's param list.
     //symbTab=new SymbolTable();

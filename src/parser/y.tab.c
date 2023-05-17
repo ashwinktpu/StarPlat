@@ -92,12 +92,13 @@
 	//extern SymbolTable* symbTab;
 	FrontEndContext frontEndContext;
 	map<string,int> push_map;
+	set<string> allGpuUsedVars;
 	char* backendTarget ;
     vector<Identifier*> tempIds; //stores graph vars in current function's param list.
     //symbTab=new SymbolTable();
 	//symbolTableList.push_back(new SymbolTable());
 
-#line 101 "y.tab.c"
+#line 102 "y.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -301,7 +302,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 35 "lrparser.y"
+#line 36 "lrparser.y"
 
     int  info;
     long ival;
@@ -316,7 +317,7 @@ union YYSTYPE
     tempNode* temporary;
      
 
-#line 320 "y.tab.c"
+#line 321 "y.tab.c"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -699,21 +700,21 @@ static const yytype_int8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,   100,   100,   101,   103,   110,   116,   122,   128,   134,
-     140,   141,   144,   155,   159,   168,   171,   172,   174,   175,
-     176,   177,   178,   179,   180,   181,   182,   183,   184,   185,
-     188,   190,   192,   194,   196,   198,   200,   203,   211,   214,
-     217,   221,   222,   223,   226,   227,   228,   229,   230,   231,
-     232,   235,   236,   238,   239,   241,   243,   246,   247,   248,
-     250,   251,   252,   253,   255,   257,   259,   260,   261,   262,
-     263,   264,   265,   266,   267,   268,   269,   270,   271,   272,
-     273,   276,   277,   278,   280,   281,   283,   288,   292,   301,
-     302,   303,   304,   305,   306,   309,   310,   312,   313,   314,
-     315,   317,   318,   319,   321,   322,   324,   326,   327,   330,
-     331,   333,   336,   337,   338,   339,   340,   342,   344,   346,
-     347,   349,   350,   359,   361,   362,   363,   364,   365,   367,
-     368,   369,   371,   375,   392,   399,   404,   412,   413,   418,
-     419,   422,   427,   431
+       0,   101,   101,   102,   104,   111,   117,   123,   129,   135,
+     141,   142,   145,   156,   160,   169,   172,   173,   175,   176,
+     177,   178,   179,   180,   181,   182,   183,   184,   185,   186,
+     189,   191,   193,   195,   197,   199,   201,   204,   212,   215,
+     218,   222,   223,   224,   227,   228,   229,   230,   231,   232,
+     233,   236,   237,   239,   240,   242,   244,   247,   248,   249,
+     251,   252,   253,   254,   256,   258,   260,   261,   262,   263,
+     264,   265,   266,   267,   268,   269,   270,   271,   272,   273,
+     274,   277,   278,   279,   281,   282,   284,   289,   293,   302,
+     303,   304,   305,   306,   307,   310,   311,   313,   314,   315,
+     316,   318,   319,   320,   322,   323,   325,   327,   328,   331,
+     332,   334,   337,   338,   339,   340,   341,   343,   345,   347,
+     348,   350,   351,   360,   362,   363,   364,   365,   366,   368,
+     369,   370,   372,   376,   393,   400,   405,   413,   414,   419,
+     420,   423,   428,   432
 };
 #endif
 
@@ -1797,91 +1798,91 @@ yyreduce:
   switch (yyn)
     {
   case 3:
-#line 101 "lrparser.y"
+#line 102 "lrparser.y"
                                {/* printf("LIST SIZE %d",frontEndContext.getFuncList().size())  ;*/ }
-#line 1803 "y.tab.c"
+#line 1804 "y.tab.c"
     break;
 
   case 4:
-#line 103 "lrparser.y"
+#line 104 "lrparser.y"
                                             { 
 	                                          Function* func=(Function*)(yyvsp[-1].node);
                                               blockStatement* block=(blockStatement*)(yyvsp[0].node);
                                               func->setBlockStatement(block);
 											   Util::addFuncToList(func);
 											}
-#line 1814 "y.tab.c"
+#line 1815 "y.tab.c"
     break;
 
   case 5:
-#line 110 "lrparser.y"
+#line 111 "lrparser.y"
                                            { 
 										   (yyval.node)=Util::createFuncNode((yyvsp[-3].node),(yyvsp[-1].pList)->PList);
                                            Util::setCurrentFuncType(GEN_FUNC);
 										   Util::resetTemp(tempIds);
 										   tempIds.clear();
 	                                      }
-#line 1825 "y.tab.c"
+#line 1826 "y.tab.c"
     break;
 
   case 6:
-#line 116 "lrparser.y"
+#line 117 "lrparser.y"
                                                            { 
 										   (yyval.node)=Util::createStaticFuncNode((yyvsp[-3].node),(yyvsp[-1].pList)->PList);
                                             Util::setCurrentFuncType(STATIC_FUNC);
 											Util::resetTemp(tempIds);
 											tempIds.clear();
 	                                      }
-#line 1836 "y.tab.c"
+#line 1837 "y.tab.c"
     break;
 
   case 7:
-#line 122 "lrparser.y"
+#line 123 "lrparser.y"
                                                      { 
 										   (yyval.node)=Util::createIncrementalNode((yyvsp[-1].pList)->PList);
                                             Util::setCurrentFuncType(INCREMENTAL_FUNC);
 											Util::resetTemp(tempIds);
 											tempIds.clear();
 	                                      }
-#line 1847 "y.tab.c"
+#line 1848 "y.tab.c"
     break;
 
   case 8:
-#line 128 "lrparser.y"
+#line 129 "lrparser.y"
                                                              { 
 										   (yyval.node)=Util::createDecrementalNode((yyvsp[-1].pList)->PList);
                                             Util::setCurrentFuncType(DECREMENTAL_FUNC);
 											Util::resetTemp(tempIds);
 											tempIds.clear();
 	                                      }
-#line 1858 "y.tab.c"
+#line 1859 "y.tab.c"
     break;
 
   case 9:
-#line 134 "lrparser.y"
+#line 135 "lrparser.y"
                                                         { (yyval.node)=Util::createDynamicFuncNode((yyvsp[-3].node),(yyvsp[-1].pList)->PList);
                                             Util::setCurrentFuncType(DYNAMIC_FUNC);
 											Util::resetTemp(tempIds);
 											tempIds.clear();
 											}
-#line 1868 "y.tab.c"
+#line 1869 "y.tab.c"
     break;
 
   case 10:
-#line 140 "lrparser.y"
+#line 141 "lrparser.y"
                  {(yyval.pList)=Util::createPList((yyvsp[0].node));}
-#line 1874 "y.tab.c"
+#line 1875 "y.tab.c"
     break;
 
   case 11:
-#line 141 "lrparser.y"
+#line 142 "lrparser.y"
                                      {(yyval.pList)=Util::addToPList((yyvsp[0].pList),(yyvsp[-2].node)); 
 			                           }
-#line 1881 "y.tab.c"
+#line 1882 "y.tab.c"
     break;
 
   case 12:
-#line 144 "lrparser.y"
+#line 145 "lrparser.y"
                  {  //Identifier* id=(Identifier*)Util::createIdentifierNode($2);
                         Type* type=(Type*)(yyvsp[-1].node);
 	                     Identifier* id=(Identifier*)(yyvsp[0].node);
@@ -1893,20 +1894,20 @@ yyreduce:
 							}
 					printf("\n");
                     (yyval.node)=Util::createParamNode((yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1897 "y.tab.c"
+#line 1898 "y.tab.c"
     break;
 
   case 13:
-#line 155 "lrparser.y"
+#line 156 "lrparser.y"
                           { // Identifier* id=(Identifier*)Util::createIdentifierNode($2);
 			  
 					
                              (yyval.node)=Util::createParamNode((yyvsp[-1].node),(yyvsp[0].node));}
-#line 1906 "y.tab.c"
+#line 1907 "y.tab.c"
     break;
 
   case 14:
-#line 159 "lrparser.y"
+#line 160 "lrparser.y"
                                                  { // Identifier* id1=(Identifier*)Util::createIdentifierNode($4);
 			                            //Identifier* id=(Identifier*)Util::createIdentifierNode($2);
 				                        Type* tempType=(Type*)(yyvsp[-4].node);
@@ -1914,137 +1915,137 @@ yyreduce:
 										  tempType->addSourceGraph((yyvsp[-1].node));
 				                         (yyval.node)=Util::createParamNode(tempType,(yyvsp[-3].node));
 									 }
-#line 1918 "y.tab.c"
+#line 1919 "y.tab.c"
     break;
 
   case 15:
-#line 168 "lrparser.y"
+#line 169 "lrparser.y"
                                 {(yyval.node)=(yyvsp[0].node);}
-#line 1924 "y.tab.c"
+#line 1925 "y.tab.c"
     break;
 
   case 16:
-#line 171 "lrparser.y"
+#line 172 "lrparser.y"
               {}
-#line 1930 "y.tab.c"
+#line 1931 "y.tab.c"
     break;
 
   case 17:
-#line 172 "lrparser.y"
+#line 173 "lrparser.y"
                                { Util::addToBlock((yyvsp[0].node)); }
-#line 1936 "y.tab.c"
+#line 1937 "y.tab.c"
     break;
 
   case 18:
-#line 174 "lrparser.y"
+#line 175 "lrparser.y"
                           {(yyval.node)=(yyvsp[-1].node);}
-#line 1942 "y.tab.c"
+#line 1943 "y.tab.c"
     break;
 
   case 19:
-#line 175 "lrparser.y"
+#line 176 "lrparser.y"
                        {(yyval.node)=(yyvsp[-1].node);}
-#line 1948 "y.tab.c"
+#line 1949 "y.tab.c"
     break;
 
   case 20:
-#line 176 "lrparser.y"
+#line 177 "lrparser.y"
                        {(yyval.node)=Util::createNodeForProcCallStmt((yyvsp[-1].node));}
-#line 1954 "y.tab.c"
+#line 1955 "y.tab.c"
     break;
 
   case 21:
-#line 177 "lrparser.y"
+#line 178 "lrparser.y"
                       {(yyval.node)=(yyvsp[0].node);}
-#line 1960 "y.tab.c"
+#line 1961 "y.tab.c"
     break;
 
   case 22:
-#line 178 "lrparser.y"
+#line 179 "lrparser.y"
                       {(yyval.node)=(yyvsp[-1].node);}
-#line 1966 "y.tab.c"
+#line 1967 "y.tab.c"
     break;
 
   case 23:
-#line 179 "lrparser.y"
+#line 180 "lrparser.y"
                           {(yyval.node)=(yyvsp[0].node); }
-#line 1972 "y.tab.c"
+#line 1973 "y.tab.c"
     break;
 
   case 24:
-#line 180 "lrparser.y"
+#line 181 "lrparser.y"
                           {(yyval.node)=(yyvsp[0].node);}
-#line 1978 "y.tab.c"
+#line 1979 "y.tab.c"
     break;
 
   case 25:
-#line 181 "lrparser.y"
+#line 182 "lrparser.y"
                          {(yyval.node)=Util::createNodeForUnaryStatements((yyvsp[-1].node));}
-#line 1984 "y.tab.c"
+#line 1985 "y.tab.c"
     break;
 
   case 26:
-#line 182 "lrparser.y"
+#line 183 "lrparser.y"
                           {(yyval.node) = (yyvsp[-1].node) ;}
-#line 1990 "y.tab.c"
+#line 1991 "y.tab.c"
     break;
 
   case 27:
-#line 183 "lrparser.y"
+#line 184 "lrparser.y"
                            {(yyval.node) = (yyvsp[0].node);}
-#line 1996 "y.tab.c"
+#line 1997 "y.tab.c"
     break;
 
   case 28:
-#line 184 "lrparser.y"
+#line 185 "lrparser.y"
                            {(yyval.node) = (yyvsp[0].node);}
-#line 2002 "y.tab.c"
+#line 2003 "y.tab.c"
     break;
 
   case 29:
-#line 185 "lrparser.y"
+#line 186 "lrparser.y"
                               {(yyval.node) = (yyvsp[0].node);}
-#line 2008 "y.tab.c"
+#line 2009 "y.tab.c"
     break;
 
   case 30:
-#line 188 "lrparser.y"
+#line 189 "lrparser.y"
                                                    { (yyval.node)=Util::finishBlock();}
-#line 2014 "y.tab.c"
+#line 2015 "y.tab.c"
     break;
 
   case 31:
-#line 190 "lrparser.y"
+#line 191 "lrparser.y"
                                                                     {(yyval.node) = Util::createBatchBlockStmt((yyvsp[-4].node), (yyvsp[-2].node), (yyvsp[0].node));}
-#line 2020 "y.tab.c"
+#line 2021 "y.tab.c"
     break;
 
   case 32:
-#line 192 "lrparser.y"
+#line 193 "lrparser.y"
                                                                                 {(yyval.node) = Util::createOnAddBlock((yyvsp[-7].node), (yyvsp[-5].node), (yyvsp[-3].node), (yyvsp[0].node));}
-#line 2026 "y.tab.c"
+#line 2027 "y.tab.c"
     break;
 
   case 33:
-#line 194 "lrparser.y"
+#line 195 "lrparser.y"
                                                                                       {(yyval.node) = Util::createOnDeleteBlock((yyvsp[-7].node), (yyvsp[-5].node), (yyvsp[-3].node), (yyvsp[0].node));}
-#line 2032 "y.tab.c"
+#line 2033 "y.tab.c"
     break;
 
   case 34:
-#line 196 "lrparser.y"
+#line 197 "lrparser.y"
                 { Util::createNewBlock(); }
-#line 2038 "y.tab.c"
+#line 2039 "y.tab.c"
     break;
 
   case 36:
-#line 200 "lrparser.y"
+#line 201 "lrparser.y"
                                   {(yyval.node) = Util::createReturnStatementNode((yyvsp[0].node));}
-#line 2044 "y.tab.c"
+#line 2045 "y.tab.c"
     break;
 
   case 37:
-#line 203 "lrparser.y"
+#line 204 "lrparser.y"
                          {
 	                     Type* type=(Type*)(yyvsp[-1].node);
 	                     Identifier* id=(Identifier*)(yyvsp[0].node);
@@ -2053,608 +2054,608 @@ yyreduce:
 						    Util::storeGraphId(id);
 
                          (yyval.node)=Util::createNormalDeclNode((yyvsp[-1].node),(yyvsp[0].node));}
-#line 2057 "y.tab.c"
+#line 2058 "y.tab.c"
     break;
 
   case 38:
-#line 211 "lrparser.y"
+#line 212 "lrparser.y"
                             {//Identifier* id=(Identifier*)Util::createIdentifierNode($2);
 	                    
 	                    (yyval.node)=Util::createAssignedDeclNode((yyvsp[-3].node),(yyvsp[-2].node),(yyvsp[0].node));}
-#line 2065 "y.tab.c"
+#line 2066 "y.tab.c"
     break;
 
   case 39:
-#line 214 "lrparser.y"
+#line 215 "lrparser.y"
                     {//Identifier* id=(Identifier*)Util::createIdentifierNode($2);
 	            
                          (yyval.node)=Util::createNormalDeclNode((yyvsp[-1].node),(yyvsp[0].node)); }
-#line 2073 "y.tab.c"
+#line 2074 "y.tab.c"
     break;
 
   case 40:
-#line 217 "lrparser.y"
+#line 218 "lrparser.y"
                            {//Identifier* id=(Identifier*)Util::createIdentifierNode($2);
 	                   
 	                    (yyval.node)=Util::createAssignedDeclNode((yyvsp[-3].node),(yyvsp[-2].node),(yyvsp[0].node));}
-#line 2081 "y.tab.c"
+#line 2082 "y.tab.c"
     break;
 
   case 41:
-#line 221 "lrparser.y"
+#line 222 "lrparser.y"
                  {(yyval.node)=(yyvsp[0].node); }
-#line 2087 "y.tab.c"
+#line 2088 "y.tab.c"
     break;
 
   case 42:
-#line 222 "lrparser.y"
+#line 223 "lrparser.y"
                 {(yyval.node)=(yyvsp[0].node);}
-#line 2093 "y.tab.c"
+#line 2094 "y.tab.c"
     break;
 
   case 43:
-#line 223 "lrparser.y"
+#line 224 "lrparser.y"
                       { (yyval.node)=(yyvsp[0].node);}
-#line 2099 "y.tab.c"
+#line 2100 "y.tab.c"
     break;
 
   case 44:
-#line 226 "lrparser.y"
+#line 227 "lrparser.y"
                  { (yyval.node)=Util::createPrimitiveTypeNode(TYPE_INT);}
-#line 2105 "y.tab.c"
+#line 2106 "y.tab.c"
     break;
 
   case 45:
-#line 227 "lrparser.y"
+#line 228 "lrparser.y"
                   { (yyval.node)=Util::createPrimitiveTypeNode(TYPE_FLOAT);}
-#line 2111 "y.tab.c"
+#line 2112 "y.tab.c"
     break;
 
   case 46:
-#line 228 "lrparser.y"
+#line 229 "lrparser.y"
                  { (yyval.node)=Util::createPrimitiveTypeNode(TYPE_BOOL);}
-#line 2117 "y.tab.c"
+#line 2118 "y.tab.c"
     break;
 
   case 47:
-#line 229 "lrparser.y"
+#line 230 "lrparser.y"
                    { (yyval.node)=Util::createPrimitiveTypeNode(TYPE_DOUBLE); }
-#line 2123 "y.tab.c"
+#line 2124 "y.tab.c"
     break;
 
   case 48:
-#line 230 "lrparser.y"
+#line 231 "lrparser.y"
              {(yyval.node)=(yyval.node)=Util::createPrimitiveTypeNode(TYPE_LONG);}
-#line 2129 "y.tab.c"
+#line 2130 "y.tab.c"
     break;
 
   case 49:
-#line 231 "lrparser.y"
+#line 232 "lrparser.y"
                          {(yyval.node)=(yyval.node)=Util::createPrimitiveTypeNode(TYPE_UNSIGNED_INT);}
-#line 2135 "y.tab.c"
+#line 2136 "y.tab.c"
     break;
 
   case 50:
-#line 232 "lrparser.y"
+#line 233 "lrparser.y"
                           {(yyval.node)=(yyval.node)=Util::createPrimitiveTypeNode(TYPE_UNSIGNED_LONG);}
-#line 2141 "y.tab.c"
+#line 2142 "y.tab.c"
     break;
 
   case 51:
-#line 235 "lrparser.y"
+#line 236 "lrparser.y"
                 { (yyval.node)=Util::createGraphTypeNode(TYPE_GRAPH,NULL);}
-#line 2147 "y.tab.c"
+#line 2148 "y.tab.c"
     break;
 
   case 52:
-#line 236 "lrparser.y"
+#line 237 "lrparser.y"
                      {(yyval.node)=Util::createGraphTypeNode(TYPE_DIRGRAPH,NULL);}
-#line 2153 "y.tab.c"
+#line 2154 "y.tab.c"
     break;
 
   case 53:
-#line 238 "lrparser.y"
+#line 239 "lrparser.y"
                      { (yyval.node)=Util::createCollectionTypeNode(TYPE_LIST,NULL);}
-#line 2159 "y.tab.c"
+#line 2160 "y.tab.c"
     break;
 
   case 54:
-#line 239 "lrparser.y"
+#line 240 "lrparser.y"
                                         {//Identifier* id=(Identifier*)Util::createIdentifierNode($3);
 			                     (yyval.node)=Util::createCollectionTypeNode(TYPE_SETN,(yyvsp[-1].node));}
-#line 2166 "y.tab.c"
+#line 2167 "y.tab.c"
     break;
 
   case 55:
-#line 241 "lrparser.y"
+#line 242 "lrparser.y"
                                          {// Identifier* id=(Identifier*)Util::createIdentifierNode($3);
 					                    (yyval.node)=Util::createCollectionTypeNode(TYPE_SETE,(yyvsp[-1].node));}
-#line 2173 "y.tab.c"
+#line 2174 "y.tab.c"
     break;
 
   case 56:
-#line 243 "lrparser.y"
+#line 244 "lrparser.y"
                                                          { (yyval.node)=Util::createCollectionTypeNode(TYPE_UPDATES,(yyvsp[-1].node));}
-#line 2179 "y.tab.c"
+#line 2180 "y.tab.c"
     break;
 
   case 57:
-#line 246 "lrparser.y"
+#line 247 "lrparser.y"
                {(yyval.node)=Util::createNodeEdgeTypeNode(TYPE_NODE) ;}
-#line 2185 "y.tab.c"
+#line 2186 "y.tab.c"
     break;
 
   case 58:
-#line 247 "lrparser.y"
+#line 248 "lrparser.y"
                 {(yyval.node)=Util::createNodeEdgeTypeNode(TYPE_EDGE);}
-#line 2191 "y.tab.c"
+#line 2192 "y.tab.c"
     break;
 
   case 59:
-#line 248 "lrparser.y"
+#line 249 "lrparser.y"
                       {(yyval.node)=(yyvsp[0].node);}
-#line 2197 "y.tab.c"
+#line 2198 "y.tab.c"
     break;
 
   case 60:
-#line 250 "lrparser.y"
+#line 251 "lrparser.y"
                                   { (yyval.node)=Util::createPropertyTypeNode(TYPE_PROPNODE,(yyvsp[-1].node)); }
-#line 2203 "y.tab.c"
+#line 2204 "y.tab.c"
     break;
 
   case 61:
-#line 251 "lrparser.y"
+#line 252 "lrparser.y"
                                        { (yyval.node)=Util::createPropertyTypeNode(TYPE_PROPEDGE,(yyvsp[-1].node)); }
-#line 2209 "y.tab.c"
+#line 2210 "y.tab.c"
     break;
 
   case 62:
-#line 252 "lrparser.y"
+#line 253 "lrparser.y"
                                                     {  (yyval.node)=Util::createPropertyTypeNode(TYPE_PROPNODE,(yyvsp[-1].node)); }
-#line 2215 "y.tab.c"
+#line 2216 "y.tab.c"
     break;
 
   case 63:
-#line 253 "lrparser.y"
+#line 254 "lrparser.y"
                                                      {(yyval.node)=Util::createPropertyTypeNode(TYPE_PROPEDGE,(yyvsp[-1].node));}
-#line 2221 "y.tab.c"
+#line 2222 "y.tab.c"
     break;
 
   case 64:
-#line 255 "lrparser.y"
+#line 256 "lrparser.y"
                                 { (yyval.node)=Util::createAssignmentNode((yyvsp[-2].node),(yyvsp[0].node));}
-#line 2227 "y.tab.c"
+#line 2228 "y.tab.c"
     break;
 
   case 65:
-#line 257 "lrparser.y"
+#line 258 "lrparser.y"
                  { (yyval.node)=(yyvsp[0].node);}
-#line 2233 "y.tab.c"
+#line 2234 "y.tab.c"
     break;
 
   case 66:
-#line 259 "lrparser.y"
+#line 260 "lrparser.y"
                        { (yyval.node)=(yyvsp[0].node);}
-#line 2239 "y.tab.c"
+#line 2240 "y.tab.c"
     break;
 
   case 67:
-#line 260 "lrparser.y"
+#line 261 "lrparser.y"
                                          { (yyval.node)=Util::createNodeForArithmeticExpr((yyvsp[-2].node),(yyvsp[0].node),OPERATOR_ADD);}
-#line 2245 "y.tab.c"
+#line 2246 "y.tab.c"
     break;
 
   case 68:
-#line 261 "lrparser.y"
+#line 262 "lrparser.y"
                                              { (yyval.node)=Util::createNodeForArithmeticExpr((yyvsp[-2].node),(yyvsp[0].node),OPERATOR_SUB);}
-#line 2251 "y.tab.c"
+#line 2252 "y.tab.c"
     break;
 
   case 69:
-#line 262 "lrparser.y"
+#line 263 "lrparser.y"
                                              {(yyval.node)=Util::createNodeForArithmeticExpr((yyvsp[-2].node),(yyvsp[0].node),OPERATOR_MUL);}
-#line 2257 "y.tab.c"
+#line 2258 "y.tab.c"
     break;
 
   case 70:
-#line 263 "lrparser.y"
+#line 264 "lrparser.y"
                                            {(yyval.node)=Util::createNodeForArithmeticExpr((yyvsp[-2].node),(yyvsp[0].node),OPERATOR_DIV);}
-#line 2263 "y.tab.c"
+#line 2264 "y.tab.c"
     break;
 
   case 71:
-#line 264 "lrparser.y"
+#line 265 "lrparser.y"
                                               {(yyval.node)=Util::createNodeForLogicalExpr((yyvsp[-2].node),(yyvsp[0].node),OPERATOR_AND);}
-#line 2269 "y.tab.c"
+#line 2270 "y.tab.c"
     break;
 
   case 72:
-#line 265 "lrparser.y"
+#line 266 "lrparser.y"
                                                   {(yyval.node)=Util::createNodeForLogicalExpr((yyvsp[-2].node),(yyvsp[0].node),OPERATOR_OR);}
-#line 2275 "y.tab.c"
+#line 2276 "y.tab.c"
     break;
 
   case 73:
-#line 266 "lrparser.y"
+#line 267 "lrparser.y"
                                                  {(yyval.node)=Util::createNodeForRelationalExpr((yyvsp[-2].node),(yyvsp[0].node),OPERATOR_LE);}
-#line 2281 "y.tab.c"
+#line 2282 "y.tab.c"
     break;
 
   case 74:
-#line 267 "lrparser.y"
+#line 268 "lrparser.y"
                                                 {(yyval.node)=Util::createNodeForRelationalExpr((yyvsp[-2].node),(yyvsp[0].node),OPERATOR_GE);}
-#line 2287 "y.tab.c"
+#line 2288 "y.tab.c"
     break;
 
   case 75:
-#line 268 "lrparser.y"
+#line 269 "lrparser.y"
                                                     {(yyval.node)=Util::createNodeForRelationalExpr((yyvsp[-2].node),(yyvsp[0].node),OPERATOR_LT);}
-#line 2293 "y.tab.c"
+#line 2294 "y.tab.c"
     break;
 
   case 76:
-#line 269 "lrparser.y"
+#line 270 "lrparser.y"
                                                     {(yyval.node)=Util::createNodeForRelationalExpr((yyvsp[-2].node),(yyvsp[0].node),OPERATOR_GT);}
-#line 2299 "y.tab.c"
+#line 2300 "y.tab.c"
     break;
 
   case 77:
-#line 270 "lrparser.y"
+#line 271 "lrparser.y"
                                                         {(yyval.node)=Util::createNodeForRelationalExpr((yyvsp[-2].node),(yyvsp[0].node),OPERATOR_EQ);}
-#line 2305 "y.tab.c"
+#line 2306 "y.tab.c"
     break;
 
   case 78:
-#line 271 "lrparser.y"
+#line 272 "lrparser.y"
                                             {(yyval.node)=Util::createNodeForRelationalExpr((yyvsp[-2].node),(yyvsp[0].node),OPERATOR_NE);}
-#line 2311 "y.tab.c"
+#line 2312 "y.tab.c"
     break;
 
   case 79:
-#line 272 "lrparser.y"
+#line 273 "lrparser.y"
                                          {(yyval.node)=Util::createNodeForUnaryExpr((yyvsp[0].node),OPERATOR_NOT);}
-#line 2317 "y.tab.c"
+#line 2318 "y.tab.c"
     break;
 
   case 80:
-#line 273 "lrparser.y"
+#line 274 "lrparser.y"
                                           { Expression* expr=(Expression*)(yyvsp[-1].node);
 				                     expr->setEnclosedBrackets();
 			                        (yyval.node)=expr;}
-#line 2325 "y.tab.c"
+#line 2326 "y.tab.c"
     break;
 
   case 81:
-#line 276 "lrparser.y"
+#line 277 "lrparser.y"
                        {(yyval.node)=(yyvsp[0].node);}
-#line 2331 "y.tab.c"
+#line 2332 "y.tab.c"
     break;
 
   case 82:
-#line 277 "lrparser.y"
+#line 278 "lrparser.y"
                                     { (yyval.node)=Util::createNodeForId((yyvsp[0].node));}
-#line 2337 "y.tab.c"
+#line 2338 "y.tab.c"
     break;
 
   case 83:
-#line 278 "lrparser.y"
+#line 279 "lrparser.y"
                                       {(yyval.node)=(yyvsp[0].node);}
-#line 2343 "y.tab.c"
+#line 2344 "y.tab.c"
     break;
 
   case 84:
-#line 280 "lrparser.y"
+#line 281 "lrparser.y"
                                    {(yyval.node)=Util::createNodeForUnaryExpr((yyvsp[-1].node),OPERATOR_INC);}
-#line 2349 "y.tab.c"
+#line 2350 "y.tab.c"
     break;
 
   case 85:
-#line 281 "lrparser.y"
+#line 282 "lrparser.y"
                                                 {(yyval.node)=Util::createNodeForUnaryExpr((yyvsp[-1].node),OPERATOR_DEC);}
-#line 2355 "y.tab.c"
+#line 2356 "y.tab.c"
     break;
 
   case 86:
-#line 283 "lrparser.y"
+#line 284 "lrparser.y"
                                       { 
                                        
                                        (yyval.node) = Util::createNodeForProcCall((yyvsp[-3].node),(yyvsp[-1].aList)->AList); 
 
 									    }
-#line 2365 "y.tab.c"
+#line 2366 "y.tab.c"
     break;
 
   case 87:
-#line 288 "lrparser.y"
+#line 289 "lrparser.y"
                                                          { ASTNode* id = Util::createIdentifierNode("Incremental");
 			                                   (yyval.node) = Util::createNodeForProcCall(id, (yyvsp[-1].aList)->AList); 
 
 				                               }
-#line 2374 "y.tab.c"
+#line 2375 "y.tab.c"
     break;
 
   case 88:
-#line 292 "lrparser.y"
+#line 293 "lrparser.y"
                                                          { ASTNode* id = Util::createIdentifierNode("Decremental");
 			                                   (yyval.node) = Util::createNodeForProcCall(id, (yyvsp[-1].aList)->AList); 
 
 				                               }
-#line 2383 "y.tab.c"
+#line 2384 "y.tab.c"
     break;
 
   case 89:
-#line 301 "lrparser.y"
+#line 302 "lrparser.y"
               { (yyval.node) = Util::createNodeForIval((yyvsp[0].ival)); }
-#line 2389 "y.tab.c"
+#line 2390 "y.tab.c"
     break;
 
   case 90:
-#line 302 "lrparser.y"
+#line 303 "lrparser.y"
                     {(yyval.node) = Util::createNodeForFval((yyvsp[0].fval));}
-#line 2395 "y.tab.c"
+#line 2396 "y.tab.c"
     break;
 
   case 91:
-#line 303 "lrparser.y"
+#line 304 "lrparser.y"
                    { (yyval.node) = Util::createNodeForBval((yyvsp[0].bval));}
-#line 2401 "y.tab.c"
+#line 2402 "y.tab.c"
     break;
 
   case 92:
-#line 304 "lrparser.y"
+#line 305 "lrparser.y"
                 {(yyval.node)=Util::createNodeForINF(true);}
-#line 2407 "y.tab.c"
+#line 2408 "y.tab.c"
     break;
 
   case 93:
-#line 305 "lrparser.y"
+#line 306 "lrparser.y"
                   {(yyval.node)=Util::createNodeForINF(true);}
-#line 2413 "y.tab.c"
+#line 2414 "y.tab.c"
     break;
 
   case 94:
-#line 306 "lrparser.y"
+#line 307 "lrparser.y"
                   {(yyval.node)=Util::createNodeForINF(false);}
-#line 2419 "y.tab.c"
+#line 2420 "y.tab.c"
     break;
 
   case 95:
-#line 309 "lrparser.y"
+#line 310 "lrparser.y"
                             { (yyval.node)=(yyvsp[0].node); }
-#line 2425 "y.tab.c"
+#line 2426 "y.tab.c"
     break;
 
   case 96:
-#line 310 "lrparser.y"
+#line 311 "lrparser.y"
                              { (yyval.node)=(yyvsp[0].node); }
-#line 2431 "y.tab.c"
+#line 2432 "y.tab.c"
     break;
 
   case 97:
-#line 312 "lrparser.y"
+#line 313 "lrparser.y"
                                                                               { (yyval.node)=Util::createNodeForFixedPointStmt((yyvsp[-4].node),(yyvsp[-2].node),(yyvsp[0].node));}
-#line 2437 "y.tab.c"
+#line 2438 "y.tab.c"
     break;
 
   case 98:
-#line 313 "lrparser.y"
+#line 314 "lrparser.y"
                                                                  {(yyval.node)=Util::createNodeForWhileStmt((yyvsp[-2].node),(yyvsp[0].node)); }
-#line 2443 "y.tab.c"
+#line 2444 "y.tab.c"
     break;
 
   case 99:
-#line 314 "lrparser.y"
+#line 315 "lrparser.y"
                                                                            {(yyval.node)=Util::createNodeForDoWhileStmt((yyvsp[-2].node),(yyvsp[-5].node));  }
-#line 2449 "y.tab.c"
+#line 2450 "y.tab.c"
     break;
 
   case 100:
-#line 315 "lrparser.y"
+#line 316 "lrparser.y"
                                                                                        { 
 																				(yyval.node)=Util::createNodeForForAllStmt((yyvsp[-7].node),(yyvsp[-5].node),(yyvsp[-3].node),(yyvsp[-2].node),(yyvsp[0].node),true);}
-#line 2456 "y.tab.c"
+#line 2457 "y.tab.c"
     break;
 
   case 101:
-#line 317 "lrparser.y"
+#line 318 "lrparser.y"
                                                                         { (yyval.node)=Util::createNodeForForStmt((yyvsp[-4].node),(yyvsp[-2].node),(yyvsp[0].node),true);}
-#line 2462 "y.tab.c"
+#line 2463 "y.tab.c"
     break;
 
   case 102:
-#line 318 "lrparser.y"
+#line 319 "lrparser.y"
                                                                  { (yyval.node)=Util::createNodeForForStmt((yyvsp[-4].node),(yyvsp[-2].node),(yyvsp[0].node),false);}
-#line 2468 "y.tab.c"
+#line 2469 "y.tab.c"
     break;
 
   case 103:
-#line 319 "lrparser.y"
+#line 320 "lrparser.y"
                                                                                     {(yyval.node)=Util::createNodeForForAllStmt((yyvsp[-7].node),(yyvsp[-5].node),(yyvsp[-3].node),(yyvsp[-2].node),(yyvsp[0].node),false);}
-#line 2474 "y.tab.c"
+#line 2475 "y.tab.c"
     break;
 
   case 104:
-#line 321 "lrparser.y"
+#line 322 "lrparser.y"
                       { (yyval.node)=NULL;}
-#line 2480 "y.tab.c"
+#line 2481 "y.tab.c"
     break;
 
   case 105:
-#line 322 "lrparser.y"
+#line 323 "lrparser.y"
                                               { (yyval.node)=(yyvsp[-1].node);}
-#line 2486 "y.tab.c"
+#line 2487 "y.tab.c"
     break;
 
   case 106:
-#line 324 "lrparser.y"
+#line 325 "lrparser.y"
                           { (yyval.node)=(yyvsp[0].node) ;}
-#line 2492 "y.tab.c"
+#line 2493 "y.tab.c"
     break;
 
   case 107:
-#line 326 "lrparser.y"
+#line 327 "lrparser.y"
                                                    { (yyval.node)=Util::createNodeForIfStmt((yyvsp[-2].node),(yyvsp[0].node),NULL); }
-#line 2498 "y.tab.c"
+#line 2499 "y.tab.c"
     break;
 
   case 108:
-#line 327 "lrparser.y"
+#line 328 "lrparser.y"
                                                                            {(yyval.node)=Util::createNodeForIfStmt((yyvsp[-4].node),(yyvsp[-2].node),(yyvsp[0].node)); }
-#line 2504 "y.tab.c"
+#line 2505 "y.tab.c"
     break;
 
   case 109:
-#line 330 "lrparser.y"
+#line 331 "lrparser.y"
                                        { (yyval.node)=Util::createNodeForReductionStmt((yyvsp[-2].node),(yyvsp[0].node)) ;}
-#line 2510 "y.tab.c"
+#line 2511 "y.tab.c"
     break;
 
   case 110:
-#line 331 "lrparser.y"
+#line 332 "lrparser.y"
                                                                               { reductionCall* reduc=(reductionCall*)(yyvsp[-3].node);
 		                                                               (yyval.node)=Util::createNodeForReductionStmtList((yyvsp[-7].nodeList)->ASTNList,reduc,(yyvsp[-1].nodeList)->ASTNList);}
-#line 2517 "y.tab.c"
+#line 2518 "y.tab.c"
     break;
 
   case 111:
-#line 333 "lrparser.y"
+#line 334 "lrparser.y"
                                                    {(yyval.node)=Util::createNodeForReductionOpStmt((yyvsp[-2].node),(yyvsp[-1].ival),(yyvsp[0].node));}
-#line 2523 "y.tab.c"
+#line 2524 "y.tab.c"
     break;
 
   case 112:
-#line 336 "lrparser.y"
+#line 337 "lrparser.y"
                          {(yyval.ival)=OPERATOR_ADDASSIGN;}
-#line 2529 "y.tab.c"
+#line 2530 "y.tab.c"
     break;
 
   case 113:
-#line 337 "lrparser.y"
+#line 338 "lrparser.y"
                          {(yyval.ival)=OPERATOR_MULASSIGN;}
-#line 2535 "y.tab.c"
+#line 2536 "y.tab.c"
     break;
 
   case 114:
-#line 338 "lrparser.y"
+#line 339 "lrparser.y"
                                  {(yyval.ival)=OPERATOR_ORASSIGN;}
-#line 2541 "y.tab.c"
+#line 2542 "y.tab.c"
     break;
 
   case 115:
-#line 339 "lrparser.y"
+#line 340 "lrparser.y"
                                  {(yyval.ival)=OPERATOR_ANDASSIGN;}
-#line 2547 "y.tab.c"
+#line 2548 "y.tab.c"
     break;
 
   case 116:
-#line 340 "lrparser.y"
+#line 341 "lrparser.y"
                                  {(yyval.ival)=OPERATOR_SUBASSIGN;}
-#line 2553 "y.tab.c"
+#line 2554 "y.tab.c"
     break;
 
   case 117:
-#line 342 "lrparser.y"
+#line 343 "lrparser.y"
                                   { (yyval.nodeList)=Util::addToNList((yyvsp[0].nodeList),(yyvsp[-2].node));
                                          }
-#line 2560 "y.tab.c"
+#line 2561 "y.tab.c"
     break;
 
   case 118:
-#line 344 "lrparser.y"
+#line 345 "lrparser.y"
                             { (yyval.nodeList)=Util::createNList((yyvsp[0].node));}
-#line 2566 "y.tab.c"
+#line 2567 "y.tab.c"
     break;
 
   case 119:
-#line 346 "lrparser.y"
+#line 347 "lrparser.y"
                               { (yyval.nodeList)=Util::addToNList((yyvsp[0].nodeList),(yyvsp[-2].node));}
-#line 2572 "y.tab.c"
+#line 2573 "y.tab.c"
     break;
 
   case 120:
-#line 347 "lrparser.y"
+#line 348 "lrparser.y"
                                    { ASTNode* node = Util::createNodeForId((yyvsp[-2].node));
 			                         (yyval.nodeList)=Util::addToNList((yyvsp[0].nodeList),node);}
-#line 2579 "y.tab.c"
+#line 2580 "y.tab.c"
     break;
 
   case 121:
-#line 349 "lrparser.y"
+#line 350 "lrparser.y"
                    { (yyval.nodeList)=Util::createNList((yyvsp[0].node));}
-#line 2585 "y.tab.c"
+#line 2586 "y.tab.c"
     break;
 
   case 122:
-#line 350 "lrparser.y"
+#line 351 "lrparser.y"
                               { ASTNode* node = Util::createNodeForId((yyvsp[0].node));
 			            (yyval.nodeList)=Util::createNList(node);}
-#line 2592 "y.tab.c"
+#line 2593 "y.tab.c"
     break;
 
   case 123:
-#line 359 "lrparser.y"
+#line 360 "lrparser.y"
                                                  {(yyval.node)=Util::createNodeforReductionCall((yyvsp[-3].ival),(yyvsp[-1].aList)->AList);}
-#line 2598 "y.tab.c"
+#line 2599 "y.tab.c"
     break;
 
   case 124:
-#line 361 "lrparser.y"
+#line 362 "lrparser.y"
                         { (yyval.ival)=REDUCE_SUM;}
-#line 2604 "y.tab.c"
+#line 2605 "y.tab.c"
     break;
 
   case 125:
-#line 362 "lrparser.y"
+#line 363 "lrparser.y"
                            {(yyval.ival)=REDUCE_COUNT;}
-#line 2610 "y.tab.c"
+#line 2611 "y.tab.c"
     break;
 
   case 126:
-#line 363 "lrparser.y"
+#line 364 "lrparser.y"
                              {(yyval.ival)=REDUCE_PRODUCT;}
-#line 2616 "y.tab.c"
+#line 2617 "y.tab.c"
     break;
 
   case 127:
-#line 364 "lrparser.y"
+#line 365 "lrparser.y"
                          {(yyval.ival)=REDUCE_MAX;}
-#line 2622 "y.tab.c"
+#line 2623 "y.tab.c"
     break;
 
   case 128:
-#line 365 "lrparser.y"
+#line 366 "lrparser.y"
                          {(yyval.ival)=REDUCE_MIN;}
-#line 2628 "y.tab.c"
+#line 2629 "y.tab.c"
     break;
 
   case 129:
-#line 367 "lrparser.y"
+#line 368 "lrparser.y"
               { (yyval.node)=(yyvsp[0].node); }
-#line 2634 "y.tab.c"
+#line 2635 "y.tab.c"
     break;
 
   case 130:
-#line 368 "lrparser.y"
+#line 369 "lrparser.y"
                {  (yyval.node)=(yyvsp[0].node); }
-#line 2640 "y.tab.c"
+#line 2641 "y.tab.c"
     break;
 
   case 131:
-#line 369 "lrparser.y"
+#line 370 "lrparser.y"
                {(yyval.node) = (yyvsp[0].node); }
-#line 2646 "y.tab.c"
+#line 2647 "y.tab.c"
     break;
 
   case 132:
-#line 371 "lrparser.y"
+#line 372 "lrparser.y"
               {
                  argList* aList=new argList();
 				 (yyval.aList)=aList;  }
-#line 2654 "y.tab.c"
+#line 2655 "y.tab.c"
     break;
 
   case 133:
-#line 375 "lrparser.y"
+#line 376 "lrparser.y"
                                          {argument* a1=new argument();
 		                          assignment* assign=(assignment*)(yyvsp[-2].node);
 		                     a1->setAssign(assign);
@@ -2670,11 +2671,11 @@ yyreduce:
 						  */ 
 						  
                           }
-#line 2674 "y.tab.c"
+#line 2675 "y.tab.c"
     break;
 
   case 134:
-#line 392 "lrparser.y"
+#line 393 "lrparser.y"
                                              {argument* a1=new argument();
 		                                Expression* expr=(Expression*)(yyvsp[-2].node);
 										a1->setExpression(expr);
@@ -2682,85 +2683,85 @@ yyreduce:
 						               // a1->expressionflag=true;
 										 (yyval.aList)=Util::addToAList((yyvsp[0].aList),a1);
 						                }
-#line 2686 "y.tab.c"
+#line 2687 "y.tab.c"
     break;
 
   case 135:
-#line 399 "lrparser.y"
+#line 400 "lrparser.y"
                             {argument* a1=new argument();
 		                 Expression* expr=(Expression*)(yyvsp[0].node);
 						 a1->setExpression(expr);
 						a1->setExpressionFlag();
 						  (yyval.aList)=Util::createAList(a1); }
-#line 2696 "y.tab.c"
+#line 2697 "y.tab.c"
     break;
 
   case 136:
-#line 404 "lrparser.y"
+#line 405 "lrparser.y"
                             { argument* a1=new argument();
 		                   assignment* assign=(assignment*)(yyvsp[0].node);
 		                     a1->setAssign(assign);
 							 a1->setAssignFlag();
 						   (yyval.aList)=Util::createAList(a1);
 						   }
-#line 2707 "y.tab.c"
+#line 2708 "y.tab.c"
     break;
 
   case 137:
-#line 412 "lrparser.y"
+#line 413 "lrparser.y"
                                                                                                                  {(yyval.node)=Util::createIterateInBFSNode((yyvsp[-10].node),(yyvsp[-8].node),(yyvsp[-6].node),(yyvsp[-4].node),(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)) ;}
-#line 2713 "y.tab.c"
+#line 2714 "y.tab.c"
     break;
 
   case 138:
-#line 413 "lrparser.y"
+#line 414 "lrparser.y"
                                                                                                       {//$$=Util::createIterateInBFSNode($3,$6,$8,$9,$10) ;
 			}
-#line 2720 "y.tab.c"
+#line 2721 "y.tab.c"
     break;
 
   case 139:
-#line 418 "lrparser.y"
+#line 419 "lrparser.y"
                                                  {(yyval.node)=Util::createIterateInReverseBFSNode(NULL,(yyvsp[0].node));}
-#line 2726 "y.tab.c"
+#line 2727 "y.tab.c"
     break;
 
   case 140:
-#line 419 "lrparser.y"
+#line 420 "lrparser.y"
                                                                        {(yyval.node)=Util::createIterateInReverseBFSNode((yyvsp[-2].node),(yyvsp[0].node));}
-#line 2732 "y.tab.c"
+#line 2733 "y.tab.c"
     break;
 
   case 141:
-#line 422 "lrparser.y"
+#line 423 "lrparser.y"
                 { //Identifier* id1=(Identifier*)Util::createIdentifierNode($1);
                   // Identifier* id2=(Identifier*)Util::createIdentifierNode($1);
 				   (yyval.node)=Util::createPropIdNode((yyvsp[-2].node),(yyvsp[0].node));
 				    }
-#line 2741 "y.tab.c"
+#line 2742 "y.tab.c"
     break;
 
   case 142:
-#line 427 "lrparser.y"
+#line 428 "lrparser.y"
                        {// Identifier* id1=(Identifier*)Util::createIdentifierNode($1);
                   // Identifier* id2=(Identifier*)Util::createIdentifierNode($1);
 				   (yyval.node)=Util::createPropIdNode((yyvsp[-4].node),(yyvsp[-2].node));
 				    }
-#line 2750 "y.tab.c"
+#line 2751 "y.tab.c"
     break;
 
   case 143:
-#line 431 "lrparser.y"
+#line 432 "lrparser.y"
           { 
 	         (yyval.node)=Util::createIdentifierNode((yyvsp[0].text));  
 
             
             }
-#line 2760 "y.tab.c"
+#line 2761 "y.tab.c"
     break;
 
 
-#line 2764 "y.tab.c"
+#line 2765 "y.tab.c"
 
       default: break;
     }
@@ -2992,7 +2993,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 439 "lrparser.y"
+#line 440 "lrparser.y"
 
 
 

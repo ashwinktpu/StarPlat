@@ -1,7 +1,7 @@
 // FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
 #include "CC.h"
 
-void Compute_CC(graph& g,float* CC)
+void Compute_CC(graph& g,float* CC,std::set<int>& sourceSet)
 
 {
   // CSR BEGIN
@@ -84,30 +84,63 @@ void Compute_CC(graph& g,float* CC)
   //BEGIN DSL PARSING 
   initKernel<float> <<<numBlocks,threadsPerBlock>>>(V,d_CC,(float)0);
 
-  int V = g.num_nodes( ); // asst in .cu
+  int numNodes = g.num_nodes( ); // asst in .cu
 
-  int src = 0;
-  do{
-    int* d_dist;
-    cudaMalloc(&d_dist, sizeof(int)*(V));
+  int* d_dist;
+  cudaMalloc(&d_dist, sizeof(int)*(V));
 
-    bool* d_modified;
-    cudaMalloc(&d_modified, sizeof(bool)*(V));
+  bool* d_modified;
+  cudaMalloc(&d_modified, sizeof(bool)*(V));
 
+  //FOR SIGNATURE of SET - Assumes set for on .cu only
+  std::set<int>::iterator itr;
+  for(itr=sourceSet.begin();itr!=sourceSet.end();itr++) 
+  {
+    int src = *itr;
     initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_dist,(int)INT_MAX);
 
     initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_modified,(bool)false);
 
-    d_modified[src] = true;
-    d_dist[src] = 0;
+    initIndex<bool><<<1,1>>>(V,d_modified,src,(bool)true); //InitIndexDevice
+    initIndex<int><<<1,1>>>(V,d_dist,src,(int)0); //InitIndexDevice
     bool finished = false; // asst in .cu
 
+    // FIXED POINT variables
+    //BEGIN FIXED POINT
+    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
+    int k=0; // #fixpt-Iterations
+    while(!finished) {
 
-    //cudaFree up!! all propVars in this BLOCK!
-    cudaFree(d_modified);
-    cudaFree(d_dist);
+      finished = true;
+      cudaMemcpyToSymbol(::finished, &finished, sizeof(bool), 0, cudaMemcpyHostToDevice);
+      Compute_CC_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_dist,d_modified);
+      cudaDeviceSynchronize();
 
-  }while(src < V);
+
+
+
+      cudaMemcpyFromSymbol(&finished, ::finished, sizeof(bool), 0, cudaMemcpyDeviceToHost);
+      cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
+      initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
+      k++;
+    } // END FIXED POINT
+
+    int temp = 0; // asst in .cu
+
+    cudaMemcpyToSymbol(::temp, &temp, sizeof(int), 0, cudaMemcpyHostToDevice);
+    Compute_CC_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_dist);
+    cudaDeviceSynchronize();
+    cudaMemcpyFromSymbol(&temp, ::temp, sizeof(int), 0, cudaMemcpyDeviceToHost);
+
+
+
+    initIndex<float><<<1,1>>>(V,d_CC,src,(float)1.000000 / temp); //InitIndexDevice
+
+  }
+
+  //cudaFree up!! all propVars in this BLOCK!
+  cudaFree(d_modified);
+  cudaFree(d_dist);
 
   //TIMER STOP
   cudaEventRecord(stop,0);
