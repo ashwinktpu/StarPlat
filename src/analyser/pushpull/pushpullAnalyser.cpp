@@ -1,7 +1,7 @@
 #include "pushpullAnalyser.h"
 #include <string.h>
 #include <list>
-
+#include "../../backends/backend_multigpu/getUsedVars.h"
 
 int pushpullAnalyser::analyseforinfor(forallStmt* forstmt,Identifier* ownvertex){
     cout << "   for" << endl;
@@ -175,6 +175,7 @@ void pushpullAnalyser::analyseStatement(statement *stmt)
        {
         cout<<"fixedpoint"<<endl;
         fixedPointStmt *fixedstmt = (fixedPointStmt*)stmt;
+        allGpuUsedVars.insert(string(fixedstmt->getFixedPointId()->getIdentifier()));
         analyseBlock((blockStatement *)fixedstmt->getBody());
         break;
        }
@@ -191,6 +192,12 @@ void pushpullAnalyser::analyseStatement(statement *stmt)
         forallStmt *forStmt = (forallStmt *)stmt;
         if (forStmt->isForall())
         {
+            multigpu::usedVariables usedVars = multigpu::getVarsForAll(forStmt);
+            list<Identifier *> vars = usedVars.getVariables();
+            for (Identifier *iden : vars)
+            {
+                allGpuUsedVars.insert(string(iden->getIdentifier()));
+            }
             int pushorpull = analyseForAll((forallStmt *)stmt);
             }
             else analyseBlock((blockStatement *)forStmt->getBody());

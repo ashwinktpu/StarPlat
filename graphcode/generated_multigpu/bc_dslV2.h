@@ -16,17 +16,16 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet);
 
 __global__ void fwd_pass(int n,int device,int start,int end,int* d_meta,int* d_data,int* d_weight, float* d_delta, float* d_sigma, int* d_level, int* d_hops_from_source, bool* d_finished,float* d_BC) {
   unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
+  v = v + start;
   if(v >= n) return;
   if ( v >= start && v < end ) {
-    if(d_level[v] == *d_hops_from_source) {
+    if(d_level[v] == -1) {
       for (int edge = d_meta[v]; edge < d_meta[v+1]; edge++) { 
         int w = d_data[edge];
-        if(d_level[w] == -1) {
-          d_level[w] = *d_hops_from_source + 1;
+        if(d_level[w] == *d_hops_from_source) {
+          d_level[v] = *d_hops_from_source+1;
           *d_finished = false;
-        }
-        if(d_level[w] == *d_hops_from_source + 1) {
-          atomicAdd(&d_sigma[w] , d_sigma[v]);
+          d_sigma[v] = d_sigma[v] + d_sigma[w];
         }
       }
     }

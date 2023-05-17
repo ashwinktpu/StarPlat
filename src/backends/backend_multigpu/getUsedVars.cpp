@@ -85,16 +85,14 @@ usedVariables getVarsIf(ifStmt *stmt)
 
   return currVars;
 }
-/*
+
 usedVariables getVarsFixedPoint(fixedPointStmt *stmt)
 {
   usedVariables currVars = getVarsExpr(stmt->getDependentProp());
-  currVars.addVariable(stmt->getFixedPointId());
+  currVars.addVariable(stmt->getFixedPointId(),READ_WRITE);
   currVars.merge(getVarsStatement(stmt->getBody()));
   return currVars;
 }
-// TODO : Handle this atlast
-*/
 
 usedVariables getVarsReduction(reductionCallStmt *stmt)
 {
@@ -327,10 +325,10 @@ usedVariables getVarsStatement(statement *stmt)
     return getVarsReduction((reductionCallStmt *)stmt);
 
     /*case NODE_ITRBFS:
-      return getVarsBFS((iterateBFS *)stmt);
+      return getVarsBFS((iterateBFS *)stmt);*/
 
     case NODE_FIXEDPTSTMT:
-      return getVarsFixedPoint((fixedPointStmt *)stmt);*/
+      return getVarsFixedPoint((fixedPointStmt *)stmt);
   default:
     ; // added to fix warning!
   }

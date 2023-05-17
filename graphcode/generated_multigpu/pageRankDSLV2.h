@@ -7,6 +7,7 @@
 #include <cuda.h>
 #include "../graph.hpp"
 #include "../libcuda.cuh"
+#include <curand.h>
 #include <cooperative_groups.h>
 
 void Compute_PR(graph& g,float beta,float delta,int maxIter,
@@ -18,7 +19,6 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
 
 
 __global__ void Compute_PR_kernel1(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,float* d_delta,float* d_num_nodes,float* d_pageRank,float* d_pageRank_nxt){ // BEGIN KER FUN via ADDKERNEL
-  float num_nodes  = V;
   unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
   int num_vertices = end-start;
   if( v < num_vertices) {
@@ -28,7 +28,7 @@ __global__ void Compute_PR_kernel1(int start,int end,int V, int E, int* d_meta, 
       int nbr = d_src[edge] ;
       sum = sum + d_pageRank[nbr] / (d_meta[nbr+1]-d_meta[nbr]);
     } //  end FOR NBR ITR. TMP FIX!
-    float val = (1 - delta) / num_nodes + delta * sum; // asst in .cu 
+    float val = (1 - d_delta[0]) / d_num_nodes[0] + d_delta[0] * sum; // asst in .cu 
     d_pageRank_nxt[v] = val;
   }
 } // end KER FUNC

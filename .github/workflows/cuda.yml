@@ -1,4 +1,4 @@
-name: CUDA Build
+name: CUDA Branch
 
 on:
   push:
@@ -16,4 +16,4 @@ jobs:
         
     - name: make
       run: cd src && make cuda
-
+    

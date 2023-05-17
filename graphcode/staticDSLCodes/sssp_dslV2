@@ -1,19 +1,19 @@
 function Compute_SSSP(Graph g, propNode<int> dist, node src)
 {
 
-     propNode<bool> modified;
-     g.attachNodeProperty(dist = INF, modified = False);
-     src.modified = True;
+     propNode<bool> modified1;
+     g.attachNodeProperty(dist = INF, modified1 = False);
+     src.modified1 = True;
      src.dist = 0;
      bool finished = False;
-     fixedPoint until(finished : !modified)
+     fixedPoint until(finished : !modified1)
      {
-          forall(v in g.nodes().filter(modified == True))
+          forall(v in g.nodes())
           {
-               forall(nbr in g.neighbours(v))
+               forall(nbr in g.neighbors(v).filter(modified1 == True))
                {
                     edge e = g.get_edge(v, nbr);
-                    <nbr.dist,nbr.modified> = <Min(nbr.dist, v.dist + e.weight), True>;
+                    <v.dist,v.modified1> = <Min(v.dist, nbr.dist + e.weight), True>;
                }
           }
      }

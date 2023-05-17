@@ -1,7 +1,7 @@
 // FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
 #include "scc_V3.h"
 
-void Hong(graph& g)
+void Compute_SSSP(graph& g,int* dist,int src)
 
 {
   // CSR BEGIN
@@ -77,148 +77,31 @@ void Hong(graph& g)
 
 
   //DECLAR DEVICE AND HOST vars in params
+  int* d_dist;
+  cudaMalloc(&d_dist, sizeof(int)*(V));
+
 
   //BEGIN DSL PARSING 
-  int* d_modified;
-  cudaMalloc(&d_modified, sizeof(int)*(V));
+  bool* d_modified;
+  cudaMalloc(&d_modified, sizeof(bool)*(V));
 
-  int* d_scc;
-  cudaMalloc(&d_scc, sizeof(int)*(V));
+  initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_dist,(int)INT_MAX);
 
-  initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_modified,(int)false);
+  initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_modified,(bool)false);
 
-  initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_scc,(int)-1);
+  initIndex<bool><<<1,1>>>(V,d_modified,src,(bool)true); //InitIndexDevice
+  initIndex<int><<<1,1>>>(V,d_dist,src,(int)0); //InitIndexDevice
+  int x = 0; // asst in .cu
 
-  bool fpoint1 = false; // asst in .cu
-
-  // FIXED POINT variables
-  //BEGIN FIXED POINT
-  initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-  int k=0; // #fixpt-Iterations
-  while(!fpoint1) {
-
-    fpoint1 = true;
-    cudaMemcpyToSymbol(::fpoint1, &fpoint1, sizeof(bool), 0, cudaMemcpyHostToDevice);
-    cudaMemcpyToSymbol(::fpoint1, &fpoint1, sizeof(bool), 0, cudaMemcpyHostToDevice);
-    Hong_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_scc);
-    cudaDeviceSynchronize();
-    cudaMemcpyFromSymbol(&fpoint1, ::fpoint1, sizeof(bool), 0, cudaMemcpyDeviceToHost);
+  cudaMemcpyToSymbol(::x, &x, sizeof(int), 0, cudaMemcpyHostToDevice);
+  Compute_SSSP_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next);
+  cudaDeviceSynchronize();
+  cudaMemcpyFromSymbol(&x, ::x, sizeof(int), 0, cudaMemcpyDeviceToHost);
 
 
-
-    ; // asst in .cu
-
-    ; // asst in .cu
-
-
-    cudaMemcpyFromSymbol(&fpoint1, ::fpoint1, sizeof(bool), 0, cudaMemcpyDeviceToHost);
-    cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
-    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-    k++;
-  } // END FIXED POINT
-
-  int* d_visitFw;
-  cudaMalloc(&d_visitFw, sizeof(int)*(V));
-
-  int* d_visitBw;
-  cudaMalloc(&d_visitBw, sizeof(int)*(V));
-
-  initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_visitFw,(int)-1);
-
-  initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_visitBw,(int)-1);
-
-  bool fpoint2 = false; // asst in .cu
-
-  // FIXED POINT variables
-  //BEGIN FIXED POINT
-  initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-  int k=0; // #fixpt-Iterations
-  while(!fpoint2) {
-
-    fpoint2 = true;
-    cudaMemcpyToSymbol(::fpoint2, &fpoint2, sizeof(bool), 0, cudaMemcpyHostToDevice);
-    Hong_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_scc,d_visitBw,d_visitFw);
-    cudaDeviceSynchronize();
-
-
-
-    bool fpoint3 = false; // asst in .cu
-
-    // FIXED POINT variables
-    //BEGIN FIXED POINT
-    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-    int k=0; // #fixpt-Iterations
-    while(!fpoint3) {
-
-      fpoint3 = true;
-      cudaMemcpyToSymbol(::fpoint3, &fpoint3, sizeof(bool), 0, cudaMemcpyHostToDevice);
-      cudaMemcpyToSymbol(::fpoint3, &fpoint3, sizeof(bool), 0, cudaMemcpyHostToDevice);
-      Hong_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_visitFw,d_scc);
-      cudaDeviceSynchronize();
-      cudaMemcpyFromSymbol(&fpoint3, ::fpoint3, sizeof(bool), 0, cudaMemcpyDeviceToHost);
-
-
-
-      cudaMemcpyToSymbol(::fpoint3, &fpoint3, sizeof(bool), 0, cudaMemcpyHostToDevice);
-      Hong_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_visitBw,d_scc);
-      cudaDeviceSynchronize();
-      cudaMemcpyFromSymbol(&fpoint3, ::fpoint3, sizeof(bool), 0, cudaMemcpyDeviceToHost);
-
-
-
-
-      cudaMemcpyFromSymbol(&fpoint3, ::fpoint3, sizeof(bool), 0, cudaMemcpyDeviceToHost);
-      cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
-      initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-      k++;
-    } // END FIXED POINT
-
-    cudaMemcpyToSymbol(::fpoint2, &fpoint2, sizeof(bool), 0, cudaMemcpyHostToDevice);
-    Hong_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_scc,d_visitBw,d_visitFw);
-    cudaDeviceSynchronize();
-    cudaMemcpyFromSymbol(&fpoint2, ::fpoint2, sizeof(bool), 0, cudaMemcpyDeviceToHost);
-
-
-
-    fpoint1 = false;
-    // FIXED POINT variables
-    //BEGIN FIXED POINT
-    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-    int k=0; // #fixpt-Iterations
-    while(!fpoint1) {
-
-      fpoint1 = true;
-      cudaMemcpyToSymbol(::fpoint1, &fpoint1, sizeof(bool), 0, cudaMemcpyHostToDevice);
-      cudaMemcpyToSymbol(::fpoint1, &fpoint1, sizeof(bool), 0, cudaMemcpyHostToDevice);
-      Hong_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_scc);
-      cudaDeviceSynchronize();
-      cudaMemcpyFromSymbol(&fpoint1, ::fpoint1, sizeof(bool), 0, cudaMemcpyDeviceToHost);
-
-
-
-      ; // asst in .cu
-
-      ; // asst in .cu
-
-
-      cudaMemcpyFromSymbol(&fpoint1, ::fpoint1, sizeof(bool), 0, cudaMemcpyDeviceToHost);
-      cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
-      initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-      k++;
-    } // END FIXED POINT
-
-
-    cudaMemcpyFromSymbol(&fpoint2, ::fpoint2, sizeof(bool), 0, cudaMemcpyDeviceToHost);
-    cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
-    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
-    k++;
-  } // END FIXED POINT
 
 
   //cudaFree up!! all propVars in this BLOCK!
-  cudaFree(d_visitFw);
-  cudaFree(d_visitBw);
-  cudaFree(d_scc);
   cudaFree(d_modified);
 
   //TIMER STOP
@@ -227,4 +110,5 @@ void Hong(graph& g)
   cudaEventElapsedTime(&milliseconds, start, stop);
   printf("GPU Time: %.6f ms\n", milliseconds);
 
+  cudaMemcpy(    dist,   d_dist, sizeof(int)*(V), cudaMemcpyDeviceToHost);
 } //end FUN

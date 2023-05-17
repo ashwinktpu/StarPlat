@@ -1,0 +1,20 @@
+function Compute_SSSP (Graph g, node src)
+{
+propNode <int> dist;
+propNode <bool> modified;
+g.attachNodeProperty(dist=INF, modified = False);
+src.modified = True; 
+src.dist=0;
+bool finished = False;
+fixedPoint until (finished==True)
+     {
+          forall (v in g.nodes().filter(v.modified == True) )
+               {
+                    forall (nbr in g.neighbors( v ))
+                        {          
+                              edge e = g.get_edge(v, nbr);
+                               <nbr.dist,nbr.modified> = < Min (nbr.dist, v.dist + e.weight), True>;
+                        }
+               }
+     }          
+}
