@@ -35,7 +35,7 @@ Incremental(Graph g, int triangle_countSent, propEdge<bool> modified, updates<g>
       int v1 = update.source;
       int v2 = update.destination;
       
-      forall(v3 in g.neighbors(v1).filter(v3!=v2))
+      forall(v3 in g.neighbors(v1).filter(v3!=v2 && v3!=v1 && v1!=v2))
          {
            edge e1 = g.get_edge(v1, v3); 
             int newEdge = 1;
@@ -95,7 +95,7 @@ Decremental(Graph g, int triangle_countSent, propEdge<bool> modified, updates<g>
       int v1 = update.source;
       int v2 = update.destination;
       
-      forall(v3 in g.neighbors(v1).filter(v3!=v2))
+      forall(v3 in g.neighbors(v1).filter(v3!=v2 && v3!=v1 && v1!=v2))
          {
            edge e1 = g.get_edge(v1, v3); 
            int newEdge = 1;
@@ -134,8 +134,66 @@ Decremental(Graph g, int triangle_countSent, propEdge<bool> modified, updates<g>
 
    triangle_count = triangle_count - (count1/2 + count2/4 + count3/6);
    
-   return triangle_count ;
+   return  triangle_count ;
  
+
+}
+
+Dynamic DynTC(Graph g, updates<g> updateBatch, int batchSize)
+{
+  int triangleCount = staticTC(g);
+
+  Batch(updateBatch:batchSize) 
+    {  
+    
+     propEdge<bool> modified_del; 
+     g.attachEdgeProperty(modified_del = false);
+
+     updates<g> deleteBatch = updateBatch.currentBatch(0);
+     updates<g> addBatch = updateBatch.currentBatch(1);
+
+     OnDelete(u in updateBatch.currentBatch()):
+          { 
+            int src = u.source;
+            int dest = u.destination;
+
+            for(nbr in g.neighbors(src))
+               {
+                 edge e = g.get_edge(src,nbr);
+                 if(nbr == dest)
+                   e.modified_del = True;
+               }
+
+          }
+
+
+     triangleCount = Decremental(g, triangleCount, modified_del, deleteBatch);
+     
+     g.updateCSRDel(updateBatch); 
+
+     g.updateCSRAdd(updateBatch);
+      
+     propEdge<bool> modified_add; 
+     g.attachEdgeProperty(modified_add = false);
+
+     OnAdd(u in updateBatch.currentBatch()): 
+         {
+               int src = u.source;
+               int dest = u.destination;
+
+               for(nbr in g.neighbors(src))
+                  {
+                    edge e = g.get_edge(src,nbr);
+                    if(nbr == dest)
+                       e.modified_add = True;
+                  }
+
+                 
+             }  
+
+       triangleCount = Incremental(g, triangleCount, modified_add, addBatch);    
+
+  }
 
 }
 

@@ -6,6 +6,7 @@
 #include<atomic>
 #include<omp.h>
 #include"../graph.hpp"
+#include"../atomicUtil.h"
 
 void count_nodes(graph& g);
 

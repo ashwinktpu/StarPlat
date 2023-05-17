@@ -1,4 +1,4 @@
-function Compute_SSSP(Graph g, propNode<int> dist, node src)
+function Compute_SSSP(Graph g, propNode<int> dist, propEdge<int> weight, node src)
 {
 
      propNode<bool> modified1;
@@ -13,7 +13,7 @@ function Compute_SSSP(Graph g, propNode<int> dist, node src)
                forall(nbr in g.neighbors(v).filter(modified1 == True))
                {
                     edge e = g.get_edge(v, nbr);
-                    <v.dist,v.modified1> = <Min(v.dist, nbr.dist + e.weight), True>;
+                    <nbr.dist, nbr.modified> = <Min(nbr.dist, v.dist + e.weight), True>;
                }
           }
      }
