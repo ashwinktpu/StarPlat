@@ -450,6 +450,7 @@ void vHong(graph& g)
     cudaSetDevice(i);
     cudaDeviceSynchronize();
   }
+  //fixed_pt_var
 
   if(devicecount>1){
     //src src
@@ -490,6 +491,7 @@ void vHong(graph& g)
     }
   }
   bool fpoint1 = false; // asst in .cu 
+  //fixed_pt_var
   bool** h_fpoint1;
   h_fpoint1 = (bool**)malloc(sizeof(bool*)*(devicecount+1));
   for(int i=0;i<=devicecount;i+=1){
@@ -550,7 +552,9 @@ void vHong(graph& g)
       cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
+    //fixed_pt_var
 
+    //fixed_pt_var
 
     if(devicecount>1){
       //src src
@@ -623,9 +627,13 @@ void vHong(graph& g)
     cudaSetDevice(i);
     cudaDeviceSynchronize();
   }
+  //fixed_pt_var
 
+  //fixed_pt_var
 
+  //fixed_pt_var
 
+  //fixed_pt_var
 
   if(devicecount>1){
     //src index
@@ -664,7 +672,9 @@ void vHong(graph& g)
     cudaSetDevice(i);
     cudaDeviceSynchronize();
   }
+  //fixed_pt_var
 
+  //fixed_pt_var
 
   if(devicecount>1){
     //src src
@@ -724,6 +734,7 @@ void vHong(graph& g)
     }
   }
   bool fpoint2 = false; // asst in .cu 
+  //fixed_pt_var
   bool** h_fpoint2;
   h_fpoint2 = (bool**)malloc(sizeof(bool*)*(devicecount+1));
   for(int i=0;i<=devicecount;i+=1){
@@ -768,7 +779,7 @@ void vHong(graph& g)
     for(int i=0;i<devicecount;i++)
     {
       cudaSetDevice(i);
-      vHong_kernel5<<<numBlocksKernel, threadsPerBlock>>>(h_vertex_partition[i],h_vertex_partition[i+1],V,E,d_offset[i],d_edges[i],d_weight[i],d_src[i],d_rev_meta[i],d_visitBw[i],d_propFw[i],d_visitFw[i],d_scc[i],d_propBw[i],d_range[i],d_fpoint2[i]);
+      vHong_kernel5<<<numBlocksKernel, threadsPerBlock>>>(h_vertex_partition[i],h_vertex_partition[i+1],V,E,d_offset[i],d_edges[i],d_weight[i],d_src[i],d_rev_meta[i],d_propBw[i],d_visitBw[i],d_propFw[i],d_visitFw[i],d_scc[i],d_range[i],d_fpoint2[i]);
     }
 
     for(int i=0;i<devicecount;i++)
@@ -776,6 +787,7 @@ void vHong(graph& g)
       cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
+    //fixed_pt_var
 
     if(devicecount>1){
       //src dst
@@ -900,8 +912,11 @@ void vHong(graph& g)
     cudaSetDevice(i);
     cudaDeviceSynchronize();
   }
+  //fixed_pt_var
 
+  //fixed_pt_var
 
+  //fixed_pt_var
 
   if(devicecount>1){
     //src src
@@ -1061,7 +1076,9 @@ void vHong(graph& g)
       cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
+    //fixed_pt_var
 
+    //fixed_pt_var
 
     if(devicecount>1){
       //src src
@@ -1172,6 +1189,7 @@ void vHong(graph& g)
     }
   }
   bool fpoint4 = false; // asst in .cu 
+  //fixed_pt_var
   bool** h_fpoint4;
   h_fpoint4 = (bool**)malloc(sizeof(bool*)*(devicecount+1));
   for(int i=0;i<=devicecount;i+=1){
@@ -1254,6 +1272,7 @@ void vHong(graph& g)
       cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
+    //fixed_pt_var
 
     if(devicecount>1){
       //src src
@@ -1297,6 +1316,7 @@ void vHong(graph& g)
   } // END FIXED POINT
 
   bool fpoint5 = false; // asst in .cu 
+  //fixed_pt_var
   bool** h_fpoint5;
   h_fpoint5 = (bool**)malloc(sizeof(bool*)*(devicecount+1));
   for(int i=0;i<=devicecount;i+=1){
@@ -1349,9 +1369,13 @@ void vHong(graph& g)
       cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
+    //fixed_pt_var
 
+    //fixed_pt_var
 
+    //fixed_pt_var
 
+    //fixed_pt_var
 
     if(devicecount>1){
       //src index
@@ -1390,7 +1414,9 @@ void vHong(graph& g)
       cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
+    //fixed_pt_var
 
+    //fixed_pt_var
 
     if(devicecount>1){
       //src src
@@ -1485,7 +1511,7 @@ void vHong(graph& g)
       for(int i=0;i<devicecount;i++)
       {
         cudaSetDevice(i);
-        vHong_kernel13<<<numBlocksKernel, threadsPerBlock>>>(h_vertex_partition[i],h_vertex_partition[i+1],V,E,d_offset[i],d_edges[i],d_weight[i],d_src[i],d_rev_meta[i],d_visitBw[i],d_propFw[i],d_visitFw[i],d_scc[i],d_propBw[i],d_range[i],d_fpoint2[i]);
+        vHong_kernel13<<<numBlocksKernel, threadsPerBlock>>>(h_vertex_partition[i],h_vertex_partition[i+1],V,E,d_offset[i],d_edges[i],d_weight[i],d_src[i],d_rev_meta[i],d_propBw[i],d_visitBw[i],d_propFw[i],d_visitFw[i],d_scc[i],d_range[i],d_fpoint2[i]);
       }
 
       for(int i=0;i<devicecount;i++)
@@ -1493,6 +1519,7 @@ void vHong(graph& g)
         cudaSetDevice(i);
         cudaDeviceSynchronize();
       }
+      //fixed_pt_var
 
       if(devicecount>1){
         //src dst
@@ -1617,8 +1644,11 @@ void vHong(graph& g)
       cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
+    //fixed_pt_var
 
+    //fixed_pt_var
 
+    //fixed_pt_var
 
     if(devicecount>1){
       //src src
@@ -1761,23 +1791,5 @@ void vHong(graph& g)
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&milliseconds, start, stop);
   printf("GPU Time: %.6f ms\n", milliseconds);
-  int cnt = 0;
-  for(int i=0;i<=V;i+=1){
-    if(h_isPivot[0][i]==true){
-      cnt+=1;
-    }
-  }
-  printf("SCC val %d device count %d\n",cnt,devicecount);
-
 
 } //end FUN
-
-
-int main(int argc,char* argv[])
-{
-  char *file_name = argv[1];
-  graph g(file_name);
-  g.parseGraph();
-  vHong(g);
-  return 0;
-}

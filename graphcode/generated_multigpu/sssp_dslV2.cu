@@ -136,14 +136,6 @@ void Compute_SSSP(graph& g,int* dist,int src)
     cudaMalloc(&d_modified[i], sizeof(bool)*(V+1));
   }
 
-  bool* h_modified_temp1 = (bool*)malloc((V+1)*(devicecount)*sizeof(bool));
-  cudaSetDevice(0);
-  bool* d_modified_temp1;
-  cudaMalloc(&d_modified_temp1,(V+1)*(devicecount)*sizeof(bool));
-  bool* d_modified_temp2;
-  cudaMalloc(&d_modified_temp2,(V+1)*(devicecount)*sizeof(bool));
-
-
   for(int i=0;i<devicecount;i++)
   {
     cudaSetDevice(i);
@@ -201,6 +193,7 @@ void Compute_SSSP(graph& g,int* dist,int src)
     cudaDeviceSynchronize();
   }
   bool finished = false; // asst in .cu 
+  //fixed_pt_var
   bool** h_finished;
   h_finished = (bool**)malloc(sizeof(bool*)*(devicecount+1));
   for(int i=0;i<=devicecount;i+=1){
@@ -261,34 +254,18 @@ void Compute_SSSP(graph& g,int* dist,int src)
       cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
-    int* h_dist1;
+    //global loop var v iden v
     if(devicecount>1){
-      //push based
-       h_dist1 = (int*)malloc((V+1)*(devicecount)*sizeof(int));
+      //pull based
+
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
-        cudaMemcpyAsync(h_dist1+i*(V+1),d_dist[i],sizeof(int)*(V+1),cudaMemcpyDeviceToHost);
+        cudaMemcpyAsync(h_dist+h_vertex_partition[i],d_dist[i]+h_vertex_partition[i],sizeof(int)*(h_vertex_partition[i+1]-h_vertex_partition[i]),cudaMemcpyDeviceToHost);
       }
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
         cudaDeviceSynchronize();
       }
-    }
-    //global loop var v iden nbr
-    if(devicecount>1){
-      //push based
-
-      cudaSetDevice(0);
-      int* d_dist_temp;
-      int* d_dist_temp1;
-      cudaMalloc(&d_dist_temp , (V+1)*sizeof(int));
-      cudaMalloc(&d_dist_temp1,(V+1)*(devicecount)*sizeof(int));
-      initKernel<int><<<numBlocks,threadsPerBlock>>>(V+1,d_dist_temp,(int)INT_MAX);
-      for(int i=0;i<devicecount;i++){
-        cudaMemcpy(d_dist_temp1+i*(V+1),h_dist1+i*(V+1),sizeof(int)*(V+1),cudaMemcpyHostToDevice);
-      }
-      Compute_Min<<<numBlocks,numThreads>>>(d_dist_temp1,d_dist_temp,V,devicecount);
-      cudaMemcpy(h_dist,d_dist_temp,sizeof(int)*(V+1),cudaMemcpyDeviceToHost);
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
         cudaMemcpyAsync(d_dist[i],h_dist,sizeof(int)*(V+1),cudaMemcpyHostToDevice);
@@ -303,26 +280,10 @@ void Compute_SSSP(graph& g,int* dist,int src)
       cudaMemcpy(d_modified[0],d_modified_next[0],sizeof(bool)*(V+1),cudaMemcpyDeviceToDevice);
     }
     if(devicecount>1){
-      h_modified1 = (bool*)malloc((V+1)*sizeof(bool));
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
-        cudaMemcpyAsync(h_modified+i*(V+1),d_modified_next[i],sizeof(bool)*(V+1),cudaMemcpyDeviceToHost);
+        cudaMemcpyAsync(h_modified+h_vertex_partition[i],d_modified_next[i]+h_vertex_partition[i],sizeof(bool)*(h_vertex_partition[i+1]-h_vertex_partition[i]),cudaMemcpyDeviceToHost);
       }
-      for(int i=0;i<devicecount;i++){
-        cudaSetDevice(i);
-        cudaDeviceSynchronize();
-      }
-      cudaSetDevice(0);
-      bool* d_modified_temp;
-      bool* d_modified_temp1;
-      cudaMalloc(&d_modified_temp,(V+1)*sizeof(bool));
-      cudaMalloc(&d_modified_temp1,(devicecount)*(V+1)*sizeof(bool));
-      initKernel<bool><<<numBlocks,threadsPerBlock>>>(V+1,d_modified_temp,false);
-      for(int i=0;i<devicecount;i++){
-        cudaMemcpy(d_modified_temp1+i*(V+1),h_modified1+i*(V+1),sizeof(bool)*(V+1),cudaMemcpyHostToDevice);
-      }
-      Compute_Or<<<numBlocks,threadsPerBlock>>>(d_modified_temp1,d_modified_temp,V,devicecount);
-      cudaMemcpy(h_modified,d_modified_temp,sizeof(bool)*(V+1),cudaMemcpyDeviceToHost);
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
         cudaDeviceSynchronize();
@@ -372,5 +333,5 @@ void Compute_SSSP(graph& g,int* dist,int src)
   cudaEventElapsedTime(&milliseconds, start, stop);
   printf("GPU Time: %.6f ms\n", milliseconds);
 
-  cudaMemcpy(    dist,   d_dist, sizeof(int)*(V), cudaMemcpyDeviceToHost);
+  cudaMemcpy(    dist,   d_dist[0], sizeof(int)*(V), cudaMemcpyDeviceToHost);
 } //end FUN

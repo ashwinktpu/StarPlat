@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <cuda.h>
-#include "graph.hpp"
-#include "libcuda.cuh"
+#include "../graph.hpp"
+#include "../libcuda.cuh"
 #include <curand.h>
 #include <cooperative_groups.h>
 
@@ -93,7 +93,7 @@ __global__ void vHong_kernel4(int start,int end,int V, int E, int* d_meta, int* 
     } // if filter end
   }
 } // end KER FUNC
-__global__ void vHong_kernel5(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,bool* d_visitBw,bool* d_propFw,bool* d_visitFw,int* d_scc,bool* d_propBw,int* d_range,bool* d_fpoint2){ // BEGIN KER FUN via ADDKERNEL
+__global__ void vHong_kernel5(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,bool* d_propBw,bool* d_visitBw,bool* d_propFw,bool* d_visitFw,int* d_scc,int* d_range,bool* d_fpoint2){ // BEGIN KER FUN via ADDKERNEL
   unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
   int num_vertices = end-start;
   if( src < num_vertices) {
@@ -263,7 +263,7 @@ __global__ void vHong_kernel12(int start,int end,int V, int E, int* d_meta, int*
     } // if filter end
   }
 } // end KER FUNC
-__global__ void vHong_kernel13(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,bool* d_visitBw,bool* d_propFw,bool* d_visitFw,int* d_scc,bool* d_propBw,int* d_range,bool* d_fpoint2){ // BEGIN KER FUN via ADDKERNEL
+__global__ void vHong_kernel13(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,bool* d_propBw,bool* d_visitBw,bool* d_propFw,bool* d_visitFw,int* d_scc,int* d_range,bool* d_fpoint2){ // BEGIN KER FUN via ADDKERNEL
   unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
   int num_vertices = end-start;
   if( src < num_vertices) {

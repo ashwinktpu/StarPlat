@@ -72,7 +72,7 @@ __global__ void Boruvka_kernel3(int start,int end,int V, int E, int* d_meta, int
     } // if filter end
   }
 } // end KER FUNC
-__global__ void Boruvka_kernel4(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_minEdgeOfComp,int* d_color,int* d_nodeId){ // BEGIN KER FUN via ADDKERNEL
+__global__ void Boruvka_kernel4(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_nodeId,int* d_color,int* d_minEdgeOfComp){ // BEGIN KER FUN via ADDKERNEL
   unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
   int num_vertices = end-start;
   if( src < num_vertices) {
@@ -94,7 +94,7 @@ __global__ void Boruvka_kernel4(int start,int end,int V, int E, int* d_meta, int
     } // if filter end
   }
 } // end KER FUNC
-__global__ void Boruvka_kernel5(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_minEdgeOfComp,int* d_color,int* d_nodeId,bool* d_isMSTEdge){ // BEGIN KER FUN via ADDKERNEL
+__global__ void Boruvka_kernel5(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_nodeId,int* d_color,int* d_minEdgeOfComp,bool* d_isMSTEdge){ // BEGIN KER FUN via ADDKERNEL
   unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
   int num_vertices = end-start;
   if( src < num_vertices) {
@@ -107,7 +107,7 @@ __global__ void Boruvka_kernel5(int start,int end,int V, int E, int* d_meta, int
     } // if filter end
   }
 } // end KER FUNC
-__global__ void Boruvka_kernel6(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_minEdgeOfComp,int* d_color,int* d_nodeId,bool* d_noNewComp){ // BEGIN KER FUN via ADDKERNEL
+__global__ void Boruvka_kernel6(int start,int end,int V, int E, int* d_meta, int* d_data, int* d_weight,int* d_src,int* d_rev_meta,int* d_nodeId,int* d_color,int* d_minEdgeOfComp,bool* d_noNewComp){ // BEGIN KER FUN via ADDKERNEL
   unsigned src = blockIdx.x * blockDim.x + threadIdx.x;
   int num_vertices = end-start;
   if( src < num_vertices) {

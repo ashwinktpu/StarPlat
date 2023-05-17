@@ -119,27 +119,10 @@ void colorGraph(graph& g)
 
   //BEGIN DSL PARSING 
   int numNodes = g.num_nodes( ); // asst in .cu 
-  int** h_numNodes;
-  h_numNodes = (int**)malloc(sizeof(int*)*(devicecount+1));
-  for(int i=0;i<=devicecount;i+=1){
-    h_numNodes[i] = (int*)malloc(sizeof(int));
-  }
-
-  int** d_numNodes;
-  d_numNodes = (int**)malloc(sizeof(int*)*devicecount);
-  for(int i = 0 ; i < devicecount ; i++){
-    cudaSetDevice(i);
-    cudaMalloc(&d_numNodes[i],sizeof(int));
-    initKernel<int> <<<1,1>>>(1,d_numNodes[i],g.num_nodes( ));
-  }
-  for(int i=0;i<devicecount;i++){
-    cudaSetDevice(i);
-    cudaDeviceSynchronize();
-  }
-
+  //fixed_pt_var
 
   long* h_color;
-  h_color=(long*)malloc(sizeof(long)*V+1);
+  h_color=(long*)malloc(sizeof(long)*(V+1));
   long** d_color;
   d_color = (long**)malloc(sizeof(long*)*devicecount);
   for (int i = 0; i < devicecount; i++) {
@@ -148,7 +131,7 @@ void colorGraph(graph& g)
   }
 
   int* h_color1;
-  h_color1=(int*)malloc(sizeof(int)*V+1);
+  h_color1=(int*)malloc(sizeof(int)*(V+1));
   int** d_color1;
   d_color1 = (int**)malloc(sizeof(int*)*devicecount);
   for (int i = 0; i < devicecount; i++) {
@@ -157,7 +140,7 @@ void colorGraph(graph& g)
   }
 
   int* h_color2;
-  h_color2=(int*)malloc(sizeof(int)*V+1);
+  h_color2=(int*)malloc(sizeof(int)*(V+1));
   int** d_color2;
   d_color2 = (int**)malloc(sizeof(int*)*devicecount);
   for (int i = 0; i < devicecount; i++) {
@@ -166,7 +149,7 @@ void colorGraph(graph& g)
   }
 
   bool* h_modified;
-  h_modified=(bool*)malloc(sizeof(bool)*V+1);
+  h_modified=(bool*)malloc(sizeof(bool)*(V+1));
   bool** d_modified;
   d_modified = (bool**)malloc(sizeof(bool*)*devicecount);
   for (int i = 0; i < devicecount; i++) {
@@ -175,7 +158,7 @@ void colorGraph(graph& g)
   }
 
   bool* h_modified_next;
-  h_modified_next=(bool*)malloc(sizeof(bool)*V+1);
+  h_modified_next=(bool*)malloc(sizeof(bool)*(V+1));
   bool** d_modified_next;
   d_modified_next = (bool**)malloc(sizeof(bool*)*devicecount);
   for (int i = 0; i < devicecount; i++) {
@@ -238,6 +221,7 @@ void colorGraph(graph& g)
     cudaDeviceSynchronize();
   }
   int fpoint1 = 0; // asst in .cu 
+  //fixed_pt_var
   int** h_fpoint1;
   h_fpoint1 = (int**)malloc(sizeof(int*)*(devicecount+1));
   for(int i=0;i<=devicecount;i+=1){
@@ -258,86 +242,29 @@ void colorGraph(graph& g)
 
 
   int diff = 0; // asst in .cu 
-  int** h_diff;
-  h_diff = (int**)malloc(sizeof(int*)*(devicecount+1));
-  for(int i=0;i<=devicecount;i+=1){
-    h_diff[i] = (int*)malloc(sizeof(int));
-  }
-
-  int** d_diff;
-  d_diff = (int**)malloc(sizeof(int*)*devicecount);
-  for(int i = 0 ; i < devicecount ; i++){
-    cudaSetDevice(i);
-    cudaMalloc(&d_diff[i],sizeof(int));
-    initKernel<int> <<<1,1>>>(1,d_diff[i],0);
-  }
-  for(int i=0;i<devicecount;i++){
-    cudaSetDevice(i);
-    cudaDeviceSynchronize();
-  }
-
+  //fixed_pt_var
 
   int diff_old = 0; // asst in .cu 
-  int** h_diff_old;
-  h_diff_old = (int**)malloc(sizeof(int*)*(devicecount+1));
-  for(int i=0;i<=devicecount;i+=1){
-    h_diff_old[i] = (int*)malloc(sizeof(int));
-  }
-
-  int** d_diff_old;
-  d_diff_old = (int**)malloc(sizeof(int*)*devicecount);
-  for(int i = 0 ; i < devicecount ; i++){
-    cudaSetDevice(i);
-    cudaMalloc(&d_diff_old[i],sizeof(int));
-    initKernel<int> <<<1,1>>>(1,d_diff_old[i],0);
-  }
-  for(int i=0;i<devicecount;i++){
-    cudaSetDevice(i);
-    cudaDeviceSynchronize();
-  }
-
+  //fixed_pt_var
 
   int cnt = 0; // asst in .cu 
-  int** h_cnt;
-  h_cnt = (int**)malloc(sizeof(int*)*(devicecount+1));
-  for(int i=0;i<=devicecount;i+=1){
-    h_cnt[i] = (int*)malloc(sizeof(int));
-  }
-
-  int** d_cnt;
-  d_cnt = (int**)malloc(sizeof(int*)*devicecount);
-  for(int i = 0 ; i < devicecount ; i++){
-    cudaSetDevice(i);
-    cudaMalloc(&d_cnt[i],sizeof(int));
-    initKernel<int> <<<1,1>>>(1,d_cnt[i],0);
-  }
-  for(int i=0;i<devicecount;i++){
-    cudaSetDevice(i);
-    cudaDeviceSynchronize();
-  }
-
+  //fixed_pt_var
 
   int iter = 0; // asst in .cu 
-  int** h_iter;
-  h_iter = (int**)malloc(sizeof(int*)*(devicecount+1));
-  for(int i=0;i<=devicecount;i+=1){
-    h_iter[i] = (int*)malloc(sizeof(int));
-  }
-
-  int** d_iter;
-  d_iter = (int**)malloc(sizeof(int*)*devicecount);
-  for(int i = 0 ; i < devicecount ; i++){
-    cudaSetDevice(i);
-    cudaMalloc(&d_iter[i],sizeof(int));
-    initKernel<int> <<<1,1>>>(1,d_iter[i],0);
-  }
-  for(int i=0;i<devicecount;i++){
-    cudaSetDevice(i);
-    cudaDeviceSynchronize();
-  }
-
+  //fixed_pt_var
 
   do{
+    fpoint1 = 0;
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
+      //printed here
+
+      initKernel<int> <<<1,1>>>(1,d_fpoint1[i],(int)fpoint1);
+    }
+    for(int i=0;i<devicecount;i++){
+      cudaSetDevice(i);
+      cudaDeviceSynchronize();
+    }
     int x11=rand();
     int x12=rand();
     for(int i=0;i<devicecount;i++){
@@ -364,7 +291,7 @@ void colorGraph(graph& g)
     for(int i=0;i<devicecount;i++)
     {
       cudaSetDevice(i);
-      colorGraph_kernel1<<<numBlocksKernel, threadsPerBlock>>>(h_vertex_partition[i],h_vertex_partition[i+1],V,E,d_offset[i],d_edges[i],d_weight[i],d_src[i],d_rev_meta[i],d_modified[i],d_fpoint1[i],d_color[i],d_modified_next[i]);
+      colorGraph_kernel1<<<numBlocksKernel, threadsPerBlock>>>(h_vertex_partition[i],h_vertex_partition[i+1],V,E,d_offset[i],d_edges[i],d_weight[i],d_src[i],d_rev_meta[i],d_fpoint1[i],d_modified[i],d_color[i],d_modified_next[i]);
     }
 
     for(int i=0;i<devicecount;i++)
@@ -372,7 +299,9 @@ void colorGraph(graph& g)
       cudaSetDevice(i);
       cudaDeviceSynchronize();
     }
+    //fixed_pt_var
 
+    //fixed_pt_var
 
     if(devicecount>1){
       //v v
@@ -415,77 +344,17 @@ void colorGraph(graph& g)
       cudaDeviceSynchronize();
     }
     iter = iter + 1;
-    for(int i=0;i<devicecount;i++){
-      cudaSetDevice(i);
-      //printed here
-
-      initKernel<int> <<<1,1>>>(1,d_iter[i],(int)iter);
-    }
-    for(int i=0;i<devicecount;i++){
-      cudaSetDevice(i);
-      cudaDeviceSynchronize();
-    }
     diff_old = diff;
-    for(int i=0;i<devicecount;i++){
-      cudaSetDevice(i);
-      //printed here
-
-      initKernel<int> <<<1,1>>>(1,d_diff_old[i],(int)diff_old);
-    }
-    for(int i=0;i<devicecount;i++){
-      cudaSetDevice(i);
-      cudaDeviceSynchronize();
-    }
     diff = fpoint1 - iter;
-    for(int i=0;i<devicecount;i++){
-      cudaSetDevice(i);
-      //printed here
-
-      initKernel<int> <<<1,1>>>(1,d_diff[i],(int)diff);
-    }
-    for(int i=0;i<devicecount;i++){
-      cudaSetDevice(i);
-      cudaDeviceSynchronize();
-    }
     if (diff == diff_old){ // if filter begin 
       cnt = cnt + 1;
-      for(int i=0;i<devicecount;i++){
-        cudaSetDevice(i);
-        //printed here
-
-        initKernel<int> <<<1,1>>>(1,d_cnt[i],(int)cnt);
-      }
-      for(int i=0;i<devicecount;i++){
-        cudaSetDevice(i);
-        cudaDeviceSynchronize();
-      }
     } // if filter end
     else
     if (diff != diff_old){ // if filter begin 
       cnt = 0;
-      for(int i=0;i<devicecount;i++){
-        cudaSetDevice(i);
-        //printed here
-
-        initKernel<int> <<<1,1>>>(1,d_cnt[i],(int)cnt);
-      }
-      for(int i=0;i<devicecount;i++){
-        cudaSetDevice(i);
-        cudaDeviceSynchronize();
-      }
     } // if filter end
     if (cnt == 10){ // if filter begin 
       iter = iter + numNodes - fpoint1;
-      for(int i=0;i<devicecount;i++){
-        cudaSetDevice(i);
-        //printed here
-
-        initKernel<int> <<<1,1>>>(1,d_iter[i],(int)iter);
-      }
-      for(int i=0;i<devicecount;i++){
-        cudaSetDevice(i);
-        cudaDeviceSynchronize();
-      }
       fpoint1 = numNodes;
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);

@@ -8,7 +8,8 @@
 
 namespace spmultigpu{
 
-
+set<string> pushIdentifiers;
+set<string> pullIdentifiers;
 const char* globalLoopVar; 
 map<char*,int> declInForAll;
 char MODIFIED[100];
@@ -135,7 +136,7 @@ void dsl_cpp_generator::generateCudaMemCpyStr(const char *sVarName,
   // cudaMemcpyHostToDevice);
   //                1         2               3       4       5
   char strBuffer[1024];
-  sprintf(strBuffer, "cudaMemcpy(%8s, %8s, sizeof(%3s)*(%s), %s);", sVarName,
+  sprintf(strBuffer, "cudaMemcpy(%8s, %8s[0], sizeof(%3s)*(%s), %s);", sVarName,
           tVarName, type, sizeV,
           (isH2D ? "cudaMemcpyHostToDevice" : "cudaMemcpyDeviceToHost"));
   main.pushstr_newL(strBuffer);
@@ -1238,6 +1239,7 @@ void dsl_cpp_generator::generateReductionOpStmt(reductionCallStmt *stmt,
     // targetFile.pushstr_space(operatorString);
     generateExpr(stmt->getRightSide(), isMainFile);
     targetFile.pushstr_newL(");");
+    // pushIdentifiers
     helper(stmt->getPropAccess()->getIdentifier2(),stmt->getPropAccess()->getIdentifier1());
   }
 }

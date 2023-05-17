@@ -1,13 +1,15 @@
 function Compute_PR(Graph g,float beta,float delta,int maxIter,propNode<float> pageRank)
 {
+
  float num_nodes = g.num_nodes();
  propNode<float> pageRank_nxt;
- g.attachNodeProperty(pageRank=1/num_nodes);
+ g.attachNodeProperty(pageRank=1/num_nodes, pageRank_nxt = 0);
  int iterCount=0;
  
  float diff;
  do
   {
+    diff=0.0;
 
     forall(v in g.nodes())
     {    
@@ -18,7 +20,18 @@ function Compute_PR(Graph g,float beta,float delta,int maxIter,propNode<float> p
             sum=sum+nbr.pageRank/g.count_outNbrs(nbr);
          }
 
+
          float val=(1-delta)/num_nodes+delta*sum;
+         int x =0;
+         if(val-v.pageRank>=0)
+         {
+         x=x+val-v.pageRank; 
+         }
+         else
+         {
+          x=x+v.pageRank-val;
+         }
+         diff+=x;
          v.pageRank_nxt=val;
 
     }
@@ -28,5 +41,6 @@ function Compute_PR(Graph g,float beta,float delta,int maxIter,propNode<float> p
 
 
   } while((diff>beta)&&(iterCount<maxIter));
+
 
 }

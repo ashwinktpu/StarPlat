@@ -119,7 +119,7 @@ void Boruvka(graph& g)
 
   //BEGIN DSL PARSING 
   int* h_nodeId;
-  h_nodeId=(int*)malloc(sizeof(int)*V+1);
+  h_nodeId=(int*)malloc(sizeof(int)*(V+1));
   int** d_nodeId;
   d_nodeId = (int**)malloc(sizeof(int*)*devicecount);
   for (int i = 0; i < devicecount; i++) {
@@ -128,7 +128,7 @@ void Boruvka(graph& g)
   }
 
   int* h_color;
-  h_color=(int*)malloc(sizeof(int)*V+1);
+  h_color=(int*)malloc(sizeof(int)*(V+1));
   int** d_color;
   d_color = (int**)malloc(sizeof(int*)*devicecount);
   for (int i = 0; i < devicecount; i++) {
@@ -137,7 +137,7 @@ void Boruvka(graph& g)
   }
 
   bool* h_isMSTEdge;
-  h_isMSTEdge=(bool*)malloc(sizeof(bool)*E);
+  h_isMSTEdge=(bool*)malloc(sizeof(bool)*(E));
   bool** d_isMSTEdge;
   d_isMSTEdge = (bool**)malloc(sizeof(bool*)*devicecount);
   for (int i = 0; i < devicecount; i++) {
@@ -145,12 +145,12 @@ void Boruvka(graph& g)
     cudaMalloc(&d_isMSTEdge[i], sizeof(bool)*E);
   }
 
-  bool* h_isMSTEdge_temp1 = (bool*)malloc(E*(devicecount)*sizeof(bool));
+  bool* h_isMSTEdge_temp1 = (bool*)malloc((E)*(devicecount)*sizeof(bool));
   cudaSetDevice(0);
   bool* d_isMSTEdge_temp1;
-  cudaMalloc(&d_isMSTEdge_temp1,E*(devicecount)*sizeof(bool));
+  cudaMalloc(&d_isMSTEdge_temp1,(E)*(devicecount)*sizeof(bool));
   bool* d_isMSTEdge_temp2;
-  cudaMalloc(&d_isMSTEdge_temp2,E*(devicecount)*sizeof(bool));
+  cudaMalloc(&d_isMSTEdge_temp2,(E)*(devicecount)*sizeof(bool));
 
 
   for(int i=0;i<devicecount;i++)
@@ -251,7 +251,7 @@ void Boruvka(graph& g)
     }
   }
   bool* h_modified;
-  h_modified=(bool*)malloc(sizeof(bool)*V+1);
+  h_modified=(bool*)malloc(sizeof(bool)*(V+1));
   bool** d_modified;
   d_modified = (bool**)malloc(sizeof(bool*)*devicecount);
   for (int i = 0; i < devicecount; i++) {
@@ -278,7 +278,7 @@ void Boruvka(graph& g)
     cudaDeviceSynchronize();
   }
   int* h_minEdgeOfComp;
-  h_minEdgeOfComp=(int*)malloc(sizeof(int)*V+1);
+  h_minEdgeOfComp=(int*)malloc(sizeof(int)*(V+1));
   int** d_minEdgeOfComp;
   d_minEdgeOfComp = (int**)malloc(sizeof(int*)*devicecount);
   for (int i = 0; i < devicecount; i++) {
@@ -286,16 +286,16 @@ void Boruvka(graph& g)
     cudaMalloc(&d_minEdgeOfComp[i], sizeof(int)*(V+1));
   }
 
-  int* h_minEdgeOfComp_temp1 = (int*)malloc(V+1*(devicecount)*sizeof(int));
+  int* h_minEdgeOfComp_temp1 = (int*)malloc((V+1)*(devicecount)*sizeof(int));
   cudaSetDevice(0);
   int* d_minEdgeOfComp_temp1;
-  cudaMalloc(&d_minEdgeOfComp_temp1,V+1*(devicecount)*sizeof(int));
+  cudaMalloc(&d_minEdgeOfComp_temp1,(V+1)*(devicecount)*sizeof(int));
   int* d_minEdgeOfComp_temp2;
-  cudaMalloc(&d_minEdgeOfComp_temp2,V+1*(devicecount)*sizeof(int));
+  cudaMalloc(&d_minEdgeOfComp_temp2,(V+1)*(devicecount)*sizeof(int));
 
 
   int* h_minEdge;
-  h_minEdge=(int*)malloc(sizeof(int)*V+1);
+  h_minEdge=(int*)malloc(sizeof(int)*(V+1));
   int** d_minEdge;
   d_minEdge = (int**)malloc(sizeof(int*)*devicecount);
   for (int i = 0; i < devicecount; i++) {
@@ -304,6 +304,7 @@ void Boruvka(graph& g)
   }
 
   bool noNewComp = false; // asst in .cu 
+  //fixed_pt_var
   bool** h_noNewComp;
   h_noNewComp = (bool**)malloc(sizeof(bool*)*(devicecount+1));
   for(int i=0;i<=devicecount;i+=1){
@@ -439,6 +440,7 @@ void Boruvka(graph& g)
       cudaDeviceSynchronize();
     }
     bool finishedMinEdge = false; // asst in .cu 
+    //fixed_pt_var
     bool** h_finishedMinEdge;
     h_finishedMinEdge = (bool**)malloc(sizeof(bool*)*(devicecount+1));
     for(int i=0;i<=devicecount;i+=1){
@@ -491,30 +493,34 @@ void Boruvka(graph& g)
         cudaSetDevice(i);
         cudaDeviceSynchronize();
       }
+      //fixed_pt_var
 
+      //fixed_pt_var
 
+      //fixed_pt_var
 
+      //fixed_pt_var
 
       if(devicecount>1){
         //u comp
         for(int i=0;i<devicecount;i++){
           cudaSetDevice(i);
-          cudaMemcpyAsync(h_minEdgeOfComp_temp1+i*V+1,d_minEdgeOfComp[i],sizeof(int)*(V+1),cudaMemcpyDeviceToHost);
+          cudaMemcpyAsync(h_minEdgeOfComp_temp1+i*(V+1),d_minEdgeOfComp[i],sizeof(int)*(V+1),cudaMemcpyDeviceToHost);
         }
         for(int i=0;i<devicecount;i++){
           cudaSetDevice(i);
           cudaDeviceSynchronize();
         }
         cudaSetDevice(0);
-        cudaMemcpy(d_minEdgeOfComp_temp1,h_minEdgeOfComp_temp1,V+1*(devicecount)*sizeof(int),cudaMemcpyHostToDevice);
+        cudaMemcpy(d_minEdgeOfComp_temp1,h_minEdgeOfComp_temp1,(V+1)*(devicecount)*sizeof(int),cudaMemcpyHostToDevice);
         for(int i=0;i<devicecount;i++){
-          cudaMemcpy(d_minEdgeOfComp_temp2+i*V+1,h_minEdgeOfComp,sizeof(int)*V+1,cudaMemcpyHostToDevice);
+          cudaMemcpy(d_minEdgeOfComp_temp2+i*(V+1),h_minEdgeOfComp,sizeof(int)*(V+1),cudaMemcpyHostToDevice);
         }
-        Compute_correct<int><<<numBlocks,threadsPerBlock>>>(d_minEdgeOfComp_temp1,d_minEdgeOfComp_temp2,V+1,devicecount);
-        cudaMemcpy(h_minEdgeOfComp,d_minEdgeOfComp_temp1,V+1*sizeof(int),cudaMemcpyDeviceToHost);
+        Compute_correct<int><<<numBlocks,threadsPerBlock>>>(d_minEdgeOfComp_temp1,d_minEdgeOfComp_temp2,V,devicecount);
+        cudaMemcpy(h_minEdgeOfComp,d_minEdgeOfComp_temp1,(V+1)*sizeof(int),cudaMemcpyDeviceToHost);
         for(int i=0;i<devicecount;i++){
           cudaSetDevice(i);
-          cudaMemcpyAsync(d_minEdgeOfComp[i],h_minEdgeOfComp,V+1*sizeof(int),cudaMemcpyHostToDevice);
+          cudaMemcpyAsync(d_minEdgeOfComp[i],h_minEdgeOfComp,(V+1)*sizeof(int),cudaMemcpyHostToDevice);
         }
         for(int i=0;i<devicecount;i++){
           cudaSetDevice(i);
@@ -525,22 +531,22 @@ void Boruvka(graph& g)
         //u comp
         for(int i=0;i<devicecount;i++){
           cudaSetDevice(i);
-          cudaMemcpyAsync(h_minEdgeOfComp_temp1+i*V+1,d_minEdgeOfComp[i],sizeof(int)*(V+1),cudaMemcpyDeviceToHost);
+          cudaMemcpyAsync(h_minEdgeOfComp_temp1+i*(V+1),d_minEdgeOfComp[i],sizeof(int)*(V+1),cudaMemcpyDeviceToHost);
         }
         for(int i=0;i<devicecount;i++){
           cudaSetDevice(i);
           cudaDeviceSynchronize();
         }
         cudaSetDevice(0);
-        cudaMemcpy(d_minEdgeOfComp_temp1,h_minEdgeOfComp_temp1,V+1*(devicecount)*sizeof(int),cudaMemcpyHostToDevice);
+        cudaMemcpy(d_minEdgeOfComp_temp1,h_minEdgeOfComp_temp1,(V+1)*(devicecount)*sizeof(int),cudaMemcpyHostToDevice);
         for(int i=0;i<devicecount;i++){
-          cudaMemcpy(d_minEdgeOfComp_temp2+i*V+1,h_minEdgeOfComp,sizeof(int)*V+1,cudaMemcpyHostToDevice);
+          cudaMemcpy(d_minEdgeOfComp_temp2+i*(V+1),h_minEdgeOfComp,sizeof(int)*(V+1),cudaMemcpyHostToDevice);
         }
-        Compute_correct<int><<<numBlocks,threadsPerBlock>>>(d_minEdgeOfComp_temp1,d_minEdgeOfComp_temp2,V+1,devicecount);
-        cudaMemcpy(h_minEdgeOfComp,d_minEdgeOfComp_temp1,V+1*sizeof(int),cudaMemcpyDeviceToHost);
+        Compute_correct<int><<<numBlocks,threadsPerBlock>>>(d_minEdgeOfComp_temp1,d_minEdgeOfComp_temp2,V,devicecount);
+        cudaMemcpy(h_minEdgeOfComp,d_minEdgeOfComp_temp1,(V+1)*sizeof(int),cudaMemcpyDeviceToHost);
         for(int i=0;i<devicecount;i++){
           cudaSetDevice(i);
-          cudaMemcpyAsync(d_minEdgeOfComp[i],h_minEdgeOfComp,V+1*sizeof(int),cudaMemcpyHostToDevice);
+          cudaMemcpyAsync(d_minEdgeOfComp[i],h_minEdgeOfComp,(V+1)*sizeof(int),cudaMemcpyHostToDevice);
         }
         for(int i=0;i<devicecount;i++){
           cudaSetDevice(i);
@@ -572,7 +578,7 @@ void Boruvka(graph& g)
     for(int i=0;i<devicecount;i++)
     {
       cudaSetDevice(i);
-      Boruvka_kernel4<<<numBlocksKernel, threadsPerBlock>>>(h_vertex_partition[i],h_vertex_partition[i+1],V,E,d_offset[i],d_edges[i],d_weight[i],d_src[i],d_rev_meta[i],d_color[i],d_nodeId[i],d_minEdgeOfComp[i]);
+      Boruvka_kernel4<<<numBlocksKernel, threadsPerBlock>>>(h_vertex_partition[i],h_vertex_partition[i+1],V,E,d_offset[i],d_edges[i],d_weight[i],d_src[i],d_rev_meta[i],d_nodeId[i],d_color[i],d_minEdgeOfComp[i]);
     }
 
     for(int i=0;i<devicecount;i++)
@@ -584,22 +590,22 @@ void Boruvka(graph& g)
       //src dstLead
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
-        cudaMemcpyAsync(h_minEdgeOfComp_temp1+i*V+1,d_minEdgeOfComp[i],sizeof(int)*(V+1),cudaMemcpyDeviceToHost);
+        cudaMemcpyAsync(h_minEdgeOfComp_temp1+i*(V+1),d_minEdgeOfComp[i],sizeof(int)*(V+1),cudaMemcpyDeviceToHost);
       }
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
         cudaDeviceSynchronize();
       }
       cudaSetDevice(0);
-      cudaMemcpy(d_minEdgeOfComp_temp1,h_minEdgeOfComp_temp1,V+1*(devicecount)*sizeof(int),cudaMemcpyHostToDevice);
+      cudaMemcpy(d_minEdgeOfComp_temp1,h_minEdgeOfComp_temp1,(V+1)*(devicecount)*sizeof(int),cudaMemcpyHostToDevice);
       for(int i=0;i<devicecount;i++){
-        cudaMemcpy(d_minEdgeOfComp_temp2+i*V+1,h_minEdgeOfComp,sizeof(int)*V+1,cudaMemcpyHostToDevice);
+        cudaMemcpy(d_minEdgeOfComp_temp2+i*(V+1),h_minEdgeOfComp,sizeof(int)*(V+1),cudaMemcpyHostToDevice);
       }
-      Compute_correct<int><<<numBlocks,threadsPerBlock>>>(d_minEdgeOfComp_temp1,d_minEdgeOfComp_temp2,V+1,devicecount);
-      cudaMemcpy(h_minEdgeOfComp,d_minEdgeOfComp_temp1,V+1*sizeof(int),cudaMemcpyDeviceToHost);
+      Compute_correct<int><<<numBlocks,threadsPerBlock>>>(d_minEdgeOfComp_temp1,d_minEdgeOfComp_temp2,V,devicecount);
+      cudaMemcpy(h_minEdgeOfComp,d_minEdgeOfComp_temp1,(V+1)*sizeof(int),cudaMemcpyDeviceToHost);
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
-        cudaMemcpyAsync(d_minEdgeOfComp[i],h_minEdgeOfComp,V+1*sizeof(int),cudaMemcpyHostToDevice);
+        cudaMemcpyAsync(d_minEdgeOfComp[i],h_minEdgeOfComp,(V+1)*sizeof(int),cudaMemcpyHostToDevice);
       }
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
@@ -609,7 +615,7 @@ void Boruvka(graph& g)
     for(int i=0;i<devicecount;i++)
     {
       cudaSetDevice(i);
-      Boruvka_kernel5<<<numBlocksKernel, threadsPerBlock>>>(h_vertex_partition[i],h_vertex_partition[i+1],V,E,d_offset[i],d_edges[i],d_weight[i],d_src[i],d_rev_meta[i],d_color[i],d_nodeId[i],d_minEdgeOfComp[i],d_isMSTEdge[i]);
+      Boruvka_kernel5<<<numBlocksKernel, threadsPerBlock>>>(h_vertex_partition[i],h_vertex_partition[i+1],V,E,d_offset[i],d_edges[i],d_weight[i],d_src[i],d_rev_meta[i],d_nodeId[i],d_color[i],d_minEdgeOfComp[i],d_isMSTEdge[i]);
     }
 
     for(int i=0;i<devicecount;i++)
@@ -621,22 +627,22 @@ void Boruvka(graph& g)
       //src srcMinEdge
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
-        cudaMemcpyAsync(h_isMSTEdge_temp1+i*E,d_isMSTEdge[i],sizeof(bool)*(V+1),cudaMemcpyDeviceToHost);
+        cudaMemcpyAsync(h_isMSTEdge_temp1+i*(E),d_isMSTEdge[i],sizeof(bool)*(E),cudaMemcpyDeviceToHost);
       }
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
         cudaDeviceSynchronize();
       }
       cudaSetDevice(0);
-      cudaMemcpy(d_isMSTEdge_temp1,h_isMSTEdge_temp1,E*(devicecount)*sizeof(bool),cudaMemcpyHostToDevice);
+      cudaMemcpy(d_isMSTEdge_temp1,h_isMSTEdge_temp1,(E)*(devicecount)*sizeof(bool),cudaMemcpyHostToDevice);
       for(int i=0;i<devicecount;i++){
-        cudaMemcpy(d_isMSTEdge_temp2+i*E,h_isMSTEdge,sizeof(bool)*E,cudaMemcpyHostToDevice);
+        cudaMemcpy(d_isMSTEdge_temp2+i*(E),h_isMSTEdge,sizeof(bool)*(E),cudaMemcpyHostToDevice);
       }
-      Compute_correct<bool><<<numBlocks,threadsPerBlock>>>(d_isMSTEdge_temp1,d_isMSTEdge_temp2,E,devicecount);
-      cudaMemcpy(h_isMSTEdge,d_isMSTEdge_temp1,E*sizeof(bool),cudaMemcpyDeviceToHost);
+      Compute_correct<bool><<<numBlocks_Edge,threadsPerBlock>>>(d_isMSTEdge_temp1,d_isMSTEdge_temp2,E-1,devicecount);
+      cudaMemcpy(h_isMSTEdge,d_isMSTEdge_temp1,(E)*sizeof(bool),cudaMemcpyDeviceToHost);
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
-        cudaMemcpyAsync(d_isMSTEdge[i],h_isMSTEdge,E*sizeof(bool),cudaMemcpyHostToDevice);
+        cudaMemcpyAsync(d_isMSTEdge[i],h_isMSTEdge,(E)*sizeof(bool),cudaMemcpyHostToDevice);
       }
       for(int i=0;i<devicecount;i++){
         cudaSetDevice(i);
@@ -646,7 +652,7 @@ void Boruvka(graph& g)
     for(int i=0;i<devicecount;i++)
     {
       cudaSetDevice(i);
-      Boruvka_kernel6<<<numBlocksKernel, threadsPerBlock>>>(h_vertex_partition[i],h_vertex_partition[i+1],V,E,d_offset[i],d_edges[i],d_weight[i],d_src[i],d_rev_meta[i],d_color[i],d_nodeId[i],d_minEdgeOfComp[i],d_noNewComp[i]);
+      Boruvka_kernel6<<<numBlocksKernel, threadsPerBlock>>>(h_vertex_partition[i],h_vertex_partition[i+1],V,E,d_offset[i],d_edges[i],d_weight[i],d_src[i],d_rev_meta[i],d_nodeId[i],d_color[i],d_minEdgeOfComp[i],d_noNewComp[i]);
     }
 
     for(int i=0;i<devicecount;i++)
@@ -674,6 +680,7 @@ void Boruvka(graph& g)
       }
     }
     bool finished = false; // asst in .cu 
+    //fixed_pt_var
     bool** h_finished;
     h_finished = (bool**)malloc(sizeof(bool*)*(devicecount+1));
     for(int i=0;i<=devicecount;i+=1){
@@ -726,7 +733,9 @@ void Boruvka(graph& g)
         cudaSetDevice(i);
         cudaDeviceSynchronize();
       }
+      //fixed_pt_var
 
+      //fixed_pt_var
 
       if(devicecount>1){
         //u u

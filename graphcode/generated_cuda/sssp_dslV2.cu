@@ -82,40 +82,40 @@ void Compute_SSSP(graph& g,int* dist,int src)
 
 
   //BEGIN DSL PARSING 
-  bool* d_modified;
-  cudaMalloc(&d_modified, sizeof(bool)*(V));
+  bool* d_modified1;
+  cudaMalloc(&d_modified1, sizeof(bool)*(V));
 
   initKernel<int> <<<numBlocks,threadsPerBlock>>>(V,d_dist,(int)INT_MAX);
 
-  initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_modified,(bool)false);
+  initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V,d_modified1,(bool)false);
 
-  initIndex<bool><<<1,1>>>(V,d_modified,src,(bool)true); //InitIndexDevice
+  initIndex<bool><<<1,1>>>(V,d_modified1,src,(bool)true); //InitIndexDevice
   initIndex<int><<<1,1>>>(V,d_dist,src,(int)0); //InitIndexDevice
   bool finished = false; // asst in .cu
 
   // FIXED POINT variables
   //BEGIN FIXED POINT
-  initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
+  initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified1_next, false);
   int k=0; // #fixpt-Iterations
   while(!finished) {
 
     finished = true;
     cudaMemcpyToSymbol(::finished, &finished, sizeof(bool), 0, cudaMemcpyHostToDevice);
-    Compute_SSSP_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_dist,d_modified);
+    Compute_SSSP_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next,d_modified1,d_dist);
     cudaDeviceSynchronize();
 
 
 
 
     cudaMemcpyFromSymbol(&finished, ::finished, sizeof(bool), 0, cudaMemcpyDeviceToHost);
-    cudaMemcpy(d_modified, d_modified_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
-    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified_next, false);
+    cudaMemcpy(d_modified1, d_modified1_next, sizeof(bool)*V, cudaMemcpyDeviceToDevice);
+    initKernel<bool> <<<numBlocks,threadsPerBlock>>>(V, d_modified1_next, false);
     k++;
   } // END FIXED POINT
 
 
   //cudaFree up!! all propVars in this BLOCK!
-  cudaFree(d_modified);
+  cudaFree(d_modified1);
 
   //TIMER STOP
   cudaEventRecord(stop,0);
@@ -125,20 +125,3 @@ void Compute_SSSP(graph& g,int* dist,int src)
 
   cudaMemcpy(    dist,   d_dist, sizeof(int)*(V), cudaMemcpyDeviceToHost);
 } //end FUN
-
-int main(int argc,char* argv[])
-{
-  char *file_name = argv[1];
-  graph g(file_name);
-  g.parseGraph();
-  int *distance = (int *)malloc((g.num_nodes() + 1) * sizeof(int));
-  int src = 1;
-  Compute_SSSP(g, distance, src);
-  long sum = 0;
-  for (int i = 1; i <= g.num_nodes(); i++)
-  {
-    sum+=distance[i];
-  }
-  std::cout<<sum<<std::endl;
-  return 0;
-}

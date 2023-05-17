@@ -137,7 +137,7 @@ void colorGraph(graph& g)
       cnt = 0;
 
     } // if filter end
-    if (cnt == 3){ // if filter begin 
+    if (cnt == 10){ // if filter begin 
       iter = iter + numNodes - fpoint1;
       fpoint1 = numNodes;
 

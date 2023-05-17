@@ -60,6 +60,9 @@ __global__ void colorGraph_kernel(int V, int E, int* d_meta, int* d_data, int* d
     } // if filter end
 
   } // if filter end
+  else
+  d_modified_next[v] = true;
+
 } // end KER FUNC
 
 #endif

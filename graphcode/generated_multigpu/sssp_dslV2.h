@@ -20,15 +20,18 @@ __global__ void Compute_SSSP_kernel1(int start,int end,int V, int E, int* d_meta
   if( v < num_vertices) {
     v+=start;
     if (d_modified[v] == true){ // if filter begin 
-      int e = edge;
-       int dist_new = d_dist[v] + d_weight[e];
-      bool modified_new = true;
-      if(d_dist[v]!= INT_MAX && d_dist[nbr] > dist_new)
-      {
-        atomicMin(&d_dist[nbr],dist_new);
-        d_modified_next[nbr] = true ;
-        d_finished[0] = false ;
-      }
+      for (int edge = d_meta[v]; edge < d_meta[v+1]; edge++) { 
+        int nbr = d_data[edge];
+        int e = edge;
+         int dist_new = d_dist[nbr] + d_weight[e];
+        bool modified_new = true;
+        if(d_dist[nbr]!= INT_MAX && d_dist[v] > dist_new)
+        {
+          atomicMin(&d_dist[v],dist_new);
+          d_modified_next[v] = true ;
+          d_finished[0] = false ;
+        }
+      } //  end FOR NBR ITR. TMP FIX!
     } // if filter end
   }
 } // end KER FUNC

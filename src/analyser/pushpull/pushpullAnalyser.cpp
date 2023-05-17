@@ -3,6 +3,7 @@
 #include <list>
 #include "../../backends/backend_multigpu/getUsedVars.h"
 
+forallStmt* curr = NULL;
 int pushpullAnalyser::analyseforinfor(forallStmt* forstmt,Identifier* ownvertex){
     cout << "   for" << endl;
     blockStatement *forbody = (blockStatement *)forstmt->getBody();
@@ -30,6 +31,7 @@ int pushpullAnalyser::analyseassigninfor(assignment *stmt, Identifier *ownvertex
         if (strcmp(ownvertex->getIdentifier(), affectedId->getIdentifier()) != 0)
         {
             push_map[string(stmt->getPropId()->getIdentifier2()->getIdentifier())]=1;
+            curr->push_map[string(stmt->getPropId()->getIdentifier2()->getIdentifier())]=1;
             return 0;
         }
     }
@@ -68,6 +70,7 @@ int pushpullAnalyser::analysereductioninfor(reductionCallStmt* stmt, Identifier 
              {
                  PropAccess* stmt1 = (PropAccess*) stmt;
                  push_map[string(stmt1->getIdentifier2()->getIdentifier())] = 1;
+                 curr->push_map[string(stmt1->getIdentifier2()->getIdentifier())]=1;
                  ans =0;
              }
         }
@@ -78,6 +81,7 @@ int pushpullAnalyser::analysereductioninfor(reductionCallStmt* stmt, Identifier 
         if (strcmp(ownvertex->getIdentifier(), affectedId->getIdentifier()) != 0)
         {
              push_map[string(leftprop->getIdentifier2()->getIdentifier())] = 1;
+             curr->push_map[string(leftprop->getIdentifier2()->getIdentifier())]=1;
              ans =0;
         }
     }
@@ -97,6 +101,8 @@ int pushpullAnalyser::analyseexprinfor(unary_stmt* input,Identifier *ownvertex){
         if (strcmp(ownvertex->getIdentifier(), affectedId->getIdentifier()) != 0)
         {
              push_map[string(propaccess->getIdentifier2()->getIdentifier())] = 1;
+            curr->push_map[string(propaccess->getIdentifier2()->getIdentifier())] = 1;
+
              return 0;
         }
     }
@@ -192,6 +198,7 @@ void pushpullAnalyser::analyseStatement(statement *stmt)
         forallStmt *forStmt = (forallStmt *)stmt;
         if (forStmt->isForall())
         {
+            curr = forStmt;
             multigpu::usedVariables usedVars = multigpu::getVarsForAll(forStmt);
             list<Identifier *> vars = usedVars.getVariables();
             for (Identifier *iden : vars)

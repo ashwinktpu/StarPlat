@@ -15,26 +15,26 @@ void Compute_SSSP(graph& g,int* dist,int src);
 
 __device__ bool finished ; // DEVICE ASSTMENT in .h
 
-__global__ void Compute_SSSP_kernel(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,int* d_dist,bool* d_modified){ // BEGIN KER FUN via ADDKERNEL
+__global__ void Compute_SSSP_kernel(int V, int E, int* d_meta, int* d_data, int* d_src, int* d_weight, int *d_rev_meta,bool *d_modified_next,bool* d_modified1,int* d_dist){ // BEGIN KER FUN via ADDKERNEL
   float num_nodes  = V;
   unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
   if(v >= V) return;
-  for (int edge = d_rev_meta[v]; edge < d_rev_meta[v+1]; edge++)
-  {int nbr = d_src[edge] ;
-    if (d_modified[nbr] == true){ // if filter begin 
+  if (d_modified1[v] == true){ // if filter begin 
+    for (int edge = d_meta[v]; edge < d_meta[v+1]; edge++) { // FOR NBR ITR 
+      int nbr = d_data[edge];
       int e = edge;
-       int dist_new = d_dist[nbr] + d_weight[e];
-      bool modified_new = true;
-      if(d_dist[nbr]!= INT_MAX && d_dist[v] > dist_new)
+       int dist_new = d_dist[v] + d_weight[e];
+      bool modified1_new = true;
+      if(d_dist[v]!= INT_MAX && d_dist[nbr] > dist_new)
       {
-        atomicMin(&d_dist[v],dist_new);
-        d_modified_next[v] = modified_new;
+        atomicMin(&d_dist[nbr],dist_new);
+        d_modified1_next[nbr] = modified1_new;
         finished = false ;
       }
 
-    } // if filter end
+    } //  end FOR NBR ITR. TMP FIX!
 
-  } //  end FOR NBR ITR. TMP FIX!
+  } // if filter end
 } // end KER FUNC
 
 #endif

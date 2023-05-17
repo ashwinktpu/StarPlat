@@ -1,5 +1,5 @@
 // FOR BC: nvcc bc_dsl_v2.cu -arch=sm_60 -std=c++14 -rdc=true # HW must support CC 6.0+ Pascal or after
-#include "sssp_dslV2.h"
+#include "sssp_dslV3.h"
 
 void Compute_SSSP(graph& g,int* dist,int src)
 

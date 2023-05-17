@@ -1891,6 +1891,7 @@ class fixedPointStmt:public statement
     
     list<Identifier*> usedVars;
     public:
+    map<string,int> push_map;
     forallStmt()
     {
       iterator=NULL;
