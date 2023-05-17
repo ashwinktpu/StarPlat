@@ -1,10 +1,10 @@
-EXPENDABLES_WINDOWS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c bin/deviceVarsAnalyser.o bin/analyserUtil.o bin/dv*.o
-EXPENDABLES = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c  bin/deviceVarsAnalyser.o
-ANALYSER = bin/dataRaceAnalyser.o 
-PROGRAMS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/cu_dsl_cpp_generator.o  bin/ac_dsl_cpp_generator.o bin/om_dsl_cpp_generator.o bin/mpi_dsl_cpp_generator.o bin/multigpu_dsl_cpp_generator.o bin/om_dyn_dsl_cpp_generator.o 
+EXPENDABLES_WINDOWS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c bin/deviceVarsAnalyser.o bin/analyserUtil.o bin/dv*.o bin/bv*.o
+EXPENDABLES = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c  bin/deviceVarsAnalyser.o bin/blockVarsAnalyser.o
+ANALYSER = bin/dataRaceAnalyser.o
+PROGRAMS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/cu_dsl_cpp_generator.o  bin/ac_dsl_cpp_generator.o bin/om_dsl_cpp_generator.o bin/mpi_dsl_cpp_generator.o bin/om_dyn_dsl_cpp_generator.o bin/mpi_dsl_cpp_generator_helper.o bin/mpi_dsl_cpp_expression_generator.o bin/mpi_dsl_cpp_statement_generator.o bin/mpi_dsl_dyn_cpp_generator.o bin/sycl_dsl_cpp_generator.o bin/multigpu_dsl_cpp_generator.o
 #bin/ac_dsl_cpp_generator.o 
 #bin/om_dsl_cpp_generator.o
-A_PROGRAM = bin/attachPropAnalyser.o bin/dataRaceAnalyser.o bin/deviceVarsAnalyser.o bin/analyserUtil.o bin/pushpullAnalyser.o
+A_PROGRAM = bin/attachPropAnalyser.o bin/dataRaceAnalyser.o bin/deviceVarsAnalyser.o bin/blockVarsAnalyser.o bin/analyserUtil.o bin/pushpullAnalyser.o
 
 CFLAGS  = -g 
 CC = g++ -std=c++11 #-Wall # -Wno-unused-variable #-fsanitize=address
@@ -34,7 +34,7 @@ bin/cu_dsl_cpp_generator.o: backends/backend_cuda/dsl_cpp_generator.cpp backends
 	$(CC) $(CFLAGS) -c backends/backend_cuda/dsl_cpp_generator.cpp -o bin/cu_dsl_cpp_generator.o
 
 #openACC
-bin/ac_dsl_cpp_generator.o: backends/backend_openACC/dsl_cpp_generator.cpp backends/dslCodePad.h
+bin/ac_dsl_cpp_generator.o: backends/backend_openACC/dsl_cpp_generator.cpp backends/dslCodePad.h backends/backend_openACC/getMetaDataUsed.cpp
 	$(CC) $(CFLAGS) -c backends/backend_openACC/dsl_cpp_generator.cpp -o bin/ac_dsl_cpp_generator.o
 	
 #omp
@@ -42,12 +42,28 @@ bin/om_dsl_cpp_generator.o: backends/backend_omp/dsl_cpp_generator.cpp backends/
 	$(CC) $(CFLAGS) -c backends/backend_omp/dsl_cpp_generator.cpp -o bin/om_dsl_cpp_generator.o
 
 #mpi
-bin/mpi_dsl_cpp_generator.o: backends/backend_mpi/dsl_cpp_generator.cpp backends/dslCodePad.h
+bin/mpi_dsl_cpp_generator.o: backends/backend_mpi/dsl_cpp_generator.h backends/backend_mpi/dsl_cpp_generator.cpp backends/dslCodePad.h
 	$(CC) $(CFLAGS) -c backends/backend_mpi/dsl_cpp_generator.cpp -o bin/mpi_dsl_cpp_generator.o
+
+#sycl
+bin/sycl_dsl_cpp_generator.o: backends/backend_sycl/dsl_cpp_generator.cpp backends/dslCodePad.h
+	$(CC) $(CFLAGS) -c backends/backend_sycl/dsl_cpp_generator.cpp -o bin/sycl_dsl_cpp_generator.o
 
 #dyn OMP
 bin/om_dyn_dsl_cpp_generator.o: backends/backend_omp/dsl_dyn_cpp_generator.cpp backends/dslCodePad.h
 	$(CC) $(CFLAGS) -c backends/backend_omp/dsl_dyn_cpp_generator.cpp -o bin/om_dyn_dsl_cpp_generator.o
+
+bin/mpi_dsl_cpp_generator_helper.o: backends/backend_mpi/dsl_cpp_generator.h backends/backend_mpi/dsl_cpp_generator_helper.cpp backends/dslCodePad.h
+	$(CC) $(CFLAGS) -c backends/backend_mpi/dsl_cpp_generator_helper.cpp -o bin/mpi_dsl_cpp_generator_helper.o
+
+bin/mpi_dsl_cpp_expression_generator.o: backends/backend_mpi/dsl_cpp_generator.h backends/backend_mpi/dsl_cpp_expression_generator.cpp backends/dslCodePad.h
+	$(CC) $(CFLAGS) -c backends/backend_mpi/dsl_cpp_expression_generator.cpp -o bin/mpi_dsl_cpp_expression_generator.o
+
+bin/mpi_dsl_cpp_statement_generator.o: backends/backend_mpi/dsl_cpp_generator.h backends/backend_mpi/dsl_cpp_statement_generator.cpp backends/dslCodePad.h
+	$(CC) $(CFLAGS) -c backends/backend_mpi/dsl_cpp_statement_generator.cpp -o bin/mpi_dsl_cpp_statement_generator.o
+
+bin/mpi_dsl_dyn_cpp_generator.o : backends/backend_mpi/dsl_cpp_generator.h backends/backend_mpi/dsl_cpp_statement_generator.cpp backends/backend_mpi/dsl_dyn_cpp_generator.h backends/backend_mpi/dsl_dyn_cpp_generator.cpp backends/dslCodePad.h
+	$(CC) $(CFLAGS) -c backends/backend_mpi/dsl_dyn_cpp_generator.cpp -o bin/mpi_dsl_dyn_cpp_generator.o
 
 starplat: bin $(PROGRAMS) $(A_PROGRAM) 
 	$(CC)  $(PROGRAMS) $(A_PROGRAM) -o StarPlat
@@ -101,6 +117,27 @@ bin/dv4.o: analyser/deviceVars/deviceVarsTransfer.cpp analyser/deviceVars/device
 bin/dv5.o: analyser/deviceVars/getUsedVars.cpp analyser/deviceVars/deviceVarsAnalyser.h analyser/analyserUtil.cpp
 	$(CC) $(CFLAGS) -c analyser/deviceVars/getUsedVars.cpp -o bin/dv5.o
 
+bin/blockVarsAnalyser.o: bin/bv1.o bin/bv2.o bin/bv3.o bin/bv4.o bin/bv5.o bin/bv6.o.o
+	ld -r bin/bv1.o bin/bv2.o bin/bv3.o bin/bv4.o bin/bv5.o bin/bv6.o.o -o bin/blockVarsAnalyser.o
+
+bin/bv1.o: analyser/blockVars/blockVarsAnalyser.cpp analyser/blockVars/blockVarsAnalyser.h
+	$(CC) $(CFLAGS) -c analyser/blockVars/blockVarsAnalyser.cpp -o bin/bv1.o
+
+bin/bv2.o: analyser/blockVars/blockVarsInit.cpp analyser/blockVars/blockVarsAnalyser.h
+	$(CC) $(CFLAGS) -c analyser/blockVars/blockVarsInit.cpp -o bin/bv2.o
+
+bin/bv3.o: analyser/blockVars/getUsedVars.cpp analyser/blockVars/blockVarsAnalyser.h
+	$(CC) $(CFLAGS) -c analyser/blockVars/getUsedVars.cpp -o bin/bv3.o
+
+bin/bv4.o: analyser/blockVars/NodeBlockData.cpp analyser/blockVars/blockVarsAnalyser.h
+	$(CC) $(CFLAGS) -c analyser/blockVars/NodeBlockData.cpp -o bin/bv4.o
+
+bin/bv5.o: analyser/blockVars/setVarsInParallel.cpp analyser/blockVars/blockVarsAnalyser.h
+	$(CC) $(CFLAGS) -c analyser/blockVars/setVarsInParallel.cpp -o bin/bv5.o
+
+bin/bv6.o.o: analyser/blockVars/analyserUtil.cpp analyser/blockVars/analyserUtil.h
+	$(CC) $(CFLAGS) -c analyser/blockVars/analyserUtil.cpp -o bin/bv6.o.o
+
 bin/analyserUtil.o: analyser/analyserUtil.cpp
 	$(CC) $(CFLAGS) -c analyser/analyserUtil.cpp -o bin/analyserUtil.o
 
@@ -121,5 +158,5 @@ clean_windows:
 
 clean:
 #~ 	rm -f $(EXPENDABLES)
-	rm bin/*.o StarPlat StarPlat.exe
+	rm bin/*.o StarPlat
 	rmdir bin

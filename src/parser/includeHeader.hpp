@@ -1,10 +1,9 @@
 #ifndef INCLUDEHEADER_H
 #define INCLUDEHEADER_H
 
-
-//#include "../maincontext/MainContext.hpp"
+// #include "../maincontext/MainContext.hpp"
 #include "../maincontext/enum_def.hpp"
-//#include "../symbolutil/SymbolTable.hpp"
+// #include "../symbolutil/SymbolTable.hpp"
 /*#include "../ast/ASTNodeTypes.hpp"
 #include "../ast/ASTNode.hpp"
 #include "../ast/ASTHelper.cpp"*/
@@ -15,6 +14,7 @@
 
 /* UNCOMMENT IT TO GENERATE FOR MPI BACKEND */
 #include "../backends/backend_mpi/dsl_cpp_generator.h"
+#include "../backends/backend_mpi/dsl_dyn_cpp_generator.h"
 
 /* UNCOMMENT IT TO GENERATE FOR CUDA BACKEND */
 #include "../backends/backend_cuda/dsl_cpp_generator.h"
@@ -27,7 +27,9 @@
 
 #include "../symbolutil/SymbolTableBuilder.h"
 
-extern "C" int yyparse (void);
+/* UNCOMMENT IT TO GENERATE FOR SYCL BACKEND */
+#include "../backends/backend_sycl/dsl_cpp_generator.h"
 
+extern "C" int yyparse(void);
 
 #endif

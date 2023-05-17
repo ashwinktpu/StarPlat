@@ -85,16 +85,15 @@ usedVariables getVarsIf(ifStmt *stmt)
 
   return currVars;
 }
-/*
+
 usedVariables getVarsFixedPoint(fixedPointStmt *stmt)
 {
   usedVariables currVars = getVarsExpr(stmt->getDependentProp());
-  currVars.addVariable(stmt->getFixedPointId());
+  currVars.addVariable(stmt->getFixedPointId(), READ);
   currVars.merge(getVarsStatement(stmt->getBody()));
   return currVars;
 }
 // TODO : Handle this atlast
-*/
 
 usedVariables getVarsReduction(reductionCallStmt *stmt)
 {
@@ -127,16 +126,24 @@ usedVariables getVarsReduction(reductionCallStmt *stmt)
     {
       for(ASTNode* node: stmt->getLeftList())
       {
+        Identifier* affectedId = NULL;
         if(node->getTypeofNode() == NODE_ID)
         {
           Identifier* iden = (Identifier*)node;
           currVars.addVariable(iden, WRITE);
+          affectedId = iden;
         }
         else if(node->getTypeofNode() == NODE_PROPACCESS)
         {
           PropAccess* propId = (PropAccess*)node;
           currVars.addVariable(propId->getIdentifier1(), READ);
           currVars.addVariable(propId->getIdentifier2(), WRITE);
+          affectedId = propId->getIdentifier2();
+        }
+
+        if(affectedId->getSymbolInfo()->getId()->get_fp_association()) {
+          Identifier* fpId = affectedId->getSymbolInfo()->getId()->get_fpIdNode();
+          currVars.addVariable(fpId, WRITE);
         }
       }
       getVarsReductionCall(stmt->getReducCall());
@@ -326,10 +333,10 @@ usedVariables getVarsStatement(statement *stmt)
     return getVarsReduction((reductionCallStmt *)stmt);
 
     /*case NODE_ITRBFS:
-      return getVarsBFS((iterateBFS *)stmt);
+      return getVarsBFS((iterateBFS *)stmt);*/
 
-    case NODE_FIXEDPTSTMT:
-      return getVarsFixedPoint((fixedPointStmt *)stmt);*/
+  case NODE_FIXEDPTSTMT:
+      return getVarsFixedPoint((fixedPointStmt *)stmt);
   default:
     ; // added to fix warning!
   }

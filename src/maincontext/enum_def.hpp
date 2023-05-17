@@ -20,8 +20,8 @@ enum TYPE
  TYPE_PROPEDGE,
  TYPE_NONE,
  TYPE_UPDATES,
- TYPE_UNSIGNED_INT,
- TYPE_UNSIGNED_LONG,
+ TYPE_CONTAINER,
+ TYPE_NODEMAP,
 };
 
 inline bool check_isNodeEdgeType(int typeId)
@@ -34,7 +34,7 @@ inline bool check_isPropType(int typeId)
 }
 inline bool check_isCollectionType(int typeId)
 {
-  return ((typeId == TYPE_LIST)||(typeId==TYPE_SETE)||(typeId==TYPE_SETN)||(typeId == TYPE_UPDATES));
+  return ((typeId == TYPE_LIST)||(typeId==TYPE_SETE)||(typeId==TYPE_SETN)||(typeId == TYPE_UPDATES) || (typeId == TYPE_NODEMAP) || (typeId == TYPE_CONTAINER));
 }
 inline bool check_isGraphType(int typeId)
 {
@@ -64,11 +64,23 @@ inline bool check_isSetCollectionType(int typeId)
 }
 inline bool check_isNodeType(int typeId)
 {
-  return typeId==TYPE_NODE;
+  return typeId == TYPE_NODE;
 }
 inline bool check_isEdgeType(int typeId)
 {
-  return typeId==TYPE_EDGE;
+  return typeId == TYPE_EDGE;
+}
+inline bool check_isContainerType(int typeId)
+{
+
+ return typeId == TYPE_CONTAINER;
+   
+}
+inline bool check_isNodeMapType(int typeId)
+{
+ 
+return typeId == TYPE_NODEMAP;
+
 }
 
 enum REDUCE
@@ -105,6 +117,7 @@ enum OPERATOR
  OPERATOR_ORASSIGN,
  OPERATOR_ANDASSIGN,
  OPERATOR_SUBASSIGN,
+ OPERATOR_INDEX,
 
 };
 
@@ -165,6 +178,7 @@ enum EXPR
    EXPR_INFINITY,
    EXPR_PROCCALL,
    EXPR_DEPENDENT,
+   EXPR_MAPGET,
 };
 
 static const char *currentBatch = "currentBatch";

@@ -9,6 +9,8 @@
 
 using namespace std;
 
+class NodeBlockData;
+
 class ASTNode
 {
   protected:
@@ -17,6 +19,8 @@ class ASTNode
   NODETYPE typeofNode;
   SymbolTable* var_symbTab;
   SymbolTable* prop_symbTab;
+  NodeBlockData* blockData;
+
   public:
   ASTNode()
   {
@@ -54,7 +58,15 @@ class ASTNode
     return prop_symbTab;
   }
 
+  void setBlockData(NodeBlockData* blockData)
+  {
+    this->blockData = blockData;
+  }
 
+  NodeBlockData* getBlockData()
+  {
+    return blockData;
+  }
 
 };
 
