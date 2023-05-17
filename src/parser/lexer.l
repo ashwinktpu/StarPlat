@@ -26,8 +26,6 @@ NEGATE [-]
 "float"   {printf("Type: %s", yytext);  return T_FLOAT;}
 "double"  {printf("Type: %s", yytext);  return T_DOUBLE;}
 "bool"    {printf("Type: %s", yytext);  return T_BOOL;}
-"unsigned int" 	  {printf("Type: %s", yytext);  return T_UNSIGNED_INT;}
-"unsigned long" 	  {printf("Type: %s", yytext);  return T_UNSIGNED_LONG;}
 
 "forall"  {printf("Keyword-forall: %s", yytext); return T_FORALL;}
 "for"     {printf("For: %s", yytext); return T_FOR;}

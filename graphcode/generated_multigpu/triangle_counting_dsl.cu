@@ -102,10 +102,6 @@ void Compute_TC(graph& g)
   unsigned numBlocksKernel    = (V+threadsPerBlock-1)/threadsPerBlock;
   unsigned numBlocks_Edge    = (E+threadsPerBlock-1)/threadsPerBlock;
 
-  if(devicecount>1){
-    numBlocksKernel = numBlocksKernel/devicecount+1;
-  }
-
 
   // TIMER START
   cudaEvent_t start, stop;
@@ -119,6 +115,7 @@ void Compute_TC(graph& g)
 
   //BEGIN DSL PARSING 
   long triangle_count = 0; // asst in .cu 
+  //fixed_pt_var
   long** h_triangle_count;
   h_triangle_count = (long**)malloc(sizeof(long*)*(devicecount+1));
   for(int i=0;i<=devicecount;i+=1){

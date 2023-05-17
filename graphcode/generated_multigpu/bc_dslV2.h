@@ -25,7 +25,7 @@ __global__ void fwd_pass(int n,int device,int start,int end,int* d_meta,int* d_d
         if(d_level[w] == *d_hops_from_source) {
           d_level[v] = *d_hops_from_source+1;
           *d_finished = false;
-          d_sigma[v] = d_sigma[v] + d_sigma[w];
+          atomicAdd(&d_sigma[v],  d_sigma[w]);
         }
       }
     }
@@ -40,7 +40,7 @@ __global__ void back_pass(int n,int device,int start,int end,int* d_meta,int* d_
       for (int edge = d_meta[v]; edge < d_meta[v+1]; edge++) { 
         int w = d_data[edge];
         if(d_level[w] == *d_hops_from_source) {
-          d_delta[v] = d_delta[v] + (d_sigma[v] / d_sigma[w]) * (1 + d_delta[w]);
+          atomicAdd(&d_delta[v],  (d_sigma[v] / d_sigma[w]) * (1 + d_delta[w]));
         } // end IF  
       } // end FOR
       d_BC[v] = d_BC[v] + d_delta[v];
