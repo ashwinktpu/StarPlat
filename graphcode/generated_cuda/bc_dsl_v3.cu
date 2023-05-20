@@ -27,20 +27,17 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
   for(int i=0; i<= V; i++) {
     int temp = g.indexofNodes[i];
     h_meta[i] = temp;
+    temp = g.rev_indexofNodes[i];
+    h_rev_meta[i] = temp;
   }
 
   for(int i=0; i< E; i++) {
     int temp = g.edgeList[i];
     h_data[i] = temp;
-    temp = srcList[i];
+    temp = g.srcList[i];
     h_src[i] = temp;
     temp = edgeLen[i];
     h_weight[i] = temp;
-  }
-
-  for(int i=0; i<= V; i++) {
-    int temp = g.rev_indexofNodes[i];
-    h_rev_meta[i] = temp;
   }
 
 
@@ -67,7 +64,7 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
   // CSR END
   //LAUNCH CONFIG
   const unsigned threadsPerBlock = 512;
-  unsigned numThreads   = (V < threadsPerBlock)? V: 512;
+  unsigned numThreads   = (V < threadsPerBlock)? 512: V;
   unsigned numBlocks    = (V+threadsPerBlock-1)/threadsPerBlock;
 
 
@@ -121,7 +118,7 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
       cudaMemcpy(d_finished, &finished, sizeof(bool)*(1), cudaMemcpyHostToDevice);
 
       //Kernel LAUNCH
-      fwd_pass<<<numBlocks,threadsPerBlock>>>(V, d_meta, d_data,d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished, d_BC); ///TODO from varList
+      fwd_pass<<<numBlocks,threadsPerBlock>>>(V, d_meta, d_data,d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished,d_BC); ///DONE from varList
 
       incrementDeviceVar<<<1,1>>>(d_hops_from_source);
       cudaDeviceSynchronize(); //MUST - rupesh
@@ -138,13 +135,20 @@ void Compute_BC(graph& g,double* BC,std::set<int>& sourceSet)
     while(hops_from_source > 1) {
 
       //KERNEL Launch
-      back_pass<<<numBlocks,threadsPerBlock>>>(V, d_meta, d_data, d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished, d_BC); ///TODO from varList
+      back_pass<<<numBlocks,threadsPerBlock>>>(V, d_meta, d_data, d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished
+        ,d_BC); ///DONE from varList
 
       hops_from_source--;
       cudaMemcpy(d_hops_from_source, &hops_from_source, sizeof(int)*(1), cudaMemcpyHostToDevice);
     }
     //accumulate_bc<<<numBlocks,threadsPerBlock>>>(V,d_delta, d_BC, d_level, src);
+
   }
+
+  //cudaFree up!! all propVars in this BLOCK!
+  cudaFree(d_delta);
+  cudaFree(d_sigma);
+
   //TIMER STOP
   cudaEventRecord(stop,0);
   cudaEventSynchronize(stop);

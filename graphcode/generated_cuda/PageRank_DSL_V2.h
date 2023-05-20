@@ -32,6 +32,7 @@ __global__ void Compute_PR_kernel(int V, int E, int* d_meta, int* d_data, int* d
   for (int edge = d_rev_meta[v]; edge < d_rev_meta[v+1]; edge++)
   {int nbr = d_src[edge] ;
     sum = sum + d_pageRank[nbr] / (d_meta[nbr+1]-d_meta[nbr]);
+
   } //  end FOR NBR ITR. TMP FIX!
   float val = (1 - delta) / num_nodes + delta * sum; // DEVICE ASSTMENT in .h
 

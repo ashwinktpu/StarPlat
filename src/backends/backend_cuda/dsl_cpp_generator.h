@@ -40,13 +40,7 @@ class dsl_cpp_generator {
   }
 
 
-  /**************************************************************amd*************************/
-  void generateGetPlatforms();
-  void generateGetDevices();
-  void generateCreateContext();
-  void generateCreateCommandQueue();
 
-  /********************************************End AMD****************************************/
   void generateParamList(list<formalParam*> paramList, dslCodePad& targetFile);
   void setCurrentFunc(Function* func);
   Function* getCurrentFunc();

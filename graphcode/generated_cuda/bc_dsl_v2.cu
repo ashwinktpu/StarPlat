@@ -48,18 +48,18 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
   int* d_rev_meta;
   bool* d_modified_next;
 
-  cl_mem d_meta = clCreateBuffer(context, CL_MEM_READ_WRITE, (1+V)*sizeof(int), NULL, &status);
-  cl_mem d_data = clCreateBuffer(context, CL_MEM_READ_WRITE, (E)*sizeof(int), NULL, &status);
-  cl_mem d_src = clCreateBuffer(context, CL_MEM_READ_WRITE, (E)*sizeof(int), NULL, &status);
-  cl_mem d_weight = clCreateBuffer(context, CL_MEM_READ_WRITE, (E)*sizeof(int), NULL, &status);
-  cl_mem d_rev_meta = clCreateBuffer(context, CL_MEM_READ_WRITE, (V+1)*sizeof(int), NULL, &status);
-  cl_mem d_modified_next = clCreateBuffer(context, CL_MEM_READ_WRITE, (V)*sizeof(bool), NULL, &status);
+  cudaMalloc(&d_meta, sizeof(int)*(1+V));
+  cudaMalloc(&d_data, sizeof(int)*(E));
+  cudaMalloc(&d_src, sizeof(int)*(E));
+  cudaMalloc(&d_weight, sizeof(int)*(E));
+  cudaMalloc(&d_rev_meta, sizeof(int)*(V+1));
+  cudaMalloc(&d_modified_next, sizeof(bool)*(V));
 
-  status = clEnqueueWriteBuffer(command_queue,   d_meta , CL_TRUE, 0, sizeof(int)*V+1,   h_meta, 0, NULL, NULL );
-  status = clEnqueueWriteBuffer(command_queue,   d_data , CL_TRUE, 0, sizeof(int)*E,   h_data, 0, NULL, NULL );
-  status = clEnqueueWriteBuffer(command_queue,    d_src , CL_TRUE, 0, sizeof(int)*E,    h_src, 0, NULL, NULL );
-  status = clEnqueueWriteBuffer(command_queue, d_weight , CL_TRUE, 0, sizeof(int)*E, h_weight, 0, NULL, NULL );
-  status = clEnqueueWriteBuffer(command_queue, d_rev_meta , CL_TRUE, 0, sizeof(int)*(V+1), h_rev_meta, 0, NULL, NULL );
+  cudaMemcpy(  d_meta,   h_meta, sizeof(int)*(V+1), cudaMemcpyHostToDevice);
+  cudaMemcpy(  d_data,   h_data, sizeof(int)*(E), cudaMemcpyHostToDevice);
+  cudaMemcpy(   d_src,    h_src, sizeof(int)*(E), cudaMemcpyHostToDevice);
+  cudaMemcpy(d_weight, h_weight, sizeof(int)*(E), cudaMemcpyHostToDevice);
+  cudaMemcpy(d_rev_meta, h_rev_meta, sizeof(int)*((V+1)), cudaMemcpyHostToDevice);
 
   // CSR END
   //LAUNCH CONFIG
@@ -115,7 +115,7 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
     // long k =0 ;// For DEBUG
     do {
       finished = true;
-      status = clEnqueueWriteBuffer(command_queue, d_finished , CL_TRUE, 0, sizeof(bool)*1, &finished, 0, NULL, NULL );
+      cudaMemcpy(d_finished, &finished, sizeof(bool)*(1), cudaMemcpyHostToDevice);
 
       //Kernel LAUNCH
       fwd_pass<<<numBlocks,threadsPerBlock>>>(V, d_meta, d_data,d_weight, d_delta, d_sigma, d_level, d_hops_from_source, d_finished,d_BC); ///DONE from varList
@@ -125,11 +125,11 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
       ++hops_from_source; // updating the level to process in the next iteration
       // k++; //DEBUG
 
-      clEnqueueReadBuffer(command_queue, &finished , CL_TRUE, 0, sizeof(bool)*1, d_finished, 0, NULL, NULL );
+      cudaMemcpy(&finished, d_finished, sizeof(bool)*(1), cudaMemcpyDeviceToHost);
     }while(!finished);
 
     hops_from_source--;
-    status = clEnqueueWriteBuffer(command_queue, d_hops_from_source , CL_TRUE, 0, sizeof(int)*1, &hops_from_source, 0, NULL, NULL );
+    cudaMemcpy(d_hops_from_source, &hops_from_source, sizeof(int)*(1), cudaMemcpyHostToDevice);
 
     //BACKWARD PASS
     while(hops_from_source > 1) {
@@ -139,7 +139,7 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
         ,d_BC); ///DONE from varList
 
       hops_from_source--;
-      status = clEnqueueWriteBuffer(command_queue, d_hops_from_source , CL_TRUE, 0, sizeof(int)*1, &hops_from_source, 0, NULL, NULL );
+      cudaMemcpy(d_hops_from_source, &hops_from_source, sizeof(int)*(1), cudaMemcpyHostToDevice);
     }
     //accumulate_bc<<<numBlocks,threadsPerBlock>>>(V,d_delta, d_BC, d_level, src);
 
@@ -155,5 +155,5 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
   cudaEventElapsedTime(&milliseconds, start, stop);
   printf("GPU Time: %.6f ms\n", milliseconds);
 
-  clEnqueueReadBuffer(command_queue, BC , CL_TRUE, 0, sizeof(float)*V, d_BC, 0, NULL, NULL );
+  cudaMemcpy(      BC,     d_BC, sizeof(float)*(V), cudaMemcpyDeviceToHost);
 } //end FUN
