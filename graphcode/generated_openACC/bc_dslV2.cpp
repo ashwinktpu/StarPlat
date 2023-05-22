@@ -40,7 +40,7 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
 
     #pragma acc data copyin(g)
     {
-      #pragma acc data copyout() copyin()
+      #pragma acc data copyout(sigma[0: g.num_nodes()]) copyin()
       {
         #pragma acc parallel loop
         for (int t = 0; t < g.num_nodes(); t ++) 
@@ -50,7 +50,7 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
       }
     }
 
-    bfsDist[src] = -1;
+    bfsDist[src] = 0;
     sigma[src] = 1;
     int* level = new int[g.num_nodes()];
     int dist_from_source = 0;

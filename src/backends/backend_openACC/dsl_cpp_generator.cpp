@@ -1039,6 +1039,12 @@ void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt)   //Attac
             Identifier* lhsId=assign->getId();   //Get LHS identifier. Example: dist
             Expression* exprAssigned = assign->getExpr();   //Get RHS expression assigned. Here Example: INF
 
+            set<TableEntry*> out = proc_callStmt->getBlockData()->getBlock()->getOut();   //Get all the identifiers that are used in the block
+            for (auto te: out)
+            {
+              printf("OUT: %s\n", te->getId()->getIdentifier());
+            }
+
             if (presentInOut(proc_callStmt, lhsId))
             {
               //To generate comma before every array except the first one
@@ -1357,7 +1363,7 @@ void dsl_cpp_generator::generateForAll_header(forallStmt* forAll)    //Required 
     main.pushstr_newL(strBuffer1);
     main.pushstr_newL("{"); //---------------------------------------------
 
-    main.pushstr_space("#pragma acc data");  // start of pragma acc data
+    main.pushString("#pragma acc data ");  // start of pragma acc data
     generateDataDirectiveForStatment(forAll);
 
   //--------------------sent only useful data to acc-------------------------
@@ -2523,8 +2529,12 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct)
     sprintf(strBuffer,"%s = %s;",fixedPointId->getIdentifier(),"true");  //LINE: finished=true
     main.pushstr_newL(strBuffer);
 
-    cout << "fpid: " << fixedPointId->getIdentifier() << endl;
+    // cout << "fpid: " << fixedPointId->getIdentifier() << endl;
     currAccVars.erase(fixedPointId->getSymbolInfo()); // Since the variable(finished) is getting modified it is invalid to be used in the data copyin directive.
+    for (auto it = currAccVars.begin(); it != currAccVars.end(); ++it)
+    {
+      cout << "currAccVars: " << (*it)->getId()->getIdentifier() << endl;
+    }
 
     //OpenAcc data pragma
     //sprintf(strBuffer,"#pragma acc data copy(%s);", fixedPointId->getIdentifier());
@@ -3038,7 +3048,7 @@ bool dsl_cpp_generator::generate()
 
         for (Identifier* id: writeVarsList) {
           TableEntry* te = id->getSymbolInfo();
-          if (presentInSet(out, te))
+          if (presentInSet(out, te) && !presentInSet(currAccVars, te))
             writeVars.insert(te);
         }
 
@@ -3095,7 +3105,10 @@ bool dsl_cpp_generator::generate()
 
         for (Identifier* id: writeVarsList) {
           TableEntry* te = id->getSymbolInfo();
-          if (presentInSet(out, te))
+          if (te->getId()->get_fp_association()) {
+            readWriteVars.insert(te->getId()->get_fpIdNode()->getSymbolInfo());
+          }
+          if (presentInSet(out, te) && !presentInSet(currAccVars, te))
             writeVars.insert(te);
         }
 
@@ -3138,7 +3151,7 @@ bool dsl_cpp_generator::generate()
         // get lhs id
         Identifier* lhsId = assign->getId();
         set<TableEntry*> out = assign->getBlockData()->getBlock()->getOut();
-        if (out.find(lhsId->getSymbolInfo()) != out.end()) {
+        if (out.find(lhsId->getSymbolInfo()) != out.end() && !presentInSet(currAccVars, lhsId->getSymbolInfo())) {
           if (lhsId->getSymbolInfo()->getType()->isPropNodeType())
             sprintf(strBuffer, "copyout(%s[0:%s.num_nodes()+1])", lhsId->getIdentifier(), graph_name);
           else if (lhsId->getSymbolInfo()->getType()->isPropEdgeType())
@@ -3166,7 +3179,7 @@ bool dsl_cpp_generator::generate()
         
         set<TableEntry*> out = declStmt->getBlockData()->getBlock()->getOut();
         TableEntry* te_decl = declStmt->getdeclId()->getSymbolInfo();
-        if (out.find(te_decl) != out.end()) {
+        if (out.find(te_decl) != out.end() && !presentInSet(currAccVars, te_decl)) {
           Type* type = te_decl->getType();
           if (type->isPropNodeType())   // for each node, copy the property value
             sprintf(strBuffer, "copyout(%s[0:%s.num_nodes()])", declStmt->getdeclId()->getIdentifier(), graph_name);
@@ -3213,8 +3226,9 @@ bool dsl_cpp_generator::generate()
 
         for (Identifier* id: writeVarsList) {
           TableEntry* te = id->getSymbolInfo();
-          if (presentInSet(out, te))
+          if (presentInSet(out, te) && !presentInSet(currAccVars, te)) {
             writeVars.insert(te);
+          }
         }
 
         for (Identifier* id: readWriteVarsList) {
@@ -3273,7 +3287,7 @@ bool dsl_cpp_generator::generate()
 
         for (Identifier* id: writeVarsList) {
           TableEntry* te = id->getSymbolInfo();
-          if (presentInSet(out, te))
+          if (presentInSet(out, te) && !presentInSet(currAccVars, te))
             writeVars.insert(te);
         }
 

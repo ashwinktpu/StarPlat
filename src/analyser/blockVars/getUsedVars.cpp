@@ -77,7 +77,7 @@ usedVariables_t blockVarsAnalyser::getVarsAssignment(assignment *stmt)
   {
     PropAccess *propId = stmt->getPropId();
     currVars.addVariable(propId->getIdentifier1(), USED);
-    currVars.addVariable(propId->getIdentifier2(), DEFINED);
+    // currVars.addVariable(propId->getIdentifier2(), DEFINED);
   }
   else if (stmt->lhs_isIdentifier())
     currVars.addVariable(stmt->getId(), DEFINED);

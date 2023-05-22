@@ -72,9 +72,11 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
   float* d_pageRank_nxt;
   cudaMalloc(&d_pageRank_nxt, sizeof(float)*(V));
 
-  float numNodes = (float)g.num_nodes( ); // asst in .cu
+  float num_nodes = (float)g.num_nodes( ); // asst in .cu
 
-  initKernel<float> <<<numBlocks,threadsPerBlock>>>(V,d_pageRank,(float)1 / numNodes);
+  initKernel<float> <<<numBlocks,threadsPerBlock>>>(V,d_pageRank,(float)1 / num_nodes);
+
+  initKernel<float> <<<numBlocks,threadsPerBlock>>>(V,d_pageRank_nxt,(float)0);
 
   int iterCount = 0; // asst in .cu
 
@@ -89,8 +91,8 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
     tempVar_0 = true;
     diff = 0.000000;
     cudaMemcpyToSymbol(::diff, &diff, sizeof(float), 0, cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol(::num_nodes, &num_nodes, sizeof(float), 0, cudaMemcpyHostToDevice);
     cudaMemcpyToSymbol(::delta, &delta, sizeof(float), 0, cudaMemcpyHostToDevice);
-    cudaMemcpyToSymbol(::numNodes, &numNodes, sizeof(float), 0, cudaMemcpyHostToDevice);
     Compute_PR_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_src,d_rev_meta,d_pageRank,d_pageRank_nxt);
     cudaDeviceSynchronize();
 
