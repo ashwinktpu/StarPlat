@@ -103,7 +103,7 @@ make
 # How to generate
 ```
 # Step 3. Generate files from DSL files.  
-./StarPlat [-s|-d] -f <dsl.sp> -b [cuda|omp|mpi|acc]
+./StarPlat [-s|-d] -f <dsl.sp> -b [cuda|omp|mpi|acc|sycl]
 
 #Example
 ./StarPlat -s -f ../graphcode/generated_cuda/sssp_dslV2 -b omp
