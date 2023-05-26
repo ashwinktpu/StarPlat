@@ -287,7 +287,7 @@ static ASTNode* createAssignmentNode(ASTNode* leftSide, ASTNode* rhs)
     }
     if(leftSide->getTypeofNode() == NODE_EXPR){
       
-      // cout<<"INSIDE ASSIGNMENT***********EXPR"<<"\n";
+       cout<<"INSIDE ASSIGNMENT***********EXPR"<<"\n";
        Expression* expr = (Expression*)leftSide;
        if(expr->getExpressionFamily() == EXPR_MAPGET) {
            

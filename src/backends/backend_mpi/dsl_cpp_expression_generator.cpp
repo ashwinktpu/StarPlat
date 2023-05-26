@@ -12,29 +12,36 @@ namespace spmpi {
         char strBuffer[1024];
         Identifier* id1 = propId->getIdentifier1();
         Identifier* id2 = propId->getIdentifier2();
+        Expression * indexExpr = propId->getPropExpr();
         ASTNode* propParent = propId->getParent();
         
-        vector<Identifier*> graphIds = graphId[curFuncType][curFuncCount()];
-
-        if (id2->getSymbolInfo() != NULL){
-            if (id2->get_forall_filter_association()) {
-                sprintf(strBuffer, "%s.getHistoryValue(%s)", id2->getIdentifier(), id1->getIdentifier());
+        
+        if(propId->isPropertyExpression())
+        {
+            generate_exprIndexExpr(indexExpr);
+            sprintf(strBuffer,".getValue(%s)", id1->getIdentifier());
+            main.pushString(strBuffer);
+        }
+        else{
+            if (id2->getSymbolInfo() != NULL){
+                if (id2->get_forall_filter_association()) {
+                    sprintf(strBuffer, "%s.getHistoryValue(%s)", id2->getIdentifier(), id1->getIdentifier());
             // printf("Inside this checked !\n");
+                } 
+                else {
+                    sprintf(strBuffer, "%s.getValue(%s)",id2->getIdentifier(), id1->getIdentifier());
+                }
+
             } 
             else {
-                sprintf(strBuffer, "%s.getValue(%s)",id2->getIdentifier(), id1->getIdentifier());
+                string s ="weight";
+                if(s.compare(id2->getIdentifier()) == 0)
+                    sprintf(strBuffer, "%s.getValue(%s)",id2->getIdentifier(), id1->getIdentifier());
+                else     
+                    sprintf(strBuffer, "%s.%s",id1->getIdentifier(),id2->getIdentifier());
             }
-
-        } 
-        else {
-            string s ="weight";
-            if(s.compare(id2->getIdentifier()) == 0)
-                sprintf(strBuffer, "%s.getValue(%s)",id2->getIdentifier(), id1->getIdentifier());
-            else     
-                sprintf(strBuffer, "%s.%s",id1->getIdentifier(),id2->getIdentifier());
+            main.pushString(strBuffer);
         }
-        main.pushString(strBuffer);
-        
     }
 
 
@@ -66,10 +73,49 @@ namespace spmpi {
         else if (expr->isUnary()) 
             generate_exprUnary(expr);
 
+        else if (expr->isIndexExpr())
+            generate_exprIndexExpr(expr);    
+
         else 
             assert(false);
     }
 
+    void dsl_cpp_generator::generate_exprIndexExpr(Expression * expr)
+    {
+        char strBuffer[1024];
+        Expression* mapExpr = expr->getMapExpr();
+        Expression* indexExpr = expr->getIndexExpr();
+
+        Identifier* mapExprId = mapExpr->getId();
+
+        if(mapExpr->isIdentifierExpr()){  
+            sprintf(strBuffer , "%s[", mapExprId->getIdentifier());
+            main.pushString(strBuffer);
+            generateExpr(indexExpr);
+            main.pushString("]");
+        }
+        else if(mapExpr->isPropIdExpr()){
+            PropAccess * propId = (PropAccess *)mapExpr;
+            Identifier * id1 = propId->getIdentifier1();
+            Identifier * id2 = propId->getIdentifier2();
+            if (id2->getSymbolInfo() != NULL){
+                sprintf(strBuffer,"%s[",id2->getIdentifier());
+                main.pushString(strBuffer);
+                generateExpr(indexExpr);
+                sprintf(strBuffer,"][%s]",id1->getIdentifier());
+                main.pushString(strBuffer);
+            } 
+            else {
+                assert(false);
+            }
+        
+        }
+        else 
+        {
+            assert(false);
+        }
+
+    }
 
     /* generate_exprProcCall generates code fpr expressions which are procedure calls (inbuilt or otherwise). 
     Not support for all inbuilt might be present as of now, will be added as required. */
@@ -104,7 +150,32 @@ namespace spmpi {
             sprintf(strBuffer, "%s.%s(%s, %s)", objectId->getIdentifier(), "check_if_nbr", srcId->getIdentifier(), destId->getIdentifier());
             main.pushString(strBuffer);
 
-        } else { // This is the default generation for non inbuilt(or non supported inbuilt)
+        } 
+        else if(methodId =="push") {
+            Identifier* objectId = proc->getId1();
+            Expression* indexExpr = proc->getIndexExpr();
+            if(objectId != NULL)
+            {
+                sprintf(strBuffer,"%s.push(",objectId->getIdentifier());
+                main.pushString(strBuffer);
+                generateArgList(proc->getArgList());
+                main.pushString(")");
+
+            }
+            else if(indexExpr != NULL)
+            {
+                generate_exprIndexExpr(indexExpr);
+                main.pushString(".push(");
+                generateArgList(proc->getArgList());
+                main.pushString(")");
+
+            }
+            else{
+                assert(false);
+            }
+
+        }
+        else { // This is the default generation for non inbuilt(or non supported inbuilt)
             list<argument*> argList = proc->getArgList();
             if (argList.size() == 0) {
                 Identifier* objectId = proc->getId1();
@@ -114,6 +185,8 @@ namespace spmpi {
             else {
                 
                 Identifier* objectId = proc->getId1();
+
+                Expression* indexExpr = proc->getIndexExpr();
                 if(objectId!=NULL)
                 {
                     Identifier* id2 = proc->getId2();
@@ -121,6 +194,12 @@ namespace spmpi {
                         sprintf(strBuffer,"%s.%s.%s",objectId->getIdentifier(), id2->getIdentifier(), proc->getMethodId()->getIdentifier());
                     else
                         sprintf(strBuffer,"%s.%s",objectId->getIdentifier(), proc->getMethodId()->getIdentifier());    
+                }
+                else if(indexExpr != NULL)
+                {
+                    generate_exprIndexExpr(indexExpr);
+                    main.pushString(".");
+                    main.pushString(proc->getMethodId()->getIdentifier());
                 }
                 else
                 {

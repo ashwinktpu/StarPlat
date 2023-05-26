@@ -134,8 +134,9 @@
   }
 
   
-  Graph::Graph(char* file, boost::mpi::communicator world )
+  Graph::Graph(char* file, boost::mpi::communicator world , bool undirected)
   {
+    this->undirected = undirected;
     filePath=file;
     nodesTotal=0;
     edgesTotal=0;
@@ -173,7 +174,7 @@
     MPI_Scatterv(src.data(), sizes.data(), offsets.data(), MPI_INT32_T, localsrc, scatter_size, MPI_INT32_T, 0, MPI_COMM_WORLD);
     MPI_Scatterv(dest.data(), sizes.data(), offsets.data(), MPI_INT32_T, localdest, scatter_size, MPI_INT32_T, 0, MPI_COMM_WORLD);
     MPI_Scatterv(weight.data(), sizes.data(), offsets.data(), MPI_INT32_T, localweight, scatter_size, MPI_INT32_T, 0, MPI_COMM_WORLD);
-   
+    src.clear();dest.clear();weight.clear();sizes.clear();offsets.clear();
     // The number of vertices this particular proc will own.
     nodesPartitionSize = (nodesTotal + world.size() - 1) / world.size();
     startNode = world.rank() * nodesPartitionSize;
@@ -186,61 +187,86 @@
     std::vector<std::vector<std::vector<int32_t>>> weight_list_3d(world.size(), adjacency_list_group);
     std::vector<std::vector<std::vector<int32_t>>> rev_adjacency_list_3d(world.size(), adjacency_list_group);
     
+    std::vector<int32_t> destList, srcList, weightList;
+    
 
     for (int i = 0; i < scatter_size; i++)
     {
       int proc_num = localsrc[i] / nodesPartitionSize;
       adjacency_list_3d[proc_num][localsrc[i] % nodesPartitionSize].push_back((localdest[i]));
-      weight_list_3d[proc_num][localsrc[i] % nodesPartitionSize].push_back(localweight[i]);
-
-      proc_num = localdest[i] / nodesPartitionSize;
-      rev_adjacency_list_3d[proc_num][localdest[i] % nodesPartitionSize].push_back((localsrc[i]));
-    
     }
-    delete[] localsrc ;
-    delete[] localdest;
-    delete[] localweight;
-
-    int32_t * indexofNodes = new int32_t[nodesPartitionSize+1];
-    int32_t * rev_indexofNodes = new int32_t[nodesPartitionSize+1];
-    indexofNodes[0]=0; rev_indexofNodes[0]=0;
-
     boost::mpi::all_to_all(world, adjacency_list_3d, adjacency_list_3d);
-    boost::mpi::all_to_all(world, weight_list_3d, weight_list_3d);
-    boost::mpi::all_to_all(world, rev_adjacency_list_3d, rev_adjacency_list_3d); 
-    
-    
-    std::vector<int32_t> destList, srcList, weightList;
-    indexofNodes[0] = 0;
-    rev_indexofNodes[0] = 0;
+    int32_t * indexofNodes = new int32_t[nodesPartitionSize+1]; indexofNodes[0]=0; 
     for (int i = 0; i < nodesPartitionSize; i++)
     {
-      std::vector<std::pair<int32_t,int32_t>> temp1;
-      std::vector<int32_t> temp2;
+      std::vector<int32_t> temp1;
       for (int j = 0; j < world.size(); j++)
       {
         for(int k=0;k<(int)adjacency_list_3d[j][i].size();k++)
         {
-          temp1.push_back(std::make_pair(adjacency_list_3d[j][i][k], weight_list_3d[j][i][k]));
+          temp1.push_back(adjacency_list_3d[j][i][k]);
         }
-        temp2.insert(temp2.end(), rev_adjacency_list_3d[j][i].begin(), rev_adjacency_list_3d[j][i].end());
       }
-
-      sort(temp1.begin(), temp1.end(), [](const std::pair<int32_t,int32_t>& e1,const std::pair<int32_t,int32_t>& e2) { return e1.first < e2.first; });
-      sort(temp2.begin(), temp2.end(), [](const int32_t& e1,const int32_t& e2) { return e1 < e2; });
-
       indexofNodes[i+1] = indexofNodes[i] + temp1.size();
-      rev_indexofNodes[i+1] = rev_indexofNodes[i] + temp2.size();
+      
+      for(int k=0;k<(int)temp1.size();k++)
+      {
+        destList.push_back(temp1[k]);
+      }
+	  }
+    adjacency_list_3d.clear();
+
+
+
+    for (int i = 0; i < scatter_size; i++)
+    {
+      int proc_num = localsrc[i] / nodesPartitionSize;
+      weight_list_3d[proc_num][localsrc[i] % nodesPartitionSize].push_back(localweight[i]);
+    }
+    delete[] localweight;
+    boost::mpi::all_to_all(world, weight_list_3d, weight_list_3d);
+    for (int i = 0; i < nodesPartitionSize; i++)
+    {
+      std::vector<int32_t> temp1;
+      for (int j = 0; j < world.size(); j++)
+      {
+        for(int k=0;k<(int)weight_list_3d[j][i].size();k++)
+        {
+          temp1.push_back(weight_list_3d[j][i][k]);
+        }
+      }
 
       for(int k=0;k<(int)temp1.size();k++)
       {
-        destList.push_back(temp1[k].first);
-        weightList.push_back(temp1[k].second);
+        weightList.push_back(temp1[k]);
       }
-      srcList.insert(srcList.end(), temp2.begin(), temp2.end());
-
 	  }
-    
+    weight_list_3d.clear();
+
+
+
+    for (int i = 0; i < scatter_size; i++)
+    {
+      int proc_num = localdest[i] / nodesPartitionSize;
+      rev_adjacency_list_3d[proc_num][localdest[i] % nodesPartitionSize].push_back((localsrc[i]));
+    }
+    delete[] localsrc ;
+    delete[] localdest;
+    boost::mpi::all_to_all(world, rev_adjacency_list_3d, rev_adjacency_list_3d); 
+    int32_t * rev_indexofNodes = new int32_t[nodesPartitionSize+1];
+    rev_indexofNodes[0]=0;    
+    for (int i = 0; i < nodesPartitionSize; i++)
+    {
+      std::vector<int32_t> temp2;
+      for (int j = 0; j < world.size(); j++)
+      {
+        temp2.insert(temp2.end(), rev_adjacency_list_3d[j][i].begin(), rev_adjacency_list_3d[j][i].end());
+      }
+      rev_indexofNodes[i+1] = rev_indexofNodes[i] + temp2.size();
+      srcList.insert(srcList.end(), temp2.begin(), temp2.end());
+	  }
+    rev_adjacency_list_3d.clear();
+
     int32_t destListSize = destList.size();
     int32_t * destListSizes = new int32_t [world.size()];
     MPI_Allgather(&destListSize,1,MPI_INT32_T,destListSizes,1,MPI_INT32_T, MPI_COMM_WORLD);
@@ -1244,6 +1270,30 @@
       while(1){
         
         int local_count = 0;
+
+        while(1)
+        {
+          int local_count_2 = 0;
+          for(int v = start_node();v<=end_node();v++)
+          {
+            if(property.propList.data[get_node_local_index(v)] == true)
+            { local_count_2++;
+              for(int nbr : getNeighbors(v))
+              {
+                 if(get_node_owner(nbr)==world.rank())
+                 {
+                    property.propList.data[get_node_local_index(nbr)] = true;
+                 }
+              }
+            }
+          }
+          if(local_count==local_count_2)
+            break;
+
+          local_count= local_count_2;  
+        }
+
+        local_count = 0;
         std::vector<std::unordered_set<int>> newNodesToSet(world.size());
         for(int v = start_node();v<=end_node();v++)
         {
@@ -1251,8 +1301,16 @@
           {
             local_count++;
             for(int nbr : getNeighbors(v))
-            {
+            { 
+              //if(get_node_owner(nbr)!=world.rank())
+              {
                newNodesToSet[get_node_owner(nbr)].insert(nbr);
+              }
+              //else
+              {
+              //  if(property.propList.data[get_node_local_index(v)] == false)
+              //    assert(false);
+              } 
             }
           }
         }

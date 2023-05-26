@@ -16,6 +16,7 @@
 #include"graph_properties/node_property/node_property.h"
 #include"graph_properties/edge_property/edge_property.h"
 #include"rma_datatype/rma_datatype.h"
+#include"data_constructs/data_constructs.h"
 
 #include <boost/mpi.hpp>
 #include <boost/mpi/collectives.hpp>
@@ -28,6 +29,7 @@
 class Graph
 {
   private:
+  bool undirected;
   int32_t nodesTotal;
   int32_t edgesTotal;
   char* filePath;
@@ -92,7 +94,8 @@ class Graph
   
 
 
-  Graph(char* file, boost::mpi::communicator world );
+  Graph(char* file, boost::mpi::communicator world , bool undirected = false);
+  bool is_undirected(){return undirected;}
   void print_csr();  
   void get_lock_for_reduction_statement();
   void unlock_for_reduction_statement();

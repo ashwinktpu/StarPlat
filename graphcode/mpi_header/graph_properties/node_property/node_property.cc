@@ -159,17 +159,18 @@ template <typename T>
         return history_data[local_node_id];
     }
 
-
-    // TODO : Add lock here too
     template <typename T>
-    void NodeProperty<T>::assignCopy(NodeProperty<T>& property)
+    void NodeProperty<T>::operator =(const NodeProperty<T>& property)
     {
-        for(int i=0;i<length;i++)
+        if(property.attached_to_graph == false)
+          return;
+        else 
         {
-           propList.data[i] = property.propList.data[i];
-        }
+          attachToGraph(property.graph, property.propList.data);
+          return;
+        }  
     }
-
+    
     template <typename T>
     void NodeProperty<T>::deleteHistory()
     {
