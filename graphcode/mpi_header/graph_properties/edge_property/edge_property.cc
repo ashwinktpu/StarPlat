@@ -277,20 +277,18 @@
     }
 
     template <typename T>
-    void EdgeProperty<T>::assignCopy(EdgeProperty<T>& property)
+    void EdgeProperty<T>::operator=(const EdgeProperty<T>& property)
     {
-        for(int i=0;i<length;i++)
-        {
-           propList.data[i] = property.propList.data[i];
-        }
-
-        if(diff_propList_present)
-        {
-          for(int i=0;i<diff_length;i++)
-          {
-             diff_propList.data[i] = property.diff_propList.data[i];
-          }
-        }  
+      if(property.attached_to_graph == false)
+      {
+        return;
+      }
+      else{
+        if(property.diff_propList_present)
+          attachToGraph(property.graph, property.propList.data, (T*)NULL);
+        else
+          attachToGraph(property.graph, property.propList.data, property.diff_propList.data,false, true );
+      }
     }
 
     template <typename T>

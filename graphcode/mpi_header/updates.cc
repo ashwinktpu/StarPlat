@@ -5,7 +5,7 @@
 #include<string>
 #include<cassert>
 
-void readFromUpdatesFile(char* filePath, int32_t &num_updates,std::vector<char> &types,std::vector<int32_t> &srcs,std::vector<int32_t> &dests,std::vector<int32_t> &weights)
+void readFromUpdatesFile(char* filePath, int32_t &num_updates,std::vector<char> &types,std::vector<int32_t> &srcs,std::vector<int32_t> &dests,std::vector<int32_t> &weights, bool push_reverse, int max_updates, int total_nodes)
 {
 
     std::ifstream infile;
@@ -19,7 +19,7 @@ void readFromUpdatesFile(char* filePath, int32_t &num_updates,std::vector<char> 
     std::string line;
     num_updates = 0;
 
-    while (std::getline(infile, line))
+    while (max_updates > num_updates && std::getline(infile, line))
     {
 
         if (line.length() == 0 || (line[0] != 'a' && line[0] != 'd'))
@@ -29,7 +29,7 @@ void readFromUpdatesFile(char* filePath, int32_t &num_updates,std::vector<char> 
 
         std::stringstream ss(line);
 
-        num_updates++;
+        
 
         char type;
         int32_t source;
@@ -42,16 +42,29 @@ void readFromUpdatesFile(char* filePath, int32_t &num_updates,std::vector<char> 
         
         if(!(ss >> weightVal))
           weightVal =1;
-            
+
+        if(source >= total_nodes || destination >= total_nodes)
+            continue;
+
+        num_updates++;    
         types.push_back(type);
         srcs.push_back(source);
         dests.push_back(destination);
         weights.push_back(weightVal);
+        
+        if(push_reverse)
+        {
+            num_updates++;
+            types.push_back(type);
+            srcs.push_back(destination);
+            dests.push_back(source);
+            weights.push_back(weightVal);
+        }
     }
     infile.close();
 }
 
-Updates::Updates(char* file,boost::mpi::communicator world,Graph * g)
+Updates::Updates(char* file,boost::mpi::communicator world,Graph * g, float percent_updates)
 {
     this->g = g;
     current_batch = 0;
@@ -65,10 +78,14 @@ Updates::Updates(char* file,boost::mpi::communicator world,Graph * g)
     std::vector<int32_t> weights;
 
     total_updates = 0;
-
+    int max_updates = INT_MAX;
+    if(percent_updates != 100)
+    {
+        max_updates = (int)(percent_updates*g->num_edges());
+    }
     if(world.rank()==0)
     {
-        readFromUpdatesFile(file,total_updates,types,srcs,dests,weights);
+        readFromUpdatesFile(file,total_updates,types,srcs,dests,weights, g->is_undirected(),max_updates,  g->num_nodes());
     }
     world.barrier();
     boost::mpi::broadcast(world, total_updates, 0);
@@ -191,6 +208,7 @@ void Updates::updateCsrDel(Graph * g)
     std::vector<std::pair<int32_t,std::pair<int32_t,int32_t>>> rev_delUpdates;
     for(Update u: currentDelBatch->getUpdates())
     {
+    
         delUpdates.push_back(std::make_pair(u.source, std::make_pair(u.destination,u.weight)));
         rev_delUpdates_to_process[g->get_node_owner(u.destination)].push_back(std::make_pair(u.source, std::make_pair(u.destination,u.weight)));
     }

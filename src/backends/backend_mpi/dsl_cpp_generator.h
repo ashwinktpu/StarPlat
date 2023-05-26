@@ -53,7 +53,7 @@ class dsl_cpp_generator
   void generation_end();
   virtual bool openFileforOutput();
   void closeOutputFile();
-  const char* convertToCppType(Type* type);
+  const char* convertToCppType(Type* type, bool is_reference = false);
   void castIfRequired(Type* type, Identifier* methodID, dslCodePad& main);
   const char* getOperatorString(int operatorId);
   virtual void generateFunc(ASTNode* proc);
@@ -85,7 +85,7 @@ class dsl_cpp_generator
   virtual void generate_exprProcCall(Expression* expr);
   void generate_exprArL(Expression* expr);
   void generate_exprUnary(Expression* expr);
-
+  void generate_exprIndexExpr(Expression* expr);
 
   void generateForAll_header(forallStmt* forAll);
   void getEdgeTranslation(Expression* expr);  //translation of edge assignment.
@@ -103,7 +103,6 @@ class dsl_cpp_generator
   void generateId();
   void generateOid();
   void addIncludeToFile(const char* includeName, dslCodePad& file, bool isCPPLib);
-  void generatePropertyDefination(Type* type, char* Id);
   void findTargetGraph(vector<Identifier*> graphTypes, Type* type);
   void incFuncCount(int funcType);
   int curFuncCount();

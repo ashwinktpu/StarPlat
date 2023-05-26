@@ -99,7 +99,7 @@ class EdgeProperty : public Property
     
     T getHistoryValue(Edge edge);
     
-    void assignCopy(EdgeProperty<T>& property);
+    void operator =(const EdgeProperty<T>& property);
     
     void deleteHistory();
     

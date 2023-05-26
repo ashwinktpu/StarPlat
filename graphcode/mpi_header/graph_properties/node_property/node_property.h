@@ -65,8 +65,7 @@ class NodeProperty : public Property
 
     T getHistoryValue(int node_id);
  
-    // TODO : Add lock here too
-    void assignCopy(NodeProperty<T>& property);
+    void operator =(const NodeProperty<T>& property);
 
     void deleteHistory();
 
