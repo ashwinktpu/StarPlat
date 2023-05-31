@@ -1,8 +1,9 @@
 EXPENDABLES = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c bin/dsl_cpp_generator.o
+PROGRAMS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/cl_dsl_cpp_generator.o
 
 CC = g++ -g -std=c++11 -Wall -Wreturn-type #-fsanitize=address
 
-all: bin finalcode clean
+all: bin starplat clean
 
 cuda: bin generator_cuda finalcode_cuda clean
 
@@ -14,9 +15,11 @@ finalcode_cuda: bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/S
 finalcode_amd: bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o
 	$(CC) bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o -o finalcode
 
-#~ Earlier finalcode
-finalcode: bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o
-	$(CC) bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o -o finalcode
+starplat: $(PROGRAMS)
+	$(CC) $(PROGRAMS) -o StarPlat
+
+bin/cl_dsl_cpp_generator.o: backends/backend_amd/dsl_cpp_generator.cpp backends/dslCodePad.h
+	$(CC) -c backends/backend_amd/dsl_cpp_generator.cpp -o bin/cl_dsl_cpp_generator.o
 
 bin/MainContext.o: maincontext/MainContext.cpp
 	$(CC) -c maincontext/MainContext.cpp -o bin/MainContext.o
@@ -48,7 +51,7 @@ bin/lex.yy.o:
 
 bin:
 	mkdir -p bin
-	mkdir -p ../graphcode/generated_cuda
+	mkdir -p ../graphcode/generated_amd
 
 clean:
 	rm -f $(EXPENDABLES)
