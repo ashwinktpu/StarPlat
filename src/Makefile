@@ -2,7 +2,7 @@ EXPENDABLES = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/Sym
 
 CC = g++ -g -std=c++11 -Wall -Wreturn-type #-fsanitize=address
 
-all: finalcode clean
+all: bin finalcode clean
 
 cuda: bin generator_cuda finalcode_cuda clean
 
@@ -16,7 +16,7 @@ finalcode_amd: bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/Sy
 
 #~ Earlier finalcode
 finalcode: bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o
-	$(CC) bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o  -ll -o finalcode
+	$(CC) bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o -o finalcode
 
 bin/MainContext.o: maincontext/MainContext.cpp
 	$(CC) -c maincontext/MainContext.cpp -o bin/MainContext.o
