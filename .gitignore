@@ -1,7 +1,7 @@
 lex.yy.c
 src/parser/y.tab.h
 .vscode/launch.json
-src/finalcode
+src/StarPlat
 *.out
 src/bin/
 .history/
