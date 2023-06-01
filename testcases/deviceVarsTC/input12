@@ -1,0 +1,36 @@
+function test(Graph g,node src)
+{
+    propNode<int> prop;
+    g.attachNodeProperty(prop = 10);
+
+    do
+    {
+        forall(v in g.nodes()){
+            v.prop = 10;
+        }
+
+    }while(True);
+
+    do
+    {
+        forall(v in g.nodes()){
+            v.prop = 10;
+        }
+        src.prop = 200;
+    } while (True);
+    
+
+    int temp = 0;
+    for(v in g.nodes()){
+        v.prop = 22;
+        temp = temp + v.prop;
+    }
+
+    do
+    {
+        forall(v in g.nodes()){
+            int tempGPU = v.prop;
+        }
+    } while (True);
+    
+}

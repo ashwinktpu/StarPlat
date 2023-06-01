@@ -1,7 +1,10 @@
 #include <string.h>
 #include <cassert>
 #include "dsl_cpp_generator.h"
-#include "getUsedVars.cpp"
+#include "getUsedVarsAMD.cpp"
+#include "../../ast/ASTHelper.cpp"
+
+namespace spamd{
 
 dslCodePad& dsl_cpp_generator::getTargetFile(int isMainFile)
 {
@@ -1357,7 +1360,7 @@ void dsl_cpp_generator::checkForAllAndGenerate(blockStatement* blockStmt , int i
         sprintf(strBuffer, "status = clSetKernelArg(%s, 7, sizeof(cl_mem) , (void*)&d_modified_next);", kernelName);
         targetFile.pushString(strBuffer);
         targetFile.NewLine();
-        usedVariables usedVars = getVarsForAll(forAll);
+        usedVariables usedVars = getVarsForAllAMD(forAll);
         list<Identifier*> vars = usedVars.getVariables();
         int argCount = 8;
         // If parent is fixedpoint Node then get the fixpoint variable and add it to the kernel that means
@@ -1525,7 +1528,7 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,i
         targetFile.pushString(strBuffer);
         targetFile.NewLine();
 
-        assert(graphId.size() == 1);
+        // assert(graphId.size() == 1);
         sprintf(strBuffer,"%s = true;", fixPointVar);
         targetFile.pushString(strBuffer);
         targetFile.NewLine();
@@ -1687,7 +1690,7 @@ void dsl_cpp_generator::addCudaKernel(forallStmt* forAll)
   cout<<"inside addCuda Kernel function"<<endl;
   const char* loopVar = "v";// but it could be 'e' also
   char strBuffer[1024];
-  usedVariables usedVars = getVarsForAll(forAll);
+  usedVariables usedVars = getVarsForAllAMD(forAll);
   list<Identifier*> vars = usedVars.getVariables();
   kernel.pushString("__kernel void ");
   kernel.pushString(getCurrentFunc()->getIdentifier()->getIdentifier());
@@ -1922,7 +1925,7 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, int isMainFile)
   if (forAll->isForall())// IS FORALL
   { 
     printf("Entered here for forall \n");
-    usedVariables usedVars = getVarsForAll(forAll);
+    usedVariables usedVars = getVarsForAllAMD(forAll);
     list<Identifier*> vars = usedVars.getVariables();
     cout<<"checkPoint 1 "<< vars.size()<<endl;
     // If there is any variable of premitive data type then need to do transfer it to device
@@ -2973,7 +2976,7 @@ void dsl_cpp_generator::generateBlock(blockStatement* blockStmt,bool includeBrac
   //cout << "i am inside generateBlock for the first time and the value of isMainFile=" << isMainFile<<endl;
   dslCodePad& targetFile = getTargetFile(isMainFile);
 
-  usedVariables usedVars = getDeclaredPropertyVarsOfBlock(blockStmt);
+  usedVariables usedVars = getDeclaredPropertyVarsOfBlockAMD(blockStmt);
   list<Identifier*> vars = usedVars.getVariables();
   std::cout<< "\t==VARSIZE:" << vars.size() << '\n';
 
@@ -3347,4 +3350,6 @@ void dsl_cpp_generator::setFileName(
     token = strtok(NULL, "/");
   }
   fileName = prevtoken;
+}
+
 }

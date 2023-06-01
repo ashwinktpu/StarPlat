@@ -13,11 +13,25 @@ class FrontEndContext
   private:
   vector<blockStatement*> blockList;
   list<Function*> funcList;
+  map<string, bool> dynamicLinkFunc;
   static FrontEndContext* instance;
+  int currentFuncType;
+  int genFuncCount;
+  int staticFuncCount;
+  int inFuncCount;
+  int decFuncCount;
+  int dynFuncCount;
+  
+
 
   public:
   FrontEndContext()
   {
+    genFuncCount = 0;
+    staticFuncCount = 0;
+    inFuncCount = 0;
+    decFuncCount = 0;
+    dynFuncCount = 0;
   
   }
 
@@ -34,7 +48,13 @@ class FrontEndContext
   void endBlock();
   blockStatement* getCurrentBlock();
   list<Function*> getFuncList();
+  map<string, bool> getDynamicLinkFuncs();
+  void setDynamicLinkFuncs(map<string, bool> sentMap);
   void addFuncToList(Function* func);
+  void setCurrentFuncType(int funcType);
+  int getCurrentFuncType();
+  void incrementCurrentFuncCount();
+  int getCurrentFuncCount();
 
 };
 

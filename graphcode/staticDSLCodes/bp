@@ -1,0 +1,20 @@
+function bp(Graph g, int k , propEdge<int> weight){
+    propNode<int> cur_prob;
+    propNode<int> prior_prob;
+    int iter = 0;
+    g.attachNodeProperty(cur_prob = 1, prior_prob = 1);
+    do{
+        iter++;
+        forall(v in g.nodes()){
+            int new_prob = 0;
+            forall(nbr in g.neighbors(v)){
+                edge e = g.get_edge(v,nbr);
+                new_prob += e.weight * v.prior_prob;
+            }
+            v.cur_prob = new_prob;
+        }
+        forall(v in g.nodes()){
+            v.prior_prob = v.cur_prob;
+        }
+    }while(iter < k);
+}

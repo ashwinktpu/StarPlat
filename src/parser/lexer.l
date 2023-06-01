@@ -1,4 +1,3 @@
-
 DIGIT       [0-9]
 ALPHANUM    [a-zA-Z][a-zA-Z0-9_]*
 WS  [ \t\v\n\f]
@@ -27,8 +26,10 @@ NEGATE [-]
 "float"   {printf("Type: %s", yytext);  return T_FLOAT;}
 "double"  {printf("Type: %s", yytext);  return T_DOUBLE;}
 "bool"    {printf("Type: %s", yytext);  return T_BOOL;}
+
 "forall"  {printf("Keyword-forall: %s", yytext); return T_FORALL;}
 "for"     {printf("For: %s", yytext); return T_FOR;}
+"return"  {printf("Return: %s", yytext); return T_RETURN;}
 "+INF"    {printf("+Infinity: %s", yytext); return T_P_INF;}
 "INF"     {printf("+Infinity: %s", yytext); return T_INF;}
 "-INF"    {printf("-Infinity: %s", yytext); return T_N_INF;}
@@ -38,15 +39,24 @@ NEGATE [-]
 "if"      {printf("Keyword if: %s", yytext);  return T_IF;}
 "else"    {printf("Keyword else: %s", yytext); return T_ELSE;}
 "while"   {printf("Keyword while: %s", yytext);  return T_WHILE;}
-"Return"  {printf("Keyword return: %s", yytext);  return T_RETURN;}
 "do"      {printf("Keyword do: %s", yytext);  return T_DO;}
 "in"      {printf("Keyword in ");  return T_IN;}
 "fixedPoint" {printf("Keyword fixedPoint"); return T_FIXEDPOINT;}
 "until"      {printf("Keyword until");  return T_UNTIL;}
 "iterateInBFS"  {printf("iterateInBFS");  return T_BFS;}
-"iterateInReverse" {printf("iterateInReverse");  return T_REVERSE;}
-"from"          {printf("from"); return T_FROM;}
-"filter"        {printf("from");  return T_FILTER;}
+"iterateInReverse" {printf("iterateInReverse");  return T_REVERSE;} 
+"from"          {printf("from"); return T_FROM;} 
+"filter"        {printf("filter");  return T_FILTER;} 
+"Incremental"   {printf("incremental"); return T_INCREMENTAL;}
+"Decremental"   {printf("decremental"); return T_DECREMENTAL;}
+"Static"        {printf("static"); return T_STATIC;}
+"Dynamic"       {printf("dynamic"); return T_DYNAMIC ;}
+"Batch"         {printf("batch"); return T_BATCH ;} 
+"OnDelete"      {printf("Ondelete") ; return T_ONDELETE;}
+"OnAdd"      {printf("Onadd") ; return T_ONADD;}
+ 
+
+
 "+="					{ printf ("ADD_ASSIGN "); return T_ADD_ASSIGN;}
 "-="					{ printf ("SUB_ASSIGN"); return T_SUB_ASSIGN;}
 "*="					{ printf ( "MUL_ASSIGN"); return T_MUL_ASSIGN;}
@@ -55,8 +65,6 @@ NEGATE [-]
 "&="					{ printf ( "AND_ASSIGN");  return T_AND_ASSIGN;}
 "^="					{ printf ( "XOR_ASSIGN"); return T_XOR_ASSIGN;}
 "|="					{ printf ( "OR_ASSIGN"); return T_OR_ASSIGN;}
-">>"					{ printf ( "RIGHT_OP"); return T_RIGHT_OP;}
-"<<"					{ printf ( "LEFT_OP"); return T_LEFT_OP;}
 "++"					{ printf ( "INC_OP");  return T_INC_OP;}
 "--"					{ printf ( "DEC_OP");  return T_DEC_OP;}
 "->"					{ printf ( "PTR_OP");  return T_PTR_OP;}
@@ -85,6 +93,7 @@ NEGATE [-]
 "+"					{ printf ( "'+'");  return '+';}
 "*"					{ printf ( "'*'");  return '*';}
 "/"					{ printf ( "'/'"); return '/';}
+"//"[^\n]*"\n"                { printf ( "COMMENT" ); }
 "%"					{ printf ( "'%%'");  return '%';}
 "<"					{ printf ( "'<'");  return '<';}
 ">"					{ printf ( "'>'");  return '>';}
@@ -94,8 +103,8 @@ NEGATE [-]
 "?"					{ printf ( "'?'");  return '?';}
 
 
-"And"     { printf ( "And");  return T_AND;}
-"Or"      { printf ( "Or");  return T_OR;}
+"And"     { /* printf ( "And"); */  return T_AND;}
+"Or"      { /* printf ( "Or"); */  return T_OR;}
 
 "Sum"     { printf ( "Sum");  return T_SUM;}
 "Count"   { printf ( "Count");  return T_COUNT;}
@@ -116,10 +125,13 @@ NEGATE [-]
 "SetN" 	{printf("Set of Nodes");  return T_SET_NODES;}
 "SetE" 	{printf("Set of Edges"); return T_SET_EDGES;}
 "list" {printf("list type"); return T_LIST;}
+"updates" {printf("updates type"); return T_UPDATES;}
+"container" {printf("container type"); return T_CONTAINER;}
+"nodeMap"  {printf("nodeMap type"); return T_NODEMAP;}
 
 
  /* Numbers and Identifies */
-{ALPHANUM}          { yylval.text=yytext; /*printf("HELLO ID %s",yytext); printf("\n");*/ return ID;}
+{ALPHANUM}          { yylval.text=yytext; /*printf("HELLO ID %s",yytext); /* printf("\n");*/ return ID;}
 {DIGIT}+"."{DIGIT}* { yylval.fval=atof(yytext);
                         return FLOAT_NUM;}
 {NEGATE}*{DIGIT}{DIGIT}*     {  yylval.ival=atoi(yytext);
@@ -128,7 +140,7 @@ NEGATE [-]
 [ \n\t]	{ printf("\n");}
 {WS}+					{ /* whitespace separates tokens */ }
 
-.    {printf("invalid\n");}
+.    {/* printf("invalid\n"); */}
 
 
 %%
@@ -136,3 +148,4 @@ NEGATE [-]
 int yywrap(void) {
     return 1;
 }
+

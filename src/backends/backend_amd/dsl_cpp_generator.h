@@ -1,12 +1,14 @@
-#ifndef DSL_CPP_GENERATOR
-#define DSL_CPP_GENERATOR
+#ifndef AMD_DSL_CPP_GENERATOR
+#define AMD_DSL_CPP_GENERATOR
 
 #include <cstdio>
 #include "../../ast/ASTNodeTypes.hpp"
 #include "../../parser/includeHeader.hpp"
 #include "../dslCodePad.h"
+#include "../../analyser/analyserUtil.cpp"
 
-
+namespace spamd
+{
 class dsl_cpp_generator {
  private:
   dslCodePad header;
@@ -204,10 +206,12 @@ class dsl_cpp_generator {
   //~ char* getGName() { return gName; }
   void IncrementKCount() { kernelCount++; }
   int getKCount() { return kernelCount; }
-};
+  };
 
-static const char* INTALLOCATION = "new int";
-static const char* BOOLALLOCATION = "new bool";
-static const char* FLOATALLOCATION = "new float";
-static const char* DOUBLEALLOCATION = "new double";
+  static const char* INTALLOCATION = "new int";
+  static const char* BOOLALLOCATION = "new bool";
+  static const char* FLOATALLOCATION = "new float";
+  static const char* DOUBLEALLOCATION = "new double";
+
+}
 #endif

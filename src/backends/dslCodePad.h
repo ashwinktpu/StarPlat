@@ -1,3 +1,6 @@
+#ifndef DSLCODEPAD_H
+#define DSLCODEPAD_H
+
 #include<stdio.h>
 #include<ctype.h>
 #include<string.h>
@@ -180,3 +183,6 @@ class dslCodePad
 
 
 };
+
+
+#endif
