@@ -1,0 +1,16 @@
+function Boruvka (Graph g){
+    propNode<int> nodeId;
+    propNode<int> color; 
+    propEdge<bool> isMSTEdge; 
+    
+    g.attachNodeProperty(nodeId = -1);
+    g.attachNodeProperty(color = -1);
+    g.attachEdgeProperty(isMSTEdge = False);
+    
+    forall(u in g.nodes()){
+        u.nodeId = u;
+        u.color = u;
+    }
+    
+      
+}

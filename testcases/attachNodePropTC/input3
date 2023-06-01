@@ -1,0 +1,39 @@
+function test(Graph g)
+{
+    int x;
+    int y;
+    int z;
+    int a;
+    int temp;
+
+    propNode<int> prop;
+    propNode<int> prop1;
+    propNode<int> prop2;
+    propNode<int> prop3;
+    propNode<int> prop4;
+
+    temp = 4;
+    y = x;
+    temp = 4;
+    g.attachNodeProperty(prop = x);
+
+    temp = 4;
+    y = x++;
+    temp = 4;
+    g.attachNodeProperty(prop1 = x);
+
+    temp = 4;
+    x = 10;
+    temp = 4;
+    g.attachNodeProperty(prop2 = x);
+
+    temp = 4;
+    y = x;
+    temp = 4;
+    g.attachNodeProperty(prop3 = x++);
+
+    temp = 4;
+    x = 10;
+    temp = 4;
+    g.attachNodeProperty(prop4 = x++);
+}

@@ -1,0 +1,11 @@
+function Compute_SSSP(Graph g, propNode<int> dist, node src)
+{
+
+     int x  = 0;int y;
+     y= 1;
+    forall(v in g.nodes()){
+        forall(nbr in g.neighbors(v)){
+            x = x+1;
+        }
+    }
+}
