@@ -1621,7 +1621,8 @@ void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment *asmt,
 
     Identifier *id = asmt->getId();
     targetFile.pushString("//hi\n");
-    targetFile.pushString(id->getIdentifier());
+//     targetFile.pushString(id->getIdentifier());
+       generate_exprIdentifier(id,isMainFile);
   }
   else if (asmt->lhs_isProp()) // the check for node and edge property to be
                                // carried out.
