@@ -282,11 +282,7 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
       checkForExpressions(expr);
     }
 
-<<<<<<< HEAD
     if (( backend.compare("amd") == 0 ||  backend.compare("cuda") == 0 || (backend.compare("sycl") == 0) || (backend.compare("multigpu") == 0)) && assign->lhs_isProp())
-=======
-    if ((backend.compare("cuda") == 0 || (backend.compare("sycl") == 0) || (backend.compare("multigpu") == 0)) && assign->lhs_isProp())
->>>>>>> WorkingBranch
     { // This flags device assingments OUTSIDE for
       //~ std::cout<< "varName1: " << assign->getPropId()->getIdentifier1()->getIdentifier() << '\n';
       //~ std::cout<< "varName2: " << assign->getPropId()->getIdentifier2()->getIdentifier() << '\n';
@@ -387,11 +383,7 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
        another forall which is to be generated with
        omp parallel pragma, and then disable the parallel loop*/
 
-<<<<<<< HEAD
     if ((backend.compare("omp") == 0) || (backend.compare("amd") == 0) || (backend.compare("cuda") == 0) || (backend.compare("multigpu") == 0)|| (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0))
-=======
-    if ((backend.compare("omp") == 0) || (backend.compare("cuda") == 0) || (backend.compare("multigpu") == 0)|| (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0))
->>>>>>> WorkingBranch
     {
       if (parallelConstruct.size() > 0)
       {
@@ -409,11 +401,7 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
       }
     }
 
-<<<<<<< HEAD
     if ((backend.compare("amd") == 0) || backend.compare("cuda") == 0 || (backend.compare("sycl") == 0) || (backend.compare("multigpu") == 0))
-=======
-    if (backend.compare("cuda") == 0 || (backend.compare("sycl") == 0) || (backend.compare("multigpu") == 0))
->>>>>>> WorkingBranch
     { // This flags device assingments INSIDE for
       std::cout << "FORALL par   NAME1:" << forAll->getParent()->getTypeofNode() << '\n';
       if (forAll->getParent()->getParent())
@@ -497,11 +485,7 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
 
     //~ delete_curr_SymbolTable();
 
-<<<<<<< HEAD
     if ((backend.compare("omp") == 0 || backend.compare("amd") == 0 || backend.compare("cuda") == 0 || (backend.compare("multigpu") == 0)|| backend.compare("acc") == 0 || backend.compare("mpi") == 0 || (backend.compare("sycl") == 0)) && forAll->isForall())
-=======
-    if ((backend.compare("omp") == 0 || backend.compare("cuda") == 0 || (backend.compare("multigpu") == 0)|| backend.compare("acc") == 0 || backend.compare("mpi") == 0 || (backend.compare("sycl") == 0)) && forAll->isForall())
->>>>>>> WorkingBranch
     {
       if (forAll->isForall())
       {
@@ -674,11 +658,7 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
     iterateBFS *iBFS = (iterateBFS *)stmt;
     string backend(backendTarget);
 
-<<<<<<< HEAD
     if ((backend.compare("omp") == 0) || (backend.compare("amd") == 0) || (backend.compare("cuda") == 0) || (backend.compare("multigpu") == 0)|| (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0))
-=======
-    if ((backend.compare("omp") == 0) || (backend.compare("cuda") == 0) || (backend.compare("multigpu") == 0)|| (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0))
->>>>>>> WorkingBranch
 
     {
       parallelConstruct.push_back(iBFS);
@@ -699,11 +679,7 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
       iRevBFS->addAccumulateAssignment();
       buildForStatements(iRevBFS->getBody());
     }
-<<<<<<< HEAD
     if ((backend.compare("omp") == 0) || (backend.compare("amd") == 0) || (backend.compare("cuda") == 0) || (backend.compare("multigpu") == 0)|| (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0))
-=======
-    if ((backend.compare("omp") == 0) || (backend.compare("cuda") == 0) || (backend.compare("multigpu") == 0)|| (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0))
->>>>>>> WorkingBranch
 
     {
       parallelConstruct.pop_back();
