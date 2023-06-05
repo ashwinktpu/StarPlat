@@ -229,70 +229,60 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
         id->getSymbolInfo()->getId()->set_used_inside_forall_filter_and_changed_inside_forall_body();
       }
 
-                // Add MORE DOC : Push all the globalvariables which are modified inside the parallel region
-                if(backend.compare("mpi") == 0)
-                {
-                  if(id->getSymbolInfo()->isGlobalVariable())
-                  {
-                    
-                    if(parallelConstruct.size()>0)
-                    { printf("global variable changed here %s \n", id->getIdentifier());
-                      // Add More DOC (Atharva)
-                      ASTNode * parallel = parallelConstruct.back();
-                      if(parallel->getTypeofNode() == NODE_FORALLSTMT)
-                      {
-                      
-                      forallStmt* forall = (forallStmt*) parallel;
-                      printf("%s\n",id->getSymbolInfo()->getId()->getIdentifier());
-                      forall->pushModifiedGlobalVariable(id->getSymbolInfo());
-                      printf("global var inserted\n");
-                      }
-                      else if(parallel->getTypeofNode() == NODE_ITRBFS)
-                      {
-                        //iterateBFS* iBFS = (iterateBFS*) parallel;
-                        //iBFS->pushModifiedGlobalVariable(id->getSymbolInfo());
-                      }
-                      else if(parallel->getTypeofNode() == NODE_ITRRBFS)
-                      {
-                        //iterateReverseBFS* iRBFS = (iterateReverseBFS*) parallel;
-                        //iRBFS->pushModifiedGlobalVariable(id->getSymbolInfo());
-                      }
-                      else
-                      {
-                        assert(false); // add similar for other parallel constructs like itrbfs if needed
-                      }
-                    }
-                  }
-                }
-             }
-             else if(assign->lhs_isProp())
-             {  printf("inside node_assign2\n");
-                 PropAccess* propId = assign->getPropId();
-                 searchSuccess = findSymbolPropId(propId);
-                 if(backend.compare("mpi") == 0 ) {
-                  if(propId->isPropertyExpression())
-                  {
-                      Expression * propExpr = propId->getPropExpr();
-                      if(propExpr->getMapExpr()->isIdentifierExpr())
-                        if(IdsInsideParallelFilter.find(propExpr->getMapExpr()->getId()->getSymbolInfo()) != IdsInsideParallelFilter.end())
-                          propExpr->getMapExpr()->getId()->getSymbolInfo()->getId()->set_used_inside_forall_filter_and_changed_inside_forall_body();
-                  }
-                  else{
-                    if(IdsInsideParallelFilter.find(propId->getIdentifier2()->getSymbolInfo()) != IdsInsideParallelFilter.end())
-                      propId->getIdentifier2()->getSymbolInfo()->getId()->set_used_inside_forall_filter_and_changed_inside_forall_body();
-                  }
-                    
-                  }
-             }
-             else if(assign->lhs_isIndexAccess()){
-                printf("inside node_assign3\n");
-                Expression* expr = assign->getIndexAccess();
-                printf("reached here0\n");
-                checkForExpressions(expr);
-                printf("reached here\n");
-             }
-              
-             if ((backend.compare("cuda") == 0 || (backend.compare("sycl") == 0) || (backend.compare("multigpu") == 0)) && assign->lhs_isProp())
+      // Add MORE DOC : Push all the globalvariables which are modified inside the parallel region
+      if (backend.compare("mpi") == 0)
+      {
+        if (id->getSymbolInfo()->isGlobalVariable())
+        {
+
+          if (parallelConstruct.size() > 0)
+          {
+            printf("global variable changed here %s \n", id->getIdentifier());
+            // Add More DOC (Atharva)
+            ASTNode *parallel = parallelConstruct.back();
+            if (parallel->getTypeofNode() == NODE_FORALLSTMT)
+            {
+
+              forallStmt *forall = (forallStmt *)parallel;
+              printf("%s\n", id->getSymbolInfo()->getId()->getIdentifier());
+              forall->pushModifiedGlobalVariable(id->getSymbolInfo());
+              printf("global var inserted\n");
+            }
+            else if (parallel->getTypeofNode() == NODE_ITRBFS)
+            {
+              // iterateBFS* iBFS = (iterateBFS*) parallel;
+              // iBFS->pushModifiedGlobalVariable(id->getSymbolInfo());
+            }
+            else if (parallel->getTypeofNode() == NODE_ITRRBFS)
+            {
+              // iterateReverseBFS* iRBFS = (iterateReverseBFS*) parallel;
+              // iRBFS->pushModifiedGlobalVariable(id->getSymbolInfo());
+            }
+            else
+            {
+              assert(false); // add similar for other parallel constructs like itrbfs if needed
+            }
+          }
+        }
+      }
+    }
+    else if (assign->lhs_isProp())
+    {
+      PropAccess *propId = assign->getPropId();
+      searchSuccess = findSymbolPropId(propId);
+      if (backend.compare("mpi") == 0 && IdsInsideParallelFilter.find(propId->getIdentifier2()->getSymbolInfo()) != IdsInsideParallelFilter.end())
+      {
+        propId->getIdentifier2()->getSymbolInfo()->getId()->set_used_inside_forall_filter_and_changed_inside_forall_body();
+      }
+    }
+    else if (assign->lhs_isIndexAccess())
+    {
+
+      Expression *expr = assign->getIndexAccess();
+      checkForExpressions(expr);
+    }
+
+    if (( backend.compare("amd") == 0 ||  backend.compare("cuda") == 0 || (backend.compare("sycl") == 0) || (backend.compare("multigpu") == 0)) && assign->lhs_isProp())
     { // This flags device assingments OUTSIDE for
       //~ std::cout<< "varName1: " << assign->getPropId()->getIdentifier1()->getIdentifier() << '\n';
       //~ std::cout<< "varName2: " << assign->getPropId()->getIdentifier2()->getIdentifier() << '\n';
@@ -305,7 +295,6 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
         assign->flagAsDeviceVariable();
       }
     }
-
 
     checkForExpressions(exprAssigned);
 
@@ -394,7 +383,7 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
        another forall which is to be generated with
        omp parallel pragma, and then disable the parallel loop*/
 
-    if ((backend.compare("omp") == 0) || (backend.compare("cuda") == 0) || (backend.compare("multigpu") == 0)|| (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0))
+    if ((backend.compare("omp") == 0) || (backend.compare("amd") == 0) || (backend.compare("cuda") == 0) || (backend.compare("multigpu") == 0)|| (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0))
     {
       if (parallelConstruct.size() > 0)
       {
@@ -412,7 +401,7 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
       }
     }
 
-    if (backend.compare("cuda") == 0 || (backend.compare("sycl") == 0) || (backend.compare("multigpu") == 0))
+    if ((backend.compare("amd") == 0) || backend.compare("cuda") == 0 || (backend.compare("sycl") == 0) || (backend.compare("multigpu") == 0))
     { // This flags device assingments INSIDE for
       std::cout << "FORALL par   NAME1:" << forAll->getParent()->getTypeofNode() << '\n';
       if (forAll->getParent()->getParent())
@@ -496,7 +485,7 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
 
     //~ delete_curr_SymbolTable();
 
-    if ((backend.compare("omp") == 0 || backend.compare("cuda") == 0 || (backend.compare("multigpu") == 0)|| backend.compare("acc") == 0 || backend.compare("mpi") == 0 || (backend.compare("sycl") == 0)) && forAll->isForall())
+    if ((backend.compare("omp") == 0 || backend.compare("amd") == 0 || backend.compare("cuda") == 0 || (backend.compare("multigpu") == 0)|| backend.compare("acc") == 0 || backend.compare("mpi") == 0 || (backend.compare("sycl") == 0)) && forAll->isForall())
     {
       if (forAll->isForall())
       {
@@ -669,7 +658,7 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
     iterateBFS *iBFS = (iterateBFS *)stmt;
     string backend(backendTarget);
 
-    if ((backend.compare("omp") == 0) || (backend.compare("cuda") == 0) || (backend.compare("multigpu") == 0)|| (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0))
+    if ((backend.compare("omp") == 0) || (backend.compare("amd") == 0) || (backend.compare("cuda") == 0) || (backend.compare("multigpu") == 0)|| (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0))
 
     {
       parallelConstruct.push_back(iBFS);
@@ -690,7 +679,7 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
       iRevBFS->addAccumulateAssignment();
       buildForStatements(iRevBFS->getBody());
     }
-    if ((backend.compare("omp") == 0) || (backend.compare("cuda") == 0) || (backend.compare("multigpu") == 0)|| (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0))
+    if ((backend.compare("omp") == 0) || (backend.compare("amd") == 0) || (backend.compare("cuda") == 0) || (backend.compare("multigpu") == 0)|| (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0))
 
     {
       parallelConstruct.pop_back();
@@ -809,48 +798,42 @@ void SymbolTableBuilder::getIdsInsideExpression(Expression *expr, std::unordered
         getIdsInsideExpression((*it)->getExpr(), ids);
     }
 
-             break;   
-         }  
-         case EXPR_UNARY:
-         {    
-          
-             getIdsInsideExpression(expr->getUnaryExpr(),ids);
-             break;
-         }
-         case EXPR_LOGICAL:
-         {
-      
-             getIdsInsideExpression(expr->getLeft(),ids);
-             getIdsInsideExpression(expr->getRight(),ids);
-             break;
-         }
-         case EXPR_RELATIONAL:
-         {  
-             getIdsInsideExpression(expr->getLeft(),ids);
-             getIdsInsideExpression(expr->getRight(),ids);
-             break;
-         }
-         case EXPR_ID:
-         {  
-          
-             ids.insert(expr->getId()->getSymbolInfo());
-             break;
-         }
-         case EXPR_PROPID:
-         {  
-          
-             ids.insert(expr->getPropId()->getIdentifier1()->getSymbolInfo());
-             ids.insert(expr->getPropId()->getIdentifier2()->getSymbolInfo());
-             break;
-         }
+    break;
+  }
+  case EXPR_UNARY:
+  {
 
-         case EXPR_MAPGET:
-         {
-            getIdsInsideExpression(expr->getMapExpr(),ids);
-            getIdsInsideExpression(expr->getIndexExpr(),ids);
-         }
-     }
- }
+    getIdsInsideExpression(expr->getUnaryExpr(), ids);
+    break;
+  }
+  case EXPR_LOGICAL:
+  {
+
+    getIdsInsideExpression(expr->getLeft(), ids);
+    getIdsInsideExpression(expr->getRight(), ids);
+    break;
+  }
+  case EXPR_RELATIONAL:
+  {
+    getIdsInsideExpression(expr->getLeft(), ids);
+    getIdsInsideExpression(expr->getRight(), ids);
+    break;
+  }
+  case EXPR_ID:
+  {
+
+    ids.insert(expr->getId()->getSymbolInfo());
+    break;
+  }
+  case EXPR_PROPID:
+  {
+
+    ids.insert(expr->getPropId()->getIdentifier1()->getSymbolInfo());
+    ids.insert(expr->getPropId()->getIdentifier2()->getSymbolInfo());
+    break;
+  }
+  }
+}
 
 void SymbolTableBuilder::checkForExpressions(Expression *expr)
 {

@@ -30,6 +30,10 @@
 /* UNCOMMENT IT TO GENERATE FOR SYCL BACKEND */
 #include "../backends/backend_sycl/dsl_cpp_generator.h"
 
+/* UNCOMMENT IT TO GENERATE FOR AMD BACKEND */
+#include "../backends/backend_amd/dsl_cpp_generator.h"
+
+
 extern "C" int yyparse(void);
 
 #endif
