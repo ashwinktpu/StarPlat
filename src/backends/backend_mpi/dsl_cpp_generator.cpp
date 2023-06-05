@@ -148,9 +148,8 @@ namespace spmpi {
 
             Type* type = (*itr)->getType();
 
-            targetFile.pushString(convertToCppType(type));
-            if(type->isPropType())
-                targetFile.pushString("&");
+            targetFile.pushString(convertToCppType(type,true));
+            
             targetFile.pushString(" ");
             
             targetFile.pushString((*itr)->getIdentifier()->getIdentifier());

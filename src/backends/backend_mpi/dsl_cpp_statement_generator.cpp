@@ -387,7 +387,7 @@ namespace spmpi {
                 assignment* assign = (*itr)->getAssignExpr();
                 Identifier* lhsId = assign->getId();
                 Expression* exprAssigned = assign->getExpr();
-                sprintf(strBuffer, "%s.attachToGraph(&%s, (%s)", lhsId->getIdentifier(), procedure->getId1()->getIdentifier(),  convertToCppType(lhsId->getSymbolInfo()->getType()->getInnerTargetType()));
+                sprintf(strBuffer, "%s.attachToGraph(&%s, (%s)", lhsId->getIdentifier(), procedure->getId1()->getIdentifier(),  convertToCppType(lhsId->getSymbolInfo()->getType()->getInnerTargetType(), false));
                 main.pushString(strBuffer);
                 generateExpr(exprAssigned);
                 main.pushString(")");
@@ -434,9 +434,9 @@ namespace spmpi {
                 char strBuffer[1024];
                 //Identifier* rhsPropId2 = exprAssigned->getId();
                     main.pushString(id->getIdentifier());
-                    main.pushString(".assignCopy(");
+                    main.pushString(" = ");
                     generateExpr(exprAssigned);
-                    main.pushstr_newL(");");
+                    main.pushstr_newL(";");
             } 
             else
             {
@@ -482,169 +482,95 @@ namespace spmpi {
            if(asmt->getExpr()->isArithmetic()||asmt->getExpr()->isLogical())*/
             //main.pushstr_newL("#pragma omp atomic");
             //}
-
-            if(insideParallelConstruct.size()==0)
-            {   
-                if(propId->getIdentifier2()->getSymbolInfo()->getType()->gettypeId()==TYPE_PROPNODE) 
-                    sprintf(strBuffer, "if(world.rank() == %s.%s(%s))", graphIds[0]->getIdentifier(),"get_node_owner", propId->getIdentifier1()->getIdentifier());
-                else if(propId->getIdentifier2()->getSymbolInfo()->getType()->gettypeId()==TYPE_PROPEDGE)
-                    sprintf(strBuffer, "if(world.rank() == %s.%s(%s))", graphIds[0]->getIdentifier(),"get_edge_owner", propId->getIdentifier1()->getIdentifier());
-                main.pushstr_newL(strBuffer);
-                main.pushstr_newL("{");
-            }    
-
-            if(assignStmt->getExpr()->isArithmetic() && assignStmt->getExpr()->getLeft()->isPropIdExpr() )
+            if(!propId->isPropertyExpression())
             {
-                PropAccess* propIdExpr = assignStmt->getExpr()->getLeft()->getPropId();
-                string propId1(propId->getIdentifier1()->getIdentifier());
-                string propId2(propId->getIdentifier2()->getIdentifier());
-                string propIdExpr1(propIdExpr->getIdentifier1()->getIdentifier());
-                string propIdExpr2(propIdExpr->getIdentifier2()->getIdentifier());
-                
-                // Find out whether there is a better way to do this
-                if(propId1.compare(propIdExpr1)==0 && propId2.compare(propIdExpr2)==0)
+                if(insideParallelConstruct.size()==0)
+                {   
+                    if(propId->getIdentifier2()->getSymbolInfo()->getType()->gettypeId()==TYPE_PROPNODE) 
+                        sprintf(strBuffer, "if(world.rank() == %s.%s(%s))", graphIds[0]->getIdentifier(),"get_node_owner", propId->getIdentifier1()->getIdentifier());
+                    else if(propId->getIdentifier2()->getSymbolInfo()->getType()->gettypeId()==TYPE_PROPEDGE)
+                        sprintf(strBuffer, "if(world.rank() == %s.%s(%s))", graphIds[0]->getIdentifier(),"get_edge_owner", propId->getIdentifier1()->getIdentifier());
+                    main.pushstr_newL(strBuffer);
+                    main.pushstr_newL("{");
+                }    
+
+                if(assignStmt->getExpr()->isArithmetic() && assignStmt->getExpr()->getLeft()->isPropIdExpr() )
                 {
-                    if(assignStmt->getExpr()->getOperatorType() == OPERATOR_ADD)
+                    PropAccess* propIdExpr = assignStmt->getExpr()->getLeft()->getPropId();
+                    string propId1(propId->getIdentifier1()->getIdentifier());
+                    string propId2(propId->getIdentifier2()->getIdentifier());
+                    string propIdExpr1(propIdExpr->getIdentifier1()->getIdentifier());
+                    string propIdExpr2(propIdExpr->getIdentifier2()->getIdentifier());
+                
+                    // Find out whether there is a better way to do this
+                    if(propId1.compare(propIdExpr1)==0 && propId2.compare(propIdExpr2)==0)
                     {
-                        sprintf(strBuffer, "%s.atomicAdd(%s,",propId->getIdentifier2()->getIdentifier(),propId->getIdentifier1()->getIdentifier());
+                        if(assignStmt->getExpr()->getOperatorType() == OPERATOR_ADD)
+                        {
+                            sprintf(strBuffer, "%s.atomicAdd(%s,",propId->getIdentifier2()->getIdentifier(),propId->getIdentifier1()->getIdentifier());
+                        }
+                        else
+                        {
+                            // Add similar atomics for other types of similar operators
+                            assert(false);
+                        }
+                        main.pushString(strBuffer);
+                        generateExpr(assignStmt->getExpr()->getRight());
+                        main.pushstr_newL(");");
                     }
                     else
                     {
-                        // Add similar atomics for other types of similar operators
-                        assert(false);
+                        sprintf(strBuffer,"%s.setValue(%s,",propId->getIdentifier2()->getIdentifier(),propId->getIdentifier1()->getIdentifier());
+                        main.pushString(strBuffer);
+                        generateExpr(assignStmt->getExpr());
+                        main.pushstr_newL(");");        
                     }
-                    main.pushString(strBuffer);
-                    generateExpr(assignStmt->getExpr()->getRight());
-                    main.pushstr_newL(");");
                 }
-                else
-                {
+                else{
                     sprintf(strBuffer,"%s.setValue(%s,",propId->getIdentifier2()->getIdentifier(),propId->getIdentifier1()->getIdentifier());
                     main.pushString(strBuffer);
                     generateExpr(assignStmt->getExpr());
-                    main.pushstr_newL(");");        
+                    main.pushstr_newL(");");
+                }
+
+                if(insideParallelConstruct.size()==0)    
+                    main.pushstr_newL("}");
+
+                Identifier* id2 = propId->getIdentifier2();
+                if (id2->getSymbolInfo() != NULL && id2->getSymbolInfo()->getId()->get_fp_association()) {
+                    generateFixedPointUpdate(propId);
                 }
             }
             else{
-                sprintf(strBuffer,"%s.setValue(%s,",propId->getIdentifier2()->getIdentifier(),propId->getIdentifier1()->getIdentifier());
+                if(insideParallelConstruct.size()==0)
+                {   
+                    if(propId->getIdentifier2()->getSymbolInfo()->getType()->gettypeId()==TYPE_PROPNODE) 
+                        sprintf(strBuffer, "if(world.rank() == %s.%s(%s))", graphIds[0]->getIdentifier(),"get_node_owner", propId->getIdentifier1()->getIdentifier());
+                    else if(propId->getIdentifier2()->getSymbolInfo()->getType()->gettypeId()==TYPE_PROPEDGE)
+                        sprintf(strBuffer, "if(world.rank() == %s.%s(%s))", graphIds[0]->getIdentifier(),"get_edge_owner", propId->getIdentifier1()->getIdentifier());
+                    main.pushstr_newL(strBuffer);
+                    main.pushstr_newL("{");
+                }
+                Expression * indexExpr = propId->getPropExpr();
+                generate_exprIndexExpr(indexExpr);
+                sprintf(strBuffer,".setValue(%s,", propId->getIdentifier1()->getIdentifier());
                 main.pushString(strBuffer);
                 generateExpr(assignStmt->getExpr());
                 main.pushstr_newL(");");
-            }
+                if(insideParallelConstruct.size()==0)    
+                    main.pushstr_newL("}");
 
-            if(insideParallelConstruct.size()==0)    
-                main.pushstr_newL("}");
-
-            Identifier* id2 = propId->getIdentifier2();
-            if (id2->getSymbolInfo() != NULL && id2->getSymbolInfo()->getId()->get_fp_association()) {
-                generateFixedPointUpdate(propId);
-            }
+            }    
+        }
+        else if(assignStmt->lhs_isIndexAccess()){
+            Expression * indexAccess = assignStmt->getIndexAccess();
+            generate_exprIndexExpr(indexAccess);
+            main.pushString(" = ");
+            generateExpr(assignStmt->getExpr());
+            main.pushstr_newL(";");
         }
 
            
-    }
-
-    void dsl_cpp_generator::generatePropertyDefination(Type* type, char* Id) 
-    {
-        Type* targetType = type->getInnerTargetType();
-        vector<Identifier*> graphIds = graphId[curFuncType][curFuncCount()];
-        printf("currentFuncType %d\n", curFuncType);
-        printf("currentFuncCount %d graphIds[0] %ld\n", curFuncCount(), graphIds.size());
-
-        if (targetType->gettypeId() == TYPE_INT) {
-            main.pushString("=");
-            main.pushString(INTALLOCATION);
-            main.pushString("[");
-            // printf("%d SIZE OF VECTOR",)
-            // findTargetGraph(graphId,type);
-
-            if (graphIds.size() > 1) {
-                // TODO : yet to change
-                cerr << "(Inside generate Property definition )TargetGraph can't match";
-            } else {
-                Identifier* id = graphIds[0];
-
-                type->setTargetGraph(id);
-            }
-            char strBuffer[100];
-            if (type->gettypeId() == TYPE_PROPNODE)
-                sprintf(strBuffer, "%s.%s()", type->getTargetGraph()->getIdentifier(), "num_local_nodes");
-            else
-                sprintf(strBuffer, "%s.%s()", type->getTargetGraph()->getIdentifier(), "num_local_edges");
-
-            main.pushString(strBuffer);
-            main.pushString("]");
-            main.pushstr_newL(";");
-        }
-        if (targetType->gettypeId() == TYPE_BOOL) {
-            main.pushString("=");
-            main.pushString(BOOLALLOCATION);
-            main.pushString("[");
-            //findTargetGraph(graphId,type);
-            if (graphIds.size() > 1) {
-                cerr << "TargetGraph can't match";
-            } else {
-                Identifier* id = graphIds[0];
-                printf("Inside Boolean Target \n");
-                type->setTargetGraph(id);
-            }
-            char strBuffer[100];
-
-            if (type->gettypeId() == TYPE_PROPNODE)
-                sprintf(strBuffer, "%s.%s()", type->getTargetGraph()->getIdentifier(), "num_local_nodes");
-            else
-                sprintf(strBuffer, "%s.%s()", type->getTargetGraph()->getIdentifier(), "num_local_edges");
-
-            main.pushString(strBuffer);
-            main.pushString("]");
-            main.pushstr_newL(";");
-        }
-
-        if (targetType->gettypeId() == TYPE_FLOAT) {
-            main.pushString("=");
-            main.pushString(FLOATALLOCATION);
-            main.pushString("[");
-            //findTargetGraph(graphId,type);
-            if (graphIds.size() > 1) {
-                cerr << "TargetGraph can't match";
-            } else {
-                Identifier* id = graphIds[0];
-
-                type->setTargetGraph(id);
-            }
-            char strBuffer[100];
-            if (type->gettypeId() == TYPE_PROPNODE)
-                sprintf(strBuffer, "%s.%s()", type->getTargetGraph()->getIdentifier(), "num_local_nodes");
-            else
-                sprintf(strBuffer, "%s.%s()", type->getTargetGraph()->getIdentifier(), "num_local_edges");
-
-            main.pushString(strBuffer);
-            main.pushString("]");
-            main.pushstr_newL(";");
-        }
-
-        if (targetType->gettypeId() == TYPE_DOUBLE) {
-            main.pushString("=");
-            main.pushString(DOUBLEALLOCATION);
-            main.pushString("[");
-            //findTargetGraph(graphId,type);
-            if (graphIds.size() > 1) {
-            cerr << "TargetGraph can't match";
-            } else {
-            Identifier* id = graphIds[0];
-
-            type->setTargetGraph(id);
-            }
-            char strBuffer[100];
-            if (TYPE_PROPNODE)
-                sprintf(strBuffer, "%s.%s()", type->getTargetGraph()->getIdentifier(), "num_local_nodes");
-        else
-            sprintf(strBuffer, "%s.%s()", type->getTargetGraph()->getIdentifier(), "num_local_edges");
-
-        main.pushString(strBuffer);
-        main.pushString("]");
-        main.pushstr_newL(";");
-        }
     }
 
     void dsl_cpp_generator::generateReductionOpStmt(reductionCallStmt* stmt) {
@@ -983,7 +909,7 @@ namespace spmpi {
                     Identifier* id = *list_itr;
                     //main.pushString(id->getIdentifier());
                     char strBuffer[1024];
-                    sprintf(strBuffer, "%s %s_temp = %s;",convertToCppType(id->getSymbolInfo()->getType()), id->getIdentifier(),id->getIdentifier());
+                    sprintf(strBuffer, "%s %s_temp = %s;",convertToCppType(id->getSymbolInfo()->getType(),false), id->getIdentifier(),id->getIdentifier());
                     main.pushstr_newL(strBuffer);
                     sprintf(strBuffer, "MPI_Allreduce(&%s_temp,&%s,1,%s,%s,MPI_COMM_WORLD);",id->getIdentifier(),id->getIdentifier() ,getMPItype(id->getSymbolInfo()->getType()),getMPIreduction(*it));
                 
@@ -1074,7 +1000,7 @@ namespace spmpi {
                 }
                 else if(sourceId->getSymbolInfo()->getType()->gettypeId() == TYPE_UPDATES)
                 {
-                    sprintf(strBuffer, "for(Update %s : %s.getUpdates())", forAll->getIterator()->getIdentifier(), sourceId->getIdentifier());
+                    sprintf(strBuffer, "for(Update %s : %s->getUpdates())", forAll->getIterator()->getIdentifier(), sourceId->getIdentifier());
                     main.pushstr_newL(strBuffer);
                 }
             }
@@ -1144,42 +1070,19 @@ namespace spmpi {
                 main.pushString(convertToCppType(type));  
                 main.space();
                 main.pushString(decl->getdeclId()->getIdentifier());
-                main.pushstr_newL(";");
                 if (decl->isInitialized())
                 {
-                    cerr<< "Cannot assign a poperty copy before being attached to a graph\n";
-                    /*main.pushString(decl->getdeclId()->getIdentifier());
-                    main.pushString(".assignCopy(");
+                    main.pushString(" = ");
                     generateExpr(decl->getExpressionAssigned());
-                    main.pushstr_newL(")"); */
-                }    
-                //generatePropertyDefination(type, decl->getdeclId()->getIdentifier());
-                printf("added symbol %s\n", decl->getdeclId()->getIdentifier());
-                printf("value requ %d\n", decl->getdeclId()->getSymbolInfo()->getId()->require_redecl());
-                /* decl with variable name as var_nxt is required for double buffering
-                ex :- In case of fixedpoint */
-                /*if (decl->getdeclId()->getSymbolInfo()->getId()->require_redecl()) 
-                {
-                    main.pushString(convertToCppType(innerType)); 
-                    main.pushString("*");
-                    main.space();
-                    sprintf(strBuffer, "%s_nxt", decl->getdeclId()->getIdentifier());
-                    main.pushString(strBuffer);
-                    generatePropertyDefination(type, decl->getdeclId()->getIdentifier());
-                }*/
-
-                /*placeholder for adding code for declarations that are initialized as well*/
+                }
+                main.pushstr_newL(";");
+                    
             }
             else {
                 // NOT yet supported
                 assert(false);
             }
 
-        /* TODO : (Atharva) Required for dynamic */
-        //if (insideBatchBlock) 
-        /* the properties are malloced, so they need 
-                                    to be freed to manage memory.*/
-            //freeIdStore.push_back(declStmt->getdeclId());
         
         } 
         else if (type->isPrimitiveType()) 
@@ -1216,8 +1119,9 @@ namespace spmpi {
             {
                 main.pushString(" = ");
                 generateExpr(decl->getExpressionAssigned());
-                main.pushstr_newL(";");
+                
             }
+            main.pushstr_newL(";");
 
         } 
         else if (type->isCollectionType()) 
@@ -1230,12 +1134,31 @@ namespace spmpi {
                 {
                     main.pushString(" = ");
                     generateExpr(decl->getExpressionAssigned());
-                    main.pushstr_newL(";");
                 }
+                main.pushstr_newL(";");
 
-            // TODO : (Atharva) Dynamic Part code , yet to understand
-            /*if (insideBatchBlock)
-                freeIdStore.push_back(declStmt->getdeclId());*/
+            }
+            else if(type->gettypeId() == TYPE_NODEMAP)
+            {
+                main.pushstr_space(convertToCppType(type));
+                main.pushString(decl->getdeclId()->getIdentifier());
+                if (decl->isInitialized()) 
+                {
+                    main.pushString(" = ");
+                    generateExpr(decl->getExpressionAssigned());
+                }
+                main.pushstr_newL(";");                
+            }
+            else if(type->gettypeId() == TYPE_CONTAINER)
+            {
+                main.pushstr_space(convertToCppType(type));
+                main.pushString(decl->getdeclId()->getIdentifier());
+                if (decl->isInitialized()) 
+                {
+                    main.pushString(" = ");
+                    generateExpr(decl->getExpressionAssigned());
+                }
+                main.pushstr_newL(";");
             }
         }
     }

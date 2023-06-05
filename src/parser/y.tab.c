@@ -3047,7 +3047,7 @@ int main(int argc,char **argv)
 {
   
   if(argc<4){
-    std::cout<< "Usage: " << argv[0] << " [-s|-d] -f <dsl.sp> -b [cuda|omp|mpi|acc|multigpu|amd] " << '\n';
+    std::cout<< "Usage: " << argv[0] << " [-s|-d] -f <dsl.sp> -b [cuda|omp|mpi|acc|multigpu] " << '\n';
     std::cout<< "E.g. : " << argv[0] << " -s -f ../graphcode/sssp_dslV2 -b omp " << '\n';
     exit(-1);
   }
@@ -3108,7 +3108,7 @@ int main(int argc,char **argv)
    else
     {
 
-		if(!((strcmp(backendTarget, "amd")==0)||(strcmp(backendTarget,"omp")==0)||(strcmp(backendTarget,"mpi")==0)||(strcmp(backendTarget,"cuda")==0) || (strcmp(backendTarget,"acc")==0) || (strcmp(backendTarget,"sycl")==0)|| (strcmp(backendTarget,"multigpu")==0)))
+		if(!((strcmp(backendTarget,"omp")==0)|| (strcmp(backendTarget,"amd")==0) || (strcmp(backendTarget,"mpi")==0)||(strcmp(backendTarget,"cuda")==0) || (strcmp(backendTarget,"acc")==0) || (strcmp(backendTarget,"sycl")==0)|| (strcmp(backendTarget,"multigpu")==0)))
 
 		   {
 			  fprintf(stderr, "Specified backend target is not implemented in the current version!\n");
@@ -3212,18 +3212,16 @@ int main(int argc,char **argv)
 		pp.analyse(frontEndContext.getFuncList());
 		cpp_backend.setFileName(fileName);
 		cpp_backend.generate();
-	}
- 	else if (strcmp(backendTarget, "amd") == 0) {
-
-		printf("hello from amd\n");
-        spamd::dsl_cpp_generator cpp_backend;
-		std::cout<< "size:" << frontEndContext.getFuncList().size() << '\n';
-        cpp_backend.setFileName(fileName);
-        cpp_backend.generate();
-      } 
+}
 	  else if (strcmp(backendTarget, "sycl") == 0) {
 		std::cout<<"GENERATING SYCL CODE"<<std::endl;
         spsycl::dsl_cpp_generator cpp_backend;
+        cpp_backend.setFileName(fileName);
+        cpp_backend.generate();
+	  }
+	  else if (strcmp(backendTarget, "amd") == 0) {
+		std::cout<<"GENERATING OPENCL CODE"<<std::endl;
+        spamd::dsl_cpp_generator cpp_backend;
         cpp_backend.setFileName(fileName);
         cpp_backend.generate();
 	  }
