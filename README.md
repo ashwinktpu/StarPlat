@@ -149,7 +149,7 @@ Graph DSL for basic graph algorithms
 ## Acknowledgments
 ```
 This project is funded by India's National Supercomputing Mission, whose timely funding and regular reviews are greatly appreciated.
-
+```
 ## Licensing
 The StarPlat codebase is made available for academic and non-commercial use.
 Commercial use of the code needs licensing. The interested may contact rupesh@cse.iitm.ac.in.
