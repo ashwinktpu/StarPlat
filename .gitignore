@@ -21,3 +21,4 @@ dump/
 *.starplat
 runtests.sh
 cudadump/
+testcases/testAMD/*
