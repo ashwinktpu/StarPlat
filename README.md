@@ -1,11 +1,31 @@
+# StarPlat: A Versatile DSL for Graph Analytics
 
-# GraphDSL
 [![CUDA Branch](https://github.com/nibeditabh/GraphDSL/actions/workflows/cuda.yml/badge.svg?branch=cuda)](https://github.com/nibeditabh/GraphDSL/actions/workflows/cuda.yml)
 
 
+## TODO:
 
-# StarPlat: A Versatile DSL for Graph Analytics
-# GraphDSL MPI Backend
+### High Priority
+
+- [ ] The generated OpenCL code segfaults while releasing OpenCL/device
+  resources.
+- [ ] Write script for benchmarking generated OpenCL code. \\
+  [Low Priority: Extend it to support all backends]
+- [ ] Make every file generated OpenCL program use `cl_assert.h` for better
+  debugging.
+- [ ] Improve README. Update outdated instructions. Add instructions for
+  building OpenCL programs.
+
+
+### Low Priority
+
+- [ ] All generated files should be in a folder and not litter
+  `graphcode/generatedXYZ`.
+- [ ] Every occurence of "AMD" in the OpenCL backend should be replaced by
+  "OpenCL".
+
+
+## MPI Backend
 
 ### How to compile Generated MPI Codes on Aqua Cluster
 ```
