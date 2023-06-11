@@ -162,8 +162,11 @@ Graph DSL for basic graph algorithms
 - Phase1 (static)  **SSSP, BC, PR, and TC**
 
 ## Acknowledgments
-```
 This project is funded by India's National Supercomputing Mission, whose timely funding and regular reviews are greatly appreciated.
 
-[![License](http://img.shields.io/:license-mit-blue.svg?style=flat-square)](http://badges.mit-license.org)
+## License
+
+The StarPlat codebase is made available for academic and non-commercial use.
+Commercial use of the code needs licensing. The interested may contact
+rupesh@cse.iitm.ac.in.
 

@@ -1,0 +1,8 @@
+clean-soc-twitter: 1.713152 ms
+clean-soc-pokec-relationships: 11.311104 ms
+test: 0.079872 ms
+u10m_80m: 28.81024 ms
+GermanyRoadud: 1243.270144 ms
+clean-soc-sinaweibo: 4.594688 ms
+USAud: 3387.302912 ms
+
