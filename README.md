@@ -9,7 +9,7 @@
 
 - [ ] The generated OpenCL code segfaults while releasing OpenCL/device
   resources.
-- [ ] Write script for benchmarking generated OpenCL code. \\
+- [X] Write script for benchmarking generated OpenCL code.
   [Low Priority: Extend it to support all backends]
 - [ ] Make every file generated OpenCL program use `cl_assert.h` for better
   debugging.
