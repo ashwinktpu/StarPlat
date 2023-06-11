@@ -7,6 +7,7 @@
 
 ### High Priority
 
+- [ ] Improve `parseGraph()` in `graphcode/graph.hpp`.
 - [ ] The generated OpenCL code segfaults while releasing OpenCL/device
   resources.
 - [X] Write script for benchmarking generated OpenCL code.
