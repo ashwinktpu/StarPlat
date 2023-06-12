@@ -1,0 +1,16 @@
+function reductionExample(Graph g)
+{
+    int accum = 0;
+    propNode<int> A;
+    g.attachNodeProperty(A = 1);
+    forall(v in g.nodes())
+    {
+        int count = 0;
+        forall(nbr in g.neighbors(v))
+        {
+            count = count + nbr.A;
+        }
+        accum += count;
+    }
+
+}
