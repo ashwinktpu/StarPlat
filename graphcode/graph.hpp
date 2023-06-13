@@ -359,7 +359,7 @@ public:
       f = tmp;
 
       // TODO: parse weights also if there
-      // scan till whitespace
+      // scan till linebreak
       while (*f != '\n') f++;
       f++; // currently on '\n'. one more increment for next line.
 
@@ -409,20 +409,6 @@ public:
     for (edge e : graph_edge) {
       edges[e.source].push_back(e);
     }
-  }
-
-  void generateCSR() {
-    printf("generating csr representation\n");
-
-    indexofNodes = new int32_t[nodesTotal + 2];
-    edgeList = new int32_t[edgesTotal];
-    edgeLen = new int32_t[edgesTotal];
-  }
-
-  void parseGraph2() {
-    parseEdges();
-    printf("finished parsing edges\n");
-    generateCSR();
   }
 
   /**

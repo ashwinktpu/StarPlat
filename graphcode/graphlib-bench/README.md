@@ -1,13 +1,8 @@
-# Benchmarking the Parser
+# Benchmarking the Graph Library (graph.hpp)
 
 ## Potential Optimizations
 
-### Improve File Reading
-
-Currently using the most naive way to read input file. Optimizing that should
-lead to a significant speedup.
-
-### Don't Hold All Representations
+### Don't Hold All Graph Representations
 
 Currently the `graph` class carries with it all representations of the graph:
 - Edge list
@@ -32,7 +27,7 @@ detect which ones are required, and generate those accordingly.
 
 The compiler is unable to optimize the prefix sum calculations. In principle we
 should be able to take advantage of SIMD registers to get a significant (maybe
-even 2x) performance boost on using SIMD instructions.
+even 2x) performance boost.
 
 
 ### Sorting

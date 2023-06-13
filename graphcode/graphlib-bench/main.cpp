@@ -7,8 +7,6 @@ int main(int argc, char* argv[]) {
 
   printf("start parsing graph\n");
   g.parseGraph();
-
   printf("done parsing graph\n");
-  printf("%d\n", g.indexofNodes[100]);
 }
 
