@@ -8,9 +8,11 @@
 #include <string.h>
 #include <vector>
 
-#include "graph_ompv2.hpp"
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
 
-// using namespace std;
+#include "graph_ompv2.hpp"
 
 class edge {
 public:
@@ -336,6 +338,50 @@ public:
    * Calculates edgesTotal and nodesTotal
    */
   void parseEdges() {
+    int fd = open(filePath, O_RDONLY);
+    struct stat statbuf;
+    fstat(fd, &statbuf);
+
+    char* f = static_cast<char*>(mmap(0, statbuf.st_size, PROT_READ,
+                                            MAP_PRIVATE, fd, 0));
+    char* fend = f + statbuf.st_size;
+    char* tmp;
+
+    nodesTotal = 0;
+    while (f != fend) {
+      edge e;
+      // assuming no prefix spacing
+      e.source = strtol(f, &tmp, 0);
+      // must be a space now
+      f = tmp + 1;
+
+      e.destination = strtol(f, &tmp, 0);
+      f = tmp;
+
+      // TODO: parse weights also if there
+      // scan till whitespace
+      while (*f != '\n') f++;
+      f++; // currently on '\n'. one more increment for next line.
+
+      nodesTotal = std::max({nodesTotal, e.source, e.destination});
+      graph_edge.push_back(e);
+    }
+    edgesTotal = graph_edge.size();
+
+    // create adjacency list
+    edges.resize(nodesTotal+1);
+    for (edge e : graph_edge) {
+      edges[e.source].push_back(e);
+    }
+  }
+
+  /**
+   * Deprecated. Use parseEdges()
+   * Only here for reference purposes.
+   * TODO: Match the results of parseEdges and parseEdges_old and
+   * remove the latter.
+   */
+  void parseEdges_old() {
     std::ifstream infile;
     infile.open(filePath);
     std::string line;
@@ -353,14 +399,13 @@ public:
       ss >> e.weight;
 
       nodesTotal = std::max({nodesTotal, e.source, e.destination});
-
       graph_edge.push_back(e);
     }
     edgesTotal = graph_edge.size();
 
 
     // create adjacency list
-    edges.resize(nodesTotal+2);
+    edges.resize(nodesTotal+1);
     for (edge e : graph_edge) {
       edges[e.source].push_back(e);
     }
