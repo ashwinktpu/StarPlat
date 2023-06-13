@@ -6,7 +6,7 @@ Outputs edges list
 import igraph as ig
 
 def main():
-    N = 500000
+    N = 5000000
     g = ig.Graph.Erdos_Renyi(n=N, m=N)
     for e in g.es:
         print(e.source, e.target)

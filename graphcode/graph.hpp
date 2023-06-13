@@ -32,7 +32,9 @@ private:
   int32_t *rev_edgeLen;
   int32_t *diff_rev_edgeLen;
   char *filePath;
-  std::map<int32_t, std::vector<edge>> edges;
+
+  // adjacency list. edges[u][v] represents edge u -> v
+  std::vector<std::vector<edge>> edges;
 
 public:
   int32_t *indexofNodes;     /* stores prefix sum for outneighbours of a node*/
@@ -63,7 +65,7 @@ public:
     rev_edgeLen = NULL;
   }
 
-  std::map<int, std::vector<edge>> getEdges() { return edges; }
+  std::vector<std::vector<edge>> getEdges() { return edges; }
 
   int *getEdgeLen() { return edgeLen; }
 
@@ -327,52 +329,55 @@ public:
   }
 
   /**
-   * Parses the input file and creates the graph.
+   * Parses the input file to load edges into graph_edge
    * Assumes that the input file contains an edge list in the following format:
    * Each line contains two space seperated integers.
    * The first integer is the source and the second integer is the destination.
-   *
-   * Creates both the edge list representation: graph_edge
-   * as well as the adjacency list representation: edges
+   * Calculates edgesTotal and nodesTotal
    */
   void parseEdges() {
     std::ifstream infile;
     infile.open(filePath);
     std::string line;
 
+    nodesTotal = 0;
     while (std::getline(infile, line)) {
       if (line.length() == 0 || line[0] < '0' || line[0] > '9') {
         continue;
       }
 
-      std::stringstream ss(line);
-      edgesTotal++;
-
       edge e;
+      std::stringstream ss(line);
+      ss >> e.source;
+      ss >> e.destination;
+      ss >> e.weight;
 
-      int32_t source;
-      int32_t destination;
-      int32_t weightVal;
+      nodesTotal = std::max({nodesTotal, e.source, e.destination});
 
-      ss >> source;
-      if (source > nodesTotal)
-        nodesTotal = source;
-
-      ss >> destination;
-      if (destination > nodesTotal)
-        nodesTotal = destination;
-
-      e.source = source;
-      e.destination = destination;
-      e.weight = 1;
-
-      edges[source].push_back(e);
       graph_edge.push_back(e);
-
-      ss >> weightVal; // for edgelists having weight too.
     }
+    edgesTotal = graph_edge.size();
 
-    infile.close();
+
+    // create adjacency list
+    edges.resize(nodesTotal+2);
+    for (edge e : graph_edge) {
+      edges[e.source].push_back(e);
+    }
+  }
+
+  void generateCSR() {
+    printf("generating csr representation\n");
+
+    indexofNodes = new int32_t[nodesTotal + 2];
+    edgeList = new int32_t[edgesTotal];
+    edgeLen = new int32_t[edgesTotal];
+  }
+
+  void parseGraph2() {
+    parseEdges();
+    printf("finished parsing edges\n");
+    generateCSR();
   }
 
   /**
