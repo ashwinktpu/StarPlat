@@ -1,10 +1,10 @@
 #include "update.hpp"
 #include <climits>
-#include "omp.h"
+// #include "omp.h"
 
 
- std::vector<std::pair<int,int>> perNodeUpdateInfo;
- std::vector<std::pair<int,int>> perNodeUpdateRevInfo;
+std::vector<std::pair<int,int>> perNodeUpdateInfo;
+std::vector<std::pair<int,int>> perNodeUpdateRevInfo;
 
 
 void updateCSRDel_omp(int numnodes, int numEdges, int32_t* indexofNodes, int32_t* edgeList, int32_t* rev_indexofNodes, int32_t* srcList, int32_t* edgeLen, int32_t* diff_edgeLen,
