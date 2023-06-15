@@ -359,6 +359,8 @@ public:
       f = tmp;
 
       // TODO: parse weights also if there
+      e.weight = 1;
+
       // scan till linebreak
       while (*f != '\n') f++;
       f++; // currently on '\n'. one more increment for next line.
