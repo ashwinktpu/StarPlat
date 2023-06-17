@@ -92,7 +92,7 @@ void dsl_cpp_generator::addKernelObject(char *obj) {
     main.pushstr_newL("cl_program program = clCreateProgramWithSource(context, "
                       "1, (const char **)&kernelSource, NULL, &status);");
     main.pushstr_newL(
-        "printf(\"Progran created from source, status = %d \\n\", status);");
+        "printf(\"Program created from source, status = %d \\n\", status);");
     main.pushstr_newL("status = clBuildProgram(program, number_of_devices, "
                       "devices, \" -I ./\", NULL, NULL);");
     main.pushstr_newL(
