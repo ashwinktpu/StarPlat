@@ -314,6 +314,9 @@ void dsl_cpp_generator::castIfRequired(Type *type, Identifier *methodID,
   }
 }
 
+// TODO: write helper functions for all of these to remove redundancy
+// TODO: don't hardcode CSR array names
+// TODO: put all CSR array names in a list. iterate over it to generate
 void dsl_cpp_generator::generateCSRArrays(const char *gId) {
   char strBuffer[1024];
 
@@ -366,63 +369,23 @@ void dsl_cpp_generator::generateCSRArrays(const char *gId) {
   main.pushstr_newL("h_rev_meta = (int *)malloc( (V+1)*sizeof(int));");
   main.NewLine();
 
+  // TODO: generate memcpy instead of loop
   main.pushstr_newL("for(int i=0; i<= V; i++) {");
-  sprintf(strBuffer, "int temp = %s.indexofNodes[i];", gId);
+  sprintf(strBuffer, "h_meta[i] = %s.indexofNodes[i];", gId);
   main.pushstr_newL(strBuffer);
-  main.pushstr_newL("h_meta[i] = temp;");
-  sprintf(strBuffer, "temp = %s.rev_indexofNodes[i];", gId);
+  sprintf(strBuffer, "h_rev_meta[i] = %s.rev_indexofNodes[i];", gId);
   main.pushstr_newL(strBuffer);
-  main.pushstr_newL("h_rev_meta[i] = temp;");
   main.pushstr_newL("}");
   main.NewLine();
 
   main.pushstr_newL("for(int i=0; i< E; i++) {");
-  sprintf(strBuffer, "int temp = %s.edgeList[i];", gId);
+  sprintf(strBuffer, "h_data[i] = %s.edgeList[i];", gId);
   main.pushstr_newL(strBuffer);
-  main.pushstr_newL("h_data[i] = temp;");
-  sprintf(strBuffer, "temp = %s.srcList[i];", gId);
+  sprintf(strBuffer, "h_src[i] = %s.srcList[i];", gId);
   main.pushstr_newL(strBuffer);
-  main.pushstr_newL("h_src[i] = temp;");
-  main.pushstr_newL("temp = edgeLen[i];");
-  main.pushstr_newL("h_weight[i] = temp;");
+  main.pushstr_newL("h_weight[i] = edgeLen[i];");
   main.pushstr_newL("}");
   main.NewLine();
-
-  // to handle rev_offset array for pageRank only // MOVED TO PREV FOR LOOP
-  //~ main.pushstr_newL("for(int i=0; i<= V; i++) {");
-  //~ sprintf(strBuffer, "int temp = %s.rev_indexofNodes[i];", gId);
-  //~ main.pushstr_newL(strBuffer);
-  //~ main.pushstr_newL("h_rev_meta[i] = temp;");
-  //~ main.pushstr_newL("}");
-  //~ main.NewLine();
-
-  //-------------------------------------//
-
-  /*
-  printf("#nodes:%d\n",V);
-  printf("#edges:%d\n",E);
-
-
-  int *h_meta;
-  int *h_data;
-  int *h_weight;
-
-   h_meta = (int *)malloc( (V+1)*sizeof(int));
-   h_data = (int *)malloc( (E)*sizeof(int));
-   h_weight = (int *)malloc( (E)*sizeof(int));
-
-  for(int i=0; i<= V; i++) {
-    int temp = G.indexofNodes[i];
-    h_meta[i] = temp;
-  }
-
-  for(int i=0; i< E; i++) {
-    int temp = G.edgeList[i];
-    h_data[i] = temp;
-    temp = edgeLen[i];
-    h_weight[i] = temp;
-  }
-  */
 }
 
 // This function is going to generate signature of funtions in header file.
