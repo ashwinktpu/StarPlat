@@ -1,11 +1,29 @@
-#include "getUsedVarsAMD.cpp"
 #include <cassert>
 #include <string.h>
+#include <vector>
 
 #include "dsl_cpp_generator.h"
 #include "../../ast/ASTHelper.cpp"
+#include "getUsedVarsAMD.cpp"
 
 namespace spamd {
+
+const std::vector<const char*> csrArrays = {
+  "meta", "data", "weight", "rev_meta", "src", "modified_next"
+};
+
+
+inline std::vector<char*> hostCSRArrays() {
+  std::vector<char*> res;
+  for (auto arr : csrArrays) {
+    // TODO: don't allocate on heap
+    char *buff = (char*) malloc(50 * sizeof(char));
+    sprintf(buff, "h_%s", arr);
+    res.push_back(buff);
+  }
+  return res;
+}
+
 
 dslCodePad &dsl_cpp_generator::getTargetFile(int isMainFile) {
 
@@ -337,31 +355,23 @@ void dsl_cpp_generator::generateCSRArrays(const char *gId) {
   main.pushstr_newL(strBuffer);
   main.NewLine();
 
-  // These H & D arrays of CSR do not change. Hence hardcoded!
-  main.pushstr_newL("int *h_meta;");
-  main.pushstr_newL("int *h_data;");
-  main.pushstr_newL("int *h_src;");
-  main.pushstr_newL("int *h_weight;");
-  main.pushstr_newL(
-      "int *h_rev_meta;"); // done only to handle PR since other doesn't uses it
+  /// generate declarations for host csr arrays
+  for (auto arr : hostCSRArrays()) {
+    char buff[1024];
+    sprintf(buff, "int* %s;", arr);
+    main.pushstr_newL(buff);
+  }
   main.NewLine();
-  char *str;
-  str = (char *)malloc(50 * sizeof(char));
-  strcpy(str, "h_meta");
-  hostMemObjects.push_back(str);
-  str = (char *)malloc(50 * sizeof(char));
-  strcpy(str, "h_data");
-  hostMemObjects.push_back(str);
-  str = (char *)malloc(50 * sizeof(char));
-  strcpy(str, "h_src");
-  hostMemObjects.push_back(str);
-  str = (char *)malloc(50 * sizeof(char));
-  strcpy(str, "h_weight");
-  hostMemObjects.push_back(str);
-  str = (char *)malloc(50 * sizeof(char));
-  strcpy(str, "h_rev_meta");
-  hostMemObjects.push_back(str);
 
+  /// push all csr arrays to host memobjects
+  for (auto arr : hostCSRArrays()) {
+    // TODO: change hostMemObjects to use (const char*)
+    // TODO: update hostCSRArrays() accordingly
+    printf("adding %s to host memobjects\n", arr);
+    hostMemObjects.push_back(arr);
+  }
+
+  /// allocate host csr arrays
   main.pushstr_newL("h_meta = (int *)malloc( (V+1)*sizeof(int));");
   main.pushstr_newL("h_data = (int *)malloc( (E)*sizeof(int));");
   main.pushstr_newL("h_src = (int *)malloc( (E)*sizeof(int));");

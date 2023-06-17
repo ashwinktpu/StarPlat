@@ -36,11 +36,12 @@ void Compute_SSSP(graph& g,int * dist,int src)
   printf("#edges:%d\n",E);
   int* edgeLen = g.getEdgeLen();
 
-  int *h_meta;
-  int *h_data;
-  int *h_src;
-  int *h_weight;
-  int *h_rev_meta;
+  int* h_meta;
+  int* h_data;
+  int* h_weight;
+  int* h_rev_meta;
+  int* h_src;
+  int* h_modified_next;
 
   h_meta = (int *)malloc( (V+1)*sizeof(int));
   h_data = (int *)malloc( (E)*sizeof(int));
@@ -291,7 +292,8 @@ void Compute_SSSP(graph& g,int * dist,int src)
   status = clReleaseContext(context);
   free(h_meta);
   free(h_data);
-  free(h_src);
   free(h_weight);
   free(h_rev_meta);
+  free(h_src);
+  free(h_modified_next);
 } //end FUN
