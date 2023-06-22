@@ -4,5 +4,5 @@ project(starplat)
 add_subdirectory(src)
 
 add_executable(starplat src/temp.cpp)
-target_link_libraries(starplat_analyser)
+link_directories(starplat startplat_analyser startplat_ast startplat_backends startplat_maincontext startplat_symbolutil startplat_parser)
 set_target_properties(starplat PROPERTIES LINKER_LANGUAGE CXX)

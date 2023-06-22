@@ -3,4 +3,4 @@ add_subdirectory(ast)
 add_subdirectory(backends)
 add_subdirectory(maincontext)
 add_subdirectory(symbolutil)
-
+add_subdirectory(parser)

@@ -8,4 +8,7 @@ foreach(module ${starplat_ast_modules})
   add_subdirectory(${module})
 endforeach()
 
-starplat_add_libary(ast DEPENDENCIES ${starplat_analyser_modules} SOURCES ASTHelper.cpp)
+set(sources ASTHelper.cpp)
+set(headers ASTNode.hpp ASTNodeTypes.hpp)
+
+starplat_add_libary(ast DEPENDENCIES ${starplat_analyser_modules} SOURCES ${sources} HEADERS ${headers})

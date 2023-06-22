@@ -6,8 +6,10 @@ function(starplat_add_libary modulename)
   cmake_parse_arguments(${modulename} "${options}" "${one_value_args}"
                         "${multi_value_args}" ${ARGN})
 
-  add_library(starplat_${modulename} ${${modulename}_SOURCES}
-                                     ${${modulename}_DEPENDENCIES})
+  add_library(
+    starplat_${modulename}
+    ${${modulename}_SOURCES} ${${modulename}_DEPENDENCIES}
+    ${${modulename}_HEADERS})
 
   set_target_properties(starplat_${modulename} PROPERTIES LINKER_LANGUAGE CXX)
 

@@ -2261,7 +2261,7 @@ void dsl_cpp_generator::generate_exprProcCall(Expression* expr)
              if(id2 != NULL)
                {
 
-                 sprintf(strBuffer,"%s.%s.%s",objectId->getIdentifier(), id2->getIdentifier(), getProcName(proc));
+                 sprintf(strBuffer,"%s.%s.%s",objectId->getIdentifier(), id2->getIdentifier(), getProcName(proc).c_str());
                }
              else
               {
