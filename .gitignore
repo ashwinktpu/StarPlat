@@ -3,7 +3,6 @@ src/parser/y.tab.h
 src/parser/y.tab.c
 .vscode/
 src/finalcode
-src/backends
 src/finalcode.exe
 src/bin/*.o
 *.out
@@ -13,5 +12,13 @@ src/bin/
 ../.history/*
 StarPlat
 StarPlat.exe
-build
-
+debug.txt
+dump
+*.pdf
+To_be_done.txt
+.github/
+dump/
+*.starplat
+runtests.sh
+cudadump/
+testcases/testAMD/*
