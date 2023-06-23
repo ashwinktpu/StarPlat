@@ -38,7 +38,7 @@ void staticSSSP(Graph& g, NodeProperty<int>& dist, NodeProperty<int>& parent, Ed
     g.sync_reduction();
     world.barrier();
 
-    modified.assignCopy(modified_nxt);
+    modified = modified_nxt;
     modified_nxt.attachToGraph(&g, (bool)false);
     finished = modified.aggregateValue(NOT);
   }
@@ -70,7 +70,7 @@ void dynamicBatchSSSP_add(Graph& g, NodeProperty<int>& dist, NodeProperty<int>& 
     g.sync_reduction();
     world.barrier();
 
-    modified.assignCopy(modified_nxt);
+    modified = modified_nxt;
     modified_nxt.attachToGraph(&g, (bool)false);
     finished = modified.aggregateValue(NOT);
   }
@@ -145,18 +145,18 @@ void dynamicBatchSSSP_del(Graph& g, NodeProperty<int>& dist, NodeProperty<int>& 
 
 }
 void DynSSSP(Graph& g, NodeProperty<int>& dist, NodeProperty<int>& parent, EdgeProperty<int>& weight, 
-  Updates & updateBatch, int batchSize, int src, boost::mpi::communicator world )
+  Updates * updateBatch, int batchSize, int src, boost::mpi::communicator world )
 {
   staticSSSP(g,dist,parent,weight,src, world);
 
-  updateBatch.splitIntoSmallerBatches(batchSize);
-  while(updateBatch.nextBatch())
+  updateBatch->splitIntoSmallerBatches(batchSize);
+  while(updateBatch->nextBatch())
   {
     NodeProperty<bool> modified;
     NodeProperty<bool> modified_add;
     modified.attachToGraph(&g, (bool)false);
     modified_add.attachToGraph(&g, (bool)false);
-    for(Update u : updateBatch.getCurrentDeleteBatch().getUpdates())
+    for(Update u : updateBatch->getCurrentDeleteBatch()->getUpdates())
     {
       int src = u.source;
       int dest = u.destination;
@@ -168,11 +168,11 @@ void DynSSSP(Graph& g, NodeProperty<int>& dist, NodeProperty<int>& parent, EdgeP
       }
 
     }
-    updateBatch.updateCsrDel(&g);
+    updateBatch->updateCsrDel(&g);
 
     dynamicBatchSSSP_del(g,dist,parent,weight,modified, world);
 
-    for(Update u : updateBatch.getCurrentAddBatch().getUpdates())
+    for(Update u : updateBatch->getCurrentAddBatch()->getUpdates())
     {
       int src = u.source;
       int dest = u.destination;
@@ -183,7 +183,7 @@ void DynSSSP(Graph& g, NodeProperty<int>& dist, NodeProperty<int>& parent, EdgeP
       }
 
     }
-    updateBatch.updateCsrAdd(&g);
+    updateBatch->updateCsrAdd(&g);
 
     dynamicBatchSSSP_add(g,dist,parent,weight,modified_add, world);
 

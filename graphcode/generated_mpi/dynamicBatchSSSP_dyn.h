@@ -17,6 +17,6 @@ void dynamicBatchSSSP_add(Graph& g, NodeProperty<int>& dist, NodeProperty<int>& 
 void dynamicBatchSSSP_del(Graph& g, NodeProperty<int>& dist, NodeProperty<int>& parent, EdgeProperty<int>& weight, 
   NodeProperty<bool>& modified, boost::mpi::communicator world );
 void DynSSSP(Graph& g, NodeProperty<int>& dist, NodeProperty<int>& parent, EdgeProperty<int>& weight, 
-  Updates & updateBatch, int batchSize, int src, boost::mpi::communicator world );
+  Updates * updateBatch, int batchSize, int src, boost::mpi::communicator world );
 
 #endif

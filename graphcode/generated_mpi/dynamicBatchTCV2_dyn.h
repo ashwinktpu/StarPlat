@@ -11,10 +11,10 @@
 #include"../mpi_header/updates.h"
 
 auto staticTC(Graph& g, boost::mpi::communicator world );
-auto dynamicBatchTCV2_add(Graph& g, int triangle_countSent, EdgeProperty<bool>& modified, Updates & addBatch
+auto dynamicBatchTCV2_add(Graph& g, int triangle_countSent, EdgeProperty<bool>& modified, Updates * addBatch
   , boost::mpi::communicator world );
-auto dynamicBatchTCV2_del(Graph& g, int triangle_countSent, EdgeProperty<bool>& modified, Updates & deleteBatch
+auto dynamicBatchTCV2_del(Graph& g, int triangle_countSent, EdgeProperty<bool>& modified, Updates * deleteBatch
   , boost::mpi::communicator world );
-void DynTC(Graph& g, Updates & updateBatch, int batchSize, boost::mpi::communicator world );
+void DynTC(Graph& g, Updates * updateBatch, int batchSize, boost::mpi::communicator world );
 
 #endif

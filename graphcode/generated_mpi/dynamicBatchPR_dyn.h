@@ -17,6 +17,6 @@ void dynamicBatchPR_add(Graph& g, float beta, float delta, int maxIter,
 void dynamicBatchPR_del(Graph& g, float beta, float delta, int maxIter, 
   NodeProperty<float>& pageRank, NodeProperty<bool>& modified, boost::mpi::communicator world );
 void DynPR(Graph& g, float beta, float delta, int maxIter, 
-  NodeProperty<float>& pageRank, Updates & updateBatch, int batchSize, boost::mpi::communicator world );
+  NodeProperty<float>& pageRank, Updates * updateBatch, int batchSize, boost::mpi::communicator world );
 
 #endif
