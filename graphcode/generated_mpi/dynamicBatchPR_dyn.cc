@@ -30,7 +30,7 @@ void staticPR(Graph& g, float beta, float delta, int maxIter,
     float diff_temp = diff;
     MPI_Allreduce(&diff_temp,&diff,1,MPI_FLOAT,MPI_SUM,MPI_COMM_WORLD);
 
-    pageRank.assignCopy(pageRank_nxt);
+    pageRank = pageRank_nxt;
     iterCount++;
   }
   while((diff > beta) && (iterCount < maxIter));
@@ -126,20 +126,20 @@ void dynamicBatchPR_del(Graph& g, float beta, float delta, int maxIter,
   while((diff > beta) && (iterCount < maxIter));
 }
 void DynPR(Graph& g, float beta, float delta, int maxIter, 
-  NodeProperty<float>& pageRank, Updates & updateBatch, int batchSize, boost::mpi::communicator world )
+  NodeProperty<float>& pageRank, Updates * updateBatch, int batchSize, boost::mpi::communicator world )
 {
   staticPR(g,beta,delta,maxIter,pageRank, world);
 
-  updateBatch.splitIntoSmallerBatches(batchSize);
-  while(updateBatch.nextBatch())
+  updateBatch->splitIntoSmallerBatches(batchSize);
+  while(updateBatch->nextBatch())
   {
     NodeProperty<bool> modified;
     NodeProperty<bool> modified_add;
     modified.attachToGraph(&g, (bool)false);
     modified_add.attachToGraph(&g, (bool)false);
-    Updates & deleteBatch = updateBatch.getCurrentDeleteBatch();
-    Updates & addBatch = updateBatch.getCurrentAddBatch();
-    for(Update u : updateBatch.getCurrentDeleteBatch().getUpdates())
+    Updates * deleteBatch = updateBatch->getCurrentDeleteBatch();
+    Updates * addBatch = updateBatch->getCurrentAddBatch();
+    for(Update u : updateBatch->getCurrentDeleteBatch()->getUpdates())
     {
       int src = u.source;
       int dest = u.destination;
@@ -148,11 +148,11 @@ void DynPR(Graph& g, float beta, float delta, int maxIter,
     }
     g.propagateNodeFlags(modified);
 
-    updateBatch.updateCsrDel(&g);
+    updateBatch->updateCsrDel(&g);
 
     dynamicBatchPR_del(g,beta,delta,maxIter,pageRank,modified, world);
 
-    for(Update u : updateBatch.getCurrentAddBatch().getUpdates())
+    for(Update u : updateBatch->getCurrentAddBatch()->getUpdates())
     {
       int src = u.source;
       int dest = u.destination;
@@ -161,7 +161,7 @@ void DynPR(Graph& g, float beta, float delta, int maxIter,
     }
     g.propagateNodeFlags(modified_add);
 
-    updateBatch.updateCsrAdd(&g);
+    updateBatch->updateCsrAdd(&g);
 
     dynamicBatchPR_add(g,beta,delta,maxIter,pageRank,modified_add, world);
 

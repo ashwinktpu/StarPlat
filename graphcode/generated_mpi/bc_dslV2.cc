@@ -3,12 +3,12 @@
 void Compute_BC(Graph& g, NodeProperty<float>& BC, std::set<int>& sourceSet, boost::mpi::communicator world )
 {
   BC.attachToGraph(&g, (float)0);
+  NodeProperty<float> sigma;
+  NodeProperty<float> delta;
   std::set<int>::iterator itr;
   for(itr=sourceSet.begin();itr!=sourceSet.end();itr++)
   {
     int src = *itr;
-    NodeProperty<float> sigma;
-    NodeProperty<float> delta;
     delta.attachToGraph(&g, (float)0);
     sigma.attachToGraph(&g, (float)0);
     if(world.rank() == g.get_node_owner(src))
@@ -22,7 +22,7 @@ void Compute_BC(Graph& g, NodeProperty<float>& BC, std::set<int>& sourceSet, boo
       {
         for (int w :g.get_bfs_children(v))
         {
-          sigma.atomicAdd(w,sigma.getValue(v));
+          sigma.atomicAdd(v,sigma.getValue(w));
         }
 
       }

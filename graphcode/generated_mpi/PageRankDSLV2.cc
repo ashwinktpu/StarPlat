@@ -11,7 +11,6 @@ void Compute_PR(Graph& g, float beta, float delta, int maxIter,
   float diff = 0.0 ;
   do
   {
-    diff = 0.000000;
     world.barrier();
     for (int v = g.start_node(); v <= g.end_node(); v ++) 
     {
@@ -22,15 +21,11 @@ void Compute_PR(Graph& g, float beta, float delta, int maxIter,
       }
 
       float val = (1 - delta) / num_nodes + delta * sum;
-      diff = diff + val - pageRank.getValue(v);
       pageRank_nxt.setValue(v,val);
     }
     world.barrier();
 
-    float diff_temp = diff;
-    MPI_Allreduce(&diff_temp,&diff,1,MPI_FLOAT,MPI_SUM,MPI_COMM_WORLD);
-
-    pageRank.assignCopy(pageRank_nxt);
+    pageRank = pageRank_nxt;
     iterCount++;
   }
   while((diff > beta) && (iterCount < maxIter));

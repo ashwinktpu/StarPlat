@@ -37,7 +37,7 @@ void Compute_SSSP(Graph& g, NodeProperty<int>& dist, EdgeProperty<int>& weight, 
     g.sync_reduction();
     world.barrier();
 
-    modified.assignCopy(modified_nxt);
+    modified = modified_nxt;
     modified_nxt.attachToGraph(&g, (bool)false);
     finished = modified.aggregateValue(NOT);
   }

@@ -33,7 +33,7 @@ auto staticTC(Graph& g, boost::mpi::communicator world )
   return triangle_count;
 
 }
-auto dynamicBatchTCV2_add(Graph& g, int triangle_countSent, EdgeProperty<bool>& modified, Updates & addBatch
+auto dynamicBatchTCV2_add(Graph& g, int triangle_countSent, EdgeProperty<bool>& modified, Updates * addBatch
   , boost::mpi::communicator world )
 {
   long triangle_count = triangle_countSent;
@@ -41,7 +41,7 @@ auto dynamicBatchTCV2_add(Graph& g, int triangle_countSent, EdgeProperty<bool>& 
   int count2 = 0;
   int count3 = 0;
   world.barrier();
-  for(Update update : addBatch.getUpdates())
+  for(Update update : addBatch->getUpdates())
   {
     int v1 = update.source;
     int v2 = update.destination;
@@ -98,7 +98,7 @@ auto dynamicBatchTCV2_add(Graph& g, int triangle_countSent, EdgeProperty<bool>& 
   return triangle_count;
 
 }
-auto dynamicBatchTCV2_del(Graph& g, int triangle_countSent, EdgeProperty<bool>& modified, Updates & deleteBatch
+auto dynamicBatchTCV2_del(Graph& g, int triangle_countSent, EdgeProperty<bool>& modified, Updates * deleteBatch
   , boost::mpi::communicator world )
 {
   long triangle_count = triangle_countSent;
@@ -106,7 +106,7 @@ auto dynamicBatchTCV2_del(Graph& g, int triangle_countSent, EdgeProperty<bool>& 
   int count2 = 0;
   int count3 = 0;
   world.barrier();
-  for(Update update : deleteBatch.getUpdates())
+  for(Update update : deleteBatch->getUpdates())
   {
     int v1 = update.source;
     int v2 = update.destination;
@@ -163,17 +163,17 @@ auto dynamicBatchTCV2_del(Graph& g, int triangle_countSent, EdgeProperty<bool>& 
   return triangle_count;
 
 }
-void DynTC(Graph& g, Updates & updateBatch, int batchSize, boost::mpi::communicator world )
+void DynTC(Graph& g, Updates * updateBatch, int batchSize, boost::mpi::communicator world )
 {
   int triangleCount = staticTC(g, world);
-  updateBatch.splitIntoSmallerBatches(batchSize);
-  while(updateBatch.nextBatch())
+  updateBatch->splitIntoSmallerBatches(batchSize);
+  while(updateBatch->nextBatch())
   {
     EdgeProperty<bool> modified_del;
     modified_del.attachToGraph(&g, (bool)false);
-    Updates & deleteBatch = updateBatch.getCurrentDeleteBatch();
-    Updates & addBatch = updateBatch.getCurrentAddBatch();
-    for(Update u : updateBatch.getCurrentDeleteBatch().getUpdates())
+    Updates * deleteBatch = updateBatch->getCurrentDeleteBatch();
+    Updates * addBatch = updateBatch->getCurrentAddBatch();
+    for(Update u : updateBatch->getCurrentDeleteBatch()->getUpdates())
     {
       int src = u.source;
       int dest = u.destination;
@@ -189,13 +189,13 @@ void DynTC(Graph& g, Updates & updateBatch, int batchSize, boost::mpi::communica
 
     }
     triangleCount = dynamicBatchTCV2_del(g,triangleCount,modified_del,deleteBatch, world);
-    updateBatch.updateCsrDel(&g);
+    updateBatch->updateCsrDel(&g);
 
-    updateBatch.updateCsrAdd(&g);
+    updateBatch->updateCsrAdd(&g);
 
     EdgeProperty<bool> modified_add;
     modified_add.attachToGraph(&g, (bool)false);
-    for(Update u : updateBatch.getCurrentAddBatch().getUpdates())
+    for(Update u : updateBatch->getCurrentAddBatch()->getUpdates())
     {
       int src = u.source;
       int dest = u.destination;
