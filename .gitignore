@@ -24,3 +24,4 @@ cudadump/
 testcases/testAMD/*
 test-graphs/
 graphcode/graphlib-bench/inp.txt
+test-graphs.zip
