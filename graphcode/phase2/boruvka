@@ -1,0 +1,7 @@
+function Compute_SSSP(Graph g,propNode<int> dist, node src) {
+  g.attachNodeProperty(dist = INF);
+
+  forall (v in g.nodes()) {
+    v.dist = 0;
+  }
+}

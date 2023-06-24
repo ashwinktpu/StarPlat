@@ -3357,26 +3357,29 @@ void dsl_cpp_generator::releaseObjects(int isMainFile) {
   }
 }
 
+
 // This function, fopen those files in which codes will be generated.
 bool dsl_cpp_generator::openFileforOutput() {
+  char outputFolder[1024];
+  // TODO revert output folder back to `graphcode/generated_amd`
+  sprintf(outputFolder, "%s-out", fileName);
+
+
   char temp[1024];
   printf("fileName %s\n", fileName);
-  sprintf(temp, "%s/%s.h", "../graphcode/generated_amd", fileName);
+  sprintf(temp, "%s/%s.h", outputFolder, fileName);
   headerFile = fopen(temp, "w");
   if (headerFile == NULL)
     return false;
   header.setOutputFile(headerFile);
 
-  sprintf(temp, "%s/%s.cl", "../graphcode/generated_amd", fileName);
+  sprintf(temp, "%s/%s.cl", outputFolder, fileName);
   kernelFile = fopen(temp, "w");
   if (kernelFile == NULL)
     return false;
   kernel.setOutputFile(kernelFile);
 
-  // kernel.push('C');
-  // kernel.pushString("Hello");
-
-  sprintf(temp, "%s/%s.cpp", "../graphcode/generated_amd", fileName);
+  sprintf(temp, "%s/%s.cpp", outputFolder, fileName);
   bodyFile = fopen(temp, "w");
   if (bodyFile == NULL)
     return false;
