@@ -1,5 +1,5 @@
-function Compute_SSSP(Graph g,propNode<int> dist, node src) {
-  g.attachNodeProperty(dist = INF);
+function MST(Graph g, propNode<int> component) {
+  g.attachNodeProperty(component = INF);
 
   forall (v in g.nodes()) {
     v.dist = 0;

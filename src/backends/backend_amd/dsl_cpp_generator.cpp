@@ -2,28 +2,25 @@
 #include <string.h>
 #include <vector>
 
-#include "dsl_cpp_generator.h"
 #include "../../ast/ASTHelper.cpp"
+#include "dsl_cpp_generator.h"
 #include "getUsedVarsAMD.cpp"
 
 namespace spamd {
 
-const std::vector<const char*> csrArrays = {
-  "meta", "data", "weight", "rev_meta", "src", "modified_next"
-};
+const std::vector<const char *> csrArrays = {
+    "meta", "data", "weight", "rev_meta", "src", "modified_next"};
 
-
-inline std::vector<char*> hostCSRArrays() {
-  std::vector<char*> res;
+inline std::vector<char *> hostCSRArrays() {
+  std::vector<char *> res;
   for (auto arr : csrArrays) {
     // TODO: don't allocate on heap
-    char *buff = (char*) malloc(50 * sizeof(char));
+    char *buff = (char *)malloc(50 * sizeof(char));
     sprintf(buff, "h_%s", arr);
     res.push_back(buff);
   }
   return res;
 }
-
 
 dslCodePad &dsl_cpp_generator::getTargetFile(int isMainFile) {
 
@@ -348,7 +345,7 @@ void dsl_cpp_generator::generateCSRArrays(const char *gId) {
   main.pushstr_newL("printf(\"#nodes:%d\\n\",V);");
   main.pushstr_newL("printf(\"#edges:%d\\n\",E);");
   //~ main.pushstr_newL("printf(\"#srces:\%d\\n\",sourceSet.size()); /// TODO
-  //get from var");
+  // get from var");
 
   sprintf(strBuffer, "int* edgeLen = %s.getEdgeLen();",
           gId); // assuming DSL  do not contain variables as V and E
@@ -425,8 +422,8 @@ void dsl_cpp_generator::generateFuncHeader(Function *proc, int isMainFile) {
   list<formalParam *>::iterator itr;
 
   //~ bool genCSR = false;// to generate csr  main.cpp file if g is a param !
-  //var moved to .h file. May not be need. refractor later! ~ char* gId;// to
-  //generate csr  main.cpp file if g is a param
+  // var moved to .h file. May not be need. refractor later! ~ char* gId;// to
+  // generate csr  main.cpp file if g is a param
   for (itr = paramList.begin(); itr != paramList.end(); itr++) {
     arg_currNo++;
     argumentTotal--;
@@ -634,7 +631,7 @@ void dsl_cpp_generator::generateVariableDecl(declaration *declStmt,
   //~ header.pushString(declStmt->getdeclId()->getIdentifier());
   //~ header.pushstr_newL(";");
   //~ std::cout<< "PRINT DEVICE VAR ======>" <<
-  //declStmt->getdeclId()->getIdentifier()<< '\n';
+  // declStmt->getdeclId()->getIdentifier()<< '\n';
   //~ }
   if (type->isPropType()) {
     if (type->getInnerTargetType()->isPrimitiveType()) {
@@ -1227,7 +1224,9 @@ void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment *asmt,
   // cout<<"Inside generateDeviceAssignmentStmt"<<endl;
   bool isDevice = false;
   std::cout << "\tASSIGNMENT \n";
-  char strBuffer[300];
+
+  char strBuffer[4096];
+
   if (asmt->lhs_isIdentifier()) {
     Identifier *id = asmt->getId();
     targetFile.pushString(id->getIdentifier());
@@ -2512,7 +2511,7 @@ void dsl_cpp_generator::generatePropParams(list<formalParam *> paramList,
   list<formalParam *>::iterator itr;
   dslCodePad &targetFile = getTargetFile(isMainFile);
   //~ Assumes that there is at least one param already. so prefix with  "," is
-  //okay
+  // okay
   char strBuffer[1024];
   for (itr = paramList.begin(); itr != paramList.end(); itr++) {
 
@@ -3209,16 +3208,16 @@ void dsl_cpp_generator::generateFunc(ASTNode *proc) {
   generateCudaMallocParams(func->getParamList());
 
   //~ sprintf(strBuffer, "%s* d_%s; cudaMalloc(&d_%s, sizeof(%s)*(V)); ///TODO
-  //from func", outVarType, outVarName, outVarName, outVarType); ~
-  //main.pushstr_newL(strBuffer);
+  // from func", outVarType, outVarName, outVarName, outVarType); ~
+  // main.pushstr_newL(strBuffer);
 
   main.NewLine();
 
   //~ for (list<formalParam*>::iterator itr = (func->getParamList()).begin(),
-  //itrEnd=(func->getParamList()).end(); itr != itrEnd; itr++){ ~ Type* type =
+  // itrEnd=(func->getParamList()).end(); itr != itrEnd; itr++){ ~ Type* type =
   //(*itr)->getType(); ~ if(type->isPropType()){ ~ const char* typ=
-  //convertToCppType(type); ~ const char* inTyp=
-  //convertToCppType(type->getInnerTargetType()); ~ std::cout<< "TYP  :" << typ
+  // convertToCppType(type); ~ const char* inTyp=
+  // convertToCppType(type->getInnerTargetType()); ~ std::cout<< "TYP  :" << typ
   //<< '\n'; ~ std::cout<< "INTYP:" << inTyp << '\n'; ~ } ~ }
 
   main.pushstr_newL("//BEGIN DSL PARSING ");
@@ -3273,21 +3272,21 @@ void dsl_cpp_generator::generateCudaMemCpyParams(
         //~ targetFile.pushString(convertToCppType(innerType));
         ////convertToCppType need to be modified. ~ targetFile.pushString("*");
         // ~ targetFile.space(); ~
-        //targetFile.pushString(declStmt->getdeclId()->getIdentifier());
+        // targetFile.pushString(declStmt->getdeclId()->getIdentifier());
         //~
         // generatePropertyDefination(type,declStmt->getdeclId()->getIdentifier(),
         // isMainFile); ~ printf("added symbol
         //%s\n",declStmt->getdeclId()->getIdentifier()); ~ printf("value requ
         //%d\n",declStmt->getdeclId()->getSymbolInfo()->getId()->require_redecl());
         //~ /* decl with variable name as var_nxt is required for double
-        //buffering ~ ex :- In case of fixedpoint */ ~
-        //if(declStmt->getdeclId()->getSymbolInfo()->getId()->require_redecl())
+        // buffering ~ ex :- In case of fixedpoint */ ~
+        // if(declStmt->getdeclId()->getSymbolInfo()->getId()->require_redecl())
         //~ {
         //~ targetFile.pushString(convertToCppType(innerType));
         ////convertToCppType need to be modified. ~ targetFile.pushString("*");
         // ~ targetFile.space(); ~
-        //sprintf(strBuffer,"%s_nxt",declStmt->getdeclId()->getIdentifier()); ~
-        //targetFile.pushString(strBuffer);
+        // sprintf(strBuffer,"%s_nxt",declStmt->getdeclId()->getIdentifier()); ~
+        // targetFile.pushString(strBuffer);
         //~
         // generatePropertyDefination(type,declStmt->getdeclId()->getIdentifier(),
         // isMainFile);
@@ -3357,13 +3356,11 @@ void dsl_cpp_generator::releaseObjects(int isMainFile) {
   }
 }
 
-
 // This function, fopen those files in which codes will be generated.
 bool dsl_cpp_generator::openFileforOutput() {
   char outputFolder[1024];
   // TODO revert output folder back to `graphcode/generated_amd`
   sprintf(outputFolder, "%s-out", fileName);
-
 
   char temp[1024];
   printf("fileName %s\n", fileName);
