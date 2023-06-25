@@ -1,6 +1,6 @@
-#include "boruvka.h"
+#include "sssp.h"
 
-void MST(graph& g)
+void Compute_SSSP(graph& g,int * dist,int src)
 {
   //Getting platforms
   cl_int status;
@@ -84,14 +84,16 @@ void MST(graph& g)
   cl_ulong convertToMS = 1e6;
 
   //DECLAR DEVICE AND HOST vars in params
+  cl_mem d_dist = clCreateBuffer(context,CL_MEM_READ_WRITE,(V)*sizeof(int),NULL, &status);
+
 
   //BEGIN DSL PARSING 
-  int *h_cheapest = (int *)malloc(V*sizeof(int));
-  cl_mem d_cheapest = clCreateBuffer(context,CL_MEM_READ_WRITE,(V)*sizeof(int),NULL, &status);
+  int *h_modified = (int *)malloc(V*sizeof(int));
+  cl_mem d_modified = clCreateBuffer(context,CL_MEM_READ_WRITE,(V)*sizeof(int),NULL, &status);
 
 
   //Reading kernel file
-  FILE* kernelfp = fopen("boruvka.cl", "rb"); 
+  FILE* kernelfp = fopen("sssp.cl", "rb"); 
   size_t program_size;
   fseek(kernelfp, 0, SEEK_END);
   program_size = ftell(kernelfp);
@@ -111,24 +113,75 @@ void MST(graph& g)
   //Variable for launch configuration
   size_t global_size;
   size_t local_size;
-  // Creating initcheapest_kernel  Kernel
-  cl_kernel initcheapest_kernel = clCreateKernel(program, "initcheapest_kernel", &status);
+  // Creating initdist_kernel  Kernel
+  cl_kernel initdist_kernel = clCreateKernel(program, "initdist_kernel", &status);
 
-  // Initialization for cheapest variable
-  int cheapestValue = (int)0; 
-  status = clSetKernelArg(initcheapest_kernel, 0 , sizeof(cl_mem), (void *)& d_cheapest);
-  status = clSetKernelArg(initcheapest_kernel, 1, sizeof(int) , (void*)& cheapestValue);
-  status = clSetKernelArg(initcheapest_kernel, 2, sizeof(int), (void*)&V);
+  // Initialization for dist variable
+  int distValue = (int)INT_MAX; 
+  status = clSetKernelArg(initdist_kernel, 0 , sizeof(cl_mem), (void *)& d_dist);
+  status = clSetKernelArg(initdist_kernel, 1, sizeof(int) , (void*)& distValue);
+  status = clSetKernelArg(initdist_kernel, 2, sizeof(int), (void*)&V);
   local_size = 128;
   global_size = (V + local_size -1)/ local_size * local_size;
-  status = clEnqueueNDRangeKernel(command_queue, initcheapest_kernel, 1, NULL, &global_size, &local_size, 0,NULL,&event);
+  status = clEnqueueNDRangeKernel(command_queue, initdist_kernel, 1, NULL, &global_size, &local_size, 0,NULL,&event);
 
   clWaitForEvents(1,&event);
   status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, NULL);
   status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, NULL);
   kernelTime = (double)(end-start)/convertToMS;
   totalTime = totalTime+ kernelTime;
-  status = clReleaseKernel(initcheapest_kernel);
+  status = clReleaseKernel(initdist_kernel);
+
+  // Creating initmodified_kernel  Kernel
+  cl_kernel initmodified_kernel = clCreateKernel(program, "initmodified_kernel", &status);
+
+  // Initialization for modified variable
+  int modifiedValue = (int)false; 
+  status = clSetKernelArg(initmodified_kernel, 0 , sizeof(cl_mem), (void *)& d_modified);
+  status = clSetKernelArg(initmodified_kernel, 1, sizeof(int) , (void*)& modifiedValue);
+  status = clSetKernelArg(initmodified_kernel, 2, sizeof(int), (void*)&V);
+  local_size = 128;
+  global_size = (V + local_size -1)/ local_size * local_size;
+  status = clEnqueueNDRangeKernel(command_queue, initmodified_kernel, 1, NULL, &global_size, &local_size, 0,NULL,&event);
+
+  clWaitForEvents(1,&event);
+  status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, NULL);
+  status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, NULL);
+  kernelTime = (double)(end-start)/convertToMS;
+  totalTime = totalTime+ kernelTime;
+  status = clReleaseKernel(initmodified_kernel);
+
+  cl_kernel initIndexmodified_kernel = clCreateKernel(program, "initIndexmodified_kernel", &status);
+  //Indexmodified src initialization
+  int initmodifiedvalsrc = true;
+  status = clSetKernelArg(initIndexmodified_kernel , 0,sizeof(cl_mem) ,(void *)&d_modified);
+  status = clSetKernelArg(initIndexmodified_kernel, 1,sizeof(int), (void*)&src);
+  status = clSetKernelArg(initIndexmodified_kernel, 2, sizeof(int),(void *)&initmodifiedvalsrc);
+  global_size = local_size = 1;
+  status  = clEnqueueNDRangeKernel(command_queue, initIndexmodified_kernel,1,NULL, &global_size, &local_size, 0, NULL, &event);
+  clWaitForEvents(1,&event);
+  status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, NULL);
+  status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, NULL);
+  kernelTime = (double)(end-start)/convertToMS;
+  totalTime = totalTime+ kernelTime;
+
+  status = clReleaseKernel(initIndexmodified_kernel);
+
+  cl_kernel initIndexdist_kernel = clCreateKernel(program, "initIndexdist_kernel", &status);
+  //Indexdist src initialization
+  int initdistvalsrc = 0;
+  status = clSetKernelArg(initIndexdist_kernel , 0,sizeof(cl_mem) ,(void *)&d_dist);
+  status = clSetKernelArg(initIndexdist_kernel, 1,sizeof(int), (void*)&src);
+  status = clSetKernelArg(initIndexdist_kernel, 2, sizeof(int),(void *)&initdistvalsrc);
+  global_size = local_size = 1;
+  status  = clEnqueueNDRangeKernel(command_queue, initIndexdist_kernel,1,NULL, &global_size, &local_size, 0, NULL, &event);
+  clWaitForEvents(1,&event);
+  status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, NULL);
+  status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, NULL);
+  kernelTime = (double)(end-start)/convertToMS;
+  totalTime = totalTime+ kernelTime;
+
+  status = clReleaseKernel(initIndexdist_kernel);
 
   int *h_finished ;
   cl_mem d_finished= clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(int), NULL, &status);
@@ -137,20 +190,20 @@ void MST(graph& g)
 
   // Start of fixed point
   // creating %s kernel
-  cl_kernel initd_cheapest_next = clCreateKernel(program, "initd_cheapest_next_kernel", &status);
-  status = clSetKernelArg(initd_cheapest_next, 0,sizeof(cl_mem),(void*)&d_cheapest_next);
-  int d_cheapest_nextValue = false;
-  status = clSetKernelArg(initd_cheapest_next, 1,sizeof(int) ,(void*)&d_cheapest_nextValue);
-  status = clSetKernelArg(initd_cheapest_next, 2 , sizeof(int),(void*)&V);
+  cl_kernel initd_modified_next = clCreateKernel(program, "initd_modified_next_kernel", &status);
+  status = clSetKernelArg(initd_modified_next, 0,sizeof(cl_mem),(void*)&d_modified_next);
+  int d_modified_nextValue = false;
+  status = clSetKernelArg(initd_modified_next, 1,sizeof(int) ,(void*)&d_modified_nextValue);
+  status = clSetKernelArg(initd_modified_next, 2 , sizeof(int),(void*)&V);
   local_size = 128;
   global_size = (V + local_size -1)/ local_size * local_size;
-  status = clEnqueueNDRangeKernel(command_queue, initd_cheapest_next , 1, NULL , &global_size , &local_size ,0, NULL, &event);
+  status = clEnqueueNDRangeKernel(command_queue, initd_modified_next , 1, NULL , &global_size , &local_size ,0, NULL, &event);
   clWaitForEvents(1,&event);
   status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, NULL);
   status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, NULL);
   kernelTime = (double)(end-start)/convertToMS;
   totalTime = totalTime+ kernelTime;
-  status = clReleaseKernel(initd_cheapest_next);
+  status = clReleaseKernel(initd_modified_next);
 
   int k = 0;
   finished = false;
@@ -161,50 +214,51 @@ void MST(graph& g)
 
     //ForAll started here
 
-    cl_kernel MST = clCreateKernel(program, "MST_kernel", &status);
+    cl_kernel Compute_SSSP = clCreateKernel(program, "Compute_SSSP_kernel", &status);
     if(status != CL_SUCCESS){
-      printf("Failed to create MST kernel.\n");
+      printf("Failed to create Compute_SSSP kernel.\n");
       return ;
     }
-    status = clSetKernelArg(MST,0, sizeof(int),(void *)&V);
-    status = clSetKernelArg(MST,1, sizeof(int),(void *)&E);
-    status = clSetKernelArg(MST,2, sizeof(cl_mem),(void *)&d_meta);
-    status = clSetKernelArg(MST,3, sizeof(cl_mem),(void *)&d_data);
-    status = clSetKernelArg(MST,4, sizeof(cl_mem),(void *)&d_src);
-    status = clSetKernelArg(MST,5, sizeof(cl_mem),(void *)&d_weight);
-    status = clSetKernelArg(MST,6, sizeof(cl_mem),(void *)&d_rev_meta);
-    status = clSetKernelArg(MST,7, sizeof(cl_mem),(void *)&d_finished);
-    status = clSetKernelArg(MST,8, sizeof(cl_mem),(void *)&d_cheapest_next);
-    status = clSetKernelArg(MST, 9, sizeof(cl_mem), (void *)&d_cheapest);
+    status = clSetKernelArg(Compute_SSSP,0, sizeof(int),(void *)&V);
+    status = clSetKernelArg(Compute_SSSP,1, sizeof(int),(void *)&E);
+    status = clSetKernelArg(Compute_SSSP,2, sizeof(cl_mem),(void *)&d_meta);
+    status = clSetKernelArg(Compute_SSSP,3, sizeof(cl_mem),(void *)&d_data);
+    status = clSetKernelArg(Compute_SSSP,4, sizeof(cl_mem),(void *)&d_src);
+    status = clSetKernelArg(Compute_SSSP,5, sizeof(cl_mem),(void *)&d_weight);
+    status = clSetKernelArg(Compute_SSSP,6, sizeof(cl_mem),(void *)&d_rev_meta);
+    status = clSetKernelArg(Compute_SSSP,7, sizeof(cl_mem),(void *)&d_finished);
+    status = clSetKernelArg(Compute_SSSP,8, sizeof(cl_mem),(void *)&d_modified_next);
+    status = clSetKernelArg(Compute_SSSP, 9, sizeof(cl_mem), (void *)&d_modified);
+    status = clSetKernelArg(Compute_SSSP, 10, sizeof(cl_mem), (void *)&d_dist);
 
     local_size = 128;
     global_size = (V + local_size -1)/ local_size * local_size;
 
-    status = clEnqueueNDRangeKernel(command_queue,MST, 1,NULL, &global_size, &local_size , 0,NULL,&event);
+    status = clEnqueueNDRangeKernel(command_queue,Compute_SSSP, 1,NULL, &global_size, &local_size , 0,NULL,&event);
     clWaitForEvents(1,&event);
     status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, NULL);
     status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, NULL);
     kernelTime = (double)(end-start)/convertToMS;
     totalTime = totalTime+ kernelTime;
 
-    status = clReleaseKernel(MST);
+    status = clReleaseKernel(Compute_SSSP);
 
-    status = clEnqueueCopyBuffer(command_queue, d_cheapest_next ,d_cheapest, 0,0, V*sizeof(int),0,NULL, NULL);
+    status = clEnqueueCopyBuffer(command_queue, d_modified_next ,d_modified, 0,0, V*sizeof(int),0,NULL, NULL);
     // creating %s kernel
-    cl_kernel initd_cheapest_next = clCreateKernel(program, "initd_cheapest_next_kernel", &status);
-    status = clSetKernelArg(initd_cheapest_next, 0,sizeof(cl_mem),(void*)&d_cheapest_next);
-    int d_cheapest_nextValue = false;
-    status = clSetKernelArg(initd_cheapest_next, 1,sizeof(int) ,(void*)&d_cheapest_nextValue);
-    status = clSetKernelArg(initd_cheapest_next, 2 , sizeof(int),(void*)&V);
+    cl_kernel initd_modified_next = clCreateKernel(program, "initd_modified_next_kernel", &status);
+    status = clSetKernelArg(initd_modified_next, 0,sizeof(cl_mem),(void*)&d_modified_next);
+    int d_modified_nextValue = false;
+    status = clSetKernelArg(initd_modified_next, 1,sizeof(int) ,(void*)&d_modified_nextValue);
+    status = clSetKernelArg(initd_modified_next, 2 , sizeof(int),(void*)&V);
     local_size = 128;
     global_size = (V + local_size -1)/ local_size * local_size;
-    status = clEnqueueNDRangeKernel(command_queue, initd_cheapest_next , 1,NULL, &global_size , &local_size ,0, NULL, &event);
+    status = clEnqueueNDRangeKernel(command_queue, initd_modified_next , 1,NULL, &global_size , &local_size ,0, NULL, &event);
     clWaitForEvents(1,&event);
     status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, NULL);
     status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, NULL);
     kernelTime = (double)(end-start)/convertToMS;
     totalTime = totalTime+ kernelTime;
-    status = clReleaseKernel(initd_cheapest_next);
+    status = clReleaseKernel(initd_modified_next);
     status =clEnqueueReadBuffer(command_queue, d_finished , CL_TRUE, 0, sizeof(int), &finished, 0, NULL, NULL );
 
     k++;
@@ -216,12 +270,13 @@ void MST(graph& g)
 
 
   //Free up!! all propVars in this BLOCK!
-  status = clReleaseMemObject(d_cheapest);
-  free(h_cheapest);
+  status = clReleaseMemObject(d_modified);
+  free(h_modified);
 
   //TIMER STOP
   printf("Total Kernel time = %0.2lf ms.\n ", totalTime);
 
+  clEnqueueReadBuffer(command_queue, d_dist , CL_TRUE, 0, sizeof(int)*V, dist, 0, NULL, NULL );
   //Release openCL objects
   printf("Started releasing Objects\n");
   status = clReleaseMemObject(d_meta);

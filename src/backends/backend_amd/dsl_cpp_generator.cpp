@@ -5,6 +5,7 @@
 #include "../../ast/ASTHelper.cpp"
 #include "dsl_cpp_generator.h"
 #include "getUsedVarsAMD.cpp"
+#include "../../debugutils.h"
 
 namespace spamd {
 
@@ -1223,7 +1224,7 @@ void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment *asmt,
   dslCodePad &targetFile = getTargetFile(isMainFile);
   // cout<<"Inside generateDeviceAssignmentStmt"<<endl;
   bool isDevice = false;
-  std::cout << "\tASSIGNMENT \n";
+  printf("generating assignment statement\n");
 
   char strBuffer[4096];
 
@@ -1235,16 +1236,21 @@ void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment *asmt,
   {
     PropAccess *propId = asmt->getPropId();
     if (asmt->isDeviceAssignment()) {
+      printf("device statement\n");
+
       isDevice = true;
       //~ src.dist = 0; ===>  initIndex() KERNEL call
       // Type *typeA =
       // propId->getIdentifier1()->getSymbolInfo()->getType()->getInnerTargetType();
+      printf("about to get identifier\n");
       Type *typeB = propId->getIdentifier2()
                         ->getSymbolInfo()
                         ->getType()
                         ->getInnerTargetType();
       //~ targetFile.pushstr_newL(convertToCppType(typeB));
       //~ targetFile.pushstr_newL(convertToCppType(typeA));
+      printf("here\n");
+
 
       const char *varTypeB =
           convertToCppType(typeB); // DONE: get the type from id
@@ -1255,6 +1261,7 @@ void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment *asmt,
       strcpy(kernelName, "initIndex");
       strcat(kernelName, propId->getIdentifier2()->getIdentifier());
       strcat(kernelName, "_kernel");
+
       if (!isKenelPresent(kernelName)) {
         addKernelObject(kernelName);
         kernel.NewLine();
@@ -1448,7 +1455,6 @@ void dsl_cpp_generator::checkForAllAndGenerate(blockStatement *blockStmt,
       }
     }
   }
-  // cout<<"Exiting checkForForAll"<<endl;
   return;
 }
 
@@ -1456,19 +1462,25 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt *fixedPointConstruct,
                                            int isMainFile) {
   dslCodePad &targetFile = getTargetFile(isMainFile);
 
-  std::cout << "IN FIX PT" << '\n';
+  printf("preparing to generate fixed point\n");
+
   char strBuffer[1024];
   Expression *convergeExpr = fixedPointConstruct->getDependentProp();
   Identifier *fixedPointId = fixedPointConstruct->getFixedPointId();
 
   //~ statement* blockStmt = fixedPointConstruct->getBody();
+
+  // TODO why is this here
   assert(convergeExpr->getExpressionFamily() == EXPR_UNARY ||
          convergeExpr->getExpressionFamily() == EXPR_ID);
 
   Identifier *dependentId = NULL;
   //~ bool isNot = false;
+
+  // TODO why is this here
   assert(convergeExpr->getExpressionFamily() == EXPR_UNARY ||
          convergeExpr->getExpressionFamily() == EXPR_ID);
+
   if (convergeExpr->getExpressionFamily() == EXPR_UNARY) {
     if (convergeExpr->getUnaryExpr()->getExpressionFamily() == EXPR_ID) {
       dependentId = convergeExpr->getUnaryExpr()->getId();
@@ -1488,8 +1500,11 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt *fixedPointConstruct,
 
   if (convergeExpr->getExpressionFamily() == EXPR_ID)
     dependentId = convergeExpr->getId();
+
   if (dependentId != NULL) {
-    //~ std::cout<< "GENERATING FIX PT" << '\n';
+    printf("generating fixed point \n");
+    std::cout << *dependentId->getSymbolInfo()->getType() << std::endl;
+
     if (dependentId->getSymbolInfo()->getType()->isPropType()) {
       if (dependentId->getSymbolInfo()->getType()->isPropNodeType()) {
         targetFile.NewLine();
