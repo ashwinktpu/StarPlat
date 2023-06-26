@@ -22,3 +22,5 @@ dump/
 runtests.sh
 cudadump/
 testcases/testAMD/*
+test-graphs/
+graphcode/graphlib-bench/inp.txt
