@@ -437,6 +437,7 @@ class graph
         int32_t weightVal;
 
            ss>>source; 
+	    e.weight = weightVal;
            if(source>nodesTotal)
               nodesTotal=source;
 
