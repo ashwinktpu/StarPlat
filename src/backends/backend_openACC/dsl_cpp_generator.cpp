@@ -3019,17 +3019,18 @@ bool dsl_cpp_generator::generate()
     char* graph_name = graphIds[0]->getIdentifier();
     
     switch (stmt->getTypeofNode()) {
-      case NODE_DOWHILESTMT: 
+      case NODE_DOWHILESTMT:
+      case NODE_FORALLSTMT:
+      case NODE_FIXEDPTSTMT:
+      case NODE_ITRBFS:
       {
-        dowhileStmt* doWhile = (dowhileStmt*) stmt;
-
-        MetaDataUsed metaUsed = getMetaDataUsedDoWhile(doWhile);
+        MetaDataUsed metaUsed = getMetaDataUsedStatement(stmt);
         generateDataDirectiveForMetaVars(metaUsed);
 
-        set<TableEntry*> in = doWhile->getBlockData()->getStartBlock()->getOut();
-        set<TableEntry*> out = doWhile->getBlockData()->getEndBlock()->getIn();
+        set<TableEntry*> in = stmt->getBlockData()->getStartBlock()->getOut();
+        set<TableEntry*> out = stmt->getBlockData()->getEndBlock()->getIn();
 
-        usedVariables usedVars = getVarsStatement(doWhile);
+        usedVariables usedVars = getVarsStatement(stmt);
         list<Identifier*> readVarsList = usedVars.getVariables(READ_ONLY);
         list<Identifier*> writeVarsList = usedVars.getVariables(WRITE_ONLY);
         list<Identifier*> readWriteVarsList = usedVars.getVariables(READ_AND_WRITE);
@@ -3040,9 +3041,7 @@ bool dsl_cpp_generator::generate()
 
         for (Identifier* id: readVarsList) {
           TableEntry* te = id->getSymbolInfo();
-          if (presentInSet(currAccVars, te))
-            continue;
-          if (presentInSet(in, te))
+          if (!presentInSet(currAccVars, te) && presentInSet(in, te))
             readVars.insert(te);
         }
 
@@ -3056,14 +3055,14 @@ bool dsl_cpp_generator::generate()
           TableEntry* te = id->getSymbolInfo();  
           if (!presentInSet(in, te) && presentInSet(out, te))
             writeVars.insert(te);
+          else if (presentInSet(in, te) && !presentInSet(out, te) && !presentInSet(currAccVars, te))
+            readVars.insert(te);
           else if (presentInSet(in, te) && presentInSet(out, te)) {
             if (presentInSet(currAccVars, te))
               writeVars.insert(te);
             else
               readWriteVars.insert(te);
           }
-          else if (presentInSet(in, te) && !presentInSet(out, te) && !presentInSet(currAccVars, te))
-            readVars.insert(te);
         }
 
         generateDataDirectiveForVars(readVars, READ);
@@ -3073,67 +3072,7 @@ bool dsl_cpp_generator::generate()
         main.pushstr_newL("");
         break;
       }
-    
-      case NODE_FORALLSTMT: 
-      {
-        forallStmt* forAll = (forallStmt*) stmt;
-
-        MetaDataUsed metaUsed = forAll->getMetaDataUsed();
-        generateDataDirectiveForMetaVars(metaUsed);
-
-        set<TableEntry*> in = forAll->getBlockData()->getStartBlock()->getOut();
-        set<TableEntry*> out = forAll->getBlockData()->getEndBlock()->getIn();
-
-        usedVariables usedVars = getVarsStatement(forAll->getBody());
-        usedVars.removeVariable(forAll->getIterator(), READ_WRITE);
-        
-        list<Identifier*> readVarsList = usedVars.getVariables(READ_ONLY);
-        list<Identifier*> writeVarsList = usedVars.getVariables(WRITE_ONLY);
-        list<Identifier*> readWriteVarsList = usedVars.getVariables(READ_AND_WRITE);
-
-        set<TableEntry*> readVars;
-        set<TableEntry*> writeVars;
-        set<TableEntry*> readWriteVars;
-
-        for (Identifier* id: readVarsList) {
-          TableEntry* te = id->getSymbolInfo();
-          if (presentInSet(currAccVars, te))
-            continue;
-          if (presentInSet(in, te))
-            readVars.insert(te);
-        }
-
-        for (Identifier* id: writeVarsList) {
-          TableEntry* te = id->getSymbolInfo();
-          if (te->getId()->get_fp_association()) {
-            readWriteVars.insert(te->getId()->get_fpIdNode()->getSymbolInfo());
-          }
-          if (presentInSet(out, te) && !presentInSet(currAccVars, te))
-            writeVars.insert(te);
-        }
-
-        for (Identifier* id: readWriteVarsList) {
-          TableEntry* te = id->getSymbolInfo();  
-          if (!presentInSet(in, te) && presentInSet(out, te))
-            writeVars.insert(te);
-          else if (presentInSet(in, te) && presentInSet(out, te)) {
-            if (presentInSet(currAccVars, te))
-              writeVars.insert(te);
-            else
-              readWriteVars.insert(te);
-          }
-          else if (presentInSet(in, te) && !presentInSet(out, te) && !presentInSet(currAccVars, te))
-            readVars.insert(te);
-        }
-
-        generateDataDirectiveForVars(readVars, READ);
-        generateDataDirectiveForVars(writeVars, WRITE);
-        generateDataDirectiveForVars(readWriteVars, READ_WRITE);
-
-        main.pushstr_newL("");
-        break;
-      }
-
+      
       case NODE_ASSIGN:
       {
         assignment* assign = (assignment*) stmt;
@@ -3186,123 +3125,6 @@ bool dsl_cpp_generator::generate()
           else if (type->isPropEdgeType())  // for each edge, copy the property value
             sprintf(strBuffer, "copyout(%s[0:%s.num_edges()])", declStmt->getdeclId()->getIdentifier(), graph_name);
           main.pushstr_space(strBuffer);
-        }
-
-        main.pushstr_newL("");
-        break;
-      }
-
-      case NODE_FIXEDPTSTMT:
-      {
-        fixedPointStmt* fixedPtStmt = (fixedPointStmt*) stmt;
-
-        // get metadata used
-        MetaDataUsed metadataUsed = getMetaDataUsedStatement(fixedPtStmt->getBody());
-        generateDataDirectiveForMetaVars(metadataUsed);
-
-        // get in and out variables
-        set<TableEntry*> in = fixedPtStmt->getBlockData()->getStartBlock()->getOut();
-        set<TableEntry*> out = fixedPtStmt->getBlockData()->getEndBlock()->getIn();
-
-        // get used variables
-        usedVariables usedVars = getVarsStatement(fixedPtStmt);
-
-        // get read-only, write-only and read-write variables
-        list<Identifier*> readVarsList = usedVars.getVariables(READ_ONLY);
-        list<Identifier*> writeVarsList = usedVars.getVariables(WRITE_ONLY);
-        list<Identifier*> readWriteVarsList = usedVars.getVariables(READ_AND_WRITE);
-
-        set<TableEntry*> readVars;
-        set<TableEntry*> writeVars;
-        set<TableEntry*> readWriteVars;
-
-        for (Identifier* id: readVarsList) {
-          TableEntry* te = id->getSymbolInfo();
-          if (presentInSet(currAccVars, te))
-            continue;
-          if (presentInSet(in, te))
-            readVars.insert(te);
-        }
-
-        for (Identifier* id: writeVarsList) {
-          TableEntry* te = id->getSymbolInfo();
-          if (presentInSet(out, te) && !presentInSet(currAccVars, te)) {
-            writeVars.insert(te);
-          }
-        }
-
-        for (Identifier* id: readWriteVarsList) {
-          TableEntry* te = id->getSymbolInfo();
-          if (!presentInSet(in, te) && presentInSet(out, te))
-            writeVars.insert(te);
-          else if (presentInSet(in, te) && presentInSet(out, te)) {
-            if (presentInSet(currAccVars, te))
-              writeVars.insert(te);
-            else
-              readWriteVars.insert(te);
-          }
-          else if (presentInSet(in, te) && !presentInSet(out, te) && !presentInSet(currAccVars, te))
-            readVars.insert(te);
-        }
-
-        generateDataDirectiveForVars(readVars, READ);
-        generateDataDirectiveForVars(writeVars, WRITE);
-        generateDataDirectiveForVars(readWriteVars, READ_WRITE);
-
-        main.pushstr_newL("");
-        break;
-      }
-
-      case NODE_ITRBFS:
-      {
-        iterateBFS* itrBFS = (iterateBFS*) stmt;
-        
-        // get metadata used
-        MetaDataUsed metadataUsed = getMetaDataUsedStatement(itrBFS);
-        generateDataDirectiveForMetaVars(metadataUsed);
-
-        // get in and out variables
-        set<TableEntry*> in = itrBFS->getBlockData()->getStartBlock()->getOut();
-        set<TableEntry*> out = itrBFS->getBlockData()->getEndBlock()->getIn();
-
-        // get used variables
-        usedVariables usedVars = getVarsStatement(itrBFS);
-
-        // get read-only, write-only and read-write variables
-        list<Identifier*> readVarsList = usedVars.getVariables(READ_ONLY);
-        list<Identifier*> writeVarsList = usedVars.getVariables(WRITE_ONLY);
-        list<Identifier*> readWriteVarsList = usedVars.getVariables(READ_AND_WRITE);
-
-        set<TableEntry*> readVars;
-        set<TableEntry*> writeVars;
-        set<TableEntry*> readWriteVars;
-
-        for (Identifier* id: readVarsList) {
-          TableEntry* te = id->getSymbolInfo();
-          if (presentInSet(currAccVars, te))
-            continue;
-          if (presentInSet(in, te))
-            readVars.insert(te);
-        }
-
-        for (Identifier* id: writeVarsList) {
-          TableEntry* te = id->getSymbolInfo();
-          if (presentInSet(out, te) && !presentInSet(currAccVars, te))
-            writeVars.insert(te);
-        }
-
-        for (Identifier* id: readWriteVarsList) {
-          TableEntry* te = id->getSymbolInfo();  
-          if (!presentInSet(in, te) && presentInSet(out, te))
-            writeVars.insert(te);
-          else if (presentInSet(in, te) && presentInSet(out, te)) {
-            if (presentInSet(currAccVars, te))
-              writeVars.insert(te);
-            else
-              readWriteVars.insert(te);
-          }
-          else if (presentInSet(in, te) && !presentInSet(out, te) && !presentInSet(currAccVars, te))
-            readVars.insert(te);
         }
 
         main.pushstr_newL("");

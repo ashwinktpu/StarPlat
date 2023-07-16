@@ -20,11 +20,13 @@ class ASTNode
   SymbolTable* var_symbTab;
   SymbolTable* prop_symbTab;
   NodeBlockData* blockData;
+  bool inParallel;
 
   public:
   ASTNode()
   {
       parent=NULL;
+      inParallel = false;
   }
   void setParent(ASTNode* node)
   {
@@ -66,6 +68,16 @@ class ASTNode
   NodeBlockData* getBlockData()
   {
     return blockData;
+  }
+
+  void setInParallel(bool inParallel = true)
+  {
+    this->inParallel = inParallel;
+  }
+
+  bool isInParallel()
+  {
+    return inParallel;
   }
 
 };
