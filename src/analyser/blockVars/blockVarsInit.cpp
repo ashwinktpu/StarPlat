@@ -1,57 +1,63 @@
 #include "blockVarsAnalyser.h"
 
-ASTNodeBlock* blockVarsAnalyser::initBlock(blockStatement* blockStmt, ASTNodeBlock* blockNode, bool inParallel)
+ASTNodeBlock *blockVarsAnalyser::initBlock(blockStatement *blockStmt, ASTNodeBlock *blockNode, bool inParallel)
 {
     // Reverse iterate over the statements in the block
-    list<statement*> stmts = blockStmt->returnStatements();
-    for(auto stmt = stmts.rbegin(); stmt != stmts.rend(); stmt++)
+    list<statement *> stmts = blockStmt->returnStatements();
+    for (auto stmt = stmts.rbegin(); stmt != stmts.rend(); stmt++)
     {
-        blockNode = initStatement(*stmt, blockNode);
+        blockNode = initStatement(*stmt, blockNode, inParallel);
     }
 
     return blockNode;
 }
 
-ASTNodeBlock* blockVarsAnalyser::initStatement(statement* stmt, ASTNodeBlock* blockNode, bool inParallel)
+ASTNodeBlock *blockVarsAnalyser::initStatement(statement *stmt, ASTNodeBlock *blockNode, bool inParallel)
 {
-    switch(stmt->getTypeofNode())
+    switch (stmt->getTypeofNode())
     {
-        case NODE_DECL:
-            return initDeclaration((declaration*)stmt, blockNode, inParallel);
-        case NODE_ASSIGN:
-            return initAssignment((assignment*)stmt, blockNode, inParallel);
-        case NODE_UNARYSTMT:
-            return initUnary((unary_stmt*)stmt, blockNode, inParallel);
-        case NODE_FORALLSTMT:
-            return initForAll((forallStmt*)stmt, blockNode, true);
-        case NODE_BLOCKSTMT:
-            return initBlock((blockStatement*)stmt, blockNode, inParallel);
-        case NODE_IFSTMT:
-            return initIfElse((ifStmt*)stmt, blockNode, inParallel);
-        case NODE_WHILESTMT:
-            return initWhile((whileStmt*)stmt, blockNode, inParallel);
-        case NODE_DOWHILESTMT:
-            return initDoWhile((dowhileStmt*)stmt, blockNode, inParallel);
-        case NODE_PROCCALLSTMT:
-            return initProcCall((proc_callStmt*)stmt, blockNode, inParallel);
-        case NODE_FIXEDPTSTMT:
-            return initFixedPoint((fixedPointStmt*)stmt, blockNode, inParallel);
-        case NODE_REDUCTIONCALLSTMT:
-            return initReduction((reductionCallStmt*)stmt, blockNode, inParallel);
-        case NODE_ITRBFS:
-            return initItrBFS((iterateBFS*)stmt, blockNode, true);
-        case NODE_RETURN:
-            return initReturn((returnStmt*)stmt, blockNode, inParallel);
+    case NODE_DECL:
+        return initDeclaration((declaration *)stmt, blockNode, inParallel);
+    case NODE_ASSIGN:
+        return initAssignment((assignment *)stmt, blockNode, inParallel);
+    case NODE_UNARYSTMT:
+        return initUnary((unary_stmt *)stmt, blockNode, inParallel);
+    case NODE_FORALLSTMT:
+        return initForAll((forallStmt *)stmt, blockNode, true);
+    case NODE_BLOCKSTMT:
+        return initBlock((blockStatement *)stmt, blockNode, inParallel);
+    case NODE_IFSTMT:
+        return initIfElse((ifStmt *)stmt, blockNode, inParallel);
+    case NODE_WHILESTMT:
+        return initWhile((whileStmt *)stmt, blockNode, inParallel);
+    case NODE_DOWHILESTMT:
+        return initDoWhile((dowhileStmt *)stmt, blockNode, inParallel);
+    case NODE_PROCCALLSTMT:
+        return initProcCall((proc_callStmt *)stmt, blockNode, inParallel);
+    case NODE_FIXEDPTSTMT:
+        return initFixedPoint((fixedPointStmt *)stmt, blockNode, inParallel);
+    case NODE_REDUCTIONCALLSTMT:
+        return initReduction((reductionCallStmt *)stmt, blockNode, inParallel);
+    case NODE_ITRBFS:
+        return initItrBFS((iterateBFS *)stmt, blockNode, true);
+    case NODE_RETURN:
+        return initReturn((returnStmt *)stmt, blockNode, inParallel);
     }
     return blockNode;
 }
 
-ASTNodeBlock* blockVarsAnalyser::initDeclaration(declaration* declStmt, ASTNodeBlock* blockNode, bool inParallel)
+ASTNodeBlock *blockVarsAnalyser::initDeclaration(declaration *declStmt, ASTNodeBlock *blockNode, bool inParallel)
 {
-    if(inParallel) declStmt->setInParallel();
+    if(declStmt->isInitialized() && 
+        declStmt->getExpressionAssigned()->getExpressionFamily() == EXPR_ID &&
+            declStmt->getExpressionAssigned()->getId()->getSymbolInfo()->getType()->gettypeId() == declStmt->getType()->gettypeId())
+        inParallel = true;
 
     // Create a new block node for the declaration
-    ASTNodeBlock* declNode = new ASTNodeBlock(declStmt);
+    ASTNodeBlock *declNode = new ASTNodeBlock(declStmt);
+
+    if (inParallel)
+        declNode->setInParallel();
 
     // Add the used and def variables to use set of the new block
     usedVariables_t usedVars = getVarsStatement(declStmt);
@@ -65,12 +71,16 @@ ASTNodeBlock* blockVarsAnalyser::initDeclaration(declaration* declStmt, ASTNodeB
     return declNode;
 }
 
-ASTNodeBlock* blockVarsAnalyser::initAssignment(assignment* assignStmt, ASTNodeBlock* blockNode, bool inParallel)
+ASTNodeBlock *blockVarsAnalyser::initAssignment(assignment *assignStmt, ASTNodeBlock *blockNode, bool inParallel)
 {
-    if(inParallel) assignStmt->setInParallel();
+    if (assignStmt->lhs_isIdentifier() && assignStmt->hasPropCopy())
+        inParallel = true;
 
     // Create a new block node for the assignment
-    ASTNodeBlock* assignNode = new ASTNodeBlock(assignStmt);
+    ASTNodeBlock *assignNode = new ASTNodeBlock(assignStmt);
+
+    if (inParallel)
+        assignNode->setInParallel();
 
     // Add the used and def variables to use set of the new block
     usedVariables_t usedVars = getVarsStatement(assignStmt);
@@ -84,12 +94,13 @@ ASTNodeBlock* blockVarsAnalyser::initAssignment(assignment* assignStmt, ASTNodeB
     return assignNode;
 }
 
-ASTNodeBlock* blockVarsAnalyser::initUnary(unary_stmt* unaryStmt, ASTNodeBlock* blockNode, bool inParallel)
+ASTNodeBlock *blockVarsAnalyser::initUnary(unary_stmt *unaryStmt, ASTNodeBlock *blockNode, bool inParallel)
 {
-    if(inParallel) unaryStmt->setInParallel();
-
     // Create a new block node for the unary statement
-    ASTNodeBlock* unaryNode = new ASTNodeBlock(unaryStmt);
+    ASTNodeBlock *unaryNode = new ASTNodeBlock(unaryStmt);
+
+    if (inParallel)
+        unaryNode->setInParallel();
 
     // Add the used and def variables to use set of the new block
     usedVariables_t usedVars = getVarsStatement(unaryStmt);
@@ -103,25 +114,30 @@ ASTNodeBlock* blockVarsAnalyser::initUnary(unary_stmt* unaryStmt, ASTNodeBlock* 
     return unaryNode;
 }
 
-ASTNodeBlock* blockVarsAnalyser::initForAll(forallStmt* forAllStmt, ASTNodeBlock* blockNode, bool inParallel)
+ASTNodeBlock *blockVarsAnalyser::initForAll(forallStmt *forAllStmt, ASTNodeBlock *blockNode, bool inParallel)
 {
-    if(inParallel) forAllStmt->setInParallel();
-
     // Create a new block node for the forall statement start and end block
-    ASTNodeBlock* forAllStartNode = new ASTNodeBlock();
-    ASTNodeBlock* forAllEndNode = new ASTNodeBlock();
+    ASTNodeBlock *forAllStartNode = new ASTNodeBlock();
+    ASTNodeBlock *forAllEndNode = new ASTNodeBlock();
 
     // Create a new block node for the forall statement
-    ASTNodeBlock* forAllCondNode = new ASTNodeBlock(forAllStmt);
+    ASTNodeBlock *forAllCondNode = new ASTNodeBlock(forAllStmt);
+
+    if (inParallel)
+    {
+        forAllStartNode->setInParallel();
+        forAllEndNode->setInParallel();
+        forAllCondNode->setInParallel();
+    }
 
     // Add the used and def variables to use set of the new block for cond
     usedVariables_t usedVars;
-    if(forAllStmt->isSourceProcCall())
-    {   
+    if (forAllStmt->isSourceProcCall())
+    {
         proc_callExpr *expr = forAllStmt->getExtractElementFunc();
         usedVars.merge(getVarsExprProcCall(expr));
     }
-    else if(!forAllStmt->isSourceField())
+    else if (!forAllStmt->isSourceField())
     {
         Identifier *iden = forAllStmt->getSource();
         usedVars.addVariable(iden, USED);
@@ -145,7 +161,7 @@ ASTNodeBlock* blockVarsAnalyser::initForAll(forallStmt* forAllStmt, ASTNodeBlock
     blockNodes.push_back(forAllEndNode);
 
     // Add the forall statement as a succ of the new cond block
-    ASTNodeBlock* forAllBodyNode = initStatement(forAllStmt->getBody(), forAllEndNode);
+    ASTNodeBlock *forAllBodyNode = initStatement(forAllStmt->getBody(), forAllEndNode, true);
     forAllCondNode->addSucc(forAllBodyNode);
 
     // Add this node to the list of block nodes
@@ -160,12 +176,13 @@ ASTNodeBlock* blockVarsAnalyser::initForAll(forallStmt* forAllStmt, ASTNodeBlock
     return forAllCondNode;
 }
 
-ASTNodeBlock* blockVarsAnalyser::initIfElse(ifStmt* ifStmt, ASTNodeBlock* blockNode, bool inParallel)
+ASTNodeBlock *blockVarsAnalyser::initIfElse(ifStmt *ifStmt, ASTNodeBlock *blockNode, bool inParallel)
 {
-    if(inParallel) ifStmt->setInParallel();
-
     // Create a new block node for the if statement
-    ASTNodeBlock* ifCondNode = new ASTNodeBlock(ifStmt);
+    ASTNodeBlock *ifCondNode = new ASTNodeBlock(ifStmt);
+
+    if (inParallel)
+        ifCondNode->setInParallel();
 
     // Add the used and def variables to use set of the new block
     usedVariables_t usedVars = getVarsExpr(ifStmt->getCondition());
@@ -175,12 +192,12 @@ ASTNodeBlock* blockVarsAnalyser::initIfElse(ifStmt* ifStmt, ASTNodeBlock* blockN
     ifCondNode->addSucc(blockNode);
 
     // Add the if statement as a succ of the new block
-    ifCondNode->addSucc(initStatement(ifStmt->getIfBody(), blockNode));
+    ifCondNode->addSucc(initStatement(ifStmt->getIfBody(), blockNode, inParallel));
 
-    if(ifStmt->getElseBody() != NULL)
+    if (ifStmt->getElseBody() != NULL)
     {
         // Add the else statement as a succ of the new block
-        ifCondNode->addSucc(initStatement(ifStmt->getElseBody(), blockNode));
+        ifCondNode->addSucc(initStatement(ifStmt->getElseBody(), blockNode, inParallel));
     }
 
     // Add this node to the list of block nodes
@@ -188,16 +205,20 @@ ASTNodeBlock* blockVarsAnalyser::initIfElse(ifStmt* ifStmt, ASTNodeBlock* blockN
     return ifCondNode;
 }
 
-ASTNodeBlock* blockVarsAnalyser::initWhile(whileStmt* whileStmt, ASTNodeBlock* blockNode, bool inParallel)
+ASTNodeBlock *blockVarsAnalyser::initWhile(whileStmt *whileStmt, ASTNodeBlock *blockNode, bool inParallel)
 {
-    if(inParallel) whileStmt->getCondition()->setInParallel();
-
     // Create a new block node for the do-while statement start and end block
-    ASTNodeBlock* whileStartNode = new ASTNodeBlock();
-    ASTNodeBlock* whileEndNode = new ASTNodeBlock();
+    ASTNodeBlock *whileStartNode = new ASTNodeBlock();
+    ASTNodeBlock *whileEndNode = new ASTNodeBlock();
+
+    if (inParallel)
+    {
+        whileStartNode->setInParallel();
+        whileEndNode->setInParallel();
+    }
 
     // Create a new block node for the while statement
-    ASTNodeBlock* whileCondNode = new ASTNodeBlock(whileStmt->getCondition());
+    ASTNodeBlock *whileCondNode = new ASTNodeBlock(whileStmt->getCondition());
 
     // Add the used and def variables to use set of the new block
     usedVariables_t usedVars = getVarsExpr(whileStmt->getCondition());
@@ -211,7 +232,7 @@ ASTNodeBlock* blockVarsAnalyser::initWhile(whileStmt* whileStmt, ASTNodeBlock* b
     blockNodes.push_back(whileEndNode);
 
     // Add the while statement as a succ of the new block
-    ASTNodeBlock* whileBodyNode = initStatement(whileStmt->getBody(), whileEndNode);
+    ASTNodeBlock *whileBodyNode = initStatement(whileStmt->getBody(), whileEndNode, inParallel);
     whileCondNode->addSucc(whileBodyNode);
 
     // Add the while statement to the list of block nodes
@@ -221,21 +242,25 @@ ASTNodeBlock* blockVarsAnalyser::initWhile(whileStmt* whileStmt, ASTNodeBlock* b
     whileStartNode->addSucc(whileCondNode);
     blockNodes.push_back(whileStartNode);
 
-    // Map the while statement's start and end block 
+    // Map the while statement's start and end block
     addBlockNode(whileStmt, whileStartNode, whileEndNode);
     return whileStartNode;
 }
 
-ASTNodeBlock* blockVarsAnalyser::initDoWhile(dowhileStmt* doWhileStmt, ASTNodeBlock* blockNode, bool inParallel)
+ASTNodeBlock *blockVarsAnalyser::initDoWhile(dowhileStmt *doWhileStmt, ASTNodeBlock *blockNode, bool inParallel)
 {
-    if(inParallel) doWhileStmt->getCondition()->setInParallel();
-
     // Create a new block node for the do-while statement start and end block
-    ASTNodeBlock* doWhileStartNode = new ASTNodeBlock();
-    ASTNodeBlock* doWhileEndNode = new ASTNodeBlock();
+    ASTNodeBlock *doWhileStartNode = new ASTNodeBlock();
+    ASTNodeBlock *doWhileEndNode = new ASTNodeBlock();
 
     // Create a new block node for the do-while condition statement
-    ASTNodeBlock* doWhileCondNode = new ASTNodeBlock(doWhileStmt->getCondition());
+    ASTNodeBlock *doWhileCondNode = new ASTNodeBlock(doWhileStmt->getCondition());
+
+    if (inParallel) {
+        doWhileStartNode->setInParallel();
+        doWhileEndNode->setInParallel();
+        doWhileCondNode->setInParallel();
+    }
 
     // Add the used and def variables to use set of the new block
     usedVariables_t usedVars = getVarsExpr(doWhileStmt->getCondition());
@@ -252,7 +277,7 @@ ASTNodeBlock* blockVarsAnalyser::initDoWhile(dowhileStmt* doWhileStmt, ASTNodeBl
     addBlockNode(doWhileStmt->getCondition(), doWhileCondNode);
 
     // Add the do-while statement as a succ of the new block
-    ASTNodeBlock* doWhileBodyStartNode = initStatement(doWhileStmt->getBody(), doWhileCondNode);
+    ASTNodeBlock *doWhileBodyStartNode = initStatement(doWhileStmt->getBody(), doWhileCondNode, inParallel);
     doWhileCondNode->addSucc(doWhileBodyStartNode);
 
     // Add the do-while body start as a succ of the start block
@@ -260,16 +285,21 @@ ASTNodeBlock* blockVarsAnalyser::initDoWhile(dowhileStmt* doWhileStmt, ASTNodeBl
     blockNodes.push_back(doWhileStartNode);
 
     // Map the do-while statement's start and end block
-    addBlockNode(doWhileStmt, doWhileStartNode, doWhileEndNode);    
+    addBlockNode(doWhileStmt, doWhileStartNode, doWhileEndNode);
     return doWhileStartNode;
 }
 
-ASTNodeBlock* blockVarsAnalyser::initProcCall(proc_callStmt* procCallStmt, ASTNodeBlock* blockNode, bool inParallel)
+ASTNodeBlock *blockVarsAnalyser::initProcCall(proc_callStmt *procCallStmt, ASTNodeBlock *blockNode, bool inParallel)
 {
-    if(inParallel) procCallStmt->setInParallel();
+    string method = procCallStmt->getProcCallExpr()->getMethodId()->getIdentifier();
+    if (method.compare(attachNodeCall) | method.compare(attachEdgeCall) == 0)
+        inParallel = true;
 
     // Create a new block node for the procedure call statement
-    ASTNodeBlock* procCallNode = new ASTNodeBlock(procCallStmt);
+    ASTNodeBlock *procCallNode = new ASTNodeBlock(procCallStmt);
+
+    if (inParallel)
+        procCallNode->setInParallel();
 
     // Add the used and def variables to use set of the new block
     usedVariables_t usedVars = getVarsStatement(procCallStmt);
@@ -283,16 +313,21 @@ ASTNodeBlock* blockVarsAnalyser::initProcCall(proc_callStmt* procCallStmt, ASTNo
     return procCallNode;
 }
 
-ASTNodeBlock* blockVarsAnalyser::initFixedPoint(fixedPointStmt* fixedPointStmt, ASTNodeBlock* blockNode, bool inParallel)
+ASTNodeBlock *blockVarsAnalyser::initFixedPoint(fixedPointStmt *fixedPointStmt, ASTNodeBlock *blockNode, bool inParallel)
 {
-    if(inParallel) fixedPointStmt->getFixedPointId()->setInParallel();
-
     // Create a new block node for start and end block of the fixed point statement
-    ASTNodeBlock* fixedPointStartNode = new ASTNodeBlock();
-    ASTNodeBlock* fixedPointEndNode = new ASTNodeBlock();
+    ASTNodeBlock *fixedPointStartNode = new ASTNodeBlock();
+    ASTNodeBlock *fixedPointEndNode = new ASTNodeBlock();
 
     // Create a new block node for the fixed point statement
-    ASTNodeBlock* fixedPointCondNode = new ASTNodeBlock(fixedPointStmt->getFixedPointId());
+    ASTNodeBlock *fixedPointCondNode = new ASTNodeBlock(fixedPointStmt->getFixedPointId());
+
+    if (inParallel)
+    {
+        fixedPointStartNode->setInParallel();
+        fixedPointEndNode->setInParallel();
+        fixedPointCondNode->setInParallel();
+    }
 
     // Add the used and def variables to use set of the new block
     fixedPointCondNode->addUse(fixedPointStmt->getFixedPointId());
@@ -305,7 +340,7 @@ ASTNodeBlock* blockVarsAnalyser::initFixedPoint(fixedPointStmt* fixedPointStmt, 
     blockNodes.push_back(fixedPointEndNode);
 
     // Add the fixed point statement as a succ of the new block
-    fixedPointCondNode->addSucc(initStatement(fixedPointStmt->getBody(), fixedPointCondNode));
+    fixedPointCondNode->addSucc(initStatement(fixedPointStmt->getBody(), fixedPointCondNode, inParallel));
     addBlockNode(fixedPointStmt->getFixedPointId(), fixedPointCondNode);
 
     // Add the fixed point statement as a succ of the start block
@@ -317,12 +352,13 @@ ASTNodeBlock* blockVarsAnalyser::initFixedPoint(fixedPointStmt* fixedPointStmt, 
     return fixedPointStartNode;
 }
 
-ASTNodeBlock* blockVarsAnalyser::initReduction(reductionCallStmt* reductionCallStmt, ASTNodeBlock* blockNode, bool inParallel)
+ASTNodeBlock *blockVarsAnalyser::initReduction(reductionCallStmt *reductionCallStmt, ASTNodeBlock *blockNode, bool inParallel)
 {
-    if(inParallel) reductionCallStmt->setInParallel();
-
     // Create a new block node for the reduction statement
-    ASTNodeBlock* reductionNode = new ASTNodeBlock(reductionCallStmt);
+    ASTNodeBlock *reductionNode = new ASTNodeBlock(reductionCallStmt);
+
+    if (inParallel)
+        reductionNode->setInParallel();
 
     // Add the used and def variables to use set of the new block
     usedVariables_t usedVars = getVarsStatement(reductionCallStmt);
@@ -336,23 +372,31 @@ ASTNodeBlock* blockVarsAnalyser::initReduction(reductionCallStmt* reductionCallS
     return reductionNode;
 }
 
-ASTNodeBlock* blockVarsAnalyser::initItrBFS(iterateBFS* iterateBFS, ASTNodeBlock* blockNode, bool inParallel)
+ASTNodeBlock *blockVarsAnalyser::initItrBFS(iterateBFS *iterateBFS, ASTNodeBlock *blockNode, bool inParallel)
 {
-    if(inParallel) iterateBFS->getIteratorNode()->setInParallel();
-
     // Create a new block node for start and enc block of the iterateBFS + iterateReverseBFS statement
-    ASTNodeBlock* itr_BFS_RBFS_Start = new ASTNodeBlock();
-    ASTNodeBlock* itr_BFS_RBFS_End = new ASTNodeBlock();
+    ASTNodeBlock *itr_BFS_RBFS_Start = new ASTNodeBlock();
+    ASTNodeBlock *itr_BFS_RBFS_End = new ASTNodeBlock();
 
     // Create a new block node for start and end block of the iterateBFS statement
-    ASTNodeBlock* iterateBFSStartNode = new ASTNodeBlock();
-    ASTNodeBlock* iterateBFSEndNode = new ASTNodeBlock();
+    ASTNodeBlock *iterateBFSStartNode = new ASTNodeBlock();
+    ASTNodeBlock *iterateBFSEndNode = new ASTNodeBlock();
 
     // Add the start of the iterateBFS statement as a succ of the start block
     itr_BFS_RBFS_Start->addSucc(iterateBFSStartNode);
 
     // Create a new block node for the iterateBFS statement
-    ASTNodeBlock* iterateBFSCondNode = new ASTNodeBlock(iterateBFS->getIteratorNode()); // it acts like a do while loop
+    ASTNodeBlock *iterateBFSCondNode = new ASTNodeBlock(iterateBFS->getIteratorNode()); // it acts like a do while loop
+
+    if (inParallel) {
+        itr_BFS_RBFS_Start->setInParallel();
+        itr_BFS_RBFS_End->setInParallel();
+
+        iterateBFSStartNode->setInParallel();
+        iterateBFSEndNode->setInParallel();
+
+        iterateBFSCondNode->setInParallel();
+    }
 
     // Add the used and def variables to use set of the new block
     /* No used Variables in the condnode */
@@ -364,7 +408,7 @@ ASTNodeBlock* blockVarsAnalyser::initItrBFS(iterateBFS* iterateBFS, ASTNodeBlock
     blockNodes.push_back(itr_BFS_RBFS_End);
 
     // If RBFS is present, add it as a succ of the iterateBFS end block
-    if(iterateBFS->getRBFS() != NULL)
+    if (iterateBFS->getRBFS() != NULL)
         iterateBFSEndNode->addSucc(initItrRBFS(iterateBFS->getRBFS(), itr_BFS_RBFS_End));
     else
         iterateBFSEndNode->addSucc(itr_BFS_RBFS_End);
@@ -375,7 +419,7 @@ ASTNodeBlock* blockVarsAnalyser::initItrBFS(iterateBFS* iterateBFS, ASTNodeBlock
     blockNodes.push_back(iterateBFSCondNode);
 
     // Add the iterateBFS statement as a succ of the iterateBFS start block and cond block
-    ASTNodeBlock* iterateBFSBodyStartNode = initStatement(iterateBFS->getBody(), iterateBFSCondNode);
+    ASTNodeBlock *iterateBFSBodyStartNode = initStatement(iterateBFS->getBody(), iterateBFSCondNode, inParallel);
     iterateBFSCondNode->addSucc(iterateBFSBodyStartNode);
     iterateBFSStartNode->addSucc(iterateBFSBodyStartNode);
 
@@ -394,16 +438,21 @@ ASTNodeBlock* blockVarsAnalyser::initItrBFS(iterateBFS* iterateBFS, ASTNodeBlock
     return itr_BFS_RBFS_Start;
 }
 
-ASTNodeBlock* blockVarsAnalyser::initItrRBFS(iterateReverseBFS* iterateRBFS, ASTNodeBlock* blockNode, bool inParallel)
+ASTNodeBlock *blockVarsAnalyser::initItrRBFS(iterateReverseBFS *iterateRBFS, ASTNodeBlock *blockNode, bool inParallel)
 {
-    if(inParallel) iterateRBFS->getBFSFilter()->setInParallel();
-
     // Create a new block node for start and end block of the iterateReverseBFS statement
-    ASTNodeBlock* iterateRBFSStartNode = new ASTNodeBlock();
-    ASTNodeBlock* iterateRBFSEndNode = new ASTNodeBlock();
+    ASTNodeBlock *iterateRBFSStartNode = new ASTNodeBlock();
+    ASTNodeBlock *iterateRBFSEndNode = new ASTNodeBlock();
 
     // Create a new block node for the iterateReverseBFS statement
-    ASTNodeBlock* iterateRBFSCondNode = new ASTNodeBlock(iterateRBFS->getBFSFilter());
+    ASTNodeBlock *iterateRBFSCondNode = new ASTNodeBlock(iterateRBFS->getBFSFilter());
+
+    if(inParallel) 
+    {
+        iterateRBFSStartNode->setInParallel();
+        iterateRBFSEndNode->setInParallel();
+        iterateRBFSCondNode->setInParallel();
+    }
 
     // Add the used and def variables to use set of the new block
     usedVariables_t usedVars = getVarsExpr(iterateRBFS->getBFSFilter());
@@ -417,7 +466,7 @@ ASTNodeBlock* blockVarsAnalyser::initItrRBFS(iterateReverseBFS* iterateRBFS, AST
     blockNodes.push_back(iterateRBFSEndNode);
 
     // Add the iterateRBFS statement as a succ of the new block
-    ASTNodeBlock* iterateRBFSBodyNode = initStatement(iterateRBFS->getBody(), iterateRBFSEndNode);
+    ASTNodeBlock *iterateRBFSBodyNode = initStatement(iterateRBFS->getBody(), iterateRBFSEndNode, inParallel);
     iterateRBFSCondNode->addSucc(iterateRBFSBodyNode);
 
     // Add the iterateRBFS statement to the list of block nodes
@@ -427,18 +476,18 @@ ASTNodeBlock* blockVarsAnalyser::initItrRBFS(iterateReverseBFS* iterateRBFS, AST
     iterateRBFSStartNode->addSucc(iterateRBFSCondNode);
     blockNodes.push_back(iterateRBFSStartNode);
 
-    // Map the iterateRBFS statement's start and end block 
+    // Map the iterateRBFS statement's start and end block
     addBlockNode(iterateRBFS, iterateRBFSStartNode, iterateRBFSEndNode);
     return iterateRBFSStartNode;
-
 }
 
-ASTNodeBlock* blockVarsAnalyser::initReturn(returnStmt* returnStmt, ASTNodeBlock* blockNode, bool inParallel)
+ASTNodeBlock *blockVarsAnalyser::initReturn(returnStmt *returnStmt, ASTNodeBlock *blockNode, bool inParallel)
 {
-    if(inParallel) returnStmt->setInParallel();
-
     // Create a new block node for the return statement
-    ASTNodeBlock* returnNode = new ASTNodeBlock(returnStmt);
+    ASTNodeBlock *returnNode = new ASTNodeBlock(returnStmt);
+
+    if (inParallel)
+        returnNode->setInParallel();
 
     // Add the used and def variables to use set of the new block
     usedVariables_t usedVars = getVarsExpr(returnStmt->getReturnExpression());

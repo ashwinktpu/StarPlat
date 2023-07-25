@@ -163,14 +163,23 @@ void ASTNodeBlock::addDef(Identifier *id)
 
 void ASTNodeBlock::addIn(set<TableEntry *> ids)
 {
-    bool inParallel = this->getNode()->isInParallel();
     VariableState state = inParallel ? IN_GPU : IN_CPU;
 
     for (TableEntry *id : ids)
     {
+        if (id == NULL) continue;
+
+        // Delete already present instance of id
+        for (auto it = in.begin(); it != in.end(); it++)
+        {
+            if ((*it)->entry == id)
+            {
+                in.erase(it);
+                break;
+            }
+        }
         TableEntryWrapper *wrapper = new TableEntryWrapper(id, state);
-        if (id != NULL)
-            in.insert(wrapper);
+        in.insert(wrapper);
     }
 }
 
@@ -184,13 +193,19 @@ void ASTNodeBlock::addIn(set<TableEntryWrapper *> ids)
     {
         if (id != NULL)
         {
-            auto it = in.find(id);
-            if (it != in.end())
+            bool found = false;
+            for (auto it = in.begin(); it != in.end(); it++)
             {
-                // Update state
-                (*it)->state = meet((*it)->state, id->state);
+                if ((*it)->entry == id->entry)
+                {
+                    // Update state
+                    (*it)->state = meet((*it)->state, id->state);
+                    found = true;
+                    break;
+                }
             }
-            else
+
+            if (!found)
             {
                 // Insert
                 in.insert(id);
@@ -199,35 +214,24 @@ void ASTNodeBlock::addIn(set<TableEntryWrapper *> ids)
     }
 }
 
-void ASTNodeBlock::removeIn(set<TableEntryWrapper *> ids)
+void ASTNodeBlock::removeIn(set<TableEntry *> ids) 
 {
     // Find if the in set already contains the id
-    // If it does, then delete it
-
-    for (TableEntryWrapper *id : ids)
-    {
-        if (id != NULL)
-        {
-            auto it = in.find(id);
-            if (it != in.end())
-            {
-                // Delete
-                in.erase(it);
-            }
-        }
-    }
-}
-
-void ASTNodeBlock::addOut(set<TableEntry *> ids)
-{
-    bool inParallel = this->getNode()->isInParallel();
-    VariableState state = inParallel ? IN_GPU : IN_CPU;
+    // If it does, then we need to erase it
 
     for (TableEntry *id : ids)
     {
-        TableEntryWrapper *wrapper = new TableEntryWrapper(id, state);
         if (id != NULL)
-            in.insert(wrapper);
+        {
+            for (auto it = in.begin(); it != in.end(); it++)
+            {
+                if ((*it)->entry == id)
+                {
+                    in.erase(it);
+                    break;
+                }
+            }
+        }
     }
 }
 
@@ -241,13 +245,19 @@ void ASTNodeBlock::addOut(set<TableEntryWrapper *> ids)
     {
         if (id != NULL)
         {
-            auto it = out.find(id);
-            if (it != out.end())
+            bool found = false;
+            for (auto it = out.begin(); it != out.end(); it++)
             {
-                // Update state
-                (*it)->state = meet((*it)->state, id->state);
+                if ((*it)->entry == id->entry)
+                {
+                    // Update state
+                    (*it)->state = meet((*it)->state, id->state);
+                    found = true;
+                    break;
+                }
             }
-            else
+
+            if (!found)
             {
                 // Insert
                 out.insert(id);
@@ -268,4 +278,14 @@ void ASTNodeBlock::addVars(usedVariables_t vars)
         addUse(id);
     for (Identifier *id : vars.getVariables(DEFINED))
         addDef(id);
+}
+
+void ASTNodeBlock::setInParallel(bool inParallel)
+{
+    this->inParallel = inParallel;
+}
+
+bool ASTNodeBlock::isInParallel()
+{
+    return inParallel;
 }

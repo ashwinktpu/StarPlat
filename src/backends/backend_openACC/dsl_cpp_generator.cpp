@@ -8,13 +8,36 @@
 extern usedVariables getVarsStatement(statement*);
 extern usedVariables getVarsExpr(Expression*);
 
+bool usedInCPU(set<TableEntryWrapper*> vars, TableEntry* var) {
+  for (TableEntryWrapper* it: vars) {
+    if (it->entry == var && it->state != VariableState::IN_GPU) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool presentInSet(set<TableEntryWrapper*> currAccVars, TableEntry* var) {
+  for (TableEntryWrapper* it: currAccVars) {
+    if (it->entry == var) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool presentInSet(set<TableEntry*> currAccVars, TableEntry* var) {
   return currAccVars.find(var) != currAccVars.end();
 }
 
 bool presentInOut(statement* stmt, Identifier* var) {
-  set<TableEntry*> out = stmt->getBlockData()->getBlock()->getOut();
-  return out.find(var->getSymbolInfo()) != out.end();
+  set<TableEntryWrapper*> out = stmt->getBlockData()->getBlock()->getOut();
+  for (TableEntryWrapper* outEntry : out) {
+    if (outEntry->entry == var->getSymbolInfo()) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void insertInSet(set<TableEntry*>& currAccVars, TableEntry* var) {
@@ -1039,13 +1062,10 @@ void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt)   //Attac
             Identifier* lhsId=assign->getId();   //Get LHS identifier. Example: dist
             Expression* exprAssigned = assign->getExpr();   //Get RHS expression assigned. Here Example: INF
 
-            set<TableEntry*> out = proc_callStmt->getBlockData()->getBlock()->getOut();   //Get all the identifiers that are used in the block
-            for (auto te: out)
-            {
-              printf("OUT: %s\n", te->getId()->getIdentifier());
-            }
-
-            if (presentInOut(proc_callStmt, lhsId))
+            set<TableEntryWrapper*> out = proc_callStmt->getBlockData()->getBlock()->getOut();   //Get all the identifiers that are used in the block
+            // for (auto te: out)
+            //   printf("OUT: %s\n", te->entry->getId()->getIdentifier());
+            if (presentInSet(out, lhsId->getSymbolInfo()))
             {
               //To generate comma before every array except the first one
               if(first) first = false;
@@ -3027,8 +3047,8 @@ bool dsl_cpp_generator::generate()
         MetaDataUsed metaUsed = getMetaDataUsedStatement(stmt);
         generateDataDirectiveForMetaVars(metaUsed);
 
-        set<TableEntry*> in = stmt->getBlockData()->getStartBlock()->getOut();
-        set<TableEntry*> out = stmt->getBlockData()->getEndBlock()->getIn();
+        set<TableEntryWrapper*> in = stmt->getBlockData()->getStartBlock()->getOut();
+        set<TableEntryWrapper*> out = stmt->getBlockData()->getEndBlock()->getIn();
 
         usedVariables usedVars = getVarsStatement(stmt);
         list<Identifier*> readVarsList = usedVars.getVariables(READ_ONLY);
@@ -3047,22 +3067,34 @@ bool dsl_cpp_generator::generate()
 
         for (Identifier* id: writeVarsList) {
           TableEntry* te = id->getSymbolInfo();
-          if (presentInSet(out, te) && !presentInSet(currAccVars, te))
+          if (presentInSet(out, te) && usedInCPU(out, te))
             writeVars.insert(te);
         }
 
         for (Identifier* id: readWriteVarsList) {
           TableEntry* te = id->getSymbolInfo();  
-          if (!presentInSet(in, te) && presentInSet(out, te))
-            writeVars.insert(te);
-          else if (presentInSet(in, te) && !presentInSet(out, te) && !presentInSet(currAccVars, te))
+          bool read = true, write = true;
+          if (!presentInSet(in, te) || presentInSet(currAccVars, te))
+            read = false;
+          if (!presentInSet(out, te) || !usedInCPU(out, te))
+            write = false;
+
+          if (read && !write)
             readVars.insert(te);
-          else if (presentInSet(in, te) && presentInSet(out, te)) {
-            if (presentInSet(currAccVars, te))
-              writeVars.insert(te);
-            else
-              readWriteVars.insert(te);
-          }
+          else if (!read && write)
+            writeVars.insert(te);
+          else if (read && write)
+            readWriteVars.insert(te);
+          // if (!presentInSet(in, te) && presentInSet(out, te) && usedInCPU(out, te))
+          //   writeVars.insert(te);
+          // else if (presentInSet(in, te) && !presentInSet(out, te) && !presentInSet(currAccVars, te))
+          //   readVars.insert(te);
+          // else if (presentInSet(in, te) && presentInSet(out, te)) {
+          //   if (presentInSet(currAccVars, te))
+          //     writeVars.insert(te);
+          //   else
+          //     readWriteVars.insert(te);
+          // }
         }
 
         generateDataDirectiveForVars(readVars, READ);
@@ -3089,8 +3121,8 @@ bool dsl_cpp_generator::generate()
 
         // get lhs id
         Identifier* lhsId = assign->getId();
-        set<TableEntry*> out = assign->getBlockData()->getBlock()->getOut();
-        if (out.find(lhsId->getSymbolInfo()) != out.end() && !presentInSet(currAccVars, lhsId->getSymbolInfo())) {
+        set<TableEntryWrapper*> out = assign->getBlockData()->getBlock()->getOut();
+        if (presentInSet(out, lhsId->getSymbolInfo()) && !presentInSet(currAccVars, lhsId->getSymbolInfo())) {
           if (lhsId->getSymbolInfo()->getType()->isPropNodeType())
             sprintf(strBuffer, "copyout(%s[0:%s.num_nodes()+1])", lhsId->getIdentifier(), graph_name);
           else if (lhsId->getSymbolInfo()->getType()->isPropEdgeType())
@@ -3116,9 +3148,9 @@ bool dsl_cpp_generator::generate()
           main.pushstr_space(strBuffer);
         }
         
-        set<TableEntry*> out = declStmt->getBlockData()->getBlock()->getOut();
+        set<TableEntryWrapper*> out = declStmt->getBlockData()->getBlock()->getOut();
         TableEntry* te_decl = declStmt->getdeclId()->getSymbolInfo();
-        if (out.find(te_decl) != out.end() && !presentInSet(currAccVars, te_decl)) {
+        if (presentInSet(out, te_decl) && !presentInSet(currAccVars, te_decl)) {
           Type* type = te_decl->getType();
           if (type->isPropNodeType())   // for each node, copy the property value
             sprintf(strBuffer, "copyout(%s[0:%s.num_nodes()])", declStmt->getdeclId()->getIdentifier(), graph_name);
@@ -3168,7 +3200,7 @@ bool dsl_cpp_generator::generate()
     }
     if (metaUsed.isWeightUsed && !currMetaAccVars.isWeightUsed) {
       if (!first) main.pushString(", "); first = false;
-      sprintf(strBuffer, "%s.edgeWeight[0:%s.num_edges()+1]", graph_name, graph_name);
+    sprintf(strBuffer, "%s.edgeWeight[0:%s.num_edges()+1]", graph_name, graph_name);
       main.pushString(strBuffer);
     }
     currMetaAccVars |= metaUsed;

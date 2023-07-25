@@ -30,6 +30,8 @@ class ASTNodeBlock
 
     set<ASTNodeBlock *> succ; // set of successor blocks
 
+    bool inParallel;
+
 public:
     ASTNodeBlock();
     ASTNodeBlock(ASTNode *node);
@@ -42,14 +44,13 @@ public:
     void addUse(Identifier *id);
     void addDef(Identifier *id);
     void addIn(set<TableEntryWrapper *> ids);
-    void removeIn(set<TableEntryWrapper *> ids);
     void addOut(set<TableEntryWrapper *> ids);
-    void removeOut(set<Identifier *> ids);
     void addIn(set<TableEntry *> ids);
     void removeIn(set<TableEntry *> ids);
-    void addOut(set<TableEntry *> ids);
     void addSucc(ASTNodeBlock *block);
     void addVars(usedVariables_t vars);
+    void setInParallel(bool=true);
+    bool isInParallel();
 };
 
 class NodeBlockData

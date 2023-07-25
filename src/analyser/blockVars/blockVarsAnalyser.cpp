@@ -1,5 +1,22 @@
 #include "blockVarsAnalyser.h"
 
+ostream &operator<<(ostream &os, const VariableState state)
+{
+    switch (state)
+    {
+    case VariableState::IN_CPU:
+        os << "IN_CPU";
+        break;
+    case VariableState::IN_GPU:
+        os << "IN_GPU";
+        break;
+    case VariableState::IN_BOTH:
+        os << "IN_BOTH";
+        break;
+    }
+    return os;
+}
+
 TableEntryWrapper::TableEntryWrapper(TableEntry *entry, VariableState state)
 {
     this->entry = entry;
@@ -147,9 +164,9 @@ void blockVarsAnalyser::printBlockNodes()
         for (TableEntry *te : blockNode->getUse())
             cout << "Use: " << te->getId()->getIdentifier() << endl;
         for (TableEntryWrapper *te : blockNode->getIn())
-            cout << "In: " << te->entry->getId()->getIdentifier() << endl;
+            cout << "In: " << te->entry->getId()->getIdentifier() << ", State:" << te->state << endl;
         for (TableEntryWrapper *te : blockNode->getOut())
-            cout << "Out: " << te->entry->getId()->getIdentifier() << endl;
+            cout << "Out: " << te->entry->getId()->getIdentifier() << ", State:" << te->state << endl;
         for (ASTNodeBlock *succ : blockNode->getSucc())
         {
             cout << "Succ: ";
@@ -165,6 +182,7 @@ void blockVarsAnalyser::printBlockNodes()
 void blockVarsAnalyser::analyseBlockNodes()
 {
     bool changed = true;
+    int count = 0;
     do
     {
         // reset changed flag
@@ -184,12 +202,97 @@ void blockVarsAnalyser::analyseBlockNodes()
             blockNode->removeIn(blockNode->getDef());
             blockNode->addIn(blockNode->getUse());
 
+            if (changed)
+                continue;
+
             // check if in or out sets have changed
-            if (oldIn != blockNode->getIn() || oldOut != blockNode->getOut())
+            if (oldIn.size() != blockNode->getIn().size() || oldOut.size() != blockNode->getOut().size())
+            {
                 changed = true;
+            }
+            else
+            {
+                for (TableEntryWrapper *te : oldIn)
+                {
+                    bool found = false;
+                    for (TableEntryWrapper *te2 : blockNode->getIn())
+                    {
+                        if (te->entry == te2->entry)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                    {
+                        changed = true;
+                        break;
+                    }
+                }
+                if (changed)
+                    continue;
+
+                for (TableEntryWrapper *te : blockNode->getIn())
+                {
+                    bool found = false;
+                    for (TableEntryWrapper *te2 : oldIn)
+                    {
+                        if (te->entry == te2->entry)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                    {
+                        changed = true;
+                        break;
+                    }
+                }
+                if (changed)
+                    continue;
+
+                for (TableEntryWrapper *te : oldOut)
+                {
+                    bool found = false;
+                    for (TableEntryWrapper *te2 : blockNode->getOut())
+                    {
+                        if (te->entry == te2->entry)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                    {
+                        changed = true;
+                        break;
+                    }
+                }
+                if (changed)
+                    continue;
+
+                for (TableEntryWrapper *te : blockNode->getOut())
+                {
+                    bool found = false;
+                    for (TableEntryWrapper *te2 : oldOut)
+                    {
+                        if (te->entry == te2->entry)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                    {
+                        changed = true;
+                        break;
+                    }
+                }
+            }
         }
 
-    } while (changed);
+    } while (changed && count < 100);
 }
 
 void blockVarsAnalyser::analyseFunc(ASTNode *proc)
@@ -212,7 +315,7 @@ void blockVarsAnalyser::analyseFunc(ASTNode *proc)
     addBlockNode(func, blockNode);
 
     analyseBlockNodes();
-    // printBlockNodes();
+    printBlockNodes();
 }
 
 void blockVarsAnalyser::analyse(list<Function *> functions)

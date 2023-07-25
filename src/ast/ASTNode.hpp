@@ -4,8 +4,7 @@
 #include <string>
 #include "../maincontext/enum_def.hpp"
 #include "../symbolutil/SymbolTable.h"
-#include<assert.h>
-
+#include <assert.h>
 
 using namespace std;
 
@@ -13,73 +12,60 @@ class NodeBlockData;
 
 class ASTNode
 {
-  protected:
-  ASTNode* parent;
-  //string typeofNode;
+protected:
+  ASTNode *parent;
+  // string typeofNode;
   NODETYPE typeofNode;
-  SymbolTable* var_symbTab;
-  SymbolTable* prop_symbTab;
-  NodeBlockData* blockData;
-  bool inParallel;
+  SymbolTable *var_symbTab;
+  SymbolTable *prop_symbTab;
+  NodeBlockData *blockData;
 
-  public:
+public:
   ASTNode()
   {
-      parent=NULL;
-      inParallel = false;
+    parent = NULL;
   }
-  void setParent(ASTNode* node)
+  void setParent(ASTNode *node)
   {
-      parent=node;
+    parent = node;
   }
   void setTypeofNode(NODETYPE type)
   {
-    typeofNode=type;
+    typeofNode = type;
   }
   NODETYPE getTypeofNode()
   {
     return typeofNode;
   }
-  ASTNode* getParent()
+  ASTNode *getParent()
   {
-        return parent;
+    return parent;
   }
 
- void createSymbTab()
+  void createSymbTab()
   {
-      var_symbTab=new SymbolTable(this,0);
-      prop_symbTab=new SymbolTable(this,1);
+    var_symbTab = new SymbolTable(this, 0);
+    prop_symbTab = new SymbolTable(this, 1);
   }
 
-  SymbolTable* getVarSymbT()
+  SymbolTable *getVarSymbT()
   {
     return var_symbTab;
   }
-  SymbolTable* getPropSymbT()
+  SymbolTable *getPropSymbT()
   {
     return prop_symbTab;
   }
 
-  void setBlockData(NodeBlockData* blockData)
+  void setBlockData(NodeBlockData *blockData)
   {
     this->blockData = blockData;
   }
 
-  NodeBlockData* getBlockData()
+  NodeBlockData *getBlockData()
   {
     return blockData;
   }
-
-  void setInParallel(bool inParallel = true)
-  {
-    this->inParallel = inParallel;
-  }
-
-  bool isInParallel()
-  {
-    return inParallel;
-  }
-
 };
 
 #endif
