@@ -32,7 +32,7 @@ void Compute_SSSP(graph& g,int* dist,int* weight,int src
         finished = true;
         #pragma acc data copyin(g)
         {
-          #pragma acc data  copyout(dist[0:g.num_nodes()+1], finished) copy(finished)
+          #pragma acc data  copyout(finished)
           {
             #pragma acc parallel loop
             for (int v = 0; v < g.num_nodes(); v ++) 
