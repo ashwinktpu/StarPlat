@@ -873,52 +873,67 @@ void dsl_cpp_generator::generate_exprArL(
   }
 }
 
-void dsl_cpp_generator::generate_exprProcCall(Expression *expr,
-                                              int isMainFile) {
-  std::cout << "generating proc call\n";
-  //if (expr) std::cout << expr->getIdentifier() << "\n";
 
+/**
+ * Generate code for procedure calls
+ */
+void dsl_cpp_generator::generate_exprProcCall(Expression *_expr,
+                                              int isMainFile) {
   dslCodePad &targetFile = getTargetFile(isMainFile);
 
-  proc_callExpr *proc = (proc_callExpr *)expr;
+  proc_callExpr *proc = (proc_callExpr *) _expr;
+
+  std::cout << "generating proc call\n";
+  if (proc) {
+    if (proc->getId1()) std::cout << "\t" << "id1: "
+                                  << proc->getId1()->getIdentifier() << "\n";
+    if (proc->getId2()) std::cout << "\t" << "id2: "
+                                  << proc->getId2()->getIdentifier() << "\n";
+    if (proc->getMethodId()) std::cout << "\t" << "method id: "
+                                       << proc->getMethodId()->getIdentifier()
+                                       << "\n";
+  }
+
   string methodId(proc->getMethodId()->getIdentifier());
+    
   if (methodId == "get_edge") {
-    //~ cout << "heloooooooooooooooooooooooooooooooooooooooooooooooooooooooooo";
     targetFile.pushString(
         "edge"); // To be changed..need to check for a neighbour iteration
-                 // and then replace by the iterator.
+                // and then replace by the iterator.
   } else if (methodId == "count_outNbrs") // pageRank
   {
-    char strBuffer[1024];
-    list<argument *> argList = proc->getArgList();
-    assert(argList.size() == 1);
-    Identifier *nodeId = argList.front()->getExpr()->getId();
-    //~ Identifier* objectId = proc->getId1();
-    sprintf(strBuffer, "(%s[%s+1]-%s[%s])", "d_meta", nodeId->getIdentifier(),
-            "d_meta", nodeId->getIdentifier());
-    targetFile.pushString(strBuffer);
+      char strBuffer[1024];
+      list<argument *> argList = proc->getArgList();
+      assert(argList.size() == 1);
+      Identifier *nodeId = argList.front()->getExpr()->getId();
+      //~ Identifier* objectId = proc->getId1();
+      sprintf(strBuffer, "(%s[%s+1]-%s[%s])", "d_meta", nodeId->getIdentifier(),
+              "d_meta", nodeId->getIdentifier());
+      targetFile.pushString(strBuffer);
   } else if (methodId == "is_an_edge") {
-    char strBuffer[1024];
-    list<argument *> argList = proc->getArgList();
-    assert(argList.size() == 2);
-    Identifier *srcId = argList.front()->getExpr()->getId();
-    Identifier *destId = argList.back()->getExpr()->getId();
-    //~ Identifier* objectId = proc->getId1();
-    sprintf(strBuffer, "%s(%s, %s, %s, %s)", "isNeighbour",
-            srcId->getIdentifier(), destId->getIdentifier(), "d_meta",
-            "d_data");
-    targetFile.pushString(strBuffer);
+      char strBuffer[1024];
+      list<argument *> argList = proc->getArgList();
+      assert(argList.size() == 2);
+      Identifier *srcId = argList.front()->getExpr()->getId();
+      Identifier *destId = argList.back()->getExpr()->getId();
+      //~ Identifier* objectId = proc->getId1();
+      sprintf(strBuffer, "%s(%s, %s, %s, %s)", "isNeighbour",
+              srcId->getIdentifier(), destId->getIdentifier(), "d_meta",
+              "d_data");
+      targetFile.pushString(strBuffer);
 
+  } else if (methodId == "find") {
+    printf("generating code for dsu.find()\n");
   } else {
-    cout << "else part" << endl;
-    char strBuffer[1024];
-    list<argument *> argList = proc->getArgList();
-    if (argList.size() == 0) {
+      cout << "else part" << endl;
+      char strBuffer[1024];
+      list<argument *> argList = proc->getArgList();
+      if (argList.size() == 0) {
       Identifier *objectId = proc->getId1();
       sprintf(strBuffer, "%s.%s( )", objectId->getIdentifier(),
               proc->getMethodId()->getIdentifier());
       targetFile.pushString(strBuffer);
-    }
+      }
   }
 }
 
@@ -953,31 +968,25 @@ void dsl_cpp_generator::generateExpr(
   //~ dslCodePad& targetFile = isMainFile ? main : header;
 
   if (expr->isLiteral()) {
-    //~ cout << "INSIDE THIS FOR LITERAL"
-    //~ << "\n";
-    //~ std::cout<< "------>PROP LIT"  << '\n';
     generate_exprLiteral(expr, isMainFile);
   } else if (expr->isInfinity()) {
     generate_exprInfinity(expr, isMainFile);
   } else if (expr->isIdentifierExpr()) {
-    // std::cout<< "------>PROP ID"  << '\n';
     generate_exprIdentifier(expr->getId(), isMainFile);
   } else if (expr->isPropIdExpr()) {
-    //  std::cout<< "------>PROP EXP"  << '\n';
     generate_exprPropId(expr->getPropId(), isMainFile);
   } else if (expr->isArithmetic() || expr->isLogical()) {
-    // std::cout<< "------>PROP AR/LG"  << '\n';
     generate_exprArL(expr, isMainFile, isAtomic);
   } else if (expr->isRelational()) {
-    // std::cout<< "------>PROP RL"  << '\n';
     generate_exprRelational(expr, isMainFile);
   } else if (expr->isProcCallExpr()) {
-    // std::cout<< "------>PROP PRO CAL"  << '\n';
     generate_exprProcCall(expr, isMainFile);
   } else if (expr->isUnary()) {
-    // std::cout<< "------>PROP UNARY"  << '\n';
     generate_exprUnary(expr, isMainFile);
   } else {
+    std::cout << "encountered unknown expression type\n";
+    if (expr->getId()) std::cout << "\t" << expr->getId()->getIdentifier()
+                                         << "\n";
     assert(false);
   }
 }
