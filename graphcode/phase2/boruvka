@@ -7,6 +7,9 @@ function DSU_test(Graph g) {
      edge e = g.get_edge(u, v);
      int u_comp = mydsu.find(u);
      int v_comp = mydsu.find(v);
+
+     mydsu.merge(u_comp, v_comp);
+
      if (u_comp != v_comp) {
        if (e.weight < cheapest.u_comp) {
          cheapest.u_comp = 0;

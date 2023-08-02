@@ -7,19 +7,20 @@ __kernel void DSU_test_kernel(int V,  int E, __global int* d_meta, __global int*
   //ForAll started here
   for (int edge = d_meta[v]; edge < d_meta[v+1]; edge++) { // FOR NBR ITR 
     int v = d_data[edge];
-    int e = edge; int u_comp = ; 
-    int v_comp = ; 
-    if (u_comp != v_comp){ // if filter begin 
-      if (d_weight[e] < d_u_comp[cheapest]){ // if filter begin 
-        d_u_comp[cheapest] = 0;
+    int e = edge; int u_comp = dsu_find(mydsu, u)); 
+  int v_comp = dsu_find(mydsu, v)); 
+dsu_merge(mydsu, u_comp, v_comp));
+if (u_comp != v_comp){ // if filter begin 
+if (d_weight[e] < d_u_comp[cheapest]){ // if filter begin 
+  d_u_comp[cheapest] = 0;
 
-      } // if filter end
-      if (d_weight[e] < d_v_comp[cheapest]){ // if filter begin 
-        d_v_comp[cheapest] = 0;
+} // if filter end
+if (d_weight[e] < d_v_comp[cheapest]){ // if filter begin 
+  d_v_comp[cheapest] = 0;
 
-      } // if filter end
+} // if filter end
 
-    } // if filter end
+} // if filter end
 
-  } //  end FOR NBR ITR. TMP FIX!
+} //  end FOR NBR ITR. TMP FIX!
 } // end KER FUNC
