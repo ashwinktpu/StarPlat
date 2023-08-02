@@ -965,7 +965,6 @@ void dsl_cpp_generator::generate_exprUnary(Expression *expr, int isMainFile) {
 void dsl_cpp_generator::generateExpr(
     Expression *expr, int isMainFile,
     bool isAtomic) { // isAtomic default to false
-  //~ dslCodePad& targetFile = isMainFile ? main : header;
 
   if (expr->isLiteral()) {
     generate_exprLiteral(expr, isMainFile);

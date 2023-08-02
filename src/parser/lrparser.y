@@ -48,6 +48,10 @@
 	ASTNodeList* nodeList;
     tempNode* temporary;
      }
+
+%define parse.error verbose
+
+
 %token T_INT T_FLOAT T_BOOL T_DOUBLE  T_LONG
 %token T_FORALL T_FOR  T_P_INF  T_INF T_N_INF
 %token T_FUNC T_IF T_ELSE T_WHILE T_RETURN T_DO T_IN T_FIXEDPOINT T_UNTIL T_FILTER
