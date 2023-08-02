@@ -1,12 +1,32 @@
-function MST(Graph g) {
-  propNode<int> cheapest;
-  g.attachNodeProperty(cheapest = 0);
+function DSU_test(Graph g) {
+ Dsu mydsu;
+ propNode<int> cheapest;
 
-  bool finished = False;
-  
-  fixedPoint until (finished: !cheapest) {
-    forall (v in v.nodes()) {
-      v.cheapest = 3;
+ forall (u in g.nodes()) {
+   forall (v in g.neighbors(u)) {
+     edge e = g.get_edge(u, v);
+     int u_comp = mydsu.find(u);
+     int v_comp = mydsu.find(v);
+     if (u_comp != v_comp) {
+       if (e.weight < cheapest[u_comp]) {
+         cheapest[u_comp] = 0;
+       }
+       if (e.weight < cheapest[v_comp]) {
+         cheapest[v_comp] = 0;
+       }
+     }
+   }
+ }
+
+ for (u in g.nodes()) {
+   int comp = mydsu.find(u);
+   if (cheapest[comp] != INF) {
+    int src_comp = mydsu.find(cheapest[comp]);
+    int dst_comp = mydsu.find(cheapest[comp]);
+
+    if (src_comp != dst_comp) {
+      mydsu.merge(src_comp, dst_comp);
     }
-  }
+   }
+ }
 }

@@ -418,31 +418,18 @@ public:
   }
 
   bool getInitialLockDecl() { return initialLockDecl; }
-
   void flagReturn() { hasReturn = true; }
-
   bool containsReturn() { return hasReturn; }
-
   bool getIsMetaUsed() { return metadata.isMetaUsed; }
-
   void setIsMetaUsed() { metadata.isMetaUsed = true; }
-
   bool getIsDataUsed() { return metadata.isDataUsed; }
-
   void setIsDataUsed() { metadata.isDataUsed = true; }
-
   bool getIsSrcUsed() { return metadata.isSrcUsed; }
-
   void setIsSrcUsed() { metadata.isSrcUsed = true; }
-
   bool getIsWeightUsed() { return metadata.isWeightUsed; }
-
   void setIsWeightUsed() { metadata.isWeightUsed = true; }
-
   bool getIsRevMetaUsed() { return metadata.isRevMetaUsed; }
-
   void setIsRevMetaUsed() { metadata.isRevMetaUsed = true; }
-
   MetaDataUsed getMetaDataUsed() { return metadata; }
 };
 
@@ -472,6 +459,16 @@ public:
     type->setTypeofNode(NODE_TYPE);
     return type;
   }
+
+  static Type *createForDSU(int typeIdSent, int rootTypeSent) {
+    Type *type = new Type();
+    type->typeId = typeIdSent;
+    type->rootType = rootTypeSent;
+    type->setTypeofNode(NODE_TYPE);
+    type->innerTargetType = createForPrimitive(TYPE_DSU, TYPE_INT);
+    return type;
+  }
+
 
   static Type *createForGraphType(int typeIdSent, int rootTypeSent,
                                   Identifier *TargetGraphSent) {
@@ -572,6 +569,8 @@ public:
 
   bool isNodeType() { return check_isNodeType(typeId); }
   bool isEdgeType() { return check_isEdgeType(typeId); }
+
+  bool isDsuType() { return check_isDSUType(typeId); }
 
   void addSourceGraph(ASTNode *id) { sourceGraph = (Identifier *)id; }
   Type *getInnerTargetType() { return innerTargetType; }
@@ -815,6 +814,10 @@ public:
   void setEnclosedBrackets() { enclosedBrackets = true; }
 
   bool hasEnclosedBrackets() { return enclosedBrackets; }
+
+  void printExpr() {
+    std::cout << overallType << "\n";
+  }
 };
 
 class returnStmt : public statement {
@@ -1263,6 +1266,12 @@ public:
                                          list<argument *> argList,
                                          Expression *indexExprSent) {
     proc_callExpr *procExpr = new proc_callExpr();
+    /*
+    std::cout << "building node for proc call: ";
+    std::cout << id1->getIdentifier() << " "
+              << id2->getIdentifier() << " "
+              << methodId->getIdentifier() << "\n";
+    */
     procExpr->id1 = id1;
     procExpr->id2 = id2;
     procExpr->methodId = methodId;

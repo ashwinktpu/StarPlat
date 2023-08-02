@@ -1,0 +1,3 @@
+function DSU_test(Graph g) {
+ Dsu mydsu;
+}

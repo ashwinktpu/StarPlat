@@ -128,6 +128,7 @@ NEGATE [-]
 "updates" {printf("updates type"); return T_UPDATES;}
 "container" {printf("container type"); return T_CONTAINER;}
 "nodeMap"  {printf("nodeMap type"); return T_NODEMAP;}
+"Dsu" 	{printf("DSU Type"); return T_DSU;}
 
 
  /* Numbers and Identifies */
