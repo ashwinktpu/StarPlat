@@ -828,12 +828,19 @@ void dsl_cpp_generator::generate_exprIdentifier(Identifier *id,
 void dsl_cpp_generator::generate_exprPropId(
     PropAccess *propId, int isMainFile) // This needs to be made more generic.
 {
+  std::cout << "generating prop id\n";
+
   dslCodePad &targetFile = getTargetFile(isMainFile);
 
   char strBuffer[1024];
   Identifier *id1 = propId->getIdentifier1();
   Identifier *id2 = propId->getIdentifier2();
   ASTNode *propParent = propId->getParent();
+
+  if (id1) std::cout << "\tid1: " << id1->getIdentifier() << "\n";
+  if (id2) std::cout << "\tid2: " << id2->getIdentifier() << "\n";
+
+
   bool relatedToReduction =
       propParent != NULL ? propParent->getTypeofNode() == NODE_REDUCTIONCALLSTMT
                          : false;
@@ -849,7 +856,6 @@ void dsl_cpp_generator::generate_exprPropId(
     else
       sprintf(strBuffer, "%s[%s]", id2->getIdentifier(), id1->getIdentifier());
   }
-  // std::cout<< id2->getIdentifier() << id1->getIdentifier() << '\n';
   targetFile.pushString(strBuffer);
 }
 
@@ -1232,12 +1238,13 @@ void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment *asmt,
   dslCodePad &targetFile = getTargetFile(isMainFile);
   // cout<<"Inside generateDeviceAssignmentStmt"<<endl;
   bool isDevice = false;
-  printf("generating assignment statement\n");
+  std::cout << "generating device assignment statement\n";
 
   char strBuffer[4096];
 
   if (asmt->lhs_isIdentifier()) {
     Identifier *id = asmt->getId();
+    std::cout << "\tlhs is identifier. id: " << id->getIdentifier() << "\n";
     targetFile.pushString(id->getIdentifier());
   } else if (asmt->lhs_isProp()) // the check for node and edge property to be
                                  // // carried out.
@@ -3008,14 +3015,16 @@ void dsl_cpp_generator::generateBFSAbstraction(iterateBFS *bfsAbstraction,
 // w.sigma=w.sigma+v.sigma; from bc_dsl_v2
 void dsl_cpp_generator::generateAtomicDeviceAssignmentStmt(assignment *asmt,
                                                            int isMainFile) {
-  cout << "Inside generate Atomic Device Assignment" << endl;
+  std::cout << "generating atomic device assignment statement\n";
+
   dslCodePad &targetFile = getTargetFile(isMainFile);
   bool isAtomic = false;
   bool isResult = false;
-  std::cout << "\tASST\n";
+
   if (asmt->lhs_isIdentifier()) {
     cout << "Left side identifier" << endl;
     Identifier *id = asmt->getId();
+    std::cout << "\tlhs is identifier. id: " << id->getIdentifier() << "\n";
     Expression *exprAssigned = asmt->getExpr();
     if (asmt->hasPropCopy()) // prop_copy is of the form (propId = propId)
     {
@@ -3033,7 +3042,7 @@ void dsl_cpp_generator::generateAtomicDeviceAssignmentStmt(assignment *asmt,
     } else
       targetFile.pushString(id->getIdentifier());
   } else if (asmt->lhs_isProp()) {
-    cout << "Left side is prop" << endl;
+    std::cout << "\tlhs is property \n";
     PropAccess *propId = asmt->getPropId();
     Identifier *IdentifierVar1 = propId->getIdentifier1();
     Identifier *IdentifierVar2 = propId->getIdentifier2();
@@ -3058,7 +3067,12 @@ void dsl_cpp_generator::generateAtomicDeviceAssignmentStmt(assignment *asmt,
     targetFile.push('[');
     targetFile.pushString(IdentifierVar1->getIdentifier());
     targetFile.push(']');
+  } else {
+    std::cout << "\tunknown assignment type\n";
+    Identifier *id = asmt->getId();
+    if (id) std::cout << "\tid: " << id->getIdentifier() << "\n";
   }
+
   if (isAtomic)
     targetFile.pushString(", ");
   else if (!asmt->hasPropCopy())

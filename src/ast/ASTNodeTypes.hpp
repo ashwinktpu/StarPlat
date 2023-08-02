@@ -1270,9 +1270,10 @@ public:
                                          Expression *indexExprSent) {
     proc_callExpr *procExpr = new proc_callExpr();
     std::cout << "building node for proc call\n";
-    if (id1) std::cout << "id1: " << id1->getIdentifier() << "\n";
-    if (id2) std::cout << "id2: " << id2->getIdentifier() << "\n";
-    if (methodId) std::cout << "methodId: " << methodId->getIdentifier() << "\n";
+    if (id1) std::cout << "\tid1: " << id1->getIdentifier() << "\n";
+    if (id2) std::cout << "\tid2: " << id2->getIdentifier() << "\n";
+    if (methodId)
+      std::cout << "\tmethodId: " << methodId->getIdentifier() << "\n";
 
     procExpr->id1 = id1;
     procExpr->id2 = id2;
