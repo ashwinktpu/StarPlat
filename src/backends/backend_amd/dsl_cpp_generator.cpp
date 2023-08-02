@@ -875,8 +875,8 @@ void dsl_cpp_generator::generate_exprArL(
 
 void dsl_cpp_generator::generate_exprProcCall(Expression *expr,
                                               int isMainFile) {
-  cout << "inside the expr_proCall ggggggggggggggggggggggggg" << isMainFile
-       << endl;
+  std::cout << "generating proc call\n";
+  //if (expr) std::cout << expr->getIdentifier() << "\n";
 
   dslCodePad &targetFile = getTargetFile(isMainFile);
 

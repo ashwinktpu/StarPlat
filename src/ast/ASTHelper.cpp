@@ -257,17 +257,17 @@ public:
     return unaryStmt;
   }
 
+  /**
+   * Matches on the AST node type and creates the appropriate proc_callExpr
+   */
   static ASTNode *createNodeForProcCall(ASTNode *proc_callId,
                                         list<argument *> argList,
                                         ASTNode *indexExprSent) {
     proc_callExpr *proc_callExprNode;
 
+    // TODO refactor to use switch-case
     if (proc_callId->getTypeofNode() == NODE_ID) {
-
       if (indexExprSent != NULL) {
-
-        cout << "ENTERED HERE FOR INDEXEXPR PROC CALL****"
-             << "\n";
         Expression *indexExpr = (Expression *)indexExprSent;
         proc_callExprNode = proc_callExpr::nodeForProc_Call(
             NULL, NULL, (Identifier *)proc_callId, argList, indexExpr);

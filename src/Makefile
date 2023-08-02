@@ -83,7 +83,7 @@ bin/MainContext.o: maincontext/MainContext.cpp maincontext/MainContext.hpp
 bin/debugutils.o: debugutils.cpp
 	$(CC) $(CFLAGS) -c debugutils.cpp -o bin/debugutils.o
 
-bin/ASTHelper.o: ast/ASTHelper.cpp ast/ASTNode.hpp 
+bin/ASTHelper.o: ast/ASTHelper.cpp ast/ASTNode.hpp ast/ASTNodeTypes.hpp
 	$(CC) $(CFLAGS) -c ast/ASTHelper.cpp -o bin/ASTHelper.o
 
 bin/SymbolTableBuilder.o: symbolutil/SymbolTableBuilder.cpp symbolutil/SymbolTableBuilder.h

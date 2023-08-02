@@ -133,7 +133,10 @@ public:
 
   int getAccessType() { return accessType; }
 
-  char *getIdentifier() { return identifier; }
+  char *getIdentifier() {
+    if (!identifier) return "NULL";
+    return identifier;
+  }
 
   void setSymbolInfo(TableEntry *te) { idInfo = te; }
   TableEntry *getSymbolInfo() { return idInfo; }
@@ -1266,12 +1269,11 @@ public:
                                          list<argument *> argList,
                                          Expression *indexExprSent) {
     proc_callExpr *procExpr = new proc_callExpr();
-    /*
-    std::cout << "building node for proc call: ";
-    std::cout << id1->getIdentifier() << " "
-              << id2->getIdentifier() << " "
-              << methodId->getIdentifier() << "\n";
-    */
+    std::cout << "building node for proc call\n";
+    if (id1) std::cout << "id1: " << id1->getIdentifier() << "\n";
+    if (id2) std::cout << "id2: " << id2->getIdentifier() << "\n";
+    if (methodId) std::cout << "methodId: " << methodId->getIdentifier() << "\n";
+
     procExpr->id1 = id1;
     procExpr->id2 = id2;
     procExpr->methodId = methodId;
