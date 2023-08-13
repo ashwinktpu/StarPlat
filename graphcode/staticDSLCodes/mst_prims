@@ -1,0 +1,25 @@
+function Prims(Graph g)
+{
+    propNode<int> minCost;
+    propNode<edge> minEdge;
+
+    g.attachNodeProperty(minCost = INF, minEdge = null);
+
+    forall(vertex in g.nodes())
+    {
+        forall(edge in g.edges(vertex))
+        {
+            if(edge.weight < vertex.minCost)
+            {
+                vertex.minCost = edge.weight;
+                vertex.minEdge = edge;
+            }
+        }
+    }
+
+    propNode<bool> visited;
+    g.attachNodeProperty(visited = false);
+
+    propEdge<bool> inMST;
+    g.attachEdgeProperty(inMST = false);
+}
