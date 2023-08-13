@@ -41,6 +41,8 @@ function Prims(Graph g)
             }
         }
 
+        edge new_edge = minNodeTemp.minEdge;
+        new_edge.inMST = True;
         minNodeTemp.visited = True;
         
         // Setting up the neighbors for the next iteration

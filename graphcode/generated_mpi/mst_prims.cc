@@ -46,6 +46,11 @@ void Prims(Graph& g, boost::mpi::communicator world )
       }
     }
 
+    Edge new_edge = minEdge.getValue(minNodeTemp);
+    if(world.rank() == g.get_edge_owner(new_edge))
+    {
+      inMST.setValue(new_edge,true);
+    }
     if(world.rank() == g.get_node_owner(minNodeTemp))
     {
       visited.setValue(minNodeTemp,true);
