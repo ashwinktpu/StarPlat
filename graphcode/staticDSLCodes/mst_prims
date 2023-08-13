@@ -1,25 +1,64 @@
 function Prims(Graph g)
 {
     propNode<int> minCost;
-    propNode<edge> minEdge;
-
-    g.attachNodeProperty(minCost = INF, minEdge = null);
-
-    forall(vertex in g.nodes())
-    {
-        forall(edge in g.edges(vertex))
-        {
-            if(edge.weight < vertex.minCost)
-            {
-                vertex.minCost = edge.weight;
-                vertex.minEdge = edge;
-            }
-        }
-    }
-
+    propNode<int> minEdge;
     propNode<bool> visited;
-    g.attachNodeProperty(visited = false);
+    g.attachNodeProperty(minCost = INF, minEdge = -1, visited = False); 
+    // -1 as an edge means NULL, do not dereference it
 
     propEdge<bool> inMST;
-    g.attachEdgeProperty(inMST = false);
+    g.attachEdgeProperty(inMST = False);
+
+    // Setting up a single start vertex
+    node start_v = 0;
+    int minCostTemp = INF;
+    edge minEdgeTemp = -1;
+    for(nbr in g.neighbors(start_v))
+    {   
+        if(nbr.minCost < minCostTemp)
+        {
+            minCostTemp = nbr.minCost;
+            minEdgeTemp = g.get_edge(start_v,nbr);
+        }
+    }
+    start_v.minCost = minCostTemp;
+    start_v.minEdge = minEdgeTemp;
+
+    // Iterating until all nodes are visited
+    bool allVisited = False;
+    while (!allVisited)
+    {
+        // Finding the minimum cost node
+        node minNodeTemp = -1;
+        int minCostTemp = INF;
+
+        for(vertex in g.nodes().filter(visited == False))
+        {
+            if(vertex.minCost < minCostTemp)
+            {
+                minCostTemp = vertex.minCost;
+                minNodeTemp = vertex;
+            }
+        }
+
+        minNodeTemp.visited = True;
+        
+        // Setting up the neighbors for the next iteration
+        for(vertex in g.neighbors(minNodeTemp).filter(visited == False)) // Should be forall
+        {
+            edge e = g.get_edge(minNodeTemp,vertex);
+            if(e.weight < vertex.minCost)
+            {
+                vertex.minCost = e.weight;
+                vertex.minEdge = e;
+            }
+        }
+
+        // Checking if all nodes are visited
+        allVisited = True;
+        for(vertex in g.nodes().filter(visited == False))
+        {
+            allVisited = False;
+        }
+    }
 }
