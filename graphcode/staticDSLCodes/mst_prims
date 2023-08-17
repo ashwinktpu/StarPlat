@@ -21,6 +21,7 @@ function Prims(Graph g)
             minEdgeTemp = g.get_edge(start_v,nbr);
         }
     }
+    
     start_v.minCost = minCostTemp;
     start_v.minEdge = minEdgeTemp;
 
