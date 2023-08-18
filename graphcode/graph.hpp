@@ -448,10 +448,14 @@ class graph
            e.destination=destination;
            e.weight=1;
 
+           if(ss>>weightVal) { //for edgelists having weight too.      
+              // std::cout << "W";
+              e.weight = weightVal;
+           }
+
            edges[source].push_back(e);
            graph_edge.push_back(e);
 
-           ss>>weightVal; //for edgelists having weight too.      
              
      }
 

@@ -1,7 +1,7 @@
 /**
  * Manual implementation for Betweenness Centrality
  * Brandes Algorithm 
- * Parallel Algorithm using AMD HIP Code. 
+ * Parallel implementation using AMD HIP Code. 
  * 
  * @author: cs22m056
 */
@@ -17,6 +17,15 @@
 using std::cin;
 using std::cout;
 using std::vector;
+
+
+__global__
+void PrintArray(double* array, long size) {
+
+	for(int i = 0; i < size; i++)
+		printf("%f ", array[i]);
+	printf("\n");
+}
 
 template <typename T>
 __global__
@@ -42,12 +51,13 @@ void InitializeArrayLocation(T* array, T value, long location, long size) {
 
 __global__
 void BreadthFirstSearch(
-	int nv, int* d_meta, int* d_data, double* d_delta, double* d_sigma,
-	int* d_d, int* level, bool* finished, double* d_bc 
+	int nv, int* d_meta, int* d_data, double* d_delta,
+	double* d_sigma, int* d_d, int* level, bool* finished
 ) {
 
 	unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
 
+	// printf("v = %d dd = %d level = %d\n", v, d_d[v], *level);
 	if(v >= nv)
 		return;
 
@@ -56,6 +66,8 @@ void BreadthFirstSearch(
 		for(int e = d_meta[v]; e < d_meta[v+1]; e++) {
 
 			int w = d_data[e];
+
+			// printf("Current Node: %d Neighbour: %d\n", v, w);
 
 			if(d_d[w] < 0) {
 
@@ -70,10 +82,42 @@ void BreadthFirstSearch(
 }
 
 __global__
-void ReversePass() {
+void ReversePass(
+	int nv, int* d_meta, int* d_data, double* d_delta, double* d_sigma,
+	int* d_d, int* level, bool* finished, double* d_bc
+) {
 
-	auto grid = cooperative_groups::this_grid();
-	grid.sync();
+	unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
+	if(v >= nv)
+		return;
+
+	// auto grid = cooperative_groups::this_grid();
+
+	if(d_d[v] == *level - 1) {
+
+		for(int e = d_meta[v]; e < d_meta[v+1]; e++) {
+
+			int w = d_data[e];
+
+			if(d_d[w] == *level)
+				atomicAdd(&d_delta[v], (d_sigma[v] / d_sigma[w]) * (1 + d_delta[w]));
+		}
+
+		// ? Moved to another kernel
+		// printf("v = %d dd = %d level = %d\n", v, d_d[v], *level);
+		// grid.sync();
+		// d_bc[v] += d_delta[v];
+	}
+}
+
+__global__
+void AddElements(int nv, double* a, double* b) {
+
+	unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
+	if(v >= nv)
+		return;
+
+	a[v] += b[v];
 }
 
 double* ComputeBetweennessCentrality(graph& g, vector<int>& sources) { // TODO: sources should be a set
@@ -99,10 +143,10 @@ double* ComputeBetweennessCentrality(graph& g, vector<int>& sources) { // TODO: 
 	int* d_meta;
 	int* d_data;
 
-	hipMalloc(&d_meta, sizeof(int) * V);
+	hipMalloc(&d_meta, sizeof(int) * (V + 1));
 	hipMalloc(&d_data, sizeof(int) * E);
 
-	hipMemcpy(d_meta, h_meta, sizeof(int) * V, hipMemcpyHostToDevice);
+	hipMemcpy(d_meta, h_meta, sizeof(int) * (V + 1), hipMemcpyHostToDevice);
 	hipMemcpy(d_data, h_data, sizeof(int) * E, hipMemcpyHostToDevice);
 
 	double* d_bc;
@@ -111,8 +155,10 @@ double* ComputeBetweennessCentrality(graph& g, vector<int>& sources) { // TODO: 
 
 	// TODO: Temp launch config
 
-	int threads = 1024;
+	int threads = 1024; //! TODO: try other confid
+	// int threads = V;
 	int blocks = ceil(V / 1024.0);
+	// int blocks = 1;
 
 	// TODO: BEGIN TIMING
 
@@ -126,57 +172,98 @@ double* ComputeBetweennessCentrality(graph& g, vector<int>& sources) { // TODO: 
 	hipMalloc(&d_delta, sizeof(double) * V);
 	hipMalloc(&d_d, sizeof(int) * V);
 
+	bool* isAllNodesTraversed;
+	hipHostMalloc(&isAllNodesTraversed, sizeof(bool), 0);
+
+	int* level;
+	hipHostMalloc(&level, sizeof(int), 0);
+
 	for(int i: sources) {
 
-		InitializeArray<double><<<blocks, threads>>>(d_sigma, 0, V);
-		InitializeArray<double><<<blocks, threads>>>(d_delta, 0, V);
+		InitializeArray<double><<<blocks, threads>>>(d_sigma, 0.0, V);
+		InitializeArray<double><<<blocks, threads>>>(d_delta, 0.0, V);
 		InitializeArray<int><<<blocks, threads>>>(d_d, -1, V);
-		InitializeArrayLocation<double><<<1, 1>>>(d_sigma, 1, i, V);
+		InitializeArrayLocation<double><<<1, 1>>>(d_sigma, 1.0, i, V);
 		InitializeArrayLocation<int><<<1, 1>>>(d_d, 0, i, V);
 
-		bool* isAllNodesTraversed;
-		hipHostMalloc(&isAllNodesTraversed, sizeof(bool), 0);
 		*isAllNodesTraversed = false;
-
-		int* level;
-		hipHostMalloc(&level, sizeof(int), 0);
 		*level = 0;
 
-		while(!isAllNodesTraversed) {
+		hipDeviceSynchronize();
+
+		while(!*isAllNodesTraversed) {
 
 			*isAllNodesTraversed = true;
 			BreadthFirstSearch<<<blocks, threads>>>(
 				V, d_meta, d_data, d_delta, d_sigma,
-				d_d, level, isAllNodesTraversed, d_bc
+				d_d, level, isAllNodesTraversed
 			);
-			(*level)++;
+
 			hipDeviceSynchronize();
+			(*level)++;
 		}
 
 		(*level)--;
+		cout << "Sigma values for src " << i << " ";
+		PrintArray<<<1,1>>>(d_sigma, V);
+		hipDeviceSynchronize();
 
 		while(*level > 1) {
+			
+			// cout << "Inside ReversePass loop. level : " << *level << NL;
+			ReversePass<<<blocks, threads>>>(
+				V, d_meta, d_data, d_delta, d_sigma,
+				d_d, level, isAllNodesTraversed, d_bc
+			); 
+			
+			hipDeviceSynchronize(); //? Problem with grid.sync()
 
-			ReversePass<<<blocks, threads>>>(); //! TODO
+			AddElements<<<blocks, threads>>>(
+				V, d_bc, d_delta
+			);
+
 			(*level)--;
 		}
+		hipDeviceSynchronize();
 	}
 
 	// TODO: TIMING ENDS
 
-	// TODO: Copy BC values back
+	hipMemcpy(h_bc, d_bc, sizeof(double) * V, hipMemcpyDeviceToHost);
+
+	//! TODO: Free up memory
 
 	return h_bc;
 }
 
 int main(int argc, char* argv[]) {
 
+	graph G(argv[1]);
+	G.parseGraph();
 
-	// double* bc = ComputeBetweennessCentrality();
+	vector<int> src;
+
+	std::string line;
+	std::ifstream srcfile(argv[2]);
+	int nodeVal;
+
+	while ( std::getline (srcfile,line) ) {
+
+		std::stringstream ss(line);
+		ss>> nodeVal;
+		src.push_back(nodeVal);
+	}
+
+	srcfile.close();
+
+	double* bc = ComputeBetweennessCentrality(G, src);
 
 	// Process bc data
 
-	// free(bc);
+	for(int i: src)
+		cout << i << " " << bc[i] << NL;
+
+	free(bc);
 
 	return 0;
 }
