@@ -22,5 +22,4 @@ dump/
 runtests.sh
 cudadump/
 testcases/testAMD/*
-testing_mpi/
 src/parser/y.tab.c
