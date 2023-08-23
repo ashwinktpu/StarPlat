@@ -12,7 +12,7 @@ void Prims(Graph& g, boost::mpi::communicator world )
   inMST.attachToGraph(&g, (bool)false);
   int start_v = 0;
   int minCostTemp = INT_MAX;
-  Edge minEdgeTemp = -1;
+  Edge minEdgeTemp;
   for (int nbr : g.getNeighbors(start_v)) 
   {
     if (minCost.getValue(nbr) < minCostTemp )

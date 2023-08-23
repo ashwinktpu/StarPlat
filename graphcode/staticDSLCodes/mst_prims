@@ -12,7 +12,7 @@ function Prims(Graph g)
     // Setting up a single start vertex
     node start_v = 0;
     int minCostTemp = INF;
-    edge minEdgeTemp = -1;
+    edge minEdgeTemp;
     for(nbr in g.neighbors(start_v))
     {   
         if(nbr.minCost < minCostTemp)
