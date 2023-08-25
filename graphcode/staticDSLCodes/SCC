@@ -6,7 +6,7 @@ function scc(Graph g)
     g.attachNodeProperty(vis = False,tim = -1,low = -1);
     int cur_t=0;
 
-    forall(u in g.nodes().filter(tim == -1))
+    for(u in g.nodes().filter(tim == -1)) // should be forall
     {
         dfs(u,vis,tim,low,g,cur_t);
 
@@ -21,7 +21,7 @@ function dfs(node u, propNode<bool> vis, propNode<int> tim,propNode<int> low,Gra
     u.tim = cur_t;
     u.low = cur_t;
     cur_t = cur_t + 1;
-    forall(v in g.neighbors(u))
+    for(v in g.neighbors(u))  // should be forall
     {
         if(v.tim == -1)
         {
@@ -56,7 +56,7 @@ function dfs(node u, propNode<bool> vis, propNode<int> tim,propNode<int> low,Gra
 function dfs1(node u, Graph g, propNode<bool> vis)
 {
     u.vis = False;
-    forall(v in g.neighbors(u).filter(vis == True))
+    for(v in g.neighbors(u).filter(vis == True))  // should be forall
     {
         dfs1(v,g,vis);
     }

@@ -1,61 +1,48 @@
 #include"../mpi_header/graph_mpi.h"
-#include"PageRankDSLV2.h"
-#include"triangle_counting_dsl.h"
 #include"sssp_dslV3.h"
-#include"bc_dslV2.h"
+// Include Timing Code
+#include <chrono>
+#include <iostream>
+
+using namespace std::chrono;
 
 int main(int argc, char *argv[])
 {
-   
+    if(argc!=2)
+    {
+        std::cout << "Usage: " << argv[0] << " <graph_file>" << std::endl;
+        exit(1);
+    }
+
     boost::mpi::environment env(argc, argv);
     boost::mpi::communicator world;
+
+    auto start = high_resolution_clock::now();
     
-    //printf("program started\n"); 
     Graph graph(argv[1],world);
     world.barrier();
 
-    
-    // Triangle Counting
-    //need to add print statement in generated code to check the value of triangle count
-    
-    Compute_TC(graph, world );
-    
-
-    
-
-    // SSSP 
-    /*NodeProperty<int> dist;
+    NodeProperty<int> dist;
     Compute_SSSP(graph, dist, graph.weights, 0,world);
     
-    for(int i=graph.start_node() ;i<=graph.end_node();i++)
-    {
-        printf("%d %d\n", i, dist.getValue(i));
-    }*/
-    
+    // for(int i=graph.start_node() ;i<=graph.end_node();i++)
+    // {
+    //     if(world.rank()==graph.get_node_owner(i))
+    //     {
+    //         std::cout<<"Node "<<i<<" has distance "<<dist.getValue(i)<<std::endl;
+    //     }
+    // }
 
+    auto stop = high_resolution_clock::now();
 
-
-    //PageRank
-    /*float beta = 0.01;
-    float delta = 0.85;
-    int maxIter = 100;
-    NodeProperty<float> pageRank;
-    Compute_PR(graph, beta, delta, maxIter, pageRank, world);
-    for(int i=graph.start_node() ;i<=graph.end_node();i++)
-    {
-        printf("%d %f\n", i, pageRank.getValue(i));
-    }*/
-    
-
-    //BC
-    /*std::set<int> sourceSet; sourceSet.insert(0);
-    NodeProperty<float> BC;
-    Compute_BC(graph, BC, sourceSet, world);
-    for(int i=graph.start_node() ;i<=graph.end_node();i++)
-    {
-        printf("%d %f\n", i, BC.getValue(i));
-    }*/
+    auto duration = duration_cast<microseconds>(stop - start);
     
     world.barrier();
+
+    if(world.rank()==0)
+    {
+        std::cout << "Time taken by function: "
+            << duration.count() << " microseconds" << std::endl;
+    }
     return 0;
 }
