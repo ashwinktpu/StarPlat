@@ -60,6 +60,8 @@
 %token T_BFS T_REVERSE
 %token T_INCREMENTAL T_DECREMENTAL T_STATIC T_DYNAMIC
 %token T_BATCH T_ONADD T_ONDELETE
+%token T_FORWARD T_BACKWARD T_GC T_ALT
+%token T_UPD T_ITR T_COND T_THIS
 
 
 %token <text> ID
@@ -80,7 +82,7 @@
 %type <node> reductionCall 
 %type <aList> arg_list
 %type <ival> reduction_calls reduce_op
-
+%type <node> graph_construct property_club
 
 
 
@@ -190,6 +192,8 @@ statement: declaration ';'{$$=$1;};
 	| batch_blockstmt  {$$ = $1;};
 	| on_add_blockstmt {$$ = $1;};
 	| on_delete_blockstmt {$$ = $1;};
+	| graph_construct ';' {$$ = $1;};
+	| property_club ';' {$$ = $1;};
 
 
 blockstatements : block_begin statements block_end { $$=Util::finishBlock();};
@@ -267,7 +271,41 @@ property : T_NP '<' primitive '>' { $$=Util::createPropertyTypeNode(TYPE_PROPNOD
               | T_NP '<' T_NODE '>' {ASTNode* type = Util::createNodeEdgeTypeNode(TYPE_NODE);
 			                         $$=Util::createPropertyTypeNode(TYPE_PROPNODE, type); }
 			  | T_NP '<' T_EDGE '>' {ASTNode* type = Util::createNodeEdgeTypeNode(TYPE_EDGE);
-			                         $$=Util::createPropertyTypeNode(TYPE_PROPNODE, type); }	
+			                         $$=Util::createPropertyTypeNode(TYPE_PROPNODE, type); };
+											
+property_club : T_NP '<' primitive ',' id '>' id '=' rhs { ASTNode* a=Util::createPropertyTypeNode(TYPE_PROPNODE,$3);
+														  ASTNode* g=Util::createNormalDeclNode(a, $7);
+														  Util::addToBlock(g);
+														  ASTNode* b=Util::createIdentifierNode("attachNodeProperty");
+														  ASTNode* c=Util::createPropIdNode(b, $5);
+														  ASTNode* d=Util::createAssignmentNode($7, $9);
+														  argument* a1=new argument();
+														  assignment* assign=(assignment*)d;
+														  a1->setAssign(assign);
+														  a1->setAssignFlag();
+														  argList* e=Util::createAList(a1);
+														  ASTNode* f=Util::createNodeForProcCall(c, e->AList, NULL);
+														  $$=Util::createNodeForProcCallStmt(f);
+														  };
+			  | T_EP '<' primitive ',' id '>' id '=' rhs { ASTNode* a=Util::createPropertyTypeNode(TYPE_PROPNODE,$3);
+														  ASTNode* g=Util::createNormalDeclNode(a, $7);
+														  Util::addToBlock(g);
+														  ASTNode* b=Util::createIdentifierNode("attachEdgeProperty");
+														  ASTNode* c=Util::createPropIdNode(b, $5);
+														  ASTNode* d=Util::createAssignmentNode($7, $9);
+														  argument* a1=new argument();
+														  assignment* assign=(assignment*)d;
+														  a1->setAssign(assign);
+														  a1->setAssignFlag();
+														  argList* e=Util::createAList(a1);
+														  ASTNode* f=Util::createNodeForProcCall(c, e->AList, NULL);
+														  $$=Util::createNodeForProcCallStmt(f); };
+			  | T_NP '<' collections ',' id '>' { $$=Util::createPropertyTypeNode(TYPE_PROPEDGE,$3); };
+			  | T_EP '<' collections ',' id '>' { $$=Util::createPropertyTypeNode(TYPE_PROPEDGE,$3); };
+			  | T_NP '<' T_NODE ',' id '>' { ASTNode* type = Util::createNodeEdgeTypeNode(TYPE_NODE);
+											$$=Util::createPropertyTypeNode(TYPE_PROPNODE, type); };
+			  | T_EP '<' T_EDGE ',' id '>' {ASTNode* type = Util::createNodeEdgeTypeNode(TYPE_EDGE);
+											$$=Util::createPropertyTypeNode(TYPE_PROPNODE, type); };
 
 assignment :  leftSide '=' rhs  { printf("testassign\n");$$=Util::createAssignmentNode($1,$3);};
               | indexExpr '=' rhs { $$=Util::createAssignmentNode($1 , $3);};        
@@ -337,22 +375,62 @@ control_flow : selection_cf { $$=$1; };
               | iteration_cf { $$=$1; };
 
 iteration_cf : T_FIXEDPOINT T_UNTIL '(' id ':' expression ')' blockstatements { $$=Util::createNodeForFixedPointStmt($4,$6,$8);};
-		   | T_WHILE '(' boolean_expr')' blockstatements {$$=Util::createNodeForWhileStmt($3,$5); };
+		   | T_WHILE '(' boolean_expr ')' blockstatements {$$=Util::createNodeForWhileStmt($3,$5); };
 		   | T_DO blockstatements T_WHILE '(' boolean_expr ')' ';' {$$=Util::createNodeForDoWhileStmt($5,$2);  };
-		| T_FORALL '(' id T_IN id '.' proc_call filterExpr')'  blockstatements { 
-																				$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,true);};
-		| T_FORALL '(' id T_IN leftSide ')' blockstatements	{ $$=Util::createNodeForForStmt($3,$5,$7,true);};																	
-		| T_FOR '(' id T_IN leftSide ')' blockstatements { $$=Util::createNodeForForStmt($3,$5,$7,false);};
-		| T_FOR '(' id T_IN id '.' proc_call  filterExpr')' blockstatements {$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,false);};
-		| T_FOR '(' id T_IN indexExpr ')' blockstatements {$$ = Util::createNodeForForStmt($3, $5, $7, false);};
-		| T_FORALL '(' id T_IN indexExpr ')' blockstatements {$$ = Util::createNodeForForStmt($3, $5, $7, true);};
-
-filterExpr  :         { $$=NULL;};
-            |'.' T_FILTER '(' boolean_expr ')'{ $$=$4;};
+		   | T_FORALL '(' id T_IN id '.' proc_call filterExpr')'  blockstatements { $$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,true);};
+		   | T_FORALL '(' id T_IN leftSide ')' blockstatements	{ $$=Util::createNodeForForStmt($3,$5,$7,true);};																
+		   | T_FOR '(' id T_IN leftSide ')' blockstatements { $$=Util::createNodeForForStmt($3,$5,$7,false);};
+		   | T_FOR '(' id T_IN id '.' proc_call  filterExpr')' blockstatements {$$=Util::createNodeForForAllStmt($3,$5,$7,$8,$10,false);};
+		   | T_FOR '(' id T_IN indexExpr ')' blockstatements {$$ = Util::createNodeForForStmt($3, $5, $7, false);};
+		   | T_FORALL '(' id T_IN indexExpr ')' blockstatements {$$ = Util::createNodeForForStmt($3, $5, $7, true);};
+		   | id '.' T_UPD '(' filterExpr ')' T_UNTIL '(' id ':' expression ')' blockstatements {Util::createNewBlock();
+																								ASTNode* z=Util::createIdentifierNode("src");
+																								ASTNode* h=Util::createIdentifierNode("nodes");
+																								argList* aList=new argList();
+																								ASTNode* i=Util::createNodeForProcCall(h, aList->AList, NULL);
+																								ASTNode* x=Util::createNodeForForAllStmt(z,$1,i,$5,$13,true);
+																								Util::addToBlock(x);
+																								ASTNode* y=Util::finishBlock();
+																								$$=Util::createNodeForFixedPointStmt($9,$11,y);};
+		   | id '.' T_UPD '(' filterExpr ')' blockstatements {ASTNode* z=Util::createIdentifierNode("src");
+								   							  ASTNode* h=Util::createIdentifierNode("nodes");
+															  argList* aList=new argList();
+															  ASTNode* i=Util::createNodeForProcCall(h, aList->AList, NULL);
+															  $$=Util::createNodeForForAllStmt(z,$1,i,$5,$7,true);};
+		   | id '.' T_UPD '(' ')' T_UNTIL '(' id ':' expression ')' blockstatements {Util::createNewBlock();
+																					 ASTNode* z=Util::createIdentifierNode("src");
+																					 ASTNode* h=Util::createIdentifierNode("nodes");
+																					 argList* aList=new argList();
+																					 ASTNode* i=Util::createNodeForProcCall(h, aList->AList, NULL);
+																					 ASTNode* x=Util::createNodeForForAllStmt(z,$1,i,NULL,$12,true);
+																					 Util::addToBlock(x);
+																					 ASTNode* y=Util::finishBlock();
+																					 $$=Util::createNodeForFixedPointStmt($8,$10,y);};
+		   | id '.' T_UPD '(' ')' blockstatements {ASTNode* z=Util::createIdentifierNode("src");
+								   				   ASTNode* h=Util::createIdentifierNode("nodes");
+												   argList* aList=new argList();
+												   ASTNode* i=Util::createNodeForProcCall(h, aList->AList, NULL);
+										    	   $$=Util::createNodeForForAllStmt(z,$1,i,NULL,$6,true);};
+		   | id '.' T_UPD '(' T_ITR '(' id T_IN id '.' proc_call ')' ',' filterExpr ')' blockstatements {$$=Util::createNodeForForAllStmt($7,$1,$11,$14,$16,true);};
+		   | id '.' T_UPD '(' T_ITR '(' id T_IN id '.' proc_call ')' ')' blockstatements {$$=Util::createNodeForForAllStmt($7,$1,$11,NULL,$14,true);}; // To be updated
+		   | id '.' T_UPD '(' T_ITR '(' id T_IN id '.' proc_call ')' ',' filterExpr ')' T_UNTIL '(' id ':' expression ')' blockstatements {Util::createNewBlock();
+																																		   ASTNode* x=Util::createNodeForForAllStmt($7,$1,$11,$14,$22,true);
+																																		   Util::addToBlock(x);
+																																		   ASTNode* y=Util::finishBlock();
+																																		   $$=Util::createNodeForFixedPointStmt($18,$20,y);};
+		   | id '.' T_UPD '(' T_ITR '(' id T_IN id '.' proc_call ')' ')' T_UNTIL '(' id ':' expression ')' blockstatements { Util::createNewBlock();
+																															 ASTNode* x=Util::createNodeForForAllStmt($7,$1,$11,NULL,$20,true);
+																															 Util::addToBlock(x);
+																															 ASTNode* y=Util::finishBlock();
+																															 $$=Util::createNodeForFixedPointStmt($18,$20,y);};
+		
+filterExpr : { $$=NULL;};
+            |'.' T_FILTER '(' boolean_expr ')' { $$=$4;};
+            | T_FILTER '(' boolean_expr ')' { $$=$3;};
 
 boolean_expr : expression { $$=$1 ;};
 
-selection_cf : T_IF '(' boolean_expr ')' statement { $$=Util::createNodeForIfStmt($3,$5,NULL); }; 
+selection_cf : T_IF '(' boolean_expr ')' statement { $$=Util::createNodeForIfStmt($3,$5,NULL); };
 	           | T_IF '(' boolean_expr ')' statement T_ELSE statement  {$$=Util::createNodeForIfStmt($3,$5,$7); };
 
 
@@ -437,8 +515,7 @@ arg_list :    {
 							 a1->setAssignFlag();
 						   $$=Util::createAList(a1);
 						   };
-
-
+						  
 bfs_abstraction	: T_BFS '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr blockstatements reverse_abstraction{$$=Util::createIterateInBFSNode($3,$5,$7,$9,$11,$12,$13) ;};
 			| T_BFS '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr blockstatements {$$=Util::createIterateInBFSNode($3,$5,$7,$9,$11,$12,NULL) ; };
 
@@ -447,7 +524,1219 @@ bfs_abstraction	: T_BFS '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr bl
 reverse_abstraction :  T_REVERSE blockstatements {$$=Util::createIterateInReverseBFSNode(NULL,$2);};
                      | T_REVERSE '(' boolean_expr ')'  blockstatements {$$=Util::createIterateInReverseBFSNode($3,$5);};
 
-
+graph_construct : '(' T_FORWARD '<' id ',' id ',' T_COND '(' boolean_expr ')' '>' filterExpr T_UNTIL '(' id ':' expression ')' ')' T_AND_OP '(' boolean_expr ')' {			Expression* a=(Expression*)$23;
+																																			ASTNode* x=Util::createIdentifierNode("src");
+																																			ASTNode* b=Util::createPropIdNode(x, $6);
+																																			ASTNode* c=Util::createNodeForBval(true);
+																																			ASTNode* w1=Util::createNodeForId(b); // This was the issue
+																																			ASTNode* d=Util::createNodeForRelationalExpr(w1, c, OPERATOR_EQ);
+																																			ASTNode* n1=Util::createIdentifierNode("src");
+																																			Expression* o1=a->getLeft();
+																																			Identifier* p1=o1->getId();
+																																			ASTNode* e=Util::createPropIdNode(n1, (ASTNode*)p1);
+																																			ASTNode* s1=Util::createNodeForId(e);
+																																			a->setLeft((Expression*)s1);
+																																			ASTNode* f=Util::createNodeForLogicalExpr($23, d, OPERATOR_AND);
+																																			Util::createNewBlock();
+																																			ASTNode* g=Util::createIdentifierNode("dst");
+																																			ASTNode* h=Util::createIdentifierNode("neighbors");
+																																			ASTNode* e2=Util::createIdentifierNode("src");
+																																			ASTNode* k1=Util::createNodeForId(e2);
+																																			argument* a2=new argument();
+																																			Expression* expr=(Expression*)k1;
+																																			a2->setExpression(expr);
+																																			a2->setExpressionFlag();
+																																			argList* d1=Util::createAList(a2);
+																																			ASTNode* i=Util::createNodeForProcCall(h, d1->AList, NULL);
+																																			Util::createNewBlock();
+																																			ASTNode* k=Util::createIdentifierNode("dst");
+																																			ASTNode* m=Util::createPropIdNode(k, $6);
+																																			ASTNode* y1=Util::createNodeForId(m);
+																																			ASTNode* n=Util::createNodeForBval(false);
+																																			ASTNode* o=Util::createNodeForRelationalExpr(y1, n, OPERATOR_EQ);
+																																			ASTNode* j1=Util::createIdentifierNode("dst");
+																																			Expression* l1=(Expression*)$10;
+																																			Expression* t1=l1->getLeft();
+																																			Identifier* u1=t1->getId();
+																																			ASTNode* p=Util::createPropIdNode(j1, (ASTNode*)u1);
+																																			ASTNode* v1=Util::createNodeForId(p);
+																																			l1->setLeft((Expression*)v1);
+																																			ASTNode* q=Util::createNodeForLogicalExpr(o, $10, OPERATOR_AND);
+																																			Util::createNewBlock();
+																																			ASTNode* s=Util::createIdentifierNode("dst");
+																																			ASTNode* u=Util::createPropIdNode(s, $6);
+																																			ASTNode* v=Util::createNodeForBval(true);
+																																			ASTNode* w=Util::createAssignmentNode(u, v);
+																																			Util::addToBlock(w);
+																																			ASTNode* y=Util::createNodeForBval(false);
+																																			ASTNode* z=Util::createAssignmentNode($16, y);
+																																			Util::addToBlock(z);
+																																			ASTNode* a1=Util::finishBlock();
+																																			ASTNode* r=Util::createNodeForIfStmt(f,a1,NULL); // Completes the if statement
+																																			Util::addToBlock(r);
+																																			ASTNode* b1=Util::finishBlock();
+																																			ASTNode* j=Util::createNodeForForAllStmt(g, $4, i, $13, b1, false);
+																																			Util::addToBlock(j);
+																																			ASTNode* e1=Util::createIdentifierNode("src");
+																																			ASTNode* m1=Util::createIdentifierNode(p1->getIdentifier());
+																																			ASTNode* g1=Util::createPropIdNode(e1, m1);
+																																			ASTNode* h1=Util::createNodeForBval(true);
+																																			ASTNode* i1=Util::createAssignmentNode(g1, h1);
+																																			Util::addToBlock(i1);
+																																			ASTNode* c1=Util::finishBlock();
+																																			$$=Util::createNodeForIfStmt(f,c1,NULL);};
+																																			
+				| T_FORWARD '<' id ',' id ',' T_COND '(' boolean_expr ')' '>' filterExpr T_UNTIL '(' id ':' expression ')' {  		ASTNode* x=Util::createIdentifierNode("src");
+																									ASTNode* b=Util::createPropIdNode(x, $5);
+																									ASTNode* w1=Util::createNodeForId(b);
+																									ASTNode* c=Util::createNodeForBval(true);
+																									ASTNode* d=Util::createNodeForRelationalExpr(w1, c, OPERATOR_EQ);
+																									Util::createNewBlock();
+																									ASTNode* g=Util::createIdentifierNode("dst");
+																									ASTNode* h=Util::createIdentifierNode("neighbors");
+																									ASTNode* e1=Util::createIdentifierNode("src");
+																									ASTNode* k1=Util::createNodeForId(e1);
+																									argument* a2=new argument();
+																									Expression* expr=(Expression*)k1;
+																									a2->setExpression(expr);
+																									a2->setExpressionFlag();
+																									argList* d1=Util::createAList(a2);
+																									ASTNode* i=Util::createNodeForProcCall(h, d1->AList, NULL);
+																									Util::createNewBlock();
+																									ASTNode* k=Util::createIdentifierNode("dst");
+																									ASTNode* m=Util::createPropIdNode(k, $5);
+																									ASTNode* y1=Util::createNodeForId(m);
+																									ASTNode* n=Util::createNodeForBval(false);
+																									ASTNode* o=Util::createNodeForRelationalExpr(y1, n, OPERATOR_EQ);
+																									ASTNode* j1=Util::createIdentifierNode("dst");
+																									Expression* m1=(Expression *)$9;
+																									Expression* n1=m1->getLeft();
+																									Identifier* o1=n1->getId();
+																									ASTNode* p=Util::createPropIdNode(j1, (ASTNode *)o1);
+																									ASTNode* p1=Util::createNodeForId(p);
+																									m1->setLeft((Expression *)p1);
+																									ASTNode* q=Util::createNodeForLogicalExpr(o, $9, OPERATOR_AND);
+																									Util::createNewBlock();
+																									ASTNode* s=Util::createIdentifierNode("dst");
+																									ASTNode* u=Util::createPropIdNode(s, $5);
+																									ASTNode* v=Util::createNodeForBval(true);
+																									ASTNode* w=Util::createAssignmentNode(u, v);
+																									Util::addToBlock(w);
+																									ASTNode* y=Util::createNodeForBval(false);
+																									ASTNode* z=Util::createAssignmentNode($15, y);
+																									Util::addToBlock(z);
+																									ASTNode* a1=Util::finishBlock();
+																									ASTNode* r=Util::createNodeForIfStmt(q,a1,NULL); // Completes the if statement
+																									Util::addToBlock(r);
+																									ASTNode* b1=Util::finishBlock();
+																									ASTNode* j=Util::createNodeForForAllStmt(g, $3, i, $12, b1, false); // Completes the for statement
+																									Util::addToBlock(j);
+																									ASTNode* c1=Util::finishBlock();
+																									$$=Util::createNodeForIfStmt(d,c1,NULL);};
+																									
+				| '(' T_FORWARD '<' id ',' id ',' T_COND '(' boolean_expr ')' '>' filterExpr T_UNTIL '(' id ':' expression ')' ')' {  		ASTNode* x=Util::createIdentifierNode("src");
+																											ASTNode* b=Util::createPropIdNode(x, $6);
+																											ASTNode* w1=Util::createNodeForId(b);
+																											ASTNode* c=Util::createNodeForBval(true);
+																											ASTNode* d=Util::createNodeForRelationalExpr(w1, c, OPERATOR_EQ);
+																											Util::createNewBlock();
+																											ASTNode* g=Util::createIdentifierNode("dst");
+																											ASTNode* h=Util::createIdentifierNode("neighbors");
+																											ASTNode* e1=Util::createIdentifierNode("src");
+																											ASTNode* k1=Util::createNodeForId(e1);
+																											argument* a2=new argument();
+																											Expression* expr=(Expression*)k1;
+																											a2->setExpression(expr);
+																											a2->setExpressionFlag();
+																											argList* d1=Util::createAList(a2);
+																											ASTNode* i=Util::createNodeForProcCall(h, d1->AList, NULL);
+																											Util::createNewBlock();
+																											ASTNode* k=Util::createIdentifierNode("dst");
+																											ASTNode* m=Util::createPropIdNode(k, $6);
+																											ASTNode* f1=Util::createNodeForId(m);
+																											ASTNode* n=Util::createNodeForBval(false);
+																											ASTNode* o=Util::createNodeForRelationalExpr(f1, n, OPERATOR_EQ);
+																											Expression* m1=(Expression *)$10;
+																											Expression* n1=m1->getLeft();
+																											Identifier* o1=n1->getId();
+																											ASTNode* y1=Util::createIdentifierNode("dst");
+																											ASTNode* p=Util::createPropIdNode(y1, (ASTNode *)o1);
+																											ASTNode* p1=Util::createNodeForId(p);
+																											m1->setLeft((Expression *)p1);
+																											ASTNode* q=Util::createNodeForLogicalExpr(o, $10, OPERATOR_AND);
+																											Util::createNewBlock();
+																											ASTNode* s=Util::createIdentifierNode("dst");
+																											ASTNode* u=Util::createPropIdNode(s, $6);
+																											ASTNode* v=Util::createNodeForBval(true);
+																											ASTNode* w=Util::createAssignmentNode(u, v);
+																											Util::addToBlock(w);
+																											ASTNode* y=Util::createNodeForBval(false);
+																											ASTNode* z=Util::createAssignmentNode($16, y);
+																											Util::addToBlock(z);
+																											ASTNode* a1=Util::finishBlock();
+																											ASTNode* r=Util::createNodeForIfStmt(q,a1,NULL); // Completes the if statement
+																											Util::addToBlock(r);
+																											ASTNode* b1=Util::finishBlock();
+																											ASTNode* j=Util::createNodeForForAllStmt(g, $4, i, $13, b1, false); // Completes the for statement
+																											Util::addToBlock(j);
+																											ASTNode* c1=Util::finishBlock();
+																											$$=Util::createNodeForIfStmt(d,c1,NULL);};
+																											
+				| '(' T_FORWARD '<' id ',' id '>' filterExpr T_UNTIL '(' id ':' expression ')' ')' T_AND_OP '(' boolean_expr ')' {	Expression* a=(Expression*)$18;		
+																											ASTNode* x=Util::createIdentifierNode("src");
+																											ASTNode* b=Util::createPropIdNode(x, $6);
+																											ASTNode* w1=Util::createNodeForId(b);
+																											ASTNode* c=Util::createNodeForBval(true);
+																											ASTNode* d=Util::createNodeForRelationalExpr(w1, c, OPERATOR_EQ);
+																											ASTNode* m1=Util::createIdentifierNode("src");
+																											Expression* j1=a->getLeft();
+																											Identifier* l1=j1->getId();
+																											ASTNode* e=Util::createPropIdNode(m1, (ASTNode *)l1);
+																											ASTNode* p1=Util::createNodeForId(e);
+																											a->setLeft((Expression *)p1);
+																											ASTNode* f=Util::createNodeForLogicalExpr($18, d, OPERATOR_AND);
+																											Util::createNewBlock();
+																											ASTNode* g=Util::createIdentifierNode("dst");
+																											ASTNode* h=Util::createIdentifierNode("neighbors");
+																											ASTNode* e1=Util::createIdentifierNode("src");
+																											ASTNode* k1=Util::createNodeForId(e1);
+																											argument* a2=new argument();
+																											Expression* expr=(Expression*)k1;
+																											a2->setExpression(expr);
+																											a2->setExpressionFlag();
+																											argList* d1=Util::createAList(a2);
+																											ASTNode* i=Util::createNodeForProcCall(h, d1->AList, NULL);
+																											Util::createNewBlock();
+																											ASTNode* k=Util::createIdentifierNode("dst");
+																											ASTNode* m=Util::createPropIdNode(k, $6);
+																											ASTNode* y1=Util::createNodeForId(m);
+																											ASTNode* n=Util::createNodeForBval(false);
+																											ASTNode* o=Util::createNodeForRelationalExpr(y1, n, OPERATOR_EQ);
+																											Util::createNewBlock();
+																											ASTNode* s=Util::createIdentifierNode("dst");
+																											ASTNode* u=Util::createPropIdNode(s, $6);
+																											ASTNode* v=Util::createNodeForBval(true);
+																											ASTNode* w=Util::createAssignmentNode(u, v);
+																											Util::addToBlock(w);
+																											ASTNode* y=Util::createNodeForBval(false);
+																											ASTNode* z=Util::createAssignmentNode($11, y);
+																											Util::addToBlock(z);
+																											ASTNode* a1=Util::finishBlock();
+																											ASTNode* r=Util::createNodeForIfStmt(o,a1,NULL); // Completes the if statement
+																											Util::addToBlock(r);
+																											ASTNode* b1=Util::finishBlock();
+																											ASTNode* j=Util::createNodeForForAllStmt(g, $4, i, $8, b1, false); // Completes the for statement
+																											Util::addToBlock(j);
+																											ASTNode* e2=Util::createIdentifierNode("src");
+																											ASTNode* n1=Util::createIdentifierNode(l1->getIdentifier());
+																											ASTNode* g1=Util::createPropIdNode(e2, n1);
+																											ASTNode* h1=Util::createNodeForBval(true);
+																											ASTNode* i1=Util::createAssignmentNode(g1, h1);
+																											Util::addToBlock(i1);
+																											ASTNode* c1=Util::finishBlock();
+																											$$=Util::createNodeForIfStmt(f,c1,NULL);};
+				
+				| T_FORWARD '<' id ',' id '>' filterExpr T_UNTIL '(' id ':' expression ')' {			ASTNode* x=Util::createIdentifierNode("src");
+																	ASTNode* b=Util::createPropIdNode(x, $5);
+																	ASTNode* w1=Util::createNodeForId(b);
+																	ASTNode* c=Util::createNodeForBval(true);
+																	ASTNode* d=Util::createNodeForRelationalExpr(w1, c, OPERATOR_EQ);
+																	Util::createNewBlock();
+																	ASTNode* g=Util::createIdentifierNode("dst");
+																	ASTNode* h=Util::createIdentifierNode("neighbors");
+																	ASTNode* e1=Util::createIdentifierNode("src");
+																	ASTNode* k1=Util::createNodeForId(e1);
+																	argument* a2=new argument();
+																	Expression* expr=(Expression*)k1;
+																	a2->setExpression(expr);
+																	a2->setExpressionFlag();
+																	argList* d1=Util::createAList(a2);
+																	ASTNode* i=Util::createNodeForProcCall(h, d1->AList, NULL);
+																	Util::createNewBlock();
+																	ASTNode* k=Util::createIdentifierNode("dst");
+																	ASTNode* m=Util::createPropIdNode(k, $5);
+																	ASTNode* y1=Util::createNodeForId(m);
+																	ASTNode* n=Util::createNodeForBval(false);
+																	ASTNode* o=Util::createNodeForRelationalExpr(y1, n, OPERATOR_EQ);
+																	Util::createNewBlock();
+																	ASTNode* s=Util::createIdentifierNode("dst");
+																	ASTNode* u=Util::createPropIdNode(s, $5);
+																	ASTNode* v=Util::createNodeForBval(true);
+																	ASTNode* w=Util::createAssignmentNode(u, v);
+																	Util::addToBlock(w);
+																	ASTNode* y=Util::createNodeForBval(false);
+																	ASTNode* z=Util::createAssignmentNode($10, y);
+																	Util::addToBlock(z);
+																	ASTNode* a1=Util::finishBlock();
+																	ASTNode* r=Util::createNodeForIfStmt(o,a1,NULL); // Completes the if statement
+																	Util::addToBlock(r);
+																	ASTNode* b1=Util::finishBlock();
+																	ASTNode* j=Util::createNodeForForAllStmt(g, $3, i, $7, b1, false); // Completes the for statement
+																	Util::addToBlock(j);
+																	ASTNode* c1=Util::finishBlock();
+																	$$=Util::createNodeForIfStmt(d,c1,NULL);};
+																	
+				| '(' T_FORWARD '<' id ',' id '>' filterExpr T_UNTIL '(' id ':' expression ')' ')' {			ASTNode* x=Util::createIdentifierNode("src");
+																			ASTNode* b=Util::createPropIdNode(x, $6);
+																			ASTNode* w1=Util::createNodeForId(b);
+																			ASTNode* c=Util::createNodeForBval(true);
+																			ASTNode* d=Util::createNodeForRelationalExpr(w1, c, OPERATOR_EQ);
+																			Util::createNewBlock();
+																			ASTNode* g=Util::createIdentifierNode("dst");
+																			ASTNode* h=Util::createIdentifierNode("neighbors");
+																			ASTNode* e1=Util::createIdentifierNode("src");
+																			ASTNode* k1=Util::createNodeForId(e1);
+																			argument* a2=new argument();
+																			Expression* expr=(Expression*)k1;
+																			a2->setExpression(expr);
+																			a2->setExpressionFlag();
+																			argList* d1=Util::createAList(a2);
+																			ASTNode* i=Util::createNodeForProcCall(h, d1->AList, NULL);
+																			Util::createNewBlock();
+																			ASTNode* k=Util::createIdentifierNode("dst");
+																			ASTNode* m=Util::createPropIdNode(k, $6);
+																			ASTNode* y1=Util::createNodeForId(m);
+																			ASTNode* n=Util::createNodeForBval(false);
+																			ASTNode* o=Util::createNodeForRelationalExpr(y1, n, OPERATOR_EQ);
+																			Util::createNewBlock();
+																			ASTNode* s=Util::createIdentifierNode("dst");
+																			ASTNode* u=Util::createPropIdNode(s, $6);
+																			ASTNode* v=Util::createNodeForBval(true);
+																			ASTNode* w=Util::createAssignmentNode(u, v);
+																			Util::addToBlock(w);
+																			ASTNode* y=Util::createNodeForBval(false);
+																			ASTNode* z=Util::createAssignmentNode($11, y);
+																			Util::addToBlock(z);
+																			ASTNode* a1=Util::finishBlock();
+																			ASTNode* r=Util::createNodeForIfStmt(o,a1,NULL); // Completes the if statement
+																			Util::addToBlock(r);
+																			ASTNode* b1=Util::finishBlock();
+																			ASTNode* j=Util::createNodeForForAllStmt(g, $4, i, $8, b1, false); // Completes the for statement
+																			Util::addToBlock(j);
+																			ASTNode* c1=Util::finishBlock();
+																			$$=Util::createNodeForIfStmt(d,c1,NULL);};
+																	
+				| '(' T_FORWARD '<' id ',' id ',' T_COND '(' boolean_expr ')' '>' filterExpr ')' T_AND_OP '(' boolean_expr ')' {			Expression* a=(Expression*)$17;
+																																			ASTNode* x=Util::createIdentifierNode("src");
+																																			ASTNode* b=Util::createPropIdNode(x, $6);
+																																			ASTNode* c=Util::createNodeForBval(true);
+																																			ASTNode* w1=Util::createNodeForId(b); // This was the issue
+																																			ASTNode* d=Util::createNodeForRelationalExpr(w1, c, OPERATOR_EQ);
+																																			ASTNode* n1=Util::createIdentifierNode("src");
+																																			Expression* o1=a->getLeft();
+																																			Identifier* p1=o1->getId();
+																																			ASTNode* e=Util::createPropIdNode(n1, (ASTNode*)p1);
+																																			ASTNode* s1=Util::createNodeForId(e);
+																																			a->setLeft((Expression*)s1);
+																																			ASTNode* f=Util::createNodeForLogicalExpr($17, d, OPERATOR_AND);
+																																			Util::createNewBlock();
+																																			ASTNode* g=Util::createIdentifierNode("dst");
+																																			ASTNode* h=Util::createIdentifierNode("neighbors");
+																																			ASTNode* e2=Util::createIdentifierNode("src");
+																																			ASTNode* k1=Util::createNodeForId(e2);
+																																			argument* a2=new argument();
+																																			Expression* expr=(Expression*)k1;
+																																			a2->setExpression(expr);
+																																			a2->setExpressionFlag();
+																																			argList* d1=Util::createAList(a2);
+																																			ASTNode* i=Util::createNodeForProcCall(h, d1->AList, NULL);
+																																			Util::createNewBlock();
+																																			ASTNode* k=Util::createIdentifierNode("dst");
+																																			ASTNode* m=Util::createPropIdNode(k, $6);
+																																			ASTNode* y1=Util::createNodeForId(m);
+																																			ASTNode* n=Util::createNodeForBval(false);
+																																			ASTNode* o=Util::createNodeForRelationalExpr(y1, n, OPERATOR_EQ);
+																																			ASTNode* j1=Util::createIdentifierNode("dst");
+																																			Expression* l1=(Expression*)$10;
+																																			Expression* t1=l1->getLeft();
+																																			Identifier* u1=t1->getId();
+																																			Expression* p=(Expression*)Util::createPropIdNode(j1, (ASTNode*)u1);
+																																			ASTNode* v1=Util::createNodeForId(p);
+																																			l1->setLeft((Expression*)v1);
+																																			ASTNode* q=Util::createNodeForLogicalExpr(o, $10, OPERATOR_AND);
+																																			Util::createNewBlock();
+																																			ASTNode* s=Util::createIdentifierNode("dst");
+																																			ASTNode* u=Util::createPropIdNode(s, $6);
+																																			ASTNode* v=Util::createNodeForBval(true);
+																																			ASTNode* w=Util::createAssignmentNode(u, v);
+																																			Util::addToBlock(w);
+																																			ASTNode* a1=Util::finishBlock();
+																																			ASTNode* r=Util::createNodeForIfStmt(f,a1,NULL); // Completes the if statement
+																																			Util::addToBlock(r);
+																																			ASTNode* b1=Util::finishBlock();
+																																			ASTNode* j=Util::createNodeForForAllStmt(g, $4, i, $13, b1, false);
+																																			Util::addToBlock(j);
+																																			ASTNode* e1=Util::createIdentifierNode("src");
+																																			ASTNode* m1=Util::createIdentifierNode(p1->getIdentifier());
+																																			ASTNode* g1=Util::createPropIdNode(e1, m1);
+																																			ASTNode* h1=Util::createNodeForBval(true);
+																																			ASTNode* i1=Util::createAssignmentNode(g1, h1);
+																																			Util::addToBlock(i1);
+																																			ASTNode* c1=Util::finishBlock();
+																																			$$=Util::createNodeForIfStmt(f,c1,NULL);};
+																																			
+				| T_FORWARD '<' id ',' id ',' T_COND '(' boolean_expr ')' '>' filterExpr {  		ASTNode* x=Util::createIdentifierNode("src");
+																									ASTNode* b=Util::createPropIdNode(x, $5);
+																									ASTNode* w1=Util::createNodeForId(b);
+																									ASTNode* c=Util::createNodeForBval(true);
+																									ASTNode* d=Util::createNodeForRelationalExpr(w1, c, OPERATOR_EQ);
+																									Util::createNewBlock();
+																									ASTNode* g=Util::createIdentifierNode("dst");
+																									ASTNode* h=Util::createIdentifierNode("neighbors");
+																									ASTNode* e1=Util::createIdentifierNode("src");
+																									ASTNode* k1=Util::createNodeForId(e1);
+																									argument* a2=new argument();
+																									Expression* expr=(Expression*)k1;
+																									a2->setExpression(expr);
+																									a2->setExpressionFlag();
+																									argList* d1=Util::createAList(a2);
+																									ASTNode* i=Util::createNodeForProcCall(h, d1->AList, NULL);
+																									Util::createNewBlock();
+																									ASTNode* k=Util::createIdentifierNode("dst");
+																									ASTNode* m=Util::createPropIdNode(k, $5);
+																									ASTNode* y1=Util::createNodeForId(m);
+																									ASTNode* n=Util::createNodeForBval(false);
+																									ASTNode* o=Util::createNodeForRelationalExpr(y1, n, OPERATOR_EQ);
+																									ASTNode* j1=Util::createIdentifierNode("dst");
+																									Expression* m1=(Expression *)$9;
+																									Expression* n1=m1->getLeft();
+																									Identifier* o1=n1->getId();
+																									ASTNode* p=Util::createPropIdNode(j1, (ASTNode *)o1);
+																									ASTNode* p1=Util::createNodeForId(p);
+																									m1->setLeft((Expression *)p1);
+																									ASTNode* q=Util::createNodeForLogicalExpr(o, $9, OPERATOR_AND);
+																									Util::createNewBlock();
+																									ASTNode* s=Util::createIdentifierNode("dst");
+																									ASTNode* u=Util::createPropIdNode(s, $5);
+																									ASTNode* v=Util::createNodeForBval(true);
+																									ASTNode* w=Util::createAssignmentNode(u, v);
+																									Util::addToBlock(w);
+																									ASTNode* a1=Util::finishBlock();
+																									ASTNode* r=Util::createNodeForIfStmt(q,a1,NULL); // Completes the if statement
+																									Util::addToBlock(r);
+																									ASTNode* b1=Util::finishBlock();
+																									ASTNode* j=Util::createNodeForForAllStmt(g, $3, i, $12, b1, false); // Completes the for statement
+																									Util::addToBlock(j);
+																									ASTNode* c1=Util::finishBlock();
+																									$$=Util::createNodeForIfStmt(d,c1,NULL);};
+																									
+				| '(' T_FORWARD '<' id ',' id ',' T_COND '(' boolean_expr ')' '>' filterExpr ')' {  		ASTNode* x=Util::createIdentifierNode("src");
+																											ASTNode* b=Util::createPropIdNode(x, $6);
+																											ASTNode* w1=Util::createNodeForId(b);
+																											ASTNode* c=Util::createNodeForBval(true);
+																											ASTNode* d=Util::createNodeForRelationalExpr(w1, c, OPERATOR_EQ);
+																											Util::createNewBlock();
+																											ASTNode* g=Util::createIdentifierNode("dst");
+																											ASTNode* h=Util::createIdentifierNode("neighbors");
+																											ASTNode* e1=Util::createIdentifierNode("src");
+																											ASTNode* k1=Util::createNodeForId(e1);
+																											argument* a2=new argument();
+																											Expression* expr=(Expression*)k1;
+																											a2->setExpression(expr);
+																											a2->setExpressionFlag();
+																											argList* d1=Util::createAList(a2);
+																											ASTNode* i=Util::createNodeForProcCall(h, d1->AList, NULL);
+																											Util::createNewBlock();
+																											ASTNode* k=Util::createIdentifierNode("dst");
+																											ASTNode* m=Util::createPropIdNode(k, $6);
+																											ASTNode* f1=Util::createNodeForId(m);
+																											ASTNode* n=Util::createNodeForBval(false);
+																											ASTNode* o=Util::createNodeForRelationalExpr(f1, n, OPERATOR_EQ);
+																											Expression* m1=(Expression *)$10;
+																											Expression* n1=m1->getLeft();
+																											Identifier* o1=n1->getId();
+																											ASTNode* y1=Util::createIdentifierNode("dst");
+																											ASTNode* p=Util::createPropIdNode(y1, (ASTNode *)o1);
+																											ASTNode* p1=Util::createNodeForId(p);
+																											m1->setLeft((Expression *)p1);
+																											ASTNode* q=Util::createNodeForLogicalExpr(o, $10, OPERATOR_AND);
+																											Util::createNewBlock();
+																											ASTNode* s=Util::createIdentifierNode("dst");
+																											ASTNode* u=Util::createPropIdNode(s, $6);
+																											ASTNode* v=Util::createNodeForBval(true);
+																											ASTNode* w=Util::createAssignmentNode(u, v);
+																											Util::addToBlock(w);
+																											ASTNode* a1=Util::finishBlock();
+																											ASTNode* r=Util::createNodeForIfStmt(q,a1,NULL); // Completes the if statement
+																											Util::addToBlock(r);
+																											ASTNode* b1=Util::finishBlock();
+																											ASTNode* j=Util::createNodeForForAllStmt(g, $4, i, $13, b1, false); // Completes the for statement
+																											Util::addToBlock(j);
+																											ASTNode* c1=Util::finishBlock();
+																											$$=Util::createNodeForIfStmt(d,c1,NULL);};
+																											
+				| '(' T_FORWARD '<' id ',' id '>' filterExpr ')' T_AND_OP '(' boolean_expr ')' {			Expression* a=(Expression *)$12;
+																											ASTNode* x=Util::createIdentifierNode("src");
+																											ASTNode* b=Util::createPropIdNode(x, $6);
+																											ASTNode* w1=Util::createNodeForId(b);
+																											ASTNode* c=Util::createNodeForBval(true);
+																											ASTNode* d=Util::createNodeForRelationalExpr(w1, c, OPERATOR_EQ);
+																											ASTNode* m1=Util::createIdentifierNode("src");
+																											Expression* j1=a->getLeft();
+																											Identifier* l1=j1->getId();
+																											ASTNode* e=Util::createPropIdNode(m1, (ASTNode *)l1);
+																											ASTNode* p1=Util::createNodeForId(e);
+																											a->setLeft((Expression *)p1);
+																											ASTNode* f=Util::createNodeForLogicalExpr($12, d, OPERATOR_AND);
+																											Util::createNewBlock();
+																											ASTNode* g=Util::createIdentifierNode("dst");
+																											ASTNode* h=Util::createIdentifierNode("neighbors");
+																											ASTNode* e1=Util::createIdentifierNode("src");
+																											ASTNode* k1=Util::createNodeForId(e1);
+																											argument* a2=new argument();
+																											Expression* expr=(Expression*)k1;
+																											a2->setExpression(expr);
+																											a2->setExpressionFlag();
+																											argList* d1=Util::createAList(a2);
+																											ASTNode* i=Util::createNodeForProcCall(h, d1->AList, NULL);
+																											Util::createNewBlock();
+																											ASTNode* k=Util::createIdentifierNode("dst");
+																											ASTNode* m=Util::createPropIdNode(k, $6);
+																											ASTNode* y1=Util::createNodeForId(m);
+																											ASTNode* n=Util::createNodeForBval(false);
+																											ASTNode* o=Util::createNodeForRelationalExpr(y1, n, OPERATOR_EQ);
+																											Util::createNewBlock();
+																											ASTNode* s=Util::createIdentifierNode("dst");
+																											ASTNode* u=Util::createPropIdNode(s, $6);
+																											ASTNode* v=Util::createNodeForBval(true);
+																											ASTNode* w=Util::createAssignmentNode(u, v);
+																											Util::addToBlock(w);
+																											ASTNode* a1=Util::finishBlock();
+																											ASTNode* r=Util::createNodeForIfStmt(o,a1,NULL); // Completes the if statement
+																											Util::addToBlock(r);
+																											ASTNode* b1=Util::finishBlock();
+																											ASTNode* j=Util::createNodeForForAllStmt(g, $4, i, $8, b1, false); // Completes the for statement
+																											Util::addToBlock(j);
+																											ASTNode* e2=Util::createIdentifierNode("src");
+																											ASTNode* n1=Util::createIdentifierNode(l1->getIdentifier());
+																											ASTNode* g1=Util::createPropIdNode(e2, n1);
+																											ASTNode* h1=Util::createNodeForBval(true);
+																											ASTNode* i1=Util::createAssignmentNode(g1, h1);
+																											Util::addToBlock(i1);
+																											ASTNode* c1=Util::finishBlock();
+																											$$=Util::createNodeForIfStmt(f,c1,NULL);};
+																											
+				| T_FORWARD '<' id ',' id '>' filterExpr {			ASTNode* x=Util::createIdentifierNode("src");
+																	ASTNode* b=Util::createPropIdNode(x, $5);
+																	ASTNode* w1=Util::createNodeForId(b);
+																	ASTNode* c=Util::createNodeForBval(true);
+																	ASTNode* d=Util::createNodeForRelationalExpr(w1, c, OPERATOR_EQ);
+																	Util::createNewBlock();
+																	ASTNode* g=Util::createIdentifierNode("dst");
+																	ASTNode* h=Util::createIdentifierNode("neighbors");
+																	ASTNode* e1=Util::createIdentifierNode("src");
+																	ASTNode* k1=Util::createNodeForId(e1);
+																	argument* a2=new argument();
+																	Expression* expr=(Expression*)k1;
+																	a2->setExpression(expr);
+																	a2->setExpressionFlag();
+																	argList* d1=Util::createAList(a2);
+																	ASTNode* i=Util::createNodeForProcCall(h, d1->AList, NULL);
+																	Util::createNewBlock();
+																	ASTNode* k=Util::createIdentifierNode("dst");
+																	ASTNode* m=Util::createPropIdNode(k, $5);
+																	ASTNode* y1=Util::createNodeForId(m);
+																	ASTNode* n=Util::createNodeForBval(false);
+																	ASTNode* o=Util::createNodeForRelationalExpr(y1, n, OPERATOR_EQ);
+																	Util::createNewBlock();
+																	ASTNode* s=Util::createIdentifierNode("dst");
+																	ASTNode* u=Util::createPropIdNode(s, $5);
+																	ASTNode* v=Util::createNodeForBval(true);
+																	ASTNode* w=Util::createAssignmentNode(u, v);
+																	Util::addToBlock(w);
+																	ASTNode* a1=Util::finishBlock();
+																	ASTNode* r=Util::createNodeForIfStmt(o,a1,NULL); // Completes the if statement
+																	Util::addToBlock(r);
+																	ASTNode* b1=Util::finishBlock();
+																	ASTNode* j=Util::createNodeForForAllStmt(g, $3, i, $7, b1, false); // Completes the for statement
+																	Util::addToBlock(j);
+																	ASTNode* c1=Util::finishBlock();
+																	$$=Util::createNodeForIfStmt(d,c1,NULL);};
+																	
+				| '(' T_FORWARD '<' id ',' id '>' filterExpr ')' {			ASTNode* x=Util::createIdentifierNode("src");
+																			ASTNode* b=Util::createPropIdNode(x, $6);
+																			ASTNode* w1=Util::createNodeForId(b);
+																			ASTNode* c=Util::createNodeForBval(true);
+																			ASTNode* d=Util::createNodeForRelationalExpr(w1, c, OPERATOR_EQ);
+																			Util::createNewBlock();
+																			ASTNode* g=Util::createIdentifierNode("dst");
+																			ASTNode* h=Util::createIdentifierNode("neighbors");
+																			ASTNode* e1=Util::createIdentifierNode("src");
+																			ASTNode* k1=Util::createNodeForId(e1);
+																			argument* a2=new argument();
+																			Expression* expr=(Expression*)k1;
+																			a2->setExpression(expr);
+																			a2->setExpressionFlag();
+																			argList* d1=Util::createAList(a2);
+																			ASTNode* i=Util::createNodeForProcCall(h, d1->AList, NULL);
+																			Util::createNewBlock();
+																			ASTNode* k=Util::createIdentifierNode("dst");
+																			ASTNode* m=Util::createPropIdNode(k, $6);
+																			ASTNode* y1=Util::createNodeForId(m);
+																			ASTNode* n=Util::createNodeForBval(false);
+																			ASTNode* o=Util::createNodeForRelationalExpr(y1, n, OPERATOR_EQ);
+																			Util::createNewBlock();
+																			ASTNode* s=Util::createIdentifierNode("dst");
+																			ASTNode* u=Util::createPropIdNode(s, $6);
+																			ASTNode* v=Util::createNodeForBval(true);
+																			ASTNode* w=Util::createAssignmentNode(u, v);
+																			Util::addToBlock(w);
+																			ASTNode* a1=Util::finishBlock();
+																			ASTNode* r=Util::createNodeForIfStmt(o,a1,NULL); // Completes the if statement
+																			Util::addToBlock(r);
+																			ASTNode* b1=Util::finishBlock();
+																			ASTNode* j=Util::createNodeForForAllStmt(g, $4, i, $8, b1, false); // Completes the for statement
+																			Util::addToBlock(j);
+																			ASTNode* c1=Util::finishBlock();
+																			$$=Util::createNodeForIfStmt(d,c1,NULL);};
+																			
+				| '(' T_BACKWARD '<' id ',' id ',' T_COND '(' boolean_expr ')' '>' filterExpr T_UNTIL '(' id ':' expression ')' ')' T_AND_OP '(' boolean_expr ')' {			Expression* a=(Expression *)$23;
+																																			ASTNode* x=Util::createIdentifierNode("src");
+																																			ASTNode* b=Util::createPropIdNode(x, $6);
+																																			ASTNode* w1=Util::createNodeForId(b);
+																																			ASTNode* c=Util::createNodeForBval(true);
+																																			ASTNode* d=Util::createNodeForRelationalExpr(w1, c, OPERATOR_EQ);
+																																			ASTNode* n1=Util::createIdentifierNode("src");
+																																			Expression* o1=a->getLeft();
+																																			Identifier* p1=o1->getId();
+																																			ASTNode* e=Util::createPropIdNode(n1, (ASTNode *)p1);
+																																			ASTNode* s1=Util::createNodeForId(e);
+																																			a->setLeft((Expression*)s1);
+																																			ASTNode* f=Util::createNodeForLogicalExpr($23, d, OPERATOR_AND);
+																																			Util::createNewBlock();
+																																			ASTNode* g=Util::createIdentifierNode("par");
+																																			ASTNode* h=Util::createIdentifierNode("nodes_to");
+																																			ASTNode* e1=Util::createIdentifierNode("src");
+																																			ASTNode* k1=Util::createNodeForId(e1);
+																																			argument* a2=new argument();
+																																			Expression* expr=(Expression*)k1;
+																																			a2->setExpression(expr);
+																																			a2->setExpressionFlag();
+																																			argList* d1=Util::createAList(a2);
+																																			ASTNode* i=Util::createNodeForProcCall(h, d1->AList, NULL);
+																																			Util::createNewBlock();
+																																			ASTNode* k=Util::createIdentifierNode("par");
+																																			ASTNode* m=Util::createPropIdNode(k, $6);
+																																			ASTNode* y1=Util::createNodeForId(m);
+																																			ASTNode* n=Util::createNodeForBval(false);
+																																			ASTNode* o=Util::createNodeForRelationalExpr(y1, n, OPERATOR_EQ);
+																																			ASTNode* j1=Util::createIdentifierNode("par");
+																																			Expression* m1=(Expression *)$10;
+																																			Expression* t1=m1->getLeft();
+																																			Identifier* u1=t1->getId(); 
+																																			ASTNode* p=Util::createPropIdNode(j1, (ASTNode*)u1);
+																																			ASTNode* v1=Util::createNodeForId(p);
+																																			m1->setLeft((Expression*)v1);
+																																			ASTNode* q=Util::createNodeForLogicalExpr(o, $10, OPERATOR_AND);
+																																			Util::createNewBlock();
+																																			ASTNode* s=Util::createIdentifierNode("par");
+																																			ASTNode* u=Util::createPropIdNode(s, $6);
+																																			ASTNode* v=Util::createNodeForBval(true);
+																																			ASTNode* w=Util::createAssignmentNode(u, v);
+																																			Util::addToBlock(w);
+																																			ASTNode* y=Util::createNodeForBval(false);
+																																			ASTNode* z=Util::createAssignmentNode($16, y);
+																																			Util::addToBlock(z);
+																																			ASTNode* a1=Util::finishBlock();
+																																			ASTNode* r=Util::createNodeForIfStmt(q,a1,NULL); // Completes the if statement
+																																			Util::addToBlock(r);
+																																			ASTNode* b1=Util::finishBlock();
+																																			ASTNode* j=Util::createNodeForForAllStmt(g, $4, i, $13, b1, false); // Completes the for statement
+																																			Util::addToBlock(j);
+																																			ASTNode* e2=Util::createIdentifierNode("src");
+																																			ASTNode* q1=Util::createIdentifierNode(p1->getIdentifier());
+																																			ASTNode* g1=Util::createPropIdNode(e2, q1);
+																																			ASTNode* h1=Util::createNodeForBval(true);
+																																			ASTNode* i1=Util::createAssignmentNode(g1, h1);
+																																			Util::addToBlock(i1);
+																																			ASTNode* c1=Util::finishBlock();
+																																			$$=Util::createNodeForIfStmt(f,c1,NULL);};
+																																			
+				| T_BACKWARD '<' id ',' id ',' T_COND '(' boolean_expr ')' '>' filterExpr T_UNTIL '(' id ':' expression ')' {			ASTNode* x=Util::createIdentifierNode("src");
+																									ASTNode* b=Util::createPropIdNode(x, $5);
+																									ASTNode* w1=Util::createNodeForId(b);
+																									ASTNode* c=Util::createNodeForBval(true);
+																									ASTNode* d=Util::createNodeForRelationalExpr(w1, c, OPERATOR_EQ);
+																									Util::createNewBlock();
+																									ASTNode* g=Util::createIdentifierNode("par");
+																									ASTNode* h=Util::createIdentifierNode("nodes_to");
+																									ASTNode* e1=Util::createIdentifierNode("src");
+																									ASTNode* k1=Util::createNodeForId(e1);
+																									argument* a2=new argument();
+																									Expression* expr=(Expression*)k1;
+																									a2->setExpression(expr);
+																									a2->setExpressionFlag();
+																									argList* d1=Util::createAList(a2);
+																									ASTNode* i=Util::createNodeForProcCall(h, d1->AList, NULL);
+																									Util::createNewBlock();
+																									ASTNode* k=Util::createIdentifierNode("par");
+																									ASTNode* m=Util::createPropIdNode(k, $5);
+																									ASTNode* y1=Util::createNodeForId(m);
+																									ASTNode* n=Util::createNodeForBval(false);
+																									ASTNode* o=Util::createNodeForRelationalExpr(y1, n, OPERATOR_EQ);
+																									ASTNode* j1=Util::createIdentifierNode("par");
+																									Expression* m1=(Expression *)$9;
+																									Expression* f1=m1->getLeft();
+																									Identifier* g1=f1->getId();
+																									ASTNode* p=Util::createPropIdNode(j1, (ASTNode *)g1);
+																									ASTNode* h1=Util::createNodeForId(p);
+																									m1->setLeft((Expression *)h1);
+																									ASTNode* q=Util::createNodeForLogicalExpr(o, $9, OPERATOR_AND);
+																									Util::createNewBlock();
+																									ASTNode* s=Util::createIdentifierNode("par");
+																									ASTNode* u=Util::createPropIdNode(s, $5);
+																									ASTNode* v=Util::createNodeForBval(true);
+																									ASTNode* w=Util::createAssignmentNode(u, v);
+																									Util::addToBlock(w);
+																									ASTNode* y=Util::createNodeForBval(false);
+																									ASTNode* z=Util::createAssignmentNode($15, y);
+																									Util::addToBlock(z);
+																									ASTNode* a1=Util::finishBlock();
+																									ASTNode* r=Util::createNodeForIfStmt(q,a1,NULL); // Completes the if statement
+																									Util::addToBlock(r);
+																									ASTNode* b1=Util::finishBlock();
+																									ASTNode* j=Util::createNodeForForAllStmt(g, $3, i, $12, b1, false); // Completes the for statement
+																									Util::addToBlock(j);
+																									ASTNode* c1=Util::finishBlock();
+																									$$=Util::createNodeForIfStmt(d,c1,NULL);};
+																									
+				| '(' T_BACKWARD '<' id ',' id ',' T_COND '(' boolean_expr ')' '>' filterExpr T_UNTIL '(' id ':' expression ')' ')' {			ASTNode* x=Util::createIdentifierNode("src");
+																											ASTNode* b=Util::createPropIdNode(x, $6);
+																											ASTNode* w1=Util::createNodeForId(b);
+																											ASTNode* c=Util::createNodeForBval(true);
+																											ASTNode* d=Util::createNodeForRelationalExpr(w1, c, OPERATOR_EQ);
+																											Util::createNewBlock();
+																											ASTNode* g=Util::createIdentifierNode("par");
+																											ASTNode* h=Util::createIdentifierNode("nodes_to");
+																											ASTNode* e1=Util::createIdentifierNode("src");
+																											ASTNode* k1=Util::createNodeForId(e1);
+																											argument* a2=new argument();
+																											Expression* expr=(Expression*)k1;
+																											a2->setExpression(expr);
+																											a2->setExpressionFlag();
+																											argList* d1=Util::createAList(a2);
+																											ASTNode* i=Util::createNodeForProcCall(h, d1->AList, NULL);
+																											Util::createNewBlock();
+																											ASTNode* k=Util::createIdentifierNode("par");
+																											ASTNode* m=Util::createPropIdNode(k, $6);
+																											ASTNode* y1=Util::createNodeForId(m);
+																											ASTNode* n=Util::createNodeForBval(false);
+																											ASTNode* o=Util::createNodeForRelationalExpr(y1, n, OPERATOR_EQ);
+																											Expression* m1=(Expression *)$10;
+																											Expression* f1=m1->getLeft();
+																											Identifier* g1=f1->getId();
+																											ASTNode* p=Util::createPropIdNode(h, (ASTNode *)g1);
+																											ASTNode* h1=Util::createNodeForId(p);
+																											m1->setLeft((Expression *)h1);
+																											ASTNode* q=Util::createNodeForLogicalExpr(o, $10, OPERATOR_AND);
+																											Util::createNewBlock();
+																											ASTNode* s=Util::createIdentifierNode("par");
+																											ASTNode* u=Util::createPropIdNode(s, $6);
+																											ASTNode* v=Util::createNodeForBval(true);
+																											ASTNode* w=Util::createAssignmentNode(u, v);
+																											Util::addToBlock(w);
+																											ASTNode* y=Util::createNodeForBval(false);
+																											ASTNode* z=Util::createAssignmentNode($16, y);
+																											Util::addToBlock(z);
+																											ASTNode* a1=Util::finishBlock();
+																											ASTNode* r=Util::createNodeForIfStmt(q,a1,NULL); // Completes the if statement
+																											Util::addToBlock(r);
+																											ASTNode* b1=Util::finishBlock();
+																											ASTNode* j=Util::createNodeForForAllStmt(g, $4, i, $13, b1, false); // Completes the for statement
+																											Util::addToBlock(j);
+																											ASTNode* c1=Util::finishBlock();
+																											$$=Util::createNodeForIfStmt(d,c1,NULL);};
+																											
+				| '(' T_BACKWARD '<' id ',' id '>' filterExpr T_UNTIL '(' id ':' expression ')' ')' T_AND_OP '(' boolean_expr ')' {			ASTNode* x=Util::createIdentifierNode("src");
+																											ASTNode* b=Util::createPropIdNode(x, $6);
+																											ASTNode* w1=Util::createNodeForId(b);
+																											ASTNode* c=Util::createNodeForBval(true);
+																											ASTNode* d=Util::createNodeForRelationalExpr(w1, c, OPERATOR_EQ);
+																											ASTNode* m1=Util::createIdentifierNode("src");
+																											Expression* a=(Expression *)$18;
+																											Expression* f1=a->getLeft();
+																											Identifier* l1=f1->getId();
+																											ASTNode* e=Util::createPropIdNode(m1, (ASTNode *)l1);
+																											ASTNode* j1=Util::createNodeForId(e);
+																											a->setLeft((Expression *)j1);
+																											ASTNode* f=Util::createNodeForLogicalExpr($18, d, OPERATOR_AND);
+																											Util::createNewBlock();
+																											ASTNode* g=Util::createIdentifierNode("par");
+																											ASTNode* h=Util::createIdentifierNode("nodes_to");
+																											ASTNode* e1=Util::createIdentifierNode("src");
+																											ASTNode* k1=Util::createNodeForId(e1);
+																											argument* a2=new argument();
+																											Expression* expr=(Expression*)k1;
+																											a2->setExpression(expr);
+																											a2->setExpressionFlag();
+																											argList* d1=Util::createAList(a2);
+																											ASTNode* i=Util::createNodeForProcCall(h, d1->AList, NULL);
+																											Util::createNewBlock();
+																											ASTNode* k=Util::createIdentifierNode("par");
+																											ASTNode* m=Util::createPropIdNode(k, $6);
+																											ASTNode* y1=Util::createNodeForId(m);
+																											ASTNode* n=Util::createNodeForBval(false);
+																											ASTNode* o=Util::createNodeForRelationalExpr(y1, n, OPERATOR_EQ);
+																											Util::createNewBlock();
+																											ASTNode* s=Util::createIdentifierNode("par");
+																											ASTNode* u=Util::createPropIdNode(s, $6);
+																											ASTNode* v=Util::createNodeForBval(true);
+																											ASTNode* w=Util::createAssignmentNode(u, v);
+																											Util::addToBlock(w);
+																											ASTNode* y=Util::createNodeForBval(false);
+																											ASTNode* z=Util::createAssignmentNode($11, y);
+																											Util::addToBlock(z);
+																											ASTNode* a1=Util::finishBlock();
+																											ASTNode* r=Util::createNodeForIfStmt(o,a1,NULL); // Completes the if statement
+																											Util::addToBlock(r);
+																											ASTNode* b1=Util::finishBlock();
+																											ASTNode* j=Util::createNodeForForAllStmt(g, $4, i, $8, b1, false); // Completes the for statement
+																											Util::addToBlock(j);
+																											ASTNode* e2=Util::createIdentifierNode("src");
+																											ASTNode* n1=Util::createIdentifierNode(l1->getIdentifier());
+																											ASTNode* g1=Util::createPropIdNode(e2, n1);
+																											ASTNode* h1=Util::createNodeForBval(true);
+																											ASTNode* i1=Util::createAssignmentNode(g1, h1);
+																											Util::addToBlock(i1);
+																											ASTNode* c1=Util::finishBlock();
+																											$$=Util::createNodeForIfStmt(f,c1,NULL);};
+																											
+				| T_BACKWARD '<' id ',' id '>' filterExpr T_UNTIL '(' id ':' expression ')' {			ASTNode* x=Util::createIdentifierNode("src");
+																	ASTNode* b=Util::createPropIdNode(x, $5);
+																	ASTNode* w1=Util::createNodeForId(b);
+																	ASTNode* c=Util::createNodeForBval(true);
+																	ASTNode* d=Util::createNodeForRelationalExpr(w1, c, OPERATOR_EQ);
+																	Util::createNewBlock();
+																	ASTNode* g=Util::createIdentifierNode("par");
+																	ASTNode* h=Util::createIdentifierNode("nodes_to");
+																	ASTNode* e1=Util::createIdentifierNode("src");
+																	ASTNode* k1=Util::createNodeForId(e1);
+																	argument* a2=new argument();
+																	Expression* expr=(Expression*)k1;
+																	a2->setExpression(expr);
+																	a2->setExpressionFlag();
+																	argList* d1=Util::createAList(a2);
+																	ASTNode* i=Util::createNodeForProcCall(h, d1->AList, NULL);
+																	Util::createNewBlock();
+																	ASTNode* k=Util::createIdentifierNode("par");
+																	ASTNode* m=Util::createPropIdNode(k, $5);
+																	ASTNode* y1=Util::createNodeForId(m);
+																	ASTNode* n=Util::createNodeForBval(false);
+																	ASTNode* o=Util::createNodeForRelationalExpr(y1, n, OPERATOR_EQ);
+																	Util::createNewBlock();
+																	ASTNode* s=Util::createIdentifierNode("par");
+																	ASTNode* u=Util::createPropIdNode(s, $5);
+																	ASTNode* v=Util::createNodeForBval(true);
+																	ASTNode* w=Util::createAssignmentNode(u, v);
+																	Util::addToBlock(w);
+																	ASTNode* y=Util::createNodeForBval(false);
+																	ASTNode* z=Util::createAssignmentNode($10, y);
+																	Util::addToBlock(z);
+																	ASTNode* a1=Util::finishBlock();
+																	ASTNode* r=Util::createNodeForIfStmt(o,a1,NULL); // Completes the if statement
+																	Util::addToBlock(r);
+																	ASTNode* b1=Util::finishBlock();
+																	ASTNode* j=Util::createNodeForForAllStmt(g, $3, i, $7, b1, false); // Completes the for statement
+																	Util::addToBlock(j);
+																	ASTNode* c1=Util::finishBlock();
+																	$$=Util::createNodeForIfStmt(d,c1,NULL);};
+																	
+				| '(' T_BACKWARD '<' id ',' id '>' filterExpr T_UNTIL '(' id ':' expression ')' ')' {			ASTNode* x=Util::createIdentifierNode("src");
+																			ASTNode* b=Util::createPropIdNode(x, $6);
+																			ASTNode* w1=Util::createNodeForId(b);
+																			ASTNode* c=Util::createNodeForBval(true);
+																			ASTNode* d=Util::createNodeForRelationalExpr(w1, c, OPERATOR_EQ);
+																			Util::createNewBlock();
+																			ASTNode* g=Util::createIdentifierNode("par");
+																			ASTNode* h=Util::createIdentifierNode("nodes_to");
+																			ASTNode* e1=Util::createIdentifierNode("src");
+																			ASTNode* k1=Util::createNodeForId(e1);
+																			argument* a2=new argument();
+																			Expression* expr=(Expression*)k1;
+																			a2->setExpression(expr);
+																			a2->setExpressionFlag();
+																			argList* d1=Util::createAList(a2);
+																			ASTNode* i=Util::createNodeForProcCall(h, d1->AList, NULL);
+																			Util::createNewBlock();
+																			ASTNode* k=Util::createIdentifierNode("par");
+																			ASTNode* m=Util::createPropIdNode(k, $6);
+																			ASTNode* y1=Util::createNodeForId(m);
+																			ASTNode* n=Util::createNodeForBval(false);
+																			ASTNode* o=Util::createNodeForRelationalExpr(y1, n, OPERATOR_EQ);
+																			Util::createNewBlock();
+																			ASTNode* s=Util::createIdentifierNode("par");
+																			ASTNode* u=Util::createPropIdNode(s, $6);
+																			ASTNode* v=Util::createNodeForBval(true);
+																			ASTNode* w=Util::createAssignmentNode(u, v);
+																			Util::addToBlock(w);
+																			ASTNode* y=Util::createNodeForBval(false);
+																			ASTNode* z=Util::createAssignmentNode($11, y);
+																			Util::addToBlock(z);
+																			ASTNode* a1=Util::finishBlock();
+																			ASTNode* r=Util::createNodeForIfStmt(o,a1,NULL); // Completes the if statement
+																			Util::addToBlock(r);
+																			ASTNode* b1=Util::finishBlock();
+																			ASTNode* j=Util::createNodeForForAllStmt(g, $4, i, $8, b1, false); // Completes the for statement
+																			Util::addToBlock(j);
+																			ASTNode* c1=Util::finishBlock();
+																			$$=Util::createNodeForIfStmt(d,c1,NULL);};
+																									
+				| '(' T_BACKWARD '<' id ',' id ',' T_COND '(' boolean_expr ')' '>' filterExpr ')' T_AND_OP '(' boolean_expr ')' {			Expression* a=(Expression *)$17;
+																																			ASTNode* x=Util::createIdentifierNode("src");
+																																			ASTNode* b=Util::createPropIdNode(x, $6);
+																																			ASTNode* w1=Util::createNodeForId(b);
+																																			ASTNode* c=Util::createNodeForBval(true);
+																																			ASTNode* d=Util::createNodeForRelationalExpr(w1, c, OPERATOR_EQ);
+																																			ASTNode* n1=Util::createIdentifierNode("src");
+																																			Expression* o1=a->getLeft();
+																																			Identifier* p1=o1->getId();
+																																			ASTNode* e=Util::createPropIdNode(n1, (ASTNode*)p1);
+																																			ASTNode* s1=Util::createNodeForId(e);
+																																			a->setLeft((Expression*)s1);
+																																			ASTNode* f=Util::createNodeForLogicalExpr($17, d, OPERATOR_AND);
+																																			Util::createNewBlock();
+																																			ASTNode* g=Util::createIdentifierNode("par");
+																																			ASTNode* h=Util::createIdentifierNode("nodes_to");
+																																			ASTNode* e1=Util::createIdentifierNode("src");
+																																			ASTNode* k1=Util::createNodeForId(e1);
+																																			argument* a2=new argument();
+																																			Expression* expr=(Expression*)k1;
+																																			a2->setExpression(expr);
+																																			a2->setExpressionFlag();
+																																			argList* d1=Util::createAList(a2);
+																																			ASTNode* i=Util::createNodeForProcCall(h, d1->AList, NULL);
+																																			Util::createNewBlock();
+																																			ASTNode* k=Util::createIdentifierNode("par");
+																																			ASTNode* m=Util::createPropIdNode(k, $6);
+																																			ASTNode* y1=Util::createNodeForId(m);
+																																			ASTNode* n=Util::createNodeForBval(false);
+																																			ASTNode* o=Util::createNodeForRelationalExpr(y1, n, OPERATOR_EQ);
+																																			ASTNode* j1=Util::createIdentifierNode("par");
+																																			Expression* m1=(Expression *)$10;
+																																			ASTNode* p=Util::createPropIdNode(j1, m1->getLeft());
+																																			m1->setLeft((Expression *)p);
+																																			ASTNode* q=Util::createNodeForLogicalExpr(o, $10, OPERATOR_AND);
+																																			Util::createNewBlock();
+																																			ASTNode* s=Util::createIdentifierNode("par");
+																																			ASTNode* u=Util::createPropIdNode(s, $6);
+																																			ASTNode* v=Util::createNodeForBval(true);
+																																			ASTNode* w=Util::createAssignmentNode(u, v);
+																																			Util::addToBlock(w);
+																																			ASTNode* a1=Util::finishBlock();
+																																			ASTNode* r=Util::createNodeForIfStmt(q,a1,NULL); // Completes the if statement
+																																			Util::addToBlock(r);
+																																			ASTNode* b1=Util::finishBlock();
+																																			ASTNode* j=Util::createNodeForForAllStmt(g, $4, i, $13, b1, false); // Completes the for statement
+																																			Util::addToBlock(j);
+																																			ASTNode* e2=Util::createIdentifierNode("src");
+																																			ASTNode* q1=Util::createIdentifierNode(p1->getIdentifier());
+																																			ASTNode* g1=Util::createPropIdNode(e2, q1);
+																																			ASTNode* h1=Util::createNodeForBval(true);
+																																			ASTNode* i1=Util::createAssignmentNode(g1, h1);
+																																			Util::addToBlock(i1);
+																																			ASTNode* c1=Util::finishBlock();
+																																			$$=Util::createNodeForIfStmt(f,c1,NULL);};
+																																			
+				| T_BACKWARD '<' id ',' id ',' T_COND '(' boolean_expr ')' '>' filterExpr {			ASTNode* x=Util::createIdentifierNode("src");
+																									ASTNode* b=Util::createPropIdNode(x, $5);
+																									ASTNode* w1=Util::createNodeForId(b);
+																									ASTNode* c=Util::createNodeForBval(true);
+																									ASTNode* d=Util::createNodeForRelationalExpr(w1, c, OPERATOR_EQ);
+																									Util::createNewBlock();
+																									ASTNode* g=Util::createIdentifierNode("par");
+																									ASTNode* h=Util::createIdentifierNode("nodes_to");
+																									ASTNode* e1=Util::createIdentifierNode("src");
+																									ASTNode* k1=Util::createNodeForId(e1);
+																									argument* a2=new argument();
+																									Expression* expr=(Expression*)k1;
+																									a2->setExpression(expr);
+																									a2->setExpressionFlag();
+																									argList* d1=Util::createAList(a2);
+																									ASTNode* i=Util::createNodeForProcCall(h, d1->AList, NULL);
+																									Util::createNewBlock();
+																									ASTNode* k=Util::createIdentifierNode("par");
+																									ASTNode* m=Util::createPropIdNode(k, $5);
+																									ASTNode* y1=Util::createNodeForId(m);
+																									ASTNode* n=Util::createNodeForBval(false);
+																									ASTNode* o=Util::createNodeForRelationalExpr(y1, n, OPERATOR_EQ);
+																									ASTNode* j1=Util::createIdentifierNode("par");
+																									Expression* m1=(Expression *)$9;
+																									Expression* f1=m1->getLeft();
+																									Identifier* g1=f1->getId();
+																									ASTNode* p=Util::createPropIdNode(j1, (ASTNode *)g1);
+																									ASTNode* h1=Util::createNodeForId(p);
+																									m1->setLeft((Expression *)h1);
+																									ASTNode* q=Util::createNodeForLogicalExpr(o, $9, OPERATOR_AND);
+																									Util::createNewBlock();
+																									ASTNode* s=Util::createIdentifierNode("par");
+																									ASTNode* u=Util::createPropIdNode(s, $5);
+																									ASTNode* v=Util::createNodeForBval(true);
+																									ASTNode* w=Util::createAssignmentNode(u, v);
+																									Util::addToBlock(w);
+																									ASTNode* a1=Util::finishBlock();
+																									ASTNode* r=Util::createNodeForIfStmt(q,a1,NULL); // Completes the if statement
+																									Util::addToBlock(r);
+																									ASTNode* b1=Util::finishBlock();
+																									ASTNode* j=Util::createNodeForForAllStmt(g, $3, i, $12, b1, false); // Completes the for statement
+																									Util::addToBlock(j);
+																									ASTNode* c1=Util::finishBlock();
+																									$$=Util::createNodeForIfStmt(d,c1,NULL);};
+																									
+				| '(' T_BACKWARD '<' id ',' id ',' T_COND '(' boolean_expr ')' '>' filterExpr ')' {			ASTNode* x=Util::createIdentifierNode("src");
+																											ASTNode* b=Util::createPropIdNode(x, $6);
+																											ASTNode* w1=Util::createNodeForId(b);
+																											ASTNode* c=Util::createNodeForBval(true);
+																											ASTNode* d=Util::createNodeForRelationalExpr(w1, c, OPERATOR_EQ);
+																											Util::createNewBlock();
+																											ASTNode* g=Util::createIdentifierNode("par");
+																											ASTNode* h=Util::createIdentifierNode("nodes_to");
+																											ASTNode* e1=Util::createIdentifierNode("src");
+																											ASTNode* k1=Util::createNodeForId(e1);
+																											argument* a2=new argument();
+																											Expression* expr=(Expression*)k1;
+																											a2->setExpression(expr);
+																											a2->setExpressionFlag();
+																											argList* d1=Util::createAList(a2);
+																											ASTNode* i=Util::createNodeForProcCall(h, d1->AList, NULL);
+																											Util::createNewBlock();
+																											ASTNode* k=Util::createIdentifierNode("par");
+																											ASTNode* m=Util::createPropIdNode(k, $6);
+																											ASTNode* y1=Util::createNodeForId(m);
+																											ASTNode* n=Util::createNodeForBval(false);
+																											ASTNode* o=Util::createNodeForRelationalExpr(y1, n, OPERATOR_EQ);
+																											Expression* m1=(Expression *)$10;
+																											Expression* f1=m1->getLeft();
+																											Identifier* g1=f1->getId();
+																											ASTNode* p=Util::createPropIdNode(h, (ASTNode *)g1);
+																											ASTNode* h1=Util::createNodeForId(p);
+																											m1->setLeft((Expression *)h1);
+																											ASTNode* q=Util::createNodeForLogicalExpr(o, $10, OPERATOR_AND);
+																											Util::createNewBlock();
+																											ASTNode* s=Util::createIdentifierNode("par");
+																											ASTNode* u=Util::createPropIdNode(s, $6);
+																											ASTNode* v=Util::createNodeForBval(true);
+																											ASTNode* w=Util::createAssignmentNode(u, v);
+																											Util::addToBlock(w);
+																											ASTNode* a1=Util::finishBlock();
+																											ASTNode* r=Util::createNodeForIfStmt(q,a1,NULL); // Completes the if statement
+																											Util::addToBlock(r);
+																											ASTNode* b1=Util::finishBlock();
+																											ASTNode* j=Util::createNodeForForAllStmt(g, $4, i, $13, b1, false); // Completes the for statement
+																											Util::addToBlock(j);
+																											ASTNode* c1=Util::finishBlock();
+																											$$=Util::createNodeForIfStmt(d,c1,NULL);};
+																											
+				| '(' T_BACKWARD '<' id ',' id '>' filterExpr ')' T_AND_OP '(' boolean_expr ')' {			ASTNode* x=Util::createIdentifierNode("src");
+																											ASTNode* b=Util::createPropIdNode(x, $6);
+																											ASTNode* w1=Util::createNodeForId(b);
+																											ASTNode* c=Util::createNodeForBval(true);
+																											ASTNode* d=Util::createNodeForRelationalExpr(w1, c, OPERATOR_EQ);
+																											ASTNode* m1=Util::createIdentifierNode("src");
+																											Expression* a=(Expression *)$12;
+																											Expression* f1=a->getLeft();
+																											Identifier* l1=f1->getId();
+																											ASTNode* e=Util::createPropIdNode(m1, (ASTNode *)l1);
+																											ASTNode* j1=Util::createNodeForId(e);
+																											a->setLeft((Expression *)j1);
+																											ASTNode* f=Util::createNodeForLogicalExpr($12, d, OPERATOR_AND);
+																											Util::createNewBlock();
+																											ASTNode* g=Util::createIdentifierNode("par");
+																											ASTNode* h=Util::createIdentifierNode("nodes_to");
+																											ASTNode* e1=Util::createIdentifierNode("src");
+																											ASTNode* k1=Util::createNodeForId(e1);
+																											argument* a2=new argument();
+																											Expression* expr=(Expression*)k1;
+																											a2->setExpression(expr);
+																											a2->setExpressionFlag();
+																											argList* d1=Util::createAList(a2);
+																											ASTNode* i=Util::createNodeForProcCall(h, d1->AList, NULL);
+																											Util::createNewBlock();
+																											ASTNode* k=Util::createIdentifierNode("par");
+																											ASTNode* m=Util::createPropIdNode(k, $6);
+																											ASTNode* y1=Util::createNodeForId(m);
+																											ASTNode* n=Util::createNodeForBval(false);
+																											ASTNode* o=Util::createNodeForRelationalExpr(y1, n, OPERATOR_EQ);
+																											Util::createNewBlock();
+																											ASTNode* s=Util::createIdentifierNode("par");
+																											ASTNode* u=Util::createPropIdNode(s, $6);
+																											ASTNode* v=Util::createNodeForBval(true);
+																											ASTNode* w=Util::createAssignmentNode(u, v);
+																											Util::addToBlock(w);
+																											ASTNode* a1=Util::finishBlock();
+																											ASTNode* r=Util::createNodeForIfStmt(o,a1,NULL); // Completes the if statement
+																											Util::addToBlock(r);
+																											ASTNode* b1=Util::finishBlock();
+																											ASTNode* j=Util::createNodeForForAllStmt(g, $4, i, $8, b1, false); // Completes the for statement
+																											Util::addToBlock(j);
+																											ASTNode* e2=Util::createIdentifierNode("src");
+																											ASTNode* n1=Util::createIdentifierNode(l1->getIdentifier());
+																											ASTNode* g1=Util::createPropIdNode(e2, n1);
+																											ASTNode* h1=Util::createNodeForBval(true);
+																											ASTNode* i1=Util::createAssignmentNode(g1, h1);
+																											Util::addToBlock(i1);
+																											ASTNode* c1=Util::finishBlock();
+																											$$=Util::createNodeForIfStmt(f,c1,NULL);};
+																											
+				| T_BACKWARD '<' id ',' id '>' filterExpr {			ASTNode* x=Util::createIdentifierNode("src");
+																	ASTNode* b=Util::createPropIdNode(x, $5);
+																	ASTNode* w1=Util::createNodeForId(b);
+																	ASTNode* c=Util::createNodeForBval(true);
+																	ASTNode* d=Util::createNodeForRelationalExpr(w1, c, OPERATOR_EQ);
+																	Util::createNewBlock();
+																	ASTNode* g=Util::createIdentifierNode("par");
+																	ASTNode* h=Util::createIdentifierNode("nodes_to");
+																	ASTNode* e1=Util::createIdentifierNode("src");
+																	ASTNode* k1=Util::createNodeForId(e1);
+																	argument* a2=new argument();
+																	Expression* expr=(Expression*)k1;
+																	a2->setExpression(expr);
+																	a2->setExpressionFlag();
+																	argList* d1=Util::createAList(a2);
+																	ASTNode* i=Util::createNodeForProcCall(h, d1->AList, NULL);
+																	Util::createNewBlock();
+																	ASTNode* k=Util::createIdentifierNode("par");
+																	ASTNode* m=Util::createPropIdNode(k, $5);
+																	ASTNode* y1=Util::createNodeForId(m);
+																	ASTNode* n=Util::createNodeForBval(false);
+																	ASTNode* o=Util::createNodeForRelationalExpr(y1, n, OPERATOR_EQ);
+																	Util::createNewBlock();
+																	ASTNode* s=Util::createIdentifierNode("par");
+																	ASTNode* u=Util::createPropIdNode(s, $5);
+																	ASTNode* v=Util::createNodeForBval(true);
+																	ASTNode* w=Util::createAssignmentNode(u, v);
+																	Util::addToBlock(w);
+																	ASTNode* a1=Util::finishBlock();
+																	ASTNode* r=Util::createNodeForIfStmt(o,a1,NULL); // Completes the if statement
+																	Util::addToBlock(r);
+																	ASTNode* b1=Util::finishBlock();
+																	ASTNode* j=Util::createNodeForForAllStmt(g, $3, i, $7, b1, false); // Completes the for statement
+																	Util::addToBlock(j);
+																	ASTNode* c1=Util::finishBlock();
+																	$$=Util::createNodeForIfStmt(d,c1,NULL);};
+																	
+				| '(' T_BACKWARD '<' id ',' id '>' filterExpr ')' {			ASTNode* x=Util::createIdentifierNode("src");
+																			ASTNode* b=Util::createPropIdNode(x, $6);
+																			ASTNode* w1=Util::createNodeForId(b);
+																			ASTNode* c=Util::createNodeForBval(true);
+																			ASTNode* d=Util::createNodeForRelationalExpr(w1, c, OPERATOR_EQ);
+																			Util::createNewBlock();
+																			ASTNode* g=Util::createIdentifierNode("par");
+																			ASTNode* h=Util::createIdentifierNode("nodes_to");
+																			ASTNode* e1=Util::createIdentifierNode("src");
+																			ASTNode* k1=Util::createNodeForId(e1);
+																			argument* a2=new argument();
+																			Expression* expr=(Expression*)k1;
+																			a2->setExpression(expr);
+																			a2->setExpressionFlag();
+																			argList* d1=Util::createAList(a2);
+																			ASTNode* i=Util::createNodeForProcCall(h, d1->AList, NULL);
+																			Util::createNewBlock();
+																			ASTNode* k=Util::createIdentifierNode("par");
+																			ASTNode* m=Util::createPropIdNode(k, $6);
+																			ASTNode* y1=Util::createNodeForId(m);
+																			ASTNode* n=Util::createNodeForBval(false);
+																			ASTNode* o=Util::createNodeForRelationalExpr(y1, n, OPERATOR_EQ);
+																			Util::createNewBlock();
+																			ASTNode* s=Util::createIdentifierNode("par");
+																			ASTNode* u=Util::createPropIdNode(s, $6);
+																			ASTNode* v=Util::createNodeForBval(true);
+																			ASTNode* w=Util::createAssignmentNode(u, v);
+																			Util::addToBlock(w);
+																			ASTNode* a1=Util::finishBlock();
+																			ASTNode* r=Util::createNodeForIfStmt(o,a1,NULL); // Completes the if statement
+																			Util::addToBlock(r);
+																			ASTNode* b1=Util::finishBlock();
+																			ASTNode* j=Util::createNodeForForAllStmt(g, $4, i, $8, b1, false); // Completes the for statement
+																			Util::addToBlock(j);
+																			ASTNode* c1=Util::finishBlock();
+																			$$=Util::createNodeForIfStmt(d,c1,NULL);};
+																			
+				| T_GC '<' id ',' filterExpr ',' id ',' id ',' id '>' {				ASTNode* b=Util::createIdentifierNode("src");
+																					ASTNode* c=Util::createIdentifierNode("nodes");
+																					argList* aList=new argList();
+																					ASTNode* d=Util::createNodeForProcCall(c, aList->AList, NULL);
+																					Util::createNewBlock();
+																					ASTNode* e=Util::createIdentifierNode("src");
+																					ASTNode* f=Util::createIdentifierNode("src");
+																					ASTNode* g=Util::createPropIdNode(e, $9);
+																					ASTNode* i2=Util::createNodeForId(g);
+																					ASTNode* h=Util::createPropIdNode(f, $11);
+																					ASTNode* j2=Util::createNodeForId(h);
+																					ASTNode* i=Util::createNodeForBval("false");
+																					ASTNode* j=Util::createNodeForBval("false");
+																					ASTNode* k=Util::createNodeForRelationalExpr(i2,i,OPERATOR_EQ);
+																					ASTNode* l=Util::createNodeForRelationalExpr(j2,j,OPERATOR_EQ);
+																					ASTNode* m=Util::createNodeForLogicalExpr(k,l,OPERATOR_OR);
+																					Util::createNewBlock();
+																					ASTNode* n=Util::createPrimitiveTypeNode(TYPE_INT);
+																					ASTNode* y2=Util::createPrimitiveTypeNode(TYPE_INT);
+																					ASTNode* o=Util::createIdentifierNode("ext1");
+																					ASTNode* p=Util::createIdentifierNode("ext2");
+																					ASTNode* q=Util::createNodeForIval(0);
+																					ASTNode* r=Util::createNodeForIval(0);
+																					ASTNode* s=Util::createAssignedDeclNode(n,o,q);
+																					ASTNode* t=Util::createAssignedDeclNode(y2,p,r);
+																					Util::addToBlock(s);
+																					Util::addToBlock(t);
+																					ASTNode* u=Util::createIdentifierNode("src");
+																					ASTNode* v=Util::createNodeForBval("false");
+																					ASTNode* w=Util::createPropIdNode(u, $9);
+																					ASTNode* k2=Util::createNodeForId(w);
+																					ASTNode* x=Util::createNodeForRelationalExpr(k2,v,OPERATOR_EQ);
+																					Util::createNewBlock();
+																					ASTNode* y=Util::createIdentifierNode("ext1");
+																					ASTNode* z=Util::createNodeForIval(1);
+																					ASTNode* a1=Util::createAssignmentNode(y, z);
+																					Util::addToBlock(a1);
+																					ASTNode* b1=Util::finishBlock();
+																					ASTNode* c1=Util::createNodeForIfStmt(x, b1, NULL);
+																					ASTNode* d1=Util::createIdentifierNode("src");
+																					ASTNode* e1=Util::createNodeForBval("false");
+																					ASTNode* f1=Util::createPropIdNode(d1, $11);
+																					ASTNode* l2=Util::createNodeForId(f1);
+																					ASTNode* g1=Util::createNodeForRelationalExpr(l2,e1,OPERATOR_EQ);
+																					Util::createNewBlock();
+																					ASTNode* h1=Util::createIdentifierNode("ext2");
+																					ASTNode* i1=Util::createNodeForIval(1);
+																					ASTNode* j1=Util::createAssignmentNode(h1, i1);
+																					Util::addToBlock(f1);
+																					ASTNode* k1=Util::finishBlock();
+																					ASTNode* l1=Util::createNodeForIfStmt(g1, k1, NULL);
+																					ASTNode* m1=Util::createPrimitiveTypeNode(TYPE_INT);
+																					ASTNode* n1=Util::createIdentifierNode("newRange");
+																					ASTNode* o1=Util::createNodeForIval(3);
+																					ASTNode* p1=Util::createIdentifierNode("src");
+																					ASTNode* q1=Util::createPropIdNode(p1, $7);
+																					ASTNode* m2=Util::createNodeForId(q1);
+																					ASTNode* r1=Util::createNodeForArithmeticExpr(o1, m2, OPERATOR_MUL);
+																					ASTNode* s1=Util::createIdentifierNode("ext1");
+																					ASTNode* n2=Util::createNodeForId(s1);
+																					ASTNode* t1=Util::createNodeForArithmeticExpr(r1, n2, OPERATOR_ADD);
+																					ASTNode* u1=Util::createIdentifierNode("ext2");
+																					ASTNode* o2=Util::createNodeForId(u1);
+																					ASTNode* v1=Util::createNodeForArithmeticExpr(t1, n2, OPERATOR_ADD);
+																					Util::addToBlock(v1);
+																					ASTNode* w1=Util::createIdentifierNode("src");
+																					ASTNode* x1=Util::createPropIdNode(w1, $7);
+																					ASTNode* y1=Util::createIdentifierNode("newRange");
+																					ASTNode* z2=Util::createAssignmentNode(x1, y1);
+																					Util::addToBlock(z2);
+																					ASTNode* a2=Util::createIdentifierNode("src");
+																					ASTNode* b2=Util::createPropIdNode(a2, $9);
+																					ASTNode* c2=Util::createNodeForBval(false);
+																					ASTNode* d2=Util::createAssignmentNode(b2, c2);
+																					Util::addToBlock(d2);
+																					ASTNode* e2=Util::createIdentifierNode("src");
+																					ASTNode* f2=Util::createPropIdNode(e2, $11);
+																					ASTNode* g2=Util::createNodeForBval(false);
+																					ASTNode* h2=Util::createAssignmentNode(f2, g2);
+																					Util::addToBlock(h2);
+																					ASTNode* q2=Util::finishBlock();
+																					ASTNode* e3=Util::createNodeForIfStmt(m, q2, NULL);
+																					Util::addToBlock(e3);										
+																					ASTNode* r2=Util::finishBlock();
+																					$$=Util::createNodeForForAllStmt(b, $3, d, $5, r2, true);};
+																					
 oid :  id '.' id { //Identifier* id1=(Identifier*)Util::createIdentifierNode($1);
                   // Identifier* id2=(Identifier*)Util::createIdentifierNode($1);
 				   $$ = Util::createPropIdNode($1,$3);
@@ -456,18 +1745,21 @@ oid :  id '.' id { //Identifier* id1=(Identifier*)Util::createIdentifierNode($1)
 	                          ASTNode* expr2 = Util::createNodeForId($5);
 							  ASTNode* indexexpr =  Util::createNodeForIndexExpr(expr1, expr2, OPERATOR_INDEX);
 	                          $$ = Util::createPropIdNode($1 , indexexpr);};					
-    				
-					 
 
 tid : id '.' id '.' id {// Identifier* id1=(Identifier*)Util::createIdentifierNode($1);
                   // Identifier* id2=(Identifier*)Util::createIdentifierNode($1);
 				   $$=Util::createPropIdNode($1,$3);
 				    };
 id : ID   { 
-	         $$=Util::createIdentifierNode($1);  
 
+	        $$=Util::createIdentifierNode($1);
+	        Identifier* temp=(Identifier *)$$;
+			if (strcmp(temp->getIdentifier(), "this") == 0)
+				temp->setIdentifier("src");
             
-            };                                                   
+            };                
+            
+                                   
           
 
 
@@ -482,15 +1774,15 @@ void yyerror(const char *s) {
 int main(int argc,char **argv) 
 {
   
-  if(argc<4){
+  if(argc < 4) {
     std::cout<< "Usage: " << argv[0] << " [-s|-d] -f <dsl.sp> -b [cuda|omp|mpi|acc|multigpu|amd] " << '\n';
     std::cout<< "E.g. : " << argv[0] << " -s -f ../graphcode/sssp_dslV2 -b omp " << '\n';
     exit(-1);
   }
   
-    //dsl_cpp_generator cpp_backend;
-    SymbolTableBuilder stBuilder;
-     FILE    *fd;
+  // dsl_cpp_generator cpp_backend;
+  SymbolTableBuilder stBuilder;
+  FILE    *fd;
      
   int opt;
   char* fileName=NULL;
@@ -555,11 +1847,8 @@ int main(int argc,char **argv)
    if(!(staticGen || dynamicGen)) {
 		fprintf(stderr, "Type of graph(static/dynamic) not specified!\n");
 		exit(-1);
-     }
+   }
 	  
-     
-
-
    yyin= fopen(fileName,"r");
    
    if(!yyin) {
@@ -684,7 +1973,7 @@ int main(int argc,char **argv)
 
 	printf("finished successfully\n");
    
-   /* to generate code, ./finalcode -s/-d -f "filename" -b "backendname"*/
+    /* to generate code, ./finalcode -s/-d -f "filename" -b "backendname"*/
 	return 0;   
 	 
 }
