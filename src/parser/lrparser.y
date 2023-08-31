@@ -572,7 +572,7 @@ graph_construct : '(' T_FORWARD '<' id ',' id ',' T_COND '(' boolean_expr ')' '>
 																																			ASTNode* z=Util::createAssignmentNode($16, y);
 																																			Util::addToBlock(z);
 																																			ASTNode* a1=Util::finishBlock();
-																																			ASTNode* r=Util::createNodeForIfStmt(f,a1,NULL); // Completes the if statement
+																																			ASTNode* r=Util::createNodeForIfStmt(q,a1,NULL); // Completes the if statement
 																																			Util::addToBlock(r);
 																																			ASTNode* b1=Util::finishBlock();
 																																			ASTNode* j=Util::createNodeForForAllStmt(g, $4, i, $13, b1, false);
@@ -1662,8 +1662,8 @@ graph_construct : '(' T_FORWARD '<' id ',' id ',' T_COND '(' boolean_expr ')' '>
 																					ASTNode* i2=Util::createNodeForId(g);
 																					ASTNode* h=Util::createPropIdNode(f, $11);
 																					ASTNode* j2=Util::createNodeForId(h);
-																					ASTNode* i=Util::createNodeForBval("false");
-																					ASTNode* j=Util::createNodeForBval("false");
+																					ASTNode* i=Util::createNodeForBval(false);
+																					ASTNode* j=Util::createNodeForBval(false);
 																					ASTNode* k=Util::createNodeForRelationalExpr(i2,i,OPERATOR_EQ);
 																					ASTNode* l=Util::createNodeForRelationalExpr(j2,j,OPERATOR_EQ);
 																					ASTNode* m=Util::createNodeForLogicalExpr(k,l,OPERATOR_OR);
@@ -1679,7 +1679,7 @@ graph_construct : '(' T_FORWARD '<' id ',' id ',' T_COND '(' boolean_expr ')' '>
 																					Util::addToBlock(s);
 																					Util::addToBlock(t);
 																					ASTNode* u=Util::createIdentifierNode("src");
-																					ASTNode* v=Util::createNodeForBval("false");
+																					ASTNode* v=Util::createNodeForBval(false);
 																					ASTNode* w=Util::createPropIdNode(u, $9);
 																					ASTNode* k2=Util::createNodeForId(w);
 																					ASTNode* x=Util::createNodeForRelationalExpr(k2,v,OPERATOR_EQ);
@@ -1690,8 +1690,9 @@ graph_construct : '(' T_FORWARD '<' id ',' id ',' T_COND '(' boolean_expr ')' '>
 																					Util::addToBlock(a1);
 																					ASTNode* b1=Util::finishBlock();
 																					ASTNode* c1=Util::createNodeForIfStmt(x, b1, NULL);
+																					Util::addToBlock(c1);
 																					ASTNode* d1=Util::createIdentifierNode("src");
-																					ASTNode* e1=Util::createNodeForBval("false");
+																					ASTNode* e1=Util::createNodeForBval(false);
 																					ASTNode* f1=Util::createPropIdNode(d1, $11);
 																					ASTNode* l2=Util::createNodeForId(f1);
 																					ASTNode* g1=Util::createNodeForRelationalExpr(l2,e1,OPERATOR_EQ);
@@ -1699,9 +1700,10 @@ graph_construct : '(' T_FORWARD '<' id ',' id ',' T_COND '(' boolean_expr ')' '>
 																					ASTNode* h1=Util::createIdentifierNode("ext2");
 																					ASTNode* i1=Util::createNodeForIval(1);
 																					ASTNode* j1=Util::createAssignmentNode(h1, i1);
-																					Util::addToBlock(f1);
+																					Util::addToBlock(j1);
 																					ASTNode* k1=Util::finishBlock();
 																					ASTNode* l1=Util::createNodeForIfStmt(g1, k1, NULL);
+																					Util::addToBlock(l1);
 																					ASTNode* m1=Util::createPrimitiveTypeNode(TYPE_INT);
 																					ASTNode* n1=Util::createIdentifierNode("newRange");
 																					ASTNode* o1=Util::createNodeForIval(3);
@@ -1714,12 +1716,14 @@ graph_construct : '(' T_FORWARD '<' id ',' id ',' T_COND '(' boolean_expr ')' '>
 																					ASTNode* t1=Util::createNodeForArithmeticExpr(r1, n2, OPERATOR_ADD);
 																					ASTNode* u1=Util::createIdentifierNode("ext2");
 																					ASTNode* o2=Util::createNodeForId(u1);
-																					ASTNode* v1=Util::createNodeForArithmeticExpr(t1, n2, OPERATOR_ADD);
-																					Util::addToBlock(v1);
+																					ASTNode* v1=Util::createNodeForArithmeticExpr(t1, o2, OPERATOR_ADD);
+																					ASTNode* s2=Util::createAssignedDeclNode(m1, n1, v1);
+																					Util::addToBlock(s2);
 																					ASTNode* w1=Util::createIdentifierNode("src");
 																					ASTNode* x1=Util::createPropIdNode(w1, $7);
 																					ASTNode* y1=Util::createIdentifierNode("newRange");
-																					ASTNode* z2=Util::createAssignmentNode(x1, y1);
+																					ASTNode* p2=Util::createNodeForId(y1);
+																					ASTNode* z2=Util::createAssignmentNode(x1, p2);
 																					Util::addToBlock(z2);
 																					ASTNode* a2=Util::createIdentifierNode("src");
 																					ASTNode* b2=Util::createPropIdNode(a2, $9);
