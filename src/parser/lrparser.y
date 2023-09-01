@@ -193,7 +193,7 @@ statement: declaration ';'{$$=$1;};
 	| on_add_blockstmt {$$ = $1;};
 	| on_delete_blockstmt {$$ = $1;};
 	| graph_construct ';' {$$ = $1;};
-	| property_club ';' {$$ = Util::createNodeForProcCallStmt($1);};
+	| property_club ';' {$$ = $1;};
 
 
 blockstatements : block_begin statements block_end { $$=Util::finishBlock();};
@@ -284,7 +284,8 @@ property_club : T_NP '<' primitive ',' id '>' id '=' rhs { ASTNode* a=Util::crea
 														  a1->setAssign(assign);
 														  a1->setAssignFlag();
 														  argList* e=Util::createAList(a1);
-														  $$=Util::createNodeForProcCall(c, e->AList, NULL);};
+														  ASTNode* f=Util::createNodeForProcCall(c, e->AList, NULL);
+														  $$=Util::createNodeForProcCallStmt(f);};
 			  | T_EP '<' primitive ',' id '>' id '=' rhs { ASTNode* a=Util::createPropertyTypeNode(TYPE_PROPEDGE,$3);
 														  ASTNode* g=Util::createNormalDeclNode(a, $7);
 														  Util::addToBlock(g);
@@ -296,7 +297,12 @@ property_club : T_NP '<' primitive ',' id '>' id '=' rhs { ASTNode* a=Util::crea
 														  a1->setAssign(assign);
 														  a1->setAssignFlag();
 														  argList* e=Util::createAList(a1);
-														  $$=Util::createNodeForProcCall(c, e->AList, NULL);};
+														  ASTNode* f=Util::createNodeForProcCall(c, e->AList, NULL);
+														  $$=Util::createNodeForProcCallStmt(f);};
+			  | T_NP '<' primitive ',' id '>' id { ASTNode* a=Util::createPropertyTypeNode(TYPE_PROPNODE,$3);
+												$$=Util::createNormalDeclNode(a, $7);};
+			  | T_EP '<' primitive ',' id '>' id { ASTNode* a=Util::createPropertyTypeNode(TYPE_PROPEDGE,$3);
+												  $$=Util::createNormalDeclNode(a, $7);};
 			  | T_NP '<' collections ',' id '>' { $$=Util::createPropertyTypeNode(TYPE_PROPEDGE,$3); };
 			  | T_EP '<' collections ',' id '>' { $$=Util::createPropertyTypeNode(TYPE_PROPEDGE,$3); };
 			  | T_NP '<' T_NODE ',' id '>' { ASTNode* type = Util::createNodeEdgeTypeNode(TYPE_NODE);
