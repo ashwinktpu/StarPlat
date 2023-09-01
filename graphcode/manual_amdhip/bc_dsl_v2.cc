@@ -1,6 +1,6 @@
 /**
  * Manual implementation for Betweenness Centrality
- * Brandes Algorithm 
+ * Brandes Algorithm using Global Barrier
  * Parallel implementation using AMD HIP Code. 
  * 
  * @author: cs22m056
@@ -26,6 +26,7 @@ using std::cout;
 using std::vector;
 
 #define FLAG cout << "FLAG\n";
+#define GALF printf("FLAG\n");
 
 __global__
 void PrintArray(double* array, long size) {
@@ -97,18 +98,12 @@ void ReversePass(
 
 	unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
 
-	if(v >= nv)
-		return;
+	// if(v >= nv)
+		// return;
 
-	// auto grid = cooperative_groups::this_grid(); // TODO
+	auto grid = cooperative_groups::this_grid(); // TODO
 
-	// !
-	// ! POSSIBLE PROBLEM
-	// !
-	// ! Check the levels things. 
-	// !
-
-	if(d_d[v] == *level - 1) {
+	if(v < nv && d_d[v] == *level - 1) {
 
 		for(int e = d_meta[v]; e < d_meta[v+1]; e++) {
 
@@ -117,23 +112,14 @@ void ReversePass(
 			if(d_d[w] == *level)
 				atomicAdd(&d_delta[v], (d_sigma[v] / d_sigma[w]) * (1 + d_delta[w]));
 		}
-
-		// ? Moved to another kernel
-		// printf("v = %d dd = %d level = %d\n", v, d_d[v], *level);
-		// grid.sync();
-		// d_bc[v] += d_delta[v];
 	}
-}
 
-__global__
-void AddElements(int nv, double* a, double* b, int* d_d, int* level, int src) {
+	if(v == 0) GALF
+	grid.sync();
+	if(v == 0) GALF
 
-	unsigned v = blockIdx.x * blockDim.x + threadIdx.x;
-	if(v >= nv)
-		return;
-
-	if(d_d[v] == *level - 1 && v != src)
-		a[v] += b[v];
+	if(v < nv && d_d[v] == *level - 1)
+		d_bc[v] += d_delta[v];
 }
 
 void ComputeBetweennessCentrality(graph& g, vector<int>& sources, double *h_bc) { // TODO: sources should be a set
@@ -225,15 +211,7 @@ void ComputeBetweennessCentrality(graph& g, vector<int>& sources, double *h_bc) 
 				V, d_meta, d_data, d_delta, d_sigma,
 				d_d, level, isAllNodesTraversed, d_bc
 			); 
-			
-			//? Problem with grid.sync()
-
-			AddElements<<<blocks, threads>>>( 
-				V, d_bc, d_delta, d_d, level, s
-			);
-
 			hipDeviceSynchronize(); //? Problem with grid.sync()
-			
 			(*level)--;
 		}
 		hipDeviceSynchronize();
@@ -274,8 +252,8 @@ int main(int argc, char* argv[]) {
 
 	// Process bc data
 
-	// for(int i: src)
-	// 	cout << i << " " << bc[i] << NL;
+	for(int i: src)
+		cout << i << " " << bc[i] << NL;
 
 	free(bc);
 
