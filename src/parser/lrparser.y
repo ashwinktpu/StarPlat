@@ -60,7 +60,7 @@
 %token T_BFS T_REVERSE
 %token T_INCREMENTAL T_DECREMENTAL T_STATIC T_DYNAMIC
 %token T_BATCH T_ONADD T_ONDELETE
-%token T_FORWARD T_BACKWARD T_GC T_ALT
+%token T_FORWARD T_BACKWARD T_GC
 %token T_UPD T_ITR T_COND T_THIS
 
 
@@ -193,7 +193,7 @@ statement: declaration ';'{$$=$1;};
 	| on_add_blockstmt {$$ = $1;};
 	| on_delete_blockstmt {$$ = $1;};
 	| graph_construct ';' {$$ = $1;};
-	| property_club ';' {$$ = $1;};
+	| property_club ';' {$$ = Util::createNodeForProcCallStmt($1);};
 
 
 blockstatements : block_begin statements block_end { $$=Util::finishBlock();};
@@ -277,29 +277,26 @@ property_club : T_NP '<' primitive ',' id '>' id '=' rhs { ASTNode* a=Util::crea
 														  ASTNode* g=Util::createNormalDeclNode(a, $7);
 														  Util::addToBlock(g);
 														  ASTNode* b=Util::createIdentifierNode("attachNodeProperty");
-														  ASTNode* c=Util::createPropIdNode(b, $5);
+														  ASTNode* c=Util::createPropIdNode($5, b);
 														  ASTNode* d=Util::createAssignmentNode($7, $9);
 														  argument* a1=new argument();
 														  assignment* assign=(assignment*)d;
 														  a1->setAssign(assign);
 														  a1->setAssignFlag();
 														  argList* e=Util::createAList(a1);
-														  ASTNode* f=Util::createNodeForProcCall(c, e->AList, NULL);
-														  $$=Util::createNodeForProcCallStmt(f);
-														  };
-			  | T_EP '<' primitive ',' id '>' id '=' rhs { ASTNode* a=Util::createPropertyTypeNode(TYPE_PROPNODE,$3);
+														  $$=Util::createNodeForProcCall(c, e->AList, NULL);};
+			  | T_EP '<' primitive ',' id '>' id '=' rhs { ASTNode* a=Util::createPropertyTypeNode(TYPE_PROPEDGE,$3);
 														  ASTNode* g=Util::createNormalDeclNode(a, $7);
 														  Util::addToBlock(g);
 														  ASTNode* b=Util::createIdentifierNode("attachEdgeProperty");
-														  ASTNode* c=Util::createPropIdNode(b, $5);
+														  ASTNode* c=Util::createPropIdNode($5, b);
 														  ASTNode* d=Util::createAssignmentNode($7, $9);
 														  argument* a1=new argument();
 														  assignment* assign=(assignment*)d;
 														  a1->setAssign(assign);
 														  a1->setAssignFlag();
 														  argList* e=Util::createAList(a1);
-														  ASTNode* f=Util::createNodeForProcCall(c, e->AList, NULL);
-														  $$=Util::createNodeForProcCallStmt(f); };
+														  $$=Util::createNodeForProcCall(c, e->AList, NULL);};
 			  | T_NP '<' collections ',' id '>' { $$=Util::createPropertyTypeNode(TYPE_PROPEDGE,$3); };
 			  | T_EP '<' collections ',' id '>' { $$=Util::createPropertyTypeNode(TYPE_PROPEDGE,$3); };
 			  | T_NP '<' T_NODE ',' id '>' { ASTNode* type = Util::createNodeEdgeTypeNode(TYPE_NODE);
@@ -1651,7 +1648,7 @@ graph_construct : '(' T_FORWARD '<' id ',' id ',' T_COND '(' boolean_expr ')' '>
 																			ASTNode* c1=Util::finishBlock();
 																			$$=Util::createNodeForIfStmt(d,c1,NULL);};
 																			
-				| T_GC '<' id ',' filterExpr ',' id ',' id ',' id '>' {				ASTNode* b=Util::createIdentifierNode("src");
+				| T_GC '<' id ',' filterExpr ',' id ',' id ',' id ',' id'>' {		ASTNode* b=Util::createIdentifierNode("src");
 																					ASTNode* c=Util::createIdentifierNode("nodes");
 																					argList* aList=new argList();
 																					ASTNode* d=Util::createNodeForProcCall(c, aList->AList, NULL);
@@ -1719,6 +1716,18 @@ graph_construct : '(' T_FORWARD '<' id ',' id ',' T_COND '(' boolean_expr ')' '>
 																					ASTNode* v1=Util::createNodeForArithmeticExpr(t1, o2, OPERATOR_ADD);
 																					ASTNode* s2=Util::createAssignedDeclNode(m1, n1, v1);
 																					Util::addToBlock(s2);
+																					ASTNode* t2=Util::createIdentifierNode("newRange");
+																					ASTNode* u2=Util::createIdentifierNode("newRange");
+																					ASTNode* v2=Util::createIdentifierNode("newRange");
+																					ASTNode* w2=Util::createNodeForId(u2);
+																					ASTNode* x2=Util::createNodeForId(v2);
+																					ASTNode* a3=Util::createNodeForId($13);
+																					ASTNode* b3=Util::createNodeForArithmeticExpr(w2,a3,OPERATOR_DIV);
+																					ASTNode* c3=Util::createNodeForId($13);
+																					ASTNode* d3=Util::createNodeForArithmeticExpr(b3,c3,OPERATOR_MUL);
+																					ASTNode* f3=Util::createNodeForArithmeticExpr(x2,d3,OPERATOR_SUB);
+																					ASTNode* g3=Util::createAssignmentNode(t2,f3);
+																					Util::addToBlock(g3);
 																					ASTNode* w1=Util::createIdentifierNode("src");
 																					ASTNode* x1=Util::createPropIdNode(w1, $7);
 																					ASTNode* y1=Util::createIdentifierNode("newRange");
