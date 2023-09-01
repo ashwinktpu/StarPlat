@@ -1,0 +1,171 @@
+function vHong(Graph g) {
+    propNode<bool, g> modified = False;
+    propNode<int, g> outDeg = 0;
+	  propNode<int, g> inDeg = 0;
+    propNode<bool, g> visitFw = False;
+	  propNode<bool, g> visitBw = False;
+    propNode<bool, g> propFw = False;
+	  propNode<bool, g> propBw = False;
+    propNode<bool, g> isPivot = False;
+    propNode<int, g> scc = -1;
+    propNode<int, g> range = 0;
+    propNode<int, g> pivotField = -1;
+	
+	g.update() {
+		int nxtSrc = this + 1;
+		this.inDeg = this.inDeg + nxtSrc.rev_meta - this.rev_meta;
+		this.outDeg = this.outDeg + nxtSrc.meta - this.meta;
+	}
+    
+    bool fpoint1 = False;
+    g.update(filter(scc == -1)) until (fpoint1: !modified) {
+		int havePar = 0;
+		int haveChild = 0;
+		g.update(iterate(par in g.nodes_to(this)), filter(scc == -1)) {
+			if (par.range == this.range) {
+				havePar = 1;
+			}
+		}
+		g.update(iterate(dst in g.neighbors(this)), filter(scc == -1)) {
+			if (dst.range == this.range) {
+				haveChild = 1;
+			}
+		}
+		if ((havePar == 0) || (haveChild == 0)) {
+			this.scc = this;
+			this.isPivot = True;
+			fpoint1 = False;
+		}
+	}
+	
+	g.update(filter(scc == -1)) {
+		int color = this.range;
+		int index = color - (color / V) * V;
+		int oldSrcValue = -1;
+		int oldSrc = index.pivotField;
+		if(oldSrc >= 0) {oldSrcValue = oldSrc.inDeg + oldSrc.outDeg;}
+		if(oldSrcValue < (this.inDeg + this.outDeg)) {index.pivotField = this;}
+	}
+	
+	g.update(filter(scc == -1)) {
+		int color = this.range;
+		int index = color - (color / V) * V;
+		if (index.pivotField == this) {
+			this.visitFw = True;
+			this.visitBw = True;
+			this.isPivot = True;
+		}
+	}
+
+    bool fpoint2 = False;
+    g.update(filter(scc == -1)) until (fpoint2: !modified) {
+		int myrange = this.range;
+		
+		(propagate_forward<g, visitFw, cond(range == myrange)>.filter(scc == -1) until (fpoint2: !modified)) && (propFw == False);
+		(propagate_backward<g, visitBw, cond(range == myrange)>.filter(scc == -1) until (fpoint2: !modified)) && (propBw == False);
+	}
+
+	graph_color<g, filter(scc == -1), range, visitFw, visitBw, V>;
+	
+	g.update(filter(scc == -1)) {
+		if (this.visitFw == False || this.visitBw == False) {
+			this.propFw = False;
+			this.propBw = False;
+		}
+		if (this.visitFw == True && this.visitBw == True) {
+			this.scc = this;
+		}
+	}
+	
+    fpoint1 = False;
+	g.update(filter(scc == -1)) until (fpoint1: !modified) {
+		int havePar = 0;
+		int haveChild = 0;
+		g.update(iterate(par in g.nodes_to(src)), filter(scc == -1)) {
+			if (par.range == this.range) {
+				havePar = 1;
+			}
+		}
+		g.update(iterate(dst in g.neighbors(src)), filter(scc == -1)) {
+			if (dst.range == this.range) {
+				haveChild = 1;
+			}
+		}
+		if ((havePar == 0) || (haveChild == 0)) {
+			this.scc = this;
+			this.isPivot = True;
+			fpoint1 = False;
+		}
+	}
+
+    g.attachNodeProperty(range = 0);
+    g.update(){
+		this.range = this.range + this;
+	}
+
+    bool fpoint4 = False;
+    fixedPoint until (fpoint4 : !modified) {
+		g.update(filter(scc == -1)) {
+			g.update(iterate(dst in g.neighbors(this)), filter(scc == -1)) {
+				if (dst.range < this.range) {
+					this.range = dst.range;
+					fpoint4 = False;
+				}
+			}
+		}
+		
+		g.update(filter(scc == -1)) {
+			int myrange = this.range;
+			if ((myrange != this) && (myrange != myrange.range)) {
+				this.range = myrange.range;
+				fpoint4 = False;
+			}
+		}
+	}
+
+    bool fpoint5 = False;
+    fixedPoint until (fpoint5 : !modified) {
+		g.update(filter(scc == -1)) {
+			int color = this.range;
+			int index = color - (color / V) * V;
+			int oldSrcValue = -1;
+			int oldSrc = index.pivotField;
+			if (oldSrc >= 0) {
+				oldSrcValue = oldSrc.inDeg + oldSrc.outDeg;
+			}
+			if (oldSrcValue < (inDeg + outDeg)) {
+				index.pivotField = src;
+			}
+		}
+	
+		g.update(filter(scc == -1)) {
+			int color = range;
+			int index = color - (color / V) * V;
+			if (index.pivotField == this) {
+				this.visitFw = True;
+				this.visitBw = True;
+				this.isPivot = True;
+			}
+		}
+
+		fpoint2 = False;
+		g.update(filter(scc == -1)) until (fpoint2: !modified) {
+			int myrange = range;
+			(propagate_forward<g, visitFw, cond(range == myrange)>.filter(scc == -1) until (fpoint2 : !modified)) && (propFw == False);
+			(propagate_backward<g, visitBw, cond(range == myrange)>.filter(scc == -1) until (fpoint2 : !modified)) && (propFw == False);
+		}
+	}
+
+    graph_color<g, filter(scc == -1), range, visitFw, visitBw, V>;
+    
+	g.update(filter(scc == -1)) {
+		if (this.visitFw == False || this.visitBw == False) {
+			this.propFw = False;
+			this.propBw = False;
+		}
+		if (this.visitFw == True && this.visitBw == True) {
+			this.scc = this;
+		}
+	}
+}
+// While using propagate_forward clause with g.update, do not specify any iterate in g.update. Let the program default itself to an iterator.
