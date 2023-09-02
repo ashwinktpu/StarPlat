@@ -1,11 +1,11 @@
-function vHong(Graph g) {
+function vHong(Graph g, int V) {
     propNode<bool, g> modified = False;
     propNode<int, g> outDeg = 0;
-	  propNode<int, g> inDeg = 0;
+	propNode<int, g> inDeg = 0;
     propNode<bool, g> visitFw = False;
-	  propNode<bool, g> visitBw = False;
+	propNode<bool, g> visitBw = False;
     propNode<bool, g> propFw = False;
-	  propNode<bool, g> propBw = False;
+	propNode<bool, g> propBw = False;
     propNode<bool, g> isPivot = False;
     propNode<int, g> scc = -1;
     propNode<int, g> range = 0;
@@ -133,13 +133,13 @@ function vHong(Graph g) {
 			if (oldSrc >= 0) {
 				oldSrcValue = oldSrc.inDeg + oldSrc.outDeg;
 			}
-			if (oldSrcValue < (inDeg + outDeg)) {
+			if (oldSrcValue < (this.inDeg + this.outDeg)) {
 				index.pivotField = src;
 			}
 		}
 	
 		g.update(filter(scc == -1)) {
-			int color = range;
+			int color = this.range;
 			int index = color - (color / V) * V;
 			if (index.pivotField == this) {
 				this.visitFw = True;
@@ -150,7 +150,7 @@ function vHong(Graph g) {
 
 		fpoint2 = False;
 		g.update(filter(scc == -1)) until (fpoint2: !modified) {
-			int myrange = range;
+			int myrange = this.range;
 			(propagate_forward<g, visitFw, cond(range == myrange)>.filter(scc == -1) until (fpoint2 : !modified)) && (propFw == False);
 			(propagate_backward<g, visitBw, cond(range == myrange)>.filter(scc == -1) until (fpoint2 : !modified)) && (propFw == False);
 		}
