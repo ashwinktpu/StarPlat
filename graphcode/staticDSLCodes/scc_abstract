@@ -152,19 +152,19 @@ function vHong(Graph g, int V) {
 		g.update(filter(scc == -1)) until (fpoint2: !modified) {
 			int myrange = this.range;
 			(propagate_forward<g, visitFw, cond(range == myrange)>.filter(scc == -1) until (fpoint2 : !modified)) && (propFw == False);
-			(propagate_backward<g, visitBw, cond(range == myrange)>.filter(scc == -1) until (fpoint2 : !modified)) && (propFw == False);
+			(propagate_backward<g, visitBw, cond(range == myrange)>.filter(scc == -1) until (fpoint2 : !modified)) && (propBw == False);
 		}
-	}
-
-    graph_color<g, filter(scc == -1), range, visitFw, visitBw, V>;
+		graph_color<g, filter(scc == -1), range, visitFw, visitBw, V>;
     
-	g.update(filter(scc == -1)) {
-		if (this.visitFw == False || this.visitBw == False) {
-			this.propFw = False;
-			this.propBw = False;
-		}
-		if (this.visitFw == True && this.visitBw == True) {
-			this.scc = this;
+		g.update(filter(scc == -1)) {
+			if (this.visitFw == False || this.visitBw == False) {
+				fpoint5 = false;
+				this.propFw = False;
+				this.propBw = False;
+			}
+			if (this.visitFw == True && this.visitBw == True) {
+				this.scc = this;
+			}
 		}
 	}
 }
