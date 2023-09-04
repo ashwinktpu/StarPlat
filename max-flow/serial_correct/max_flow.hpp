@@ -6,22 +6,29 @@ struct edge_elements ;
 
 
 struct edge_elements {
-  int flow ;
-  int capacity ;
-  vertex_properties *destination ;
+
+
+  // struct to store entities relevant to an edge for the max flow problem.
+  int flow ; // current flow value through the edge.
+  int capacity ; // capacity of the edge.
+  vertex_properties *source; // vertex type struct containing the source vertex of the edge.
+  vertex_properties *destination ; // vertex type struct containing the destination vertex of the edge.
+
 };
 
 struct vertex_properties {
 
-
-  bool active ;
-  int excess ;
-  int vertex_id ;
-  int height ;
-  edge_elements *current_edge ;
+  
+  // struct to store all information relevant to a vertex.
+  bool active ; // whether the vertex is active or not,
+  int excess ; // amount of excess flow passing through the vertex.
+  int vertex_id ; // vertex_id of the vertex.
+  int height ; // height of the vertex.
+  edge_elements *current_edge ; // current selected edge through which flow is being passed through the vertex.
 
   bool operator< (vertex_properties a, vertex_properties b) {
-
+    
+    // for storing the vertices in an associative container. To change to Hash type container.
     return a.vertex_id < b.vertex_id ;  
   }
 } ;
@@ -29,28 +36,51 @@ struct vertex_properties {
 
 class network_flow : public graph {
 
+/*
+ * network_flow type graph based on the class graph.
+ * additionally stores edge capacities and current vertices.
+ * Also maintains a residual height
+ * Each vertex has an excess and a height associated with it.
+ * */
+
 private:
-  int source ;
-  int sink ;
+
+  // source and sink to be defined by user. 
+  vertex_properties source ;
+  vertex_properties sink ;
 
 public:
 
 
-  void select_source () {}
+  void select_source (vertex_properties source) {
+    
+    // set source of the network_flow. 
+    this->source = source ;
+  }
 
 
-  void select_sink () {}
+  void select_sink (vertex_properties sink) {
+
+    // set sink of the network flow.
+    this->sink = sink ;
+  }
 
 
   void set_up_excess () {
 
-    assert (source != -1) ;
-    assert (sink != -1) ;
 
+    // check whether source and sink are set or not.
+    assert (source.vertex_id != -1) ;
+    assert (sink.vertex_id != -1) ;
+    
+
+    // set excess of source to be the sum of all capacities going out of the source.. 
+    source.excess = 0;
   }
 
   void initialize () {
-
+    /*
+     * initialize the adjacency list of the array and create the max flow.*/
     
     map <int, vector<edge>> adj_list = getEdges();   
 
