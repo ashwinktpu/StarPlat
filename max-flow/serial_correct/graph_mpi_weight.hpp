@@ -93,6 +93,8 @@ class graph
   {
       return degree_max;
   }
+
+  virtual void initialize ();
 #if 0
    bool check_if_nbr(int s, int d)
     {
