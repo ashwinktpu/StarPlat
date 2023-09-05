@@ -1654,7 +1654,7 @@ graph_construct : '(' T_FORWARD '<' id ',' id ',' T_COND '(' boolean_expr ')' '>
 																			ASTNode* c1=Util::finishBlock();
 																			$$=Util::createNodeForIfStmt(d,c1,NULL);};
 																			
-				| T_GC '<' id ',' filterExpr ',' id ',' id ',' id ',' id'>' {		ASTNode* b=Util::createIdentifierNode("src");
+				| T_GC '<' id ',' filterExpr ',' id ',' id ',' id'>' {		ASTNode* b=Util::createIdentifierNode("src");
 																					ASTNode* c=Util::createIdentifierNode("nodes");
 																					argList* aList=new argList();
 																					ASTNode* d=Util::createNodeForProcCall(c, aList->AList, NULL);
@@ -1714,11 +1714,13 @@ graph_construct : '(' T_FORWARD '<' id ',' id ',' T_COND '(' boolean_expr ')' '>
 																					ASTNode* t2=Util::createIdentifierNode("newRange");
 																					ASTNode* u2=Util::createIdentifierNode("newRange");
 																					ASTNode* v2=Util::createIdentifierNode("newRange");
+																					ASTNode* h3=Util::createIdentifierNode("V");
+																					ASTNode* i3=Util::createIdentifierNode("V");
 																					ASTNode* w2=Util::createNodeForId(u2);
 																					ASTNode* x2=Util::createNodeForId(v2);
-																					ASTNode* a3=Util::createNodeForId($13);
+																					ASTNode* a3=Util::createNodeForId(h3);
 																					ASTNode* b3=Util::createNodeForArithmeticExpr(w2,a3,OPERATOR_DIV);
-																					ASTNode* c3=Util::createNodeForId($13);
+																					ASTNode* c3=Util::createNodeForId(i3);
 																					ASTNode* d3=Util::createNodeForArithmeticExpr(b3,c3,OPERATOR_MUL);
 																					ASTNode* f3=Util::createNodeForArithmeticExpr(x2,d3,OPERATOR_SUB);
 																					ASTNode* g3=Util::createAssignmentNode(t2,f3);
