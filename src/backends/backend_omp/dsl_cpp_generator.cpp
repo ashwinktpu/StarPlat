@@ -2339,16 +2339,33 @@ void dsl_cpp_generator::generate_exprPropId(PropAccess* propId) //This needs to 
   Expression* indexexpr = NULL;
   ASTNode* propParent = propId->getParent();
   
+  vector<Identifier*> graphVar = graphId[curFuncType][curFuncCount()];
+  char *temp1 = (char *)malloc(sizeof(graphVar[0]->getIdentifier()) + 18);
+  char *temp2 = (char *)malloc(sizeof(id2->getIdentifier()) + 1);
+  strcpy(temp1, graphVar[0]->getIdentifier());
   if(propId->isPropertyExpression())
      indexexpr = propId->getPropExpr();
 
   else
-    id2 = propId->getIdentifier2();   
-
+    id2 = propId->getIdentifier2();
+	
+	strcpy(temp2, id2->getIdentifier());
+	
+	if (strcmp(id2->getIdentifier(), "meta") == 0)
+	{
+		strcat(temp1, ".indexofNodes");
+		id2->setIdentifier(temp1);
+	}
+	else if (strcmp(id2->getIdentifier(), "rev_meta") == 0)
+	{
+		strcat(temp1, ".rev_indexofNodes");
+		id2->setIdentifier(temp1);
+	}
   //cout<<"id2  "<<(id2!=NULL)<<"\n";
    if(id2 != NULL && id2->getSymbolInfo()!=NULL&&id2->getSymbolInfo()->getId()->get_fp_association())
     {
        bool relatedToUpdation = propParent!=NULL?((propParent->getTypeofNode() == NODE_REDUCTIONCALLSTMT|| propParent->getTypeofNode() == NODE_ASSIGN) && checkFixedPointAssociation(propId)):false;
+       
        if(relatedToUpdation)
            {
              sprintf(strBuffer,"%s_nxt[%s]",id2->getIdentifier(),id1->getIdentifier());
@@ -2371,7 +2388,8 @@ void dsl_cpp_generator::generate_exprPropId(PropAccess* propId) //This needs to 
     {
        sprintf(strBuffer,"%s[%s]",id2->getIdentifier(),id1->getIdentifier());
     }
-  
+	
+	id2->setIdentifier(temp2);
   main.pushString(strBuffer);
 
 }
@@ -2588,13 +2606,18 @@ void dsl_cpp_generator::generateFunc(ASTNode* proc)
    generateFuncHeader(func,true);
    curFuncType = func->getFuncType();
    currentFunc = func;
-
+	
+	vector<Identifier*> graphVar = graphId[curFuncType][curFuncCount()]; 
    //including locks before hand in the body of function.
     main.pushstr_newL("{");
+    sprintf(strBuffer, "int V = %s.num_nodes();", graphVar[0]->getIdentifier());  // assuming DSL  do not contain variables as V and E
+	main.pushstr_newL(strBuffer);
+	sprintf(strBuffer, "int E = %s.num_edges();", graphVar[0]->getIdentifier());
+	main.pushstr_newL(strBuffer);
+	main.NewLine();
     if(func->getInitialLockDecl())
        {
          
-         vector<Identifier*> graphVar = graphId[curFuncType][curFuncCount()]; 
          sprintf(strBuffer,"omp_lock_t* lock = (omp_lock_t*)malloc(%s.num_nodes()*sizeof(omp_lock_t));",graphVar[0]->getIdentifier());
          main.pushstr_newL(strBuffer);
          main.NewLine();
