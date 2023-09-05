@@ -1,5 +1,7 @@
 #include "graph_mpi_weight.hpp"
 #include <assert.h>
+#include <queue>
+
 
 struct vertex_properties ;
 struct edge_elements ;
@@ -26,12 +28,26 @@ struct vertex_properties {
   int height ; // height of the vertex.
   edge_elements *current_edge ; // current selected edge through which flow is being passed through the vertex.
 
-  bool operator< (vertex_properties a, vertex_properties b) {
+  bool operator< (const vertex_properties &other)  {
     
     // for storing the vertices in an associative container. To change to Hash type container.
-    return a.vertex_id < b.vertex_id ;  
+    return vertex_id < other.vertex_id ;  
+  }
+  
+  // for use in visited array. 
+  int operator[] (vertex_properties a) {
+
+    return a.vertex_id ;
   }
 } ;
+
+
+
+bool operator< (const vertex_properties &a, const vertex_properties &b) {
+
+  return a.vertex_id < b.vertex_id ;
+}
+
 
 
 class network_flow : public graph {
@@ -48,6 +64,7 @@ private:
   // source and sink to be defined by user. 
   vertex_properties source ;
   vertex_properties sink ;
+  map <vertex_properties, vector<edge_elements> > adj;
 
 public:
 
@@ -84,8 +101,7 @@ public:
     
     map <int, vector<edge>> adj_list = getEdges();   
 
-    map <vertex_properties, vector<edge_elements> > adj;
-  
+    // TO:DO change find a better way to represent the adjacency list. 
     for (auto edge:adj_list) {
     
       edge_elements edge_elements_new;
@@ -112,9 +128,10 @@ public:
         edge_elements_new.destination = &destination ;
 
         adj[this_vertex].push_back (edge_elements_new) ;
-        
+         
       }
     }
+    // End To:DO
 
     set_up_heights () ;
     set_up_excess () ;
@@ -122,19 +139,70 @@ public:
 
   void set_up_heights () {
 
+    /* 
+     * Do a BFS to find the heights of all the vertices.
+     * */
     queue <vertex_properties> q;
-    q.push_back (source) ;
+    q.push (source) ;
+    vector<vertex_properties> visited (num_nodes ()) ;
+
+
 
     while (!q.empty ()) {
       
       vertex_properties u = q.front () ;
       
-      for (auto it : adj[u]) {
 
+      for (auto v_edge : adj[u]) {
+
+        // v is an edge element.
+        // Therefore, must retreive the destination vertex from it.
+        vertex_properties v = *(v_edge.destination) ;
+
+        
+        if (!visited[v]) { 
+
+
+          // Cannot index into I guess . 
+          q.push (v) ;
+          visited[v]=true ;
+        } 
       }
     }
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   
   
   
