@@ -1,4 +1,4 @@
-function vHong(Graph g, int V) {
+function vHong(Graph g) {
     propNode<bool, g> modified = False;
     propNode<int, g> outDeg = 0;
 	propNode<int, g> inDeg = 0;
@@ -65,7 +65,7 @@ function vHong(Graph g, int V) {
 		(propagate_backward<g, visitBw, cond(range == myrange)>.filter(scc == -1) until (fpoint2: !modified)) && (propBw == False);
 	}
 
-	graph_color<g, filter(scc == -1), range, visitFw, visitBw, V>;
+	graph_color<g, filter(scc == -1), range, visitFw, visitBw>;
 	
 	g.update(filter(scc == -1)) {
 		if (this.visitFw == False || this.visitBw == False) {
@@ -154,7 +154,7 @@ function vHong(Graph g, int V) {
 			(propagate_forward<g, visitFw, cond(range == myrange)>.filter(scc == -1) until (fpoint2 : !modified)) && (propFw == False);
 			(propagate_backward<g, visitBw, cond(range == myrange)>.filter(scc == -1) until (fpoint2 : !modified)) && (propBw == False);
 		}
-		graph_color<g, filter(scc == -1), range, visitFw, visitBw, V>;
+		graph_color<g, filter(scc == -1), range, visitFw, visitBw>;
     
 		g.update(filter(scc == -1)) {
 			if (this.visitFw == False || this.visitBw == False) {
