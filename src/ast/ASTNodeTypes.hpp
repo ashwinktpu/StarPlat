@@ -3,13 +3,13 @@
 
 #include "ASTNode.hpp"
 #include <string.h>
-#include<list>
-#include<iostream>
-#include<vector>
-#include<stack>
-#include<map>
-#include<set>
-#include<queue>
+#include <list>
+#include <iostream>
+#include <vector>
+#include <stack>
+#include <map>
+#include <set>
+#include <queue>
 #include "../maincontext/enum_def.hpp"
 #include "MetaDataUsed.hpp"
 
@@ -185,7 +185,10 @@ class Identifier:public ASTNode
    {
      return identifier;
    }
-
+	void setIdentifier(const char *id)
+	{
+		strcpy(identifier, id);
+	}
    void setSymbolInfo(TableEntry* te)
    {
      idInfo=te;
@@ -1248,7 +1251,10 @@ class formalParam:public ASTNode
      {
        return enclosedBrackets;
      }
-
+	void setLeft(Expression* a)
+	{
+		left = a;
+	}
   };
 
 
@@ -1888,6 +1894,7 @@ class fixedPointStmt:public statement
     Identifier* getMethodId()
     {
       return methodId;
+      
     }
     
     Identifier* getId1()
@@ -1918,8 +1925,6 @@ class fixedPointStmt:public statement
 
     
   };
-
-
   
   class onDeleteBlock:public statement
   {
@@ -2809,4 +2814,5 @@ class varTransferStmt: public statement
     setTypeofNode(NODE_TRANSFERSTMT);
   } 
 };
+		
 #endif
