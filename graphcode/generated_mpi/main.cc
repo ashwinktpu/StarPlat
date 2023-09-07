@@ -17,27 +17,27 @@ int main(int argc, char *argv[])
     boost::mpi::environment env(argc, argv);
     boost::mpi::communicator world;
 
-    auto start = high_resolution_clock::now();
     
     Graph graph(argv[1],world);
+    auto start = high_resolution_clock::now();
     world.barrier();
 
     NodeProperty<int> dist;
-    Compute_SSSP(graph, dist, graph.weights, 0,world);
+    Compute_SSSP(graph, dist, graph.weights,255661,world);
     
-    // for(int i=graph.start_node() ;i<=graph.end_node();i++)
-    // {
-    //     if(world.rank()==graph.get_node_owner(i))
-    //     {
-    //         std::cout<<"Node "<<i<<" has distance "<<dist.getValue(i)<<std::endl;
-    //     }
-    // }
+    for(int i=graph.start_node() ;i<=graph.end_node();i++)
+    {
+    	   if(world.rank()==graph.get_node_owner(i))
+         {
+             std::cout<<"Node "<<i<<" has distance "<<dist.getValue(i)<<std::endl;
+         }
+    }
 
+    world.barrier();
     auto stop = high_resolution_clock::now();
 
     auto duration = duration_cast<microseconds>(stop - start);
     
-    world.barrier();
 
     if(world.rank()==0)
     {
