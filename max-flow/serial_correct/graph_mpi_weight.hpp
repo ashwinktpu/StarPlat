@@ -39,7 +39,7 @@ class graph
                        required for iteration over out neighbours */
   int* srcList;  /*stores source corresponding to edgeNo.
                        required for iteration over in neighbours */
-  graph(char* file)
+  explicit graph(char* file)
   {
     filePath=file;
     original_nodesTotal=0;
@@ -50,6 +50,7 @@ class graph
     //std::cout << "World size: " <<np << std::endl;
 
   }
+
 
   std::map<int,std::vector<edge>> getEdges()
   {
@@ -94,7 +95,6 @@ class graph
       return degree_max;
   }
 
-  virtual void initialize ();
 #if 0
    bool check_if_nbr(int s, int d)
     {
@@ -128,7 +128,7 @@ class graph
 
     }
 #endif
-   void parseGraph()
+  void parseGraph()
   { 
      std::ifstream infile;
      infile.open(filePath);
@@ -268,8 +268,7 @@ class graph
 
     }
 
-    #pragma omp parallel for
-
+cout<<"generating reverse list\n" ;
     for(int i=0;i<padded_nodesTotal+1;i++)
        rev_indexofNodes[i] = 0;
    
@@ -282,7 +281,6 @@ class graph
     /* count indegrees first */
     int32_t* edge_indexinrevCSR = new int32_t[edgesTotal];
 
-    #pragma omp parallel for
     for(int i=0;i<padded_nodesTotal;i++)
       {
 
@@ -306,7 +304,6 @@ class graph
         rev_indexofNodes[padded_nodesTotal] = prefix_sum;
 
     /* store the sources in srcList */
-      #pragma omp parallel for 
       for(int i=0;i<padded_nodesTotal;i++)
         {
           for(int j=indexofNodes[i];j<indexofNodes[i+1];j++)
@@ -317,7 +314,6 @@ class graph
             }
         }
       std::cout << "done\n";
-       #pragma omp parallel for num_threads(4)
         for(int i=0;i<padded_nodesTotal;i++)
         {
           std::vector<int> vect;
@@ -331,8 +327,11 @@ class graph
 
         }
 	delete [] edge_indexinrevCSR;
-	edges.clear();
-	std::map<int,std::vector<edge>>().swap(edges);
+
+
+  // who left this here ??????
+
+      cout << edges.size () << " this is what I should get\n" ;
   std::cout << "okay" <<std::endl;
  }
 
