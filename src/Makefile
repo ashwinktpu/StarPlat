@@ -1,10 +1,10 @@
 EXPENDABLES_WINDOWS = bin/MainContextj.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c bin/deviceVarsAnalyser.o bin/analyserUtil.o bin/dv*.o bin/bv*.o
-EXPENDABLES = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c  bin/deviceVarsAnalyser.o bin/blockVarsAnalyser.o bin/liveVarsAnalyser.o
+EXPENDABLES = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c  bin/deviceVarsAnalyser.o bin/blockVarsAnalyser.o bin/liveVarsAnalyser.o bin/liveVarsNode.o
 ANALYSER = bin/dataRaceAnalyser.o
 PROGRAMS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/cu_dsl_cpp_generator.o  bin/ac_dsl_cpp_generator.o bin/om_dsl_cpp_generator.o bin/mpi_dsl_cpp_generator.o bin/om_dyn_dsl_cpp_generator.o bin/mpi_dsl_cpp_generator_helper.o bin/mpi_dsl_cpp_expression_generator.o bin/mpi_dsl_cpp_statement_generator.o bin/mpi_dsl_dyn_cpp_generator.o bin/sycl_dsl_cpp_generator.o bin/multigpu_dsl_cpp_generator.o  bin/amd_dsl_cpp_generator.o
 #bin/ac_dsl_cpp_generator.o 
 #bin/om_dsl_cpp_generator.o
-A_PROGRAM = bin/attachPropAnalyser.o bin/dataRaceAnalyser.o bin/deviceVarsAnalyser.o bin/blockVarsAnalyser.o bin/analyserUtil.o bin/pushpullAnalyser.o bin/liveVarsAnalyser.o
+A_PROGRAM = bin/attachPropAnalyser.o bin/dataRaceAnalyser.o bin/deviceVarsAnalyser.o bin/blockVarsAnalyser.o bin/analyserUtil.o bin/pushpullAnalyser.o bin/liveVarsAnalyser.o bin/liveVarsNode.o
 
 CFLAGS  = -g 
 CC = g++ -std=c++11 #-Wall # -Wno-unused-variable #-fsanitize=address
@@ -146,6 +146,9 @@ bin/bv6.o.o: analyser/blockVars/analyserUtil.cpp analyser/blockVars/analyserUtil
 bin/analyserUtil.o: analyser/analyserUtil.cpp
 	$(CC) $(CFLAGS) -c analyser/analyserUtil.cpp -o bin/analyserUtil.o
 
+
+bin/liveVarsNode.o: analyser/liveVars/liveVarsNode.cpp analyser/liveVars/liveVarsNode.h
+	$(CC) $(CFLAGS) -c analyser/liveVars/liveVarsNode.cpp -o bin/liveVarsNode.o
 
 bin/liveVarsAnalyser.o: analyser/liveVars/liveVarsAnalyser.cpp analyser/liveVars/liveVarsAnalyser.h
 	$(CC) $(CFLAGS) -c analyser/liveVars/liveVarsAnalyser.cpp -o bin/liveVarsAnalyser.o
