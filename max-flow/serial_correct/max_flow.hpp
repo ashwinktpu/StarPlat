@@ -3,6 +3,9 @@
 #include <queue>
 
 
+bool ACTIVE_VERTEX_EXISTS = true; 
+
+
 struct vertex_properties ;
 struct edge_elements ;
 
@@ -26,8 +29,23 @@ struct vertex_properties {
   bool active ; // whether the vertex is active or not,
   int excess ; // amount of excess flow passing through the vertex.
   int vertex_id ; // vertex_id of the vertex.
-  int height ; // height of the vertex.
+  
+
+  int get_height (int* heights) {
+    // get the heights.
+    return heights[vertex_id] ;
+  }
+
+
+  void set_height (int* heights, int val) {
+    // set the heights.
+
+    heights[vertex_id]=val ;
+  }
+
+
   edge_elements *current_edge ; // current selected edge through which flow is being passed through the vertex.
+
 
   bool operator< (const vertex_properties &other)  {
     
@@ -38,6 +56,7 @@ struct vertex_properties {
   // for use in visited array. 
   int operator[] (vertex_properties a) {
 
+    // 
     return a.vertex_id ;
   }
 } ;
@@ -66,6 +85,8 @@ private:
   // source and sink to be defined by user. 
   vertex_properties source ;
   vertex_properties sink ;
+  int * heights ;
+  set<vertex_properties> active_vertices ;
 
   // The adjacency list of the graph.
   // TO:DO - Change to CSR/ unordered_map post discussion.
@@ -75,8 +96,14 @@ public:
   
 
 
-  network_flow (char* file_name): graph (file_name) {
+  network_flow (char* file_name, vertex_properties source, vertex_properties sink): graph (file_name) {
 
+    // call all relevant methods.
+    parseGraph () ;
+    select_source (source) ;
+    select_sink(sink) ;
+    this->heights = new int (num_nodes()+1) ;
+    initialize() ;
     cout << " inside network_flow's constructor " << endl ;
   }
 
@@ -121,7 +148,7 @@ public:
       this_vertex.vertex_id = edge.first;
       this_vertex.active = true;
       this_vertex.excess = 0;
-      this_vertex.height = 0 ;
+      this_vertex.set_height(heights, 0) ;
 
       // The particular vertex. 
       cout << this_vertex.vertex_id << " : " ;
@@ -140,7 +167,7 @@ public:
         destination->excess = 0 ;
         destination->active = true ;
         destination->vertex_id = edge_props.destination ;
-        destination->height = 0 ;
+        destination->set_height(heights, 0) ;
 
 
         // initialize the edge struct and all its members.
@@ -163,6 +190,8 @@ public:
     // initialize the heights and the excesses.
     set_up_heights () ;
     set_up_excess () ;
+
+
   }
 
   void set_up_excess () {
@@ -191,6 +220,7 @@ public:
     cerr << "inside the BFS function, initialization for BFS successful\n" ;
     // Run the BFS for loop.
     
+    active_vertices.insert (source) ;
     
     while (!q.empty()) {
     
@@ -198,6 +228,7 @@ public:
     q.pop();
     visited[u->vertex_id] = 1;
 
+    active_vertices.insert (*u) ;
 
     for (auto &v_edge : adj[*u]) {
 
@@ -208,7 +239,7 @@ public:
         if (!visited[v->vertex_id]) {
 
             // Increment the height of the destination vertex.
-            v->height = u->height + 1;
+            v->set_height(heights, u->get_height(heights)+1);
 
             // Push the destination vertex into the queue.
             q.push(v);
@@ -216,35 +247,42 @@ public:
 
           v_edge.destination = v ;
 
-          cerr << "set height to " << v_edge.destination->height <<endl ;
+          cerr << "set height to " << v_edge.destination->get_height(heights)<<endl ;
         }
     }
-}
-
   }
+}
 
   
 
-  void relabel (vertex_properties relabel_this_vertex) {
+  bool relabel (vertex_properties relabel_this_vertex) {
     
     // relabel the passed vertex.. Change it's height to the lowest height among it's adjacent vertics increased by 1
     //
     int minim = 1000000000 ; // Find a better upper limit.
     for (auto edge : adj[relabel_this_vertex]) {
 
-      minim = min (minim, edge.destination->height+1) ;
+      minim = min (minim, edge.destination->get_height(heights)+1) ;
     }
-    relabel_this_vertex.height = minim ;
+    relabel_this_vertex.set_height(heights, minim) ;
+
+    if (minim == 1000000000) {
+      return false ;
+    }
+    return true ;
   }
 
 
 
-  void push (vertex_properties active_vertex) {
+  bool push (vertex_properties active_vertex) {
 
 
+    cout << "working with active vertex : " << active_vertex.vertex_id << endl ;
     // check whether the current edge is still a valid edge to push heights to.
-    if (active_vertex.height != active_vertex.current_edge->destination->height+1) {
+    cout << active_vertex.get_height(heights) << " height of current vertex" << endl ;
+    if (active_vertex.get_height(heights) != active_vertex.current_edge->destination->get_height(heights)+1) {
 
+      cout << "readjusting current edge "  <<endl ;
       // if not reset the current edge for the current vertex.
       reset_current_edge (active_vertex) ;
     }
@@ -256,8 +294,15 @@ public:
     active_vertex.current_edge->flow -= curr_flow ;      
     active_vertex.excess -= curr_flow ;
 
+
+    cout << "push successful from active vertex: " << active_vertex.vertex_id << endl ;
+
+    if (active_vertex.excess == 0 and active_vertex.get_height(heights) <= 0) {
+      return false ;
+    }
     // TO:DO 
     // When to Deactivate the Vertex ?? 
+    return true ;
   }
 
 
@@ -266,33 +311,65 @@ public:
 
 
     // search for edges leading to vertices with height exactly lesser by 1.
+    cout << "started readjusting current edge for active vertex " << active_vertex.vertex_id << endl ;
+    int success = false ;
     for (auto v_edge:adj[active_vertex]) {
 
       // check whether v_edge satisfies the property.
-      if (v_edge.destination->height == active_vertex.height+1) {
+      if (v_edge.destination->get_height(heights) == active_vertex.get_height(heights)+1) {
 
         // update the active vertex's edge.
         active_vertex.current_edge = &v_edge ;
+        success = true ;
         return ;
       }
     }
 
+    cout << "successful readjusting current edge for active vertex " << active_vertex.vertex_id << endl ;
+
     // if control reaches here, relabelling is needed .
-    relabel(active_vertex) ;
+    if (!success)
+      relabel(active_vertex) ;
   }
 
   void print_heights () {
 
     cerr << "graph heights \n" ;
     for (auto it:adj) {
-      cerr << it.first.vertex_id << " at height " << it.first.height << " : " ;
+      vertex_properties temp = it.first ;
+      cerr << temp.vertex_id << " at height " << temp.get_height(this->heights) << " : " ;
 
       for (auto it1: it.second) {
         cerr << it1.destination->vertex_id << " " ;
       }
       cerr << endl ;
     }
+  }
 
+
+  void print_active_vertices () {
+
+    cout << "active_vertices" << endl ;
+
+    for (auto it:active_vertices) {
+      cout << it.vertex_id << " ";
+    }cout << endl ;
+  }
+
+  void push_and_relabel () {
+
+    cout << " preflow push relable \n" ;
+    // select an active vertex.
+    vertex_properties current_vertex = *active_vertices.begin () ;
+    // push flow to its current edge if possible
+    while (push (current_vertex));
+    // if not possible relabel
+    active_vertices.erase (active_vertices.begin ()) ;
+
+    if (active_vertices.size () == 0) {
+
+      ACTIVE_VERTEX_EXISTS=false ;
+    }
   }
 };
  
