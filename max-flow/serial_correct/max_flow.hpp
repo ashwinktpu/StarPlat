@@ -36,16 +36,25 @@ struct vertex_properties {
     return heights[vertex_id] ;
   }
 
-
   void set_height (int* heights, int val) {
     // set the heights.
 
+    cout << vertex_id << " accessing into heights array" << endl ;
     heights[vertex_id]=val ;
   }
 
+  void set_current_edge (edge_elements** current_edges, edge_elements* current_edge) {
+    // set current edge for the vertex
 
-  edge_elements *current_edge ; // current selected edge through which flow is being passed through the vertex.
+    current_edges[vertex_id] = current_edge ;
+  }
 
+
+  edge_elements* get_current_edge (edge_elements** current_edges) {
+
+    // get the current edge for this vertex.
+    return current_edges[vertex_id] ;
+  }
 
   bool operator< (const vertex_properties &other)  {
     
@@ -86,6 +95,7 @@ private:
   vertex_properties source ;
   vertex_properties sink ;
   int * heights ;
+  edge_elements** current_edges ;
   set<vertex_properties> active_vertices ;
 
   // The adjacency list of the graph.
@@ -102,7 +112,9 @@ public:
     parseGraph () ;
     select_source (source) ;
     select_sink(sink) ;
-    this->heights = new int (num_nodes()+1) ;
+    this->heights = (int*)malloc ((num_nodes()+1)*sizeof(int)) ;
+    cerr << "size of heights " << num_nodes() + 1 << endl ;
+    this->current_edges = (edge_elements**)malloc ((num_nodes()+1)*sizeof(edge_elements*)) ;
     initialize() ;
     cout << " inside network_flow's constructor " << endl ;
   }
@@ -130,6 +142,7 @@ public:
     // retreive edge list from the parsed graph. It is actually sent back as an adjacency list for some reason.
     map <int, vector<edge>> adj_list = getEdges();   
 
+    cerr << "heights indexing to 1" << 1 << " " <<heights[1] << endl ;
     cerr<<"beginning the actual process of initialization. Edges obtained\n" ;
     // TO:DO change find a better way to represent the adjacency list. 
 
@@ -148,8 +161,10 @@ public:
       this_vertex.vertex_id = edge.first;
       this_vertex.active = true;
       this_vertex.excess = 0;
+      
+      cerr << "trying to set vertiecs :  " <<endl ;
       this_vertex.set_height(heights, 0) ;
-
+      cerr << "succesful set : " << endl ;
       // The particular vertex. 
       cout << this_vertex.vertex_id << " : " ;
 
@@ -167,8 +182,11 @@ public:
         destination->excess = 0 ;
         destination->active = true ;
         destination->vertex_id = edge_props.destination ;
+
+      cerr << "trying to set vertiecs :  " <<endl ;
         destination->set_height(heights, 0) ;
 
+      cerr << "succesful set : " << endl ;
 
         // initialize the edge struct and all its members.
         edge_elements_new.flow = 0 ;
@@ -280,18 +298,22 @@ public:
     cout << "working with active vertex : " << active_vertex.vertex_id << endl ;
     // check whether the current edge is still a valid edge to push heights to.
     cout << active_vertex.get_height(heights) << " height of current vertex" << endl ;
-    if (active_vertex.get_height(heights) != active_vertex.current_edge->destination->get_height(heights)+1) {
+
+    // location of error....
+    cout << "current vertex " << (*active_vertex.get_current_edge(current_edges)).destination->vertex_id << endl; 
+    cerr <<"succesful access" << endl ;
+    if (active_vertex.get_height(heights) != ((*active_vertex.get_current_edge(current_edges)).destination->get_height(heights)+1)) {
 
       cout << "readjusting current edge "  <<endl ;
       // if not reset the current edge for the current vertex.
       reset_current_edge (active_vertex) ;
     }
     // push flow from a particular vertex to all subsequent vertices .. 
-    int curr_flow = min (active_vertex.excess, active_vertex.current_edge->flow) ;
+    int curr_flow = min (active_vertex.excess, active_vertex.get_current_edge(current_edges)->flow) ;
 
     // update all relevant values
-    active_vertex.current_edge->residual += curr_flow ;
-    active_vertex.current_edge->flow -= curr_flow ;      
+    active_vertex.get_current_edge(current_edges)->residual += curr_flow ;
+    active_vertex.get_current_edge(current_edges)->flow -= curr_flow ;      
     active_vertex.excess -= curr_flow ;
 
 
@@ -319,7 +341,7 @@ public:
       if (v_edge.destination->get_height(heights) == active_vertex.get_height(heights)+1) {
 
         // update the active vertex's edge.
-        active_vertex.current_edge = &v_edge ;
+        active_vertex.set_current_edge(current_edges, &v_edge) ;
         success = true ;
         return ;
       }
