@@ -196,6 +196,7 @@ public:
         cout << destination->vertex_id << " " ;
 
         // Add the edge to the adjacency matrix.
+        // a copy is being pushed .
         adj[this_vertex].push_back (edge_elements_new) ;
          
       }
@@ -208,7 +209,6 @@ public:
     // initialize the heights and the excesses.
     set_up_heights () ;
     set_up_excess () ;
-
 
   }
 
@@ -223,53 +223,58 @@ public:
 
     // all else is already at 0 ;
   }
+
+
+
+
   void set_up_heights () {
 
     /* 
      * Do a BFS to find the heights of all the vertices.
+     * Set up current edges while at it.̦
      * */
 
 
     queue <vertex_properties*> q;
-    q.push (&source) ;
+    q.push (&sink) ;
     vector<int> visited (num_nodes (), 0) ;
 
     cerr << q.size () << endl ;
     cerr << "inside the BFS function, initialization for BFS successful\n" ;
     // Run the BFS for loop.
     
-    active_vertices.insert (source) ;
+    active_vertices.insert (sink) ;
     
     while (!q.empty()) {
     
-    vertex_properties* u = q.front();
-    q.pop();
-    visited[u->vertex_id] = 1;
+      vertex_properties* u = q.front();
+      q.pop();
+      visited[u->vertex_id] = 1;
 
-    active_vertices.insert (*u) ;
+      active_vertices.insert (*u) ;
 
-    for (auto &v_edge : adj[*u]) {
+      for (auto &v_edge : adj[*u]) {
 
-        // Get the destination vertex from the edge element by reference.
-        vertex_properties* v = v_edge.destination;
+          // Get the destination vertex from the edge element by reference.
+          vertex_properties* v = v_edge.destination;
 
-        // Check if the destination vertex has been visited.
-        if (!visited[v->vertex_id]) {
+          // Check if the destination vertex has been visited.
+          if (!visited[v->vertex_id]) {
 
-            // Increment the height of the destination vertex.
-            v->set_height(heights, u->get_height(heights)+1);
+              // Increment the height of the destination vertex.
+              v->set_height(heights, u->get_height(heights)+1);
 
-            // Push the destination vertex into the queue.
-            q.push(v);
-            visited[v->vertex_id] = true;
+              // Push the destination vertex into the queue.
+              q.push(v);
+              visited[v->vertex_id] = true;
 
-          v_edge.destination = v ;
-
-          cerr << "set height to " << v_edge.destination->get_height(heights)<<endl ;
-        }
+            v_edge.destination = v ;
+            v->set_current_edge(current_edges, &adj[*u][0]) ;
+            cerr << "set height to " << v_edge.destination->get_height(heights)<<endl ;
+          }
+      }
     }
   }
-}
 
   
 
@@ -294,7 +299,14 @@ public:
 
   bool push (vertex_properties active_vertex) {
 
+    cout << "manual printing : "; 
+    cout << (*current_edges[0]).destination->vertex_id <<endl ;
+    cout << (*current_edges[1]).destination->vertex_id <<endl ;
+    cout << (*current_edges[2]).destination->vertex_id <<endl ;
+    cout << (*current_edges[3]).destination->vertex_id <<endl ;
 
+
+    // print_current_edges () ;
     cout << "working with active vertex : " << active_vertex.vertex_id << endl ;
     // check whether the current edge is still a valid edge to push heights to.
     cout << active_vertex.get_height(heights) << " height of current vertex" << endl ;
@@ -310,6 +322,8 @@ public:
     }
     // push flow from a particular vertex to all subsequent vertices .. 
     int curr_flow = min (active_vertex.excess, active_vertex.get_current_edge(current_edges)->flow) ;
+
+    cerr << "updating flow " << endl ;
 
     // update all relevant values
     active_vertex.get_current_edge(current_edges)->residual += curr_flow ;
@@ -342,6 +356,7 @@ public:
 
         // update the active vertex's edge.
         active_vertex.set_current_edge(current_edges, &v_edge) ;
+        // cerr << active_vertex.get_current_edge(current_edges)->destination->vertex_id << " this the new current edge's destination vertex" << endl ;
         success = true ;
         return ;
       }
@@ -392,6 +407,16 @@ public:
 
       ACTIVE_VERTEX_EXISTS=false ;
     }
+  }
+
+  void print_current_edges () {
+
+    cout << " current edges : " ;
+
+    for (int i=0; i<num_nodes(); i++) {
+      edge_elements curr_edge = *current_edges[i] ;
+      cout << curr_edge.destination->vertex_id << " " ;
+    }    cout << endl ;
   }
 };
  

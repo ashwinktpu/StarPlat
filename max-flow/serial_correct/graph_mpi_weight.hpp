@@ -6,7 +6,7 @@
 #include<map>
 #include<algorithm>
 #include<string>
-#include "omp.h"
+// #include "omp.h"
 
 //using namespace std;
 using namespace std;
@@ -329,7 +329,6 @@ cout<<"generating reverse list\n" ;
 	delete [] edge_indexinrevCSR;
 
 
-  // who left this here ??????
 
       cout << edges.size () << " this is what I should get\n" ;
   std::cout << "okay" <<std::endl;
