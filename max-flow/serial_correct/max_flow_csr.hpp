@@ -7,7 +7,7 @@
  * New Issue : csr not being generated.
  * It's going into resetting of edges needed and then it's not finding any edges.. So is it calling relabel ? Check that out.
  * If f is a preflow and d is any valid labeling for f and v is any active vertex, a push or a relabel is applicable.
- * Now what?
+ * Now what? ̰
  * We have a queue which maintains the active vertices.
 */
 
@@ -33,7 +33,7 @@ class network_flow : public graph {
 private:
 
   // source and sink to be defined by user. 
-  int source ;
+  int source ; 
   int sink ;
   int * heights ;
   int * current_edges ;
@@ -224,10 +224,17 @@ public:
     }
     heights[relabel_this_vertex]=minim-1 ;
 
-    if ( minim == (100000000-1) || minim == 0 ) {
-
+    if ( minim >= (100000000-1) || minim == 0 ) {
+      cout << "failed relabeling" << endl ;
       return false ;
     }
+
+    for (int i=0; i<=num_nodes(); i++) {
+      if (excess[i]>0 and heights[i]>0 and heights[i]<999999) {
+        active_vertices.push (i) ;
+      }
+    }
+    cout << "successfully relabeled " << heights[relabel_this_vertex] << endl ;
     return true ;
   }
 
@@ -312,9 +319,9 @@ public:
         active_vertices.push (csr[h_offset[active_vertex]+current_edges[active_vertex]]) ;
     }
 
-    if (excess[active_vertex] > 0) {
+    if (excess[active_vertex] > 0 and heights[active_vertex] < 999999999) {
 
-        cerr << "pushed into queue the active vertex : " << active_vertex << endl ;
+        cerr << "pushed into queue the active vertex : " << active_vertex << " " << heights[active_vertex] << endl ;
 
       active_vertices.push (active_vertex) ;
       return false ;
@@ -381,10 +388,10 @@ public:
 
         cout << "results ==========================================\n" ;
         cout << "max_flow = " << excess[sink]-excess[source] << endl ; 
-        // print_arr_log (this->flow, num_edges()) ;
-        // print_arr_log (this->residual_flow, num_edges()) ;
-        // print_arr_log (this->excess, num_nodes()) ;
-        // print_arr_log (this->heights, num_nodes()) ;
+        print_arr (this->flow, num_edges()) ;
+        print_arr (this->residual_flow, num_edges()) ;
+        print_arr (this->excess, num_nodes()) ;
+        print_arr (this->heights, num_nodes()) ;
         cout << endl ;
         for (int u=0; u< num_nodes (); u++) {
 
