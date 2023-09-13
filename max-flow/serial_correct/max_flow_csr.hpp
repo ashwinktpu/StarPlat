@@ -92,25 +92,45 @@ public:
 
     set_up_heights () ;
 
-    cout << "network is as follows : \n" ;
-
+    cerr << "network is as follows : \n" ;
+    
+    cerr << "csr list : \n" ;
     print_arr (this->h_offset, num_nodes()+1 ) ;
     print_arr (this->csr, num_edges() ) ;
+
+    cerr << "reverse csr list : \n" ;
     print_arr (this->r_offset, num_nodes()+1 ) ;
     print_arr (this->r_csr, num_edges() ) ;
+
+    cerr << "capacities : \n" ;
     print_arr (this->capacities, num_edges() ) ;
+
+    cerr << "flow : \n" ;
     print_arr (this->flow, num_edges() ) ;
+
+    cerr << "residual flow : \n " ;
     print_arr (this->residual_flow, num_edges() ) ;
     print_arr (this->current_edges, num_nodes() +1) ;
+
+    cerr << "heights : \n" ;
     print_arr (this->heights, num_nodes()+1) ;
-    cout << " inside network_flow's constructor " << endl ;
+
+    cerr << "excess: \n" ;
+    print_arr (this->excess, num_nodes ()+1 ) ;
+  }
+
+  void print_arr_log (int*arr ,int n) {
+
+    for (int i=0; i<n; i++) {
+        cout << arr[i] << " " ;
+    }cout << endl ;
   }
 
   void print_arr (int*arr ,int n) {
 
     for (int i=0; i<n; i++) {
-        cout << arr[i] << " " ;
-    }cout << endl ;
+        cerr << arr[i] << " " ;
+    }cerr << endl ;
   }
 
   void select_source (int source) {
@@ -134,7 +154,8 @@ public:
         excess[i]= 0 ;
     }
     for (int x = h_offset[source]; x<h_offset[source+1]; x++) {
-        excess[x] += capacities[x] ;
+        excess[0] += capacities[x] ;
+        // flow[x]=capacities[x] ;
     }   
   }
 
@@ -168,12 +189,12 @@ public:
 
       for (int v = r_offset[u]; v< r_offset[u+1]; v++) {
 
-        cout << csr[v] << endl ;
+        cerr << csr[v] << endl ;
         if (!visited[r_csr[v]]) {
 
             visited[r_csr[v]] = true ;
             heights[r_csr[v]] = heights[u]+1 ;
-            cout << heights[r_csr[v]] << " has been reset \n" ;
+            cerr << heights[r_csr[v]] << " has been reset \n" ;
             q.push(r_csr[v]) ;
         }
       }
@@ -193,17 +214,17 @@ public:
      * if push is not applicable to v d(v)<d(w)+1 ????  
     */
 
-    cout << "inside relabeling: " << endl ;
+    cerr << "inside relabeling: " << endl ;
     int minim = 1000000000 ; // Find a better upper limit.
-    for (int v = h_offset[relabel_this_vertex] ; v <= h_offset[relabel_this_vertex+1]; v++) {
+    for (int v = h_offset[relabel_this_vertex] ; v < h_offset[relabel_this_vertex+1]; v++) {
       
-      if ( heights[relabel_this_vertex] <= heights[csr[v]] and residual_flow[csr[v]] > 0 )
+      if ( heights[relabel_this_vertex] >= heights[csr[v]] and residual_flow[csr[v]] > 0 )
         minim = min (minim, heights[csr[v]]) ;
 
     }
-    heights[relabel_this_vertex]=minim+1 ;
+    heights[relabel_this_vertex]=minim-1 ;
 
-    if ( minim == 1000000000 || minim == 0 ) {
+    if ( minim == (100000000-1) || minim == 0 ) {
 
       return false ;
     }
@@ -216,8 +237,12 @@ public:
 
     // indexing is wrong current_edges[active_vertex] gives the offset
 
+    if (excess[active_vertex] <=0 ) {
+        return false ;
+    }
+
     if (active_vertex == sink) {
-        cout << "hit sink " << endl ;
+        cerr << "hit sink " << endl ;
         return false ;
     }
 
@@ -225,29 +250,34 @@ public:
 
     cerr<<"invoked push: " << heights[active_vertex] << " " << excess[active_vertex] << " " << heights[csr[h_offset[active_vertex]+current_edges[active_vertex]]] << endl ;
 
-    
-    if (heights[active_vertex] != heights[csr[h_offset[active_vertex]+current_edges[active_vertex]]]+1 or capacities[csr[h_offset[active_vertex]+current_edges[active_vertex]]]-flow[csr[h_offset[active_vertex]+current_edges[active_vertex]]]<=0) {
+    // if current edge is greater than it can be ,, break ... No more edges..
 
-      cerr << "resetting of edges needed" << endl ;
+    cerr << "current edge " << current_edges[active_vertex] << " " << endl ;
+    
+    if (heights[active_vertex] != heights[csr[h_offset[active_vertex]+current_edges[active_vertex]]]+1 or capacities[h_offset[active_vertex]+current_edges[active_vertex]]-flow[h_offset[active_vertex]+current_edges[active_vertex]]<=0) {
+
       // current edge is no longer a good option
-      if (!reset_current_edge (active_vertex) and excess[active_vertex]>0) {
-        active_vertices.push (active_vertex) ;
-        cerr << "no more edges left !! " << endl ;
+      if (!reset_current_edge (active_vertex)) {
+
         return false ;
       } ;
     }
 
-    if (capacities[csr[h_offset[active_vertex]+current_edges[active_vertex]]]-flow[csr[h_offset[active_vertex]+current_edges[active_vertex]]]<=0) {
-
-        if (excess[active_vertex]>0) {
-            active_vertices.push (csr[h_offset[active_vertex]+current_edges[active_vertex]]) ;
-        }
+    if (h_offset[active_vertex]+current_edges[active_vertex] >= h_offset[active_vertex+1]) {
         return false ;
     }
+    
 
-    cerr << "current edge accepted" << endl ;
+    if (capacities[h_offset[active_vertex]+current_edges[active_vertex]]-flow[h_offset[active_vertex]+current_edges[active_vertex]]<=0) {
+
+        // try next
+        return true ;
+    }
+
+
+
     // push flow from a particular vertex to all subsequent vertices .. 
-    int curr_flow = min (excess[active_vertex], residual_flow[r_csr[r_offset[csr[h_offset[active_vertex]+current_edges[active_vertex]]]]]) ;
+    int curr_flow = min (excess[active_vertex], capacities[h_offset[active_vertex]+current_edges[active_vertex]]-flow[h_offset[active_vertex]+current_edges[active_vertex]]) ;
 
     cerr << "pushing flow from " << active_vertex << " to " << csr[h_offset[active_vertex]+current_edges[active_vertex]] << endl ;
     cerr << "updating flow " << curr_flow <<  endl ;
@@ -260,9 +290,9 @@ public:
     cerr << "=================================================================================================\n" ;
 
     // update flow and residual flow.
-    flow[csr[h_offset[active_vertex]+current_edges[active_vertex]]] += curr_flow ;
+    flow[h_offset[active_vertex]+current_edges[active_vertex]] += curr_flow ;
 
-    residual_flow[r_csr[r_offset[csr[h_offset[active_vertex]+current_edges[active_vertex]]]]] -= curr_flow ;      
+    residual_flow[h_offset[active_vertex]+current_edges[active_vertex]] -= curr_flow ;      
 
     // update excess of active vertex and current vertexclear
 
@@ -281,11 +311,15 @@ public:
 
         active_vertices.push (csr[h_offset[active_vertex]+current_edges[active_vertex]]) ;
     }
-    // skeptical about this deactivation.
+
     if (excess[active_vertex] > 0) {
+
+        cerr << "pushed into queue the active vertex : " << active_vertex << endl ;
+
       active_vertices.push (active_vertex) ;
       return false ;
     }
+
     
     return true ;
   }
@@ -298,23 +332,27 @@ public:
     // search for edges leading to vertices with height exactly lesser by 1.
 
     int success = false ;
-    for (int v = h_offset[active_vertex]; v < h_offset[active_vertex+1]; v++) {
+    int pointer = current_edges[active_vertex]+1 ;
+    for (int v = h_offset[active_vertex]+current_edges[active_vertex]+1; v < h_offset[active_vertex+1]; v++) {
 
       // check whether v_edge satisfies the property.
-      cout << "inside finding new edge " << endl ;
-      cout << heights[active_vertex] << " " << heights[csr[v]] ;
-      if (heights[csr[v]] == heights[active_vertex]+1) {
+
+      cerr << heights[active_vertex] << " " << heights[csr[v]] ;
+
+      if (heights[csr[v]] == heights[active_vertex]-1) {
         // update the active vertex's edge.
-        current_edges[active_vertex] = csr[v] ;
+
+        current_edges[active_vertex] = pointer ;
 
         success = true ;
         return true ;
       }
+      pointer++ ;
     }
 
     // if control reaches here, relabelling is needed .
     if (!success){
-
+        
         return relabel(active_vertex) ;
     }
     
@@ -323,7 +361,7 @@ public:
 
   void push_and_relabel () {
 
-    cout << " preflow push relable \n" ;
+    cerr << " preflow push relable \n" ;
     // select an active vertex.
     int current_vertex = active_vertices.front () ;
 
@@ -332,14 +370,33 @@ public:
     // push (current_vertex) ;
     while (push (current_vertex));
 
-    cerr << "no more push operations" << endl ;
-    cerr << active_vertices.size () << endl ;
+
     if (active_vertices.size () == 0) {
 
       ACTIVE_VERTEX_EXISTS=false ;
     }
   }
 
+    void print_result () {
+
+        cout << "results ==========================================\n" ;
+        cout << "max_flow = " << excess[sink]-excess[source] << endl ; 
+        // print_arr_log (this->flow, num_edges()) ;
+        // print_arr_log (this->residual_flow, num_edges()) ;
+        // print_arr_log (this->excess, num_nodes()) ;
+        // print_arr_log (this->heights, num_nodes()) ;
+        cout << endl ;
+        for (int u=0; u< num_nodes (); u++) {
+
+            for (int v_index = h_offset[u]; v_index<h_offset[u+1]; v_index++) {
+
+                cout << "flow from "<<u <<" to " << csr[v_index] << " = " << flow[v_index]<< endl  ;
+            }
+        }
+
+        cout << "====================================================\n" ;
+
+    }
 };
  
   

@@ -47,7 +47,7 @@ class graph
     degree_max=0;
     padded_nodesTotal=0;
     np = 1;
-    //std::cout << "World size: " <<np << std::endl;
+    //std::cerr << "World size: " <<np << std::endl;
 
   }
 
@@ -134,19 +134,19 @@ class graph
      infile.open(filePath);
      if(!infile)
      {
-     	std::cout <<"Cannot open the file"<<std::endl;
+     	std::cerr <<"Cannot open the file"<<std::endl;
      	exit(0);
      }
      std::string line;
      std::stringstream ss;
-     std::cout << "graph recognized \n";
+     std::cerr << "graph recognized \n";
      while (getline(infile, line)) 
      {
        
        if (line[0] < '0' || line[0] >'9') {
           int k=3;
           while (k--) {
-            std::cout << "ignoring " << line << std::endl;
+            std::cerr << "ignoring " << line << std::endl;
             getline (infile, line);
             continue;
           }
@@ -211,7 +211,7 @@ class graph
 
       }                      
 
-      std::cout << "Edges : " << ' ' << edgesTotal << "\n Vertices : " << original_nodesTotal <<std::endl;
+      std::cerr << "Edges : " << ' ' << edgesTotal << "\n Vertices : " << original_nodesTotal <<std::endl;
       indexofNodes=new int[padded_nodesTotal+1];
       edgeList=new int[edgesTotal];
       edgeLen=new int[edgesTotal];
@@ -268,7 +268,7 @@ class graph
 
     }
 
-cout<<"generating reverse list\n" ;
+cerr<<"generating reverse list\n" ;
     for(int i=0;i<padded_nodesTotal+1;i++)
        rev_indexofNodes[i] = 0;
    
@@ -313,7 +313,7 @@ cout<<"generating reverse list\n" ;
                srcList[index_in_srcList] = i;
             }
         }
-      std::cout << "done\n";
+      std::cerr << "done\n";
         for(int i=0;i<padded_nodesTotal;i++)
         {
           std::vector<int> vect;
@@ -330,8 +330,8 @@ cout<<"generating reverse list\n" ;
 
 
 
-      cout << edges.size () << " this is what I should get\n" ;
-  std::cout << "okay" <<std::endl;
+      cerr << edges.size () << " this is what I should get\n" ;
+  std::cerr << "okay" <<std::endl;
  }
 
 

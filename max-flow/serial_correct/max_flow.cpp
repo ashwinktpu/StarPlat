@@ -17,6 +17,8 @@ int main (int argc, char ** argv) {
     // we need to push source vertex into the queue.
     g.push_and_relabel () ;
   }
+
+  g.print_result () ;
   return 0;
 
 }
