@@ -924,24 +924,7 @@ void dsl_cpp_generator::generateAssignmentStmt(assignment* asmt)  //When propnod
         //  sprintf(strBuffer, "#pragma acc data copyin(%s)", graph_name);
         //  main.pushstr_newL(strBuffer);
         //  main.pushstr_newL("{");
-
-         main.pushstr_space("#pragma acc data");
          generateDataDirectiveForStatment(asmt);
-         main.pushstr_newL("{");
-
-         //main.pushstr_newL("#pragma acc data copyout( modified[0: num_nodes], modified_nxt[0: num_nodes], dist[0: num_nodes+1] )");
-         //main.pushstr_newL("{");
-         main.pushstr_newL("#pragma acc parallel loop");
-         sprintf(strBuffer,"for (%s %s = 0; %s < %s.%s(); %s ++) ","int", "node" ,"node",graph_name,"num_nodes","node");
-         main.pushstr_newL(strBuffer);     
-                                                                                        /* the graph associated                          */
-         main.pushstr_newL("{");
-         sprintf(strBuffer,"%s [%s] = %s [%s] ;",id->getIdentifier(), "node",rhsPropId2->getIdentifier(),"node");
-         main.pushstr_newL(strBuffer);
-         main.pushstr_newL("}");
-
-         main.pushstr_newL("}"); //-----openacc data close
-        //  main.pushstr_newL("}"); //-----openacc data close
 
        }
        else
@@ -2007,23 +1990,7 @@ void dsl_cpp_generator:: generateVariableDecl(declaration* declStmt)
             char* graph_name = graph_arr[0]->getIdentifier();  //Graph variable name identifier
             char buffer[1024];
 
-            main.pushstr_space("#pragma acc data");
             generateDataDirectiveForStatment(declStmt);
-
-            main.pushstr_newL("{");   // start of data region
-            main.pushstr_newL("#pragma acc parallel loop");
-
-            if (type->isPropNodeType())   // for each node, copy the property value
-              sprintf(buffer, "for (int t = 0; t < %s.num_nodes(); t++)", graph_name);
-            else if (type->isPropEdgeType())  // for each edge, copy the property value
-              sprintf(buffer, "for (int t = 0; t < %s.num_edges(); t++)", graph_name);
-            main.pushstr_newL(buffer);
-            main.pushstr_newL("{");
-            sprintf(buffer, "%s[t] = %s[t];", declStmt->getdeclId()->getIdentifier(), propId->getIdentifier());
-            main.pushstr_newL(buffer);
-            main.pushstr_newL("}");     // end of parallel loop
-
-            main.pushstr_newL("}");     // end of data region
           }
         }
       
@@ -3111,55 +3078,153 @@ bool dsl_cpp_generator::generate()
 
         // get rhs id
         Identifier* rhsId = assign->getExpr()->getId();
+        bool dataDirectiveRequired = false;
+
+        main.pushstr_space("#pragma acc data");
+
         if (!presentInSet(currAccVars, rhsId->getSymbolInfo())) {
-          if (rhsId->getSymbolInfo()->getType()->isPropNodeType())
+          if (rhsId->getSymbolInfo()->getType()->isPropNodeType()) {
             sprintf(strBuffer, "copyin(%s[0:%s.num_nodes()+1])", rhsId->getIdentifier(), graph_name);
-          else if (rhsId->getSymbolInfo()->getType()->isPropEdgeType())
+
+            if (!dataDirectiveRequired) 
+              main.pushstr_space("#pragma acc data");
+
+            dataDirectiveRequired = true;
+            main.pushstr_space(strBuffer);
+          }
+          else if (rhsId->getSymbolInfo()->getType()->isPropEdgeType()) {
             sprintf(strBuffer, "copyin(%s[0:%s.num_edges()+1])", rhsId->getIdentifier(), graph_name);
-          main.pushstr_space(strBuffer);
+            
+            if (!dataDirectiveRequired) 
+              main.pushstr_space("#pragma acc data");
+            
+            dataDirectiveRequired = true;
+            main.pushstr_space(strBuffer);
+          }
         }
 
         // get lhs id
         Identifier* lhsId = assign->getId();
         set<TableEntryWrapper*> out = assign->getBlockData()->getBlock()->getOut();
         if (presentInSet(out, lhsId->getSymbolInfo()) && !presentInSet(currAccVars, lhsId->getSymbolInfo())) {
-          if (lhsId->getSymbolInfo()->getType()->isPropNodeType())
+          if (lhsId->getSymbolInfo()->getType()->isPropNodeType()) {
             sprintf(strBuffer, "copyout(%s[0:%s.num_nodes()+1])", lhsId->getIdentifier(), graph_name);
-          else if (lhsId->getSymbolInfo()->getType()->isPropEdgeType())
+
+            if (!dataDirectiveRequired) 
+              main.pushstr_space("#pragma acc data");
+
+            dataDirectiveRequired = true;
+            main.pushstr_space(strBuffer);
+          } 
+          else if (lhsId->getSymbolInfo()->getType()->isPropEdgeType()) {
             sprintf(strBuffer, "copyout(%s[0:%s.num_edges()+1])", lhsId->getIdentifier(), graph_name);
+
+            if (!dataDirectiveRequired) 
+              main.pushstr_space("#pragma acc data");
+
+            dataDirectiveRequired = true;
+            main.pushstr_space(strBuffer);
+          }
           main.pushstr_space(strBuffer);
         }
 
-        main.pushstr_newL("");
+        if (dataDirectiveRequired) {
+          main.pushstr_newL("");
+          main.pushstr_newL("{");
+        }
+
+        //main.pushstr_newL("#pragma acc data copyout( modified[0: num_nodes], modified_nxt[0: num_nodes], dist[0: num_nodes+1] )");
+        //main.pushstr_newL("{");
+        main.pushstr_newL("#pragma acc parallel loop");
+        sprintf(strBuffer,"for (%s %s = 0; %s < %s.%s(); %s ++) ","int", "node" ,"node",graph_name,"num_nodes","node");
+        main.pushstr_newL(strBuffer);     
+                                                                                      /* the graph associated                          */
+        main.pushstr_newL("{");
+        sprintf(strBuffer,"%s [%s] = %s [%s] ;",id->getIdentifier(), "node",rhsPropId2->getIdentifier(),"node");
+        main.pushstr_newL(strBuffer);
+        main.pushstr_newL("}");
+
+        if(dataDirectiveRequired)
+          main.pushstr_newL("}"); //-----openacc data close
         break;
       }
 
       case NODE_DECL:
       {
         declaration* declStmt = (declaration*) stmt;
-        
+        char buffer[1024];
+
+        bool dataDirectiveRequired = false;
+
         Identifier* propId = declStmt->getExpressionAssigned()->getId();
         if (!presentInSet(currAccVars, propId->getSymbolInfo())) {
           Type* type = propId->getSymbolInfo()->getType();
-          if (type->isPropNodeType())   // for each node, copy the property value
+          if (type->isPropNodeType()) {   // for each node, copy the property value
             sprintf(strBuffer, "copyin(%s[0:%s.num_nodes()])", propId->getIdentifier(), graph_name);
-          else if (type->isPropEdgeType())  // for each edge, copy the property value
+
+            if (!dataDirectiveRequired) 
+              main.pushstr_space("#pragma acc data");
+
+            dataDirectiveRequired = true;
+            main.pushstr_space(strBuffer);
+          }
+          else if (type->isPropEdgeType()) { // for each edge, copy the property value
             sprintf(strBuffer, "copyin(%s[0:%s.num_edges()])", propId->getIdentifier(), graph_name);
-          main.pushstr_space(strBuffer);
+
+            if (!dataDirectiveRequired) 
+              main.pushstr_space("#pragma acc data");
+            
+            dataDirectiveRequired = true;
+            main.pushstr_space(strBuffer);
+          }
         }
         
         set<TableEntryWrapper*> out = declStmt->getBlockData()->getBlock()->getOut();
         TableEntry* te_decl = declStmt->getdeclId()->getSymbolInfo();
+        
         if (presentInSet(out, te_decl) && !presentInSet(currAccVars, te_decl)) {
           Type* type = te_decl->getType();
-          if (type->isPropNodeType())   // for each node, copy the property value
+          if (type->isPropNodeType()) {   // for each node, copy the property value
             sprintf(strBuffer, "copyout(%s[0:%s.num_nodes()])", declStmt->getdeclId()->getIdentifier(), graph_name);
-          else if (type->isPropEdgeType())  // for each edge, copy the property value
+          
+            if (!dataDirectiveRequired) 
+              main.pushstr_space("#pragma acc data");
+            
+            dataDirectiveRequired = true;
+            main.pushstr_space(strBuffer);
+          }
+          else if (type->isPropEdgeType()) { // for each edge, copy the property value
             sprintf(strBuffer, "copyout(%s[0:%s.num_edges()])", declStmt->getdeclId()->getIdentifier(), graph_name);
-          main.pushstr_space(strBuffer);
+          
+            if (!dataDirectiveRequired) 
+              main.pushstr_space("#pragma acc data");
+            
+            dataDirectiveRequired = true;
+            main.pushstr_space(strBuffer);
+          }
         }
 
-        main.pushstr_newL("");
+        if (dataDirectiveRequired) {
+          main.pushstr_newL("");
+          main.pushstr_newL("{");
+        }
+
+        main.pushstr_newL("#pragma acc parallel loop");
+
+        Type* type = declStmt->getType();
+        if (type->isPropNodeType())   // for each node, copy the property value
+          sprintf(buffer, "for (int t = 0; t < %s.num_nodes(); t++)", graph_name);
+        else if (type->isPropEdgeType())  // for each edge, copy the property value
+          sprintf(buffer, "for (int t = 0; t < %s.num_edges(); t++)", graph_name);
+        main.pushstr_newL(buffer);
+        main.pushstr_newL("{");
+        sprintf(buffer, "%s[t] = %s[t];", declStmt->getdeclId()->getIdentifier(), propId->getIdentifier());
+        main.pushstr_newL(buffer);
+        main.pushstr_newL("}");     // end of parallel loop
+
+        if (dataDirectiveRequired) {
+          main.pushstr_newL("}");     // end of data region
+        }
         break;
       }
     }
