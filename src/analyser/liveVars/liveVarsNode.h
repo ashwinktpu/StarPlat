@@ -12,8 +12,19 @@ class liveVarsNode
     set<TableEntry*> in;
     set<TableEntry*> out;
 
+    set<liveVarsNode*> predecessors;
+    set<liveVarsNode*> successors;
+
     public:
     liveVarsNode(ASTNode*);
+    
+    ASTNode* getNode();
+    set<TableEntry*> getUse();
+    set<TableEntry*> getDef();
+    set<TableEntry*> getIn();
+    set<TableEntry*> getOut();
+    set<liveVarsNode*> getPredecessors();
+    set<liveVarsNode*> getSuccessors();
 };
 
 #endif
