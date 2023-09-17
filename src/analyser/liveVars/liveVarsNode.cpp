@@ -38,3 +38,13 @@ set<liveVarsNode*> liveVarsNode::getSuccessors()
 {
     return successors;
 }
+
+void liveVarsNode::addPredecessor(liveVarsNode* pred)
+{
+    predecessors.insert(pred);
+}
+
+void liveVarsNode::addSuccessor(liveVarsNode* succ)
+{
+    successors.insert(succ);
+}

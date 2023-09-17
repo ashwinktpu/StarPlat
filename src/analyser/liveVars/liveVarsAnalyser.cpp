@@ -59,9 +59,11 @@ liveVarsNode* liveVarsAnalyser::initStatement(statement* node, liveVarsNode* suc
     return nullptr;
 }
 
-liveVarsNode* liveVarsAnalyser::initAssignment(assignment*, liveVarsNode*)
+liveVarsNode* liveVarsAnalyser::initAssignment(assignment* node, liveVarsNode* successor)
 {
-    return nullptr;
+    liveVarsNode* liveVars = new liveVarsNode(node);
+    
+    return liveVars;
 }
 
 liveVarsNode* liveVarsAnalyser::initBlockStatement(blockStatement* node, liveVarsNode* successor)
