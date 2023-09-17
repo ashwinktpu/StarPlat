@@ -924,7 +924,7 @@ void dsl_cpp_generator::generateAssignmentStmt(assignment* asmt)  //When propnod
         //  sprintf(strBuffer, "#pragma acc data copyin(%s)", graph_name);
         //  main.pushstr_newL(strBuffer);
         //  main.pushstr_newL("{");
-         generateDataDirectiveForStatment(asmt);
+        generateDataDirectiveForStatment(asmt);
 
        }
        else
@@ -3140,7 +3140,7 @@ bool dsl_cpp_generator::generate()
         main.pushstr_newL(strBuffer);     
                                                                                       /* the graph associated                          */
         main.pushstr_newL("{");
-        sprintf(strBuffer,"%s [%s] = %s [%s] ;",id->getIdentifier(), "node",rhsPropId2->getIdentifier(),"node");
+        sprintf(strBuffer,"%s [%s] = %s [%s] ;",lhsId->getIdentifier(), "node",rhsId->getIdentifier(),"node");
         main.pushstr_newL(strBuffer);
         main.pushstr_newL("}");
 
