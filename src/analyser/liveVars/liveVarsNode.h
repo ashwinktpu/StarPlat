@@ -2,6 +2,7 @@
 #define LIVE_VARS_NODE_H
 
 #include "../../ast/ASTHelper.cpp"
+#include "../analyserUtil.h"
 
 class liveVarsNode
 {
@@ -26,6 +27,9 @@ class liveVarsNode
     set<liveVarsNode*> getPredecessors();
     set<liveVarsNode*> getSuccessors();
 
+    void addUse(Identifier*);
+    void addDef(Identifier*);
+    void addVars(usedVariables);
     void addPredecessor(liveVarsNode*);
     void addSuccessor(liveVarsNode*);
 };

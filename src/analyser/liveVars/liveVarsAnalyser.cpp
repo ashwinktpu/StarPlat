@@ -24,57 +24,70 @@ void liveVarsAnalyser::initFunc(Function* func)
     return;
 }
 
-liveVarsNode* liveVarsAnalyser::initStatement(statement* node, liveVarsNode* successor)
+liveVarsNode* liveVarsAnalyser::initStatement(statement* node, liveVarsNode* predecessor)
 {
     switch(node->getTypeofNode())
     {
         case NODE_ASSIGN:
-            return initAssignment((assignment*)node, successor);
+            return initAssignment((assignment*)node, predecessor);
         case NODE_BLOCKSTMT:
-            return initBlockStatement((blockStatement*)node, successor);
+            return initBlockStatement((blockStatement*)node, predecessor);
         case NODE_DECL:
-            return initDeclaration((declaration*)node, successor);
+            return initDeclaration((declaration*)node, predecessor);
         case NODE_DOWHILESTMT:
-            return initDoWhile((dowhileStmt*)node, successor);
+            return initDoWhile((dowhileStmt*)node, predecessor);
         case NODE_FIXEDPTSTMT:
-            return initFixedPoint((fixedPointStmt*)node, successor);
+            return initFixedPoint((fixedPointStmt*)node, predecessor);
         case NODE_FORALLSTMT:
-            return initForAll((forallStmt*)node, successor);
+            return initForAll((forallStmt*)node, predecessor);
         case NODE_IFSTMT:
-            return initIfStmt((ifStmt*)node, successor);
+            return initIfStmt((ifStmt*)node, predecessor);
         case NODE_ITRBFS:
-            return initIterateBFS((iterateBFS*)node, successor);
+            return initIterateBFS((iterateBFS*)node, predecessor);
         case NODE_PROCCALLSTMT:
-            return initProcCall((proc_callStmt*)node, successor);
+            return initProcCall((proc_callStmt*)node, predecessor);
         case NODE_REDUCTIONCALLSTMT:
-            return initReduction((reductionCallStmt*)node, successor);
+            return initReduction((reductionCallStmt*)node, predecessor);
         case NODE_RETURN:
-            return initReturn((returnStmt*)node, successor);
+            return initReturn((returnStmt*)node, predecessor);
         case NODE_UNARYSTMT:
-            return initUnary((unary_stmt*)node, successor);
+            return initUnary((unary_stmt*)node, predecessor);
         case NODE_WHILESTMT:
-            return initWhile((whileStmt*)node, successor);
+            return initWhile((whileStmt*)node, predecessor);
     }
 
     return nullptr;
 }
 
-liveVarsNode* liveVarsAnalyser::initAssignment(assignment* node, liveVarsNode* successor)
+liveVarsNode* liveVarsAnalyser::initAssignment(assignment* node, liveVarsNode* predecessor)
 {
     liveVarsNode* liveVars = new liveVarsNode(node);
+
+    liveVars->addVars(getVarsAssignment(node));
+    liveVars->addPredecessor(predecessor);
     
     return liveVars;
 }
 
-liveVarsNode* liveVarsAnalyser::initBlockStatement(blockStatement* node, liveVarsNode* successor)
+liveVarsNode* liveVarsAnalyser::initBlockStatement(blockStatement* node, liveVarsNode* predecessor)
 {
-    return nullptr;
+    list<statement*> stmts = node->returnStatements();
+    for(auto stmt = stmts.begin(); stmt != stmts.end(); stmt++)
+    {
+        liveVarsNode* predecessor = initStatement((*stmt), predecessor);
+    }
+    
+    return predecessor;
 }
 
-
-liveVarsNode* liveVarsAnalyser::initDeclaration(declaration*, liveVarsNode*)
+liveVarsNode* liveVarsAnalyser::initDeclaration(declaration* node, liveVarsNode* predecessor)
 {
-    return nullptr;
+    liveVarsNode* liveVars = new liveVarsNode(node);
+
+    liveVars->addVars(getVarsDeclaration(node));
+    liveVars->addPredecessor(predecessor);
+    
+    return liveVars;
 }
 
 liveVarsNode* liveVarsAnalyser::initDoWhile(dowhileStmt*, liveVarsNode*)

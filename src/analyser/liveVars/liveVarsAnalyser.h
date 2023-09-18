@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 #include "../../ast/ASTHelper.cpp"
+#include "../analyserUtil.h"
 
 class liveVarsAnalyser
 {
@@ -31,6 +32,24 @@ class liveVarsAnalyser
     liveVarsNode* initReturn(returnStmt*, liveVarsNode*);
     liveVarsNode* initUnary(unary_stmt*, liveVarsNode*);
     liveVarsNode* initWhile(whileStmt*, liveVarsNode*);
+
+    //Returns the used variables in each statment
+    usedVariables getVarsStatement(statement*);
+    usedVariables getVarsBlock(blockStatement*);
+    usedVariables getVarsForAll(forallStmt*);
+    usedVariables getVarsUnary(unary_stmt*);
+    usedVariables getVarsDeclaration(declaration*);
+    usedVariables getVarsWhile(whileStmt*);
+    usedVariables getVarsDoWhile(dowhileStmt*);
+    usedVariables getVarsAssignment(assignment*);
+    usedVariables getVarsIf(ifStmt*);
+    usedVariables getVarsExpr(Expression*);
+    usedVariables getVarsReduction(reductionCallStmt*);
+    usedVariables getVarsFixedPoint(fixedPointStmt*);
+    usedVariables getVarsBFS(iterateBFS*);
+    usedVariables getVarsRBFS(iterateReverseBFS*);
+    usedVariables getVarsProcCall(proc_callStmt*);
+    usedVariables getVarsExprProcCall(proc_callExpr*);
 };
 
 #endif

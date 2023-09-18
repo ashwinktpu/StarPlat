@@ -39,6 +39,28 @@ set<liveVarsNode*> liveVarsNode::getSuccessors()
     return successors;
 }
 
+void liveVarsNode::addUse(Identifier* id)
+{
+    if(!id->getSymbolInfo())
+        return;
+    use.insert(id->getSymbolInfo());
+}
+
+void liveVarsNode::addDef(Identifier* id)
+{
+    if(!id->getSymbolInfo())
+        return;
+    def.insert(id->getSymbolInfo());
+}
+
+void liveVarsNode::addVars(usedVariables vars)
+{
+    for(Identifier* id : vars.getVariables(READ))
+        addUse(id);
+    for(Identifier* id : vars.getVariables(WRITE))
+        addUse(id);
+}
+
 void liveVarsNode::addPredecessor(liveVarsNode* pred)
 {
     predecessors.insert(pred);
