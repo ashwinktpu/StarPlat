@@ -73,7 +73,7 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
     level[src] = 0;
     #pragma acc data copyin(g)
     {
-      #pragma acc data copyin(g.indexofNodes[0:g.num_nodes()+1], g.edgeList[0:g.num_edges()+1], g.edgeWeight[0:g.num_edges()+1])
+      #pragma acc data copyin(g.indexofNodes[0:g.num_nodes()+1], g.edgeList[0:g.num_edges()+1], g.edgeWeight[0:g.num_edges()+1]) copyin(BC[0:g.num_nodes()+1], sigma[0:g.num_nodes()+1], delta[0:g.num_nodes()+1])
       {
         do
         {

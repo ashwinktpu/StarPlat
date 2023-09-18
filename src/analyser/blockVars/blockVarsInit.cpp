@@ -435,6 +435,7 @@ ASTNodeBlock *blockVarsAnalyser::initItrBFS(iterateBFS *iterateBFS, ASTNodeBlock
 
     // Map the outer iterateBFS statement's start and end block
     addBlockNode(iterateBFS, itr_BFS_RBFS_Start, itr_BFS_RBFS_End);
+    cout << (iterateBFS->getBlockData()->getStartBlock() == itr_BFS_RBFS_Start) << ", there are equal" << endl;
     return itr_BFS_RBFS_Start;
 }
 

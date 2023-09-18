@@ -3026,19 +3026,38 @@ bool dsl_cpp_generator::generate()
         set<TableEntry*> writeVars;
         set<TableEntry*> readWriteVars;
 
+        cout << "readvars size " << readVarsList.size() << endl;
+        cout << "writevars size " << writeVarsList.size() << endl;
+        cout << "readwritevars size " << readWriteVarsList.size() << endl;
+
+        cout << "read only: " << in.size() << endl;
         for (Identifier* id: readVarsList) {
+          if (stmt->getTypeofNode() == NODE_ITRBFS) {
+            cout << "read only: " << id->getIdentifier() << endl;
+          }
+
           TableEntry* te = id->getSymbolInfo();
           if (!presentInSet(currAccVars, te) && presentInSet(in, te))
             readVars.insert(te);
         }
 
+        cout << "write only: " << out.size() << endl;
         for (Identifier* id: writeVarsList) {
+          if (stmt->getTypeofNode() == NODE_ITRBFS) {
+            cout << "write only: " << id->getIdentifier() << endl;
+          }
+
           TableEntry* te = id->getSymbolInfo();
           if (presentInSet(out, te) && usedInCPU(out, te))
             writeVars.insert(te);
         }
 
+        cout << "read write: " << in.size() << " " << out.size() << endl;
         for (Identifier* id: readWriteVarsList) {
+          if (stmt->getTypeofNode() == NODE_ITRBFS) {
+            cout << "read write: " << id->getIdentifier() << endl;
+          }
+
           TableEntry* te = id->getSymbolInfo();  
           bool read = true, write = true;
           if (!presentInSet(in, te) || presentInSet(currAccVars, te))
@@ -3079,8 +3098,6 @@ bool dsl_cpp_generator::generate()
         // get rhs id
         Identifier* rhsId = assign->getExpr()->getId();
         bool dataDirectiveRequired = false;
-
-        main.pushstr_space("#pragma acc data");
 
         if (!presentInSet(currAccVars, rhsId->getSymbolInfo())) {
           if (rhsId->getSymbolInfo()->getType()->isPropNodeType()) {

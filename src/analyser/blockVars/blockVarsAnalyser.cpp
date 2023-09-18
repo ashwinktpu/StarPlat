@@ -315,7 +315,7 @@ void blockVarsAnalyser::analyseFunc(ASTNode *proc)
     addBlockNode(func, blockNode);
 
     analyseBlockNodes();
-    printBlockNodes();
+    // printBlockNodes();
 }
 
 void blockVarsAnalyser::analyse(list<Function *> functions)

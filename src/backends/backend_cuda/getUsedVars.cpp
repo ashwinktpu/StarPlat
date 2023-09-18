@@ -200,20 +200,24 @@ usedVariables getVarsUnary(unary_stmt *stmt)
   return currUsed;
 }
 
-/*
-usedVariables getVarsBFS(iterateBFS *stmt)
+usedVariables getVarsRBFS(iterateReverseBFS *stmt)
 {
   usedVariables currVars = getVarsStatement(stmt->getBody());
-  if (stmt->getRBFS() != nullptr)
+  if(stmt->hasFilter())
   {
-    iterateReverseBFS *RBFSstmt = stmt->getRBFS();
-    if (RBFSstmt->getBFSFilter() != nullptr)
-      currVars.merge(RBFSstmt->getBFSFilter());
-    currVars.merge(RBFSstmt->getBody());
+    currVars.merge(getVarsExpr(stmt->getBFSFilter()));
   }
 
   return currVars;
-}*/
+}
+
+usedVariables getVarsBFS(iterateBFS *stmt)
+{
+  usedVariables currVars = getVarsStatement(stmt->getBody());
+  usedVariables rbfsVars = getVarsRBFS(stmt->getRBFS());
+  currVars.merge(rbfsVars);
+  return currVars;
+}
 
 usedVariables getVarsForAll(forallStmt *stmt)
 {
@@ -332,8 +336,8 @@ usedVariables getVarsStatement(statement *stmt)
   case NODE_REDUCTIONCALLSTMT:
     return getVarsReduction((reductionCallStmt *)stmt);
 
-    /*case NODE_ITRBFS:
-      return getVarsBFS((iterateBFS *)stmt);*/
+  case NODE_ITRBFS:
+      return getVarsBFS((iterateBFS *)stmt);
 
   case NODE_FIXEDPTSTMT:
       return getVarsFixedPoint((fixedPointStmt *)stmt);

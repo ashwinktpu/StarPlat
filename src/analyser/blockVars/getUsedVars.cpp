@@ -125,6 +125,8 @@ usedVariables_t blockVarsAnalyser::getVarsUnary(unary_stmt *stmt)
 usedVariables_t blockVarsAnalyser::getVarsBFS(iterateBFS *stmt)
 {
   usedVariables_t currVars = getVarsStatement(stmt->getBody());
+  usedVariables_t rbfsVars = getVarsRBFS(stmt->getRBFS());
+  currVars.merge(rbfsVars);
   return currVars;
 }
 

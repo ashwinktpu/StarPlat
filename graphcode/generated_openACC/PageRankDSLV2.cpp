@@ -48,13 +48,10 @@ void Compute_PR(graph& g,float beta,float delta,int maxIter,
           }
         }
 
-        #pragma acc data 
+        #pragma acc parallel loop
+        for (int node = 0; node < g.num_nodes(); node ++) 
         {
-          #pragma acc parallel loop
-          for (int node = 0; node < g.num_nodes(); node ++) 
-          {
-            pageRank [node] = pageRank_nxt [node] ;
-          }
+          pageRank [node] = pageRank_nxt [node] ;
         }
         iterCount++;
       }
