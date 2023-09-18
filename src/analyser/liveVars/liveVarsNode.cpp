@@ -1,5 +1,8 @@
 #include "liveVarsNode.h"
 
+liveVarsNode::liveVarsNode()
+{}
+
 liveVarsNode::liveVarsNode(ASTNode* astnode)
     : node(astnode)
 {}
@@ -59,6 +62,11 @@ void liveVarsNode::addVars(usedVariables vars)
         addUse(id);
     for(Identifier* id : vars.getVariables(WRITE))
         addUse(id);
+}
+
+void liveVarsNode::addPredecessor(liveVarsNode* pred)
+{
+    predecessors.insert(pred);
 }
 
 void liveVarsNode::addPredecessors(set<liveVarsNode*> pred)

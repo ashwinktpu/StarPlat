@@ -17,6 +17,7 @@ class liveVarsNode
     set<liveVarsNode*> successors;
 
     public:
+    liveVarsNode();
     liveVarsNode(ASTNode*);
     
     ASTNode* getNode();
@@ -30,6 +31,7 @@ class liveVarsNode
     void addUse(Identifier*);
     void addDef(Identifier*);
     void addVars(usedVariables);
+    void addPredecessor(liveVarsNode*);
     void addPredecessors(set<liveVarsNode*>);
     void addSuccessors(set<liveVarsNode*>);
 };

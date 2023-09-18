@@ -9,8 +9,8 @@ class liveVarsAnalyser
 {
     private:
     std::unordered_map<ASTNode*, liveVarsNode*> nodeMap;
-
     std::list<ASTNode*> nodeList;
+    std::list<liveVarsNode*> currReturnNodes;
 
     public:
     liveVarsAnalyser();
