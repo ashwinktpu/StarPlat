@@ -61,12 +61,14 @@ void liveVarsNode::addVars(usedVariables vars)
         addUse(id);
 }
 
-void liveVarsNode::addPredecessor(liveVarsNode* pred)
+void liveVarsNode::addPredecessors(set<liveVarsNode*> pred)
 {
-    predecessors.insert(pred);
+    for(auto p = pred.begin(); p != pred.end(); p++)
+        predecessors.insert(*p);
 }
 
-void liveVarsNode::addSuccessor(liveVarsNode* succ)
+void liveVarsNode::addSuccessors(set<liveVarsNode*> succ)
 {
-    successors.insert(succ);
+    for(auto s = succ.begin(); s != succ.end(); s++)
+        successors.insert(*s);
 }

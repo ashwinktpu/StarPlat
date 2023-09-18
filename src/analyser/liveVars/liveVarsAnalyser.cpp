@@ -14,17 +14,10 @@ void liveVarsAnalyser::analyse(list<Function*> funcList)
 
 void liveVarsAnalyser::initFunc(Function* func)
 {
-    // end block
-    liveVarsNode* endNode = new liveVarsNode(func);
-
-    // return search
-
-    initStatement(func->getBlockStatement(), endNode);
-
     return;
 }
 
-liveVarsNode* liveVarsAnalyser::initStatement(statement* node, liveVarsNode* predecessor)
+liveVarsNode* liveVarsAnalyser::initStatement(statement* node, set<liveVarsNode*> predecessor)
 {
     switch(node->getTypeofNode())
     {
@@ -59,83 +52,92 @@ liveVarsNode* liveVarsAnalyser::initStatement(statement* node, liveVarsNode* pre
     return nullptr;
 }
 
-liveVarsNode* liveVarsAnalyser::initAssignment(assignment* node, liveVarsNode* predecessor)
+liveVarsNode* liveVarsAnalyser::initAssignment(assignment* node, set<liveVarsNode*> predecessor)
 {
     liveVarsNode* liveVars = new liveVarsNode(node);
 
     liveVars->addVars(getVarsAssignment(node));
-    liveVars->addPredecessor(predecessor);
+    liveVars->addPredecessors(predecessor);
     
     return liveVars;
 }
 
-liveVarsNode* liveVarsAnalyser::initBlockStatement(blockStatement* node, liveVarsNode* predecessor)
+liveVarsNode* liveVarsAnalyser::initBlockStatement(blockStatement* node, set<liveVarsNode*> predecessor)
 {
     list<statement*> stmts = node->returnStatements();
-    for(auto stmt = stmts.begin(); stmt != stmts.end(); stmt++)
+
+    //handle the case where block is empty??
+
+    auto stmt = stmts.begin();
+    liveVarsNode* pred = initStatement((*stmt), predecessor);
+    stmt++;
+
+    for(; stmt != stmts.end(); stmt++)
     {
-        liveVarsNode* predecessor = initStatement((*stmt), predecessor);
+        set<liveVarsNode*> curr;
+        curr.insert(pred);
+        pred = initStatement((*stmt), curr);
     }
     
-    return predecessor;
+    return pred;
 }
 
-liveVarsNode* liveVarsAnalyser::initDeclaration(declaration* node, liveVarsNode* predecessor)
+liveVarsNode* liveVarsAnalyser::initDeclaration(declaration* node, set<liveVarsNode*> predecessor)
 {
     liveVarsNode* liveVars = new liveVarsNode(node);
 
     liveVars->addVars(getVarsDeclaration(node));
-    liveVars->addPredecessor(predecessor);
+    liveVars->addPredecessors(predecessor);
     
     return liveVars;
 }
 
-liveVarsNode* liveVarsAnalyser::initDoWhile(dowhileStmt*, liveVarsNode*)
+liveVarsNode* liveVarsAnalyser::initDoWhile(dowhileStmt*, set<liveVarsNode*>)
 {
     return nullptr;
 }
 
-liveVarsNode* liveVarsAnalyser::initFixedPoint(fixedPointStmt*, liveVarsNode*)
+liveVarsNode* liveVarsAnalyser::initFixedPoint(fixedPointStmt*, set<liveVarsNode*>)
 {
     return nullptr;
 }
 
-liveVarsNode* liveVarsAnalyser::initForAll(forallStmt*, liveVarsNode*)
+liveVarsNode* liveVarsAnalyser::initForAll(forallStmt*, set<liveVarsNode*>)
 {
     return nullptr;
 }
 
-liveVarsNode* liveVarsAnalyser::initIfStmt(ifStmt*, liveVarsNode*)
+liveVarsNode* liveVarsAnalyser::initIfStmt(ifStmt*, set<liveVarsNode*>)
 {
     return nullptr;
 }
 
-liveVarsNode* liveVarsAnalyser::initIterateBFS(iterateBFS*, liveVarsNode*)
+liveVarsNode* liveVarsAnalyser::initIterateBFS(iterateBFS*, set<liveVarsNode*>)
 {
     return nullptr;
 }
 
-liveVarsNode* liveVarsAnalyser::initProcCall(proc_callStmt*, liveVarsNode*)
+liveVarsNode* liveVarsAnalyser::initProcCall(proc_callStmt*, set<liveVarsNode*>)
 {
     return nullptr;
 }
 
-liveVarsNode* liveVarsAnalyser::initReduction(reductionCallStmt*, liveVarsNode*)
+liveVarsNode* liveVarsAnalyser::initReduction(reductionCallStmt*, set<liveVarsNode*>)
 {
     return nullptr;
 }
 
-liveVarsNode* liveVarsAnalyser::initReturn(returnStmt*, liveVarsNode*)
+liveVarsNode* liveVarsAnalyser::initReturn(returnStmt*, set<liveVarsNode*>)
 {
     return nullptr;
 }
 
-liveVarsNode* liveVarsAnalyser::initUnary(unary_stmt*, liveVarsNode*)
+liveVarsNode* liveVarsAnalyser::initUnary(unary_stmt*, set<liveVarsNode*>)
 {
     return nullptr;
 }
 
-liveVarsNode* liveVarsAnalyser::initWhile(whileStmt*, liveVarsNode*)
+liveVarsNode* liveVarsAnalyser::initWhile(whileStmt*, set<liveVarsNode*>)
 {
     return nullptr;
 }

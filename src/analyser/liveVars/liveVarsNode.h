@@ -30,8 +30,8 @@ class liveVarsNode
     void addUse(Identifier*);
     void addDef(Identifier*);
     void addVars(usedVariables);
-    void addPredecessor(liveVarsNode*);
-    void addSuccessor(liveVarsNode*);
+    void addPredecessors(set<liveVarsNode*>);
+    void addSuccessors(set<liveVarsNode*>);
 };
 
 #endif
