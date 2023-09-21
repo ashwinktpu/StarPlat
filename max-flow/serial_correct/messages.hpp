@@ -1,0 +1,1 @@
+#define KILL_ALL 0xFF ;

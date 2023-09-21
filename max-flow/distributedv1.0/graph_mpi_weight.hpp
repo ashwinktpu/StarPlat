@@ -178,8 +178,6 @@ class graph
            edges[source].push_back(e);
           
         }
-      
-    
      }
 
       
@@ -260,16 +258,6 @@ class graph
 
 	vect.clear();
 	std::vector <std::pair<int,int>>().swap(vect);
-	
-          //std::vector<int> vect;
-          //vect.insert(vect.begin(),edgeList+indexofNodes[i],edgeList+indexofNodes[i+1]);
-          //std::sort(vect.begin(),vect.end());
-          //for(int j=0;j<vect.size();j++)
-          //  edgeList[j+indexofNodes[i]]=vect[j];
-
-            //vect.clear();
-	//	std::vector<int>().swap(vect);
-
     }
 
 cerr<<"generating reverse list\n" ;

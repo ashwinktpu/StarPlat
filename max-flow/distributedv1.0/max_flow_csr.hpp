@@ -42,6 +42,8 @@ private:
   int * current_edges ;
   queue<int> active_vertices ;
   int * excess ;
+  int global_nodes ;
+  int global_edges ;
 
 
   // The adjacency list of the graph.
@@ -88,6 +90,22 @@ public:
     for (int i=0; i< num_edges(); i++) {
         flow[i]=0 ;
         residual_flow[i]=capacities[i] ;
+    }
+
+    set_global_nodes (int global_nodes) {
+      this->global_nodes = global_nodes ;
+    }
+
+    set_global_edges (int global_edges) {
+      this->global_edges = global_edges ;
+    } 
+
+    get_global_vertices () {
+      return this->global_vertices ;
+    }
+
+    get_global_edges () {
+      return this->global_edges ;
     }
 
     set_up_excess () ;

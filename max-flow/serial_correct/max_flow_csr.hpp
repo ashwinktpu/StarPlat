@@ -218,11 +218,11 @@ public:
     int minim = 1000000000 ; // Find a better upper limit.
     for (int v = h_offset[relabel_this_vertex] ; v < h_offset[relabel_this_vertex+1]; v++) {
       
-      if ( heights[relabel_this_vertex] >= heights[csr[v]] and residual_flow[csr[v]] > 0 )
+      if ( heights[relabel_this_vertex] >= heights[csr[v]] and residual_flow[v] > 0 )
         minim = min (minim, heights[csr[v]]) ;
 
     }
-    heights[relabel_this_vertex]=minim-1 ;
+    heights[relabel_this_vertex]=minim+1 ;
 
     if ( minim >= (100000000-1) || minim == 0 ) {
       cout << "failed relabeling" << endl ;
