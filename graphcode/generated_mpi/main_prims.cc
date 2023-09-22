@@ -1,26 +1,39 @@
-#include "../graphcode/generated_mpi/mst_prims.h"
+#include "mst_prims_new.h"
 #include "../mpi_header/graph_mpi.h" 
+#include <iostream>
+#include <vector>
+#include <chrono>
+
+using namespace std;
+using namespace std::chrono;
 
 int main(int argv, char* argc[])
 {
+    if(argv < 2)
+    {
+        cout << "Usage: ./main_prims <graph_file>" << endl;
+        return 0;
+    }
     boost::mpi::environment env(argv, argc);
     boost::mpi::communicator world;
+    
+    auto start = high_resolution_clock::now();
     Graph graph(argc[1], world);
-    world.barrier();
-    Prims(graph, world);
-    world.barrier();
-    NodeProperty<int> minCost;
-    NodeProperty<int> minEdge;
-    NodeProperty<bool> visited;
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
+    if(world.rank() == 0) cout << "Time taken to read graph: " << duration.count() << " microseconds" << endl;
 
-    string info = "Rank " + to_string(world.rank()) + " " + "has nodes from " + to_string(graph.start_node()) + " to " + to_string(graph.end_node()) + "\n";
-    for(int i=graph.start_node(); i<=graph.end_node(); i++)
+    world.barrier();
+    
+    long long int mst_weight = 0;
+    int num_mst_nodes = 0;
+    Compute_MST_Prims(graph, 0, num_mst_nodes, mst_weight, world);
+    world.barrier();
+
+    if(world.rank() == 0)
     {
-        info += "Node id: " + to_string(i) + \
-                " minCost: " + to_string(minCost.getValue(i)) + \
-                " minEdge: " + to_string(minEdge.getValue(i)) + \
-                " visited: " + to_string(visited.getValue(i)) + "\n";
+        cout << "MST weight: " << mst_weight << endl;
+        cout << "Number of nodes in MST: " << num_mst_nodes << endl;
     }
-
     return 0;
 }

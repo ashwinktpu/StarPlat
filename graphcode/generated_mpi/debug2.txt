@@ -1,0 +1,135 @@
+mpic++ -std=c++17  -o main_prims.out main_prims.cc ../mpi_header/graph_mpi.cc ../mpi_header/updates.cc ../mpi_header/graph_properties/node_property/node_property.cc ../mpi_header/graph_properties/edge_property/edge_property.cc ../mpi_header/rma_datatype/rma_datatype.cc mst_prims_new.cc -g -Wall -I/lfs/usrhome/btech/cs20b013/boost_install/include -L/lfs/usrhome/btech/cs20b013/boost_install/lib -lboost_serialization -lboost_mpi  
+../mpi_header/graph_properties/edge_property/edge_property.cc: In member function ‘std::vector<std::vector<int> > EdgeProperty<T>::perform_reduction(MPI_Op)’:
+../mpi_header/graph_properties/edge_property/edge_property.cc:416:5: warning: no return statement in function returning non-void [-Wreturn-type]
+  416 |     }
+      |     ^
+../mpi_header/graph_properties/edge_property/edge_property.cc: In instantiation of ‘std::vector<std::vector<int> > EdgeProperty<T>::perform_reduction(MPI_Op) [with T = int; MPI_Op = ompi_op_t*]’:
+../mpi_header/graph_properties/edge_property/edge_property.cc:465:16:   required from here
+../mpi_header/graph_properties/edge_property/edge_property.cc:416:5: warning: no return statement in function returning non-void [-Wreturn-type]
+../mpi_header/graph_properties/edge_property/edge_property.cc: In instantiation of ‘std::vector<std::vector<int> > EdgeProperty<T>::perform_reduction(MPI_Op) [with T = bool; MPI_Op = ompi_op_t*]’:
+../mpi_header/graph_properties/edge_property/edge_property.cc:468:16:   required from here
+../mpi_header/graph_properties/edge_property/edge_property.cc:416:5: warning: no return statement in function returning non-void [-Wreturn-type]
+Starting germanyudwt
+Time taken to read graph: 89364510 microseconds
+Starting MST computation
+Number of nodes in MST: 1
+Found min edge: 1 0 28
+Iteration 1
+Number of nodes in MST: 2
+Found min edge: 89072 1 54
+Iteration 2
+Number of nodes in MST: 3
+Found min edge: 89073 89072 95
+Iteration 3
+Number of nodes in MST: 4
+Found min edge: 89074 89073 28
+Iteration 4
+Number of nodes in MST: 5
+Found min edge: 89075 89074 95
+Iteration 5
+Number of nodes in MST: 6
+Found min edge: 89076 89075 3
+Iteration 6
+Number of nodes in MST: 7
+Found min edge: 89077 89076 2
+Iteration 7
+Number of nodes in MST: 8
+Found min edge: 89078 89077 81
+Iteration 7
+Number of nodes in MST: 8
+Found min edge: 89078 89077 81
+Iteration 7
+Number of nodes in MST: 8
+Found min edge: 89078 89077 81
+Iteration 7
+Number of nodes in MST: 8
+Found min edge: 89078 89077 81
+Iteration 7
+Number of nodes in MST: 8
+Found min edge: 89078 89077 81
+Iteration 8
+Number of nodes in MST: 9
+Found min edge: 89079 89078 30
+Iteration 8
+Number of nodes in MST: 9
+Found min edge: 89079 89078 30
+Iteration 9
+Number of nodes in MST: 10
+Found min edge: 580 89079 73
+Iteration 9
+Number of nodes in MST: 10
+Found min edge: 580 89079 73
+Iteration 10
+Number of nodes in MST: 11
+Found min edge: 155269 580 33
+Iteration 11
+Number of nodes in MST: 12
+Found min edge: 581 580 49
+Iteration 12
+Number of nodes in MST: 13
+Found min edge: 155268 155269 56
+Iteration 13
+Number of nodes in MST: 14
+Found min edge: 155267 155268 69
+Iteration 14
+Number of nodes in MST: 15
+Found min edge: 155266 155267 37
+Iteration 15
+Number of nodes in MST: 16
+Found min edge: 155265 155266 51
+Iteration 16
+Number of nodes in MST: 17
+Found min edge: 256339 155265 2
+Iteration 17
+Number of nodes in MST: 18
+Found min edge: 256338 256339 13
+Iteration 18
+Number of nodes in MST: 19
+Found min edge: 256337 256338 1
+Iteration 19
+Number of nodes in MST: 20
+Found min edge: 259562 155265 42
+Iteration 20
+Number of nodes in MST: 21
+Found min edge: 155255 256337 68
+Iteration 21
+Number of nodes in MST: 22
+Found min edge: 259559 89079 74
+Iteration 22
+Number of nodes in MST: 23
+Found min edge: 259560 259559 52
+Iteration 23
+Number of nodes in MST: 24
+Found min edge: 259561 259560 77
+Iteration 24
+Number of nodes in MST: 25
+Found min edge: 256336 155255 84
+Iteration 25
+Number of nodes in MST: 26
+Found min edge: 259557 256336 45
+Iteration 26
+Number of nodes in MST: 27
+Found min edge: 256335 256336 57
+Iteration 27
+Number of nodes in MST: 28
+Found min edge: 256334 256335 58
+Iteration 28
+Number of nodes in MST: 29
+Found min edge: 155258 256334 15
+Iteration 29
+Number of nodes in MST: 30
+Found min edge: 155257 155258 19
+Iteration 30
+Number of nodes in MST: 31
+Found min edge: 259552 155258 21
+Iteration 31
+Number of nodes in MST: 32
+Found min edge: 259551 259552 36
+Iteration 32
+Number of nodes in MST: 33
+Found min edge: 706218 155258 53
+Iteration 33
+Number of nodes in MST: 34
+Found min edge: 724557 706218 12
+Iteration 34
+Number of nodes in MST: 35
