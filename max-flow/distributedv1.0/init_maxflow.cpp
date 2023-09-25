@@ -28,12 +28,12 @@ int main (int argc, char** argv) {
   printf ("Enter source and sink nodes \n") ;
   scanf ("%d %d ", &source, &sink) ;
 
-  Network_flow curr_network = read_current_file (MPI_COMM_WORLD, source, sink, ACTIVE_VERTEX_EXISTS_GLOBAL) ;
+ // Network_flow curr_network = read_current_file (MPI_COMM_WORLD, source, sink, ACTIVE_VERTEX_EXISTS_GLOBAL) ;
 
-  tie (source_process, sink_process) = find_source_sink (curr_network) ;
+//  tie (source_process, sink_process) = find_source_sink (curr_network) ;
 
-  while (ACTIVE_VERTEX_EXISTS_GLOBAL) {
+  //while (ACTIVE_VERTEX_EXISTS_GLOBAL) {
     
-  }
+  //}
   MPI_Finalize () ;
 }
