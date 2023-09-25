@@ -18,20 +18,20 @@ class liveVarsAnalyser
     void analyse(list<Function*>);
     void initFunc(Function*);
 
-    liveVarsNode* initStatement(statement*, set<liveVarsNode*>);
-    liveVarsNode* initAssignment(assignment*, set<liveVarsNode*>);
-    liveVarsNode* initBlockStatement(blockStatement*, set<liveVarsNode*>);
-    liveVarsNode* initDeclaration(declaration*, set<liveVarsNode*>);
-    liveVarsNode* initDoWhile(dowhileStmt*, set<liveVarsNode*>);
-    liveVarsNode* initFixedPoint(fixedPointStmt*, set<liveVarsNode*>);
-    liveVarsNode* initForAll(forallStmt*, set<liveVarsNode*>);
-    liveVarsNode* initIfStmt(ifStmt*, set<liveVarsNode*>);
-    liveVarsNode* initIterateBFS(iterateBFS*, set<liveVarsNode*>);
-    liveVarsNode* initProcCall(proc_callStmt*, set<liveVarsNode*>);
-    liveVarsNode* initReduction(reductionCallStmt*, set<liveVarsNode*>);
-    liveVarsNode* initReturn(returnStmt*, set<liveVarsNode*>);
-    liveVarsNode* initUnary(unary_stmt*, set<liveVarsNode*>);
-    liveVarsNode* initWhile(whileStmt*, set<liveVarsNode*>);
+    liveVarsNode* initStatement(statement*, liveVarsNode*);
+    liveVarsNode* initAssignment(assignment*, liveVarsNode*);
+    liveVarsNode* initBlockStatement(blockStatement*, liveVarsNode*);
+    liveVarsNode* initDeclaration(declaration*, liveVarsNode*);
+    liveVarsNode* initDoWhile(dowhileStmt*, liveVarsNode*);
+    liveVarsNode* initFixedPoint(fixedPointStmt*, liveVarsNode*);
+    liveVarsNode* initForAll(forallStmt*, liveVarsNode*);
+    liveVarsNode* initIfStmt(ifStmt*, liveVarsNode*);
+    liveVarsNode* initIterateBFS(iterateBFS*, liveVarsNode*);
+    liveVarsNode* initProcCall(proc_callStmt*, liveVarsNode*);
+    liveVarsNode* initReduction(reductionCallStmt*, liveVarsNode*);
+    liveVarsNode* initReturn(returnStmt*, liveVarsNode*);
+    liveVarsNode* initUnary(unary_stmt*, liveVarsNode*);
+    liveVarsNode* initWhile(whileStmt*, liveVarsNode*);
 
     //Returns the used variables in each statment
     usedVariables getVarsStatement(statement*);

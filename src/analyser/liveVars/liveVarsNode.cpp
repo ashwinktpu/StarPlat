@@ -61,7 +61,7 @@ void liveVarsNode::addVars(usedVariables vars)
     for(Identifier* id : vars.getVariables(READ))
         addUse(id);
     for(Identifier* id : vars.getVariables(WRITE))
-        addUse(id);
+        addDef(id);
 }
 
 void liveVarsNode::addPredecessor(liveVarsNode* pred)

@@ -18,7 +18,7 @@ void liveVarsAnalyser::initFunc(Function* func)
     return;
 }
 
-liveVarsNode* liveVarsAnalyser::initStatement(statement* node, set<liveVarsNode*> predecessor)
+liveVarsNode* liveVarsAnalyser::initStatement(statement* node, liveVarsNode* predecessor)
 {
     switch(node->getTypeofNode())
     {
@@ -53,17 +53,17 @@ liveVarsNode* liveVarsAnalyser::initStatement(statement* node, set<liveVarsNode*
     return nullptr;
 }
 
-liveVarsNode* liveVarsAnalyser::initAssignment(assignment* node, set<liveVarsNode*> predecessor)
+liveVarsNode* liveVarsAnalyser::initAssignment(assignment* node, liveVarsNode* predecessor)
 {
     liveVarsNode* liveVars = new liveVarsNode(node);
 
     liveVars->addVars(getVarsAssignment(node));
-    liveVars->addPredecessors(predecessor);
+    liveVars->addPredecessor(predecessor);
     
     return liveVars;
 }
 
-liveVarsNode* liveVarsAnalyser::initBlockStatement(blockStatement* node, set<liveVarsNode*> predecessor)
+liveVarsNode* liveVarsAnalyser::initBlockStatement(blockStatement* node, liveVarsNode* predecessor)
 {
     list<statement*> stmts = node->returnStatements();
 
@@ -75,25 +75,23 @@ liveVarsNode* liveVarsAnalyser::initBlockStatement(blockStatement* node, set<liv
 
     for(; stmt != stmts.end(); stmt++)
     {
-        set<liveVarsNode*> curr;
-        curr.insert(pred);
-        pred = initStatement((*stmt), curr);
+        pred = initStatement((*stmt), pred);
     }
     
     return pred;
 }
 
-liveVarsNode* liveVarsAnalyser::initDeclaration(declaration* node, set<liveVarsNode*> predecessor)
+liveVarsNode* liveVarsAnalyser::initDeclaration(declaration* node, liveVarsNode* predecessor)
 {
     liveVarsNode* liveVars = new liveVarsNode(node);
 
     liveVars->addVars(getVarsDeclaration(node));
-    liveVars->addPredecessors(predecessor);
+    liveVars->addPredecessor(predecessor);
     
     return liveVars;
 }
 
-liveVarsNode* liveVarsAnalyser::initDoWhile(dowhileStmt* node, set<liveVarsNode*> predecessor)
+liveVarsNode* liveVarsAnalyser::initDoWhile(dowhileStmt* node, liveVarsNode* predecessor)
 {
     Expression* condNode = node->getCondition();
     statement* bodyNode = node->getBody();
@@ -101,39 +99,39 @@ liveVarsNode* liveVarsAnalyser::initDoWhile(dowhileStmt* node, set<liveVarsNode*
     liveVarsNode* condLive = new liveVarsNode(node);
     condLive->addVars(getVarsExpr(condNode));
 
-    predecessor.insert(condLive);
-    liveVarsNode* bodyEnd = initStatement(bodyNode, predecessor);
+    liveVarsNode* dummy = new liveVarsNode();
+    dummy->addPredecessor(predecessor);
+    dummy->addPredecessor(condLive);
+
+    liveVarsNode* bodyEnd = initStatement(bodyNode, dummy);
 
     condLive->addPredecessor(bodyEnd);
 
     return condLive;
 }
 
-liveVarsNode* liveVarsAnalyser::initFixedPoint(fixedPointStmt* node, set<liveVarsNode*> predecessor)
+liveVarsNode* liveVarsAnalyser::initFixedPoint(fixedPointStmt* node, liveVarsNode* predecessor)
 {
     Identifier* fixedPointNode = node->getFixedPointId();
     statement* bodyNode = node->getBody();
 
     liveVarsNode* condLive = new liveVarsNode(fixedPointNode);
     condLive->addUse(fixedPointNode);
-    condLive->addPredecessors(predecessor);
+    condLive->addPredecessor(predecessor);
 
-    set<liveVarsNode*> condSet;
-    condSet.insert(condLive);
-
-    liveVarsNode* bodyEnd = initStatement(bodyNode, condSet);
+    liveVarsNode* bodyEnd = initStatement(bodyNode, condLive);
 
     condLive->addPredecessor(bodyEnd);
 
     return bodyEnd;
 }
 
-liveVarsNode* liveVarsAnalyser::initForAll(forallStmt*, set<liveVarsNode*>)
+liveVarsNode* liveVarsAnalyser::initForAll(forallStmt*, liveVarsNode*)
 {
     return nullptr;
 }
 
-liveVarsNode* liveVarsAnalyser::initIfStmt(ifStmt* node, set<liveVarsNode*> predecessor)
+liveVarsNode* liveVarsAnalyser::initIfStmt(ifStmt* node, liveVarsNode* predecessor)
 {
     Expression* condNode = node->getCondition();
     statement* ifBody = node->getIfBody();
@@ -141,86 +139,80 @@ liveVarsNode* liveVarsAnalyser::initIfStmt(ifStmt* node, set<liveVarsNode*> pred
 
     liveVarsNode* condLive = new liveVarsNode(condNode);
     condLive->addVars(getVarsExpr(condNode));
-    condLive->addPredecessors(predecessor);
+    condLive->addPredecessor(predecessor);
 
     liveVarsNode* ifEnd = new liveVarsNode();
 
-    set<liveVarsNode*> condSet;
-    condSet.insert(condLive);
-
-    liveVarsNode* ifLive = initStatement(ifBody, condSet);
+    liveVarsNode* ifLive = initStatement(ifBody, condLive);
     ifEnd->addPredecessor(ifLive);
 
     if(elseBody != NULL)
     {
-        liveVarsNode* elseLive = initStatement(elseBody, condSet);
+        liveVarsNode* elseLive = initStatement(elseBody, condLive);
         ifEnd->addPredecessor(elseLive);
     }
     
     return ifEnd;
 }
 
-liveVarsNode* liveVarsAnalyser::initIterateBFS(iterateBFS*, set<liveVarsNode*>)
+liveVarsNode* liveVarsAnalyser::initIterateBFS(iterateBFS*, liveVarsNode*)
 {
     return nullptr;
 }
 
-liveVarsNode* liveVarsAnalyser::initProcCall(proc_callStmt* node, set<liveVarsNode*> predecessor)
+liveVarsNode* liveVarsAnalyser::initProcCall(proc_callStmt* node, liveVarsNode* predecessor)
 {
     liveVarsNode* liveVars = new liveVarsNode(node);
 
     liveVars->addVars(getVarsProcCall(node));
-    liveVars->addPredecessors(predecessor);
+    liveVars->addPredecessor(predecessor);
     
     return liveVars;
 }
 
-liveVarsNode* liveVarsAnalyser::initReduction(reductionCallStmt* node, set<liveVarsNode*> predecessor)
+liveVarsNode* liveVarsAnalyser::initReduction(reductionCallStmt* node, liveVarsNode* predecessor)
 {
     liveVarsNode* liveVars = new liveVarsNode(node);
 
     liveVars->addVars(getVarsReduction(node));
-    liveVars->addPredecessors(predecessor);
+    liveVars->addPredecessor(predecessor);
     
     return liveVars;
 }
 
-liveVarsNode* liveVarsAnalyser::initReturn(returnStmt* node, set<liveVarsNode*> predecessor)
+liveVarsNode* liveVarsAnalyser::initReturn(returnStmt* node, liveVarsNode* predecessor)
 {
     Expression* returnExpr = node->getReturnExpression();
 
     liveVarsNode* liveVars = new liveVarsNode(node);
     liveVars->addVars(getVarsExpr(returnExpr));
-    liveVars->addPredecessors(predecessor);
+    liveVars->addPredecessor(predecessor);
 
     currReturnNodes.push_back(liveVars);
 
     return liveVars;
 }
 
-liveVarsNode* liveVarsAnalyser::initUnary(unary_stmt* node, set<liveVarsNode*> predecessor)
+liveVarsNode* liveVarsAnalyser::initUnary(unary_stmt* node, liveVarsNode* predecessor)
 {
     liveVarsNode* liveVars = new liveVarsNode(node);
 
     liveVars->addVars(getVarsUnary(node));
-    liveVars->addPredecessors(predecessor);
+    liveVars->addPredecessor(predecessor);
 
     return liveVars;
 }
 
-liveVarsNode* liveVarsAnalyser::initWhile(whileStmt* node, set<liveVarsNode*> predecessor)
+liveVarsNode* liveVarsAnalyser::initWhile(whileStmt* node, liveVarsNode* predecessor)
 {
     Expression* condNode = node->getCondition();
     statement* bodyNode = node->getBody();
 
     liveVarsNode* condLive = new liveVarsNode(node);
     condLive->addVars(getVarsExpr(condNode));
-    condLive->addPredecessors(predecessor);
+    condLive->addPredecessor(predecessor);
 
-    set<liveVarsNode*> condSet;
-    condSet.insert(condLive);
-
-    liveVarsNode* bodyEnd = initStatement(bodyNode, condSet);
+    liveVarsNode* bodyEnd = initStatement(bodyNode, condLive);
 
     condLive->addPredecessor(bodyEnd);
 
