@@ -42,6 +42,17 @@ set<liveVarsNode*> liveVarsNode::getSuccessors()
     return successors;
 }
 
+void liveVarsNode::setIn(set<TableEntry*> newIn)
+{
+    in = newIn;
+}
+
+void liveVarsNode::addOut(set<TableEntry*> ids)
+{
+    for(TableEntry* id : ids)
+        out.insert(id);
+}
+
 void liveVarsNode::addUse(Identifier* id)
 {
     if(!id->getSymbolInfo())

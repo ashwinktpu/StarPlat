@@ -15,6 +15,20 @@ void liveVarsAnalyser::analyse(list<Function*> funcList)
 void liveVarsAnalyser::initFunc(Function* func)
 {
     currReturnNodes.clear();
+
+    liveVarsNode* funcStart = new liveVarsNode();
+    for(formalParam* param : func->getParamList())
+        funcStart->addDef(param->getIdentifier());
+
+    initStatement(func->getBlockStatement(), funcStart);
+
+    liveVarsNode* funcEnd = new liveVarsNode();
+
+    for(auto node : currReturnNodes)
+    {
+        funcEnd->addPredecessor(node);
+    }
+
     return;
 }
 
@@ -217,4 +231,48 @@ liveVarsNode* liveVarsAnalyser::initWhile(whileStmt* node, liveVarsNode* predece
     condLive->addPredecessor(bodyEnd);
 
     return condLive;
+}
+
+void liveVarsAnalyser::analysecfg(liveVarsNode* endNode)
+{
+    queue<liveVarsNode*> nodeQueue;
+    nodeQueue.push(endNode);
+
+    while(!nodeQueue.empty())
+    {
+        liveVarsNode* temp = nodeQueue.front();
+        nodeQueue.pop();
+        if(analyseNode(temp))
+            for(liveVarsNode* pred : temp->getPredecessors())
+                nodeQueue.push(pred);
+    }
+    
+    return;
+}
+
+bool liveVarsAnalyser::analyseNode(liveVarsNode* node)
+{
+    bool update = false;
+
+    set<TableEntry*> newIn = node->getUse();
+    for(TableEntry* id : node->getDef())
+    {
+        auto itr = newIn.find(id);
+        if(itr != newIn.end())
+            newIn.erase(itr);
+    }
+    for(TableEntry* id : node->getUse())
+        newIn.insert(id);
+    
+    if(node->getIn() != newIn)
+    {
+        update = true;
+        node->setIn(newIn);
+    }
+
+    if(update)
+        for(liveVarsNode* pred : node->getPredecessors())
+            pred->addOut(node->getIn());
+
+    return update;
 }
