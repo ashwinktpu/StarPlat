@@ -98,29 +98,29 @@ __global__ void add_edges_CSR(int size, update *d_batch,
     int flag = 0, flagR = 0;
     for (int i = d_indexofNodes[u]; i < d_indexofNodes[u + 1]; i++)
     {
-      if (d_edgeLen[i] == INT_MAX)
+      if (d_edgeList[i] == INT_MAX)
       {
-        flag = atomicCAS(&d_edgeLen[i], INT_MAX, w);
+        flag = atomicCAS(&d_edgeList[i], INT_MAX, v);
         if (flag == INT_MAX)
         {
           d_batch[id].type = 'x';
-          d_edgeList[i] = v;
+          d_edgeLen[i] = w;
           break;
         }
       }
     }
     for (int i = d_rev_indexofNodes[v]; i < d_rev_indexofNodes[v + 1]; i++)
     {
-      if (d_rev_edgeLen[i] == INT_MAX)
+      if (d_srcList[i] == INT_MAX)
       {
-        flagR = atomicCAS(&d_rev_edgeLen[i], INT_MAX, w);
+        flagR = atomicCAS(&d_srcList[i], INT_MAX, u);
         if (flagR == INT_MAX)
         {
           if (d_batch[id].type == 'a')
             d_batch[id].type = 'y';
           else
             d_batch[id].type = 'z';
-          d_srcList[i] = u;
+          d_rev_edgeLen[i] = w;
           break;
         }
       }
@@ -144,12 +144,12 @@ __global__ void add_diff_edge_counts(int V, int *d_diff_indexofNodes, int *d_dif
   {
     for (int i = d_diff_indexofNodes[id]; i < d_diff_indexofNodes[id + 1]; i++)
     {
-      if (d_diff_edgeLen[i] != INT_MAX)
+      if (d_diff_edgeList[i] != INT_MAX)
         d_diffCsrOffsets_next[id + 1] += 1;
     }
     for (int i = d_diff_rev_indexofNodes[id]; i < d_diff_rev_indexofNodes[id + 1]; i++)
     {
-      if (d_diff_rev_edgeLen[i] != INT_MAX)
+      if (d_diff_rev_edgeList[i] != INT_MAX)
         d_diffCsrOffsetsR_next[id + 1] += 1;
     }
   }
@@ -188,7 +188,7 @@ __global__ void copy_edges_diffcsr(int V, int *d_diff_indexofNodes, int *d_diff_
     int j = d_diffCsrOffsets_next[id];
     for (int i = d_diff_indexofNodes[id]; i < d_diff_indexofNodes[id + 1]; i++)
     {
-      if (d_diff_edgeLen[i] != INT_MAX)
+      if (d_diff_edgeList[i] != INT_MAX)
       {
         d_diffCsrCords_next[j] = d_diff_edgeList[i];
         d_diffCsrWeights_next[j] = d_diff_edgeLen[i];
@@ -198,7 +198,7 @@ __global__ void copy_edges_diffcsr(int V, int *d_diff_indexofNodes, int *d_diff_
     j = d_diffCsrOffsetsR_next[id];
     for (int i = d_diff_rev_indexofNodes[id]; i < d_diff_rev_indexofNodes[id + 1]; i++)
     {
-      if (d_diff_rev_edgeLen[i] != INT_MAX)
+      if (d_diff_rev_edgeList[i] != INT_MAX)
       {
         d_diffCsrCordsR_next[j] = d_diff_rev_edgeList[i];
         d_diffCsrWeightsR_next[j] = d_diff_rev_edgeLen[i];
@@ -223,11 +223,11 @@ __global__ void add_edges_diffcsr(int size, update *d_batch,
     {
       for (int i = d_diff_indexofNodes[u]; i < d_diff_indexofNodes[u + 1]; i++)
       {
-        if (d_diff_edgeLen[i] == INT_MAX)
+        if (d_diff_edgeList[i] == INT_MAX)
         {
-          if (atomicCAS(&d_diff_edgeLen[i], INT_MAX, w) == INT_MAX)
+          if (atomicCAS(&d_diff_edgeList[i], INT_MAX, v) == INT_MAX)
           {
-            d_diff_edgeList[i] = v;
+            d_diff_edgeLen[i] = w;
             break;
           }
         }
@@ -237,11 +237,11 @@ __global__ void add_edges_diffcsr(int size, update *d_batch,
     {
       for (int i = d_diff_rev_indexofNodes[v]; i < d_diff_rev_indexofNodes[v + 1]; i++)
       {
-        if (d_diff_rev_edgeLen[i] == INT_MAX)
+        if (d_diff_rev_edgeList[i] == INT_MAX)
         {
-          if (atomicCAS(&d_diff_rev_edgeLen[i], INT_MAX, w) == INT_MAX)
+          if (atomicCAS(&d_diff_rev_edgeList[i], INT_MAX, u) == INT_MAX)
           {
-            d_diff_rev_edgeList[i] = u;
+            d_diff_rev_edgeLen[i] = w;
             break;
           }
         }
