@@ -1,0 +1,458 @@
+Enter source and sink nodes 
+0 1 ---- > 2
+2 1 ---- > 2
+3 1 ---- > 2
+8 1 ---- > 2
+48 1 ---- > 2
+16 1 ---- > 2
+17 1 ---- > 2
+18 1 ---- > 2
+19 1 ---- > 2
+20 1 ---- > 2
+21 1 ---- > 2
+22 1 ---- > 2
+24 1 ---- > 2
+25 1 ---- > 2
+26 1 ---- > 2
+28 1 ---- > 2
+29 1 ---- > 2
+30 1 ---- > 2
+32 1 ---- > 2
+34 1 ---- > 2
+40 1 ---- > 2
+49 1 ---- > 2
+50 1 ---- > 2
+51 1 ---- > 2
+52 1 ---- > 2
+53 1 ---- > 2
+54 1 ---- > 2
+56 1 ---- > 2
+57 1 ---- > 2
+58 1 ---- > 2
+60 1 ---- > 2
+61 1 ---- > 2
+62 1 ---- > 2
+35 1 ---- > 2
+9 1 ---- > 2
+42 1 ---- > 2
+12 1 ---- > 2
+4 1 ---- > 2
+1 1 ---- > 2
+5 1 ---- > 2
+14 1 ---- > 2
+6 1 ---- > 2
+10 1 ---- > 2
+33 1 ---- > 2
+41 1 ---- > 2
+7 1 ---- > 2
+36 1 ---- > 2
+38 1 ---- > 2
+37 1 ---- > 2
+44 1 ---- > 2
+46 1 ---- > 2
+39 1 ---- > 2
+47 1 ---- > 2
+15 1 ---- > 2
+13 1 ---- > 2
+27 1 ---- > 2
+59 1 ---- > 2
+31 1 ---- > 2
+63 1 ---- > 2
+55 1 ---- > 2
+23 1 ---- > 2
+11 1 ---- > 2
+64 1 ---- > 2
+76 1 ---- > 2
+78 1 ---- > 2
+77 1 ---- > 2
+66 1 ---- > 2
+72 1 ---- > 2
+75 1 ---- > 2
+73 1 ---- > 2
+65 1 ---- > 2
+74 1 ---- > 2
+68 1 ---- > 2
+70 1 ---- > 2
+71 1 ---- > 2
+69 1 ---- > 2
+79 1 ---- > 2
+67 1 ---- > 2
+80 1 ---- > 2
+84 1 ---- > 2
+85 1 ---- > 2
+86 1 ---- > 2
+83 1 ---- > 2
+93 1 ---- > 2
+82 1 ---- > 2
+95 1 ---- > 2
+87 1 ---- > 2
+88 1 ---- > 2
+90 1 ---- > 2
+91 1 ---- > 2
+94 1 ---- > 2
+81 1 ---- > 2
+89 1 ---- > 2
+45 1 ---- > 2
+43 1 ---- > 2
+92 1 ---- > 2
+for opening file by 2 26
+opening up file ../part_26
+for opening file by 2 30
+opening up file ../part_30
+for opening file by 2 62
+for opening file by 2 58
+opening up file ../part_58
+for opening file by 2 38
+for opening file by 2 94
+for opening file by 2 6
+opening up file ../part_6
+opening up file ../part_62
+opening up file ../part_94
+for opening file by 2 74
+for opening file by 2 90
+opening up file ../part_74
+opening up file ../part_90
+opening up file ../part_38
+for opening file by 2 46
+opening up file ../part_46
+for opening file by 2 63
+opening up file ../part_63
+for opening file by 2 14
+opening up file ../part_14
+for opening file by 2 60
+for opening file by 2 70
+for opening file by 2 86
+for opening file by 2 28
+for opening file by 2 31
+for opening file by 2 72
+for opening file by 2 42
+for opening file by 2 54
+for opening file by 2 66
+for opening file by 2 34
+for opening file by 2 84
+opening up file ../part_72
+for opening file by 2 52
+opening up file ../part_60
+opening up file ../part_84
+opening up file ../part_66
+for opening file by 2 89
+opening up file ../part_28
+for opening file by 2 40
+opening up file ../part_34
+for opening file by 2 56
+for opening file by 2 24
+opening up file ../part_70
+opening up file ../part_89
+opening up file ../part_24
+opening up file ../part_40
+opening up file ../part_56
+for opening file by 2 2
+opening up file ../part_2
+for opening file by 2 8
+opening up file ../part_8
+for opening file by 2 20
+opening up file ../part_20
+opening up file ../part_86
+for opening file by 2 71
+opening up file ../part_71
+for opening file by 2 57
+for opening file by 2 22
+for opening file by 2 41
+for opening file by 2 36
+for opening file by 2 10
+for opening file by 2 92
+for opening file by 2 44
+for opening file by 2 73
+opening up file ../part_10
+opening up file ../part_44
+opening up file ../part_92
+opening up file ../part_41
+opening up file ../part_36
+for opening file by 2 49
+for opening file by 2 78
+for opening file by 2 39
+for opening file by 2 68
+opening up file ../part_68
+opening up file ../part_22
+opening up file ../part_49
+opening up file ../part_73
+opening up file ../part_54
+for opening file by 2 1
+opening up file ../part_39
+for opening file by 2 65
+for opening file by 2 81
+opening up file ../part_78
+for opening file by 2 19
+for opening file by 2 83
+for opening file by 2 16
+for opening file by 2 51
+opening up file ../part_81
+opening up file ../part_65
+opening up file ../part_19
+opening up file ../part_83
+opening up file ../part_51
+opening up file ../part_16
+for opening file by 2 79
+for opening file by 2 37
+opening up file ../part_37
+for opening file by 2 5
+opening up file ../part_79
+for opening file by 2 33
+opening up file ../part_33
+for opening file by 2 9
+opening up file ../part_9
+opening up file ../part_57
+for opening file by 2 76
+opening up file ../part_76
+for opening file by 2 69
+opening up file ../part_69
+for opening file by 2 88
+opening up file ../part_88
+for opening file by 2 4
+opening up file ../part_4
+for opening file by 2 12
+opening up file ../part_12
+for opening file by 2 3
+opening up file ../part_3
+for opening file by 2 35
+opening up file ../part_35
+for opening file by 2 23
+opening up file ../part_23
+for opening file by 2 15
+opening up file ../part_15
+for opening file by 2 47
+opening up file ../part_47
+for opening file by 2 17
+opening up file ../part_17
+for opening file by 2 55
+opening up file ../part_55
+for opening file by 2 25
+opening up file ../part_25
+for opening file by 2 13
+opening up file ../part_13
+for opening file by 2 59
+for opening file by 2 7
+opening up file ../part_7
+for opening file by 2 45
+opening up file ../part_45
+opening up file ../part_5
+for opening file by 2 50
+opening up file ../part_50
+opening up file ../part_1
+opening up file ../part_42
+for opening file by 2 61
+opening up file ../part_61
+for opening file by 2 77
+opening up file ../part_77
+opening up file ../part_31
+for opening file by 2 67
+opening up file ../part_67
+for opening file by 2 95
+opening up file ../part_95
+for opening file by 2 87
+opening up file ../part_87
+for opening file by 2 91
+opening up file ../part_91
+for opening file by 2 82
+opening up file ../part_82
+for opening file by 2 0
+opening up file ../part_0
+for opening file by 2 48
+opening up file ../part_48
+for opening file by 2 18
+opening up file ../part_18
+for opening file by 2 21
+opening up file ../part_21
+for opening file by 2 29
+opening up file ../part_29
+opening up file ../part_59
+for opening file by 2 53
+opening up file ../part_53
+for opening file by 2 27
+opening up file ../part_27
+for opening file by 2 11
+opening up file ../part_11
+opening up file ../part_52
+for opening file by 2 75
+opening up file ../part_75
+for opening file by 2 93
+opening up file ../part_93
+for opening file by 2 80
+opening up file ../part_80
+for opening file by 2 85
+opening up file ../part_85
+for opening file by 2 43
+opening up file ../part_43
+for opening file by 2 32
+opening up file ../part_32
+for opening file by 2 64
+opening up file ../part_64
+Enter source and sink nodes 
+0 1 ---- > 2
+1 1 ---- > 2
+for opening file by 2 1
+opening up file ../part_1
+2 1 ---- > 2
+for opening file by 2 2
+opening up file ../part_2
+3 1 ---- > 2
+for opening file by 2 3
+opening up file ../part_3
+for opening file by 2 0
+opening up file ../part_0
+Enter source and sink nodes 
+1 1 ---- > 2
+for opening file by 2 1
+opening up file ../part_1
+2 1 ---- > 2
+for opening file by 2 2
+opening up file ../part_2
+3 1 ---- > 2
+for opening file by 2 3
+opening up file ../part_3
+0 1 ---- > 2
+for opening file by 2 0
+opening up file ../part_0
+Enter source and sink nodes 
+0 1 ---- > 2
+1 1 ---- > 2
+for opening file by 2 1
+opening up file ../part_1
+2 1 ---- > 2
+for opening file by 2 2
+opening up file ../part_2
+3 1 ---- > 2
+for opening file by 2 3
+opening up file ../part_3
+for opening file by 2 0
+opening up file ../part_0
+Enter source and sink nodes 
+0 1 ---- > 2
+1 1 ---- > 2
+2 1 ---- > 2
+3 1 ---- > 2
+for opening file by 2 0
+for opening file by 2 1
+for opening file by 2 2
+for opening file by 2 3
+opening up file ../part_2
+opening up file ../part_0
+opening up file ../part_1
+opening up file ../part_3
+Enter source and sink nodes 
+0 1 ---- > 2
+1 1 ---- > 2
+2 1 ---- > 2
+3 1 ---- > 2
+for opening file by 2 3
+for opening file by 2 0
+opening up file ../part_0
+for opening file by 2 1
+opening up file ../part_1
+for opening file by 2 2
+opening up file ../part_2
+opening up file ../part_3
+Enter source and sink nodes 
+0 1 ---- > 2
+2 1 ---- > 2
+3 1 ---- > 2
+1 1 ---- > 2
+for opening file by 2 3
+for opening file by 2 0
+for opening file by 2 2
+for opening file by 2 1
+opening up file ../part_2
+opening up file ../part_3
+opening up file ../part_0
+opening up file ../part_1
+Enter source and sink nodes 
+0 1 ---- > 2
+1 1 ---- > 2
+2 1 ---- > 2
+3 1 ---- > 2
+for opening file by 2 0
+for opening file by 2 1
+for opening file by 2 2
+for opening file by 2 3
+opening up file ../part_2
+opening up file ../part_0
+opening up file ../part_1
+opening up file ../part_3
+Enter source and sink nodes 
+1 1 ---- > 2
+for opening file by 2 1
+opening up file ../part_1
+2 1 ---- > 2
+for opening file by 2 2
+opening up file ../part_2
+3 1 ---- > 2
+for opening file by 2 3
+opening up file ../part_3
+0 1 ---- > 2
+for opening file by 2 0
+opening up file ../part_0
+Enter source and sink nodes 
+1 1 ---- > 2
+for opening file by 2 1
+opening up file ../part_1
+2 1 ---- > 2
+for opening file by 2 2
+opening up file ../part_2
+3 1 ---- > 2
+for opening file by 2 3
+opening up file ../part_3
+0 1 ---- > 2
+for opening file by 2 0
+opening up file ../part_0
+Enter source and sink nodes 
+0 1 ---- > 2
+1 1 ---- > 2
+2 1 ---- > 2
+3 1 ---- > 2
+for opening file by 2 0
+opening up file ../part_0
+for opening file by 2 1
+opening up file ../part_1
+for opening file by 2 2
+opening up file ../part_2
+for opening file by 2 3
+opening up file ../part_3
+Enter source and sink nodes 
+0 1 ---- > 2
+1 1 ---- > 2
+2 1 ---- > 2
+3 1 ---- > 2
+for opening file by 2 0
+for opening file by 2 1
+for opening file by 2 2
+for opening file by 2 3
+opening up file ../part_2
+opening up file ../part_0
+opening up file ../part_1
+opening up file ../part_3
+Enter source and sink nodes 
+0 1 ---- > 2
+1 1 ---- > 2
+2 1 ---- > 2
+for opening file by 2 0
+for opening file by 2 1
+3 1 ---- > 2
+for opening file by 2 3
+for opening file by 2 2
+opening up file ../part_3
+opening up file ../part_1
+opening up file ../part_2
+opening up file ../part_0
+Enter source and sink nodes 
+0 1 ---- > 2
+1 1 ---- > 2
+2 1 ---- > 2
+for opening file by 2 0
+for opening file by 2 1
+3 1 ---- > 2
+for opening file by 2 3
+for opening file by 2 2
+opening up file ../part_3
+opening up file ../part_0
+opening up file ../part_1
+opening up file ../part_2
