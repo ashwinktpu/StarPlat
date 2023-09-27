@@ -96,6 +96,7 @@ public:
     cerr << "number of nodes in rank " << rank << " is " << num_nodes () << endl ;
   }
 
+    
     void set_global_nodes (int global_nodes) {
       this->global_nodes = global_nodes ;
     }
@@ -132,6 +133,9 @@ public:
     this->source = source ;
   }
 
+  int get_source () {
+    return this->source ;
+  }
 
   void select_sink (int sink) {
 

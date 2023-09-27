@@ -21,7 +21,7 @@
   }
 
   template<typename T>
-  void Rma_Datatype<T>::create_window(T* data, int32_t length, int32_t dataTypeSizeInBytes, boost::mpi::communicator world,  MPI_Info info  )
+  void Rma_Datatype<T>::create_window(T* data, int32_t length, int32_t dataTypeSizeInBytes, MPI_Comm world,  MPI_Info info  )
   {
     if(window_created)
     {

@@ -456,3 +456,151 @@ opening up file ../part_3
 opening up file ../part_0
 opening up file ../part_1
 opening up file ../part_2
+Enter source and sink nodes 
+1 1 ---- > 2
+for opening file by 2 1
+opening up file ../part_1
+2 1 ---- > 2
+for opening file by 2 2
+opening up file ../part_2
+3 1 ---- > 2
+for opening file by 2 3
+opening up file ../part_3
+0 1 ---- > 2
+for opening file by 2 0
+opening up file ../part_0
+Enter source and sink nodes 
+0 1 ---- > 2
+1 1 ---- > 2
+2 1 ---- > 2
+3 1 ---- > 2
+for opening file by 2 0
+opening up file ../part_0
+for opening file by 2 1
+opening up file ../part_1
+for opening file by 2 2
+opening up file ../part_2
+for opening file by 2 3
+opening up file ../part_3
+Enter source and sink nodes 
+0 1 ---- > 2
+2 1 ---- > 2
+1 1 ---- > 2
+3 1 ---- > 2
+for opening file by 2 1
+for opening file by 2 3
+for opening file by 2 2
+for opening file by 2 0
+opening up file ../part_3
+opening up file ../part_2
+opening up file ../part_1
+opening up file ../part_0
+Enter source and sink nodes 
+0 1 ---- > 2
+for opening file by 2 0
+1 1 ---- > 2
+for opening file by 2 1
+2 1 ---- > 2
+for opening file by 2 2
+3 1 ---- > 2
+for opening file by 2 3
+opening up file ../part_3
+opening up file ../part_0
+opening up file ../part_1
+opening up file ../part_2
+Enter source and sink nodes 
+0 1 ---- > 2
+for opening file by 2 0
+opening up file ../part_0
+1 1 ---- > 2
+for opening file by 2 1
+opening up file ../part_1
+2 1 ---- > 2
+for opening file by 2 2
+opening up file ../part_2
+3 1 ---- > 2
+for opening file by 2 3
+opening up file ../part_3
+Enter source and sink nodes 
+0 1 ---- > 2
+for opening file by 2 0
+opening up file ../part_0
+1 1 ---- > 2
+for opening file by 2 1
+opening up file ../part_1
+2 1 ---- > 2
+for opening file by 2 2
+opening up file ../part_2
+3 1 ---- > 2
+for opening file by 2 3
+opening up file ../part_3
+Enter source and sink nodes 
+0 1 ---- > 2
+2 1 ---- > 2
+for opening file by 2 2
+3 1 ---- > 2
+for opening file by 2 3
+for opening file by 2 0
+1 1 ---- > 2
+for opening file by 2 1
+opening up file ../part_0
+opening up file ../part_3
+opening up file ../part_2
+opening up file ../part_1
+Enter source and sink nodes 
+Enter source and sink nodes 
+Enter source and sink nodes 
+Enter source and sink nodes 
+0 0 ---- > 0
+2 0 ---- > 0
+1 0 ---- > 0
+for opening file by 2 1
+opening up file ../part_1
+3 0 ---- > 0
+for opening file by 2 3
+opening up file ../part_3
+for opening file by 2 2
+opening up file ../part_2
+for opening file by 2 0
+opening up file ../part_0
+Enter source and sink nodes 
+0 0 ---- > 0
+2 0 ---- > 0
+1 0 ---- > 0
+for opening file by 2 1
+opening up file ../part_1
+3 0 ---- > 0
+for opening file by 2 3
+opening up file ../part_3
+for opening file by 2 2
+opening up file ../part_2
+for opening file by 2 0
+opening up file ../part_0
+4 total processes failed to start
+4 total processes failed to start
+Enter source and sink nodes 
+0 1 ---- > 2
+for opening file by 2 0
+opening up file ../part_0
+1 1 ---- > 2
+for opening file by 2 1
+opening up file ../part_1
+2 1 ---- > 2
+for opening file by 2 2
+opening up file ../part_2
+3 1 ---- > 2
+for opening file by 2 3
+opening up file ../part_3
+Enter source and sink nodes 
+0 1 ---- > 2
+1 1 ---- > 2
+for opening file by 2 1
+opening up file ../part_1
+2 1 ---- > 2
+for opening file by 2 2
+opening up file ../part_2
+3 1 ---- > 2
+for opening file by 2 3
+opening up file ../part_3
+for opening file by 2 0
+opening up file ../part_0

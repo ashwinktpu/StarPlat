@@ -48,6 +48,7 @@ int main (int argc, char** argv) {
   cout << rank << " " << source << " ---- > " << sink << endl ;
   MPI_Barrier(MPI_COMM_WORLD) ;
   Network_flow curr_network = read_current_file (MPI_COMM_WORLD, source, sink, ACTIVE_VERTEX_EXISTS_GLOBAL) ;
+ 
 
   //tie (source_process, sink_process) = find_source_sink (curr_network) ;
 

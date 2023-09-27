@@ -61,6 +61,11 @@ class graph
 
   }
 
+  std::vector<edge> getNeighbours (int nodeptr) {
+    return edges[global_to_local[nodeptr]] ;
+  }
+
+
   std::map<int,int> get_local_to_global () {
     return local_to_global ;
   }
@@ -77,7 +82,13 @@ class graph
   {
       return edges;
   }
+  bool exists_here (int nodeptr) {
 
+    if (global_to_local.find (nodeptr) != global_to_local.end()) {
+      return true ;
+    }
+    return false ;
+  }
   int* getProcessList () {
 
     return process_list ;

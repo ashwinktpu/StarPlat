@@ -25,7 +25,7 @@ class Rma_Datatype {
     MPI_Win win;
     bool window_created;
     int32_t dataTypeSizeInBytes;
-    boost::mpi::communicator world;
+    MPI_Comm world;
 
   public :  
     int32_t length;
@@ -38,7 +38,7 @@ class Rma_Datatype {
   ~Rma_Datatype();
   
 
-  void create_window(T* data, int32_t length, int32_t dataTypeSizeInBytes, boost::mpi::communicator world,  MPI_Info info = MPI_INFO_NULL );
+  void create_window(T* data, int32_t length, int32_t dataTypeSizeInBytes, MPI_Comm world,  MPI_Info info = MPI_INFO_NULL );
 
   void get_lock(int32_t proc_num, locktype lock,  bool no_checks_needed = false);
 
@@ -53,4 +53,6 @@ class Rma_Datatype {
   void accumulate(int32_t proc_num,  T* data_array,int startIndex,int length, MPI_Op op,locktype lock);
 
 };
+
+
 #endif
