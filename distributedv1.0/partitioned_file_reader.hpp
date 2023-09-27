@@ -51,7 +51,7 @@ Network_flow read_current_file (MPI_Comm communicator, int source, int sink, boo
     int total_edges ;
     int total_internal ;
     // int local_internal = partial_network.getInterTotal () ;
-    int local_nodes = partial_network.num_nodes () ;
+    int local_nodes = partial_network.getDiffTotal () ;
     int local_edges = partial_network.num_edges () ;
     
     MPI_Reduce (&local_nodes, &total_nodes, 1, MPI_INT, MPI_SUM, 0, communicator) ;
@@ -71,7 +71,7 @@ Network_flow read_current_file (MPI_Comm communicator, int source, int sink, boo
 }
 
 
-Rma_Datatype <int> initialize_excesses (MPI_Comm communicator, Network_flow total_network, int source_process) {
+Rma_Datatype <int> initialize_excesses (MPI_Comm communicator, Network_flow &total_network, int source_process) {
     
     Rma_Datatype<int> excess ;
     int* excess_arr = (int*) malloc (sizeof (int) * total_network.get_global_vertices ()) ;
@@ -80,7 +80,7 @@ Rma_Datatype <int> initialize_excesses (MPI_Comm communicator, Network_flow tota
     for (auto &v:total_network.getNeighbours (total_network.get_source ())) {
         outgoing_caps += v.weight ;
     }
-    locktype lock ;
+    locktype lock=EXCLUSIVE_LOCK ;
     excess.get_lock (source_process, lock) ;
     excess.put_data (source_process, excess_arr, outgoing_caps, 1, lock) ;
     excess.unlock (source_process, lock) ;
@@ -93,7 +93,7 @@ Rma_Datatype<int> initialize_heights (MPI_Comm communicator, Network_flow &total
     Rma_Datatype<int> heights ;
     int* heights_arr = (int*) malloc (sizeof (int) * total_network.get_global_vertices ()) ;
     heights.create_window (heights_arr, total_network.get_global_vertices (), sizeof(int), MPI_COMM_WORLD) ;
-    locktype lock ;
+    locktype lock = EXCLUSIVE_LOCK;
     heights.get_lock (source_process, lock) ;
     heights.put_data (source_process, heights_arr, total_network.get_source (), 1, lock) ;
     heights.unlock (source_process, lock) ;
@@ -101,7 +101,7 @@ Rma_Datatype<int> initialize_heights (MPI_Comm communicator, Network_flow &total
     return heights ;
 }
 
-MPI_Status remove_excess (MPI_Win excess) {
+MPI_Status remove_excess (MPI_Win &excess) {
     MPI_Win_free (&excess) ;
 }
 
@@ -120,11 +120,16 @@ int find_source (Network_flow &total_newtork)  {
     }
 
     int process_num = -1 ;
-    int check_sum = 0. ;
+    int check_sum = 0 ;
     for (int i=0; i<size; i++) {
         check_sum += pooler[i] ;
         process_num = i ;
     }
+    
+
+    for (int i=0; i<size; i++) {
+        cerr << pooler[i] << " " ;
+    }cerr << endl ;
 
     assert (check_sum == 1) ;
     assert (process_num != -1) ;

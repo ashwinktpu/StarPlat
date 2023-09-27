@@ -84,7 +84,7 @@ class graph
   }
   bool exists_here (int nodeptr) {
 
-    if (global_to_local.find (nodeptr) != global_to_local.end()) {
+    if (edges.find (nodeptr) != edges.end()) {
       return true ;
     }
     return false ;
@@ -177,6 +177,7 @@ class graph
      std::string line;
      std::stringstream ss;
      std::cerr << "graph recognized \n";
+     int counter = 0;
      while (getline(infile, line)) 
      {
        
@@ -201,7 +202,6 @@ class graph
         int local_destination ;
 	      int weight ;
         int process ;
-        int counter ;
         int rank ;
         MPI_Comm_rank (MPI_COMM_WORLD, &rank) ;
         if(ss >> global_source && ss >> global_destination && ss >> weight && ss>>process)
@@ -209,18 +209,25 @@ class graph
           
           // map the global source to the local source with a counter ;
           if (global_to_local.find (global_source) == global_to_local.end ()) {
+
             global_to_local[global_source] = counter++ ;
+            cerr << "new vertex found " << counter << endl ;
             diff_Total++ ;
           } 
 
           local_source = global_to_local[global_source] ;
 
           if (global_to_local.find (global_destination) == global_to_local.end ()) {
+            
             global_to_local[global_destination] = counter++ ;
+            cerr << "new vertex found " << counter << endl ;
+
             if (rank == process) {
               diff_Total++ ;
             }
           }
+
+          // cerr << "counter_val " << counter <<" " << global_source << " " <<global_destination << " || " ;
 
           local_destination = global_to_local [global_destination] ;
            if(local_source >  original_nodesTotal)

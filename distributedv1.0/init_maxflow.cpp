@@ -48,8 +48,10 @@ int main (int argc, char** argv) {
   cout << rank << " " << source << " ---- > " << sink << endl ;
   MPI_Barrier(MPI_COMM_WORLD) ;
   Network_flow curr_network = read_current_file (MPI_COMM_WORLD, source, sink, ACTIVE_VERTEX_EXISTS_GLOBAL) ;
- 
-
+  cerr << "network flow formation successful per process " << endl ;
+  source_process = find_source (curr_network) ;
+  cerr << "found source process to be " << source_process << endl ;
+  Rma_Datatype<int> heights = initialize_heights (MPI_COMM_WORLD, curr_network, source_process) ;
   //tie (source_process, sink_process) = find_source_sink (curr_network) ;
 
   //while (ACTIVE_VERTEX_EXISTS_GLOBAL) {
