@@ -544,11 +544,19 @@ int main(int argc,char **argv)
    else
     {
 
-		if(!((strcmp(backendTarget,"omp")==0)|| (strcmp(backendTarget,"amd")==0) || (strcmp(backendTarget,"mpi")==0)||(strcmp(backendTarget,"cuda")==0) || (strcmp(backendTarget,"acc")==0) || (strcmp(backendTarget,"sycl")==0)|| (strcmp(backendTarget,"multigpu")==0)))
+		if(!(
+				(strcmp(backendTarget,"omp")==0) || 
+				(strcmp(backendTarget,"amd")==0) || 
+				(strcmp(backendTarget,"mpi")==0) || 
+				(strcmp(backendTarget,"cuda")==0) || 
+				(strcmp(backendTarget,"acc")==0) || 
+				(strcmp(backendTarget,"sycl")==0) || 
+				(strcmp(backendTarget,"hip")==0) || 
+				(strcmp(backendTarget,"multigpu")==0)
+			)) {
 
-		   {
-			  fprintf(stderr, "Specified backend target is not implemented in the current version!\n");
-			   exit(-1);
+				fprintf(stderr, "Specified backend target is not implemented in the current version!\n");
+				exit(-1);
 		   }
 	}
 
@@ -666,6 +674,8 @@ int main(int argc,char **argv)
 		} else if(strcmp(backendTarget, "hip") == 0) {
 			
 			std::cout << "Generating HIP Code\n";
+			sphip::DslCppGenerator hip_backend(fileName);
+			hip_backend.Generate();
 
 		} else std::cout<< "invalid backend" << '\n';
 
