@@ -17,7 +17,7 @@ namespace sphip {
 
     public:
 
-        DslCppGenerator(const std::string& fileName);
+        DslCppGenerator(const std::string& fileName, const int threadsPerBlock);
 
         /**
          * Generation Functions
@@ -66,7 +66,102 @@ namespace sphip {
         /**
          * TODO
          */
+        void CheckAndGenerateVariables(Function *func, const std::string &loc);
+
+        /**
+         * TODO
+         */
+        void CheckAndGenerateHipMalloc(Function *func);
+
+        /**
+         * TODO
+         */
+        void CheckAndGenerateMemcpy(Function *func);
+
+        /**
+         * TODO
+         */
+        void CheckAndGenerateMalloc(Function *func);
+
+
+        /**
+         * TODO
+         */
         void GenerateCsrArrays(const std::string &graphId, Function *func);
+
+        /**
+         * TODO
+         */
+        void GenerateLaunchConfiguration();
+
+        /*STATEMENTS BEGIN*/
+
+        /**
+         * TODO
+         */
+        void GenerateBlock(blockStatement* blockStmt, bool includeBrace, bool isMainFile = true);
+
+        /**
+         * TODO
+         */
+        void GenerateStatement(statement* stmt, bool isMainFile);
+
+        /**
+         * TODO
+         */
+        void GenerateVariableDeclaration(declaration* stmt, bool isMainFile);
+
+        /**
+         * TODO
+         */
+        void GenerateDeviceAssignment(assignment* stmt, bool isMainFile);
+
+        /**
+         * TODO
+         */
+        void GenerateAtomicOrNormalAssignment(assignment* stmt, bool isMainFile);
+
+        /**
+         * TODO
+         */
+        void GenerateForAll(forallStmt* stmt, bool isMainFile);
+
+        /**
+         * TODO
+         */
+        void GenerateFixedPoint(fixedPointStmt* stmt, bool isMainFile);
+
+        /**
+         * TODO
+         */
+        void GenerateIfStmt(ifStmt* stmt, bool isMainFile);
+
+        /**
+         * TODO
+         */
+        void GenerateReductionCallStmt(reductionCallStmt* stmt, bool isMainFile);
+
+        /**
+         * TODO
+         */
+        void GenerateItrBfs(iterateBFS* stmt, bool isMainFile);
+
+        /**
+         * TODO
+         */
+        void GenerateItrRevBfs(iterateReverseBFS* stmt, bool isMainFile);
+
+        /**
+         * TODO
+         */
+        void GenerateProcCallStmt(proc_callStmt* stmt, bool isMainFile);
+
+        /* STATEMENTS END*/
+
+        /**
+         * TODO
+         */
+        void GenerateMallocStr(const std::string &dVar, const std::string &typeStr, const std::string &sizeOfType);
 
         /**
          * HIP Specific Functions
@@ -75,7 +170,12 @@ namespace sphip {
         /**
          * TODO
          */
-        void GenerateHipMallocParams(list<formalParam*> paramList);
+        void GenerateHipMallocParams(const list<formalParam*> &paramList);
+
+        /**
+         * TODO
+         */
+        void GenerateHipMemcpyParams(const list<formalParam*> &paramList);
 
         /**
          * TODO
@@ -95,12 +195,17 @@ namespace sphip {
         /**
          * TODO
          */
-        void GenerateHipMalloc(Type* type, const char* identifier);
+        void GenerateHipMalloc(Type* type, const std::string &identifier);
 
         /**
          * TODO
          */
-        void GenerateLaunchConfiguration();
+        void GenerateTimerStart();
+
+        /**
+         * TODO
+         */
+        void GenerateTimerStop();
 
         /**
          * Auxillary Functions

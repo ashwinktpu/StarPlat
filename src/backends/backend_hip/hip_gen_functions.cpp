@@ -50,10 +50,57 @@ namespace sphip {
         );
         main.pushStringWithNewLine(
             "const unsigned numThreads = (V < threadsPerBlock) ? " +
-            std::to_string(threadsPerBlock) + " : V";
+            std::to_string(threadsPerBlock) + " : V;"
         );
         main.pushStringWithNewLine(
-            ""
+            "const unsigned numBlocks = (V + threadsPerBlock - 1) / threadsPerBlock;"
+        );
+
+        main.NewLine();
+    }
+
+    void DslCppGenerator::GenerateTimerStart() {
+        //TODO
+    }
+
+    void DslCppGenerator::GenerateTimerStop() {
+        //TODO
+    }
+
+    void DslCppGenerator::GenerateHipMallocParams(const list<formalParam*> &paramList) {
+
+        for(auto itr = paramList.begin(); itr != paramList.end(); itr++) {
+
+            Type *type = (*itr)->getType();
+
+            if(type->isPropType() && type->getInnerTargetType()->isPrimitiveType()) {
+
+                main.pushString(ConvertToCppType(type->getInnerTargetType()));
+                main.pushString(" * ");
+
+                std::string identifier = (*itr)->getIdentifier()->getIdentifier();
+                identifier[0] = std::toupper(identifier[0]);
+                main.pushString("d" + identifier);
+                main.pushStringWithNewLine(";");
+
+                GenerateHipMalloc(type, (*itr)->getIdentifier()->getIdentifier());
+            } 
+        }
+
+        main.NewLine();
+    }
+
+    void DslCppGenerator::GenerateHipMemcpyParams(const list<formalParam*> &paramList) {
+
+        //TODO
+    }
+
+    void DslCppGenerator::GenerateHipMalloc(Type* type, const std::string &identifier) {
+
+        main.pushStringWithNewLine(
+            "hipMalloc(&d" + identifier + ", sizeof(" + 
+            ConvertToCppType(type->getInnerTargetType()) + ") * (" +
+            (type->isPropNodeType() ? "V" : "E") + "));"
         );
     }
 }

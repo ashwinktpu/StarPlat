@@ -674,7 +674,7 @@ int main(int argc,char **argv)
 		} else if(strcmp(backendTarget, "hip") == 0) {
 			
 			std::cout << "Generating HIP Code\n";
-			sphip::DslCppGenerator hip_backend(fileName);
+			sphip::DslCppGenerator hip_backend(fileName, 512);
 			hip_backend.Generate();
 
 		} else std::cout<< "invalid backend" << '\n';

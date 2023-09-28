@@ -13,7 +13,7 @@
 
 namespace sphip {
 
-    DslCppGenerator::DslCppGenerator(const std::string& , const int threadsPerBlock) : 
+    DslCppGenerator::DslCppGenerator(const std::string& fileName, const int threadsPerBlock) : 
         fileName(StripName(fileName)), 
         HEADER_GUARD("GENHIP_" + ToUpper(StripName(fileName)) + "_H"),
         threadsPerBlock(threadsPerBlock) {
@@ -44,7 +44,6 @@ namespace sphip {
 
     void DslCppGenerator::GenerateIncludeFiles() {
 
-        // TODO: For BC, can we use global barriers? if so, add necessary comments
         // TODO: Add meta comments for both header and main files
 
         header.pushStringWithNewLine("#ifndef " + HEADER_GUARD);
@@ -78,8 +77,18 @@ namespace sphip {
         main.pushStringWithNewLine("{");
 
         GenerateFunctionBody(func);
-
         main.NewLine();
+
+        GenerateTimerStart();
+        
+        GenerateHipMallocParams(func->getParamList()); //TODO: impl
+        GenerateBlock(func->getBlockStatement(), false); //TODO: 
+        
+        GenerateTimerStop();
+
+        GenerateHipMemcpyParams(func->getParamList());
+
+        main.pushStringWithNewLine("}");
     }
 
     void DslCppGenerator::GenerateFunctionHeader(Function* func, bool isMainFile) {
@@ -150,62 +159,10 @@ namespace sphip {
             main.NewLine();
         }
 
-        if(function->getIsMetaUsed()) 
-            main.pushStringWithNewLine("int* dOffsetArray;");
-
-        if(function->getIsDataUsed())
-            main.pushStringWithNewLine("int* dEdgelist;");
-
-        if(function->getIsSrcUsed())
-            main.pushStringWithNewLine("int* dSrcList;");
-
-        if(function->getIsWeightUsed())
-            main.pushStringWithNewLine("int *dWeight;");
-
-        if(function->getIsRevMetaUsed())
-            main.pushStringWithNewLine("int* dRevOffsetArray;");
-
-        main.NewLine();
-
-        if(function->getIsMetaUsed()) 
-            GenerateHipMallocStr("dOffsetArray", "int", "V + 1");
-
-        if(function->getIsDataUsed())
-            GenerateHipMallocStr("dEdgelist", "int", "E");
-
-        if(function->getIsSrcUsed())
-            GenerateHipMallocStr("dSrcList", "int", "E");
-
-        if(function->getIsWeightUsed())
-            GenerateHipMallocStr("dWeight", "int", "E");
-
-        if(function->getIsRevMetaUsed())
-            GenerateHipMallocStr("dRevOffsetArray", "int", "V + 1");
-
-        main.NewLine();
-
-        if(function->getIsMetaUsed())
-            GenerateHipMemCpyStr("dOffsetArray", "hOffsetArray", "int", "V + 1");
-
-        if(function->getIsDataUsed())
-            GenerateHipMallocStr("dEdgelist", "hEdgelist", "int", "E");
-
-        if(function->getIsSrcUsed())
-            GenerateHipMallocStr("dSrcList", "hSrcList", "int", "E");
-
-        if(function->getIsWeightUsed())
-            GenerateHipMallocStr("dWeight", "hWeight", "int", "E");
-
-        if(function->getIsRevMetaUsed())
-            GenerateHipMallocStr("dRevOffsetArray", "hRevOffsetArray", "int", "V + 1");
-
-        main.NewLine();
-
+        CheckAndGenerateVariables(func, "d");
+        CheckAndGenerateHipMalloc(func);
+        CheckAndGenerateMemcpy(func);
         GenerateLaunchConfiguration();
-    }
-
-    void DslCppGenerator::GenerateCsrArrays(const std::string &graphId, Function *func) {
-
     }
 
     void DslCppGenerator::SetCurrentFunction(Function* func) {
@@ -276,8 +233,214 @@ namespace sphip {
         return "NA";
     }
 
-    void GenerateCsrArrays(const std::string &graphId, Function *func) {
+    void DslCppGenerator::GenerateCsrArrays(const std::string &graphId, Function *func) {
 
+        main.pushStringWithNewLine("int V = " + graphId + ".num_nodes();");
+        main.pushStringWithNewLine("int E = " + graphId + ".num_edges();");
 
+        main.NewLine();
+
+        if(func->getIsWeightUsed())
+            main.pushStringWithNewLine("int *edgeLens = " + graphId + ".getEdgeLen();");
+
+        main.NewLine();
+
+        CheckAndGenerateVariables(func, "h");
+        CheckAndGenerateMalloc(func);
+
+        if(func->getIsMetaUsed() || func->getIsRevMetaUsed()) {
+
+            main.pushStringWithNewLine(
+                "for(int i = 0; i <= V; i++) {"
+            );
+
+            if(func->getIsMetaUsed())
+                main.pushStringWithNewLine(
+                    "hOffsetArray[i] = " + graphId + ".indexOfNodes[i];"
+                );
+
+            if(func->getIsRevMetaUsed())
+                main.pushStringWithNewLine(
+                    "hRevOffsetArray[i] = " + graphId + ".rev_indexofNodes[i];"
+                );
+
+            main.pushStringWithNewLine("}");
+        }
+
+        if(
+            func->getIsDataUsed() ||
+            func->getIsSrcUsed()  ||
+            func->getIsWeightUsed()
+        ) {
+
+            main.pushStringWithNewLine(
+                "for(int i = 0; i < E; i++) {"
+            );
+
+            if(func->getIsDataUsed()) 
+                main.pushStringWithNewLine(
+                    "hEdgelist[i] = " + graphId + ".edgeList[i];"
+                );
+
+            if(func->getIsSrcUsed()) 
+                main.pushStringWithNewLine(
+                    "hSrcList[i] = " + graphId + ".srcList[i];"
+                );
+
+            if(func->getIsWeightUsed()) 
+                main.pushStringWithNewLine(
+                    "hWeight[i] = edgeLens[i];"
+                );
+
+            main.pushStringWithNewLine("}");
+        }
+
+        main.NewLine();
+    }
+
+    void DslCppGenerator::GenerateStatement(statement* stmt, bool isMainFile) {
+
+        switch (stmt->getTypeofNode()) {
+
+        case NODE_BLOCKSTMT:
+            GenerateBlock(static_cast<blockStatement*>(stmt), false, isMainFile);
+            break;
+
+        case NODE_DECL:
+
+            break;
+        
+        default:
+            break;
+        }
+    }
+
+    void DslCppGenerator::GenerateBlock(
+        blockStatement* blockStmt,
+        bool includeBrace,
+        bool isMainFile
+    ) {
+
+        dslCodePad &targetFile = isMainFile ? main : header;
+
+        //TODO: Used variables thingy
+        
+        list<statement*> stmtList = blockStmt->returnStatements();
+
+        if(includeBrace)
+            targetFile.pushStringWithNewLine("{");
+
+        for(auto itr = stmtList.begin(); itr != stmtList.end(); itr++)
+            GenerateStatement(*itr, isMainFile);
+
+        if(includeBrace)
+            targetFile.pushStringWithNewLine("}");
+
+        main.NewLine();
+    }
+
+    void DslCppGenerator::GenerateMallocStr(
+        const std::string &hVar, 
+        const std::string &typeStr, 
+        const std::string &sizeOfType
+    ) {
+
+        main.pushStringWithNewLine(
+            hVar + " = (" + typeStr + "*) malloc(sizeof(" + typeStr + ")" +
+            " * (" + sizeOfType + "));"
+        );
+    }
+
+    /**
+     * Simple functions to reduce cognitive complexity
+    */
+
+    void DslCppGenerator::CheckAndGenerateVariables(Function *function, const std::string &loc) {
+
+        if(function->getIsMetaUsed()) 
+            main.pushStringWithNewLine("int *" + loc +"OffsetArray;");
+
+        if(function->getIsDataUsed())
+            main.pushStringWithNewLine("int *" + loc +"Edgelist;");
+
+        if(function->getIsSrcUsed())
+            main.pushStringWithNewLine("int *" + loc +"SrcList;");
+
+        if(function->getIsWeightUsed())
+            main.pushStringWithNewLine("int *" + loc +"Weight;");
+
+        if(function->getIsRevMetaUsed())
+            main.pushStringWithNewLine("int *" + loc +"RevOffsetArray;");
+
+        main.NewLine();
+    }
+
+    /**
+     * TODO
+    */
+    void DslCppGenerator::CheckAndGenerateHipMalloc(Function *function) {
+
+        if(function->getIsMetaUsed()) 
+            GenerateHipMallocStr("dOffsetArray", "int", "V + 1");
+
+        if(function->getIsDataUsed())
+            GenerateHipMallocStr("dEdgelist", "int", "E");
+
+        if(function->getIsSrcUsed())
+            GenerateHipMallocStr("dSrcList", "int", "E");
+
+        if(function->getIsWeightUsed())
+            GenerateHipMallocStr("dWeight", "int", "E");
+
+        if(function->getIsRevMetaUsed())
+            GenerateHipMallocStr("dRevOffsetArray", "int", "V + 1");
+
+        main.NewLine();
+    }
+
+    /**
+     * TODO
+    */
+    void DslCppGenerator::CheckAndGenerateMalloc(Function *function) {
+
+        if(function->getIsMetaUsed()) 
+            GenerateMallocStr("hOffsetArray", "int", "V + 1");
+
+        if(function->getIsDataUsed())
+            GenerateMallocStr("hEdgelist", "int", "E");
+
+        if(function->getIsSrcUsed())
+            GenerateMallocStr("hSrcList", "int", "E");
+
+        if(function->getIsWeightUsed())
+            GenerateMallocStr("hWeight", "int", "E");
+
+        if(function->getIsRevMetaUsed())
+            GenerateMallocStr("hRevOffsetArray", "int", "V + 1");
+
+        main.NewLine();
+    }
+
+    /**
+     * TODO
+    */
+    void DslCppGenerator::CheckAndGenerateMemcpy(Function *function) {
+
+        if(function->getIsMetaUsed())
+            GenerateHipMemCpyStr("dOffsetArray", "hOffsetArray", "int", "V + 1");
+
+        if(function->getIsDataUsed())
+            GenerateHipMemCpyStr("dEdgelist", "hEdgelist", "int", "E");
+
+        if(function->getIsSrcUsed())
+            GenerateHipMemCpyStr("dSrcList", "hSrcList", "int", "E");
+
+        if(function->getIsWeightUsed())
+            GenerateHipMemCpyStr("dWeight", "hWeight", "int", "E");
+
+        if(function->getIsRevMetaUsed())
+            GenerateHipMemCpyStr("dRevOffsetArray", "hRevOffsetArray", "int", "V + 1");
+
+        main.NewLine();
     }
 }
