@@ -65,6 +65,9 @@ class graph
     return edges[global_to_local[nodeptr]] ;
   }
 
+  int get_local (int node_id) {
+    return global_to_local[node_id] ;
+  }
 
   std::map<int,int> get_local_to_global () {
     return local_to_global ;
@@ -211,7 +214,7 @@ class graph
           if (global_to_local.find (global_source) == global_to_local.end ()) {
 
             global_to_local[global_source] = counter++ ;
-            cerr << "new vertex found " << counter << endl ;
+            // cerr << "new vertex found " << counter << endl ;
             diff_Total++ ;
           } 
 
@@ -220,7 +223,7 @@ class graph
           if (global_to_local.find (global_destination) == global_to_local.end ()) {
             
             global_to_local[global_destination] = counter++ ;
-            cerr << "new vertex found " << counter << endl ;
+            // cerr << "new vertex found " << counter << endl ;
 
             if (rank == process) {
               diff_Total++ ;

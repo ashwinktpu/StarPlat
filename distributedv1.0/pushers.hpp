@@ -6,36 +6,15 @@
 #include <mpi.h>
 #include "max_flow_csr.hpp"
 
-bool START_PUSH ;
+bool PULSE_ONGOING ;
 
 
-void push_phase (MPI_Comm communicator, int rank, Network_flow curr_network) {
+void start_pulse (MPI_Comm communicator, int &rank, Network_flow &curr_network) {
 
-    START_PUSH = true ;
-    while (curr_network.push_is_possible)
-        curr_network.push () ;
-    START_PUSH = false ;
-
-}
-
-
-void enter_relabel_phase (MPI_Comm communicator) {
-
-
-    int rank ;
-    MPI_Comm_rank (communicator, &rank) ;
-
-    START_PUSH = false ;
-
-    int status = MPI_Bcast (&START_PUSH, 1, MPI_C_BOOL, 0, communicator) ;
-
-    assert (status == MPI_SUCCESS) ;
-
-} 
-
-void relabel (MPI_Comm communicator) {
-
-    // Create RMA window .
+    PULSE_ONGOING = true ;
+        curr_network.push_and_relabel () ;
+        curr_network.synchronize_excess () ;
+    PULSE_ONGOING = false ;
 }
 
 #endif

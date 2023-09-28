@@ -13,25 +13,24 @@
 #include <stdio.h>
 #include <iostream>
 #include "max_flow_csr.hpp"
-//#include "pushers.hpp"
+#include "pushers.hpp"
 //#include "relabelers.hpp" 
 
 using namespace std ;
 
 
 
-int source_process, sink_process ;
+int source_process, sink_process, global_max_flow_val ;
 bool ACTIVE_VERTEX_EXISTS_GLOBAL ;
 
 int main (int argc, char** argv) {
 
   int status = MPI_Init (&argc, &argv) ;
-
   assert (status == MPI_SUCCESS) ;
 
   int source, sink, source_process, sink_process ;
-
   int rank, size ;
+  global_max_flow_val=0 ;
 
   MPI_Comm_rank (MPI_COMM_WORLD, &rank) ;
 
@@ -40,23 +39,51 @@ int main (int argc, char** argv) {
     printf ("Enter source and sink nodes \n") ;
     cin >> source >> sink ;
   }
-  MPI_Barrier(MPI_COMM_WORLD) ;
-  MPI_Barrier (MPI_COMM_WORLD) ;
-  status = MPI_Bcast (&source, 1, MPI_INT, 0, MPI_COMM_WORLD) ;
-  assert (status == MPI_SUCCESS) ;
-  status = MPI_Bcast (&sink, 1, MPI_INT, 0, MPI_COMM_WORLD) ;
-  cout << rank << " " << source << " ---- > " << sink << endl ;
-  MPI_Barrier(MPI_COMM_WORLD) ;
-  Network_flow curr_network = read_current_file (MPI_COMM_WORLD, source, sink, ACTIVE_VERTEX_EXISTS_GLOBAL) ;
-  cerr << "network flow formation successful per process " << endl ;
-  source_process = find_source (curr_network) ;
-  cerr << "found source process to be " << source_process << endl ;
-  Rma_Datatype<int> heights = initialize_heights (MPI_COMM_WORLD, curr_network, source_process) ;
-  //tie (source_process, sink_process) = find_source_sink (curr_network) ;
+  MPI_Barrier(MPI_COMM_WORLD) ; // SO that other processes wait for the input to be taken, and do not have grabage as source.
 
-  //while (ACTIVE_VERTEX_EXISTS_GLOBAL) {
+  status = MPI_Bcast (&source, 1, MPI_INT, 0, MPI_COMM_WORLD) ; // Broadcast Source
+  assert (status == MPI_SUCCESS) ; // want to halt of broadcast fails.
+  status = MPI_Bcast (&sink, 1, MPI_INT, 0, MPI_COMM_WORLD) ; // Broadcast Sink.
+  // cout << rank << " " << source << " ---- > " << sink << endl ;
+
+  Network_flow curr_network = read_current_file (MPI_COMM_WORLD, source, sink, ACTIVE_VERTEX_EXISTS_GLOBAL) ; // create Network flow class
+  source_process = find_source (curr_network) ; // find the source.
+
+  cerr << "found source process to be " << source_process << endl ;
+
+  int local_active = curr_network.get_active_vertices () ;
+  MPI_Barrier (MPI_COMM_WORLD) ;
+  MPI_Reduce (&rank, &local_active, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD) ;
+  cerr << "number of active vertices : " << local_active << endl ;
+  
+  while (local_active) {
     
-  //}
+    start_pulse (MPI_COMM_WORLD, rank, curr_network) ;
+    MPI_Barrier (MPI_COMM_WORLD) ; // Make sure correct labels are available to all processes.
+
+    local_active = curr_network.get_active_vertices () ;
+    MPI_Barrier (MPI_COMM_WORLD) ;
+    MPI_Reduce (&rank, &local_active, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD) ;
+
+    cerr << "active vertices : " << local_active << endl ;
+  }
+
+  cerr << "all good" << endl ;
+
+  int total_source_excess, total_sink_excess ;
+  total_source_excess = curr_network.get_residue_on_source () ;
+  cerr << rank << " " << total_source_excess << endl ;
+  MPI_Barrier (MPI_COMM_WORLD) ;
+  MPI_Reduce (&rank, &total_source_excess, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD) ;
+  cerr << "treduction successful\n" ;
+  MPI_Bcast (&total_source_excess, 1, MPI_INT, 0, MPI_COMM_WORLD) ;
+  total_sink_excess = curr_network.get_residue_on_sink () ;
+  MPI_Barrier (MPI_COMM_WORLD) ;
+  MPI_Reduce (&rank, &total_sink_excess, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD) ;
+  MPI_Bcast (&total_sink_excess, 1, MPI_INT, 0, MPI_COMM_WORLD) ;
+  cerr << total_sink_excess << endl ;
+  cout << "maxflow value : " << total_source_excess-total_sink_excess << endl ;
+  
   MPI_Finalize () ;
   return 0 ;
 }

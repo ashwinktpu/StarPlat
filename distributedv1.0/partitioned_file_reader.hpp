@@ -50,14 +50,13 @@ Network_flow read_current_file (MPI_Comm communicator, int source, int sink, boo
     int total_nodes ;
     int total_edges ;
     int total_internal ;
-    // int local_internal = partial_network.getInterTotal () ;
+
     int local_nodes = partial_network.getDiffTotal () ;
     int local_edges = partial_network.num_edges () ;
     
     MPI_Reduce (&local_nodes, &total_nodes, 1, MPI_INT, MPI_SUM, 0, communicator) ;
     MPI_Reduce (&local_edges, &total_edges, 1, MPI_INT, MPI_SUM, 0, communicator) ;
-    // MPI_Reduce (&local_internal, &total_internal, 1, MPI_INT, MPI_SUM, 0, communicator) ;
-    // MPI_Bcast (&total_internal, 1, MPI_INT, 0, communicator) ;
+    
     MPI_Bcast (&total_nodes, 1, MPI_INT, 0, communicator) ;
     MPI_Bcast (&total_edges, 1, MPI_INT, 0, communicator) ;
     
