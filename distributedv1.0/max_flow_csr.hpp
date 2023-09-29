@@ -1,14 +1,14 @@
 /*
- * Redo the entire thing without the structs.. Keep arrays
- * Array for height, current edge (index number into adj[u]),
+ * Redo the entire thing without the structs.. Keep arrays [DONE]
+ * Array for height, current edge (index number into adj[u]), [DONE]
  * Separate array for flow
  * Reverse csr
- * set of active vertices
- * New Issue : csr not being generated.
+ * set of active vertices [DONE]
+ * New Issue : csr not being generated. [RESOLVED]
  * It's going into resetting of edges needed and then it's not finding any edges.. So is it calling relabel ? Check that out.
  * If f is a preflow and d is any valid labeling for f and v is any active vertex, a push or a relabel is applicable.
- * Now what? ̰
- * We have a queue which maintains the active vertices.
+ * Now what? ̰ [THINK]
+ * We have a queue which maintains the active vertices. [DONE]
  */
 
 #ifndef _MAX_FLOW_SERIAL_
@@ -217,6 +217,7 @@ public:
         }
     }
 
+
     bool relabel(int relabel_this_vertex)
     {
 
@@ -255,6 +256,7 @@ public:
         cout << "successfully relabeled " << heights[relabel_this_vertex] << endl;
         return true;
     }
+
 
     bool push(int active_vertex)
     {
@@ -356,6 +358,7 @@ public:
         return true;
     }
 
+
     bool reset_current_edge(int active_vertex)
     {
 
@@ -411,13 +414,27 @@ public:
         }
     }
 
+
     void synchronize_excess () {
 
-        // can be done with MPI_Reduce.
+        // The reduction and broadcast will happen over subset of the communicator.
+        // Form a communicator across all processes that have 
+        // Or should we send and receive ??
 
-        
+        for (auto &packet:send_to_edge) {
 
+            // The point to point.
+            
+        }
+
+        switch (point_to_point) {
+            case SENDER :
+                MPI_Send () ;
+            case REVEIVER:
+                MPI_Recv () ;
+        }
     }
+
 
     void print_result()
     {
