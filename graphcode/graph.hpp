@@ -840,7 +840,9 @@ public:
     cudaMalloc(&d_diffCsrWeights_next, sizeof(int) * (diffE));
     cudaMalloc(&d_diffCsrCordsR_next, sizeof(int) * (diffRevE));
     cudaMalloc(&d_diffCsrWeightsR_next, sizeof(int) * (diffRevE));
+    init_kernel<int><<<((diffE) + numThreads) / numThreads, numThreads>>>(d_diffCsrCords_next, INT_MAX, diffE);
     init_kernel<int><<<((diffE) + numThreads) / numThreads, numThreads>>>(d_diffCsrWeights_next, INT_MAX, diffE);
+    init_kernel<int><<<((diffRevE) + numThreads) / numThreads, numThreads>>>(d_diffCsrCordsR_next, INT_MAX, diffRevE);
     init_kernel<int><<<((diffRevE) + numThreads) / numThreads, numThreads>>>(d_diffCsrWeightsR_next, INT_MAX, diffRevE);
 
     // copy edges from previous diffCSR to new diffCSr
