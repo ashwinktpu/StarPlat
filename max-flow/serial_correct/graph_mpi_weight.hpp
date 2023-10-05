@@ -14,30 +14,30 @@ using namespace std;
 class edge
 {
   public:
-  int source;
-  int destination;
-  int weight;
+  long long  source;
+  long long  destination;
+  long long  weight;
 };
 
 class graph
 {
   private:
-  int original_nodesTotal;
-  int padded_nodesTotal;
-  int edgesTotal;
-  int degree_max;
-  int np;
+  long long  original_nodesTotal;
+  long long  padded_nodesTotal;
+  long long  edgesTotal;
+  long long  degree_max;
+  long long  np;
 
   char* filePath;
-  std::map<int,std::vector<edge>> edges;
+  std::map<long long ,std::vector<edge>> edges;
 
   public:
-  int* indexofNodes;
-  int* edgeList;
-  int* edgeLen;
-  int* rev_indexofNodes; /*stores destination corresponding to edgeNo.
+  long long * indexofNodes;
+  long long * edgeList;
+  long long * edgeLen;
+  long long * rev_indexofNodes; /*stores destination corresponding to edgeNo.
                        required for iteration over out neighbours */
-  int* srcList;  /*stores source corresponding to edgeNo.
+  long long * srcList;  /*stores source corresponding to edgeNo.
                        required for iteration over in neighbours */
   explicit graph(char* file)
   {
@@ -52,54 +52,54 @@ class graph
   }
 
 
-  std::map<int,std::vector<edge>> getEdges()
+  std::map<long long ,std::vector<edge>> getEdges()
   {
       return edges;
   }
   
-  int* getEdgeLen()
+  long long * getEdgeLen()
   {
     return edgeLen;
   }
-  int* getEdgeList()
+  long long * getEdgeList()
   {
     return edgeList;
   }
-  int* getSrcList()
+  long long * getSrcList()
   {
     return srcList;
   }
-  int* getIndexofNodes()
+  long long * getIndexofNodes()
   {
     return indexofNodes;
   }
-  int* getRevIndexofNodes()
+  long long * getRevIndexofNodes()
   {
     return rev_indexofNodes;
   }
 
-  int num_nodes()
+  long long  num_nodes()
   {
       return padded_nodesTotal;
   }
-  int ori_num_nodes()
+  long long  ori_num_nodes()
   {
       return original_nodesTotal;
   }
-  int num_edges()
+  long long  num_edges()
   {
       return edgesTotal;
   }
-  int max_degree()
+  long long  max_degree()
   {
       return degree_max;
   }
 
 #if 0
-   bool check_if_nbr(int s, int d)
+   bool check_if_nbr(long long  s, long long  d)
     {
-      int startEdge=indexofNodes[s];
-      int endEdge=indexofNodes[s+1]-1;
+      long long  startEdge=indexofNodes[s];
+      long long  endEdge=indexofNodes[s+1]-1;
 
 
       if(edgeList[startEdge]==d)
@@ -107,7 +107,7 @@ class graph
       if(edgeList[endEdge]==d)
          return true;   
 
-       int mid = (startEdge+endEdge)/2;
+       long long  mid = (startEdge+endEdge)/2;
 
       while(startEdge<=endEdge)
         {
@@ -144,7 +144,7 @@ class graph
      {
        
        if (line[0] < '0' || line[0] >'9') {
-          int k=3;
+          long long  k=3;
           while (k--) {
             std::cerr << "ignoring " << line << std::endl;
             getline (infile, line);
@@ -158,9 +158,9 @@ class graph
         edgesTotal++; 
         
         edge e;
-        int source;
-        int destination;
-	      int weight;
+        long long  source;
+        long long  destination;
+	      long long  weight;
         if(ss >> source && ss >> destination && ss >> weight)
         {  
            if(source >  original_nodesTotal)
@@ -190,7 +190,7 @@ class graph
         padded_nodesTotal = original_nodesTotal + np -(original_nodesTotal%np);
      }
 
-      for(int i=0;i<padded_nodesTotal;i++)
+      for(long long  i=0;i<padded_nodesTotal;i++)
       {
        std::vector<edge> edgeOfVertex=edges[i];
 
@@ -212,16 +212,16 @@ class graph
       }                      
 
       std::cerr << "Edges : " << ' ' << edgesTotal << "\n Vertices : " << original_nodesTotal <<std::endl;
-      indexofNodes=new int[padded_nodesTotal+1];
-      edgeList=new int[edgesTotal];
-      edgeLen=new int[edgesTotal];
-      rev_indexofNodes=new int[padded_nodesTotal+1];
-      srcList=new int32_t[edgesTotal];
+      indexofNodes=new long long [padded_nodesTotal+1];
+      edgeList=new long long [edgesTotal];
+      edgeLen=new long long [edgesTotal];
+      rev_indexofNodes=new long long [padded_nodesTotal+1];
+      srcList=new long long [edgesTotal];
 
     
-    int edge_no=0;
+    long long  edge_no=0;
     
-    for(int i=0;i<padded_nodesTotal;i++)
+    for(long long  i=0;i<padded_nodesTotal;i++)
     {
       std::vector<edge> edgeofVertex=edges[i];
       
@@ -241,35 +241,35 @@ class graph
       
     }
     indexofNodes[padded_nodesTotal]=edge_no;
-    for(int i=0;i<padded_nodesTotal;i++)
+    for(long long  i=0;i<padded_nodesTotal;i++)
     {
-	 std::vector <std::pair<int,int>> vect;
-	 for (int j = indexofNodes[i]; j < indexofNodes[i+1]; j++)
+	 std::vector <std::pair<long long ,long long >> vect;
+	 for (long long  j = indexofNodes[i]; j < indexofNodes[i+1]; j++)
 	 	vect.push_back(std::make_pair(edgeList[j], edgeLen[j]));
 	 std::sort(vect.begin(),vect.end());
 	
-	 for (int j = 0; j < vect.size(); j++)
+	 for (long long  j = 0; j < vect.size(); j++)
 	 {
 		edgeList[j + indexofNodes[i]] = vect[j].first;
 		edgeLen[j + indexofNodes[i]] = vect[j].second;
 	 }
 
 	vect.clear();
-	std::vector <std::pair<int,int>>().swap(vect);
+	std::vector <std::pair<long long ,long long >>().swap(vect);
 	
-          //std::vector<int> vect;
+          //std::vector<long long > vect;
           //vect.insert(vect.begin(),edgeList+indexofNodes[i],edgeList+indexofNodes[i+1]);
           //std::sort(vect.begin(),vect.end());
-          //for(int j=0;j<vect.size();j++)
+          //for(long long  j=0;j<vect.size();j++)
           //  edgeList[j+indexofNodes[i]]=vect[j];
 
             //vect.clear();
-	//	std::vector<int>().swap(vect);
+	//	std::vector<long long >().swap(vect);
 
     }
 
 cerr<<"generating reverse list\n" ;
-    for(int i=0;i<padded_nodesTotal+1;i++)
+    for(long long  i=0;i<padded_nodesTotal+1;i++)
        rev_indexofNodes[i] = 0;
    
 
@@ -279,24 +279,24 @@ cerr<<"generating reverse list\n" ;
     */
 
     /* count indegrees first */
-    int32_t* edge_indexinrevCSR = new int32_t[edgesTotal];
+    long long * edge_indexinrevCSR = new long long [edgesTotal];
 
-    for(int i=0;i<padded_nodesTotal;i++)
+    for(long long  i=0;i<padded_nodesTotal;i++)
       {
 
-       for(int j=indexofNodes[i];j<indexofNodes[i+1];j++)
+       for(long long  j=indexofNodes[i];j<indexofNodes[i+1];j++)
            {
-             int dest = edgeList[j];
-             int temp = __sync_fetch_and_add( &rev_indexofNodes[dest], 1 );
+             long long  dest = edgeList[j];
+             long long  temp = __sync_fetch_and_add( &rev_indexofNodes[dest], 1 );
              edge_indexinrevCSR[j] = temp;
            }
 
       }   
       /* convert to revCSR */
-      int prefix_sum = 0;
-      for(int i=0;i<padded_nodesTotal;i++)
+      long long  prefix_sum = 0;
+      for(long long  i=0;i<padded_nodesTotal;i++)
         {
-          int temp = prefix_sum;
+          long long  temp = prefix_sum;
           prefix_sum = prefix_sum + rev_indexofNodes[i];
           rev_indexofNodes[i]=temp;
       
@@ -304,26 +304,26 @@ cerr<<"generating reverse list\n" ;
         rev_indexofNodes[padded_nodesTotal] = prefix_sum;
 
     /* store the sources in srcList */
-      for(int i=0;i<padded_nodesTotal;i++)
+      for(long long  i=0;i<padded_nodesTotal;i++)
         {
-          for(int j=indexofNodes[i];j<indexofNodes[i+1];j++)
+          for(long long  j=indexofNodes[i];j<indexofNodes[i+1];j++)
             {
-               int dest = edgeList[j];
-               int index_in_srcList=rev_indexofNodes[dest]+edge_indexinrevCSR[j];
+               long long  dest = edgeList[j];
+               long long  index_in_srcList=rev_indexofNodes[dest]+edge_indexinrevCSR[j];
                srcList[index_in_srcList] = i;
             }
         }
       std::cerr << "done\n";
-        for(int i=0;i<padded_nodesTotal;i++)
+        for(long long  i=0;i<padded_nodesTotal;i++)
         {
-          std::vector<int> vect;
+          std::vector<long long > vect;
           vect.insert(vect.begin(),srcList+rev_indexofNodes[i],srcList+rev_indexofNodes[i+1]);
           std::sort(vect.begin(),vect.end());
-          for(int j=0;j<vect.size();j++)
+          for(long long  j=0;j<vect.size();j++)
             srcList[j+rev_indexofNodes[i]]=vect[j];
 
           vect.clear();
-		      std::vector<int>().swap(vect);
+		      std::vector<long long >().swap(vect);
 
         }
 	delete [] edge_indexinrevCSR;

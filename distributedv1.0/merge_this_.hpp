@@ -255,7 +255,7 @@ public:
         return false ;
     }
 
-    assert (h_offset[active_vertex]+current_edges[active_vertex] < num_edges ()) ;
+    
     if (heights[active_vertex] != heights[csr[h_offset[active_vertex]+current_edges[active_vertex]]]+1 or capacities[h_offset[active_vertex]+current_edges[active_vertex]]-flow[h_offset[active_vertex]+current_edges[active_vertex]]<=0) {
 	 
 		
@@ -266,12 +266,16 @@ public:
 	  cerr << "current edge failed " << endl ;
 //	  cerr << active_vertex << " " << csr[h_offset[active_vertex]+current_edges[active_vertex]] << endl ;
 	  print_arr_log (csr, num_edges ()) ;
-	  // cerr << capacities[h_offset[active_vertex]+current_edges[active_vertex]] << " " << flow [h_offset[active_vertex]+current_edges[active_vertex]] << endl ;
+	  cerr << capacities[h_offset[active_vertex]+current_edges[active_vertex]] << " " << flow [h_offset[active_vertex]+current_edges[active_vertex]] << endl ;
       if (!reset_current_edge (active_vertex)) {
+
         return false ;
       } ;
     }
-    assert (h_offset[active_vertex]+current_edges[active_vertex] >= h_offset[active_vertex+1]) ;
+
+    if (h_offset[active_vertex]+current_edges[active_vertex] >= h_offset[active_vertex+1]) {
+        return false ;
+    }
     
 
     if (capacities[h_offset[active_vertex]+current_edges[active_vertex]]-flow[h_offset[active_vertex]+current_edges[active_vertex]]<=0) {
@@ -333,7 +337,7 @@ public:
 
       if (heights[csr[v]] == heights[active_vertex]-1 && capacities[v]-flow[v]>0) {
 
-        current_edges[active_vertex] = v ;
+        current_edges[active_vertex] = pointer ;
 
 	//	cerr << "found a good enough edge " << endl ;
 	//	cerr << "new pointer " << pointer << endl ;
@@ -379,6 +383,7 @@ public:
 		for (int i=0; i<num_edges() ; i++) {
 			if (csr[i] == sink) {
 				max_flow += flow[i] ;				
+//				cerr << "flow from " << r_csr[i] << " to " << csr[i] << " is " << flow[i] << endl ;
 			}
 		}
         cout << "max_flow = " << max_flow << endl ; 

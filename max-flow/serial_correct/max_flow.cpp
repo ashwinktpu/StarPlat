@@ -1,11 +1,11 @@
 #include "max_flow_csr.hpp"
 #include <fstream>
 
-int main (int argc, char ** argv) {
+int32_t  main (long long  argc, char ** argv) {
 
 
   char* file_name = argv[1];
-  network_flow g (file_name, 0, 5);
+  network_flow g (file_name, 0, 1);
 
 
   // start the actual max_flow.
@@ -14,7 +14,7 @@ int main (int argc, char ** argv) {
 
   while (ACTIVE_VERTEX_EXISTS) {
 
-    // we need to push source vertex into the queue.
+    // we need to push source vertex long long o the queue.
     g.push_and_relabel () ;
   }
 

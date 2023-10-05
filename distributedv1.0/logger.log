@@ -854,3 +854,49 @@ for opening file by 2 3
 opening up file ../part_3
 /usr/include/c++/9/bits/stl_queue.h:212: std::queue<_Tp, _Sequence>::reference std::queue<_Tp, _Sequence>::front() [with _Tp = int; _Sequence = std::__debug::deque<int, std::allocator<int> >; std::queue<_Tp, _Sequence>::reference = int&]: Assertion '__builtin_expect(!this->empty(), true)' failed.
 Enter source and sink nodes 
+for opening file by 2 0
+for opening file by 2 1
+opening up file ../part_1
+for opening file by 2 2
+opening up file ../part_2
+for opening file by 2 3
+opening up file ../part_3
+opening up file ../part_0
+/usr/include/c++/9/bits/stl_queue.h:212: std::queue<_Tp, _Sequence>::reference std::queue<_Tp, _Sequence>::front() [with _Tp = int; _Sequence = std::__debug::deque<int, std::allocator<int> >; std::queue<_Tp, _Sequence>::reference = int&]: Assertion '__builtin_expect(!this->empty(), true)' failed.
+4 total processes failed to start
+4 total processes failed to start
+4 total processes failed to start
+Enter source and sink nodes 
+for opening file by 2 0
+opening up file ../part_0
+for opening file by 2 1
+opening up file ../part_1
+for opening file by 2 2
+opening up file ../part_2
+for opening file by 2 3
+opening up file ../part_3
+4 total processes failed to start
+4 total processes failed to start
+Enter source and sink nodes 
+for opening file by 2 0
+for opening file by 2 1
+opening up file ../part_1
+for opening file by 2 2
+for opening file by 2 3
+opening up file ../part_0
+opening up file ../part_3
+opening up file ../part_2
+failed relabeling
+failed relabeling
+failed relabeling
+/usr/include/c++/9/bits/stl_queue.h:212: std::queue<_Tp, _Sequence>::reference std::queue<_Tp, _Sequence>::front() [with _Tp = int; _Sequence = std::__debug::deque<int, std::allocator<int> >; std::queue<_Tp, _Sequence>::reference = int&]: Assertion '__builtin_expect(!this->empty(), true)' failed.
+Enter source and sink nodes 
+for opening file by 2 0
+for opening file by 2 2
+for opening file by 2 1
+opening up file ../part_0
+for opening file by 2 3
+opening up file ../part_2
+opening up file ../part_1
+opening up file ../part_3
+/usr/include/c++/9/bits/stl_queue.h:212: std::queue<_Tp, _Sequence>::reference std::queue<_Tp, _Sequence>::front() [with _Tp = int; _Sequence = std::__debug::deque<int, std::allocator<int> >; std::queue<_Tp, _Sequence>::reference = int&]: Assertion '__builtin_expect(!this->empty(), true)' failed.
