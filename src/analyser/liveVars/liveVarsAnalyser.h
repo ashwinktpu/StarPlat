@@ -18,6 +18,7 @@ class liveVarsAnalyser
     void analyse(list<Function*>);
     void analysecfg(liveVarsNode*);
     bool analyseNode(liveVarsNode*);
+    void printLiveVarsNode(ASTNode*);
 
     void initFunc(Function*);
     liveVarsNode* initStatement(statement*, liveVarsNode*);

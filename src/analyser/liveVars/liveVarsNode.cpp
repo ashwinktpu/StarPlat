@@ -1,11 +1,14 @@
 #include "liveVarsNode.h"
 
 liveVarsNode::liveVarsNode()
+    : node(nullptr)
 {}
 
 liveVarsNode::liveVarsNode(ASTNode* astnode)
     : node(astnode)
-{}
+{
+    astnode->setLiveVarsNode(this);
+}
 
 ASTNode* liveVarsNode::getNode()
 {
@@ -47,6 +50,11 @@ void liveVarsNode::setIn(set<TableEntry*> newIn)
     in = newIn;
 }
 
+void liveVarsNode::addOut(Identifier* id)
+{
+    out.insert(id->getSymbolInfo());
+}
+
 void liveVarsNode::addOut(set<TableEntry*> ids)
 {
     for(TableEntry* id : ids)
@@ -77,13 +85,21 @@ void liveVarsNode::addVars(usedVariables vars)
 
 void liveVarsNode::addPredecessor(liveVarsNode* pred)
 {
+    if(pred == nullptr)
+        return;
     predecessors.insert(pred);
+    pred->addSuccessor(this);
 }
 
 void liveVarsNode::addPredecessors(set<liveVarsNode*> pred)
 {
     for(auto p = pred.begin(); p != pred.end(); p++)
         predecessors.insert(*p);
+}
+
+void liveVarsNode::addSuccessor(liveVarsNode* succ)
+{
+    successors.insert(succ);
 }
 
 void liveVarsNode::addSuccessors(set<liveVarsNode*> succ)

@@ -29,12 +29,14 @@ class liveVarsNode
     set<liveVarsNode*> getSuccessors();
 
     void setIn(set<TableEntry*>);
+    void addOut(Identifier*);
     void addOut(set<TableEntry*>);
     void addUse(Identifier*);
     void addDef(Identifier*);
     void addVars(usedVariables);
     void addPredecessor(liveVarsNode*);
     void addPredecessors(set<liveVarsNode*>);
+    void addSuccessor(liveVarsNode*);
     void addSuccessors(set<liveVarsNode*>);
 };
 

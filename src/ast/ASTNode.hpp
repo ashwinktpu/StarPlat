@@ -71,6 +71,16 @@ class ASTNode
     return blockData;
   }
 
+  void setLiveVarsNode(liveVarsNode* node)
+  {
+    this->liveVarData = node;
+  }
+
+  liveVarsNode* getLiveVarsNode()
+  {
+    return liveVarData;
+  }
+
 };
 
 #endif

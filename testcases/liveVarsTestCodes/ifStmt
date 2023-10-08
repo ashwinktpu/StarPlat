@@ -1,0 +1,25 @@
+// function with an if statement
+
+function test (int n)
+{
+    int res;
+    int a = 1;
+    if( n == 0 )
+    {
+        res = 3;
+    }
+    else
+    {
+        res = 5;
+        return res;
+    }
+
+    int b = a;
+
+    if( b > 1 )         // "res" should be live here
+    {
+        return b;       // "res" should not be live here
+    }
+
+    return res;
+}

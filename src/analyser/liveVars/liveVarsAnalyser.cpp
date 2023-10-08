@@ -14,20 +14,34 @@ void liveVarsAnalyser::analyse(list<Function*> funcList)
 
 void liveVarsAnalyser::initFunc(Function* func)
 {
+    std::cout<<"Start liveness analysis"<<std::endl;
+    
     currReturnNodes.clear();
 
     liveVarsNode* funcStart = new liveVarsNode();
-    for(formalParam* param : func->getParamList())
-        funcStart->addDef(param->getIdentifier());
-
-    initStatement(func->getBlockStatement(), funcStart);
-
     liveVarsNode* funcEnd = new liveVarsNode();
+    for(formalParam* param : func->getParamList())
+    {
+        funcStart->addDef(param->getIdentifier());
+        funcEnd->addOut(param->getIdentifier());
+    }
 
-    for(auto node : currReturnNodes)
+    liveVarsNode* blockEnd = initStatement(func->getBlockStatement(), funcStart);
+
+    for(liveVarsNode* node : currReturnNodes)
     {
         funcEnd->addPredecessor(node);
     }
+
+    funcEnd->addPredecessor(blockEnd);
+
+    analysecfg(funcEnd);
+
+    std::cout<<"End liveness graph analysis"<<std::endl<<std::endl;
+
+    printLiveVarsNode(func->getBlockStatement());
+
+    std::cout<<"End liveness analysis"<<std::endl;
 
     return;
 }
@@ -83,16 +97,12 @@ liveVarsNode* liveVarsAnalyser::initBlockStatement(blockStatement* node, liveVar
 
     //handle the case where block is empty??
 
-    auto stmt = stmts.begin();
-    liveVarsNode* pred = initStatement((*stmt), predecessor);
-    stmt++;
-
-    for(; stmt != stmts.end(); stmt++)
+    for(auto stmt = stmts.begin(); stmt != stmts.end(); stmt++)
     {
-        pred = initStatement((*stmt), pred);
+        predecessor = initStatement((*stmt), predecessor);
     }
     
-    return pred;
+    return predecessor;
 }
 
 liveVarsNode* liveVarsAnalyser::initDeclaration(declaration* node, liveVarsNode* predecessor)
@@ -110,14 +120,14 @@ liveVarsNode* liveVarsAnalyser::initDoWhile(dowhileStmt* node, liveVarsNode* pre
     Expression* condNode = node->getCondition();
     statement* bodyNode = node->getBody();
 
-    liveVarsNode* condLive = new liveVarsNode(node);
+    liveVarsNode* condLive = new liveVarsNode(condNode);
     condLive->addVars(getVarsExpr(condNode));
 
-    liveVarsNode* dummy = new liveVarsNode();
-    dummy->addPredecessor(predecessor);
-    dummy->addPredecessor(condLive);
+    liveVarsNode* doWhileBegin = new liveVarsNode();
+    doWhileBegin->addPredecessor(predecessor);
+    doWhileBegin->addPredecessor(condLive);
 
-    liveVarsNode* bodyEnd = initStatement(bodyNode, dummy);
+    liveVarsNode* bodyEnd = initStatement(bodyNode, doWhileBegin);
 
     condLive->addPredecessor(bodyEnd);
 
@@ -155,10 +165,11 @@ liveVarsNode* liveVarsAnalyser::initIfStmt(ifStmt* node, liveVarsNode* predecess
     condLive->addVars(getVarsExpr(condNode));
     condLive->addPredecessor(predecessor);
 
-    liveVarsNode* ifEnd = new liveVarsNode();
-
     liveVarsNode* ifLive = initStatement(ifBody, condLive);
+
+    liveVarsNode* ifEnd = new liveVarsNode();
     ifEnd->addPredecessor(ifLive);
+    ifEnd->addPredecessor(condLive);
 
     if(elseBody != NULL)
     {
@@ -198,13 +209,15 @@ liveVarsNode* liveVarsAnalyser::initReturn(returnStmt* node, liveVarsNode* prede
 {
     Expression* returnExpr = node->getReturnExpression();
 
+    std::cout<<"return init"<<std::endl;
+
     liveVarsNode* liveVars = new liveVarsNode(node);
     liveVars->addVars(getVarsExpr(returnExpr));
     liveVars->addPredecessor(predecessor);
 
     currReturnNodes.push_back(liveVars);
 
-    return liveVars;
+    return nullptr;
 }
 
 liveVarsNode* liveVarsAnalyser::initUnary(unary_stmt* node, liveVarsNode* predecessor)
@@ -222,15 +235,17 @@ liveVarsNode* liveVarsAnalyser::initWhile(whileStmt* node, liveVarsNode* predece
     Expression* condNode = node->getCondition();
     statement* bodyNode = node->getBody();
 
-    liveVarsNode* condLive = new liveVarsNode(node);
+    liveVarsNode* condLive = new liveVarsNode(condNode);
     condLive->addVars(getVarsExpr(condNode));
     condLive->addPredecessor(predecessor);
 
     liveVarsNode* bodyEnd = initStatement(bodyNode, condLive);
 
-    condLive->addPredecessor(bodyEnd);
+    liveVarsNode* whileEnd = new liveVarsNode();
+    whileEnd->addPredecessor(condLive);
+    whileEnd->addPredecessor(bodyEnd);
 
-    return condLive;
+    return whileEnd;
 }
 
 void liveVarsAnalyser::analysecfg(liveVarsNode* endNode)
@@ -254,7 +269,7 @@ bool liveVarsAnalyser::analyseNode(liveVarsNode* node)
 {
     bool update = false;
 
-    set<TableEntry*> newIn = node->getUse();
+    set<TableEntry*> newIn = node->getOut();
     for(TableEntry* id : node->getDef())
     {
         auto itr = newIn.find(id);
@@ -275,4 +290,83 @@ bool liveVarsAnalyser::analyseNode(liveVarsNode* node)
             pred->addOut(node->getIn());
 
     return update;
+}
+
+void liveVarsAnalyser::printLiveVarsNode(ASTNode* stmt)
+{
+    if(stmt == nullptr)
+    {
+        std::cout<<"Error: null ASTNode*"<<std::endl;
+    }
+    switch(stmt->getTypeofNode())
+    {
+        case NODE_BLOCKSTMT:
+        {
+            list<statement*> stmtlist = ((blockStatement*)stmt)->returnStatements(); 
+            for(auto s = stmtlist.begin(); s != stmtlist.end(); s++)
+                printLiveVarsNode(*s);
+            break;
+        }
+        case NODE_DOWHILESTMT:
+        {
+            printLiveVarsNode(((dowhileStmt*)stmt)->getBody());
+            printLiveVarsNode(((dowhileStmt*)stmt)->getCondition());
+            break;
+        }
+        case NODE_FIXEDPTSTMT:
+        {
+            printLiveVarsNode(((fixedPointStmt*)stmt)->getFixedPointId());
+            printLiveVarsNode(((fixedPointStmt*)stmt)->getBody());
+            break;
+        }
+        case NODE_FORALLSTMT:
+        {
+            break;
+        }
+        case NODE_IFSTMT:
+        {
+            printLiveVarsNode(((ifStmt*)stmt)->getCondition());
+            printLiveVarsNode(((ifStmt*)stmt)->getIfBody());
+            if(((ifStmt*)stmt)->getElseBody())
+                printLiveVarsNode(((ifStmt*)stmt)->getElseBody());
+            break;
+        }
+        case NODE_ITRBFS:
+        {
+            break;
+        }
+        case NODE_WHILESTMT:
+        {
+            printLiveVarsNode(((whileStmt*)stmt)->getCondition());
+            printLiveVarsNode(((whileStmt*)stmt)->getBody());
+            break;
+        }
+        default:
+        {
+            liveVarsNode* node = stmt->getLiveVarsNode();
+            if(node == nullptr)
+            {
+                std::cout<<"Error: LiveVarsNode* null"<<std::endl;
+                break;
+            }
+            std::cout<<"Use : ";
+            for(TableEntry* t : node->getUse())
+                std::cout<<t->getId()->getIdentifier()<<", ";
+            std::cout<<std::endl;
+            std::cout<<"Def : ";
+            for(TableEntry* t : node->getDef())
+                std::cout<<t->getId()->getIdentifier()<<", ";
+            std::cout<<std::endl;
+            std::cout<<"In  : ";
+            for(TableEntry* t : node->getIn())
+                std::cout<<t->getId()->getIdentifier()<<", ";
+            std::cout<<std::endl;
+            std::cout<<"Out : ";
+            for(TableEntry* t : node->getOut())
+                std::cout<<t->getId()->getIdentifier()<<", ";
+            std::cout<<std::endl<<std::endl;
+            break;
+        }
+    }
+    return;
 }
