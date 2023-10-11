@@ -57,6 +57,7 @@ private:
   int * capacities ;
   int * flow ;
   int * residual_flow ;
+  int * indexer ;
 
 
 
@@ -80,6 +81,7 @@ public:
     this->residual_flow = (int*)malloc ((num_edges()+1)*sizeof(int)) ;
     this->excess = (int*) malloc ((num_edges() + 1)*sizeof(int)) ;
     this->r_csr = getSrcList () ;
+	  this->indexer = getEdgeMap () ;
 
 
     for (int i=0; i<=num_nodes();i++) {
@@ -290,6 +292,8 @@ public:
         return false ;
       } ;
     }
+        assert (h_offset[active_vertex]+current_edges[active_vertex] >= h_offset[active_vertex+1]) ;
+
 
     if (h_offset[active_vertex]+current_edges[active_vertex] >= h_offset[active_vertex+1]) {
         return false ;
@@ -303,6 +307,7 @@ public:
     }
 
 
+    assert(capacities[h_offset[active_vertex]+current_edges[active_vertex]]-flow[h_offset[active_vertex]+current_edges[active_vertex]] == residual_flow[h_offset[active_vertex]+current_edges[active_vertex]]) ;
 
     // push flow from a particular vertex to all subsequent vertices .. 
     int curr_flow = min (excess[active_vertex], capacities[h_offset[active_vertex]+current_edges[active_vertex]]-flow[h_offset[active_vertex]+current_edges[active_vertex]]) ;
@@ -319,9 +324,9 @@ public:
 
     // update flow and residual flow.
     flow[h_offset[active_vertex]+current_edges[active_vertex]] += curr_flow ;
-
-    residual_flow[h_offset[active_vertex]+current_edges[active_vertex]] -= curr_flow ;      
-
+    
+    assert(r_offset[indexer[h_offset[active_vertex]+current_edges[active_vertex]]] >= 0);      
+    flow[r_offset[indexer[h_offset[active_vertex]+current_edges[active_vertex]]]] -= curr_flow ;      
     // update excess of active vertex and current vertexclear
 
 
@@ -360,7 +365,7 @@ public:
     // search for edges leading to vertices with height exactly lesser by 1.
 
     int success = false ;
-    int pointer = current_edges[active_vertex]+1 ;
+    int pointer = 0 ;
     for (int v = h_offset[active_vertex]+current_edges[active_vertex]+1; v < h_offset[active_vertex+1]; v++) {
 
       // check whether v_edge satisfies the property.
@@ -407,23 +412,18 @@ public:
 
     void print_result () {
 
-        cout << "results ==========================================\n" ;
-        cout << "max_flow = " << excess[sink]-excess[source] << endl ; 
-        print_arr (this->flow, num_edges()) ;
-        print_arr (this->residual_flow, num_edges()) ;
-        print_arr (this->excess, num_nodes()) ;
-        print_arr (this->heights, num_nodes()) ;
-        cout << endl ;
-        for (int u=0; u< num_nodes (); u++) {
+		long long max_flow = 0 ;
 
-            for (int v_index = h_offset[u]; v_index<h_offset[u+1]; v_index++) {
-
-                cout << "flow from "<<u <<" to " << csr[v_index] << " = " << flow[v_index]<< endl  ;
-            }
-        }
-
-        cout << "====================================================\n" ;
-
+		for (int i=0; i<num_edges() ; i++) {
+			if (csr[i] == sink) {
+				max_flow += flow[i] ;				
+<<<<<<< HEAD
+=======
+//				cerr << "flow from " << r_csr[i] << " to " << csr[i] << " is " << flow[i] << endl ;
+>>>>>>> 89d17965fa4e3a47b07fcc7638caaedbb5e3a439
+			}
+		}
+        cout << "max_flow = " << max_flow << endl ; 
     }
 };
 #endif

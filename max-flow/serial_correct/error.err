@@ -1,0 +1,29 @@
+graph recognized 
+Edges :  7
+ Vertices : 5
+generating reverse list
+done
+5 this is what I should get
+okay
+successful init
+csr list : 
+0 2 3 6 7 7 
+2 3 4 1 3 4 1 
+reverse csr list : 
+0 0 2 3 5 7 
+2 3 0 0 2 1 2 
+capacities : 
+99 99 4 3 2 3 6 
+flow : 
+0 0 0 0 0 0 0 
+residual flow : 
+ 99 99 4 3 2 3 6 
+0 0 0 0 0 0 
+excess : 
+198 0 0 0 0 
+edgeMap : 
+ 0 0 1 2 2 2 3 
+pushing flow from 0 to 2 99
+99 0 0 0 0 0 0 
+0 0 0 0 0 0 0 
+testing_serial.out: max_flow_csr.hpp:308: bool network_flow::push(int): Assertion `flow[h_offset[active_vertex]+current_edges[active_vertex]] == capacities[h_offset[active_vertex]+current_edges[active_vertex]] - flow[r_offset[indexer[h_offset[active_vertex]+current_edges[active_vertex]]]]' failed.
