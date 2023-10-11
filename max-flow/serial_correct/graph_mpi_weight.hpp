@@ -39,6 +39,7 @@ class graph
                        required for iteration over out neighbours */
   int* srcList;  /*stores source corresponding to edgeNo.
                        required for iteration over in neighbours */
+  int *edgeMap ;
   explicit graph(char* file)
   {
     filePath=file;
@@ -68,6 +69,10 @@ class graph
   int* getSrcList()
   {
     return srcList;
+  }
+  int* getEdgeMap () 
+  {
+	return edgeMap;
   }
   int* getIndexofNodes()
   {
@@ -217,6 +222,7 @@ class graph
       edgeLen=new int[edgesTotal];
       rev_indexofNodes=new int[padded_nodesTotal+1];
       srcList=new int32_t[edgesTotal];
+	  edgeMap=new int32_t[edgesTotal];
 
     
     int edge_no=0;
@@ -236,6 +242,7 @@ class graph
         edgeList[edge_no]=(*itr).destination;
         
         edgeLen[edge_no]=(*itr).weight;
+		edgeMap[edge_no]=i;
         edge_no++;
       }
       
