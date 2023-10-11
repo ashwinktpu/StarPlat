@@ -160,17 +160,12 @@ class graph
       
         ss.clear();
         ss<<line;
-        edgesTotal+=2; 
+        edgesTotal++; 
         
         edge e;
         int source;
         int destination;
-	    int weight;
-		
-		edge r_e ;
-		int r_source ;
-		int r_destination ;
-		int r_weight ;
+	      int weight;
         if(ss >> source && ss >> destination && ss >> weight)
         {  
            if(source >  original_nodesTotal)
@@ -182,12 +177,6 @@ class graph
            e.weight = weight;
 
            edges[source].push_back(e);
-
-		   r_e.source = destination ;
-		   r_e.weight = weight ;
-		   r_e.destination = source ;
-
-		   edges[destination].push_back (r_e) ;
           
         }
       
