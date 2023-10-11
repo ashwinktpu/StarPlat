@@ -277,7 +277,7 @@ public:
 	assert (active_vertex < num_nodes () || !( cerr<< active_vertex << " " << num_nodes () << endl )) ; 
 	assert (h_offset[active_vertex]+current_edges[active_vertex] < num_edges () || !(cerr << h_offset[active_vertex] << " " << current_edges[active_vertex] << " " << num_edges ())) ;
 
-    if (heights[active_vertex] != heights[csr[h_offset[active_vertex]+current_edges[active_vertex]]]+1 or capacities[h_offset[active_vertex]+current_edges[active_vertex]]-flow[h_offset[active_vertex]+current_edges[active_vertex]]<=0) {
+
 	 
 		
 //		cerr << capacities[h_offset[active_vertex]+current_edges[active_vertex]] << endl ;

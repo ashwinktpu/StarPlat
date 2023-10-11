@@ -1,7 +1,7 @@
 #include "max_flow_csr.hpp"
 #include <fstream>
 
-int32_t  main (long long  argc, char ** argv) {
+int32_t  main (int argc, char ** argv) {
 
 
   char* file_name = argv[1];

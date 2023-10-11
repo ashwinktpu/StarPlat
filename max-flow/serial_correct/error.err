@@ -23,7 +23,11 @@ excess :
 198 0 0 0 0 
 edgeMap : 
  0 0 1 2 2 2 3 
+current edge failed 
+99 0
+pushing flow from 0 to 2
+updating flow 99
 pushing flow from 0 to 2 99
 99 0 0 0 0 0 0 
 0 0 0 0 0 0 0 
-testing_serial.out: max_flow_csr.hpp:308: bool network_flow::push(int): Assertion `flow[h_offset[active_vertex]+current_edges[active_vertex]] == capacities[h_offset[active_vertex]+current_edges[active_vertex]] - flow[r_offset[indexer[h_offset[active_vertex]+current_edges[active_vertex]]]]' failed.
+Assertion failed: (flow[h_offset[active_vertex]+current_edges[active_vertex]] == capacities[h_offset[active_vertex]+current_edges[active_vertex]] - flow[r_offset[indexer[h_offset[active_vertex]+current_edges[active_vertex]]]]), function push, file max_flow_csr.hpp, line 337.

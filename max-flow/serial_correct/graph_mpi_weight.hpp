@@ -155,7 +155,6 @@ class graph
             getline (infile, line);
             continue;
           }
-
 	    	}
       
         ss.clear();
@@ -165,12 +164,8 @@ class graph
         edge e;
         int source;
         int destination;
-	    int weight;
+	      int weight;
 		
-		edge r_e ;
-		int r_source ;
-		int r_destination ;
-		int r_weight ;
         if(ss >> source && ss >> destination && ss >> weight)
         {  
            if(source >  original_nodesTotal)
@@ -181,11 +176,10 @@ class graph
            e.destination = destination;
            e.weight = weight;
 
+
            edges[source].push_back(e);
-          
+           edges[destination].push_back (e) ;
         }
-      
-    
      }
 
       
@@ -218,6 +212,7 @@ class graph
                                 return e1.destination<e2.destination;  
 
                             });
+        edgeOfVertex.erase( unique( edgeOfVertex.begin(), edgeOfVertex.end() ), edgeOfVertex.end() );
 
       }                      
 
@@ -227,7 +222,7 @@ class graph
       edgeLen=new int[edgesTotal];
       rev_indexofNodes=new int[padded_nodesTotal+1];
       srcList=new int32_t[edgesTotal];
-	  edgeMap=new int32_t[edgesTotal];
+	    edgeMap=new int32_t[edgesTotal];
 
     
     int edge_no=0;
@@ -247,7 +242,7 @@ class graph
         edgeList[edge_no]=(*itr).destination;
         
         edgeLen[edge_no]=(*itr).weight;
-		edgeMap[edge_no]=i;
+
         edge_no++;
       }
       
