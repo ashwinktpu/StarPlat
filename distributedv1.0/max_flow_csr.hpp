@@ -15,10 +15,10 @@
 
 #define _MAX_FLOW_SERIAL_
 
+#include <climits>
 #include "graph_mpi_weight.hpp"
 #include <assert.h>
 #include <queue>
-
 bool ACTIVE_VERTEX_EXISTS = true;
 
 class Network_flow : public graph
@@ -57,7 +57,7 @@ private:
     int *residual_flow;
 
     // For edge computing.
-    vector<pair<int,int> > send_to_edge ;
+    vector<vector<int> > send_to_edge ;
 
 public:
     Network_flow(char *file_name, int source, int sink) : graph(file_name)
@@ -230,31 +230,28 @@ public:
          * if push is not applicable to v d(v)<d(w)+1 ????
          */
 
-        cerr << "inside relabeling: " << endl;
-        int minim = 1000000000; // Find a better upper limit.
-        for (int v = h_offset[relabel_this_vertex]; v < h_offset[relabel_this_vertex + 1]; v++)
-        {
+        int minim = INT_MAX ; // Find a better upper limit.
+	    int relabel_next_vertex = relabel_this_vertex ;
 
-            if (heights[relabel_this_vertex] >= heights[csr[v]] and residual_flow[v] > 0)
-                minim = min(minim, heights[csr[v]]);
-        }
-        heights[relabel_this_vertex] = minim + 1;
+        for (int v = h_offset[relabel_this_vertex] ; v < h_offset[relabel_this_vertex+1]; v++) {
+        
+        if ( heights[relabel_this_vertex] >= heights[csr[v]] and capacities[v]-flow[v] > 0 ) {
 
-        if (minim >= (100000000 - 1) || minim == 0)
-        {
-            cout << "failed relabeling" << endl;
-            return false;
-        }
-
-        for (int i = 0; i <= num_nodes(); i++)
-        {
-            if (excess[i] > 0 and heights[i] > 0 and heights[i] < 999999)
-            {
-                active_vertices.push(i);
+    //		  cerr << "viable relabel " << relabel_this_vertex  << " " << csr[v] << " " << capacities[v] << " " << flow[v] << endl ;
+                minim = min (minim, heights[csr[v]]) ;
+                if (heights[csr[v]]<minim) {
+                    minim = heights[csr[v]] ;
+                    relabel_next_vertex = csr[v] ;
+                }
             }
         }
-        cout << "successfully relabeled " << heights[relabel_this_vertex] << endl;
-        return true;
+
+        if ( minim >= (INT_MAX-1) || minim == 0 ) {
+    //		cerr << "labeling failed " << endl ;
+        return false ;
+        }
+
+        heights[relabel_this_vertex] = minim+1 ;
     }
 
 
@@ -262,61 +259,32 @@ public:
     {
 
         // indexing is wrong current_edges[active_vertex] gives the offset
+        assert (active_vertex >= 0 && active_vertex < num_nodes ()) ;
+        assert (excess[active_vertex] <= 0) ;
+        assert (h_offset[active_vertex] + current_edges[active_vertex] < num_edges ()) ;
 
-        if (excess[active_vertex] <= 0)
-        {
-            return false;
-        }
 
-        if (active_vertex == sink)
-        {
+        if (active_vertex == sink) {
             cerr << "hit sink " << endl;
             return false;
         }
 
-        cerr << "pushing on vertex :  " << active_vertex << endl;
+        if (heights[active_vertex] != heights[csr[h_offset[active_vertex] + current_edges[active_vertex]]] + 1 or capacities[h_offset[active_vertex] + current_edges[active_vertex]] - flow[h_offset[active_vertex] + current_edges[active_vertex]] <= 0) {
 
-        cerr << "invoked push: " << heights[active_vertex] << " " << excess[active_vertex] << " " << heights[csr[h_offset[active_vertex] + current_edges[active_vertex]]] << endl;
-
-        // if current edge is greater than it can be ,, break ... No more edges..
-
-        cerr << "current edge " << current_edges[active_vertex] << " " << endl;
-
-        if (heights[active_vertex] != heights[csr[h_offset[active_vertex] + current_edges[active_vertex]]] + 1 or capacities[h_offset[active_vertex] + current_edges[active_vertex]] - flow[h_offset[active_vertex] + current_edges[active_vertex]] <= 0)
-        {
-
-            // current edge is no longer a good option
-            if (!reset_current_edge(active_vertex))
-            {
+            if (!reset_current_edge(active_vertex)) {
 
                 return false;
             };
         }
 
-        if (h_offset[active_vertex] + current_edges[active_vertex] >= h_offset[active_vertex + 1])
-        {
-            return false;
-        }
 
-        if (capacities[h_offset[active_vertex] + current_edges[active_vertex]] - flow[h_offset[active_vertex] + current_edges[active_vertex]] <= 0)
-        {
+        assert (h_offset[active_vertex] + current_edges[active_vertex] >= h_offset[active_vertex + 1]) ;
+        assert (capacities[h_offset[active_vertex]+current_edges[active_vertex]]-flow[h_offset[active_vertex] + current_edges[active_vertex]]<=0) ;
+        assert(capacities[h_offset[active_vertex]+current_edges[active_vertex]]-flow[h_offset[active_vertex]+current_edges[active_vertex]] == residual_flow[h_offset[active_vertex]+current_edges[active_vertex]]) ;
 
-            // try next
-            return true;
-        }
 
         // push flow from a particular vertex to all subsequent vertices ..
         int curr_flow = min(excess[active_vertex], capacities[h_offset[active_vertex] + current_edges[active_vertex]] - flow[h_offset[active_vertex] + current_edges[active_vertex]]);
-
-        cerr << "pushing flow from " << active_vertex << " to " << csr[h_offset[active_vertex] + current_edges[active_vertex]] << endl;
-        cerr << "updating flow " << curr_flow << endl;
-        cerr << "=================================================================================================\n";
-
-        cerr << "prior state : " << endl;
-        print_arr(flow, num_edges());
-        print_arr(residual_flow, num_edges());
-        print_arr(excess, num_nodes());
-        cerr << "=================================================================================================\n";
 
         // update flow and residual flow.
         flow[h_offset[active_vertex] + current_edges[active_vertex]] += curr_flow;
@@ -330,27 +298,17 @@ public:
 
 
         // add elements to the edge of the node.
-        if (process_list[active_vertex] != process_list[csr[h_offset[active_vertex]]]) {
-            send_to_edge.push_back ({process_list[csr[h_offset[active_vertex]]], excess[csr[h_offset[active_vertex]]]}) ;
+        if (process_list[active_vertex] != process_list[csr[h_offset[active_vertex]+current_edges[active_vertex]]]) {
+            send_to_edge.push_back ({process_list[csr[h_offset[active_vertex]]], excess[csr[h_offset[active_vertex]+current_edges[active_vertex]]], csr[h_offset[active_vertex]+current_edges[active_vertex]], get_global(csr[h_offset[active_vertex]+current_edges[active_vertex]])}) ;
         }
-
-        cerr << "current state : " << endl;
-        print_arr(flow, num_edges());
-        print_arr(residual_flow, num_edges());
-        print_arr(excess, num_nodes());
-        cerr << "=================================================================================================\n";
 
         if (excess[csr[h_offset[active_vertex] + current_edges[active_vertex]]] > 0 && process_list[csr[h_offset[active_vertex]]] == rank)
         {
-
             active_vertices.push(csr[h_offset[active_vertex] + current_edges[active_vertex]]);
         }
 
         if (excess[active_vertex] > 0 and heights[active_vertex] < 999999999)
         {
-
-            cerr << "pushed into queue the active vertex : " << active_vertex << " " << heights[active_vertex] << endl;
-
             active_vertices.push(active_vertex);
             return false;
         }
@@ -365,30 +323,25 @@ public:
         // search for edges leading to vertices with height exactly lesser by 1.
 
         int success = false;
-        int pointer = current_edges[active_vertex] + 1;
+        int pointer = 0;
         for (int v = h_offset[active_vertex] + current_edges[active_vertex] + 1; v < h_offset[active_vertex + 1]; v++)
         {
 
             // check whether v_edge satisfies the property.
 
-            cerr << heights[active_vertex] << " " << heights[csr[v]];
-
+            // cerr << heights[active_vertex] << " " << heights[csr[v]];
+            assert (v < num_edges ()) ;
             if (heights[csr[v]] == heights[active_vertex] - 1)
             {
-                // update the active vertex's edge.
-
-                current_edges[active_vertex] = pointer;
-
+                current_edges[active_vertex] = v;
                 success = true;
                 return true;
             }
-            pointer++;
         }
 
         // if control reaches here, relabelling is needed .
         if (!success)
         {
-
             return relabel(active_vertex);
         }
 
@@ -404,7 +357,6 @@ public:
 
         active_vertices.pop();
 
-        // push (current_vertex) ;
         while (push(current_vertex)) ;
 
         if (active_vertices.size() == 0)
@@ -417,22 +369,33 @@ public:
 
     void synchronize_excess () {
 
-        // The reduction and broadcast will happen over subset of the communicator.
-        // Form a communicator across all processes that have 
-        // Or should we send and receive ??
 
-        for (auto &packet:send_to_edge) {
+        for (auto this_vertex:send_to_edge) {
 
-            // The point to point.
+            int this_excess = 0 ;
+            int total_excess = 0 ;
+            MPI_Group new_group ;
+            MPI_Group old_group ;
+            MPI_Comm new_comm ;
+            vector<int> relevant_processes ;
+            int *sub_processes ;
+
+            if (exists_here( this_vertex[3])){
+                this_excess = this_vertex[1] ;
+                relevant_processes.push_back (this_vertex[0]) ;
+            }
+
+            copy (relevant_processes.begin (), relevant_processes.end (), sub_processes) ;
+            MPI_Comm_group (MPI_COMM_WORLD, &old_group) ;
+            MPI_Group_incl (old_group, relevant_processes.size (), sub_processes, &new_group) ;
+            MPI_Comm_create (MPI_COMM_WORLD, new_group, &new_comm) ;
             
-        }
-
-        switch (point_to_point) {
-            case SENDER :
-                MPI_Send () ;
-            case REVEIVER:
-                MPI_Recv () ;
-        }
+            MPI_Allreduce (&this_excess, &total_excess, 1, MPI_INT, MPI_SUM, new_comm) ;
+            if (exists_here (this_vertex[3])) {
+                excess[this_vertex[2]] = total_excess ;
+            }
+            MPI_Comm_free (&new_comm) ;
+        }  
     }
 
 

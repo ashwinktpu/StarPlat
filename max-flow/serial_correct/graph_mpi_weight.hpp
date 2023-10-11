@@ -165,7 +165,12 @@ class graph
         edge e;
         int source;
         int destination;
-	      int weight;
+	    int weight;
+		
+		edge r_e ;
+		int r_source ;
+		int r_destination ;
+		int r_weight ;
         if(ss >> source && ss >> destination && ss >> weight)
         {  
            if(source >  original_nodesTotal)
@@ -340,6 +345,5 @@ cerr<<"generating reverse list\n" ;
       cerr << edges.size () << " this is what I should get\n" ;
   std::cerr << "okay" <<std::endl;
  }
-
 
 };

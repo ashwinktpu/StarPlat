@@ -39,6 +39,7 @@ private:
     std::map<int, int> global_to_local;
     std::map<int, int> local_to_global;
 
+<<<<<<< HEAD
 public:
     int *indexofNodes;
     int *edgeList;
@@ -49,6 +50,112 @@ public:
                                  required for i teration over in neighbours */
     int *process_list;
     explicit graph(char *file)
+=======
+  public:
+  int* indexofNodes;
+  int* edgeList;
+  int* edgeLen;
+  int* rev_indexofNodes; /*stores destination corresponding to edgeNo.
+                       required for iteration over out neighbours */
+  int* srcList;  /*stores source corresponding to edgeNo.
+                       required for i teration over in neighbours */
+  int *process_list ;
+  explicit graph(char* file)
+  {
+    filePath=file;
+    original_nodesTotal=0;
+    diff_Total=0 ;
+    edgesTotal=0;
+    degree_max=0;
+    padded_nodesTotal=0;
+    np = 1;
+    //std::cerr << "World size: " <<np << std::endl;
+
+  }
+
+  std::vector<edge> getNeighbours (int nodeptr) {
+    return edges[global_to_local[nodeptr]] ;
+  }
+
+  int get_local (int node_id) {
+    
+    return global_to_local[node_id] ;
+  }
+
+  int get_global (int node_id) {
+
+    return local_to_global [node_id] ;
+  }
+
+  std::map<int,int> get_local_to_global () {
+    return local_to_global ;
+  }
+
+  std::map<int,int> get_global_to_local () {
+    return global_to_local ;
+  }
+
+  int getDiffTotal () {
+    return diff_Total ;
+  }
+
+  std::map<int,std::vector<edge>> getEdges()
+  {
+      return edges;
+  }
+  bool exists_here (int nodeptr) {
+
+    if (edges.find (nodeptr) != edges.end()) {
+      return true ;
+    }
+    return false ;
+  }
+  int* getProcessList () {
+
+    return process_list ;
+  }
+  
+  int* getEdgeLen()
+  {
+    return edgeLen;
+  }
+  int* getEdgeList()
+  {
+    return edgeList;
+  }
+  int* getSrcList()
+  {
+    return srcList;
+  }
+  int* getIndexofNodes()
+  {
+    return indexofNodes;
+  }
+  int* getRevIndexofNodes()
+  {
+    return rev_indexofNodes;
+  }
+
+  int num_nodes()
+  {
+      return padded_nodesTotal;
+  }
+  int ori_num_nodes()
+  {
+      return original_nodesTotal;
+  }
+  int num_edges()
+  {
+      return edgesTotal;
+  }
+  int max_degree()
+  {
+      return degree_max;
+  }
+
+#if 0
+   bool check_if_nbr(int s, int d)
+>>>>>>> c20393116ea6c35fa72b8557e8decc51450fc6c8
     {
         filePath = file;
         original_nodesTotal = 0;
@@ -70,6 +177,12 @@ public:
         return global_to_local[node_id];
     }
 
+            local_to_global[counter] = global_source ;
+            global_to_local[global_source] = counter++ ;
+            // cerr << "new vertex found " << counter << endl ;
+            diff_Total++ ;
+          } 
+
     std::map<int, int> get_local_to_global()
     {
         return local_to_global;
@@ -79,6 +192,12 @@ public:
     {
         return global_to_local;
     }
+          if (global_to_local.find (global_destination) == global_to_local.end ()) {
+            
+
+            local_to_global[counter] = global_destination ;
+            global_to_local[global_destination] = counter++ ;
+            // cerr << "new vertex found " << counter << endl ;
 
     int getDiffTotal()
     {

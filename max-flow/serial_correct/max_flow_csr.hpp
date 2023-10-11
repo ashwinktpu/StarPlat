@@ -50,6 +50,7 @@ private:
   int * capacities ;
   int * flow ;
   int * residual_flow ;
+  int * indexer ;
 
 
 
@@ -73,6 +74,7 @@ public:
     this->residual_flow = (int*)malloc ((num_edges()+1)*sizeof(int)) ;
     this->excess = (int*) malloc ((num_edges() + 1)*sizeof(int)) ;
     this->r_csr = getSrcList () ;
+	this->indexer = getEdgeMap () ;
 
 
     for (int i=0; i<=num_nodes();i++) {
@@ -114,6 +116,13 @@ public:
     //cerr << "heights : \n" ;
     //print_arr (this->heights, num_nodes()+1) ;
 
+    cerr << "excess : \n" ;
+    print_arr (this->excess, num_nodes ()) ;
+
+	cerr << "edgeMap : \n " ;
+	print_arr (this->indexer, num_edges ()) ;
+    //cerr << "heights : \n" ;
+    //print_arr (this->heights, num_nodes()+1) ;
     //cerr << "excess: \n" ;
     //print_arr (this->excess, num_nodes ()+1 ) ;
     set_up_heights () ;
@@ -153,9 +162,10 @@ public:
     for (int i=0; i<=num_nodes(); i++) {
         excess[i]= 0 ;
     }
+
     for (int x = h_offset[source]; x<h_offset[source+1]; x++) {
+
         excess[0] += capacities[x] ;
-        // flow[x]=capacities[x] ;
     }   
   }
 
@@ -180,6 +190,7 @@ public:
 
 	  int u = q.front () ;
 	  cout << u << endl ;
+	  // cout << u << endl ;
       q.pop();
       visited[u] = 1;
 
@@ -253,9 +264,12 @@ public:
     if (excess[active_vertex] <=0 ) {
         return false ;
     }
+	  //cerr << "pushing on " << active_vertex << endl ;
+    // indexing is wrong current_edges[active_vertex] gives the offset
+    assert (excess[active_vertex]>0) ;
 
     if (active_vertex == sink) {
-        cerr << "hit sink " << endl ;
+        // cerr << "hit sink " << " " << excess[active_vertex] << endl ;
         return false ;
     }
 
@@ -274,6 +288,16 @@ public:
 //	  cerr << active_vertex << " " << csr[h_offset[active_vertex]+current_edges[active_vertex]] << endl ;
 	  print_arr_log (csr, num_edges ()) ;
 	  cerr << capacities[h_offset[active_vertex]+current_edges[active_vertex]] << " " << flow [h_offset[active_vertex]+current_edges[active_vertex]] << endl ;
+	
+	if (h_offset[active_vertex]+current_edges[active_vertex] == num_edges ()) {
+		return false;
+	}
+    
+	assert (active_vertex < num_nodes () || !( cerr<< active_vertex << " " << num_nodes () << endl )) ; 
+	assert (h_offset[active_vertex]+current_edges[active_vertex] < num_edges () || !(cerr << active_vertex<<" "<<h_offset[active_vertex] << " " << current_edges[active_vertex] << " " << num_edges ())) ;
+
+    if (heights[active_vertex] != heights[csr[h_offset[active_vertex]+current_edges[active_vertex]]]+1 or capacities[h_offset[active_vertex]+current_edges[active_vertex]]-flow[h_offset[active_vertex]+current_edges[active_vertex]]<=0) {
+	 
       if (!reset_current_edge (active_vertex)) {
 
         return false ;
@@ -288,7 +312,7 @@ public:
     if (capacities[h_offset[active_vertex]+current_edges[active_vertex]]-flow[h_offset[active_vertex]+current_edges[active_vertex]]<=0) {
 
         // try next
-        return true ;
+        return false ;
     }
 
 
@@ -301,12 +325,17 @@ public:
     cerr << "updating flow " << curr_flow <<  endl ;
 
     // update flow and residual flow.
+    cerr << "pushing flow from " << active_vertex << " to " << csr[h_offset[active_vertex]+current_edges[active_vertex]] << " " << curr_flow << endl ;
+    
     flow[h_offset[active_vertex]+current_edges[active_vertex]] += curr_flow ;
+    print_arr (this->flow, num_edges ()) ;
 
-    residual_flow[h_offset[active_vertex]+current_edges[active_vertex]] -= curr_flow ;      
+    assert(r_offset[indexer[h_offset[active_vertex]+current_edges[active_vertex]]] >= 0);      
+    flow[r_offset[indexer[h_offset[active_vertex]+current_edges[active_vertex]]]] -= curr_flow ;      
+    print_arr (this->flow, num_edges ()) ;
 
+    assert (flow[h_offset[active_vertex]+current_edges[active_vertex]] == capacities[h_offset[active_vertex]+current_edges[active_vertex]] - flow[r_offset[indexer[h_offset[active_vertex]+current_edges[active_vertex]]]]) ;
     // update excess of active vertex and current vertexclear
-
 
     excess[active_vertex] -= curr_flow ;
     excess[csr[h_offset[active_vertex]+current_edges[active_vertex]]] += curr_flow ;
@@ -317,14 +346,14 @@ public:
         active_vertices.push (csr[h_offset[active_vertex]+current_edges[active_vertex]]) ;
     }
 
+    
     if (excess[active_vertex] > 0 and heights[active_vertex] < 999999999) {
 
       active_vertices.push (active_vertex) ;
-      return false ;
     }
 
     
-    return true ;
+    return false ;
   }
 
 
@@ -344,7 +373,7 @@ public:
 
       if (heights[csr[v]] == heights[active_vertex]-1 && capacities[v]-flow[v]>0) {
 
-        current_edges[active_vertex] = v;
+        current_edges[active_vertex] = pointer++;
 
 	//	cerr << "found a good enough edge " << endl ;
 	//	cerr << "new pointer " << pointer << endl ;
@@ -365,7 +394,7 @@ public:
 
   void push_and_relabel () {
 
-    cerr << " preflow push relable \n" ;
+    //cerr << " preflow push relable \n" ;
     // select an active vertex.
     int current_vertex = active_vertices.front () ;
 
@@ -374,6 +403,8 @@ public:
     // push (current_vertex) ;
 	//cerr<< "discharging " << active_vertices.size () << " " << current_vertex << endl ; 
     while (push (current_vertex));
+    print_arr_log (this->flow, num_edges()) ;
+    
 
 //	cout << active_vertices.size () << " || " ;
 
@@ -386,6 +417,7 @@ public:
     void print_result () {
 
 		long long max_flow = 0 ;
+    print_arr (this->flow, num_edges()) ;
 
 		for (int i=0; i<num_edges() ; i++) {
 			if (csr[i] == sink) {

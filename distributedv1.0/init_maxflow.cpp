@@ -79,8 +79,8 @@ int main (int argc, char** argv) {
   // The following is to retreive the max flow from the processes.
   int total_source_excess, total_sink_excess ;
   total_source_excess = curr_network.get_residue_on_source () ;
-  cerr << rank << " " << total_source_excess << endl ;
   MPI_Barrier (MPI_COMM_WORLD) ;
+  cerr << rank << " " << total_source_excess << endl ;
   MPI_Reduce (&rank, &total_source_excess, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD) ;
   cerr << "treduction successful\n" ;
   MPI_Bcast (&total_source_excess, 1, MPI_INT, 0, MPI_COMM_WORLD) ;
