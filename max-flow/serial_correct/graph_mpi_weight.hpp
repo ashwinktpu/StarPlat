@@ -17,6 +17,7 @@ class edge
   int source;
   int destination;
   int weight;
+  int flow ;
 };
 
 class graph
@@ -33,6 +34,7 @@ class graph
 
   public:
   int* indexofNodes;
+  int * flow_vals ;
   int* edgeList;
   int* edgeLen;
   int* rev_indexofNodes; /*stores destination corresponding to edgeNo.
@@ -56,6 +58,10 @@ class graph
   std::map<int,std::vector<edge>> getEdges()
   {
       return edges;
+  }
+
+  int* getFlow () {
+    return flow_vals ;
   }
   
   int* getEdgeLen()
@@ -159,12 +165,15 @@ class graph
       
         ss.clear();
         ss<<line;
-        edgesTotal++; 
+
         
         edge e;
         int source;
         int destination;
 	      int weight;
+        int flow ;
+
+        edge r_e ;
 		
         if(ss >> source && ss >> destination && ss >> weight)
         {  
@@ -175,10 +184,17 @@ class graph
            e.source = source;
            e.destination = destination;
            e.weight = weight;
+           e.flow = 0 ;
+
+           r_e.source = destination ;
+           r_e.destination = source ;
+           r_e.weight = weight ;
+           r_e.flow = weight ;
 
 
            edges[source].push_back(e);
-           edges[destination].push_back (e) ;
+           e.flow = weight ;
+           edges[destination].push_back (r_e) ;
         }
      }
 
@@ -202,7 +218,6 @@ class graph
      		  degree_max = edges[i].size();
 
 
-
         sort(edgeOfVertex.begin(),edgeOfVertex.end(),
                             [](const edge& e1,const edge& e2) {
 
@@ -212,8 +227,9 @@ class graph
                                 return e1.destination<e2.destination;  
 
                             });
-        edgeOfVertex.erase( unique( edgeOfVertex.begin(), edgeOfVertex.end() ), edgeOfVertex.end() );
 
+        // edgeOfVertex.erase( unique( edgeOfVertex.begin(), edgeOfVertex.end() ), edgeOfVertex.end() );
+        edgesTotal += edges[i].size () ;
       }                      
 
       std::cerr << "Edges : " << ' ' << edgesTotal << "\n Vertices : " << original_nodesTotal <<std::endl;
@@ -223,9 +239,19 @@ class graph
       rev_indexofNodes=new int[padded_nodesTotal+1];
       srcList=new int32_t[edgesTotal];
 	    edgeMap=new int32_t[edgesTotal];
+      flow_vals = new int32_t[edgesTotal] ;
 
+      for (auto e:edges) {
+        cerr << e.first << " " ;
+        for (auto it:e.second ) {
+          cerr << it.destination << " : " << it.flow << " || " ;
+        }
+        cerr << endl ;
+      }
     
     int edge_no=0;
+
+    cerr << "-------------------------------- debug csr list formation --------------------------------" << endl ;
     
     for(int i=0;i<padded_nodesTotal;i++)
     {
@@ -238,107 +264,112 @@ class graph
       for(itr=edgeofVertex.begin();itr!=edgeofVertex.end();itr++)
       { 
        
-       
+        cerr << edge_no << " " << itr->source << " " << itr->destination << " " << itr->flow << " " << itr->weight <<endl ;
         edgeList[edge_no]=(*itr).destination;
         
         edgeLen[edge_no]=(*itr).weight;
+
+        flow_vals[edge_no] = (*itr).flow ;
 
         edge_no++;
       }
       
     }
-    indexofNodes[padded_nodesTotal]=edge_no;
-    for(int i=0;i<padded_nodesTotal;i++)
-    {
-	 std::vector <std::pair<int,int>> vect;
-	 for (int j = indexofNodes[i]; j < indexofNodes[i+1]; j++)
-	 	vect.push_back(std::make_pair(edgeList[j], edgeLen[j]));
-	 std::sort(vect.begin(),vect.end());
+   indexofNodes[padded_nodesTotal]=edge_no;
+  }
+//     indexofNodes[padded_nodesTotal]=edge_no;
+//     for(int i=0;i<padded_nodesTotal;i++)
+//     {
+// 	 std::vector <std::pair<int,int>> vect;
+// 	 for (int j = indexofNodes[i]; j < indexofNodes[i+1]; j++)
+// 	 	vect.push_back(std::make_pair(edgeList[j], edgeLen[j]));
+// 	 std::sort(vect.begin(),vect.end());
 	
-	 for (int j = 0; j < vect.size(); j++)
-	 {
-		edgeList[j + indexofNodes[i]] = vect[j].first;
-		edgeLen[j + indexofNodes[i]] = vect[j].second;
-	 }
+// 	 for (int j = 0; j < vect.size(); j++)
+// 	 {
+// 		edgeList[j + indexofNodes[i]] = vect[j].first;
+// 		edgeLen[j + indexofNodes[i]] = vect[j].second;
+// 	 }
 
-	vect.clear();
-	std::vector <std::pair<int,int>>().swap(vect);
+// 	vect.clear();
+// 	std::vector <std::pair<int,int>>().swap(vect);
 	
-          //std::vector<int> vect;
-          //vect.insert(vect.begin(),edgeList+indexofNodes[i],edgeList+indexofNodes[i+1]);
-          //std::sort(vect.begin(),vect.end());
-          //for(int j=0;j<vect.size();j++)
-          //  edgeList[j+indexofNodes[i]]=vect[j];
+//           //std::vector<int> vect;
+//           //vect.insert(vect.begin(),edgeList+indexofNodes[i],edgeList+indexofNodes[i+1]);
+//           //std::sort(vect.begin(),vect.end());
+//           //for(int j=0;j<vect.size();j++)
+//           //  edgeList[j+indexofNodes[i]]=vect[j];
 
-            //vect.clear();
-	//	std::vector<int>().swap(vect);
+//             //vect.clear();
+// 	//	std::vector<int>().swap(vect);
 
-    }
+//     }
 
-cerr<<"generating reverse list\n" ;
-    for(int i=0;i<padded_nodesTotal+1;i++)
-       rev_indexofNodes[i] = 0;
+// cout << endl ;
+// cerr<<"generating reverse list\n" ;
+//     for(int i=0;i<padded_nodesTotal+1;i++)
+//        rev_indexofNodes[i] = 0;
    
 
         
-    /* Prefix Sum computation for in neighbours 
-       Loads rev_indexofNodes and srcList.
-    */
+//     /* Prefix Sum computation for in neighbours 
+//        Loads rev_indexofNodes and srcList.
+//     */
 
-    /* count indegrees first */
-    int32_t* edge_indexinrevCSR = new int32_t[edgesTotal];
+//     /* count indegrees first */
+//     int32_t* edge_indexinrevCSR = new int32_t[edgesTotal];
 
-    for(int i=0;i<padded_nodesTotal;i++)
-      {
+//     for(int i=0;i<padded_nodesTotal;i++)
+//       {
 
-       for(int j=indexofNodes[i];j<indexofNodes[i+1];j++)
-           {
-             int dest = edgeList[j];
-             int temp = __sync_fetch_and_add( &rev_indexofNodes[dest], 1 );
-             edge_indexinrevCSR[j] = temp;
-           }
+//        for(int j=indexofNodes[i];j<indexofNodes[i+1];j++)
+//            {
+//              int dest = edgeList[j];
+//              int temp = __sync_fetch_and_add( &rev_indexofNodes[dest], 1 );
+//              edge_indexinrevCSR[j] = temp;
+//            }
 
-      }   
-      /* convert to revCSR */
-      int prefix_sum = 0;
-      for(int i=0;i<padded_nodesTotal;i++)
-        {
-          int temp = prefix_sum;
-          prefix_sum = prefix_sum + rev_indexofNodes[i];
-          rev_indexofNodes[i]=temp;
+//       }   
+//       /* convert to revCSR */
+//       int prefix_sum = 0;
+//       for(int i=0;i<padded_nodesTotal;i++)
+//         {
+//           int temp = prefix_sum;
+//           prefix_sum = prefix_sum + rev_indexofNodes[i];
+//           rev_indexofNodes[i]=temp;
       
-        }
-        rev_indexofNodes[padded_nodesTotal] = prefix_sum;
+//         }
+//         rev_indexofNodes[padded_nodesTotal] = prefix_sum;
 
-    /* store the sources in srcList */
-      for(int i=0;i<padded_nodesTotal;i++)
-        {
-          for(int j=indexofNodes[i];j<indexofNodes[i+1];j++)
-            {
-               int dest = edgeList[j];
-               int index_in_srcList=rev_indexofNodes[dest]+edge_indexinrevCSR[j];
-               srcList[index_in_srcList] = i;
-            }
-        }
-      std::cerr << "done\n";
-        for(int i=0;i<padded_nodesTotal;i++)
-        {
-          std::vector<int> vect;
-          vect.insert(vect.begin(),srcList+rev_indexofNodes[i],srcList+rev_indexofNodes[i+1]);
-          std::sort(vect.begin(),vect.end());
-          for(int j=0;j<vect.size();j++)
-            srcList[j+rev_indexofNodes[i]]=vect[j];
+//     /* store the sources in srcList */
+//       for(int i=0;i<padded_nodesTotal;i++)
+//         {
+//           for(int j=indexofNodes[i];j<indexofNodes[i+1];j++)
+//             {
+//                int dest = edgeList[j];
+//                int index_in_srcList=rev_indexofNodes[dest]+edge_indexinrevCSR[j];
+//                srcList[index_in_srcList] = i;
+//             }
+//         }
+//       std::cerr << "done\n";
+//         for(int i=0;i<padded_nodesTotal;i++)
+//         {
+//           std::vector<int> vect;
+//           vect.insert(vect.begin(),srcList+rev_indexofNodes[i],srcList+rev_indexofNodes[i+1]);
+//           std::sort(vect.begin(),vect.end());
+//           for(int j=0;j<vect.size();j++)
+//             srcList[j+rev_indexofNodes[i]]=vect[j];
 
-          vect.clear();
-		      std::vector<int>().swap(vect);
+//           vect.clear();
+// 		      std::vector<int>().swap(vect);
 
-        }
-	delete [] edge_indexinrevCSR;
+//         }
+// 	delete [] edge_indexinrevCSR;
 
 
 
-      cerr << edges.size () << " this is what I should get\n" ;
-  std::cerr << "okay" <<std::endl;
- }
+//       cerr << edges.size () << " this is what I should get\n" ;
+//   std::cerr << "okay" <<std::endl;
+//  }
 
 };
