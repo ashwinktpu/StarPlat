@@ -5,7 +5,7 @@
 #include <fstream>
 #include <time.h>
 #include <iostream>
-#include <../graph.hpp>
+#include "../graph.hpp"
 
 using namespace std;
 //total size of the heap
@@ -212,9 +212,9 @@ int main(int argc, char* argv[]) {
     //in the csr format pos[],neigh[],weight[] 
     //                  pn,  wn
 
-    int pos[] = {0,2,4};
-    int neigh[] = {1,2,0,2,0,1};
-    int weight[] = {1,4,1,2,4,2};
+    // int pos[] = {0,2,4};
+    // int neigh[] = {1,2,0,2,0,1};
+    // int weight[] = {1,4,1,2,4,2};
     int Source = 0;
 
     int pn = G.num_nodes();
@@ -225,14 +225,14 @@ int main(int argc, char* argv[]) {
     int neigh[wn];
     int weight[wn];
 
-    int *edgeLens = g.getEdgeLen();
+    int *edgeLens = G.getEdgeLen();
 
-    for(int i = 0; i <= nV; i++) {
-        pos[i] = g.indexofNodes[i];
+    for(int i = 0; i < pn; i++) {
+        pos[i] = G.indexofNodes[i];
     }
 
-    for(int i = 0; i < nE; i++) {
-        neigh[i] = g.edgeList[i];
+    for(int i = 0; i < wn; i++) {
+        neigh[i] = G.edgeList[i];
         weight[i] = edgeLens[i];
     }
 
