@@ -935,13 +935,14 @@ void dsl_cpp_generator::generate_exprProcCall(Expression *_expr,
     Identifier *dsu_id = proc->getId1();
     Identifier *elem_id = arglist.back()->getExpr()->getId();
     assert(dsu_id);
+    // TODO this assertion fails when the argument is of the type `x.y`
     assert(elem_id);
 
     // TODO potential vulnerability
     // instead of just inserting the string, keep track of variables in
     // generated code and insert the corresponding variable
     char buff[1024];
-    sprintf(buff, "dsu_find(%s, %s))",
+    sprintf(buff, "dsu_find(%s, %s)",
             dsu_id->getIdentifier(),
             elem_id->getIdentifier());
     targetFile.pushString(buff);
@@ -961,7 +962,7 @@ void dsl_cpp_generator::generate_exprProcCall(Expression *_expr,
     // instead of just inserting the string, keep track of variables in
     // generated code and insert the corresponding variable
     char buff[1024];
-    sprintf(buff, "dsu_merge(%s, %s, %s))",
+    sprintf(buff, "dsu_merge(%s, %s, %s)",
             dsu_id->getIdentifier(),
             elem1_id->getIdentifier(),
             elem2_id->getIdentifier());
@@ -3161,7 +3162,7 @@ void dsl_cpp_generator::generateDoWhileStmt(dowhileStmt *doWhile,
 }
 
 void dsl_cpp_generator::generateStatement(statement *stmt, int isMainFile) {
-
+  //assert(false);
   if (stmt->getTypeofNode() == NODE_BLOCKSTMT) {
     generateBlock((blockStatement *)stmt, false, isMainFile);
   }
@@ -3541,6 +3542,7 @@ void dsl_cpp_generator::generation_begin() {
 
   // InKernel file
   kernel.pushstr_newL("#include \"libOpenCL.h\"");
+  kernel.pushstr_newL("#include \"union_find.h\"");
 }
 void dsl_cpp_generator::generation_end() {
   header.NewLine();
@@ -3582,5 +3584,6 @@ void dsl_cpp_generator::setFileName(
   }
   fileName = prevtoken;
 }
+
 
 } // namespace spamd

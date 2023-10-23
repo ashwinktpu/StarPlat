@@ -134,7 +134,7 @@ public:
   int getAccessType() { return accessType; }
 
   char *getIdentifier() {
-    if (!identifier) return "NULL";
+    if (!identifier) return (char*) "NULL";
     return identifier;
   }
 

@@ -1,4 +1,9 @@
 #include "boruvka.h"
+#include "assert_cl.c"
+
+#define __CL_ENABLE_EXCEPTIONS
+
+using namespace std;
 
 void DSU_test(graph& g)
 {
@@ -86,15 +91,25 @@ void DSU_test(graph& g)
   //DECLAR DEVICE AND HOST vars in params
 
   //BEGIN DSL PARSING 
-  int *h_cheapest = (int *)malloc(V*sizeof(int));
-  cl_mem d_cheapest = clCreateBuffer(context,CL_MEM_READ_WRITE,(V)*sizeof(int),NULL, &status);
+  int *h_cheapest_u = (int *)malloc(V*sizeof(int));
+  cl_mem d_cheapest_u = clCreateBuffer(context,CL_MEM_READ_WRITE,(V)*sizeof(int),NULL, &status);
+
+  int *h_cheapest_v = (int *)malloc(V*sizeof(int));
+  cl_mem d_cheapest_v = clCreateBuffer(context,CL_MEM_READ_WRITE,(V)*sizeof(int),NULL, &status);
+
+  int *h_cheapest_w = (int *)malloc(V*sizeof(int));
+  cl_mem d_cheapest_w = clCreateBuffer(context,CL_MEM_READ_WRITE,(V)*sizeof(int),NULL, &status);
 
 
   //ForAll started here
 
 
   //Reading kernel file
+
   FILE* kernelfp = fopen("boruvka.cl", "rb"); 
+
+  //FILE* kernelfp = fopen("test.cl", "rb"); 
+
   size_t program_size;
   fseek(kernelfp, 0, SEEK_END);
   program_size = ftell(kernelfp);
@@ -107,9 +122,20 @@ void DSU_test(graph& g)
 
   //Creating program from source(Create and build Program)
   cl_program program = clCreateProgramWithSource(context, 1, (const char **)&kernelSource, NULL, &status);
-  printf("Program created from source, status = %d \n", status);
+  printf("Program created from source, status = %d\n", status);
   status = clBuildProgram(program, number_of_devices, devices, " -I ./", NULL, NULL);
-  printf(" Program building completed, status = %d \n ",status);
+
+  if(status != CL_SUCCESS){
+    printf("Failed to build program.\n");
+    printf("error: %s\n", clGetErrorString(status));
+    const int n = 100000;
+    char buff[n];
+    clGetProgramBuildInfo(program, devices[0], CL_PROGRAM_BUILD_LOG, n, buff, NULL);
+    cout << buff << endl;
+    return;
+  }
+  
+  printf("Program building completed, status = %d\n ",status);
 
   //Variable for launch configuration
   size_t global_size;
@@ -117,7 +143,8 @@ void DSU_test(graph& g)
   cl_kernel DSU_test = clCreateKernel(program, "DSU_test_kernel", &status);
   if(status != CL_SUCCESS){
     printf("Failed to create DSU_test kernel.\n");
-    return ;
+    printf("error: %s\n", clGetErrorString(status));
+    return;
   }
   status = clSetKernelArg(DSU_test,0, sizeof(int),(void *)&V);
   status = clSetKernelArg(DSU_test,1, sizeof(int),(void *)&E);
@@ -126,6 +153,7 @@ void DSU_test(graph& g)
   status = clSetKernelArg(DSU_test,4, sizeof(cl_mem),(void *)&d_src);
   status = clSetKernelArg(DSU_test,5, sizeof(cl_mem),(void *)&d_weight);
   status = clSetKernelArg(DSU_test,6, sizeof(cl_mem),(void *)&d_rev_meta);
+  status = clSetKernelArg(DSU_test, 7, sizeof(cl_mem), (void *)&d_cheapest_w);
 
   local_size = 128;
   global_size = (V + local_size -1)/ local_size * local_size;
@@ -141,9 +169,20 @@ void DSU_test(graph& g)
 
 
 
+
+
+
+
+
+
+
   //Free up!! all propVars in this BLOCK!
-  status = clReleaseMemObject(d_cheapest);
-  free(h_cheapest);
+  status = clReleaseMemObject(d_cheapest_w);
+  free(h_cheapest_w);
+  status = clReleaseMemObject(d_cheapest_v);
+  free(h_cheapest_v);
+  status = clReleaseMemObject(d_cheapest_u);
+  free(h_cheapest_u);
 
   //TIMER STOP
   printf("Total Kernel time = %0.2lf ms.\n ", totalTime);
@@ -168,3 +207,31 @@ void DSU_test(graph& g)
   free(h_src);
   free(h_modified_next);
 } //end FUN
+
+int main(int argc, char *argv[])
+{
+    graph g = graph(argv[1]);
+    cout<<"parsing graph.";
+    g.parseGraph();
+    cout<<"parsing done"<<endl;
+    int V = g.num_nodes();
+    
+    //int *dist = (int*) malloc(V*sizeof(int));
+    //int src = atoi(argv[3]);
+    //DSU_test(g, dist, src);
+
+    cout << "executing kernel\n";
+    DSU_test(g);
+
+    /*
+    FILE* op = fopen(argv[2],"w");
+    for(int i=0; i<V; i++)
+    {
+        fprintf(op, "%d %d\n",i,dist[i]);
+    }
+    fclose(op);
+    */
+
+    cout<<"finished."<<endl;
+    return 0;
+}
