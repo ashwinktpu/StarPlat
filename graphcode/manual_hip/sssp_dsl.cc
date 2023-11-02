@@ -80,7 +80,7 @@ void ComputeSSSP(graph& g, int src, int* dist) {
 
     int nV = g.num_nodes();
     int nE = g.num_edges();
-    int *edgeLens = g.getEdgeLen();
+    int *edgeLens = g.getEdgeLen(); //edgeWeight
 
     cout << "nV: " << nV << " nE: " << nE  << " " << edgeLens[100] << NL;
 
@@ -92,13 +92,13 @@ void ComputeSSSP(graph& g, int src, int* dist) {
     bool hIsChanged = true;
 
     for(int i = 0; i <= nV; i++) {
-        hOffsetArr[i] = g.indexofNodes[i];
-        hRevOffsetArr[i] = g.rev_indexofNodes[i];
+        hOffsetArr[i] = g.indexofNodes[i]; // meta
+        hRevOffsetArr[i] = g.rev_indexofNodes[i]; 
     }
 
     for(int i = 0; i < nE; i++) {
-        hEdgeList[i] = g.edgeList[i];
-        hWeight[i] = edgeLens[i];
+        hEdgeList[i] = g.edgeList[i]; // data
+        hWeight[i] = edgeLens[i]; 
     }
 
     int *dOffsetArr;

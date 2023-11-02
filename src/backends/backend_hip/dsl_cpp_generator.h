@@ -158,6 +158,54 @@ namespace sphip {
 
         /* STATEMENTS END*/
 
+        /* GenerateExpressions */
+        /**
+         * TODO
+         */
+        void GenerateExpression(Expression* expr, bool isMainFile, bool isAtomic = false);
+
+        /**
+         * TODO
+         */
+        void GenerateExpressionLiteral(Expression* expr, bool isMainFile);
+
+        /**
+         * TODO
+         */
+        void GenerateExpressionInfinity(Expression* expr, bool isMainFile);
+
+        /**
+         * TODO
+         */
+        void GenerateExpressionIdentifier(Identifier* id, bool isMainFile);
+
+        /**
+         * TODO
+         */
+        void GenerateExpressionPropId(PropAccess* propId, bool isMainFile);
+
+        /**
+         * TODO
+         */
+        void GenerateExpressionArithmeticOrLogical(Expression* expr, bool isMainFile, bool isAtomic = false);
+
+        /**
+         * TODO
+         */
+        void GenerateExpressionRelational(Expression* expr, bool isMainFile);
+
+        /**
+         * TODO
+         */
+        void GenerateExpressionProcCallExpression(Expression* expr, bool isMainFile);
+
+        /**
+         * TODO
+         */
+        void GenerateExpressionUnary(Expression* expr, bool isMainFile);
+
+        /* EndGenerateExpressions*/
+
         /**
          * TODO
          */
@@ -210,6 +258,11 @@ namespace sphip {
         /**
          * Auxillary Functions
          */
+
+        /**
+         * TODO
+         */
+        string GetOperatorString(int operatorId);
 
         /**
          * TODO

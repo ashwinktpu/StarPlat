@@ -36,6 +36,55 @@ namespace sphip {
         return true;
     }
 
+    string DslCppGenerator::GetOperatorString(int opId) {
+
+        switch(opId) {
+
+            case OPERATOR_ADD:
+                return "+";
+            case OPERATOR_DIV:
+                return "/";
+            case OPERATOR_MUL:
+                return "*";
+            case OPERATOR_MOD:
+                return "%";
+            case OPERATOR_SUB:
+                return "-";
+            case OPERATOR_EQ:
+                return "==";
+            case OPERATOR_NE:
+                return "!=";
+            case OPERATOR_LT:
+                return "<";
+            case OPERATOR_LE:
+                return "<=";
+            case OPERATOR_GT:
+                return ">";
+            case OPERATOR_GE:
+                return ">=";
+            case OPERATOR_AND:
+                return "&&";
+            case OPERATOR_OR:
+                return "||";
+            case OPERATOR_INC:
+                return "++";
+            case OPERATOR_DEC:
+                return "--";
+            case OPERATOR_ADDASSIGN:
+                return "+";
+            case OPERATOR_ANDASSIGN:
+                return "&&";
+            case OPERATOR_ORASSIGN:
+                return "||";
+            case OPERATOR_MULASSIGN:
+                return "*";
+            case OPERATOR_SUBASSIGN:
+                return "-";
+            default:
+                return "NA";
+        }
+    }
+
     void DslCppGenerator::SetFileName(const std::string& fileName) {
 
         // this->fileName = fileName;

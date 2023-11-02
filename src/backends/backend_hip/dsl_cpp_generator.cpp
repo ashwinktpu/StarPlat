@@ -6,6 +6,7 @@
 */
 
 #include <cctype>
+#include <sstream>
 #include <stdexcept>
 
 #include "../../ast/ASTHelper.cpp"
@@ -99,6 +100,7 @@ namespace sphip {
 
         targetFile.pushString("void");
         targetFile.AddSpace();
+        std::cout << func->getIdentifier()->getIdentifier() << std::endl;
         targetFile.pushString(func->getIdentifier()->getIdentifier());
         targetFile.pushString("(");
         targetFile.NewLine();
@@ -307,10 +309,49 @@ namespace sphip {
             break;
 
         case NODE_DECL:
+            GenerateVariableDeclaration(static_cast<declaration*>(stmt), isMainFile);
+            break;
 
+        case NODE_ASSIGN:
+            
+            assignment *asst = static_cast<assignment*>(stmt);
+
+            if(asst->isDeviceAssignment())
+                GenerateDeviceAssignment(asst, isMainFile);
+            else
+                GenerateAtomicOrNormalAssignment(asst, isMainFile);
+            break;
+
+        case NODE_IFSTMT:
+            GenerateIfStmt(static_cast<ifStmt*>(stmt), isMainFile);
+            break;
+
+        case NODE_FORALLSTMT:
+            GenerateForAll(static_cast<forallStmt*>(stmt), isMainFile);
+            break;
+
+        case NODE_FIXEDPTSTMT:
+            GenerateFixedPoint(static_cast<fixedPointStmt*>(stmt), isMainFile);
+            break;
+
+        case NODE_REDUCTIONCALLSTMT:
+            GenerateReductionCallStmt(static_cast<reductionCallStmt*>(stmt), isMainFile);
+            break;
+
+        case NODE_ITRBFS:
+            GenerateItrBfs(static_cast<iterateBFS*>(stmt), isMainFile);
+            break;
+
+        case NODE_ITRRBFS:
+            GenerateItrRevBfs(static_cast<iterateReverseBFS*>(stmt), isMainFile);
+            break;
+
+        case NODE_PROCCALLSTMT:
+            GenerateProcCallStmt(static_cast<proc_callStmt*>(stmt), isMainFile);
             break;
         
         default:
+            throw std::runtime_error("Generation function not implemented for this node!");
             break;
         }
     }
@@ -339,6 +380,260 @@ namespace sphip {
         main.NewLine();
     }
 
+    void DslCppGenerator::GenerateVariableDeclaration(declaration* stmt, bool isMainFile) {
+
+        dslCodePad &targetFile = isMainFile ? main : header;
+
+        Type *type = stmt->getType();
+
+        if(type->isPropType()) {
+
+            if(type->getInnerTargetType()->isPrimitiveType()) {
+
+                Type *innerType = type->getInnerTargetType();
+
+                main.pushString(ConvertToCppType(innerType));
+                main.AddSpace();
+                main.pushString("*");
+                main.pushString("d");
+
+                std::string idName = stmt->getdeclId()->getIdentifier();
+                idName[0] = std::toupper(idName[0]);
+
+                main.pushString(idName);
+                main.pushStringWithNewLine(";");
+
+                GenerateHipMalloc(type, idName);
+
+                if(stmt->getdeclId()->getSymbolInfo()->getId()->require_redecl()) {
+
+                    main.pushString(ConvertToCppType(innerType));
+                    main.AddSpace();
+                    main.pushString("*");
+                    main.pushString("d");
+                    main.pushString(idName);
+                    main.pushString("Next");
+                    main.pushString(";");
+
+                    GenerateHipMalloc(type, idName + "Next");
+                }
+            }
+        } else if(type->isNodeEdgeType()) {
+        
+            targetFile.pushString(ConvertToCppType(type));
+            targetFile.AddSpace();
+            targetFile.pushString(stmt->getdeclId()->getIdentifier());
+
+            if(stmt->isInitialized()) {
+
+                targetFile.pushString(" = ");
+                GenerateExpression(stmt->getExpressionAssigned(), isMainFile); // TODO
+                targetFile.pushStringWithNewLine(";");
+            }
+        
+        } else if(type->isPrimitiveType()) {
+
+            std::cerr << "Hit in primitive type\n";
+        }
+    }
+
+    void DslCppGenerator::GenerateExpression(
+        Expression *expr, bool isMainFile, bool isAtomic
+    ) {
+
+        if(expr->isLiteral()) 
+            GenerateExpressionLiteral(expr, isMainFile);
+
+        else if(expr->isInfinity())
+            GenerateExpressionInfinity(expr, isMainFile);
+
+        else if(expr->isIdentifierExpr())
+            GenerateExpressionIdentifier(expr->getId(), isMainFile);
+
+        else if(expr->isPropIdExpr())
+            GenerateExpressionPropId(expr->getPropId(), isMainFile);
+
+        else if(expr->isArithmetic() || expr->isLogical())
+            GenerateExpressionArithmeticOrLogical(expr, isMainFile, isAtomic);
+
+        else if(expr->isRelational())
+            GenerateExpressionRelational(expr, isMainFile);
+
+        else if(expr->isProcCallExpr())
+            GenerateExpressionProcCallExpression(expr, isMainFile);
+
+        else if(expr->isUnary())
+            GenerateExpressionUnary(expr, isMainFile);
+
+        else    
+            assert(false);
+    }
+
+    void DslCppGenerator::GenerateExpressionLiteral(Expression* expr, bool isMainFile) {
+
+        int expressionType = expr->getExpressionFamily();
+        std::ostringstream oss;
+
+        switch(expressionType) {
+
+            case EXPR_INTCONSTANT:
+                oss << expr->getIntegerConstant();
+                break;
+
+            case EXPR_FLOATCONSTANT:
+                oss << expr->getFloatConstant();
+                break;
+
+            case EXPR_BOOLCONSTANT:
+                oss << (expr->getBooleanConstant() ? "true" : "false");
+                break;
+
+            default:
+                assert(false);
+        }
+
+        (isMainFile ? main : header).pushString(oss.str());
+    }
+
+    void DslCppGenerator::GenerateExpressionInfinity(Expression* expr, bool isMainFile) {
+
+        std::string value = expr->isPositiveInfinity() ? "INT_MAX" : "INT_MIN";
+
+        if(expr->getTypeofExpr()) {
+
+            switch(expr->getTypeofExpr()) {
+
+                case TYPE_INT:
+                    value = expr->isPositiveInfinity() ? "INT_MAX" : "INT_MIN";
+                    break;
+
+                case TYPE_LONG:
+                    value = expr->isPositiveInfinity() ? "LLONG_MAX" : "LLONG_MIN";
+                    break;
+
+                case TYPE_FLOAT:
+                    value = expr->isPositiveInfinity() ? "FLT_MAX" : "FLT_MIN";
+                    break;
+
+                case TYPE_DOUBLE:
+                    value = expr->isPositiveInfinity() ? "DBL_MAX" : "DBL_MIN";
+                    break;
+            }
+        }
+
+        (isMainFile ? main : header).pushString(value);
+    }
+
+    void DslCppGenerator::GenerateExpressionIdentifier(Identifier* id, bool isMainFile) {
+
+        (isMainFile ? main : header).pushString(id->getIdentifier());
+    }
+
+    void DslCppGenerator::GenerateExpressionPropId(PropAccess* propId, bool isMainFile) {
+
+        std::string value;
+
+        Identifier *id1 = propId->getIdentifier1();
+        Identifier *id2 = propId->getIdentifier2();
+        ASTNode *propParent = propId->getParent();
+        bool isRelatedToReduction = false;
+        
+        if(propParent)
+            isRelatedToReduction = propParent->getTypeofNode() == NODE_REDUCTIONCALLSTMT;
+
+        if(
+            id2->getSymbolInfo() &&
+            id2->getSymbolInfo()->getId()->get_fp_association() &&
+            isRelatedToReduction
+        ) {
+
+            std::string temp =
+            value = "d" 
+        }
+    }
+
+    void DslCppGenerator::GenerateExpressionArithmeticOrLogical(
+        Expression* expr, bool isMainFile, 
+        bool isAtomic = false
+    ) {
+
+        dslCodePad &target = isMainFile ? main : header;
+
+        if(expr->hasEnclosedBrackets())
+            target.pushString("(");
+
+        if(!isAtomic)
+            GenerateExpression(expr->getLeft(), isMainFile);
+
+        target.AddSpace();
+
+        const std::string operatorString = getOperatorString(expr->getOperatorType());
+
+        if(!isAtomic) {
+            target.pushString(operatorString);
+            target.AddSpace();
+        }
+
+        GenerateExpression(expr->getRight(), isMainFile);
+
+        if(expr->hasEnclosedBrackets())
+            target.pushString(")");
+    }
+
+    void DslCppGenerator::GenerateExpressionRelational(Expression* expr, bool isMainFile) {
+
+        dslCodePad & target = isMainFile ? main : header;
+
+        if(expr->hasEnclosedBrackets())
+            target.pushString("(");
+
+        GenerateExpression(expr->getLeft(), isMainFile);
+        target.AddSpace();
+
+        const string op = GetOperatorString(expr->getOperatorType());
+        target.pushString(op);
+        GenerateExpression(expr->getRight(), isMainFile);
+
+        if(expr->hasEnclosedBrackets())
+            target.pushString(")");
+    }
+
+    void DslCppGenerator::GenerateExpressionProcCallExpression(
+        proc_callExpr* expr, bool isMainFile
+    ) {
+
+        dslCodePad & targetFile = isMainFile ? main : header;
+
+        string methodId(proc->getMethodId()->getIdentifier());
+
+        if (methodId == "get_edge") 
+            targetFile.pushString("edge");
+        
+        else if (methodId == "count_outNbrs"){
+
+            string strBuffer;
+            list<argument*> argList = proc->getArgList();
+            assert(argList.size() == 1);
+
+            Identifier* nodeId = argList.front()->getExpr()->getId();
+
+            strBuffer = "(d_meta[" + nodeId->getIdentifier() + " + 1] -" +
+                         "d_meta[" + nodeId->getIdentifier() + "]";
+
+            targetFile.pushString(strBuffer);
+
+        } else if (methodId == "is_an_edge") {
+            
+            string strBuffer;
+            list<argument*> argList = proc->getArgList();
+
+        } else {
+            
+            
+        }
+    }
+
+
     void DslCppGenerator::GenerateMallocStr(
         const std::string &hVar, 
         const std::string &typeStr, 
@@ -355,6 +650,9 @@ namespace sphip {
      * Simple functions to reduce cognitive complexity
     */
 
+   /**
+     * TODO
+    */
     void DslCppGenerator::CheckAndGenerateVariables(Function *function, const std::string &loc) {
 
         if(function->getIsMetaUsed()) 
