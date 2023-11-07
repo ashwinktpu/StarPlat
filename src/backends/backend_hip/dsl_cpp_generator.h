@@ -197,7 +197,7 @@ namespace sphip {
         /**
          * TODO
          */
-        void GenerateExpressionProcCallExpression(Expression* expr, bool isMainFile);
+        void GenerateExpressionProcCallExpression(proc_callExpr* expr, bool isMainFile);
 
         /**
          * TODO
@@ -210,6 +210,16 @@ namespace sphip {
          * TODO
          */
         void GenerateMallocStr(const std::string &dVar, const std::string &typeStr, const std::string &sizeOfType);
+
+        /**
+         * TODO
+         */
+        void GenerateInitKernelCall(assignment* assign, bool isMainFile);
+
+        /**
+         * TODO
+         */
+        void GenerateInitKernel(const std::string str);
 
         /**
          * HIP Specific Functions
@@ -262,7 +272,7 @@ namespace sphip {
         /**
          * TODO
          */
-        string GetOperatorString(int operatorId);
+        const string GetOperatorString(int operatorId);
 
         /**
          * TODO
@@ -292,7 +302,8 @@ namespace sphip {
         /**
          * DEPRECATED: Use the constructor for setting the file name
          */
-        [[deprecated("Function is deprecated. Use constructor for setting names instead.")]] void SetFileName(const std::string& fileName);
+        [[deprecated("Function is deprecated. Use constructor for setting names instead.")]] 
+        void SetFileName(const std::string& fileName);
 
     private:
 

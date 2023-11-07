@@ -12,6 +12,8 @@
 #include "../../ast/ASTHelper.cpp"
 #include "dsl_cpp_generator.h"
 
+#define HIT_CHECK std::cout << "Hit at line " << __LINE__ << " of function " << __func__ << " in file " << __FILE__ << "\n";
+
 namespace sphip {
 
     DslCppGenerator::DslCppGenerator(const std::string& fileName, const int threadsPerBlock) : 
@@ -313,14 +315,16 @@ namespace sphip {
             break;
 
         case NODE_ASSIGN:
-            
-            assignment *asst = static_cast<assignment*>(stmt);
+            {
+                assignment *asst = static_cast<assignment*>(stmt);
 
-            if(asst->isDeviceAssignment())
-                GenerateDeviceAssignment(asst, isMainFile);
-            else
-                GenerateAtomicOrNormalAssignment(asst, isMainFile);
-            break;
+                if(asst->isDeviceAssignment())
+                    GenerateDeviceAssignment(asst, isMainFile);
+                else
+                    GenerateAtomicOrNormalAssignment(asst, isMainFile);
+
+                break;
+            }
 
         case NODE_IFSTMT:
             GenerateIfStmt(static_cast<ifStmt*>(stmt), isMainFile);
@@ -343,7 +347,8 @@ namespace sphip {
             break;
 
         case NODE_ITRRBFS:
-            GenerateItrRevBfs(static_cast<iterateReverseBFS*>(stmt), isMainFile);
+            cout << "DOES IT HIT ITRTBFS\n";
+            // GenerateItrRevBfs(static_cast<iterateReverseBFS*>(stmt), isMainFile);
             break;
 
         case NODE_PROCCALLSTMT:
@@ -437,6 +442,124 @@ namespace sphip {
         }
     }
 
+    void DslCppGenerator::GenerateDeviceAssignment(assignment* stmt, bool isMainFile) {
+        cout << "Inside GenerateDeviceAssignment\n";
+
+    }
+
+    void DslCppGenerator::GenerateAtomicOrNormalAssignment(assignment* stmt, bool isMainFile) {
+
+        cout << "Inside GenerateAtomicOrNormalAssignment\n";
+
+    }
+    
+
+    void DslCppGenerator::GenerateIfStmt(ifStmt* stmt, bool isMainFile) {
+
+        dslCodePad& targetFile = isMainFile ? main : header;
+        Expression* condition = stmt->getCondition();
+
+        targetFile.pushString("if (");
+        GenerateExpression(condition, isMainFile);
+        targetFile.pushStringWithNewLine(") {");
+        GenerateStatement(stmt->getIfBody(), isMainFile);
+        targetFile.pushString("} ");
+
+        if(stmt->getElseBody() != NULL) {
+
+            targetFile.pushStringWithNewLine(" else {");
+            GenerateStatement(stmt->getElseBody(), isMainFile);
+            targetFile.pushStringWithNewLine("}");
+        } else {
+            targetFile.NewLine();
+        }
+    }
+
+    void DslCppGenerator::GenerateForAll(forallStmt* stmt, bool isMainFile) {
+
+        dslCodePad& targetFile = isMainFile ? main : header;
+        proc_callExpr* extractElemFunc = stmt->getExtractElementFunc();
+        PropAccess* sourceField = stmt->getPropSource();
+        Identifier* sourceId = stmt->getSource();
+        Identifier* collectionId;
+
+        if(sourceField) 
+            collectionId = sourceField->getIdentifier1();
+
+        if(sourceId)
+            collectionId = sourceId;
+
+        Identifier* iteratorMethodId;
+
+        if(extractElemFunc)
+            iteratorMethodId = extractElemFunc->getMethodId();
+
+        statement* body = stmt->getBody();
+
+        string buffer;
+
+        if(stmt->isForall()) {
+
+            cout << "HIT inside FORALL";
+        } else {
+
+            cout << "HIT inside FORALL ELSE";
+        }
+    }
+
+    void DslCppGenerator::GenerateFixedPoint(fixedPointStmt* stmt, bool isMainFile) {
+
+        //TODO: 
+        cout << "Inside GenerateFixedPoint\n";
+
+    }
+
+    void DslCppGenerator::GenerateReductionCallStmt(reductionCallStmt* stmt, bool isMainFile) {
+
+        cout << "Inside GenerateReductionCallStmt\n";
+
+    }
+
+    void DslCppGenerator::GenerateItrBfs(iterateBFS* stmt, bool isMainFile) {
+
+        cout << "Inside GenerateItrRevBfs\n";
+       
+    }
+
+    void DslCppGenerator::GenerateItrRevBfs(iterateReverseBFS* stmt, bool isMainFile) {
+
+        cout << "Inside GenerateItrRevBfs\n";
+
+    }
+
+    void DslCppGenerator::GenerateProcCallStmt(proc_callStmt* stmt, bool isMainFile) {
+
+        proc_callExpr *proc = stmt->getProcCallExpr();
+        string methodId = proc->getMethodId()->getIdentifier();
+        string nodeCall = "attachNodeProperty";
+        string edgeCall = "attachEdgeProperty";
+
+        if(methodId.compare(nodeCall) == 0) {
+
+            list<argument*> argList = proc->getArgList();
+
+            for(auto itr =  argList.begin(); itr != argList.end(); itr++) {
+
+                GenerateInitKernelCall((*itr)->getAssignExpr(), isMainFile);
+            }
+
+        } else if(methodId.compare(edgeCall) == 0) {
+
+            HIT_CHECK
+
+        } else {
+
+            HIT_CHECK
+
+        }
+        
+    }
+
     void DslCppGenerator::GenerateExpression(
         Expression *expr, bool isMainFile, bool isAtomic
     ) {
@@ -460,7 +583,7 @@ namespace sphip {
             GenerateExpressionRelational(expr, isMainFile);
 
         else if(expr->isProcCallExpr())
-            GenerateExpressionProcCallExpression(expr, isMainFile);
+            GenerateExpressionProcCallExpression(static_cast<proc_callExpr*>(expr), isMainFile);
 
         else if(expr->isUnary())
             GenerateExpressionUnary(expr, isMainFile);
@@ -545,16 +668,21 @@ namespace sphip {
             id2->getSymbolInfo() &&
             id2->getSymbolInfo()->getId()->get_fp_association() &&
             isRelatedToReduction
-        ) {
+        ) 
+            value = string("d") + id2->getIdentifier() + "Next[" + id1->getIdentifier() + "]";
+        else {
 
-            std::string temp =
-            value = "d" 
+            if(isMainFile)
+                value = id2->getIdentifier() + string("[") + id1->getIdentifier() + "]";
+            else
+                value = string("d") + id2->getIdentifier() + "[" + id1->getIdentifier() + "]";
         }
+
+        (isMainFile ? main : header).pushString(value);
     }
 
     void DslCppGenerator::GenerateExpressionArithmeticOrLogical(
-        Expression* expr, bool isMainFile, 
-        bool isAtomic = false
+        Expression* expr, bool isMainFile, bool isAtomic
     ) {
 
         dslCodePad &target = isMainFile ? main : header;
@@ -567,7 +695,7 @@ namespace sphip {
 
         target.AddSpace();
 
-        const std::string operatorString = getOperatorString(expr->getOperatorType());
+        const std::string operatorString = GetOperatorString(expr->getOperatorType());
 
         if(!isAtomic) {
             target.pushString(operatorString);
@@ -604,7 +732,7 @@ namespace sphip {
 
         dslCodePad & targetFile = isMainFile ? main : header;
 
-        string methodId(proc->getMethodId()->getIdentifier());
+        string methodId(expr->getMethodId()->getIdentifier());
 
         if (methodId == "get_edge") 
             targetFile.pushString("edge");
@@ -612,24 +740,56 @@ namespace sphip {
         else if (methodId == "count_outNbrs"){
 
             string strBuffer;
-            list<argument*> argList = proc->getArgList();
+            list<argument*> argList = expr->getArgList();
             assert(argList.size() == 1);
 
             Identifier* nodeId = argList.front()->getExpr()->getId();
 
-            strBuffer = "(d_meta[" + nodeId->getIdentifier() + " + 1] -" +
+            strBuffer = string("(d_meta[") + nodeId->getIdentifier() + " + 1] -" +
                          "d_meta[" + nodeId->getIdentifier() + "]";
 
             targetFile.pushString(strBuffer);
 
         } else if (methodId == "is_an_edge") {
-            
-            string strBuffer;
-            list<argument*> argList = proc->getArgList();
+
+            //TODO: Implement
+            cout << "DANGER HIT";
 
         } else {
             
-            
+            cout << "DANGER HIT";
+        }
+    }
+
+    void DslCppGenerator::GenerateExpressionUnary(
+        Expression* expr, bool isMainFile
+    ) {
+
+        dslCodePad& targetFile = isMainFile ? main : header;
+
+        if (expr->hasEnclosedBrackets()) {
+            targetFile.pushString("(");
+        }
+
+        if (expr->getOperatorType() == OPERATOR_NOT) {
+
+            const string operatorString = GetOperatorString(expr->getOperatorType());
+            targetFile.pushString(operatorString);
+            GenerateExpression(expr->getUnaryExpr(), isMainFile);
+        }
+
+        if (
+            expr->getOperatorType() == OPERATOR_INC ||
+            expr->getOperatorType() == OPERATOR_DEC
+        ) {
+
+            GenerateExpression(expr->getUnaryExpr(), isMainFile);
+            const string operatorString = GetOperatorString(expr->getOperatorType());
+            targetFile.pushString(operatorString);
+        }
+
+        if (expr->hasEnclosedBrackets()) {
+            targetFile.pushString(")");
         }
     }
 

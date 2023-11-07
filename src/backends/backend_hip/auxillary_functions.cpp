@@ -36,7 +36,7 @@ namespace sphip {
         return true;
     }
 
-    string DslCppGenerator::GetOperatorString(int opId) {
+    const string DslCppGenerator::GetOperatorString(int opId) {
 
         switch(opId) {
 

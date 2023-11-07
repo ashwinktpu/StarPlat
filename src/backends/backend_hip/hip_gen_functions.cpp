@@ -103,4 +103,26 @@ namespace sphip {
             (type->isPropNodeType() ? "V" : "E") + "));"
         );
     }
+
+    void DslCppGenerator::GenerateInitKernelCall(assignment* assign, bool isMainFile) {
+
+        Identifier *id = assign->getId();
+        Expression *expr = assign->getExpr();
+
+        const std::string buffer;
+
+        buffer = "initKernel<" + 
+                ConvertToCppType(id->getSymbolInfo()->getType()->getInnerTargetType()) +
+                "><<<numBlocks, numThreads>>>(V, d" +
+                id->getIdentifier() + ", ";
+        
+        (isMainFile ? main : header).pushString(buffer);
+        GenerateExpression(expr, isMainFile);
+        buffer = ");"
+        (isMainFile ? main : header).pushStringWithNewLine(buffer);
+    }
+
+    void DslCppGenerator::GenerateInitKernel(const std::string str) {
+
+    }
 }
