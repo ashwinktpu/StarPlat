@@ -30,6 +30,7 @@ class liveVarsAnalyser
     liveVarsNode* initForAll(forallStmt*, liveVarsNode*);
     liveVarsNode* initIfStmt(ifStmt*, liveVarsNode*);
     liveVarsNode* initIterateBFS(iterateBFS*, liveVarsNode*);
+    liveVarsNode* initIterateRBFS(iterateReverseBFS*, liveVarsNode*);
     liveVarsNode* initProcCall(proc_callStmt*, liveVarsNode*);
     liveVarsNode* initReduction(reductionCallStmt*, liveVarsNode*);
     liveVarsNode* initReturn(returnStmt*, liveVarsNode*);

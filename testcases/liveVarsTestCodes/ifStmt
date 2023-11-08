@@ -1,4 +1,4 @@
-// function with an if statement
+// function with if statements
 
 function test (int n)
 {
@@ -18,7 +18,9 @@ function test (int n)
 
     if( b > 1 )         // "res" should be live here
     {
+        int temp = 7;
         return b;       // "res" should not be live here
+        res = b;
     }
 
     return res;

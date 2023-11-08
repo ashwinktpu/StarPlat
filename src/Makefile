@@ -143,7 +143,7 @@ bin/bv5.o: analyser/blockVars/setVarsInParallel.cpp analyser/blockVars/blockVars
 bin/bv6.o.o: analyser/blockVars/analyserUtil.cpp analyser/blockVars/analyserUtil.h
 	$(CC) $(CFLAGS) -c analyser/blockVars/analyserUtil.cpp -o bin/bv6.o.o
 
-bin/analyserUtil.o: analyser/analyserUtil.cpp
+bin/analyserUtil.o: analyser/analyserUtil.cpp analyser/analyserUtil.h ast/ASTNodeTypes.hpp
 	$(CC) $(CFLAGS) -c analyser/analyserUtil.cpp -o bin/analyserUtil.o
 
 

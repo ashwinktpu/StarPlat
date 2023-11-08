@@ -23,6 +23,9 @@ void liveVarsAnalyser::initFunc(Function* func)
     for(formalParam* param : func->getParamList())
     {
         funcStart->addDef(param->getIdentifier());
+
+        // sets all input parameters as live out
+        // if not required remove this
         funcEnd->addOut(param->getIdentifier());
     }
 
@@ -36,8 +39,12 @@ void liveVarsAnalyser::initFunc(Function* func)
     funcEnd->addPredecessor(blockEnd);
 
     analysecfg(funcEnd);
+    // the funcEnd will not contains any live variables and is just a placeholder
+    // analysis on individual end block needs to be called as follows
+    for(liveVarsNode* node : funcEnd->getPredecessors())
+        analysecfg(node);
 
-    std::cout<<"End liveness graph analysis"<<std::endl<<std::endl;
+    std::cout<<"Liveness graph initialized"<<std::endl<<std::endl;
 
     printLiveVarsNode(func->getBlockStatement());
 
@@ -95,8 +102,6 @@ liveVarsNode* liveVarsAnalyser::initBlockStatement(blockStatement* node, liveVar
 {
     list<statement*> stmts = node->returnStatements();
 
-    //handle the case where block is empty??
-
     for(auto stmt = stmts.begin(); stmt != stmts.end(); stmt++)
     {
         predecessor = initStatement((*stmt), predecessor);
@@ -137,22 +142,60 @@ liveVarsNode* liveVarsAnalyser::initDoWhile(dowhileStmt* node, liveVarsNode* pre
 liveVarsNode* liveVarsAnalyser::initFixedPoint(fixedPointStmt* node, liveVarsNode* predecessor)
 {
     Identifier* fixedPointNode = node->getFixedPointId();
+    Expression* fixedPointExpr = node->getDependentProp();
     statement* bodyNode = node->getBody();
 
     liveVarsNode* condLive = new liveVarsNode(fixedPointNode);
     condLive->addUse(fixedPointNode);
-    condLive->addPredecessor(predecessor);
+    condLive->addVars(getVarsExpr(fixedPointExpr));
 
-    liveVarsNode* bodyEnd = initStatement(bodyNode, condLive);
+    liveVarsNode* fixedPointBegin = new liveVarsNode();
+    fixedPointBegin->addPredecessor(predecessor);
+    fixedPointBegin->addPredecessor(condLive);
+
+    liveVarsNode* bodyEnd = initStatement(bodyNode, fixedPointBegin);
 
     condLive->addPredecessor(bodyEnd);
 
-    return bodyEnd;
+    return condLive;
 }
 
-liveVarsNode* liveVarsAnalyser::initForAll(forallStmt*, liveVarsNode*)
+liveVarsNode* liveVarsAnalyser::initForAll(forallStmt* node, liveVarsNode* predecessor)
 {
-    return nullptr;
+    statement* forAllBody = node->getBody();
+
+    liveVarsNode* condNode = new liveVarsNode(node->getIterator());
+
+    usedVariables condVars;
+    if(node->isSourceProcCall())
+    {
+        condVars.merge(getVarsExprProcCall(node->getExtractElementFunc()));
+        condVars.addVariable(node->getSourceGraph(), READ);
+    }
+    else if(!node->isSourceField())
+    {
+        condVars.addVariable(node->getSource(), READ);
+    }
+    else
+    {
+        condVars.addVariable(node->getPropSource()->getIdentifier1(), READ);
+    }
+
+    if(node->hasFilterExpr())
+        condVars.merge(getVarsExpr(node->getfilterExpr()));
+    
+    condNode->addVars(condVars);
+    condNode->addDef(node->getIterator());
+    condNode->addPredecessor(predecessor);
+
+    liveVarsNode* bodyNode = initStatement(forAllBody, condNode);
+
+    if(!node->isForall())
+    {
+        condNode->addPredecessor(bodyNode);
+    }
+
+    return bodyNode;
 }
 
 liveVarsNode* liveVarsAnalyser::initIfStmt(ifStmt* node, liveVarsNode* predecessor)
@@ -180,9 +223,55 @@ liveVarsNode* liveVarsAnalyser::initIfStmt(ifStmt* node, liveVarsNode* predecess
     return ifEnd;
 }
 
-liveVarsNode* liveVarsAnalyser::initIterateBFS(iterateBFS*, liveVarsNode*)
+liveVarsNode* liveVarsAnalyser::initIterateBFS(iterateBFS* node, liveVarsNode* predecessor)
 {
-    return nullptr;
+    statement* itrBody = node->getBody();
+    
+    liveVarsNode* condLive = new liveVarsNode(node->getIteratorNode());
+    condLive->addPredecessor(predecessor);
+    condLive->addDef(node->getIteratorNode());
+    condLive->addUse(node->getRootNode());
+    condLive->addUse(node->getGraphCandidate());
+
+    usedVariables procLive;
+    procLive.merge(getVarsExprProcCall(node->getMethodCall()));
+    condLive->addVars(procLive);
+
+    predecessor = condLive;
+
+    Expression* expr = node->getBFSFilter();
+    if(expr != nullptr)
+    {
+        liveVarsNode* exprLive  = new liveVarsNode(expr);
+        exprLive->addVars(getVarsExpr(expr));
+        exprLive->addPredecessor(predecessor);
+        predecessor = exprLive;
+    }
+
+    liveVarsNode* itrBodyLive = initStatement(itrBody, predecessor);
+
+    if(node->getRBFS() == nullptr)
+        return itrBodyLive;
+    else
+        return initIterateRBFS(node->getRBFS(), itrBodyLive);
+}
+
+liveVarsNode* liveVarsAnalyser::initIterateRBFS(iterateReverseBFS* node, liveVarsNode* predecessor)
+{
+    Expression* expr = node->getBFSFilter();
+    if(expr != nullptr)
+    {
+        liveVarsNode* exprLive  = new liveVarsNode(expr);
+        exprLive->addVars(getVarsExpr(expr));
+        exprLive->addPredecessor(predecessor);
+        predecessor = exprLive;
+    }
+
+    statement* itrBody = node->getBody();
+
+    liveVarsNode* itrBodyLive = initStatement(itrBody, predecessor);
+
+    return itrBodyLive;
 }
 
 liveVarsNode* liveVarsAnalyser::initProcCall(proc_callStmt* node, liveVarsNode* predecessor)
@@ -209,11 +298,12 @@ liveVarsNode* liveVarsAnalyser::initReturn(returnStmt* node, liveVarsNode* prede
 {
     Expression* returnExpr = node->getReturnExpression();
 
-    std::cout<<"return init"<<std::endl;
-
     liveVarsNode* liveVars = new liveVarsNode(node);
     liveVars->addVars(getVarsExpr(returnExpr));
     liveVars->addPredecessor(predecessor);
+
+    // needs to be updated if the expression involves assignments
+    liveVars->addOut(liveVars->getUse());
 
     currReturnNodes.push_back(liveVars);
 
@@ -321,6 +411,8 @@ void liveVarsAnalyser::printLiveVarsNode(ASTNode* stmt)
         }
         case NODE_FORALLSTMT:
         {
+            printLiveVarsNode(((forallStmt*)stmt)->getIterator());
+            printLiveVarsNode(((forallStmt*)stmt)->getBody());
             break;
         }
         case NODE_IFSTMT:
@@ -333,6 +425,22 @@ void liveVarsAnalyser::printLiveVarsNode(ASTNode* stmt)
         }
         case NODE_ITRBFS:
         {
+            printLiveVarsNode(((iterateBFS*)stmt)->getIteratorNode());
+            Expression* filter = ((iterateBFS*)stmt)->getBFSFilter();
+            if(filter != nullptr)
+                printLiveVarsNode(filter);
+            printLiveVarsNode(((iterateBFS*)stmt)->getBody());
+            iterateReverseBFS* reverse = ((iterateBFS*)stmt)->getRBFS();
+            if(reverse != nullptr)
+                printLiveVarsNode(reverse);
+            break;
+        }
+        case NODE_ITRRBFS:
+        {
+            Expression* filter = ((iterateReverseBFS*)stmt)->getBFSFilter();
+            if(filter != nullptr)
+                printLiveVarsNode(filter);
+            printLiveVarsNode(((iterateReverseBFS*)stmt)->getBody());
             break;
         }
         case NODE_WHILESTMT:
