@@ -235,6 +235,10 @@ int main(int argc, char* argv[]) {
         neigh[i] = G.edgeList[i];
         weight[i] = edgeLens[i];
     }
+    
+    printArray(pos,pn,k);
+    printArray(neigh,wn,k);
+    printArray(weight,wn,k);
 
     cudaHostAlloc(&curSize, sizeof(int), 0);
     cudaHostAlloc(&elemSize, sizeof(int), 0);
