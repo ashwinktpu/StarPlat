@@ -437,18 +437,18 @@ class graph
         int32_t weightVal;
 
            ss>>source; 
-	    e.weight = weightVal;
+	    //e.weight = weightVal;
            if(source>nodesTotal)
               nodesTotal=source;
 
             ss>>destination;  
             if(destination>nodesTotal)
                nodesTotal=destination;  
-
+           ss>>weightVal; 
            e.source=source;
            e.destination=destination;
-           e.weight=1;
-
+           //e.weight=1;
+           e.weight = weightVal;
            edges[source].push_back(e);
            graph_edge.push_back(e);
 
@@ -473,7 +473,7 @@ class graph
    
      printf("Here half\n");
      //printf("HELLO AFTER THIS %d \n",nodesTotal);
-     #pragma omp parallel for 
+     //#pragma omp parallel for 
      for(int i=0;i<=nodesTotal;i++)//change to 1-nodesTotal.
      {
        std::vector<edge>& edgeOfVertex=edges[i];
@@ -532,7 +532,7 @@ class graph
     indexofNodes[nodesTotal+1]=edge_no;//change to nodesTotal+1.
 
    
-     #pragma omp parallel for num_threads(4)
+     //#pragma omp parallel for num_threads(4)
      for(int i=0;i<nodesTotal+1;i++)
        rev_indexofNodes[i] = 0;
    
@@ -545,7 +545,7 @@ class graph
     /* count indegrees first */
    int32_t* edge_indexinrevCSR = new int32_t[edgesTotal];
              
-    #pragma omp parallel for num_threads(4)
+    //#pragma omp parallel for num_threads(4)
     for(int i=0;i<=nodesTotal;i++)
       {
 
@@ -570,7 +570,7 @@ class graph
         rev_indexofNodes[nodesTotal+1] = prefix_sum;
 
     /* store the sources in srcList */
-      #pragma omp parallel for num_threads(4)
+      //#pragma omp parallel for num_threads(4)
       for(int i=0;i<=nodesTotal;i++)
         {
           for(int j=indexofNodes[i];j<indexofNodes[i+1];j++)
@@ -585,7 +585,7 @@ class graph
             }   
         }
         
-      #pragma omp parallel for num_threads(4)
+      //#pragma omp parallel for num_threads(4)
         for(int i=0;i<=nodesTotal;i++)
         {
           std::vector<int> vect;
@@ -671,7 +671,7 @@ class graph
 
    /* edge weights book-keeping for reverse CSR */
 
-    #pragma omp parallel for
+    //#pragma omp parallel for
     for(int i=0;i<edgesTotal;i++)
        {
         /* int e = edgeMap[i];
