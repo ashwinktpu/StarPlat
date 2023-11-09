@@ -1,7 +1,6 @@
 #include <cstdio>        // Added for printf() function 
 #include <sys/time.h>    // Added to get time of day
 #include <cuda.h>
-#include <bits/stdc++.h>
 #include <fstream>
 #include <time.h>
 #include <iostream>
@@ -9,7 +8,7 @@
 
 using namespace std;
 //total size of the heap
-#define maxSize 100
+#define maxSize 1000000
 
 __global__ void Insert_Elem(volatile int *heap,int *d_elements,int *curSize,volatile int *lockArr,int *elemSize,int k){
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
@@ -95,7 +94,12 @@ int getRandom(int lower, int upper)
 void printArray(int arr[],int size,int k)
 {
     for(int i = 0;i<size;i++)
-        printf("%d, ",arr[i]);
+    {
+        if(arr[i] == 10000000)
+            printf("-1, ");
+        else
+            printf("%d, ",arr[i]);
+    }
     
     cout<<endl;
 }
@@ -139,6 +143,36 @@ void heapify(int hp[],int ind,int size,int k)
 
 }
 
+void heapifyBUP(int arr[], int n, int childInd,int k) {
+    // Find parent 
+    int parInd = ((childInd/k - 1)/2) * k;
+    if (parInd >= 0) { 
+        if (arr[childInd] < arr[parInd]) { 
+            for(int i = 0;i<k;i++){
+                int temp = arr[parInd+i];
+                arr[parInd+i] = arr[childInd+i];
+                arr[childInd+i] = temp;
+            }
+            heapifyBUP(arr, n, parInd,k); 
+        } 
+    } 
+}
+
+void insertNode(int arr[], int& n, int Key,int val,int k)
+{
+    // Increase the size of Heap by 2
+    n = n + 1;
+    int childInd = n*k;
+ 
+    // Insert the element at end of Heap
+    arr[childInd - 2] = Key;
+    arr[childInd - 1] = val;
+ 
+    // Heapify the new node following a
+    // Bottom-up approach
+    heapifyBUP(arr, n,childInd-k,k);
+}
+
 void deleteRoot(int arr[], int *n,int k)
 {
     for(int i = 0;i<k;i++){
@@ -180,84 +214,67 @@ void printtime(const char *str, double starttime, double endtime){
     printf("%s%3f seconds\n", str, endtime - starttime);
 }
 
+void serDijkstra(int pos[],int neigh[],int weight[],int wn,int src,int dist[],int V,int k,double &serdijtime)
+{
+    double starttime = rtclock();
+    int hp[maxSize];
+    int cursize = 0; 
+    insertNode(hp, cursize,0,src,k);
+    dist[src] = 0;
+ 
 
-// void edgeListToCSR(){
-//     vector <vector <int>> edge = {{0,1,9}};
+    while (cursize != 0) {
+        int elem = hp[1];
+        deleteRoot(hp,&cursize,k);
+ 
+        int start = pos[elem];
+        int end;
+        if(elem+1 < V)
+            end = pos[elem+1];
+        else
+            end = wn;
 
-//     int n;
-//     cin>>
-// }
+        for(int i = start;i<end;i++)
+        {
+            int v = neigh[i];
+            int wt = weight[i];
+            if (dist[v] > dist[elem] + wt) {
+                // Updating distance of v
+                dist[v] = dist[elem] + wt ;
+                insertNode(hp, cursize,dist[v],v,k);
+            }
+        }
+    }
+    double endtime = rtclock();  
+    serdijtime = endtime - starttime;
+    printtime("Serial Dijkstra Time Taken ", starttime, endtime);
+}
 
-// void init(graph& g,int pos[],int neigh[],int weight[])
-// {
-//     int nV = g.num_nodes();
-//     int nE = g.num_edges();
-    
-// }
+void setGraph(graph &G,int pos[],int neigh[],int V,int E){
 
-int main(int argc, char* argv[]) {
-    graph G(argv[1]);
-	G.parseGraph();
-    srand(time(0));
-    int countvalid = 0;
-    int inivalid = 0;
-    int k = 2;
-
-    int *d_a;
-    int *curSize;
-    int *lockArr;
-    int *elemSize;
-
-    //lets assume i have the input as of now
-    //in the csr format pos[],neigh[],weight[] 
-    //                  pn,  wn
-
-    // int pos[] = {0,2,4};
-    // int neigh[] = {1,2,0,2,0,1};
-    // int weight[] = {1,4,1,2,4,2};
-    int Source = 0;
-
-    int pn = G.num_nodes();
-    int wn = G.num_edges();
-    int V = pn;
-
-    int pos[pn];
-    int neigh[wn];
-    int weight[wn];
-
-    int *edgeLens = G.getEdgeLen();
-
-    for(int i = 0; i < pn; i++) {
+    for(int i = 0; i < V; i++) {
         pos[i] = G.indexofNodes[i];
     }
 
-    for(int i = 0; i < wn; i++) {
+    for(int i = 0; i < E; i++) {
         neigh[i] = G.edgeList[i];
-        weight[i] = edgeLens[i];
     }
-    
-    printArray(pos,pn,k);
-    printArray(neigh,wn,k);
-    printArray(weight,wn,k);
 
-    cudaHostAlloc(&curSize, sizeof(int), 0);
-    cudaHostAlloc(&elemSize, sizeof(int), 0);
-    cudaMalloc(&lockArr,(maxSize)*sizeof(int));
-    cudaMemset(lockArr,0,(maxSize)*sizeof(int));
+    // printArray(pos,pn,k);
+    // printArray(neigh,wn,k);
+    // printArray(weight,wn,k);
 
+    cout <<"No of Verices : "<< V << endl;
+    cout <<"No of Edges   : "<< E << endl;
+}
+
+void parDijkstra(int *curSize, int *elemSize,int *d_elements,int *lockArr,int *d_a,int k,double &pardijtime,int dist[],
+int V,int E,int pos[],int neigh[],int weight[],int Source){
     *curSize = 0;
- 
-    cudaHostAlloc(&d_a, maxSize*k*sizeof(int),0);
-    
-
     *elemSize = 0; //equal to the max degree in the graph
-    int *d_elements;
-    cudaHostAlloc(&d_elements, maxSize * sizeof(int),0);
 
-    int dist[V];
-    for(int i = 0;i<V;i++) dist[i] = 1000;
-    printArray(dist,V,k);
-
+    // printArray(dist,V,k);
+    double starttime = rtclock();  
     dist[Source] = 0;
     *elemSize = 1;
     d_elements[0] = 0;
@@ -269,7 +286,7 @@ int main(int argc, char* argv[]) {
     cudaDeviceSynchronize();
     Insert_Elem<<<block,1024>>>(d_a,d_elements,curSize,lockArr,elemSize,k);
     cudaDeviceSynchronize();
-    cout << *curSize<<endl;
+    // cout << *curSize<<endl;
         
     while(*curSize != 0)
     {
@@ -280,17 +297,17 @@ int main(int argc, char* argv[]) {
         // for(auto neigh : adj[elem])
         int start = pos[elem];
         int end;
-        if(elem+1 < pn)
+        if(elem+1 < V)
             end = pos[elem+1];
         else
-            end = wn;
+            end = E;
 
-        cout << "elem = "<<elem<<", start = "<<start<<", end = "<<end<<endl;
+        // cout << "elem = "<<elem<<", start = "<<start<<", end = "<<end<<endl;
         for(int i = start;i<end;i++)
         {
             int v = neigh[i];
             int wt = weight[i];
-            cout << "dist[elem] = "<<dist[elem]<<", wt = "<<wt<<", v = "<<v<<", dist[v] = "<<dist[v]<<endl;
+            // cout << "dist[elem] = "<<dist[elem]<<", wt = "<<wt<<", v = "<<v<<", dist[v] = "<<dist[v]<<endl;
             if(dist[elem] + wt < dist[v])
             {
                 dist[v] = dist[elem]+wt;
@@ -299,7 +316,7 @@ int main(int argc, char* argv[]) {
                 *elemSize = *elemSize + 1;
             }
         }
-        printArray(d_elements,*elemSize*k,k);
+        // printArray(d_elements,*elemSize*k,k);
         if(*elemSize != 0)
         {
             int block = ceil((float) *elemSize/1024);
@@ -309,12 +326,67 @@ int main(int argc, char* argv[]) {
             cudaDeviceSynchronize();
         }
         // cout << *curSize<<endl;
-        printArray(d_a,*curSize*k,k);
-        printArray(dist,V,k);
-        cout<<"............................................."<<endl;
+        // printArray(d_a,*curSize*k,k);
+        // printArray(dist,V,k);
+        // cout<<"............................................."<<endl;
         
     }
+    double endtime = rtclock();  
+    pardijtime = endtime - starttime;
+    printtime("Parallel Dijkstra Time Taken ", starttime, endtime);
+}
+
+void compareDis(int dist[],int dist2[],int V,int k)
+{
+    int flag = 0;
+    for(int i = 0;i<V;i++){
+        if(dist[i] != dist2[i]){
+            flag++;
+        }
+    }
+
+    cout << "No of Errors : "<<flag << endl;
 
     printArray(dist,V,k);
+    printArray(dist2,V,k);
+}
+
+int main(int argc, char* argv[]) {
+
+    graph G(argv[1]);
+	G.parseGraph();
+    srand(time(0));
+
+    int *d_a,*curSize,*lockArr,*elemSize,Source = 0,*d_elements,k = 2;
+
+    cudaHostAlloc(&curSize, sizeof(int), 0);
+    cudaHostAlloc(&elemSize, sizeof(int), 0);
+    cudaMalloc(&lockArr,(maxSize)*sizeof(int));
+    cudaMemset(lockArr,0,(maxSize)*sizeof(int));
+    cudaHostAlloc(&d_a, maxSize*k*sizeof(int),0);
+    cudaHostAlloc(&d_elements, maxSize * sizeof(int),0);
+
+    int V = G.num_nodes();
+    int E = G.num_edges();
+
+    int pos[V],neigh[E],*weight = G.getEdgeLen();;
+    setGraph(G,pos,neigh,V,E);
+    int dist[V],dist2[V];
+
+    for(int i = 0;i<V;i++) {
+        dist[i] = 10000000;
+        dist2[i] = 10000000;
+    }
+
+    double serdijtime,pardijtime;
+    parDijkstra(curSize,elemSize,d_elements,lockArr,d_a,k,pardijtime,dist,V,E,pos,neigh,weight,Source);
+    serDijkstra(pos,neigh,weight,E,Source,dist2,V,k,serdijtime);
+    
+    double perf = serdijtime/pardijtime;
+    
+    cout << "Performance Gained :"<<perf<<endl;
+
+    compareDis(dist,dist2,V,k);
+
     return 0;
 }
