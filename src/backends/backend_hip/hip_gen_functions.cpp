@@ -34,7 +34,7 @@ namespace sphip {
 
         std::ostringstream oss;
         oss << "hipMemcpy" << "(" << dst
-            << ", " << src << ", " << "sizeof( " << typeStr  
+            << ", " << src << ", " << "sizeof(" << typeStr  
             << ") * (" << sizeOfType << "), "
             << (isHostToDevice ? "hipMemcpyHostToDevice" : "hipMemcpyDeviceToHost")
             << ");";  
@@ -75,15 +75,16 @@ namespace sphip {
 
             if(type->isPropType() && type->getInnerTargetType()->isPrimitiveType()) {
 
-                main.pushString(ConvertToCppType(type->getInnerTargetType()));
-                main.pushString(" * ");
+                // ! FIXME
+                // main.pushString(ConvertToCppType(type->getInnerTargetType()));
+                // main.pushString(" *");
 
                 std::string identifier = (*itr)->getIdentifier()->getIdentifier();
                 identifier[0] = std::toupper(identifier[0]);
-                main.pushString("d" + identifier);
-                main.pushStringWithNewLine(";");
+                // main.pushString("d" + identifier);
+                // main.pushStringWithNewLine(";");
 
-                GenerateHipMalloc(type, (*itr)->getIdentifier()->getIdentifier());
+                // GenerateHipMalloc(type, identifier);
             } 
         }
 
@@ -95,7 +96,10 @@ namespace sphip {
         //TODO
     }
 
-    void DslCppGenerator::GenerateHipMalloc(Type* type, const std::string &identifier) {
+    void DslCppGenerator::GenerateHipMalloc(
+        Type* type, 
+        const std::string &identifier
+    ) {
 
         main.pushStringWithNewLine(
             "hipMalloc(&d" + identifier + ", sizeof(" + 
@@ -106,20 +110,25 @@ namespace sphip {
 
     void DslCppGenerator::GenerateInitKernelCall(assignment* assign, bool isMainFile) {
 
-        Identifier *id = assign->getId();
-        Expression *expr = assign->getExpr();
+        // Identifier *id = assign->getId();
+        // Expression *expr = assign->getExpr();
 
-        const std::string buffer;
+        // std::string buffer;
 
-        buffer = "initKernel<" + 
-                ConvertToCppType(id->getSymbolInfo()->getType()->getInnerTargetType()) +
-                "><<<numBlocks, numThreads>>>(V, d" +
-                id->getIdentifier() + ", ";
+        // std::string parameterName(id->getIdentifier());
+        // parameterName[0] = toupper(parameterName[0]);
+
+        // cout << "--->" << parameterName << "\n"; //! TODO
+
+        // buffer = "initKernel<" + 
+        //         ConvertToCppType(id->getSymbolInfo()->getType()->getInnerTargetType()) +
+        //         "><<<numBlocks, numThreads>>>(V, d" +
+        //         parameterName + ", ";
         
-        (isMainFile ? main : header).pushString(buffer);
-        GenerateExpression(expr, isMainFile);
-        buffer = ");"
-        (isMainFile ? main : header).pushStringWithNewLine(buffer);
+        // (isMainFile ? main : header).pushString(buffer);
+        // GenerateExpression(expr, isMainFile);
+        // buffer = ");";
+        // (isMainFile ? main : header).pushStringWithNewLine(buffer);
     }
 
     void DslCppGenerator::GenerateInitKernel(const std::string str) {
