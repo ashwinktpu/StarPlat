@@ -1,4 +1,4 @@
-__attribute__((always_inline))
+__attribute__((always_inline)
 void dsu_find_inline(__global int* d_dsu,
                        __global int* x,
                        __global int* lock,
