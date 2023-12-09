@@ -9,6 +9,8 @@
 #include <tuple>
 #include <ctime> 
 #include <iomanip>
+#include <set>
+#include <unistd.h>
 
 using namespace std;
 
@@ -67,6 +69,7 @@ void log_message (const string &msg) {
 }
 
 void log_message_push (const string &msg) {
+    return ;
     //  if (no_debug) return ;
     if (evaluate_mode) return ;
     cerr << msg << endl ;
@@ -105,18 +108,45 @@ void input (FILE* graph_file) {
     log_sos ("graph build successful") ;
 }
 
+void fix_gaps (const ll &gap) {
+
+    for (auto &it:heights) {
+        if (it > gap) {
+            it = vx ;
+        }
+    }
+}
+
+
+ll update_gap (set<ll> &mex) {
+
+    ll gap = *(prev (mex.end ())) ;
+    mex.erase (gap) ;
+    int largest = *(prev (mex.end ())) ;
+    log_message ("largest rational height : " + to_string (largest)) ;
+    for (int i = largest; i >= 0; i--) {
+        if (mex.find (i) == mex.end ()) {
+            gap = i ;
+        }
+    }
+    return gap ;
+}
+
 void bfs_label () {
 
+    for (auto &it:heights) {
+        it = vx ;
+    }
 	log_message ("starting bfs : " + to_string (heights.size ())) ;
-    queue<pair<int,int> > q ;
-    q.push ({0,snk}) ;
+    queue<pair<int,int> > q1 ;
+    q1.push ({0,snk}) ;
     vector<int> visited (vx, 0) ;
     int max_level = 0 ;
-    while (!q.empty()) {
+    while (!q1.empty()) {
         int level, u ;
-        tie (level, u) = q.front () ;
+        tie (level, u) = q1.front () ;
         max_level = max (max_level, level) ;
-        q.pop () ;
+        q1.pop () ;
 		if (visited[u]) continue ;
 		log_message ("heighst.size () = " + to_string (heights.size ())) ;
         log_message ("searching through " + to_string (u)) ;
@@ -133,24 +163,27 @@ void bfs_label () {
             // cannot find appropriate representation for flow and reverse flow.
             // Made graph according to residual capacity.
 
-            log_message ("for " + to_string(u) + "->" + to_string(v) + ", flow = " + to_string (capacity - w)) ;
-            log_message ("for " + to_string(v) + "->" + to_string(u) + ", flow = " + to_string (capacity - w)) ;
+            // log_message ("for " + to_string(u) + "->" + to_string(v) + ", flow = " + to_string (capacity - w)) ;
+            // log_message ("for " + to_string(v) + "->" + to_string(u) + ", flow = " + to_string (capacity - w)) ;
 
 
-            if (residual_graph[v][offset].back () == BACKWARD && !visited[v] && w>0) {
-                q.push ({level+1, v}) ;
+            if (/*residual_graph[v][offset].back () == BACKWARD &&*/ !visited[v] && w < capacity) {
+                q1.push ({level+1, v}) ;
             }
         }
     }
-    heights[src] = max_level+1 ;
+
+
+    heights[src] = max_level+1  ;
     log_message ("bfs labeled heights : " ) ;
     log_arr (heights) ;
-	// log_sos ("did bfs again") ;
+    
+	log_sos ("did bfs again") ;
 }
 
 void max_flow_init ()  {
 
-    heights.assign (vx,0) ;
+    heights.assign (vx,vx) ;
     excess.assign (vx, 0) ;
     current_arc.assign (vx, 0) ;
 }
@@ -177,7 +210,7 @@ void set_source_sink (const int &source, const int &sink) {
 
 bool relabel (int u) {
 
-    log_message_push ("relabeling " + to_string (u) + " at height " + to_string (heights[u])) ;
+    // log_message_push ("relabeling " + to_string (u) + " at height " + to_string (heights[u])) ;
     log_message ("=======================================") ;
     log_arr (heights) ;
     log_arr (excess) ;
@@ -192,8 +225,19 @@ bool relabel (int u) {
             minim = min (minim, heights[residual_graph[u][v][0]]) ;
         }
     }
-    heights[u] = minim + 1 ;
-    log_message_push ("new height : " + to_string (heights[u])) ;
+    int obliterate = heights[u] ;
+    heights[u] = min (minim + 1, (ll)vx) ;
+    // log_message ("new height : " + to_string (heights[u])) ;
+
+    // set<ll> mex (heights.begin (), heights.end ()) ;
+    // ll gap = update_gap (mex) ;
+    // log_message ("gap = " + to_string (gap)) ;
+    // fix_gaps (gap) ;
+    log_arr (heights) ;
+    // sleep (30) ;
+
+    if (heights[u] == obliterate) return false ;
+
     return true ;
 }
 
@@ -202,8 +246,8 @@ bool push (const int &u, const int &v) {
 
     assert (excess[u] > 0 && (heights[u] >= heights[v] + 1) ); 
     ll delta = min (excess[u], residual_graph[u][current_arc[u]][1]) ;
-    log_message_push ("pushing flow from " + to_string(u) + " to " + to_string (v) + " of val " + to_string (delta)) ;
-    log_message_push ("heights : " + to_string (heights[u]) + " and " + to_string(heights[v])) ;
+    // log_message_push ("pushing flow from " + to_string(u) + " to " + to_string (v) + " of val " + to_string (delta)) ;
+    // log_message_push ("heights : " + to_string (heights[u]) + " and " + to_string(heights[v])) ;
     residual_graph[u][current_arc[u]][1]-=delta ;
     log_graph (residual_graph) ;
     residual_graph[v][residual_graph[u][current_arc[u]][2]][1]+=delta ;
@@ -220,8 +264,7 @@ void discharge (const int &u) {
 
     while (excess[u]>0) {
         
- 
-        log_sos (to_string (active.size ()) + " " + to_string(active.front ()) + " " + to_string (excess[active.front ()])) ;
+        // log_sos (to_string (active.size ()) + " " + to_string(active.front ()) + " " + to_string (excess[active.front ()])) ;
         
 		if (counter_to_global_relabel==15) {
 			counter_to_global_relabel=0 ;
@@ -236,10 +279,14 @@ void discharge (const int &u) {
             else 
                 current_arc[u]++;
         } else {
-            relabel(u);
+            // relabel(u);
+
+            if (relabel(u) == false ) {
+                return ;
+            }
             current_arc[u] = 0;
         }
-		counter_to_global_relabel++ ;
+		// counter_to_global_relabel++ ;
     }
 }
 
@@ -247,8 +294,11 @@ void max_flow () {
 
     while (!active.empty () ) {
 
+        log_message ("number of items in queue : " + to_string (active.size ())) ;
+        log_message ("queue element label : " + to_string (active.front ())) ;
         int u = active.front () ;
         active.pop () ;
+        log_message ("popped it out ") ;
         if (u!=src && u!=snk) 
         discharge (u) ;
         log_arr (excess) ;
