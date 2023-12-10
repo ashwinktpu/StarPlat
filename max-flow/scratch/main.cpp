@@ -35,9 +35,11 @@ vi current_arc ;
 vvi graph ;
 vvii residual_graph ;
 vvi edges ;
+vi count ;
 q active ;
-int vx, e, src, snk ;
-int counter_to_global_relabel=0 ;
+ll vx, e, src, snk ;
+ll counter_to_global_relabel=0 ;
+ll pointer_1, pointer_2 ;
 
 void fileIO(){
     freopen("input.txt", "r", stdin);
@@ -85,8 +87,8 @@ void input (FILE* graph_file) {
 
     string s ;
     vx = 0, e = 0 ;
-    int u, v, w ;
-    while (fscanf (graph_file, "%d %d %d", &u, &v, &w) == 3) {
+    ll u, v, w ;
+    while (fscanf (graph_file, "%lld %lld %lld", &u, &v, &w) == 3) {
 
         edges.push_back ({u,v,w}) ;
         vx = max (vx, v) ;
@@ -118,18 +120,24 @@ void fix_gaps (const ll &gap) {
 }
 
 
-ll update_gap (set<ll> &mex) {
+ll update_gap (const ll &obliterate, const ll &current) {
 
-    ll gap = *(prev (mex.end ())) ;
-    mex.erase (gap) ;
-    int largest = *(prev (mex.end ())) ;
-    log_message ("largest rational height : " + to_string (largest)) ;
-    for (int i = largest; i >= 0; i--) {
-        if (mex.find (i) == mex.end ()) {
-            gap = i ;
+    count[obliterate]-- ;
+    count[current]++ ;
+
+    pointer_1 = max (pointer_1, current) ;
+
+    if (obliterate == pointer_1 && count[obliterate] == 0) {
+        for (; pointer_1 >= 0; pointer_1--) {
+            if (count[pointer_1]) break ;
         }
     }
-    return gap ;
+
+    for (; pointer_2 >= 0; pointer_2--) {
+        if (!count[pointer_2]) break ;
+    }
+
+    return pointer_2 ; // pointer_2 is the gap.
 }
 
 void bfs_label () {
@@ -160,13 +168,6 @@ void bfs_label () {
             int offset = x[2] ;
 			int capacity = residual_graph[v][offset][1] ;
 
-            // cannot find appropriate representation for flow and reverse flow.
-            // Made graph according to residual capacity.
-
-            // log_message ("for " + to_string(u) + "->" + to_string(v) + ", flow = " + to_string (capacity - w)) ;
-            // log_message ("for " + to_string(v) + "->" + to_string(u) + ", flow = " + to_string (capacity - w)) ;
-
-
             if (/*residual_graph[v][offset].back () == BACKWARD &&*/ !visited[v] && w < capacity) {
                 q1.push ({level+1, v}) ;
             }
@@ -181,11 +182,28 @@ void bfs_label () {
 	log_sos ("did bfs again") ;
 }
 
+void initialize_count_ds () {
+
+    for (auto &height:heights) {
+        count[height]++ ;
+        pointer_1 = max ((ll)pointer_1, height) ;
+    }
+    log_message ("count array : ") ;
+    log_arr (count) ;
+    log_message ("pointer_1 = " + to_string (pointer_1)) ;
+    pointer_2 = vx ;
+    for (; pointer_2 >= 0; pointer_2--) {
+        if (!count[pointer_2]) break ;
+    }
+    log_message ("pointer_2 = " + to_string (pointer_2)) ;
+}
+
 void max_flow_init ()  {
 
     heights.assign (vx,vx) ;
     excess.assign (vx, 0) ;
     current_arc.assign (vx, 0) ;
+    count.assign (vx+5, 0) ;
 }
 
 void set_source_sink (const int &source, const int &sink) {
@@ -230,9 +248,12 @@ bool relabel (int u) {
     // log_message ("new height : " + to_string (heights[u])) ;
 
     // set<ll> mex (heights.begin (), heights.end ()) ;
+
+    ll gap = update_gap (obliterate, heights[u]) ;
     // ll gap = update_gap (mex) ;
-    // log_message ("gap = " + to_string (gap)) ;
-    // fix_gaps (gap) ;
+    log_message ("gap = " + to_string (gap)) ;
+    fix_gaps (gap) ;
+    log_message ("heights :") ;
     log_arr (heights) ;
     // sleep (30) ;
 
@@ -308,6 +329,7 @@ void max_flow () {
 
 int main (int argc, char** argv) {
     //fileIO();
+
 	char* file_path = argv[1] ;
 	FILE* graph_file = fopen (file_path, "r") ;
 	log_sos (file_path) ;
@@ -315,29 +337,37 @@ int main (int argc, char** argv) {
 		log_sos ("FILE NOT FOUND") ;
 		return 1 ;
 	}
+
     auto start_tick = std::chrono::steady_clock::now () ;
 	log_sos ("starting the code") ;
     input (graph_file) ;
     auto input_done_tick = std::chrono::steady_clock::now () ;
-    auto duration = std::chrono::duration_cast <std::chrono::microseconds> (input_done_tick-start_tick) ;
+    auto duration = std::chrono::duration_cast <std::chrono::minutes> (input_done_tick-start_tick) ;
     log_sos ("Input time : " +  to_string(duration.count ()) + " us") ;
 	log_sos ("input OK") ;
+
     max_flow_init () ;
 	log_sos ("init OK") ;
+
     int source = 0 ;
     int sink = 1 ;
     set_source_sink (source, sink) ;
 	log_sos ("source and sink OK ") ;
+
     bfs_label () ;
+    initialize_count_ds () ;
+    log_sos ("counts made OK") ;
     auto bfs_tick = std::chrono::steady_clock::now () ;
-    duration = std::chrono::duration_cast <std::chrono::microseconds> (bfs_tick-start_tick) ;
+    duration = std::chrono::duration_cast <std::chrono::minutes> (bfs_tick-start_tick) ;
     log_sos ("bfs time : " +  to_string(duration.count ()) + " us") ;
 	log_sos ("bfs labelling OK " ) ; 
+
     max_flow () ;
 	log_sos ("max flow successful ") ; 
     auto end_tick = std::chrono::steady_clock::now () ;
-    duration = std::chrono::duration_cast <std::chrono::microseconds> (end_tick-start_tick) ;
-    log_sos ("total time : " + to_string (duration.count()) + " us") ;
+    duration = std::chrono::duration_cast <std::chrono::minutes> (end_tick-input_done_tick) ;
+    log_sos ("total time : " + to_string (duration.count()) + " s") ;
+
     log_arr (excess) ;
     cout << excess[sink] << endl ;
   return 0;
