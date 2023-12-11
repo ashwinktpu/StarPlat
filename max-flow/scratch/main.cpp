@@ -110,17 +110,19 @@ void input (FILE* graph_file) {
     log_sos ("graph build successful") ;
 }
 
-void fix_gaps (const ll &gap) {
+void fix_gaps () {
 
+    for (pointer_2 = pointer_1; pointer_2>=0 ; pointer_2--) if (!count[pointer_2]) break ;
+    cout << "gap = " << pointer_2 << endl ;
     for (auto &it:heights) {
-        if (it > gap) {
+        if (it > pointer_2) {
             it = vx ;
         }
     }
 }
 
 
-ll update_gap (const ll &obliterate, const ll &current) {
+void update_gap (const ll &obliterate, const ll &current) {
 
     count[obliterate]-- ;
     count[current]++ ;
@@ -132,12 +134,6 @@ ll update_gap (const ll &obliterate, const ll &current) {
             if (count[pointer_1]) break ;
         }
     }
-
-    for (; pointer_2 >= 0; pointer_2--) {
-        if (!count[pointer_2]) break ;
-    }
-
-    return pointer_2 ; // pointer_2 is the gap.
 }
 
 void bfs_label () {
@@ -228,7 +224,7 @@ void set_source_sink (const int &source, const int &sink) {
 
 bool relabel (int u) {
 
-    // log_message_push ("relabeling " + to_string (u) + " at height " + to_string (heights[u])) ;
+    log_sos (to_string (u) + " " + to_string (heights[u])) ;
     log_message ("=======================================") ;
     log_arr (heights) ;
     log_arr (excess) ;
@@ -249,10 +245,10 @@ bool relabel (int u) {
 
     // set<ll> mex (heights.begin (), heights.end ()) ;
 
-    ll gap = update_gap (obliterate, heights[u]) ;
+    update_gap (obliterate, heights[u]) ;
     // ll gap = update_gap (mex) ;
-    log_message ("gap = " + to_string (gap)) ;
-    fix_gaps (gap) ;
+    // log_message ("gap = " + to_string (gap)) ;
+    // fix_gaps (gap) ;
     log_message ("heights :") ;
     log_arr (heights) ;
     // sleep (30) ;
@@ -290,7 +286,9 @@ void discharge (const int &u) {
 		if (counter_to_global_relabel==15) {
 			counter_to_global_relabel=0 ;
             // log_sos (to_string (active.size ()) + " " + to_string(active.front ()) + " " + to_string (excess[active.front ()])) ;
-			bfs_label () ;
+			// bfs_label () ;
+            log_sos ("gap = " + to_string (pointer_2)) ;
+            fix_gaps () ;
 		}
 
         if (current_arc[u] < residual_graph[u].size ()) {
@@ -307,15 +305,14 @@ void discharge (const int &u) {
             }
             current_arc[u] = 0;
         }
-		// counter_to_global_relabel++ ;
+		counter_to_global_relabel++ ;
     }
 }
 
 void max_flow () {
-
+  
     while (!active.empty () ) {
 
-        log_message ("number of items in queue : " + to_string (active.size ())) ;
         log_message ("queue element label : " + to_string (active.front ())) ;
         int u = active.front () ;
         active.pop () ;
