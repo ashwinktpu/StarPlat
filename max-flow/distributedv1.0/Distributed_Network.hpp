@@ -39,14 +39,15 @@ class Distributed_Network {
 
         Distributed_Network (char* file_name, const int &source, const int &sink, const int &my_rank, const int &size)  {
             
+            
             FILE* graph_file = fileIO (file_name) ; 
             input (graph_file) ; 
+            
             this->p_no = my_rank ;
 
             MPI_Allreduce (&g_vx, &global_vertices, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD) ;
             global_vertices++ ;
             MPI_Allreduce (&e, &global_edges, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD) ;
-
             max_distributed_flow_init (my_rank, source, sink, v_id, global_vertices, heights, excess, CAND, work_list, heights_buffer, excess_buffer, CAND_buffer, work_list_buffer) ;
 
             active_nodes = 1 ;
