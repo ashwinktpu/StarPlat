@@ -20,6 +20,7 @@
 #include <unordered_map>
 #include <mpi.h>
 #include <string.h>
+#include <unordered_set>
 
 using namespace std;
 
@@ -41,6 +42,7 @@ const int evaluate_mode = 0 ;
 
 unordered_map <int,int> local_to_global ;
 unordered_map <int,int> global_to_local ;
+unordered_set <int> native_vertex ;
 vi current_arc ;
 vvi graph ;
 vvii residual_graph ;
@@ -129,13 +131,16 @@ void input (FILE* graph_file) {
         
         make_entry (u) ;
         make_entry (v) ;
+        native_vertex.insert (u) ;
         edges.push_back ({global_to_local[u],global_to_local[v],w,p}) ;
         g_vx = max (g_vx, v) ;
         g_vx = max (g_vx, u) ;
         e++ ;
     }
 
-    v_id++ ; 
+    v_id+=2 ; 
+
+    residual_graph.resize (v_id) ;
 
     log_message ("input successful") ;
 	log_message (" number of vertices : " + to_string (v_id)) ;
@@ -146,19 +151,10 @@ void input (FILE* graph_file) {
 
     for (auto &edge:edges) {
 
-        try {
-            residual_graph[edge[0]].push_back ({edge[1], edge[2], (ll)residual_graph[edge[1]].size (),FORWARD, edge[3]}) ;
-        }
-        catch (...) {
-            log_message ("failed at " + to_string (edge[0])) ;
-        }
-
-        try {
+            // log_message (to_string (edge[0]) + " " + to_string (edge[1]) + " total vx = " + to_string (v_id)) ;
+            residual_graph[edge[0]].push_back ({edge[1], edge[2], (ll)residual_graph[edge[1]].size (),FORWARD, edge[3]}) ;   
             residual_graph[edge[1]].push_back ({edge[0], 0, (ll)residual_graph[edge[0]].size ()-1ll, BACKWARD, edge[3]}) ;        
-        }
-        catch (...) {
-            log_message ("failed at " + to_string (edge[1])) ;
-        }
+        
         
     }
     log_sos ("graph build successful") ;
