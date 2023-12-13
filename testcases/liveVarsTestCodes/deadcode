@@ -1,0 +1,19 @@
+// function with dead code
+
+function test (int n)
+{
+    int res;
+    int a = 1;
+
+    if( n > 0 )
+    {
+        res = a + 3;
+    }
+    else
+    {
+        res = a - 3;
+        a--;
+    }
+
+    return res;
+}

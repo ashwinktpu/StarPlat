@@ -50,6 +50,12 @@ void liveVarsAnalyser::initFunc(Function* func)
 
     std::cout<<"End liveness analysis"<<std::endl;
 
+    std::cout<<"Dead code elimination"<<std::endl;
+
+    eliminateDeadcode(func->getBlockStatement());
+
+    std::cout<<"Dead code elimination finished"<<std::endl;
+
     return;
 }
 
@@ -473,6 +479,114 @@ void liveVarsAnalyser::printLiveVarsNode(ASTNode* stmt)
             for(TableEntry* t : node->getOut())
                 std::cout<<t->getId()->getIdentifier()<<", ";
             std::cout<<std::endl<<std::endl;
+            break;
+        }
+    }
+    return;
+}
+
+void liveVarsAnalyser::eliminateDeadcode(ASTNode* stmt)
+{
+    if(stmt == nullptr)
+    {
+        std::cout<<"Error: null ASTNode pointer"<<std::endl;
+    }
+
+    switch(stmt->getTypeofNode())
+    {
+        case NODE_BLOCKSTMT:
+        {
+            list<statement*> stmtlist = ((blockStatement*)stmt)->returnStatements(); 
+            for(auto s = stmtlist.begin(); s != stmtlist.end(); s++)
+                eliminateDeadcode(*s);
+            break;
+        }
+        case NODE_DOWHILESTMT:
+        {
+            eliminateDeadcode(((dowhileStmt*)stmt)->getBody());
+            break;
+        }
+        case NODE_FIXEDPTSTMT:
+        {
+            eliminateDeadcode(((fixedPointStmt*)stmt)->getBody());
+            break;
+        }
+        case NODE_FORALLSTMT:
+        {
+            eliminateDeadcode(((forallStmt*)stmt)->getBody());
+            break;
+        }
+        case NODE_IFSTMT:
+        {
+            eliminateDeadcode(((ifStmt*)stmt)->getIfBody());
+            if(((ifStmt*)stmt)->getElseBody())
+                eliminateDeadcode(((ifStmt*)stmt)->getElseBody());
+            break;
+        }
+        case NODE_ITRBFS:
+        {
+            eliminateDeadcode(((iterateBFS*)stmt)->getBody());
+            iterateReverseBFS* reverse = ((iterateBFS*)stmt)->getRBFS();
+            if(reverse != nullptr)
+                eliminateDeadcode(reverse);
+            break;
+        }
+        case NODE_ITRRBFS:
+        {
+            eliminateDeadcode(((iterateReverseBFS*)stmt)->getBody());
+            break;
+        }
+        case NODE_WHILESTMT:
+        {
+            eliminateDeadcode(((whileStmt*)stmt)->getBody());
+            break;
+        }
+        default:
+        {
+            liveVarsNode* node = stmt->getLiveVarsNode();
+
+            if(node->getPredecessors().empty())
+            {
+                std::set<liveVarsNode*> successors = node->getSuccessors();
+                for(auto itr = successors.begin(); itr != successors.end(); itr++)
+                {
+                    (*itr)->removePredecessor(node);
+                }
+                blockStatement* parent = (blockStatement*)stmt->getParent();
+                parent->removeStatement((statement*)stmt);
+                std::cout<<"node without predecessor"<<std::endl;
+            }
+
+            std::set<TableEntry*> def = node->getDef();
+            std::set<TableEntry*> out = node->getOut();
+
+            bool deadcode = stmt->getTypeofNode() == NODE_RETURN ? false : true;
+
+            if(deadcode)
+            {
+                for(auto itr = def.begin(); itr != def.end(); itr++)
+                {
+                    if(out.find(*itr) != out.end())
+                    {
+                        deadcode = false;
+                        break;
+                    }
+                }
+            }
+
+            if(deadcode)
+            {
+                std::set<liveVarsNode*> successors = node->getSuccessors();
+                std::set<liveVarsNode*> predecessors = node->getPredecessors();
+                for(auto itr = successors.begin(); itr != successors.end(); itr++)
+                {
+                    (*itr)->removePredecessor(node);
+                    (*itr)->addPredecessors(predecessors);
+                }
+                blockStatement* parent = (blockStatement*)stmt->getParent();
+                parent->removeStatement((statement*)stmt);
+                std::cout<<"node with dead code"<<std::endl;
+            }
             break;
         }
     }

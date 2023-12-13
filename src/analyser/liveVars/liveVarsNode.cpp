@@ -97,6 +97,13 @@ void liveVarsNode::addPredecessors(set<liveVarsNode*> pred)
         predecessors.insert(*p);
 }
 
+void liveVarsNode::removePredecessor(liveVarsNode* pred)
+{
+    auto itr = predecessors.find(pred);
+    if(itr != predecessors.end())
+        predecessors.erase(itr);
+}
+
 void liveVarsNode::addSuccessor(liveVarsNode* succ)
 {
     successors.insert(succ);
