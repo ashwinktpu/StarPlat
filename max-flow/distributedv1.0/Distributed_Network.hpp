@@ -52,9 +52,23 @@ class Distributed_Network {
             
             this->p_no = my_rank ;
 
+            int local_vertices = v_id ;
+
             MPI_Allreduce (&g_vx, &global_vertices, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD) ;
             global_vertices++ ;
             MPI_Allreduce (&e, &global_edges, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD) ;
+            heights_buffer = (int*)malloc (sizeof(int)*local_vertices) ;
+            excess_buffer = (int*)malloc (sizeof(int)*local_vertices) ;
+            CAND_buffer = (int*)malloc (sizeof(int)*local_vertices) ;
+            work_list_buffer = (int*)malloc (sizeof(int)*local_vertices) ;
+
+            memset (heights_buffer, 0, sizeof(int)*local_vertices) ;
+            memset (excess_buffer, 0, sizeof(int)*local_vertices) ;
+            memset (CAND_buffer, 0, sizeof(int)*local_vertices) ;
+            memset (work_list_buffer, 0, sizeof(int)*local_vertices) ;
+
+            MPI_Barrier (MPI_COMM_WORLD) ;
+
             max_distributed_flow_init (my_rank, source, sink, v_id, global_vertices, heights, excess, CAND, work_list, heights_buffer, excess_buffer, CAND_buffer, work_list_buffer) ;
             log_message ("Initialization OK ")  ;
             MPI_Barrier (MPI_COMM_WORLD) ;
@@ -114,15 +128,6 @@ class Distributed_Network {
 void Distributed_Network::max_distributed_flow_init (const int &my_rank, const int &source, const int &sink, const int &local_vertices, const int &global_vertices, MPI_Win heights, MPI_Win excess, MPI_Win CAND, MPI_Win work_list, int *heights_buffer, int *excess_buffer, int *cand_buffer, int *work_list_buffer) {
 
     // declare the arrays.
-    heights_buffer = (int*)malloc (sizeof(int)*local_vertices) ;
-    excess_buffer = (int*)malloc (sizeof(int)*local_vertices) ;
-    cand_buffer = (int*)malloc (sizeof(int)*local_vertices) ;
-    work_list_buffer = (int*)malloc (sizeof(int)*local_vertices) ;
-
-    memset (heights_buffer, 0, sizeof(int)*local_vertices) ;
-    memset (excess_buffer, 0, sizeof(int)*local_vertices) ;
-    memset (cand_buffer, 0, sizeof(int)*local_vertices) ;
-    memset (work_list_buffer, 0, sizeof(int)*local_vertices) ;
 
 
     MPI_Barrier (MPI_COMM_WORLD) ;
