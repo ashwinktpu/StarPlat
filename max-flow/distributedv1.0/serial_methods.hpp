@@ -22,9 +22,11 @@
 #include <string.h>
 #include <unordered_set>
 
+#include "debug.hpp"
+
 using namespace std;
 
-typedef long long ll;
+typedef int ll;
 typedef vector<ll> vi;
 typedef vector<vi> vvi ;
 typedef pair<ll,ll> ii ;
@@ -34,11 +36,6 @@ typedef queue<ll> q ;
 
 #define FORWARD 0 
 #define BACKWARD 1 
-
-
-const int no_debug = 0 ;
-const int log_emergency=1 ;
-const int evaluate_mode = 0 ;
 
 unordered_map <int,int> local_to_global ;
 unordered_map <int,int> global_to_local ;
@@ -53,50 +50,11 @@ ll g_vx, e, src, snk, v_id ;
 ll counter_to_global_relabel=0 ;
 ll pointer_1, pointer_2 ;
 
-
-
-void log_graph (vvii &a) {
-    if (evaluate_mode) return ;
-    if (no_debug) return ;
-    for (int i=0; i<a.size (); i++) {
-        for (auto &it1:a[i]) {
-            cerr <<i << " : " << it1[0] << " " << it1[1] << " " << it1[2] << " " << it1[3] << endl;
-        }
-    }
-}
-
-void log_arr (vi &a) {
-    if (evaluate_mode) return ;
-    if (no_debug) return ;
-    for (auto &it:a) {
-        cerr << it << " " ;
-    }
-    cerr << endl ;
-}
-
-void log_message (const string &msg) {
-    if (evaluate_mode) return ;
-     if (no_debug) return ;
-    cerr << msg << endl ;
-}
-
-void log_message_push (const string &msg) {
-    return ;
-    //  if (no_debug) return ;
-    if (evaluate_mode) return ;
-    cerr << msg << endl ;
-}
-
-void log_sos (const string &msg) {
-    if (evaluate_mode) return ;
-	if (!log_emergency) return ;
-	cout << msg << endl ;
-}
-
 void make_entry (const int &x) {
 
     if (global_to_local.find (x) == global_to_local.end ()) {
             global_to_local[x] = v_id ;
+            local_to_global[v_id] = x ;
             v_id++ ;
         }
 }
@@ -127,7 +85,7 @@ void input (FILE* graph_file) {
     string s ;
     g_vx = 0, e = 0, v_id = 0 ;
     ll u, v, w, p ;
-    while (fscanf (graph_file, "%lld %lld %lld %lld", &u, &v, &w, &p) == 4) {
+    while (fscanf (graph_file, "%d %d %d %d", &u, &v, &w, &p) == 4) {
         
         make_entry (u) ;
         make_entry (v) ;
@@ -152,8 +110,8 @@ void input (FILE* graph_file) {
     for (auto &edge:edges) {
 
             // log_message (to_string (edge[0]) + " " + to_string (edge[1]) + " total vx = " + to_string (v_id)) ;
-            residual_graph[edge[0]].push_back ({edge[1], edge[2], (ll)residual_graph[edge[1]].size (),FORWARD, edge[3]}) ;   
-            residual_graph[edge[1]].push_back ({edge[0], 0, (ll)residual_graph[edge[0]].size ()-1ll, BACKWARD, edge[3]}) ;        
+            residual_graph[edge[0]].push_back ({edge[1], edge[2], (int)residual_graph[edge[1]].size (),FORWARD, edge[3]}) ;   
+            residual_graph[edge[1]].push_back ({edge[0], 0, (int)residual_graph[edge[0]].size ()-1, BACKWARD, edge[3]}) ;        
         
         
     }
