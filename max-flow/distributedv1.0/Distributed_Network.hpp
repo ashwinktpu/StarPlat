@@ -17,13 +17,13 @@
 // #include "distributed_methods.hpp"
 // #include "max_flow_init_distributed_2_sided.hpp"
 // #include "discharge.hpp"
-#include "synchronizer.hpp"
+#include "synchronize_rma.hpp"
 #include <mpi.h>
 
 
 class Distributed_Network {
 
-    private:
+    public:
         int source ;
         int sink ;
         int global_vertices ;
@@ -39,7 +39,6 @@ class Distributed_Network {
         queue<int> active_vertices ;
         int active_nodes ;
     
-    public:
 
         void max_distributed_flow_init (const int &my_rank, const int &source, const int &sink, const int &local_vertices, const int &global_vertices, MPI_Win heights, MPI_Win excess, MPI_Win CAND, MPI_Win work_list, int *heights_buffer, int *excess_buffer, int *cand_buffer, int *work_list_buffer) ;
 
@@ -59,7 +58,7 @@ class Distributed_Network {
             MPI_Allreduce (&e, &global_edges, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD) ;
             heights_buffer = (int*)malloc (sizeof(int)*local_vertices) ;
             excess_buffer = (int*)malloc (sizeof(int)*local_vertices) ;
-            CAND_buffer = (int*)malloc (sizeof(int)*local_vertices) ;
+            CAND_buffer = (int*)malloc (sizeof(int)*local_vertices+1) ;
             work_list_buffer = (int*)malloc (sizeof(int)*local_vertices) ;
 
             memset (heights_buffer, 0, sizeof(int)*local_vertices) ;
@@ -69,8 +68,14 @@ class Distributed_Network {
 
             MPI_Barrier (MPI_COMM_WORLD) ;
 
+            MPI_Win_create (heights_buffer, (sizeof(int)*local_vertices), 1, MPI_INFO_NULL, MPI_COMM_WORLD, &heights) ;
+            MPI_Win_create (excess_buffer, (sizeof(int)*local_vertices), 1, MPI_INFO_NULL, MPI_COMM_WORLD, &excess) ;
+            MPI_Win_create (CAND_buffer, (sizeof(int)*local_vertices),1, MPI_INFO_NULL, MPI_COMM_WORLD, &CAND) ;
+            MPI_Win_create (work_list_buffer, (sizeof(int)*local_vertices), 1, MPI_INFO_NULL, MPI_COMM_WORLD, &work_list) ;
+
             max_distributed_flow_init (my_rank, source, sink, v_id, global_vertices, heights, excess, CAND, work_list, heights_buffer, excess_buffer, CAND_buffer, work_list_buffer) ;
             log_message ("Initialization OK ")  ;
+            log_message (to_string (p_no) + " has " + to_string (active_vertices.size ())) ;
             MPI_Barrier (MPI_COMM_WORLD) ;
               for (int i=0; i< v_id; i++) {
                 if (excess_buffer[i] > 0) {
@@ -103,17 +108,25 @@ class Distributed_Network {
             // start pulse.
             MPI_Barrier (MPI_COMM_WORLD) ;
 
-            while (!active_vertices.empty ()) {
-                altered_heights.push_back (discharge (active_vertices.front())) ;
-                active_vertices.pop () ;
+            while (1) {
+                int u = (!active_vertices.empty ()) ? active_vertices.front () : -1 ;
+                altered_heights.push_back (discharge (u)) ;
+                log_message ("exited discharge OK" + to_string (p_no)) ;
+                MPI_Barrier (MPI_COMM_WORLD) ;
+                if (!active_vertices.empty()) active_vertices.pop () ;
+                int flag = (u==-1)?1:0 ;
+                int decision ;
+                MPI_Allreduce (&u,&decision, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD) ;
+
+                MPI_Barrier (MPI_COMM_WORLD) ;
+                if (decision == 4) break ;
             }
 
             // end pulse.
             MPI_Barrier (MPI_COMM_WORLD) ;
 
             // synchronize the heights.
-            if (altered_heights.size ())
-                synchronize (altered_heights, heights_buffer, v_id) ;
+            
             int locally_active = active_vertices.size () ;
             MPI_Allreduce (&active_nodes, &locally_active, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD) ;
             // log_message ("pulse over, active nodes = " + to_string (active_nodes)) ;
@@ -136,29 +149,31 @@ void Distributed_Network::max_distributed_flow_init (const int &my_rank, const i
     log_message ("mem init OK") ;
 
     if (native_vertex.find (source) != native_vertex.end ()) {
-        log_message ("source is inside " + to_string (my_rank)) ;
+        // log_message ("source is inside " + to_string (my_rank)) ;
         for (int v_idx = 0 ; v_idx < residual_graph[source].size (); v_idx++ ){
             
             int v = residual_graph[src][v_idx][0] ;
-            log_message ("size comp : " + to_string (v) + " total = " + to_string (local_vertices)) ;
+            // log_message ("size comp : " + to_string (v) + " total = " + to_string (local_vertices)) ;
             residual_graph[v][residual_graph[src][v_idx][2]][1] += residual_graph[src][v_idx][1] ;
             int this_capacity = excess_buffer[v]; 
             this_capacity += residual_graph[src][v_idx][1] ;
             int to_proc = residual_graph[v][residual_graph[src][cand_buffer[src]][2]][4] ;
             
-            if (to_proc == p_no) {
-                
-                excess_buffer[v] += this_capacity ;
-            } else {
+            
+            excess_buffer[v] += this_capacity ;
+            if (to_proc != p_no) {
                 syncer.push_back ({my_rank, residual_graph[src][v_idx][4], local_to_global[v], this_capacity}) ;
             }
 
             residual_graph[src][v_idx][1] = 0 ;
-            if (this_capacity > 0 && v!= src && v!=snk) {
-                if (native_vertex.find (v) != native_vertex.end ()) {
+            if (excess_buffer[v] > 0 && v!= src && v!=snk) {
+                // log_message ("adding to active queue : " + to_string (v) + " excess = " + to_string (excess_buffer[v])) ;
+                if (to_proc == p_no) {
+                    // log_message("same place " + to_string (p_no)) ;
                     active_vertices.push (v) ;
+                    // log_message (to_string (active_vertices.size ())) ;
                 } else {
-                    
+                    // log_message ("different place " + to_string (to_proc)) ;
                     syncer_queue.push_back ({p_no, to_proc, local_to_global[v]}) ;
                 }
             }
@@ -168,8 +183,10 @@ void Distributed_Network::max_distributed_flow_init (const int &my_rank, const i
     MPI_Barrier (MPI_COMM_WORLD) ;
 
     log_message ("proceeding to sync") ;
-    synchronize (syncer, excess_buffer, local_vertices) ;
-    synchronize_queue (syncer, active_vertices) ;
+    synchronize (syncer, excess) ;
+    MPI_Barrier (MPI_COMM_WORLD) ;
+    log_message ("active_vertices size : " + to_string (syncer_queue.size ())) ;
+    synchronize_queue (syncer_queue, active_vertices) ;
 
     MPI_Barrier (MPI_COMM_WORLD) ;
 
@@ -183,11 +200,11 @@ void Distributed_Network::max_distributed_flow_init (const int &my_rank, const i
 
 bool Distributed_Network::push_distributed (const int &u, const int &v) {
 
-    std::vector<std::vector<ll> > syncer ;
+    std::vector<std::vector<int> > syncer ;
 
     assert (excess_buffer[u] > 0 && (heights_buffer[u] >= heights_buffer[v] + 1) ); 
-    ll delta = min ((ll)excess_buffer[u], residual_graph[u][current_arc[u]][1]) ;
-    // log_message_push ("pushing flow from " + to_string(u) + " to " + to_string (v) + " of val " + to_string (delta)) ;
+    ll delta = min ((ll)excess_buffer[u], (ll)residual_graph[u][current_arc[u]][1]) ;
+    log_message_push ("pushing flow from " + to_string(u) + " to " + to_string (v) + " of val " + to_string (delta)) ;
     // log_message_push ("heights : " + to_string (heights[u]) + " and " + to_string(heights[v])) ;
     residual_graph[u][current_arc[u]][1]-=delta ;
     log_graph (residual_graph) ;
@@ -216,7 +233,7 @@ bool Distributed_Network::push_distributed (const int &u, const int &v) {
 
 bool Distributed_Network::relabel (const int &u) {
 
-    // log_sos ("relabeling " + to_string (u) + " at height " + to_string (heights_buffer[u])) ;
+    log_sos ("relabeling " + to_string (u) + " at height " + to_string (heights_buffer[u])) ;
     
     if (heights_buffer[u] == g_vx) return false ;
 
@@ -237,6 +254,7 @@ bool Distributed_Network::relabel (const int &u) {
 std::vector<int>  Distributed_Network::discharge (const int &u) {
 
   
+    if (u == -1) return {} ;
 
     std::vector<int > ans ;
     log_message ("discharging : " + to_string (u)) ; log_message ("having excess = " + to_string (excess_buffer[u])) ;
@@ -245,22 +263,31 @@ std::vector<int>  Distributed_Network::discharge (const int &u) {
         // log_sos (to_string (active.size ()) + " " + to_string(active.front ()) + " " + to_string (excess[active.front ()])) ;
         
         if (CAND_buffer[u] < residual_graph[u].size ()) {
+            log_message ("OK" + to_string(p_no)) ;
             int v = residual_graph[u][CAND_buffer[u]][0];
             if (residual_graph[u][CAND_buffer[u]][1] > 0 && heights_buffer[u] >= heights_buffer[v] + 1)
                 push_distributed(u, v);
             else 
                 CAND_buffer[u]++;
         } else {
+            log_message ("OK" + to_string(p_no)) ;
+
+
             bool status = relabel(u);
+            log_message ("OK" + to_string(p_no)) ;
+
 
             if (status == false) return {} ;
             else {
+                log_message ("OK"+to_string (p_no)) ;
                 int from_process = p_no ;
-                int to_process = residual_graph[u][CAND_buffer[u]][3] ;
+                // int to_process = residual_graph[u][CAND_buffer[u]][3] ;
                 int offset = local_to_global[u] ;
                 int value = heights_buffer[u] ;
                 CAND_buffer[u] = 0;
-                return {from_process, to_process, offset, value} ;
+                log_message ("OK"+to_string(p_no)) ;
+                // return {from_process, to_process, offset, value} ;
+                return {} ;
              }
         }
     }
