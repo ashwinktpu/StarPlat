@@ -68,10 +68,10 @@ class Distributed_Network {
 
             MPI_Barrier (MPI_COMM_WORLD) ;
 
-            MPI_Win_create (heights_buffer, (sizeof(int)*local_vertices), 1, MPI_INFO_NULL, MPI_COMM_WORLD, &heights) ;
-            MPI_Win_create (excess_buffer, (sizeof(int)*local_vertices), 1, MPI_INFO_NULL, MPI_COMM_WORLD, &excess) ;
-            MPI_Win_create (CAND_buffer, (sizeof(int)*local_vertices),1, MPI_INFO_NULL, MPI_COMM_WORLD, &CAND) ;
-            MPI_Win_create (work_list_buffer, (sizeof(int)*local_vertices), 1, MPI_INFO_NULL, MPI_COMM_WORLD, &work_list) ;
+            MPI_Win_create (heights_buffer, (sizeof(int)*local_vertices), 4, MPI_INFO_NULL, MPI_COMM_WORLD, &heights) ;
+            MPI_Win_create (excess_buffer, (sizeof(int)*local_vertices), 4, MPI_INFO_NULL, MPI_COMM_WORLD, &excess) ;
+            MPI_Win_create (CAND_buffer, (sizeof(int)*local_vertices),4, MPI_INFO_NULL, MPI_COMM_WORLD, &CAND) ;
+            MPI_Win_create (work_list_buffer, (sizeof(int)*local_vertices), 4, MPI_INFO_NULL, MPI_COMM_WORLD, &work_list) ;
 
             max_distributed_flow_init (my_rank, source, sink, v_id, global_vertices, heights, excess, CAND, work_list, heights_buffer, excess_buffer, CAND_buffer, work_list_buffer) ;
             log_message ("Initialization OK ")  ;
@@ -79,7 +79,7 @@ class Distributed_Network {
             MPI_Barrier (MPI_COMM_WORLD) ;
               for (int i=0; i< v_id; i++) {
                 if (excess_buffer[i] > 0) {
-                    log_message ("red alert " + to_string (i) + " " + to_string (excess_buffer[i])) ;
+                    log_message ("red alert index = " + to_string (local_to_global[i]) + " value = " + to_string (excess_buffer[i]) + " to_process = " + to_string (p_no) ) ;
                 }
             }
             active_nodes = 1 ;
@@ -111,7 +111,7 @@ class Distributed_Network {
             while (1) {
                 int u = (!active_vertices.empty ()) ? active_vertices.front () : -1 ;
                 altered_heights.push_back (discharge (u)) ;
-                log_message ("exited discharge OK" + to_string (p_no)) ;
+                log_message ("exited discharge OK of " +to_string (local_to_global[u]) + " " + to_string (p_no)) ;
                 MPI_Barrier (MPI_COMM_WORLD) ;
                 if (!active_vertices.empty()) active_vertices.pop () ;
                 int flag = (u==-1)?1:0 ;
@@ -155,15 +155,15 @@ void Distributed_Network::max_distributed_flow_init (const int &my_rank, const i
             int v = residual_graph[src][v_idx][0] ;
             // log_message ("size comp : " + to_string (v) + " total = " + to_string (local_vertices)) ;
             residual_graph[v][residual_graph[src][v_idx][2]][1] += residual_graph[src][v_idx][1] ;
-            int this_capacity = excess_buffer[v]; 
+            int this_capacity = 0; 
             this_capacity += residual_graph[src][v_idx][1] ;
             int to_proc = residual_graph[v][residual_graph[src][cand_buffer[src]][2]][4] ;
             
             
-            excess_buffer[v] += this_capacity ;
-            if (to_proc != p_no) {
+	    if (to_proc == p_no)
+	    	excess_buffer[v] += this_capacity ;
+	    if (to_proc != p_no)
                 syncer.push_back ({my_rank, residual_graph[src][v_idx][4], local_to_global[v], this_capacity}) ;
-            }
 
             residual_graph[src][v_idx][1] = 0 ;
             if (excess_buffer[v] > 0 && v!= src && v!=snk) {
@@ -180,13 +180,56 @@ void Distributed_Network::max_distributed_flow_init (const int &my_rank, const i
         }
     }
 
+    /*int v_idx = 0 ;
+    while (1) {
+	
+	int flag = 0 ; int from_proc = -1, to_proc = -1 ;
+        if (native_vertex.find (source) != native_vertex.end ()) {
+	    if (v_idx == residual_graph[source].size ()) break ;
+	    int v = residual_graph[src][v_idx][0] ;
+	    
+	    residual_graph[v][residual_graph[src][v_idx][2]][1] += residual_graph[src][v_idx][1] ;
+	    int this_capacity = 0 ;
+	    this_capacity += residual_graph[src][v_idx][1] ;
+
+	    to_proc = residual_graph[v][residual_graph[src][cand_buffer[src]][2]][4] ;
+	    residual_graph[src][v_idx][1] = 0 ;
+   	    
+	    if (to_proc != p_no) 
+		syncer.push_back ({my_rank, to_proc, local_to_global[v], this_capacity}) ;
+
+	    if (excess_buffer[v] > 0 && v!= src && v != snk) {
+
+		if (to_proc == p_no) {
+		    active_vertices.push(v) ;
+		} else {
+		    MPI_Send (&v, 1, MPI_INT, to_proc, 0, MPI_COMM_WORLD) ;
+		    flag = 1 ;
+		    log_message ("sent " + to_string (v) + " from " + to_string (my_rank) + " to " + to_string (to_proc)) ;
+		}
+	    } 
+	}
+	if (flag && to_proc == my_rank) {
+	    MPI_Recv (&v, 1, MPI_INT, from_proc, 0, MPI_COMM_WORLD) ;
+	}
+    }*/
+
     MPI_Barrier (MPI_COMM_WORLD) ;
 
     log_message ("proceeding to sync") ;
     synchronize (syncer, excess) ;
     MPI_Barrier (MPI_COMM_WORLD) ;
     log_message ("active_vertices size : " + to_string (syncer_queue.size ())) ;
-    synchronize_queue (syncer_queue, active_vertices) ;
+    synchronize_queue (syncer_queue, active_vertices, work_list) ;
+
+    MPI_Win_fence (0, work_list) ;
+    for (int i=0; i<v_id; i++) {
+	if (work_list_buffer[i] != 0) {
+	    work_list_buffer[i]=0 ;
+	    active_vertices.push (i) ;
+	}
+    }
+    MPI_Win_fence (0, work_list) ;
 
     MPI_Barrier (MPI_COMM_WORLD) ;
 
@@ -203,12 +246,12 @@ bool Distributed_Network::push_distributed (const int &u, const int &v) {
     std::vector<std::vector<int> > syncer ;
 
     assert (excess_buffer[u] > 0 && (heights_buffer[u] >= heights_buffer[v] + 1) ); 
-    ll delta = min ((ll)excess_buffer[u], (ll)residual_graph[u][current_arc[u]][1]) ;
+    ll delta = min ((ll)excess_buffer[u], (ll)residual_graph[u][CAND_buffer[u]][1]) ;
     log_message_push ("pushing flow from " + to_string(u) + " to " + to_string (v) + " of val " + to_string (delta)) ;
     // log_message_push ("heights : " + to_string (heights[u]) + " and " + to_string(heights[v])) ;
-    residual_graph[u][current_arc[u]][1]-=delta ;
+    residual_graph[u][CAND_buffer[u]][1]-=delta ;
     log_graph (residual_graph) ;
-    residual_graph[v][residual_graph[u][current_arc[u]][2]][1]+=delta ;
+    residual_graph[v][residual_graph[u][CAND_buffer[u]][2]][1]+=delta ;
     excess_buffer[v]+=delta ;
     excess_buffer[u]-=delta ;
 
@@ -220,13 +263,13 @@ bool Distributed_Network::push_distributed (const int &u, const int &v) {
             active_vertices.push (v) ;
         } else {
             
-            int to_proc = residual_graph[v][residual_graph[u][current_arc[u]][2]][4] ;
+            int to_proc = residual_graph[v][residual_graph[u][CAND_buffer[u]][2]][4] ;
             syncer.push_back ({p_no, to_proc, local_to_global[v]}) ;
         }
     }
 
     if (syncer.size ())
-        synchronize_queue (syncer, active_vertices) ;
+        synchronize_queue (syncer, active_vertices, work_list) ;
     return true ;
 }
 
@@ -255,22 +298,23 @@ std::vector<int>  Distributed_Network::discharge (const int &u) {
 
   
     if (u == -1) return {} ;
+    if (native_vertex.find (u) == native_vertex.end ()) return {} ;
 
     std::vector<int > ans ;
-    log_message ("discharging : " + to_string (u)) ; log_message ("having excess = " + to_string (excess_buffer[u])) ;
+    log_message ("discharging : " + to_string (local_to_global[u]) + " from process " + to_string (p_no)) ; log_message ("having excess = " + to_string (excess_buffer[u])) ;
     while (excess_buffer[u]>0) {
         
         // log_sos (to_string (active.size ()) + " " + to_string(active.front ()) + " " + to_string (excess[active.front ()])) ;
         
         if (CAND_buffer[u] < residual_graph[u].size ()) {
-            log_message ("OK" + to_string(p_no)) ;
+//            log_message ("OK" + to_string(p_no)) ;
             int v = residual_graph[u][CAND_buffer[u]][0];
             if (residual_graph[u][CAND_buffer[u]][1] > 0 && heights_buffer[u] >= heights_buffer[v] + 1)
                 push_distributed(u, v);
             else 
                 CAND_buffer[u]++;
         } else {
-            log_message ("OK" + to_string(p_no)) ;
+ //           log_message ("OK" + to_string(p_no)) ;
 
 
             bool status = relabel(u);
@@ -279,13 +323,13 @@ std::vector<int>  Distributed_Network::discharge (const int &u) {
 
             if (status == false) return {} ;
             else {
-                log_message ("OK"+to_string (p_no)) ;
+  //              log_message ("OK"+to_string (p_no)) ;
                 int from_process = p_no ;
                 // int to_process = residual_graph[u][CAND_buffer[u]][3] ;
                 int offset = local_to_global[u] ;
                 int value = heights_buffer[u] ;
                 CAND_buffer[u] = 0;
-                log_message ("OK"+to_string(p_no)) ;
+   //             log_message ("OK"+to_string(p_no)) ;
                 // return {from_process, to_process, offset, value} ;
                 return {} ;
              }
