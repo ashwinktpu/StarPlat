@@ -91,6 +91,7 @@ void Compute_SSSP(graph& g,int * dist,int src)
   int *h_modified = (int *)malloc(V*sizeof(int));
   cl_mem d_modified = clCreateBuffer(context,CL_MEM_READ_WRITE,(V)*sizeof(int),NULL, &status);
 
+  ;
 
   //Reading kernel file
   FILE* kernelfp = fopen("sssp.cl", "rb"); 
@@ -113,44 +114,6 @@ void Compute_SSSP(graph& g,int * dist,int src)
   //Variable for launch configuration
   size_t global_size;
   size_t local_size;
-  // Creating initdist_kernel  Kernel
-  cl_kernel initdist_kernel = clCreateKernel(program, "initdist_kernel", &status);
-
-  // Initialization for dist variable
-  int distValue = (int)INT_MAX; 
-  status = clSetKernelArg(initdist_kernel, 0 , sizeof(cl_mem), (void *)& d_dist);
-  status = clSetKernelArg(initdist_kernel, 1, sizeof(int) , (void*)& distValue);
-  status = clSetKernelArg(initdist_kernel, 2, sizeof(int), (void*)&V);
-  local_size = 128;
-  global_size = (V + local_size -1)/ local_size * local_size;
-  status = clEnqueueNDRangeKernel(command_queue, initdist_kernel, 1, NULL, &global_size, &local_size, 0,NULL,&event);
-
-  clWaitForEvents(1,&event);
-  status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, NULL);
-  status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, NULL);
-  kernelTime = (double)(end-start)/convertToMS;
-  totalTime = totalTime+ kernelTime;
-  status = clReleaseKernel(initdist_kernel);
-
-  // Creating initmodified_kernel  Kernel
-  cl_kernel initmodified_kernel = clCreateKernel(program, "initmodified_kernel", &status);
-
-  // Initialization for modified variable
-  int modifiedValue = (int)false; 
-  status = clSetKernelArg(initmodified_kernel, 0 , sizeof(cl_mem), (void *)& d_modified);
-  status = clSetKernelArg(initmodified_kernel, 1, sizeof(int) , (void*)& modifiedValue);
-  status = clSetKernelArg(initmodified_kernel, 2, sizeof(int), (void*)&V);
-  local_size = 128;
-  global_size = (V + local_size -1)/ local_size * local_size;
-  status = clEnqueueNDRangeKernel(command_queue, initmodified_kernel, 1, NULL, &global_size, &local_size, 0,NULL,&event);
-
-  clWaitForEvents(1,&event);
-  status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, NULL);
-  status = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, NULL);
-  kernelTime = (double)(end-start)/convertToMS;
-  totalTime = totalTime+ kernelTime;
-  status = clReleaseKernel(initmodified_kernel);
-
   cl_kernel initIndexmodified_kernel = clCreateKernel(program, "initIndexmodified_kernel", &status);
   //Indexmodified src initialization
   int initmodifiedvalsrc = true;

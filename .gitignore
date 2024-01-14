@@ -25,3 +25,6 @@ testcases/testAMD/*
 test-graphs/
 graphcode/graphlib-bench/inp.txt
 test-graphs.zip
+graphcode/phase2/sssp-out
+graphcode/phase2/boruvka-out
+

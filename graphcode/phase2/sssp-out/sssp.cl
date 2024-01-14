@@ -1,16 +1,5 @@
 #include "libOpenCL.h"
-__kernel void initdist_kernel( __global int *d_dist , int value, int v){
-  unsigned int id = get_global_id(0);
-  if(id<v){
-    d_dist[id] = value;
-  }
-}
-__kernel void initmodified_kernel( __global int *d_modified , int value, int v){
-  unsigned int id = get_global_id(0);
-  if(id<v){
-    d_modified[id] = value;
-  }
-}
+#include "union_find.h"
 
 __kernel void initIndexmodified_kernel(__global int *d_modified, int src , int val){
   d_modified[src] = val ; 
