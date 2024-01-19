@@ -13,6 +13,7 @@
 #include "dsl_cpp_generator.h"
 
 #define HIT_CHECK std::cout << "Hit at line " << __LINE__ << " of function " << __func__ << " in file " << __FILE__ << "\n";
+// #define DUMP_INFO 
 
 namespace sphip {
 
@@ -84,7 +85,7 @@ namespace sphip {
 
         GenerateTimerStart();
         
-        GenerateHipMallocParams(func->getParamList()); //TODO: impl
+        // GenerateHipMallocParams(func->getParamList()); //TODO: impl
         GenerateBlock(func->getBlockStatement(), false); //TODO: 
         
         GenerateTimerStop();
@@ -119,8 +120,8 @@ namespace sphip {
             targetFile.AddSpace();
 
             std::string parameterName = (*itr)->getIdentifier()->getIdentifier();
-            parameterName[0] = std::toupper(parameterName[0]);
-            parameterName = "d" + parameterName;
+            // parameterName[0] = std::toupper(parameterName[0]);
+            // parameterName = "d" + parameterName;
 
             targetFile.pushString(parameterName);
 
@@ -347,7 +348,7 @@ namespace sphip {
             break;
 
         case NODE_ITRRBFS:
-            cout << "DOES IT HIT ITRTBFS\n";
+            // HIT_CHECK
             // GenerateItrRevBfs(static_cast<iterateReverseBFS*>(stmt), isMainFile);
             break;
 
@@ -390,6 +391,12 @@ namespace sphip {
         dslCodePad &targetFile = isMainFile ? main : header;
 
         Type *type = stmt->getType();
+        // cout << stmt->getdeclId()->getIdentifier() << "\n";
+
+        if(type->isPrimitiveType()) {
+            
+            cout << stmt->getdeclId()->getIdentifier() << "\n";
+        }
 
         if(type->isPropType()) {
 
@@ -404,24 +411,26 @@ namespace sphip {
 
                 std::string idName = stmt->getdeclId()->getIdentifier();
                 idName[0] = std::toupper(idName[0]);
-
                 main.pushString(idName);
                 main.pushStringWithNewLine(";");
 
                 GenerateHipMalloc(type, idName);
+                
+                // TODO: Check if the below stuff is reqd
 
-                if(stmt->getdeclId()->getSymbolInfo()->getId()->require_redecl()) {
+                // if(stmt->getdeclId()->getSymbolInfo()->getId()->require_redecl()) {
 
-                    main.pushString(ConvertToCppType(innerType));
-                    main.AddSpace();
-                    main.pushString("*");
-                    main.pushString("d");
-                    main.pushString(idName);
-                    main.pushString("Next");
-                    main.pushString(";");
+                //     main.pushString(ConvertToCppType(innerType));
+                //     main.AddSpace();
+                //     main.pushString("*");
+                //     main.pushString("d");
+                //     main.pushString(idName);
+                //     main.pushString("Next");
+                //     main.pushString(";");
+                //     main.NewLine();
 
-                    GenerateHipMalloc(type, idName + "Next");
-                }
+                //     GenerateHipMalloc(type, idName + "Next");
+                // }
             }
         } else if(type->isNodeEdgeType()) {
         
@@ -442,9 +451,33 @@ namespace sphip {
         }
     }
 
-    void DslCppGenerator::GenerateDeviceAssignment(assignment* stmt, bool isMainFile) {
-        cout << "Inside GenerateDeviceAssignment\n";
+    void DslCppGenerator::GenerateDeviceAssignment(assignment* asmt, bool isMainFile) {
+        dslCodePad& targetFile = isMainFile ? main : header;
+        bool isDevice = false;
+        string str;        
 
+        if (asmt->lhs_isProp()) {
+
+            PropAccess* propId = asmt->getPropId();
+            if (asmt->isDeviceAssignment()) {
+            isDevice = true;
+            Type* typeB = propId->getIdentifier2()->getSymbolInfo()->getType()->getInnerTargetType();
+            std::string varType = ConvertToCppType(typeB);  //DONE: get the type from id
+            std::string temp2(propId->getIdentifier2()->getIdentifier());
+            temp2[0] = toupper(temp2[0]);
+            std::string temp1(propId->getIdentifier1()->getIdentifier());
+            // temp1[0] = toupper(temp1[0]);
+
+            str = "initIndex<" + varType + "><<<1,1>>>(V, d" 
+                    + temp2 + ", " + temp1 + ", ";
+            targetFile.pushString(str);
+            } 
+        }
+
+        GenerateExpression(asmt->getExpr(), isMainFile);
+
+        targetFile.pushString(");");
+        targetFile.NewLine();
     }
 
     void DslCppGenerator::GenerateAtomicOrNormalAssignment(assignment* stmt, bool isMainFile) {
@@ -543,10 +576,9 @@ namespace sphip {
 
             list<argument*> argList = proc->getArgList();
 
-            for(auto itr =  argList.begin(); itr != argList.end(); itr++) {
-
+            for(auto itr =  argList.begin(); itr != argList.end(); itr++)
                 GenerateInitKernelCall((*itr)->getAssignExpr(), isMainFile);
-            }
+            
 
         } else if(methodId.compare(edgeCall) == 0) {
 

@@ -110,25 +110,25 @@ namespace sphip {
 
     void DslCppGenerator::GenerateInitKernelCall(assignment* assign, bool isMainFile) {
 
-        // Identifier *id = assign->getId();
-        // Expression *expr = assign->getExpr();
+        Identifier *id = assign->getId();
+        Expression *expr = assign->getExpr();
 
-        // std::string buffer;
+        std::string buffer;
 
-        // std::string parameterName(id->getIdentifier());
-        // parameterName[0] = toupper(parameterName[0]);
+        std::string parameterName(id->getIdentifier());
+        parameterName[0] = toupper(parameterName[0]);
 
-        // cout << "--->" << parameterName << "\n"; //! TODO
+        cout << "--->" << parameterName << "\n"; //! TODO
 
-        // buffer = "initKernel<" + 
-        //         ConvertToCppType(id->getSymbolInfo()->getType()->getInnerTargetType()) +
-        //         "><<<numBlocks, numThreads>>>(V, d" +
-        //         parameterName + ", ";
+        buffer = "initKernel<" + 
+                ConvertToCppType(id->getSymbolInfo()->getType()->getInnerTargetType()) +
+                "><<<numBlocks, numThreads>>>(V, d" +
+                parameterName + ", ";
         
-        // (isMainFile ? main : header).pushString(buffer);
-        // GenerateExpression(expr, isMainFile);
-        // buffer = ");";
-        // (isMainFile ? main : header).pushStringWithNewLine(buffer);
+        (isMainFile ? main : header).pushString(buffer);
+        GenerateExpression(expr, isMainFile);
+        buffer = ");";
+        (isMainFile ? main : header).pushStringWithNewLine(buffer);
     }
 
     void DslCppGenerator::GenerateInitKernel(const std::string str) {
