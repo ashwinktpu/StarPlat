@@ -62,5 +62,4 @@ function ek (Graph g,node s,node d,propNode<int> weight)
             cur = prev;
         }
     }while (new_flow != 0);
-    
 }
