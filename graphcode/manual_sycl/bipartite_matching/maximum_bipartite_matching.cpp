@@ -75,6 +75,136 @@ bool* deviceMemAllocateBool(queue &Q, int len) {
 }
 
 
+//------------------------------ Kernels ------------------------------//
+
+void APFB_kernel_1(queue &Q, int V, int nc, int *d_cmatch, int *d_bfsArray, int *d_L0) {
+
+    Q.submit([&](handler &h) {
+        h.parallel_for(NUM_THREADS, [=](id<1> i) {
+            for(int c = i; c < V; c += STRIDE) {
+                if(c < nc) {
+                    if(d_cmatch[c] == -1) {
+                        d_bfsArray[c] = d_L0[0];
+                    }
+                }
+            }
+        });
+    }).wait();
+}
+
+void APFB_kernel_2(queue &Q, int V, int nc, int *d_bfsArray, int *d_bfsLevel, int *d_meta, int *d_data, int *d_rmatch, int *d_NOT_VISITED, bool *d_noNewVertices, int *d_predeccesor, bool *d_noNewPaths) {
+    Q.submit([&](handler &h) {
+        h.parallel_for(NUM_THREADS, [=](id<1> i) {
+            for(int col_vertex = i; col_vertex < V; col_vertex += STRIDE) {
+                if(col_vertex < nc) {
+                    if(d_bfsArray[col_vertex] == d_bfsLevel[0]) {
+                        for(int edge = d_meta[col_vertex]; edge < d_meta[col_vertex + 1]; edge++) {
+                            int neigh_row = d_data[edge];
+                            if(neigh_row >= nc) {
+                                int col_match = d_rmatch[neigh_row];
+
+                                if(col_match > -1) {
+                                    if(d_bfsArray[col_match] == d_NOT_VISITED[0]) {
+                                        d_noNewVertices[0] = false;
+                                        d_bfsArray[col_match] = d_bfsLevel[0] + 1;
+                                        d_predeccesor[neigh_row] = col_vertex;
+                                    }
+                                }
+
+                                if(col_match == -1) {
+                                    d_rmatch[neigh_row] = -2;
+                                    d_predeccesor[neigh_row] = col_vertex;
+                                    d_noNewPaths[0] = false;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }).wait();
+}
+
+void APFB_kernel_3(queue &Q, int V, int nc, int *d_rmatch, bool *d_compress) {
+    Q.submit([&](handler &h) {
+        h.parallel_for(NUM_THREADS, [=](id<1> i) {
+            for(int r = i; r < V; r += STRIDE) {
+                if(r >= nc && d_rmatch[r] == -2) {
+                    d_compress[r] = true;
+                }
+            }
+        });
+    }).wait();
+}
+
+void APFB_kernel_4(queue &Q, int V, int nc, bool *d_compress, int *d_predeccesor, int *d_cmatch, int *d_rmatch, bool *d_compress_next, bool *d_compressed) {
+    Q.submit([&](handler &h) {
+        h.parallel_for(NUM_THREADS, [=](id<1> i) {
+            for(int row_vertex = i; row_vertex < V; row_vertex += STRIDE) {
+                if(d_compress[row_vertex] == true) {
+                    if(row_vertex >= nc) {
+                        int matched_col = d_predeccesor[row_vertex];
+                        int matched_row = d_cmatch[matched_col];
+
+                        bool isValid = true;
+
+                        if(matched_row != -1) {
+                            if(d_predeccesor[matched_row] == matched_col) {
+                                isValid = false;
+                            }
+                        }
+
+                        if(isValid) {
+                            d_cmatch[matched_col] = row_vertex;
+                            d_rmatch[row_vertex] = matched_col;
+                            if(matched_row != -1) {
+                                d_compress_next[matched_row] = true;
+                                d_compressed[0] = false;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }).wait();
+}
+
+void APFB_kernel_5(queue &Q, int V, int nc, bool* d_compress, bool *d_compress_next) {
+    Q.submit([&](handler &h) {
+        h.parallel_for(NUM_THREADS, [=](id<1> i) {
+            for(int row_vertex = i; row_vertex < V; row_vertex += STRIDE) {
+                if(row_vertex >= nc) {
+                    d_compress[row_vertex] = d_compress_next[row_vertex];
+                    d_compress_next[row_vertex] = false;
+                }
+            }
+        });
+    }).wait();
+}
+
+void APFB_kernel_6(queue &Q, int V, int nc, int *d_rmatch, int *d_cmatch) {
+    Q.submit([&](handler &h) {
+        h.parallel_for(NUM_THREADS, [=](id<1> i) {
+            for(int r = i; r < V; r += STRIDE) {
+                if(r >= nc) {
+                    int c = d_rmatch[r];
+
+                    if(c >= 0) {
+                        if(d_cmatch[c] != r) {
+                            d_rmatch[r] = -1;
+                        }
+                    }
+
+                    if(c == -2) {
+                        d_rmatch[r] = -1;
+                    }
+                }
+            }
+        });
+    }).wait();
+}
+
+
 int main(int argc, char** argv) {
     char* inp = argv[1];
     bool isWeighted = atoi(argv[2]) ? true : false;
