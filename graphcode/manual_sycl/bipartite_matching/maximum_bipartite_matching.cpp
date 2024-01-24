@@ -205,6 +205,244 @@ void APFB_kernel_6(queue &Q, int V, int nc, int *d_rmatch, int *d_cmatch) {
 }
 
 
+// -------------------------------------------- Maximum Bipartite Matching -----------------------------//
+
+void APFB(graph &g, int nc) {
+
+    queue Q(default_selector_v);
+    std::cout << "Selected Device:"<< Q.get_device().get_info<info::device::name>() << std::endl;
+    std::cout << "Selected Device Maximum Memory Allocation Size:"<< Q.get_device().get_info<info::device::max_mem_alloc_size>()<< std::endl;
+
+
+    int V = g.num_nodes();
+    int E = g.num_edges();
+
+    printf("#nodes : %d\n", V);
+    printf("#edges : %d\n", E);
+    int *edgeLen = g.getEdgeLen();
+
+    int *h_meta;
+    int *h_data;
+    int *h_src;
+    int *h_weight;
+    int *h_rev_meta;
+
+    h_meta = hostMemAllocateInteger(V + 1);
+    h_data = hostMemAllocateInteger(E);
+    h_src = hostMemAllocateInteger(E);
+    h_weight = hostMemAllocateInteger(E);
+    h_rev_meta = hostMemAllocateInteger(V + 1);
+
+    for(int i = 0; i <= V; i++) {
+        int temp = g.indexofNodes[i];
+        h_meta[i] = temp;
+        temp = g.rev_indexofNodes[i];
+        h_rev_meta[i] = temp;
+    }
+
+    for(int i = 0; i < E; i++) {
+        int temp = g.edgeList[i];
+        h_data[i] = temp;
+        temp = g.srcList[i];
+        h_src[i] = temp;
+        temp = edgeLen[i];
+        h_weight[i] = temp;
+    }
+
+
+    int *d_meta;
+    int *d_data;
+    int *d_src;
+    int *d_weight;
+    int *d_rev_meta;
+    bool *d_modified_next;
+
+    d_meta = deviceMemAllocateInteger(Q, V + 1);
+    d_data = deviceMemAllocateInteger(Q, E);
+    d_src = deviceMemAllocateInteger(Q, E);
+    d_weight = deviceMemAllocateInteger(Q, E);
+    d_rev_meta = deviceMemAllocateInteger(Q, V + 1);
+    d_modified_next = deviceMemAllocateBool(Q, V);
+
+    memoryCopy(Q, d_meta, h_meta, V+1);
+    memoryCopy(Q, d_data, h_data, E);
+    memoryCopy(Q, d_src, h_src, E);
+    memoryCopy(Q, d_weight, h_weight, E);
+    memoryCopy(Q, d_rev_meta, h_rev_meta, V + 1);
+
+
+    // Host Variables
+    bool *h_noNewPaths;
+    int *h_L0;
+    int *h_NOT_VISITED;
+    int *h_bfsLevel;
+    bool *h_noNewVertices;
+    bool *h_modified;
+    bool *h_compressed;
+
+    h_noNewPaths = hostMemAllocateBool(1);
+    h_L0 = hostMemAllocateInteger(1);
+    h_NOT_VISITED = hostMemAllocateInteger(1);
+    h_bfsLevel = hostMemAllocateInteger(1);
+    h_noNewVertices = hostMemAllocateBool(1);
+    h_modified = hostMemAllocateBool(V);
+    h_compressed = hostMemAllocateBool(1);
+
+    // Device Variables
+    bool *d_modified;
+    int *d_rmatch;
+    int *d_cmatch;
+    bool *d_noNewPaths;
+    int *d_L0;
+    int *d_bfsArray;
+    int *d_NOT_VISITED;
+    int *d_predeccesor;
+    int *d_bfsLevel;
+    bool *d_noNewVertices;
+    bool *d_compress;
+    bool *d_compress_next;
+    bool *d_compressed;
+
+
+    d_modified = deviceMemAllocateBool(Q, V);
+    d_rmatch = deviceMemAllocateInteger(Q, V);
+    d_cmatch = deviceMemAllocateInteger(Q, V);
+    d_noNewPaths = deviceMemAllocateBool(Q, 1);
+    d_L0 = deviceMemAllocateInteger(Q, 1);
+    d_bfsArray = deviceMemAllocateInteger(Q, V);
+    d_NOT_VISITED = deviceMemAllocateInteger(Q, 1);
+    d_predeccesor = deviceMemAllocateInteger(Q, V);
+    d_bfsLevel = deviceMemAllocateInteger(Q, 1);
+    d_noNewVertices = deviceMemAllocateBool(Q, 1);
+    d_compress = deviceMemAllocateBool(Q, V);
+    d_compress_next = deviceMemAllocateBool(Q, V);
+    d_compressed = deviceMemAllocateBool(Q, 1);
+
+    init(Q, d_modified, false, V);
+    init(Q, d_rmatch, -1, V);
+    init(Q, d_cmatch, -1, V);
+    init(Q, d_modified_next, false, V);
+
+
+    h_noNewPaths[0] = false;
+
+    while(!h_noNewPaths[0]) {
+        // std:: cout << "hi\n";
+        h_noNewPaths[0] = true;
+
+        memoryCopy(Q, d_noNewPaths, h_noNewPaths, 1);
+        h_L0[0] = 0;
+
+        h_NOT_VISITED[0] = h_L0[0] - 1;
+
+        init(Q, d_bfsArray, h_NOT_VISITED[0], V); 
+
+        memoryCopy(Q, d_L0, h_L0, 1);
+        //##########################################################//
+        //#######################KERNEL - 1#########################//
+
+        APFB_kernel_1(Q, V, nc, d_cmatch, d_bfsArray, d_L0);
+
+        //##########################################################//
+
+        init(Q, d_predeccesor, -1, V);
+
+        h_bfsLevel[0] = h_L0[0];
+        h_noNewVertices[0] = false;
+
+        init(Q, d_modified_next, false, V);
+
+        while(!h_noNewVertices[0]) {
+            // std:: cout << "hi 2\n";
+            h_noNewVertices[0] = true;
+            memoryCopy(Q, d_noNewVertices, h_noNewVertices, 1);
+            memoryCopy(Q, d_bfsLevel, h_bfsLevel, 1);
+            memoryCopy(Q, d_NOT_VISITED, h_NOT_VISITED, 1);
+            memoryCopy(Q, d_noNewVertices, h_noNewVertices, 1);
+            memoryCopy(Q, d_noNewPaths, h_noNewPaths, 1);
+
+            //##########################################################//
+            //#######################KERNEL - 2#########################//
+
+            APFB_kernel_2(Q, V, nc, d_bfsArray, d_bfsLevel, d_meta, d_data, d_rmatch, d_NOT_VISITED, d_noNewVertices, d_predeccesor, d_noNewPaths);
+
+            memoryCopy(Q, h_bfsLevel, d_bfsLevel, 1);
+            memoryCopy(Q, h_NOT_VISITED, d_NOT_VISITED, 1);
+            memoryCopy(Q, h_noNewVertices, d_noNewVertices, 1);
+            memoryCopy(Q, h_noNewPaths, d_noNewPaths, 1);
+            //##########################################################//
+
+            h_bfsLevel[0] = h_bfsLevel[0] + 1;
+            memoryCopy(Q, h_modified, d_modified_next, V);
+            memoryCopy(Q, d_modified, h_modified, V);
+            init(Q, d_modified_next, false, V);
+        }
+
+        init(Q, d_compress, false, V);
+        init(Q, d_compress_next, false, V);
+
+        //##########################################################//
+        //#######################KERNEL - 3#########################//
+
+        APFB_kernel_3(Q, V, nc, d_rmatch, d_compress);
+
+        //##########################################################//
+
+        h_compressed[0] = false;
+        init(Q, d_modified_next, false, V);
+
+        while(!h_compressed[0]) {
+            // std:: cout << "hi 3\n";
+            h_compressed[0] = true;
+
+            //##########################################################//
+            //#######################KERNEL - 4#########################//
+
+            memoryCopy(Q, d_compressed, h_compressed, 1);
+
+            APFB_kernel_4(Q, V, nc, d_compress, d_predeccesor, d_cmatch, d_rmatch, d_compress_next, d_compressed);
+
+            memoryCopy(Q, h_compressed, d_compressed, 1);
+
+            //##########################################################//
+
+            //##########################################################//
+            //#######################KERNEL - 5#########################//
+            
+            APFB_kernel_5(Q, V, nc, d_compress, d_compress_next);
+            memoryCopy(Q, h_modified, d_modified_next, V);
+            memoryCopy(Q, d_modified, h_modified, V);
+            //##########################################################//
+
+            init(Q, d_modified_next, false, V);
+        }
+
+        APFB_kernel_6(Q, V, nc, d_rmatch, d_cmatch);
+
+        memoryCopy(Q, h_noNewPaths, d_noNewPaths, 1);
+        memoryCopy(Q, h_modified, d_modified_next, V);
+        memoryCopy(Q, d_modified, h_modified, V);
+        init(Q, d_modified_next, false, V);
+    }
+
+    int *h_rmatch = hostMemAllocateInteger(V);
+    int *h_cmatch = hostMemAllocateInteger(V);
+
+    memoryCopy(Q, h_rmatch, d_rmatch, V);
+    memoryCopy(Q, h_cmatch, d_cmatch, V);
+
+    int cntMatchings = 0;
+    for(int i = 0; i < V; i++) {
+        if(h_cmatch[i] >= 0) {
+            cntMatchings += 1;
+        }
+    }
+
+    printf("Maximum Matches: %d\n", cntMatchings);d
+}
+
+
+
 int main(int argc, char** argv) {
     char* inp = argv[1];
     bool isWeighted = atoi(argv[2]) ? true : false;
