@@ -25,6 +25,12 @@
 
 class Distributed_Network {
 
+    /*
+     * Distributed Network class.
+     * Contains methods relevant for operations in networks.
+     * TODO : Change the synchronization to RMA/Probabilistic.  
+     * Change design to keep private and public separate.
+     */
     public:
         int source ;
         int sink ;
@@ -53,7 +59,7 @@ class Distributed_Network {
         unordered_map<int,int> syncer_count_map ;
         unordered_set<int> next_pulse_idxs ;
     
-    void update_buffer (std::vector<int*> &updates, int* buffer, unordered_map <int,int> &global_to_local) ;
+        void update_buffer (std::vector<int*> &updates, int* buffer, unordered_map <int,int> &global_to_local) ;
 
         void max_distributed_flow_init (const int &my_rank, const int &source, const int &sink, const int &local_vertices, const int &global_vertices, MPI_Win heights, MPI_Win excess, MPI_Win CAND, MPI_Win work_list, int *heights_buffer, int *excess_buffer, int *cand_buffer, int *work_list_buffer) ;
 
@@ -62,6 +68,9 @@ class Distributed_Network {
         void fix_gaps () ;
 
         Distributed_Network (char* file_name, const int &source, const int &sink, const int &my_rank, const int &size)  {
+            /* Constructor method. Reads the partitions and forms global and local views of the graph/network's initial state.
+             * Constructs the residual graph and 
+            */
             
 	        num_times = 0 ;
             this->source = source ;
@@ -155,8 +164,6 @@ class Distributed_Network {
         int local_max_flow () {
             
             // start pulse.
-
-
             int did_work = 0 ;
             next_pulse_idxs.clear () ;
             MPI_Barrier (MPI_COMM_WORLD) ;
@@ -291,6 +298,7 @@ class Distributed_Network {
 
 
 void Distributed_Network::fix_gaps () {
+    /* For Gap relabeling. The count data structure needs to be kept up to date in the relabel function.*/
     
     // dessiminate the map.
     vector<vector<int> > syncer_count_messages ;
