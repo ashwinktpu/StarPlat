@@ -3,6 +3,14 @@
 #include "graph.hpp"
 using namespace sycl;
 
+//-------------------------- CONSTANTS ---------------------------------//
+
+const int NUM_THREADS = 1048576;
+const int STRIDE = NUM_THREADS;
+
+
+
+
 int main(int argc, char** argv) {
     char* inp = argv[1];
     bool isWeighted = atoi(argv[2]) ? true : false;
