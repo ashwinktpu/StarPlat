@@ -4,22 +4,23 @@
 #include <fstream>
 #include <time.h>
 #include <iostream>
-#include "../graph.hpp"
+#include "graph.hpp"
+#define ll long long
 
 using namespace std;
 //total size of the heap
-#define maxSize 1000000
+#define maxSize 1000000000000
 
-__global__ void Insert_Elem(volatile int *heap,int *d_elements,int *curSize,volatile int *lockArr,int *elemSize,int k){
-    int tid = blockIdx.x * blockDim.x + threadIdx.x;
+__global__ void Insert_Elem(volatile ll int *heap,ll int *d_elements,ll int *curSize,volatile ll int *lockArr,ll int *elemSize,ll int k){
+    ll int tid = blockIdx.x * blockDim.x + threadIdx.x;
     if(tid < *elemSize)
     {
-        int childInd = atomicInc((unsigned *) curSize,maxSize+10);
+        ll  int childInd = atomicInc((long long unsigned *) curSize,maxSize);
         childInd = childInd*k;
         for(int i = 0;i<k;i++)
             heap[childInd+i] = d_elements[tid*k+i];
 
-        int parInd = ((childInd/k - 1)/2) * k;
+        ll  int parInd = ((childInd/k - 1)/2) * k;
 
         if(childInd == 0){
             lockArr[childInd] = 0;
@@ -36,12 +37,13 @@ __global__ void Insert_Elem(volatile int *heap,int *d_elements,int *curSize,vola
                     if(heap[parInd] > heap[childInd])
                     {
                         for(int i = 0;i<k;i++){
-                            int temp = heap[parInd+i];    //swapping the elements
+                            ll int temp = heap[parInd+i];    //swapping the elements
                             heap[parInd+i] = heap[childInd+i];
                             heap[childInd+i] = temp;
+                           // __threadfence();//necessary
 		                }
-
-                        __threadfence();//necessary
+			            
+                        __threadfence();
 
                         lockArr[childInd/k] = 0; //unlock the child
         
@@ -62,62 +64,62 @@ __global__ void Insert_Elem(volatile int *heap,int *d_elements,int *curSize,vola
                     } 
                     
                 }
-                // __threadfence(); //doesnt seem necessary
+                //__threadfence(); //doesnt seem necessary
             }while(oldval != 0);
         }
     }
 }
 
-bool checkHeap(int *ar,int size,int k)
+bool checkHeap(ll int *ar,ll int size,ll int k)
 {
-    for(int i = 0;i<size/2;i+=k)
+    for(ll int i = 0;i<size/2;i+=k)
     {
         if(ar[i] > ar[2*i + k]){
-            printf("\nproblem found at index parent = %d,child = %d\n",i,2*i + k);
-            printf("problem found at index parentval = %d,childval = %d\n",ar[i],ar[2*i + k]); 
+            printf("\nproblem found at index parent = %lld,child = %lld\n",i,2*i + k);
+            printf("problem found at index parentval = %lld,childval = %lld\n",ar[i],ar[2*i + k]); 
             return false;
         } 
         if((2*i + 2) < size && ar[i] > ar[2*i + 2*k]){
-            printf("\nproblem found at index parent = %d,child = %d\n",i,2*i + 2*k);
-            printf("problem found at index parentval = %d,childval = %d\n",ar[i],ar[2*i + 2*k]);
+            printf("\nproblem found at index parent = %lld,child = %lld\n",i,2*i + 2*k);
+            printf("problem found at index parentval = %lld,childval = %lld\n",ar[i],ar[2*i + 2*k]);
             return false;
         }
     }
     return true;
 }
 
-int getRandom(int lower, int upper)
+ll int getRandom(ll int lower,ll int upper)
 {
-    int num = (rand() % (upper - lower + 1)) + lower;
+    ll int num = (rand() % (upper - lower + 1)) + lower;
     return num;  
 }
-void printArray(int arr[],int size,int k)
+void printArray(ll int arr[],ll int size,ll int k)
 {
-    for(int i = 0;i<size;i++)
+    for(ll int i = 0;i<size;i++)
     {
         if(arr[i] == 10000000)
             printf("-1, ");
         else
-            printf("%d, ",arr[i]);
+            printf("%lld, ",arr[i]);
     }
     
     cout<<endl;
 }
-void FillArray(int elements[],int size,int k)
+void FillArray(ll int elements[],ll int size,ll int k)
 {
-    for(int i = 0;i<size*k;i++)
+    for(ll int i = 0;i<size*k;i++)
     {
         elements[i] = getRandom(1,1000);
     }
 }
     
-void heapify(int hp[],int ind,int size,int k)
+void heapify(ll int hp[],ll int ind,ll int size,ll int k)
 {
     while(1)
     {
-        int leftChild = 2*ind+k;
-        int rightChild = 2*ind+2*k;
-        int largeInd = -1;
+        ll int leftChild = 2*ind+k;
+        ll int rightChild = 2*ind+2*k;
+        ll int largeInd = -1;
         if(rightChild < size*k && hp[ind] > hp[rightChild]){
             if(hp[leftChild] < hp[rightChild])
                 largeInd = leftChild;
@@ -131,10 +133,10 @@ void heapify(int hp[],int ind,int size,int k)
         if(largeInd == -1)  return;
 	
     
-        for(int i = 0;i<k;i++){
-            int temp = hp[ind+i];
-                hp[ind+i] = hp[largeInd+i];
-                hp[largeInd+i] = temp;
+        for(ll int i = 0;i<k;i++){
+            ll int temp = hp[ind+i];
+            hp[ind+i] = hp[largeInd+i];
+            hp[largeInd+i] = temp;
         }
 
         ind = largeInd;
@@ -143,13 +145,13 @@ void heapify(int hp[],int ind,int size,int k)
 
 }
 
-void heapifyBUP(int arr[], int n, int childInd,int k) {
+void heapifyBUP(ll int arr[], ll int n, ll int childInd, ll int k) {
     // Find parent 
-    int parInd = ((childInd/k - 1)/2) * k;
+    ll int parInd = ((childInd/k - 1)/2) * k;
     if (parInd >= 0) { 
         if (arr[childInd] < arr[parInd]) { 
-            for(int i = 0;i<k;i++){
-                int temp = arr[parInd+i];
+            for(ll int i = 0;i<k;i++){
+                ll int temp = arr[parInd+i];
                 arr[parInd+i] = arr[childInd+i];
                 arr[childInd+i] = temp;
             }
@@ -158,11 +160,11 @@ void heapifyBUP(int arr[], int n, int childInd,int k) {
     } 
 }
 
-void insertNode(int arr[], int& n, int Key,int val,int k)
+void insertNode(ll int arr[], ll  int& n, ll int Key,ll int val,ll int k)
 {
     // Increase the size of Heap by 2
     n = n + 1;
-    int childInd = n*k;
+    ll int childInd = n*k;
  
     // Insert the element at end of Heap
     arr[childInd - 2] = Key;
@@ -173,9 +175,9 @@ void insertNode(int arr[], int& n, int Key,int val,int k)
     heapifyBUP(arr, n,childInd-k,k);
 }
 
-void deleteRoot(int arr[], int *n,int k)
+void deleteRoot(ll int arr[],ll int *n,ll int k)
 {
-    for(int i = 0;i<k;i++){
+    for(ll int i = 0;i<k;i++){
         arr[i] = arr[(*n -1)*2 + i];
     }
  
@@ -186,17 +188,17 @@ void deleteRoot(int arr[], int *n,int k)
     heapify(arr,0,*n,k);
 }
 
-void buildHeap(int hp[],int n,int k)
+void buildHeap(ll int hp[],ll int n,ll int k)
 {
-    for(int i = n/2 -1 ; i>=0;i--)
+    for(ll int i = n/2 -1 ; i>=0;i--)
     {
         heapify(hp,i*k,n,k);
     }
 }
 
-__global__ void setLockVar(int *curSize,int *lockArr,int *elemSize)
+__global__ void setLockVar(ll int *curSize,ll int *lockArr,ll int *elemSize)
 {
-    int tid = blockIdx.x * blockDim.x + threadIdx.x;
+    long long int tid = blockIdx.x * blockDim.x + threadIdx.x;
     if(tid < *elemSize)
         lockArr[tid + *curSize] = 1;
 }
@@ -204,9 +206,9 @@ __global__ void setLockVar(int *curSize,int *lockArr,int *elemSize)
 double rtclock(){
     struct timezone Tzp;
     struct timeval Tp;
-    int stat;
+    ll int stat;
     stat = gettimeofday(&Tp, &Tzp);
-    if (stat != 0) printf("Error return from gettimeofday: %d", stat);
+    if (stat != 0) cout << stat;
     return(Tp.tv_sec + Tp.tv_usec * 1.0e-6);
 }
 
@@ -214,30 +216,38 @@ void printtime(const char *str, double starttime, double endtime){
     printf("%s%3f seconds\n", str, endtime - starttime);
 }
 
-void serDijkstra(int pos[],int neigh[],int weight[],int wn,int src,int dist[],int V,int k,double &serdijtime)
+void serDijkstra(ll int *pos,ll int *neigh,ll int *weight,ll int wn,ll int src,ll int dist[],ll int V,ll int k,double &serdijtime)
 {
     double starttime = rtclock();
-    int hp[maxSize];
-    int cursize = 0; 
+
+    long long int *hp;
+    cudaMalloc(&hp,(maxSize)*sizeof(ll int));
+    ll int cursize = 0; 
     insertNode(hp, cursize,0,src,k);
     dist[src] = 0;
- 
+    ll int totDeg = 0,count = 0;
 
     while (cursize != 0) {
-        int elem = hp[1];
+        ll int elem = hp[1];
         deleteRoot(hp,&cursize,k);
  
-        int start = pos[elem];
-        int end;
+        ll int start = pos[elem];
+        ll int end;
         if(elem+1 < V)
             end = pos[elem+1];
         else
             end = wn;
 
-        for(int i = start;i<end;i++)
+        if(end > start)
         {
-            int v = neigh[i];
-            int wt = weight[i];
+            totDeg += (end-start);
+            count++;
+        }
+
+        for(ll int i = start;i<end;i++)
+        {
+            ll int v = neigh[i];
+            ll int wt = weight[i];
             if (dist[v] > dist[elem] + wt) {
                 // Updating distance of v
                 dist[v] = dist[elem] + wt ;
@@ -248,15 +258,17 @@ void serDijkstra(int pos[],int neigh[],int weight[],int wn,int src,int dist[],in
     double endtime = rtclock();  
     serdijtime = endtime - starttime;
     printtime("Serial Dijkstra Time Taken ", starttime, endtime);
+    cout << "Avg degree : "<<totDeg/count;
 }
 
-void setGraph(graph &G,int pos[],int neigh[],int V,int E){
+void setGraph(graph &G,ll int *pos,ll int *neigh, ll int V, ll int E){
 
-    for(int i = 0; i < V; i++) {
+    int *temp = G.getEdgeLen();
+    for(ll int i = 0; i < V; i++) {
         pos[i] = G.indexofNodes[i];
     }
 
-    for(int i = 0; i < E; i++) {
+    for(ll int i = 0; i < E; i++) {
         neigh[i] = G.edgeList[i];
     }
 
@@ -268,8 +280,9 @@ void setGraph(graph &G,int pos[],int neigh[],int V,int E){
     cout <<"No of Edges   : "<< E << endl;
 }
 
-void parDijkstra(int *curSize, int *elemSize,int *d_elements,int *lockArr,int *d_a,int k,double &pardijtime,int dist[],
-int V,int E,int pos[],int neigh[],int weight[],int Source){
+void parDijkstra(ll  int *curSize, ll int *elemSize, ll int *d_elements, ll int *lockArr, ll int *d_a, ll int k,double &pardijtime, ll int dist[],
+ll int V, ll int E, ll int *pos,ll int *neigh,ll int *weight, ll int Source){
+    ll int totDeg = 0,count = 0;
     *curSize = 0;
     *elemSize = 0; //equal to the max degree in the graph
 
@@ -281,7 +294,7 @@ int V,int E,int pos[],int neigh[],int weight[],int Source){
     d_elements[1] = Source;
 
     //Initialization
-    int block = ceil((float) *elemSize/1024);
+    ll int block = ceil((float) *elemSize/1024);
     setLockVar<<<block,1024>>>(curSize,lockArr,elemSize);
     cudaDeviceSynchronize();
     Insert_Elem<<<block,1024>>>(d_a,d_elements,curSize,lockArr,elemSize,k);
@@ -291,22 +304,29 @@ int V,int E,int pos[],int neigh[],int weight[],int Source){
     while(*curSize != 0)
     {
         // printArray(d_a,*curSize*k,k);
-        int elem = d_a[1];
+        ll int elem = d_a[1];
         deleteRoot(d_a,curSize,k); //call delete here
         *elemSize = 0;
         // for(auto neigh : adj[elem])
-        int start = pos[elem];
-        int end;
+        ll int start = pos[elem];
+        ll int end;
         if(elem+1 < V)
             end = pos[elem+1];
         else
             end = E;
 
         // cout << "elem = "<<elem<<", start = "<<start<<", end = "<<end<<endl;
-        for(int i = start;i<end;i++)
+        if(end > start)
         {
-            int v = neigh[i];
-            int wt = weight[i];
+            totDeg += (end-start);
+            count++;
+        }
+        
+        for(ll int i = start;i<end;i++)
+        {
+            ll int v = neigh[i];
+            ll int wt = weight[i];
+            
             // cout << "dist[elem] = "<<dist[elem]<<", wt = "<<wt<<", v = "<<v<<", dist[v] = "<<dist[v]<<endl;
             if(dist[elem] + wt < dist[v])
             {
@@ -319,7 +339,7 @@ int V,int E,int pos[],int neigh[],int weight[],int Source){
         // printArray(d_elements,*elemSize*k,k);
         if(*elemSize != 0)
         {
-            int block = ceil((float) *elemSize/1024);
+            ll int block = ceil((float) *elemSize/1024);
             setLockVar<<<block,1024>>>(curSize,lockArr,elemSize);
             cudaDeviceSynchronize();
             Insert_Elem<<<block,1024>>>(d_a,d_elements,curSize,lockArr,elemSize,k);
@@ -334,48 +354,63 @@ int V,int E,int pos[],int neigh[],int weight[],int Source){
     double endtime = rtclock();  
     pardijtime = endtime - starttime;
     printtime("Parallel Dijkstra Time Taken ", starttime, endtime);
+    cout << "Avg degree : "<<totDeg/count;
 }
 
-void compareDis(int dist[],int dist2[],int V,int k)
+void compareDis(ll int dist[],ll int dist2[],ll int V,ll int k)
 {
-    int flag = 0;
-    for(int i = 0;i<V;i++){
+    ll int flag = 0;
+    for(ll int i = 0;i<V;i++){
         if(dist[i] != dist2[i]){
             flag++;
+	    if(flag < 100)
+	    cout << i << ", "<<dist[i]<<", "<<dist2[i]<<endl;
         }
     }
 
     cout << "No of Errors : "<<flag << endl;
 
-    printArray(dist,V,k);
-    printArray(dist2,V,k);
+    //printArray(dist,V,k);
+    //printArray(dist2,V,k);
 }
 
 int main(int argc, char* argv[]) {
 
     graph G(argv[1]);
-	G.parseGraph();
+    G.parseGraph();
     srand(time(0));
 
-    int *d_a,*curSize,*lockArr,*elemSize,Source = 0,*d_elements,k = 2;
+    ll int *curSize;
+    ll int *d_a,*lockArr,*elemSize,Source = 0,*d_elements,k = 2,*pos,*neigh,*weight;
+    ll int V = G.num_nodes();
+    ll int E = G.num_edges();
+    cudaHostAlloc(&curSize, sizeof(ll int), 0);
+    cudaHostAlloc(&elemSize, sizeof(ll int), 0);
+    cudaMalloc(&lockArr,(V+10)*sizeof(ll int));
+    cudaMalloc(&pos,(V+10)*sizeof(ll int));
+    cudaMalloc(&neigh,(E+10)*sizeof(ll int));
+    cudaMalloc(&weight,(E+10)*sizeof(ll int));
+    cudaMemset(lockArr,0,(V+10)*sizeof(ll int));
+    cudaHostAlloc(&d_a, maxSize*k*sizeof(ll int),0);
+    cudaHostAlloc(&d_elements, maxSize * sizeof(ll int),0);
 
-    cudaHostAlloc(&curSize, sizeof(int), 0);
-    cudaHostAlloc(&elemSize, sizeof(int), 0);
-    cudaMalloc(&lockArr,(maxSize)*sizeof(int));
-    cudaMemset(lockArr,0,(maxSize)*sizeof(int));
-    cudaHostAlloc(&d_a, maxSize*k*sizeof(int),0);
-    cudaHostAlloc(&d_elements, maxSize * sizeof(int),0);
+    //int V = G.num_nodes();
+    
+    int *temp = G.getEdgeLen();
 
-    int V = G.num_nodes();
-    int E = G.num_edges();
+    for(ll int i = 0; i < E; i++) {
+        weight[i] = temp[i];
+    }
 
-    int pos[V],neigh[E],*weight = G.getEdgeLen();;
     setGraph(G,pos,neigh,V,E);
-    int dist[V],dist2[V];
 
-    for(int i = 0;i<V;i++) {
-        dist[i] = 10000000;
-        dist2[i] = 10000000;
+    ll int *dist,*dist2;
+    cudaMalloc(&dist,(V+10)*sizeof(ll int));
+    cudaMalloc(&dist2,(V+10)*sizeof(ll int));
+
+    for(ll int i = 0;i<V;i++) {
+        dist[i] =  1000000000;
+        dist2[i] = 1000000000;
     }
 
     double serdijtime,pardijtime;
