@@ -1,0 +1,244 @@
+290
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+Execution time = 2020.37
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/twitterwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/USAudwt.txt
+
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/USAudwt.txt
+date
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/USAudwt.txt
+now
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/USAudwt.txt
+Fri Dec 29 00:34:11 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/USAudwt.txt
+Fri Dec 29 00:34:25 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/USAudwt.txt
+Fri Dec 29 00:35:13 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/USAudwt.txt
+Fri Dec 29 00:38:08 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/livjournalwt.txt
+Fri Dec 29 00:39:48 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/USAudwt.txt
+Fri Dec 29 00:44:24 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/livjournalwt.txt
+Fri Dec 29 00:04:34 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/USAudwt.txt
+290
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Execution time = 2059.07
+Fri Dec 29 00:52:54 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/livjournalwt.txt
+290
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Execution time = 2059.35
+Fri Dec 29 01:41:15 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/orkutudwt.txt
+290
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Execution time = 2062.28
+Fri Dec 29 02:29:39 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/sinaweibowt.txt
+290
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Execution time = 2050.88
+Fri Dec 29 03:17:54 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/twitterwt.txt
+290
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Execution time = 2063.25
+Fri Dec 29 06:29:50 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/USAudwt.txt
+Fri Dec 29 05:49:29 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/USAudwt.txt
+Fri Dec 29 06:32:24 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/USAudwt.txt
+Fri Dec 29 06:38:23 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/livjournalwt.txt
+Fri Dec 29 06:47:00 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/USAudwt.txt
+Fri Dec 29 06:52:17 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/livjournalwt.txt
+Fri Dec 29 06:11:06 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/USAudwt.txt
+Fri Dec 29 06:13:20 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/USAudwt.txt

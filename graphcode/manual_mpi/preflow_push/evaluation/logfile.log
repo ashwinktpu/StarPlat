@@ -1,0 +1,95 @@
+Architecture:          x86_64
+CPU op-mode(s):        32-bit, 64-bit
+Byte Order:            Little Endian
+CPU(s):                32
+On-line CPU(s) list:   0-31
+Thread(s) per core:    1
+Core(s) per socket:    16
+Socket(s):             2
+NUMA node(s):          2
+Vendor ID:             GenuineIntel
+CPU family:            6
+Model:                 85
+Model name:            Intel(R) Xeon(R) Gold 6142 CPU @ 2.60GHz
+Stepping:              4
+CPU MHz:               2600.000
+BogoMIPS:              5200.00
+Virtualization:        VT-x
+L1d cache:             32K
+L1i cache:             32K
+L2 cache:              1024K
+L3 cache:              22528K
+NUMA node0 CPU(s):     0-15
+NUMA node1 CPU(s):     16-31
+Flags:                 fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch epb cat_l3 cdp_l3 intel_ppin intel_pt ssbd mba ibrs ibpb stibp tpr_shadow vnmi flexpriority ept vpid fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm cqm mpx rdt_a avx512f avx512dq rdseed adx smap clflushopt clwb avx512cd avx512bw avx512vl xsaveopt xsavec xgetbv1 cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_local dtherm arat pln pts pku ospke spec_ctrl intel_stibp flush_l1d
+Compilation successful. Running the program...
+Processing /lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/germanyudwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/germanyudwt.txt
+file name = 
+file name = 
+
+splitter OK
+MPI OK
+Processing /lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/livjournalwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/livjournalwt.txt
+file name = 
+file name = 
+
+splitter OK
+MPI OK
+Processing /lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/orkutudwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/orkutudwt.txt
+file name = 
+file name = 
+
+splitter OK
+MPI OK
+Processing /lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/pokecwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/pokecwt.txt
+file name = 
+file name = 
+
+splitter OK
+MPI OK
+Processing /lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/rmatwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/rmatwt.txt
+file name = 
+file name = 
+
+splitter OK
+MPI OK
+Processing /lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/sinaweibowt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/sinaweibowt.txt
+file name = 
+file name = 
+
+splitter OK
+MPI OK
+Processing /lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/twitterwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/twitterwt.txt
+file name = 
+file name = 
+
+splitter OK
+MPI OK
+Processing /lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/u10m80mwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/u10m80mwt.txt
+file name = 
+file name = 
+
+splitter OK
+MPI OK
+Processing /lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/USAudwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/USAudwt.txt
+file name = 
+file name = 
+
+splitter OK
+MPI OK
+Processing /lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/wikiwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/wikiwt.txt
+file name = 
+file name = 
+
+splitter OK
+MPI OK

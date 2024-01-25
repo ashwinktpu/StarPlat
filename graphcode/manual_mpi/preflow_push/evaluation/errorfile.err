@@ -1,0 +1,25 @@
+In file included from Distributed_Network.hpp:16,
+                 from partitioned_file_reader.hpp:7,
+                 from init_maxflow.cpp:9:
+serial_methods.hpp: In function ‘void update_edges(std::vector<int*>&)’:
+serial_methods.hpp:90:72: warning: narrowing conversion of ‘(& residual_graph.std::vector<std::vector<std::vector<int> > >::operator[](((std::vector<std::vector<std::vector<int> > >::size_type)v)))->std::vector<std::vector<int> >::size()’ from ‘std::vector<std::vector<int> >::size_type’ {aka ‘long unsigned int’} to ‘int’ [-Wnarrowing]
+   90 |             residual_graph[u].push_back ({v, 0, residual_graph[v].size () , direction, to_proc}) ;
+      |                                                 ~~~~~~~~~~~~~~~~~~~~~~~^~
+serial_methods.hpp:90:72: warning: narrowing conversion of ‘(& residual_graph.std::vector<std::vector<std::vector<int> > >::operator[](((std::vector<std::vector<std::vector<int> > >::size_type)v)))->std::vector<std::vector<int> >::size()’ from ‘std::vector<std::vector<int> >::size_type’ {aka ‘long unsigned int’} to ‘int’ [-Wnarrowing]
+serial_methods.hpp:91:81: warning: narrowing conversion of ‘((& residual_graph.std::vector<std::vector<std::vector<int> > >::operator[](((std::vector<std::vector<std::vector<int> > >::size_type)u)))->std::vector<std::vector<int> >::size() - 1)’ from ‘std::vector<std::vector<int> >::size_type’ {aka ‘long unsigned int’} to ‘int’ [-Wnarrowing]
+   91 |             residual_graph[v].push_back ({u, capacity, residual_graph[u].size ()-1, direction, _rank}) ;
+      |                                                        ~~~~~~~~~~~~~~~~~~~~~~~~~^~
+serial_methods.hpp:91:81: warning: narrowing conversion of ‘((& residual_graph.std::vector<std::vector<std::vector<int> > >::operator[](((std::vector<std::vector<std::vector<int> > >::size_type)u)))->std::vector<std::vector<int> >::size() - 1)’ from ‘std::vector<std::vector<int> >::size_type’ {aka ‘long unsigned int’} to ‘int’ [-Wnarrowing]
+serial_methods.hpp:98:72: warning: narrowing conversion of ‘(& residual_graph.std::vector<std::vector<std::vector<int> > >::operator[](((std::vector<std::vector<std::vector<int> > >::size_type)v)))->std::vector<std::vector<int> >::size()’ from ‘std::vector<std::vector<int> >::size_type’ {aka ‘long unsigned int’} to ‘int’ [-Wnarrowing]
+   98 |             residual_graph[u].push_back ({v, 0, residual_graph[v].size () , direction, to_proc}) ;
+      |                                                 ~~~~~~~~~~~~~~~~~~~~~~~^~
+serial_methods.hpp:98:72: warning: narrowing conversion of ‘(& residual_graph.std::vector<std::vector<std::vector<int> > >::operator[](((std::vector<std::vector<std::vector<int> > >::size_type)v)))->std::vector<std::vector<int> >::size()’ from ‘std::vector<std::vector<int> >::size_type’ {aka ‘long unsigned int’} to ‘int’ [-Wnarrowing]
+serial_methods.hpp:99:81: warning: narrowing conversion of ‘((& residual_graph.std::vector<std::vector<std::vector<int> > >::operator[](((std::vector<std::vector<std::vector<int> > >::size_type)u)))->std::vector<std::vector<int> >::size() - 1)’ from ‘std::vector<std::vector<int> >::size_type’ {aka ‘long unsigned int’} to ‘int’ [-Wnarrowing]
+   99 |             residual_graph[v].push_back ({u, capacity, residual_graph[u].size ()-1 , direction, _rank}) ;
+      |                                                        ~~~~~~~~~~~~~~~~~~~~~~~~~^~
+serial_methods.hpp:99:81: warning: narrowing conversion of ‘((& residual_graph.std::vector<std::vector<std::vector<int> > >::operator[](((std::vector<std::vector<std::vector<int> > >::size_type)u)))->std::vector<std::vector<int> >::size() - 1)’ from ‘std::vector<std::vector<int> >::size_type’ {aka ‘long unsigned int’} to ‘int’ [-Wnarrowing]
+serial_methods.hpp: In function ‘FILE* fileIO(char*)’:
+serial_methods.hpp:110:20: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  110 |     char* global = "/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/" ;
+      |                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+rm: cannot remove ‘../part_*’: No such file or directory

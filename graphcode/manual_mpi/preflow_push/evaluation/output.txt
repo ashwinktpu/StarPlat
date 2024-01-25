@@ -1,0 +1,2258 @@
+Sat Dec 30 22:29:26 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/pokecwt.txt
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_00
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_01
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_03
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_04
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_07
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_09
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_13
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_15
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_18
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_20
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_22
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_23
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_24
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_25
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_26
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_27
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_28
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_31
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_02
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_05
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_06
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_08
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_10
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_11
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_12
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_14
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_16
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_17
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_19
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_21
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_29
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_30
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+593
+Execution time = 65.3424
+Execution time = 65.3424
+Execution time = 65.3424
+Execution time = 65.3424
+Execution time = 65.3424
+Execution time = 65.3424
+Execution time = 65.3425
+Execution time = 65.3425
+Execution time = 65.3425
+Execution time = 65.3424
+Execution time = 65.3425
+Execution time = 65.3425
+Execution time = 65.3424
+Execution time = 65.3424
+Execution time = 65.3425
+Execution time = 65.3424
+Execution time = 65.3424
+Execution time = 65.3424
+Execution time = 65.3424
+Execution time = 65.3424
+Execution time = 65.3424
+Execution time = 65.3424
+Execution time = 65.3425
+Execution time = 65.3425
+Execution time = 65.3424
+Execution time = 65.3424
+Execution time = 65.3425
+Execution time = 65.3424
+Execution time = 65.3425
+Execution time = 65.3424
+Execution time = 65.3424
+Execution time = 65.3424
+Sat Dec 30 22:38:11 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/livjournalwt.txt
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_00
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_01
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_03
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_04
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_05
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_08
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_09
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_12
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_13
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_14
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_15
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_16
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_17
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_18
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_19
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_21
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_23
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_25
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_26
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_28
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_29
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_30
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_31
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_02
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_06
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_07
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_10
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_11
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_20
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_22
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_24
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_27
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+Total vertices = 4847571
+2186
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Execution time = 178.426
+Sat Dec 30 22:47:33 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/pokecwt.txt
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_02
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_04
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_05
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_06
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_07
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_08
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_09
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_10
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_11
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_12
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_13
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_14
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_15
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_16
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_17
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_18
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_19
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_20
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_21
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_22
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_23
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_24
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_25
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_26
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_27
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_28
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_29
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_30
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_31
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_00
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_01
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_03
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+Total vertices = 1632803
+593
+Execution time = 65.8466
+Execution time = 65.8466
+Execution time = 65.8467
+Execution time = 65.8465
+Execution time = 65.8467
+Execution time = 65.8467
+Execution time = 65.8466
+Execution time = 65.8466
+Execution time = 65.8466
+Execution time = 65.8466
+Execution time = 65.8466
+Execution time = 65.8466
+Execution time = 65.8466
+Execution time = 65.8466
+Execution time = 65.8466
+Execution time = 65.8466
+Execution time = 65.8466
+Execution time = 65.8466
+Execution time = 65.8466
+Execution time = 65.8466
+Execution time = 65.8466
+Execution time = 65.8466
+Execution time = 65.8467
+Execution time = 65.8467
+Execution time = 65.8466
+Execution time = 65.8466
+Execution time = 65.8466
+Execution time = 65.8467
+Execution time = 65.8466
+Execution time = 65.8466
+Execution time = 65.8466
+Execution time = 65.8466
+Sat Dec 30 22:51:29 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/orkutudwt.txt
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_00
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_01
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_04
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_05
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_07
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_08
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_09
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_11
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_13
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_15
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_16
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_17
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_21
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_24
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_28
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_29
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_30
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_31
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_02
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_03
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_06
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_10
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_12
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_14
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_18
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_19
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_20
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_22
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_23
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_25
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_26
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_27
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+Total vertices = 3072626
+520
+Execution time = 4.75841
+Execution time = 4.75842
+Execution time = 4.75842
+Execution time = 4.75841
+Execution time = 4.75846
+Execution time = 4.75841
+Execution time = 4.7584
+Execution time = 4.75841
+Execution time = 4.75847
+Execution time = 4.75842
+Execution time = 4.75843
+Execution time = 4.75842
+Execution time = 4.75844
+Execution time = 4.7584
+Execution time = 4.75844
+Execution time = 4.75843
+Execution time = 4.75852
+Execution time = 4.75848
+Execution time = 4.75842
+Execution time = 4.75842
+Execution time = 4.75842
+Execution time = 4.75854
+Execution time = 4.75842
+Execution time = 4.75842
+Execution time = 4.75844
+Execution time = 4.75842
+Execution time = 4.75846
+Execution time = 4.75844
+Execution time = 4.75845
+Execution time = 4.75843
+Execution time = 4.75842
+Execution time = 4.75851
+Sat Dec 30 23:13:15 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/twitterwt.txt
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_04
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_06
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_18
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_20
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_25
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_28
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_29
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_00
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_01
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_02
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_03
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_05
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_07
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_08
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_09
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_10
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_12
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_13
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_14
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_15
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_16
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_17
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_21
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_22
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_24
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_26
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_27
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_30
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_11
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_19
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_23
+/lfs/usrhome/mtech/cs22m028/max-flow/final_bench/part_31
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+Total vertices = 21297772
+0
+Execution time = 0.000544467
+Execution time = 0.000589513
+Execution time = 0.00053169
+Execution time = 0.000537054
+Execution time = 0.000551204
+Execution time = 0.000579506
+Execution time = 0.000584958
+Execution time = 0.000554432
+Execution time = 0.000650429
+Execution time = 0.000510956
+Execution time = 0.000546871
+Execution time = 0.00065652
+Execution time = 0.000598804
+Execution time = 0.000559699
+Execution time = 0.000569248
+Execution time = 0.000499505
+Execution time = 0.000561156
+Execution time = 0.000597279
+Execution time = 0.00056368
+Execution time = 0.000626284
+Execution time = 0.000549343
+Execution time = 0.000511331
+Execution time = 0.000567414
+Execution time = 0.000540232
+Execution time = 0.000606629
+Execution time = 0.000594438
+Execution time = 0.000538005
+Execution time = 0.000535084
+Execution time = 0.000574575
+Execution time = 0.000522422
+Execution time = 0.000674269
+Execution time = 0.000542168
+Sat Dec 30 23:57:02 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/sinaweibowt.txt
+Sun Dec 31 00:35:11 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/wikiwt.txt
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_00
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_01
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_02
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_03
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_04
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_05
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_06
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_07
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_08
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_09
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_10
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_11
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_12
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_13
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_14
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_15
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_16
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_17
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_18
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_19
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_20
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_21
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_22
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_23
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_24
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_25
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_26
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_27
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_28
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_29
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_30
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_31
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+45
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Execution time = 617.448
+Sun Dec 31 00:54:18 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/germanyudwt.txt
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_09
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_21
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_29
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_30
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_00
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_02
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_03
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_04
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_05
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_06
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_07
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_08
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_11
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_12
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_13
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_14
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_15
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_17
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_24
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_01
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_10
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_16
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_18
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_19
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_20
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_22
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_23
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_25
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_26
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_27
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_28
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_31
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+graph build successful
+Total vertices = 11548845
+graph build successful
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+graph build successful
+Total vertices = 11548845
+graph build successful
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+graph build successful
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+graph build successful
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+graph build successful
+graph build successful
+Total vertices = 11548845
+graph build successful
+graph build successful
+Total vertices = 11548845
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+Total vertices = 11548845
+Total vertices = 11548845
+Total vertices = 11548845
+Total vertices = 11548845
+Total vertices = 11548845
+Total vertices = 11548845
+Total vertices = 11548845
+Total vertices = 11548845
+Total vertices = 11548845
+Total vertices = 11548845
+Total vertices = 11548845
+Total vertices = 11548845
+Total vertices = 11548845
+Total vertices = 11548845
+Total vertices = 11548845
+Total vertices = 11548845
+Sun Dec 31 03:00:51 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/wikiwt.txt
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_00
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_02
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_03
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_04
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_06
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_07
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_08
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_09
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_11
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_14
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_15
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_16
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_17
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_20
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_23
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_25
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_26
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_27
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_28
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_29
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_30
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_31
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_01
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_05
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_10
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_12
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_13
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_18
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_19
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_21
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_22
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_24
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+45
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Execution time = 592.006
+Sun Dec 31 03:19:04 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/germanyudwt.txt
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_09
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_10
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_11
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_22
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_23
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_00
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_01
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_02
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_03
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_04
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_05
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_06
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_07
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_08
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_13
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_15
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_17
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_18
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_19
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_20
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_21
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_24
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_25
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_27
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_28
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_29
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_30
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_31
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_12
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_14
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_16
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_26
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+graph build successful
+Total vertices = 11548845
+Sun Dec 31 06:41:20 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/rmatwt.txt
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_00
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_02
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_03
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_04
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_05
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_06
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_07
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_09
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_10
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_11
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_12
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_13
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_14
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_15
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_16
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_17
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_18
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_19
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_20
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_21
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_22
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_23
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_24
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_25
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_26
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_27
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_28
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_29
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_30
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_31
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_01
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_08
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+Total vertices = 16775681
+1756929
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Execution time = 5583.01
+Sun Dec 31 08:34:36 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/wikiwt.txt
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_00
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_01
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_02
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_03
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_04
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_05
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_06
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_07
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_08
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_09
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_10
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_11
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_12
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_13
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_14
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_15
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_16
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_17
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_18
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_19
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_20
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_21
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_22
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_23
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_24
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_25
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_26
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_27
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_28
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_29
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_30
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_31
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+Total vertices = 3370462
+45
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Execution time = 580.092
+Sun Dec 31 15:50:52 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/USAudwt.txt
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_00
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_01
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_02
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_03
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_04
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_05
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_06
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_07
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_08
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_09
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_10
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_11
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_12
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_13
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_14
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_15
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_16
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_17
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_18
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_19
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_20
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_21
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_22
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_23
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_24
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_25
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_26
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_27
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_28
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_29
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_30
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_31
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Total vertices = 23947347
+Sun Dec 31 17:40:05 IST 2023
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/USAudwt.txt
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_00
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_01
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_02
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_03
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_04
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_05
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_06
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_07
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_08
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_09
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_10
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_11
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_12
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_13
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_14
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_15
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_16
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_17
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_18
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_19
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_20
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_21
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_22
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_23
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_24
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_25
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_26
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_27
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_28
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_29
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_30
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_31
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+graph build successful
+Total vertices = 23947347
+Mon Jan 8 09:19:08 IST 2024
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/u10m80mwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/u10m80mwt.txt
+num vertices 10000000
+starting graph partitioning
+367538ms
+1
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_00
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_01
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_02
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_03
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_04
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_05
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_06
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_07
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_08
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_09
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_10
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_11
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_12
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_13
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_14
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_15
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_16
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_17
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_18
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_19
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_20
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_21
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_22
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_23
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_24
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_25
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_26
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_27
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_28
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_29
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_30
+/lfs/usrhome/mtech/cs22m028/max-flow/wiki_bench/part_31
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+raw input OK
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+graph build successful
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+Total vertices = 10000000
+290
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Execution time = 2018.05
+Mon Jan 8 21:39:04 IST 2024
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/germanyudwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/germanyudwt.txt
+num vertices 11548845
+starting graph partitioning
+5795.91ms
+1
+Mon Jan 8 21:40:01 IST 2024
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/livjournalwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/livjournalwt.txt
+Mon Jan 8 21:41:58 IST 2024
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/germanyudwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/germanyudwt.txt
+num vertices 11548845
+starting graph partitioning
+5784.81ms
+1
+Time taken by partitionGraph: 5804776 microseconds
+Mon Jan 8 21:42:54 IST 2024
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/livjournalwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/livjournalwt.txt
+Mon Jan 8 21:44:57 IST 2024
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/germanyudwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/germanyudwt.txt
+num vertices 11548845
+starting graph partitioning
+5799.47ms
+1
+Time taken by partitionGraph: 5818334 microseconds
+Mon Jan 8 21:45:52 IST 2024
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/livjournalwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/livjournalwt.txt
+num vertices 4847571
+starting graph partitioning
+49696.1ms
+1
+Time taken by partitionGraph: 49699534 microseconds
+Mon Jan 8 21:49:46 IST 2024
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/orkutudwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/orkutudwt.txt
+num vertices 3072626
+starting graph partitioning
+101058ms
+1
+Time taken by partitionGraph: 101060320 microseconds
+Mon Jan 8 22:00:42 IST 2024
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/pokecwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/pokecwt.txt
+num vertices 1632803
+starting graph partitioning
+27735.3ms
+1
+Time taken by partitionGraph: 27736988 microseconds
+Mon Jan 8 22:02:44 IST 2024
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/rmatwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/rmatwt.txt
+num vertices 16775681
+starting graph partitioning
+334987ms
+1
+Time taken by partitionGraph: 335018021 microseconds
+Mon Jan 8 22:14:06 IST 2024
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/sinaweibowt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/sinaweibowt.txt
+num vertices 58655849
+starting graph partitioning
+866857ms
+1
+Time taken by partitionGraph: 866956774 microseconds
+Mon Jan 8 22:53:04 IST 2024
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/twitterwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/twitterwt.txt
+num vertices 21297772
+starting graph partitioning
+604309ms
+1
+Time taken by partitionGraph: 604342960 microseconds
+Mon Jan 8 23:18:51 IST 2024
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/u10m80mwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/u10m80mwt.txt
+num vertices 10000000
+starting graph partitioning
+439796ms
+1
+Time taken by partitionGraph: 439813228 microseconds
+Mon Jan 8 23:30:50 IST 2024
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/USAudwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/USAudwt.txt
+num vertices 23947347
+starting graph partitioning
+13519.4ms
+1
+Time taken by partitionGraph: 13557954 microseconds
+Mon Jan 8 23:32:57 IST 2024
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/wikiwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/wikiwt.txt
+num vertices 3370462
+starting graph partitioning
+47932.2ms
+1
+Time taken by partitionGraph: 47935405 microseconds
