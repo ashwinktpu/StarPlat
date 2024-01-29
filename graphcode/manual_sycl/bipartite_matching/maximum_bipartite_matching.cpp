@@ -1,14 +1,12 @@
-#include<bit/stdc++.h>
-#include<CL/sycl.hpp>
+#include<bits/stdc++.h>
+#include <CL/sycl.hpp>
 #include "graph.hpp"
 using namespace sycl;
-
-//-------------------------- CONSTANTS ---------------------------------//
 
 const int NUM_THREADS = 1048576;
 const int STRIDE = NUM_THREADS;
 
-//-------------------------- Utility Functions -------------------------//
+//--------------------  UTILITY FUNCTIONS :: START ------------------------------//
 
 void memoryCopy(queue &Q, bool *to, bool *from, int memSize) {
     Q.submit([&](handler &h) {
@@ -74,8 +72,9 @@ bool* deviceMemAllocateBool(queue &Q, int len) {
     return malloc_device<bool>(len, Q);
 }
 
+//--------------------  UTILITY FUNCTIONS :: END ------------------------------//
 
-//------------------------------ Kernels ------------------------------//
+//--------------------  KERNELs :: START ------------------------------//
 
 void APFB_kernel_1(queue &Q, int V, int nc, int *d_cmatch, int *d_bfsArray, int *d_L0) {
 
@@ -203,9 +202,9 @@ void APFB_kernel_6(queue &Q, int V, int nc, int *d_rmatch, int *d_cmatch) {
         });
     }).wait();
 }
+//--------------------  KERNELs :: END ------------------------------//
 
 
-// -------------------------------------------- Maximum Bipartite Matching -----------------------------//
 
 void APFB(graph &g, int nc) {
 
@@ -269,6 +268,9 @@ void APFB(graph &g, int nc) {
     memoryCopy(Q, d_src, h_src, E);
     memoryCopy(Q, d_weight, h_weight, E);
     memoryCopy(Q, d_rev_meta, h_rev_meta, V + 1);
+
+    // TIMER START
+    std::chrono::steady_clock::time_point tic = std::chrono::steady_clock::now();
 
 
     // Host Variables
@@ -438,8 +440,10 @@ void APFB(graph &g, int nc) {
         }
     }
 
-    printf("Maximum Matches: %d\n", cntMatchings);d
+    printf("Maximum Matches: %d\n", cntMatchings);
+    std::cout << "Time required: " << std::chrono::duration_cast<std::chrono::microseconds>(toc - tic).count() << "[µs]" << "   "<<std::endl;
 }
+
 
 
 
@@ -449,7 +453,7 @@ int main(int argc, char** argv) {
     printf("Taking input from: %s\n", inp); fflush(stdout);
 
     graph g(inp);
-    g.parseGraph(isWeighted);
+    g.parseGraph();
 
     int nc = 0;
     printf("If left partition size is not given it takes n/2 by default\n"); fflush(stdout);
