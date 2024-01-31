@@ -29,7 +29,6 @@
 class Graph
 {
   private:
-  unordered_set <int32_t> local_queue ; 
   bool undirected;
   int32_t nodesTotal;
   int32_t edgesTotal;
