@@ -2,7 +2,7 @@
 #include <iostream>
 #include <fstream>
 #define DEBUG 0
-#include "graph.h"
+#include "./graph.h"
 
 using namespace sycl;
 
