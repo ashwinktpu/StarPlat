@@ -228,58 +228,63 @@ int main(int argc, char **argv) {
     std::cout <<"#Nodes: " << V << std::endl;
     std::cout << "#Edges: " << E << std::endl;
 
-    bool *h_noNewPaths;
-    int *h_L0;
-    int *h_NOT_VISITED;
-    int *h_bfsLevel;
-    bool *h_noNewVertices;
-    bool *h_modified;
-    bool *h_compressed;
+    bool *h_noNewPaths = (bool *)malloc(1 * sizeof(bool));
+    int *h_L0 = (int *)malloc(1 * sizeof(int));
+    int *h_NOT_VISITED = (int *)malloc(1 * sizeof(int));
+    int *h_bfsLevel = (int *)malloc(1 * sizeof(int));
+    bool *h_noNewVertices = (bool *)malloc(1 * sizeof(bool));
+    bool *h_modified = (bool *)malloc(V * sizeof(bool));
+    bool *h_compressed = (bool *)malloc(1 * sizeof(bool));
 
-    h_noNewPaths = hostMemAllocateBool(1);
-    h_L0 = hostMemAllocateInteger(1);
-    h_NOT_VISITED = hostMemAllocateInteger(1);
-    h_bfsLevel = hostMemAllocateInteger(1);
-    h_noNewVertices = hostMemAllocateBool(1);
-    h_modified = hostMemAllocateBool(V);
-    h_compressed = hostMemAllocateBool(1);
+    // h_noNewPaths = hostMemAllocateBool(1);
+    // h_L0 = hostMemAllocateInteger(1);
+    // h_NOT_VISITED = hostMemAllocateInteger(1);
+    // h_bfsLevel = hostMemAllocateInteger(1);
+    // h_noNewVertices = hostMemAllocateBool(1);
+    // h_modified = hostMemAllocateBool(V);
+    // h_compressed = hostMemAllocateBool(1);
 
     // Device Variables
-    bool *d_modified;
-    int *d_rmatch;
-    int *d_cmatch;
-    bool *d_noNewPaths;
-    int *d_L0;
-    int *d_bfsArray;
-    int *d_NOT_VISITED;
-    int *d_predeccesor;
-    int *d_bfsLevel;
-    bool *d_noNewVertices;
-    bool *d_compress;
-    bool *d_compress_next;
-    bool *d_compressed;
-    bool *d_modified_next;
+    bool *d_modified = malloc_device<bool>(V, Q);
+    int *d_rmatch = malloc_device<int>(V, Q);
+    int *d_cmatch = malloc_device<int>(V, Q);
+    bool *d_noNewPaths = malloc_device<bool>(1, Q);
+    int *d_L0 = malloc_device<int>(1, Q);
+    int *d_bfsArray = malloc_device<int>(V, Q);
+    int *d_NOT_VISITED = malloc_device<int>(1, Q);
+    int *d_predeccesor = malloc_device<int>(V, Q);
+    int *d_bfsLevel = malloc_device<int>(1, Q);
+    bool *d_noNewVertices = malloc_device<bool>(1, Q);
+    bool *d_compress = malloc_device<bool>(V, Q);
+    bool *d_compress_next = malloc_device<bool>(V, Q);
+    bool *d_compressed = malloc_device<bool>(1, Q);
+    bool *d_modified_next = malloc_device<bool>(V, Q);
 
 
-    d_modified = deviceMemAllocateBool(Q, V);
-    d_rmatch = deviceMemAllocateInteger(Q, V);
-    d_cmatch = deviceMemAllocateInteger(Q, V);
-    d_noNewPaths = deviceMemAllocateBool(Q, 1);
-    d_L0 = deviceMemAllocateInteger(Q, 1);
-    d_bfsArray = deviceMemAllocateInteger(Q, V);
-    d_NOT_VISITED = deviceMemAllocateInteger(Q, 1);
-    d_predeccesor = deviceMemAllocateInteger(Q, V);
-    d_bfsLevel = deviceMemAllocateInteger(Q, 1);
-    d_noNewVertices = deviceMemAllocateBool(Q, 1);
-    d_compress = deviceMemAllocateBool(Q, V);
-    d_compress_next = deviceMemAllocateBool(Q, V);
-    d_compressed = deviceMemAllocateBool(Q, 1);
-    d_modified_next = deviceMemAllocateBool(Q, V);
+    // d_modified = deviceMemAllocateBool(Q, V);
+    // d_rmatch = deviceMemAllocateInteger(Q, V);
+    // d_cmatch = deviceMemAllocateInteger(Q, V);
+    // d_noNewPaths = deviceMemAllocateBool(Q, 1);
+    // d_L0 = deviceMemAllocateInteger(Q, 1);
+    // d_bfsArray = deviceMemAllocateInteger(Q, V);
+    // d_NOT_VISITED = deviceMemAllocateInteger(Q, 1);
+    // d_predeccesor = deviceMemAllocateInteger(Q, V);
+    // d_bfsLevel = deviceMemAllocateInteger(Q, 1);
+    // d_noNewVertices = deviceMemAllocateBool(Q, 1);
+    // d_compress = deviceMemAllocateBool(Q, V);
+    // d_compress_next = deviceMemAllocateBool(Q, V);
+    // d_compressed = deviceMemAllocateBool(Q, 1);
+    // d_modified_next = deviceMemAllocateBool(Q, V);
 
-    init(Q, d_modified, false, V, NUM_THREADS, STRIDE);
-    init(Q, d_rmatch, -1, V, NUM_THREADS, STRIDE);
-    init(Q, d_cmatch, -1, V, NUM_THREADS, STRIDE);
-    init(Q, d_modified_next, false, V, NUM_THREADS, STRIDE);
+    // init(Q, d_modified, false, V, NUM_THREADS, STRIDE);
+    // init(Q, d_rmatch, -1, V, NUM_THREADS, STRIDE);
+    // init(Q, d_cmatch, -1, V, NUM_THREADS, STRIDE);
+    // init(Q, d_modified_next, false, V, NUM_THREADS, STRIDE);
+
+    initialize(d_modified, false, NUM_THREADS, V, Q);
+    initialize(d_rmatch, -1, NUM_THREADS, V, Q);
+    initialize(d_cmatch, -1, NUM_THREADS, V, Q);
+    initialize(d_modified_next, false,NUM_THREADS, V, Q);
 
 
     tic = std::chrono::steady_clock::now();
@@ -291,14 +296,17 @@ int main(int argc, char **argv) {
         // std:: cout << "hi\n";
         h_noNewPaths[0] = true;
 
-        memoryCopy(Q, d_noNewPaths, h_noNewPaths, 1, NUM_THREADS, STRIDE);
+        // memoryCopy(Q, d_noNewPaths, h_noNewPaths, 1, NUM_THREADS, STRIDE);
+        memcpy(d_noNewPaths, h_noNewPaths, 1, Q);
         h_L0[0] = 0;
 
         h_NOT_VISITED[0] = h_L0[0] - 1;
 
-        init(Q, d_bfsArray, h_NOT_VISITED[0], V, NUM_THREADS, STRIDE); 
+        // init(Q, d_bfsArray, h_NOT_VISITED[0], V, NUM_THREADS, STRIDE); 
+        initialize(d_bfsArray, h_NOT_VISITED[0], NUM_THREADS, V, Q);
 
-        memoryCopy(Q, d_L0, h_L0, 1, NUM_THREADS, STRIDE);
+        // memoryCopy(Q, d_L0, h_L0, 1, NUM_THREADS, STRIDE);
+        memcpy(d_L0, h_L0, 1, Q);
         //##########################################################//
         //#######################KERNEL - 1#########################//
 
@@ -308,40 +316,60 @@ int main(int argc, char **argv) {
 
         //##########################################################//
 
-        init(Q, d_predeccesor, -1, V, NUM_THREADS, STRIDE);
+        // init(Q, d_predeccesor, -1, V, NUM_THREADS, STRIDE);
+        initialize(d_predeccesor, -1, NUM_THREADS, V, Q);
 
         h_bfsLevel[0] = h_L0[0];
         h_noNewVertices[0] = false;
 
-        init(Q, d_modified_next, false, V, NUM_THREADS, STRIDE);
+        // init(Q, d_modified_next, false, V, NUM_THREADS, STRIDE);
+        initialize(d_modified_next, false, NUM_THREADS, V, Q);
 
         while(!h_noNewVertices[0]) {
             // std:: cout << "hi 2\n";
             h_noNewVertices[0] = true;
-            memoryCopy(Q, d_noNewVertices, h_noNewVertices, 1, NUM_THREADS, STRIDE);
-            memoryCopy(Q, d_bfsLevel, h_bfsLevel, 1, NUM_THREADS, STRIDE);
-            memoryCopy(Q, d_NOT_VISITED, h_NOT_VISITED, 1, NUM_THREADS, STRIDE);
-            memoryCopy(Q, d_noNewVertices, h_noNewVertices, 1, NUM_THREADS, STRIDE);
-            memoryCopy(Q, d_noNewPaths, h_noNewPaths, 1, NUM_THREADS, STRIDE);
+            // memoryCopy(Q, d_noNewVertices, h_noNewVertices, 1, NUM_THREADS, STRIDE);
+            // memoryCopy(Q, d_bfsLevel, h_bfsLevel, 1, NUM_THREADS, STRIDE);
+            // memoryCopy(Q, d_NOT_VISITED, h_NOT_VISITED, 1, NUM_THREADS, STRIDE);
+            // memoryCopy(Q, d_noNewVertices, h_noNewVertices, 1, NUM_THREADS, STRIDE);
+            // memoryCopy(Q, d_noNewPaths, h_noNewPaths, 1, NUM_THREADS, STRIDE);
+
+            memcpy(d_noNewVertices, h_noNewVertices, 1, Q);
+            memcpy(d_bfsLevel, h_bfsLevel, 1, Q);
+            memcpy(d_NOT_VISITED, h_NOT_VISITED, 1, Q);
+            memcpy(d_noNewVertices, h_noNewVertices, 1, Q);
+            memcpy(d_noNewPaths, h_noNewPaths, 1, Q);
 
             //##########################################################//
             //#######################KERNEL - 2#########################//
 
             APFB_kernel_2(g, Q, V, nc, d_bfsArray, d_bfsLevel,  d_rmatch, d_NOT_VISITED, d_noNewVertices, d_predeccesor, d_noNewPaths, NUM_THREADS, STRIDE);
 
-            memoryCopy(Q, h_bfsLevel, d_bfsLevel, 1, NUM_THREADS, STRIDE);
-            memoryCopy(Q, h_NOT_VISITED, d_NOT_VISITED, 1, NUM_THREADS, STRIDE);
-            memoryCopy(Q, h_noNewVertices, d_noNewVertices, 1, NUM_THREADS, STRIDE);
-            memoryCopy(Q, h_noNewPaths, d_noNewPaths, 1, NUM_THREADS, STRIDE);
+            // memoryCopy(Q, h_bfsLevel, d_bfsLevel, 1, NUM_THREADS, STRIDE);
+            // memoryCopy(Q, h_NOT_VISITED, d_NOT_VISITED, 1, NUM_THREADS, STRIDE);
+            // memoryCopy(Q, h_noNewVertices, d_noNewVertices, 1, NUM_THREADS, STRIDE);
+            // memoryCopy(Q, h_noNewPaths, d_noNewPaths, 1, NUM_THREADS, STRIDE);
+
+            memcpy(h_bfsLevel, d_bfsLevel, 1, Q);
+            memcpy(h_NOT_VISITED, d_NOT_VISITED, 1, Q);
+            memcpy(h_noNewVertices, d_noNewVertices, 1, Q);
+            memcpy(h_noNewPaths, d_noNewPaths, 1, Q);
             //##########################################################//
             h_bfsLevel[0] = h_bfsLevel[0] + 1;
-            memoryCopy(Q, h_modified, d_modified_next, V, NUM_THREADS, STRIDE);
-            memoryCopy(Q, d_modified, h_modified, V, NUM_THREADS, STRIDE);
-            init(Q, d_modified_next, false, V, NUM_THREADS, STRIDE);
+            // memoryCopy(Q, h_modified, d_modified_next, V, NUM_THREADS, STRIDE);
+            // memoryCopy(Q, d_modified, h_modified, V, NUM_THREADS, STRIDE);
+            // init(Q, d_modified_next, false, V, NUM_THREADS, STRIDE);
+
+            memcpy(h_modified, d_modified_next, V, Q);
+            memcpy(d_modified, h_modified, V, Q);
+            initialize(d_modified_next, false, NUM_THREADS, V, Q);
 
         }
-        init(Q, d_compress, false, V, NUM_THREADS, STRIDE);
-        init(Q, d_compress_next, false, V, NUM_THREADS, STRIDE);
+        // init(Q, d_compress, false, V, NUM_THREADS, STRIDE);
+        // init(Q, d_compress_next, false, V, NUM_THREADS, STRIDE);
+
+        initialize(d_compress, false, NUM_THREADS, V, Q);
+        initialize(d_compress_next, false, NUM_THREADS, V, Q);
 
         //##########################################################//
         //#######################KERNEL - 3#########################//
@@ -351,7 +379,8 @@ int main(int argc, char **argv) {
         //##########################################################//
 
         h_compressed[0] = false;
-        init(Q, d_modified_next, false, V, NUM_THREADS, STRIDE);
+        // init(Q, d_modified_next, false, V, NUM_THREADS, STRIDE);
+        initialize(d_modified_next, false, NUM_THREADS, V, Q);
 
         while(!h_compressed[0]) {
             // std:: cout << "hi 3\n";
@@ -360,29 +389,40 @@ int main(int argc, char **argv) {
             //##########################################################//
             //#######################KERNEL - 4#########################//
 
-            memoryCopy(Q, d_compressed, h_compressed, 1, NUM_THREADS, STRIDE);
+            // memoryCopy(Q, d_compressed, h_compressed, 1, NUM_THREADS, STRIDE);
+            memcpy(d_compressed, h_compressed, 1, Q);
 
             APFB_kernel_4(Q, V, nc, d_compress, d_predeccesor, d_cmatch, d_rmatch, d_compress_next, d_compressed, NUM_THREADS, STRIDE);
 
-            memoryCopy(Q, h_compressed, d_compressed, 1, NUM_THREADS, STRIDE);
+            // memoryCopy(Q, h_compressed, d_compressed, 1, NUM_THREADS, STRIDE);
+            memcpy(h_compressed, d_compressed, 1, Q);
             //##########################################################//
 
             //##########################################################//
             //#######################KERNEL - 5#########################//
             
             APFB_kernel_5(Q, V, nc, d_compress, d_compress_next, NUM_THREADS, STRIDE);
-            memoryCopy(Q, h_modified, d_modified_next, V, NUM_THREADS, STRIDE);
-            memoryCopy(Q, d_modified, h_modified, V, NUM_THREADS, STRIDE);
+            // memoryCopy(Q, h_modified, d_modified_next, V, NUM_THREADS, STRIDE);
+            // memoryCopy(Q, d_modified, h_modified, V, NUM_THREADS, STRIDE);
+
+            memcpy(h_modified, d_modified_next, V, Q);
+            memcpy(d_modified, h_modified, V, Q);
             //##########################################################//
 
-            init(Q, d_modified_next, false, V, NUM_THREADS, STRIDE);
+            // init(Q, d_modified_next, false, V, NUM_THREADS, STRIDE);
+            initialize(d_modified_next, false, NUM_THREADS, V, Q);
         }
         APFB_kernel_6(Q, V, nc, d_rmatch, d_cmatch, NUM_THREADS, STRIDE);
 
-        memoryCopy(Q, h_noNewPaths, d_noNewPaths, 1, NUM_THREADS, STRIDE);
-        memoryCopy(Q, h_modified, d_modified_next, V, NUM_THREADS, STRIDE);
-        memoryCopy(Q, d_modified, h_modified, V, NUM_THREADS, STRIDE);
-        init(Q, d_modified_next, false, V, NUM_THREADS, STRIDE);
+        // memoryCopy(Q, h_noNewPaths, d_noNewPaths, 1, NUM_THREADS, STRIDE);
+        // memoryCopy(Q, h_modified, d_modified_next, V, NUM_THREADS, STRIDE);
+        // memoryCopy(Q, d_modified, h_modified, V, NUM_THREADS, STRIDE);
+        // init(Q, d_modified_next, false, V, NUM_THREADS, STRIDE);
+
+        memcpy(h_noNewPaths, d_noNewPaths, 1, Q);
+        memcpy(h_modified, d_modified_next, V, Q);
+        memcpy(d_modified, h_modified, V, Q);
+        initialize(d_modified_next, false, NUM_THREADS, V, Q);
     }
     toc = std::chrono::steady_clock::now();
     std::cout<< "Time to run maximum bipartite matching: " << std::chrono::duration_cast<std::chrono::microseconds>(toc - tic).count() << "[µs]" << std::endl;
@@ -390,8 +430,11 @@ int main(int argc, char **argv) {
     int *h_rmatch = hostMemAllocateInteger(V);
     int *h_cmatch = hostMemAllocateInteger(V);
 
-    memoryCopy(Q, h_rmatch, d_rmatch, V, NUM_THREADS, STRIDE);
-    memoryCopy(Q, h_cmatch, d_cmatch, V, NUM_THREADS, STRIDE);
+    // memoryCopy(Q, h_rmatch, d_rmatch, V, NUM_THREADS, STRIDE);
+    // memoryCopy(Q, h_cmatch, d_cmatch, V, NUM_THREADS, STRIDE);
+
+    memcpy(h_rmatch, d_rmatch, V, Q);
+    memcpy(h_cmatch, d_cmatch, V, Q);
 
     int cntMatchings = 0;
     for(int i = 0; i < V; i++) {
