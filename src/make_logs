@@ -1,0 +1,42 @@
+mkdir -p bin
+g++ -std=c++17  -g  -c maincontext/MainContext.cpp -o bin/MainContext.o
+g++ -std=c++17  -g  -c ast/ASTHelper.cpp -o bin/ASTHelper.o
+g++ -std=c++17  -g  -c symbolutil/SymbolTableBuilder.cpp -o bin/SymbolTableBuilder.o
+g++ -std=c++17  -g  -c symbolutil/SymbolTableNew.cpp -o bin/SymbolTableNew.o
+make -C parser
+make[1]: Entering directory '/home/cs22m028/MTP/StarPlat/src/parser'
+bison -dy lrparser.y
+flex lexer.l
+g++  -c -x c++ y.tab.c -o ../bin/y.tab.o
+g++  -c -x c++ lex.yy.c -o ../bin/lex.yy.o
+make[1]: Leaving directory '/home/cs22m028/MTP/StarPlat/src/parser'
+g++ -std=c++17  -g  -c backends/backend_cuda/dsl_cpp_generator.cpp -o bin/cu_dsl_cpp_generator.o
+g++ -std=c++17  -g  -c backends/backend_openACC/dsl_cpp_generator.cpp -o bin/ac_dsl_cpp_generator.o
+g++ -std=c++17  -g  -c backends/backend_omp/dsl_cpp_generator.cpp -o bin/om_dsl_cpp_generator.o
+g++ -std=c++17  -g  -c backends/backend_mpi/dsl_cpp_generator.cpp -o bin/mpi_dsl_cpp_generator.o
+g++ -std=c++17  -g  -c backends/backend_omp/dsl_dyn_cpp_generator.cpp -o bin/om_dyn_dsl_cpp_generator.o
+g++ -std=c++17  -g  -c backends/backend_mpi/dsl_cpp_generator_helper.cpp -o bin/mpi_dsl_cpp_generator_helper.o
+g++ -std=c++17  -g  -c backends/backend_mpi/dsl_cpp_expression_generator.cpp -o bin/mpi_dsl_cpp_expression_generator.o
+g++ -std=c++17  -g  -c backends/backend_mpi/dsl_cpp_statement_generator.cpp -o bin/mpi_dsl_cpp_statement_generator.o
+g++ -std=c++17  -g  -c backends/backend_mpi/dsl_dyn_cpp_generator.cpp -o bin/mpi_dsl_dyn_cpp_generator.o
+g++ -std=c++17  -g  -c backends/backend_sycl/dsl_cpp_generator.cpp -o bin/sycl_dsl_cpp_generator.o
+g++ -std=c++17  -g  -c backends/backend_multigpu/dsl_cpp_generator.cpp -o bin/multigpu_dsl_cpp_generator.o
+g++ -std=c++17  -g  -c backends/backend_amd/dsl_cpp_generator.cpp -o bin/amd_dsl_cpp_generator.o
+g++ -std=c++17  -g  -c analyser/attachProp/attachPropAnalyser.cpp -o bin/attachPropAnalyser.o
+g++ -std=c++17  -g  -c analyser/dataRace/dataRaceAnalyser.cpp -o bin/dataRaceAnalyser.o                  
+g++ -std=c++17  -g  -c analyser/deviceVars/deviceVarsAnalyser.cpp -o bin/dv1.o
+g++ -std=c++17  -g  -c analyser/deviceVars/deviceVarsInit.cpp -o bin/dv2.o
+g++ -std=c++17  -g  -c analyser/deviceVars/deviceVarsPrint.cpp -o bin/dv3.o
+g++ -std=c++17   -c analyser/deviceVars/deviceVarsTransfer.cpp -o bin/dv4.o
+g++ -std=c++17  -g  -c analyser/deviceVars/getUsedVars.cpp -o bin/dv5.o
+ld -r bin/dv1.o bin/dv2.o bin/dv3.o bin/dv4.o bin/dv5.o -o bin/deviceVarsAnalyser.o 
+g++ -std=c++17  -g  -c analyser/blockVars/blockVarsAnalyser.cpp -o bin/bv1.o
+g++ -std=c++17  -g  -c analyser/blockVars/blockVarsInit.cpp -o bin/bv2.o
+g++ -std=c++17  -g  -c analyser/blockVars/getUsedVars.cpp -o bin/bv3.o
+g++ -std=c++17  -g  -c analyser/blockVars/NodeBlockData.cpp -o bin/bv4.o
+g++ -std=c++17  -g  -c analyser/blockVars/setVarsInParallel.cpp -o bin/bv5.o
+g++ -std=c++17  -g  -c analyser/blockVars/analyserUtil.cpp -o bin/bv6.o.o
+ld -r bin/bv1.o bin/bv2.o bin/bv3.o bin/bv4.o bin/bv5.o bin/bv6.o.o -o bin/blockVarsAnalyser.o
+g++ -std=c++17  -g  -c analyser/analyserUtil.cpp -o bin/analyserUtil.o
+g++ -std=c++17  -g  -c analyser/pushpull/pushpullAnalyser.cpp -o bin/pushpullAnalyser.o                  
+g++ -std=c++17   bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/cu_dsl_cpp_generator.o  bin/ac_dsl_cpp_generator.o bin/om_dsl_cpp_generator.o bin/mpi_dsl_cpp_generator.o bin/om_dyn_dsl_cpp_generator.o bin/mpi_dsl_cpp_generator_helper.o bin/mpi_dsl_cpp_expression_generator.o bin/mpi_dsl_cpp_statement_generator.o bin/mpi_dsl_dyn_cpp_generator.o bin/sycl_dsl_cpp_generator.o bin/multigpu_dsl_cpp_generator.o  bin/amd_dsl_cpp_generator.o bin/attachPropAnalyser.o bin/dataRaceAnalyser.o bin/deviceVarsAnalyser.o bin/blockVarsAnalyser.o bin/analyserUtil.o bin/pushpullAnalyser.o -o StarPlat

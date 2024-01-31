@@ -3,6 +3,7 @@
 #include"triangle_counting_dsl.h"
 #include"sssp_dslV3.h"
 #include"bc_dslV2.h"
+#include "push_relabel.dsl.h"
 
 int main(int argc, char *argv[])
 {

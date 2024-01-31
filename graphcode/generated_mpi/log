@@ -1,0 +1,38 @@
+In file included from push_relabel.dsl.cc:1:
+push_relabel.dsl.h:1:28: warning: extra tokens at end of #ifndef directive
+    1 | #ifndef GENCPP_PUSH_RELABEL.DSL_H
+      |                            ^
+push_relabel.dsl.h:2:9: warning: ISO C++11 requires whitespace after the macro name
+    2 | #define GENCPP_PUSH_RELABEL.DSL_H
+      |         ^~~~~~~~~~~~~~~~~~~
+In file included from push_relabel.dsl.h:9:
+../mpi_header/graph_mpi.h:32:3: error: ‘unordered_set’ does not name a type
+   32 |   unordered_set <int32_t> local_queue ;
+      |   ^~~~~~~~~~~~~
+push_relabel.dsl.cc: In function ‘void push__(Graph&, int, int, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator)’:
+push_relabel.dsl.cc:30:3: error: ‘push_into_queue’ was not declared in this scope
+   30 |   push_into_queue(v, world);
+      |   ^~~~~~~~~~~~~~~
+In file included from /usr/include/c++/13.2.1/bits/stl_tree.h:63,
+                 from /usr/include/c++/13.2.1/set:62,
+                 from push_relabel.dsl.h:7:
+/usr/include/c++/13.2.1/bits/stl_algobase.h: In instantiation of ‘constexpr const _Tp& std::min(const _Tp&, const _Tp&, _Compare) [with _Tp = int; _Compare = boost::mpi::communicator]’:
+push_relabel.dsl.cc:8:14:   required from here
+/usr/include/c++/13.2.1/bits/stl_algobase.h:284:17: error: no match for call to ‘(boost::mpi::communicator) (const int&, const int&)’
+  284 |       if (__comp(__b, __a))
+      |           ~~~~~~^~~~~~~~~~
+/usr/include/c++/13.2.1/bits/stl_algobase.h: In instantiation of ‘constexpr const _Tp& std::max(const _Tp&, const _Tp&, _Compare) [with _Tp = int; _Compare = boost::mpi::communicator]’:
+push_relabel.dsl.cc:43:22:   required from here
+/usr/include/c++/13.2.1/bits/stl_algobase.h:306:17: error: no match for call to ‘(boost::mpi::communicator) (const int&, const int&)’
+  306 |       if (__comp(__a, __b))
+      |           ~~~~~~^~~~~~~~~~
+push_relabel.dsl.h:1:28: warning: extra tokens at end of #ifndef directive
+    1 | #ifndef GENCPP_PUSH_RELABEL.DSL_H
+      |                            ^
+push_relabel.dsl.h:2:9: warning: ISO C++11 requires whitespace after the macro name
+    2 | #define GENCPP_PUSH_RELABEL.DSL_H
+      |         ^~~~~~~~~~~~~~~~~~~
+In file included from push_relabel.dsl.h:9:
+../mpi_header/graph_mpi.h:32:3: error: ‘unordered_set’ does not name a type
+   32 |   unordered_set <int32_t> local_queue ;
+      |   ^~~~~~~~~~~~~
