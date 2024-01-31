@@ -4,6 +4,23 @@
 #include <fstream>
 #include <sstream>
 
+  void Graph::push_into_queue (int u) {
+    /* Push into a frontier. 
+     * Currently, using hash set so that there is no issue duplicate updates.
+     * 
+    */
+    local_queue.insert (u) ;
+  }
+
+  int Graph::pop_from_queue () {
+    if (local_queue.size () == 0) {
+      printf ("Error : Trying to pop from empty queue") ;
+      return -1 ;    
+    }
+    
+    return *local_queue.begin () ;
+  }
+
   void Graph::print_csr()
   {
     get_lock_for_reduction_statement();
@@ -316,8 +333,7 @@
     this->perNodeRevCSRSpace.create_window(temp.data(),nodesPartitionSize,sizeof(int32_t),world);
     this->perNodeDiffCSRSpace.create_window(temp.data(),nodesPartitionSize,sizeof(int32_t),world);
     this->perNodeDiffRevCSRSpace.create_window(temp.data(),nodesPartitionSize,sizeof(int32_t),world);
-    
-    
+   
   }
  
   void Graph::initialise_reduction(MPI_Op op, Property* reduction_property, std::vector<Property*> other_properties)
