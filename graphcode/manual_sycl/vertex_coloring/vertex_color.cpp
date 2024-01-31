@@ -6,72 +6,6 @@
 
 using namespace sycl;
 
-void memoryCopy(queue &Q, bool *to, bool *from, int memSize) {
-    Q.submit([&](handler &h) {
-        h.memcpy(to, from, memSize*sizeof(bool));
-    }).wait();
-}
-
-void memoryCopy(queue &Q, int *to, int *from, int memSize) {
-    Q.submit([&](handler &h) {
-        h.memcpy(to, from, memSize*sizeof(int));
-    }).wait();
-}
-
-void init(queue &Q, bool *arr, bool val, int arrLen, int NUM_THREADS, int STRIDE) {
-    if(arrLen == 1) {
-        Q.submit([&](handler &h) {
-            h.single_task([=]() {
-                arr[0] = val;
-            });
-        }).wait();
-    } else {
-        Q.submit([&](handler &h) {
-            h.parallel_for(NUM_THREADS, [=](id<1> i) {
-                for(int v = i; v < arrLen; v += STRIDE) {
-                    arr[v] = val;
-                }
-            });
-        }).wait();
-    }
-}
-
-void init(queue &Q, int *arr, int val, int arrLen, int NUM_THREADS, int STRIDE) {
-    if(arrLen == 1) {
-        Q.submit([&](handler &h) {
-            h.single_task([=]() {
-                arr[0] = val;
-            });
-        }).wait();
-    } else {
-        Q.submit([&](handler &h) {
-            h.parallel_for(NUM_THREADS, [=](id<1> i) {
-                for(int v = i; v < arrLen; v += STRIDE) {
-                    arr[v] = val;
-                }
-            });
-        }).wait();
-    }
-}
-
-int* hostMemAllocateInteger(int len) {
-    return (int *)malloc((len)*sizeof(int));
-}
-
-bool* hostMemAllocateBool(int len) {
-    return (bool *)malloc((len)*sizeof(bool));
-}
-
-int* deviceMemAllocateInteger(queue &Q, int len) {
-    return malloc_device<int>(len, Q);
-}
-
-bool* deviceMemAllocateBool(queue &Q, int len) {
-    return malloc_device<bool>(len, Q);
-}
-
-
-
 //-------------------------------------- Kernels ---------------------------------------------------//
 void colorGraph_Kernel1(graph *g, queue &Q, int V, int *d_result, int iteration, bool *d_allVerticesColored, int NUM_THREADS, int STRIDE) {
 
@@ -158,53 +92,42 @@ int main(int argc, char **argv) {
 
     tic = std::chrono::steady_clock::now();
 
-    int *h_result;
-    bool *h_vertices;
-    bool *h_allVerticesColored;
+    int *h_result = (int *)malloc((V)*sizeof(int));
+    bool *h_allVerticesColored = (bool *)malloc(sizeof(bool));
 
-    h_result = hostMemAllocateInteger(V);
-    h_vertices = hostMemAllocateBool(V + 1);
-    h_allVerticesColored = hostMemAllocateBool(1);
-
-    int *d_result;
-    bool *d_vertices;
-    bool *d_allVerticesColored;
-    bool *d_set;
-
-    d_result = deviceMemAllocateInteger(Q, V);
-    d_vertices = deviceMemAllocateBool(Q, V + 1);
-    d_allVerticesColored = deviceMemAllocateBool(Q, 1);
-    d_set = deviceMemAllocateBool(Q, V + 1);
+    int *d_result = malloc_device<int>(V, Q);
+    bool *d_vertices = malloc_device<bool>(V, Q);
+    bool *d_allVerticesColored = malloc_device<bool>(1, Q);
+    bool *d_set = malloc_device<bool>(V, Q);
 
 
-    init(Q, d_result, (int)-1, V, NUM_THREADS, STRIDE);
-    init(Q, d_result, (int)0, 1, NUM_THREADS, STRIDE);
-    init(Q, d_vertices, false, V, NUM_THREADS, STRIDE);
-    memoryCopy(Q, h_vertices, d_vertices, V + 1);
+    initialize(d_result, (int)-1, NUM_THREADS, V, Q, 0, 0);
+    initialize(d_vertices, false, NUM_THREADS, V, Q);
 
     int iteration = 0;
 
     h_allVerticesColored[0] = false;
 
     while(!h_allVerticesColored[0]) {
-        init(Q, d_allVerticesColored, true, 1, NUM_THREADS, STRIDE);
+        initialize(d_allVerticesColored, true, NUM_THREADS, 1, Q);
 
         colorGraph_Kernel1(g, Q, V, d_result, iteration, d_allVerticesColored, NUM_THREADS, STRIDE);
         colorGraph_Kernel2(g, Q, V, d_result, d_allVerticesColored, NUM_THREADS, STRIDE);
-        memoryCopy(Q, h_allVerticesColored, d_allVerticesColored, 1);
+
+        memcpy(h_allVerticesColored, d_allVerticesColored, 1, Q);
         iteration++;
     }
 
     toc = std::chrono::steady_clock::now();
+    std::cout << "Time to run vertex coloring: " << std::chrono::duration_cast<std::chrono::microseconds>(toc - tic).count() << "[µs]" << "   "<<std::endl;
 
     std:: set<int> st;
 
-    memoryCopy(Q, h_result, d_result, V);
+    memcpy(h_result, d_result, V, Q);
 
     for(int i = 0; i < V; i++) {
         st.insert(h_result[i]);
     }
 
     std::cout << "Minimum Number of colors needed: " << st.size() << std::endl;
-    std::cout << "Time required: " << std::chrono::duration_cast<std::chrono::microseconds>(toc - tic).count() << "[µs]" << "   "<<std::endl;
 }   
