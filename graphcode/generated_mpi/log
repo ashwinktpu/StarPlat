@@ -5,34 +5,50 @@ push_relabel.dsl.h:1:28: warning: extra tokens at end of #ifndef directive
 push_relabel.dsl.h:2:9: warning: ISO C++11 requires whitespace after the macro name
     2 | #define GENCPP_PUSH_RELABEL.DSL_H
       |         ^~~~~~~~~~~~~~~~~~~
-In file included from push_relabel.dsl.h:9:
-../mpi_header/graph_mpi.h:32:3: error: ‘unordered_set’ does not name a type
-   32 |   unordered_set <int32_t> local_queue ;
-      |   ^~~~~~~~~~~~~
-push_relabel.dsl.cc: In function ‘void push__(Graph&, int, int, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator)’:
-push_relabel.dsl.cc:30:3: error: ‘push_into_queue’ was not declared in this scope
-   30 |   push_into_queue(v, world);
-      |   ^~~~~~~~~~~~~~~
-In file included from /usr/include/c++/13.2.1/bits/stl_tree.h:63,
-                 from /usr/include/c++/13.2.1/set:62,
-                 from push_relabel.dsl.h:7:
-/usr/include/c++/13.2.1/bits/stl_algobase.h: In instantiation of ‘constexpr const _Tp& std::min(const _Tp&, const _Tp&, _Compare) [with _Tp = int; _Compare = boost::mpi::communicator]’:
-push_relabel.dsl.cc:8:14:   required from here
-/usr/include/c++/13.2.1/bits/stl_algobase.h:284:17: error: no match for call to ‘(boost::mpi::communicator) (const int&, const int&)’
-  284 |       if (__comp(__b, __a))
-      |           ~~~~~~^~~~~~~~~~
-/usr/include/c++/13.2.1/bits/stl_algobase.h: In instantiation of ‘constexpr const _Tp& std::max(const _Tp&, const _Tp&, _Compare) [with _Tp = int; _Compare = boost::mpi::communicator]’:
-push_relabel.dsl.cc:43:22:   required from here
-/usr/include/c++/13.2.1/bits/stl_algobase.h:306:17: error: no match for call to ‘(boost::mpi::communicator) (const int&, const int&)’
-  306 |       if (__comp(__a, __b))
-      |           ~~~~~~^~~~~~~~~~
 push_relabel.dsl.h:1:28: warning: extra tokens at end of #ifndef directive
     1 | #ifndef GENCPP_PUSH_RELABEL.DSL_H
       |                            ^
 push_relabel.dsl.h:2:9: warning: ISO C++11 requires whitespace after the macro name
     2 | #define GENCPP_PUSH_RELABEL.DSL_H
       |         ^~~~~~~~~~~~~~~~~~~
-In file included from push_relabel.dsl.h:9:
-../mpi_header/graph_mpi.h:32:3: error: ‘unordered_set’ does not name a type
-   32 |   unordered_set <int32_t> local_queue ;
-      |   ^~~~~~~~~~~~~
+/usr/bin/ld: /usr/lib/gcc/x86_64-pc-linux-gnu/13.2.1/../../../../lib/Scrt1.o: in function `_start':
+(.text+0x1b): undefined reference to `main'
+/usr/bin/ld: /tmp/cc4SB2ld.o: in function `push__(Graph&, int, int, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator)':
+push_relabel.dsl.cc:(.text+0x3e): undefined reference to `Graph::get_edge(int, int)'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0x56): undefined reference to `Graph::get_edge(int, int)'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0x72): undefined reference to `EdgeProperty<int>::getValue(Edge, bool)'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0x8b): undefined reference to `NodeProperty<int>::getValue(int, bool)'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0xc3): undefined reference to `NodeProperty<int>::getValue(int, bool)'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0xd5): undefined reference to `boost::mpi::communicator::rank() const'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0xe8): undefined reference to `Graph::get_node_owner(int)'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0x108): undefined reference to `NodeProperty<int>::setValue(int, int, bool)'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0x11e): undefined reference to `NodeProperty<int>::getValue(int, bool)'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0x132): undefined reference to `boost::mpi::communicator::rank() const'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0x145): undefined reference to `Graph::get_node_owner(int)'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0x165): undefined reference to `NodeProperty<int>::setValue(int, int, bool)'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0x17d): undefined reference to `EdgeProperty<int>::getValue(Edge, bool)'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0x18f): undefined reference to `boost::mpi::communicator::rank() const'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0x1a4): undefined reference to `Graph::get_edge_owner(Edge)'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0x1c5): undefined reference to `EdgeProperty<int>::setValue(Edge, int, bool)'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0x1dd): undefined reference to `EdgeProperty<int>::getValue(Edge, bool)'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0x1f1): undefined reference to `boost::mpi::communicator::rank() const'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0x206): undefined reference to `Graph::get_edge_owner(Edge)'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0x227): undefined reference to `EdgeProperty<int>::setValue(Edge, int, bool)'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0x23a): undefined reference to `Graph::push_into_queue(int&)'
+/usr/bin/ld: /tmp/cc4SB2ld.o: in function `relabel(Graph&, int, EdgeProperty<int>&, NodeProperty<int>&, boost::mpi::communicator)':
+push_relabel.dsl.cc:(.text+0x2a3): undefined reference to `Graph::getNeighbors(int)'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0x2f2): undefined reference to `Graph::get_edge(int, int)'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0x30e): undefined reference to `EdgeProperty<int>::getValue(Edge, bool)'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0x36c): undefined reference to `boost::mpi::communicator::rank() const'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0x37f): undefined reference to `Graph::get_node_owner(int)'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0x3a2): undefined reference to `NodeProperty<int>::setValue(int, int, bool)'
+/usr/bin/ld: /tmp/cc4SB2ld.o: in function `discharge(Graph&, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator)':
+push_relabel.dsl.cc:(.text+0x451): undefined reference to `Graph::getNeighbors(int)'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0x4a3): undefined reference to `Graph::get_edge(int, int)'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0x4c0): undefined reference to `NodeProperty<int>::getValue(int, bool)'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0x4df): undefined reference to `EdgeProperty<int>::getValue(Edge, bool)'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0x4fc): undefined reference to `NodeProperty<int>::getValue(int, bool)'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0x517): undefined reference to `NodeProperty<int>::getValue(int, bool)'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0x5c6): undefined reference to `NodeProperty<int>::getValue(int, bool)'
+/usr/bin/ld: push_relabel.dsl.cc:(.text+0x62e): undefined reference to `NodeProperty<int>::getValue(int, bool)'
+collect2: error: ld returned 1 exit status

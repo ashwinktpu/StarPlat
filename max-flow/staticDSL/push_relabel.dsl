@@ -12,7 +12,9 @@ function __push__ (Graph g, node u, node v, propNode <int> excess,propEdge <int>
     temp = backward_edge.residual_capacity + d ;
     backward_edge.residual_capacity = temp ;
     
-    push_into_queue (v) ;
+    if (v != src && v != snk) {
+        g.frontier_push(v) ;
+    }
 }
 
 function relabel (Graph g, node u, propEdge <int> residue, propNode <int> label) {
@@ -21,7 +23,9 @@ function relabel (Graph g, node u, propEdge <int> residue, propNode <int> label)
     for (v in g.neighbors (u)) {
         edge residual_capacity = g.get_edge (u, v) ;
         if (residual_capacity.residue > 0) {
-            new_label = max (new_label, v) ;
+            if (new_label < v) {
+               new_label = v ; 
+            }
         }
     }
     
@@ -47,3 +51,12 @@ function discharge (Graph g, node u, propNode <int> label, propNode <int> excess
     }
 }
 
+
+function do_max_flow (Graph g, node source, node sink) {
+
+    while (!g.frontier_empty ()) {
+        int u = g.frontier_pop () ;
+        assert (u != -1) ;
+        discharge (u) ;
+    }
+}

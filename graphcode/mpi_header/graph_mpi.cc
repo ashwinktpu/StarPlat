@@ -4,6 +4,15 @@
 #include <fstream>
 #include <sstream>
 
+  void Graph::push_into_queue (int &u) {
+    frontier.insert(u) ;
+  }
+
+  int Graph::pop_out_of_queue () {
+    if (frontier.size () == 0) return -1 ;
+    return *frontier.begin () ;
+  }
+
   void Graph::print_csr()
   {
     get_lock_for_reduction_statement();

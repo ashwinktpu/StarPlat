@@ -1,5 +1,7 @@
 #include"push_relabel.dsl.h"
-using namespace std ;
+
+int src, snk ;
+
 void push__(Graph& g, int u, int v, NodeProperty<int>& excess, 
   EdgeProperty<int>& residual_capacity, boost::mpi::communicator world )
 {
@@ -27,8 +29,11 @@ void push__(Graph& g, int u, int v, NodeProperty<int>& excess,
   {
     residual_capacity.setValue(backward_edge,temp);
   }
-  g.push_into_queue(v, world);
+  if (v != src && v != snk )
+  {
+    g.frontier_push(v);
 
+  }
 
 }
 void relabel(Graph& g, int u, EdgeProperty<int>& residue, NodeProperty<int>& label
@@ -40,7 +45,10 @@ void relabel(Graph& g, int u, EdgeProperty<int>& residue, NodeProperty<int>& lab
     Edge residual_capacity = g.get_edge(u, v);
     if (residue.getValue(residual_capacity) > 0 )
     {
-      new_label = max(new_label,v, world);
+      if (new_label < v )
+      {
+        new_label = v;
+      }
     }
   }
 
@@ -72,6 +80,17 @@ void discharge(Graph& g, int u, NodeProperty<int>& label, NodeProperty<int>& exc
       relabel(g,u,residue,label, world);
 
     }
+  }
+
+}
+void do_max_flow(Graph& g, int source, int sink, boost::mpi::communicator world )
+{
+  while (!g.frontier_empty( ) ){
+    int u = g.frontier_pop( );
+    assert(u != -1, world);
+
+    discharge(u, world);
+
   }
 
 }

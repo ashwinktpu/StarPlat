@@ -67,6 +67,7 @@ class Graph
   Rma_Datatype<int32_t> perNodeDiffCSRSpace;
   Rma_Datatype<int32_t> perNodeDiffRevCSRSpace;
   std::vector<int32_t> diff_edgeProcMap;
+  std::unordered_set<int32_t> frontier ;
   
 
   int bfs_phases ;   
@@ -96,6 +97,8 @@ class Graph
 
   Graph(char* file, boost::mpi::communicator world , bool undirected = false);
   bool is_undirected(){return undirected;}
+  void push_into_queue (int &u) ;
+  void pop_out_of_queue () ;
   void print_csr();  
   void get_lock_for_reduction_statement();
   void unlock_for_reduction_statement();
@@ -128,6 +131,9 @@ class Graph
   void sync_reduction();
 
   void propagateNodeFlags(NodeProperty<bool>& property);
+  void g.frontier_empty () ;
+  void g.frontier_push (int u) ;
+  int  g.frontier_pop () ;
 
   template<typename T, typename ... Types>
   void queue_for_reduction(std::pair<int, T> reduction_property_data , Types ... other_properties_data)

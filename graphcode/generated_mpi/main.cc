@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
     // Triangle Counting
     //need to add print statement in generated code to check the value of triangle count
     
-    Compute_TC(graph, world );
+    max-flow(graph, world );
     
 
     
