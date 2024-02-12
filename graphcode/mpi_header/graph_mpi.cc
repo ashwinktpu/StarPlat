@@ -4,14 +4,27 @@
 #include <fstream>
 #include <sstream>
 
-  void Graph::push_into_queue (int &u) {
-    frontier.insert(u) ;
+
+  bool Graph::frontier_empty (boost::mpi::communicator world) {
+    int x = frontier.empty () ;
+    x = boost::mpi::all_reduce (world, x, std::plus<int> ()) ;
+    return x>0?false:true ;
   }
 
-  int Graph::pop_out_of_queue () {
-    if (frontier.size () == 0) return -1 ;
-    return *frontier.begin () ;
+  int Graph::frontier_pop_local (boost::mpi::communicator world) {
+    if (frontier.empty()) return -1 ;
+    int popper = *frontier.begin () ;
+    assert (!frontier.empty ()) ;
+    frontier.erase (popper) ;
+    return popper  ;
   }
+
+  void Graph::frontier_push (int &u, boost::mpi::communicator world) {
+    
+    if (world.rank () == get_node_owner (u) ) {
+      frontier.insert (u) ;
+    }
+  } 
 
   void Graph::print_csr()
   {

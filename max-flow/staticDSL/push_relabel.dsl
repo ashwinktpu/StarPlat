@@ -52,11 +52,11 @@ function discharge (Graph g, node u, propNode <int> label, propNode <int> excess
 }
 
 
-function do_max_flow (Graph g, node source, node sink) {
+function do_max_flow (Graph g, node source, node sink, propNode<int> label, propNode<int> excess, propNode<int> curr_edge, propEdge<int> residue) {
 
-    while (!g.frontier_empty ()) {
-        int u = g.frontier_pop () ;
-        assert (u != -1) ;
-        discharge (u) ;
+    
+    while (!g.frontier_empty (world)) {
+        node u = g.frontier_pop_local (world) ;
+        discharge (g, u, label, excess, curr_edge, residue) ;
     }
 }

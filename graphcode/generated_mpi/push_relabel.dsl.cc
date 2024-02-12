@@ -1,13 +1,11 @@
 #include"push_relabel.dsl.h"
-
 int src, snk ;
-
 void push__(Graph& g, int u, int v, NodeProperty<int>& excess, 
   EdgeProperty<int>& residual_capacity, boost::mpi::communicator world )
 {
   Edge forward_edge = g.get_edge(u, v);
   Edge backward_edge = g.get_edge(v, u);
-  int d = min(excess.getValue(u),residual_capacity.getValue(forward_edge), world);
+  int d = std::min(excess.getValue(u),residual_capacity.getValue(forward_edge));
   int temp = 0 ;
   temp = (excess.getValue(u) - d);
   if(world.rank() == g.get_node_owner(u))
@@ -31,7 +29,7 @@ void push__(Graph& g, int u, int v, NodeProperty<int>& excess,
   }
   if (v != src && v != snk )
   {
-    g.frontier_push(v);
+    g.frontier_push(v, world);
 
   }
 
@@ -83,13 +81,13 @@ void discharge(Graph& g, int u, NodeProperty<int>& label, NodeProperty<int>& exc
   }
 
 }
-void do_max_flow(Graph& g, int source, int sink, boost::mpi::communicator world )
+void do_max_flow(Graph& g, int source, int sink, NodeProperty<int>& label, 
+  NodeProperty<int>& excess, NodeProperty<int>& curr_edge, EdgeProperty<int>& residue, boost::mpi::communicator world )
 {
-  while (!g.frontier_empty( ) ){
-    int u = g.frontier_pop( );
-    assert(u != -1, world);
-
-    discharge(u, world);
+  src=source, snk=sink ;
+  while (!g.frontier_empty(world) ){
+    int u = g.frontier_pop_local(world);
+    discharge(g,u,label,excess,curr_edge,residue, world);
 
   }
 

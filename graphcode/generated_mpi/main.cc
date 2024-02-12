@@ -11,15 +11,15 @@ int main(int argc, char *argv[])
     boost::mpi::environment env(argc, argv);
     boost::mpi::communicator world;
     
-    //printf("program started\n"); 
+    printf("program started\n"); 
     Graph graph(argv[1],world);
     world.barrier();
 
-    
+    NodeProperty<int> label, excess, curr_edge ;
+    EdgeProperty<int> residue ;
     // Triangle Counting
     //need to add print statement in generated code to check the value of triangle count
-    
-    max-flow(graph, world );
+    do_max_flow(graph,0,1, label, excess, curr_edge, residue,  world);
     
 
     

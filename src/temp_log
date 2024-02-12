@@ -1,0 +1,249 @@
+fileName ../max-flow/staticDSL/push_relabel.dsl
+Backend Target mpi
+Type: function
+
+'('Graph Type
+
+','
+Node Type
+','
+Node Type
+','
+Node Property
+'<'Type: int'>'
+','Edge Property
+'<'Type: int'>'
+')'currentFuncType check!!0
+tempID g funccount 0
+
+'{'Edge Type
+
+'='
+'.'
+'('Here hello 
+','
+')'
+';'Edge Type
+
+'='
+'.'
+'('Here hello 
+','
+')'
+';'Type: int
+
+'='
+
+'(''.'','Here hello 
+
+'.'')'Here hello 
+
+';'Type: int
+
+';'
+'='
+'(''.'
+'-'Here hello 
+
+')'
+';'testassign
+'.'
+'='Here hello 
+
+
+';'testassign
+
+'='
+'(''.'
+'+'Here hello 
+
+')'
+';'testassign
+'.'
+'='Here hello 
+
+
+';'testassign
+
+'='
+'.'
+'-'Here hello 
+
+
+';'testassign
+'.'
+'='Here hello 
+
+
+';'testassign
+
+'='
+'.'
+'+'Here hello 
+
+
+';'testassign
+'.'
+'='Here hello 
+
+
+';'testassign
+Keyword if: if
+'('
+NE_OP
+
+AND_OP
+
+NE_OP
+')'
+'{''.''('Here hello 
+')'
+';''}'
+'}'Type: function
+
+'('Graph Type
+
+','
+Node Type
+','
+Edge Property
+'<'Type: int'>'
+','
+Node Property
+'<'Type: int'>'
+')'currentFuncType check!!0
+tempID g funccount 1
+
+'{'Type: int
+
+'='
+
+';'For: for
+'('
+Keyword in 
+'.'
+'('')'')'
+'{'Edge Type
+
+'='
+'.'
+'('Here hello 
+','
+')'
+';'Keyword if: if
+'(''.'
+'>'Here hello 
+
+')'
+'{'Keyword if: if
+'('
+'<'
+')'
+'{'
+'='
+
+';'testassign
+'}''}''}'Keyword if: if
+'('
+'<'
+')''.'
+'='Here hello 
+
+'+'
+';'testassign
+
+'}'Type: function
+
+'('Graph Type
+
+','
+Node Type
+','
+Node Property
+'<'Type: int'>'
+','
+Node Property
+'<'Type: int'>'
+','
+Node Property
+'<'Type: int'>'
+','
+Edge Property
+'<'Type: int'>'
+')'currentFuncType check!!0
+tempID g funccount 2
+
+'{'Keyword while: while
+'(''.'
+'>'Here hello 
+
+')'
+'{'For: for
+'('
+Keyword in 
+'.''('')'')'
+'{'Edge Type
+
+'='
+'.'
+'('Here hello 
+','')'
+';'Keyword if: if
+'(''.'
+'>'Here hello 
+
+
+AND_OP
+'.'
+'>'Here hello 
+
+
+AND_OP
+'.'
+EQ_OPHere hello 
+
+'.''+'Here hello 
+')'
+'{'
+'('','
+','
+','
+','
+')'
+';''}''}'Keyword if: if
+'(''.'
+'>'Here hello 
+
+')'
+'{'
+'('','
+','
+','
+')'
+';''}''}'
+'}'Type: function
+
+'('Graph Type
+
+','
+Node Type
+','
+Node Type
+')'currentFuncType check!!0
+tempID g funccount 3
+
+'{'Keyword while: while
+'(''!''.'
+'('Here hello 
+')'')'
+'{'Node Type
+
+'='
+'.'
+'('Here hello 
+')'
+';'Keyword if: if
+'('EQ_OP')'
+
+';'error val 1
+finished successfully
