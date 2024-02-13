@@ -1,6 +1,6 @@
 EXPENDABLES = lex.yy.c y.tab.c y.tab.h
 
-CC = g++ 
+CC = g++ -std=c++17 -g 
 
 all: parse 
 

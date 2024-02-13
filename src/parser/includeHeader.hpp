@@ -1,6 +1,10 @@
 #ifndef INCLUDEHEADER_H
 #define INCLUDEHEADER_H
 
+/*
+* This file likely just adds the headers to the .h
+*/
+
 // #include "../maincontext/MainContext.hpp"
 #include "../maincontext/enum_def.hpp"
 // #include "../symbolutil/SymbolTable.hpp"
@@ -35,5 +39,9 @@
 
 
 extern "C" int yyparse(void);
+// what would this do ?? 
+// Why call yyparse and pass void into it ?
+// Why return int.
+// What does "C" mean ?
 
 #endif

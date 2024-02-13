@@ -1,0 +1,90 @@
+./symbolutil/SymbolTableBuilder.h:    //list<Function*> funcList=frontEndContext.getFuncList();
+./backends/backend_multigpu/dsl_cpp_generator.cpp:  // VALUES"<<frontEndContext.getFuncList().front()->getBlockStatement()->returnStatements().size();
+./backends/backend_multigpu/dsl_cpp_generator.cpp:  list<Function *> funcList = frontEndContext.getFuncList();
+./backends/backend_amd/dsl_cpp_generator.cpp:  // VALUES"<<frontEndContext.getFuncList().front()->getBlockStatement()->returnStatements().size();
+./backends/backend_amd/dsl_cpp_generator.cpp:  list<Function*> funcList = frontEndContext.getFuncList();
+./backends/backend_openACC/dsl_cpp_generator.cpp:  // cout<<"FRONTEND VALUES"<<frontEndContext.getFuncList().front()->getBlockStatement()->returnStatements().size();    //openFileforOutput();
+./backends/backend_openACC/dsl_cpp_generator.cpp:   list<Function*> funcList=frontEndContext.getFuncList();
+./backends/backend_openACC/dsl_dyn_cpp_generator.cpp:  // cout<<"FRONTEND VALUES"<<frontEndContext.getFuncList().front()->getBlockStatement()->returnStatements().size();    //openFileforOutput();
+./backends/backend_openACC/dsl_dyn_cpp_generator.cpp:   list<Function*> funcList=frontEndContext.getFuncList();
+./backends/backend_omp/dsl_cpp_generator.cpp:             map<string, bool> dynamicFuncs = frontEndContext.getDynamicLinkFuncs();
+./backends/backend_omp/dsl_cpp_generator.cpp:        map<string, bool> dynamicFuncs = frontEndContext.getDynamicLinkFuncs();
+./backends/backend_omp/dsl_cpp_generator.cpp:  cout<<"FRONTEND VALUES "<<frontEndContext.getFuncList().front()->getBlockStatement()->returnStatements().size();    //openFileforOutput();
+./backends/backend_omp/dsl_cpp_generator.cpp:  list<Function*> funcList = frontEndContext.getFuncList();
+./backends/backend_omp/dsl_dyn_cpp_generator.cpp:  map<string, bool> dynamicLinkFunc = frontEndContext.getDynamicLinkFuncs();
+./backends/backend_omp/dsl_dyn_cpp_generator.cpp:  // cout<<"FRONTEND VALUES"<<frontEndContext.getFuncList().front()->getBlockStatement()->returnStatements().size();    //openFileforOutput();
+./backends/backend_omp/dsl_dyn_cpp_generator.cpp:   list<Function*> funcList = frontEndContext.getFuncList();
+./backends/backend_cuda/to_be_deleted.cpp:  // cout<<"FRONTEND VALUES"<<frontEndContext.getFuncList().front()->getBlockStatement()->returnStatements().size();    //openFileforOutput();
+./backends/backend_cuda/to_be_deleted.cpp:   list<Function*> funcList=frontEndContext.getFuncList();
+./backends/backend_cuda/dsl_cpp_generator.cpp:  // VALUES"<<frontEndContext.getFuncList().front()->getBlockStatement()->returnStatements().size();
+./backends/backend_cuda/dsl_cpp_generator.cpp:  list<Function*> funcList = frontEndContext.getFuncList();
+./backends/backend_sycl/dsl_cpp_generator.cpp:        cout << "FRONTEND VALUES" << frontEndContext.getFuncList().front()->getBlockStatement()->returnStatements().size() << endl;
+./backends/backend_sycl/dsl_cpp_generator.cpp:        list<Function *> funcList = frontEndContext.getFuncList();
+./backends/backend_mpi/dsl_cpp_generator.cpp:        cout<<"FRONTEND VALUES "<<frontEndContext.getFuncList().front()->getBlockStatement()->returnStatements().size();    //openFileforOutput();
+./backends/backend_mpi/dsl_cpp_generator.cpp:        list<Function*> funcList = frontEndContext.getFuncList();
+./analyser/deviceVars/deviceVarsAnalyser.cpp://extern FrontEndContext frontEndContext;
+./analyser/deviceVars/deviceVarsAnalyser.cpp:  //list<Function *> funcList = frontEndContext.getFuncList();
+./analyser/attachProp/attachPropAnalyser.cpp:  //list<Function *> funcList = frontEndContext.getFuncList();
+./analyser/dataRace/dataRaceAnalyser.cpp:    // = frontEndContext.getFuncList();
+./ast/ASTHelper.cpp:extern FrontEndContext frontEndContext;  
+./ast/ASTHelper.cpp:    frontEndContext.addFuncToList(funcNode);
+./ast/ASTHelper.cpp:    frontEndContext.incrementCurrentFuncCount(); 
+./ast/ASTHelper.cpp:    frontEndContext.setCurrentFuncType(funcType);
+./ast/ASTHelper.cpp:  int currentFuncType =  frontEndContext.getCurrentFuncType();
+./ast/ASTHelper.cpp:         printf("tempID %s funccount %d\n",id->getIdentifier(),frontEndContext.getCurrentFuncCount());
+./ast/ASTHelper.cpp:        graphId[currentFuncType][frontEndContext.getCurrentFuncCount()].push_back(id);
+./ast/ASTHelper.cpp:   int currentFuncType = frontEndContext.getCurrentFuncType();
+./ast/ASTHelper.cpp:         graphId[0][frontEndContext.getCurrentFuncCount()].push_back(id);
+./ast/ASTHelper.cpp:             graphId[1][frontEndContext.getCurrentFuncCount()].push_back(id);
+./ast/ASTHelper.cpp:              graphId[2][frontEndContext.getCurrentFuncCount()].push_back(id);
+./ast/ASTHelper.cpp:              graphId[3][frontEndContext.getCurrentFuncCount()].push_back(id);
+./ast/ASTHelper.cpp:               graphId[4][frontEndContext.getCurrentFuncCount()].push_back(id);
+./ast/ASTHelper.cpp:    return frontEndContext.getCurrentFuncType();
+./ast/ASTHelper.cpp:    frontEndContext.startBlock(blockStatementNode);
+./ast/ASTHelper.cpp:     blockStatement* blockStatementNode=frontEndContext.getCurrentBlock();
+./ast/ASTHelper.cpp:    frontEndContext.endBlock();
+./ast/ASTHelper.cpp:        blockStatement* currentBlock=frontEndContext.getCurrentBlock();
+./parser/lrparser.y:	FrontEndContext frontEndContext;
+./parser/lrparser.y:        | program function_def {/* printf("LIST SIZE %d",frontEndContext.getFuncList().size())  ;*/ };
+./parser/lrparser.y:	stBuilder.buildST(frontEndContext.getFuncList());
+./parser/lrparser.y:	frontEndContext.setDynamicLinkFuncs(stBuilder.getDynamicLinkedFuncs());
+./parser/lrparser.y:			  apAnalyser.analyse(frontEndContext.getFuncList());
+./parser/lrparser.y:			  drAnalyser.analyse(frontEndContext.getFuncList());
+./parser/lrparser.y:			  	dvAnalyser.analyse(frontEndContext.getFuncList());
+./parser/lrparser.y:	  apAnalyser.analyse(frontEndContext.getFuncList());
+./parser/lrparser.y:	  drAnalyser.analyse(frontEndContext.getFuncList());
+./parser/lrparser.y:	  dvAnalyser.analyse(frontEndContext.getFuncList());
+./parser/lrparser.y:	std::cout<< "size:" << frontEndContext.getFuncList().size() << '\n';
+./parser/lrparser.y:		std::cout<< "size:" << frontEndContext.getFuncList().size() << '\n';
+./parser/lrparser.y:			bvAnalyser.analyse(frontEndContext.getFuncList());
+./parser/lrparser.y:		pp.analyse(frontEndContext.getFuncList());
+./parser/y.tab.c:	FrontEndContext frontEndContext;
+./parser/y.tab.c:                               {/* printf("LIST SIZE %d",frontEndContext.getFuncList().size())  ;*/ }
+./parser/y.tab.c:	stBuilder.buildST(frontEndContext.getFuncList());
+./parser/y.tab.c:	frontEndContext.setDynamicLinkFuncs(stBuilder.getDynamicLinkedFuncs());
+./parser/y.tab.c:			  apAnalyser.analyse(frontEndContext.getFuncList());
+./parser/y.tab.c:			  drAnalyser.analyse(frontEndContext.getFuncList());
+./parser/y.tab.c:			  	dvAnalyser.analyse(frontEndContext.getFuncList());
+./parser/y.tab.c:	  apAnalyser.analyse(frontEndContext.getFuncList());
+./parser/y.tab.c:	  drAnalyser.analyse(frontEndContext.getFuncList());
+./parser/y.tab.c:	  dvAnalyser.analyse(frontEndContext.getFuncList());
+./parser/y.tab.c:	std::cout<< "size:" << frontEndContext.getFuncList().size() << '\n';
+./parser/y.tab.c:		std::cout<< "size:" << frontEndContext.getFuncList().size() << '\n';
+./parser/y.tab.c:			bvAnalyser.analyse(frontEndContext.getFuncList());
+./parser/y.tab.c:		pp.analyse(frontEndContext.getFuncList());
+./maincontext/MainContext.hpp:class FrontEndContext
+./maincontext/MainContext.hpp:  static FrontEndContext* instance;
+./maincontext/MainContext.hpp:  FrontEndContext()
+./maincontext/MainContext.hpp: /* static FrontEndContext* getInstance()
+./maincontext/MainContext.hpp:      instance=new FrontEndContext();
+./maincontext/MainContext.cpp:void FrontEndContext::startBlock(blockStatement* blockStmtSent)
+./maincontext/MainContext.cpp: void FrontEndContext::endBlock()
+./maincontext/MainContext.cpp:void FrontEndContext::addFuncToList(Function* func)
+./maincontext/MainContext.cpp:blockStatement* FrontEndContext::getCurrentBlock()
+./maincontext/MainContext.cpp:list<Function*> FrontEndContext::getFuncList()
+./maincontext/MainContext.cpp:void FrontEndContext::setCurrentFuncType(int funcType )
+./maincontext/MainContext.cpp:int FrontEndContext::getCurrentFuncType()
+./maincontext/MainContext.cpp: void FrontEndContext::incrementCurrentFuncCount()
+./maincontext/MainContext.cpp:  void FrontEndContext::setDynamicLinkFuncs(map<string, bool> sentMap){
+./maincontext/MainContext.cpp: map<string, bool> FrontEndContext::getDynamicLinkFuncs(){
+./maincontext/MainContext.cpp:  int FrontEndContext::getCurrentFuncCount()
