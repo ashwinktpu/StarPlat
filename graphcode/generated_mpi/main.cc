@@ -12,15 +12,24 @@ int main(int argc, char *argv[])
     boost::mpi::communicator world;
     
     printf("program started\n"); 
-    Graph graph(argv[1],world);
+ //   Graph graph(argv[1],world);
+    Graph residual_graph(argv[1],world, 1);
     world.barrier();
+    printf ("residual graph csr\n") ;
+    residual_graph.print_csr () ;
+    world.barrier () ;
 
     NodeProperty<int> label, excess, curr_edge ;
     EdgeProperty<int> residue ;
+    world.barrier () ;
     // Triangle Counting
-    //need to add print statement in generated code to check the value of triangle count
-    do_max_flow(graph,0,1, label, excess, curr_edge, residue,  world);
+    // need to add print statement in generated code to check the value of triangle count
+    do_max_flow(residual_graph,0,1, label, excess, curr_edge, residue,  world);
     
+
+//    printf ("residual graph csr post max flow\n") ;
+ //   residual_graph.print_csr () ;
+
 
     
 

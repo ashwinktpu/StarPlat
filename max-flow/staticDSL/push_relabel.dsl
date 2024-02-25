@@ -54,6 +54,26 @@ function discharge (Graph g, node u, propNode <int> label, propNode <int> excess
 
 function do_max_flow (Graph g, node source, node sink, propNode<int> label, propNode<int> excess, propNode<int> curr_edge, propEdge<int> residue) {
 
+    residue=g.weights ;
+    for (auto &weight:g.weights) {
+        residue.push_back (weight) ;
+    }
+    g.attachNodeProperty (label = INF) ;
+    g.attachNodeProperty (excess = 0) ;
+    g.attachNodeProperty (curr_edge = 0) ;
+
+    int temp = 0;
+    int res = 0 ;
+
+    for (v in g.neighbors(source)) {
+        edge e = g.get_edge (source, v) ;
+        temp = e.residue ;
+        res = res + temp ;
+    }
+
+    
+    source.excess=temp ;
+    source.label=g.num_nodes ();
     
     while (!g.frontier_empty (world)) {
         node u = g.frontier_pop_local (world) ;

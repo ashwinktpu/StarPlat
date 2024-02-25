@@ -1,6 +1,7 @@
 #include"edge_property.h"
 #include"../../graph_mpi.h"
 
+
     template <typename T>
     void EdgeProperty<T>::attachToGraph(Graph * graph, T initial_value, bool attach_only_to_diff_csr, bool create_new_diff)
     { 
@@ -281,6 +282,10 @@
     {
       if(property.attached_to_graph == false)
       {
+        // Barenya :
+        // Would like for this branch to be used for copying by value.
+        // Would it cause other algorithms to crash ?
+        attachToGraph (property.graph, property.propList.data, (T*)NULL) ;
         return;
       }
       else{

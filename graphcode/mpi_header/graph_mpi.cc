@@ -8,23 +8,32 @@
   bool Graph::frontier_empty (boost::mpi::communicator world) {
     int x = frontier.empty () ;
     x = boost::mpi::all_reduce (world, x, std::plus<int> ()) ;
-    return x>0?false:true ;
+    return x==world.size () ?true:false;
   }
 
   int Graph::frontier_pop_local (boost::mpi::communicator world) {
     if (frontier.empty()) return -1 ;
     int popper = *frontier.begin () ;
     assert (!frontier.empty ()) ;
+//    printf ("Before erasing : %d elements in frontier\n", frontier.size ()) ;
     frontier.erase (popper) ;
+//    printf ("After erasing : %d elements in frontier\n", frontier.size ()) ;
     return popper  ;
   }
 
   void Graph::frontier_push (int &u, boost::mpi::communicator world) {
-    
+//    printf ("pushing %d into frontier\n", u) ; 
     if (world.rank () == get_node_owner (u) ) {
+      frontier.insert (u) ;
+    } else {
+      // Barenya : TODO, insert mechanism for u to be added in queue of process 2.
       frontier.insert (u) ;
     }
   } 
+  
+  int Graph::frontier_size () {
+    return frontier.size () ;
+  }
 
   void Graph::print_csr()
   {
@@ -156,7 +165,7 @@
   }
 
   
-  Graph::Graph(char* file, boost::mpi::communicator world , bool undirected)
+  Graph::Graph(char* file, boost::mpi::communicator world , int32_t undirected)
   {
     this->undirected = undirected;
     filePath=file;
@@ -168,7 +177,7 @@
     std::vector<int32_t> src , dest, weight;
     if (world.rank() == 0)
     {
-      readFromFile(filePath, nodesTotal, edgesTotal, src , dest, weight);
+      readFromFile(filePath, nodesTotal, edgesTotal, src , dest, weight, undirected);
     }
 
     world.barrier();
@@ -805,7 +814,7 @@
     return in_edges;
   }
 
-  void Graph::readFromFile(std::string filePath, int32_t &num_nodes, int32_t &num_edges, std::vector<int32_t> & src, std::vector<int32_t> & dest , std::vector<int32_t> & weights)
+  void Graph::readFromFile(std::string filePath, int32_t &num_nodes, int32_t &num_edges, std::vector<int32_t> & src, std::vector<int32_t> & dest , std::vector<int32_t> & weights, int32_t &undirected)
   {
         num_nodes = 0;
         num_edges = 0;
@@ -845,6 +854,15 @@
             src.push_back(source);
             dest.push_back(destination);
             weights.push_back(weightVal);
+            
+            // Barenya
+            if (undirected) {
+              src.push_back(destination) ;
+              dest.push_back(source) ;
+              weights.push_back(0) ;
+              num_edges++ ;
+            }
+            // Barenya
         }
 
         num_nodes++;

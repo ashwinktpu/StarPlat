@@ -97,7 +97,7 @@ class Graph
   
 
 
-  Graph(char* file, boost::mpi::communicator world , bool undirected = false);
+  Graph(char* file, boost::mpi::communicator world , int32_t undirected = 0);
   bool is_undirected(){return undirected;}
   // Distributed Hash set methods.
   void frontier_push (int &v, boost::mpi::communicator world) ;
@@ -105,6 +105,7 @@ class Graph
   bool frontier_empty (boost::mpi::communicator world) ;
   // Till here.D
   void print_csr();  
+  int frontier_size() ;
   void get_lock_for_reduction_statement();
   void unlock_for_reduction_statement();
   int num_nodes();
@@ -124,7 +125,7 @@ class Graph
   bool check_if_nbr(int s, int d);
   std::vector<int32_t> getNeighbors( int node);
   std::vector<int32_t> getInNeighbors( int node);
-  void readFromFile(std::string filePath, int32_t &num_nodes, int32_t &num_edges, std::vector<int32_t> & src, std::vector<int32_t> & dest , std::vector<int32_t> & weights);
+  void readFromFile(std::string filePath, int32_t &num_nodes, int32_t &num_edges, std::vector<int32_t> & src, std::vector<int32_t> & dest , std::vector<int32_t> & weights, int32_t &undirected);
 
   void addEdges_Csr(std::vector<std::pair<int32_t,std::pair<int32_t,int32_t>>>& updates);
   void delEdges_Csr(std::vector<std::pair<int32_t,std::pair<int32_t,int32_t>>>& updates);
@@ -140,6 +141,7 @@ class Graph
   template<typename T, typename ... Types>
   void queue_for_reduction(std::pair<int, T> reduction_property_data , Types ... other_properties_data)
   {
+      // Barenya : Add to queue for later sending of the message.
       if(properties[reduction_property_id]->is_node_property)
       {
         NodeProperty<T> * node_property_ptr= static_cast<NodeProperty<T>*>(properties[reduction_property_id]);
@@ -166,6 +168,7 @@ class Graph
   template<typename T, typename ... Types>
   void queue_for_reduction_helper(int reduction_node, int counter,std::pair<int, T> head_data, Types ... remaining_data)
   {
+  // Barenya : Where there are multiple elements ?
     if(properties[other_reduction_properties_id[counter]]->is_node_property)
       {
         NodeProperty<T> * node_property_ptr= static_cast<NodeProperty<T>*>(properties[other_reduction_properties_id[counter]]);
