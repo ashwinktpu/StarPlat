@@ -963,6 +963,8 @@ namespace spmpi {
                         //TODO : Yet to add, add for loop and add another if condition so that proc will consider 
                         // only those neighbors which the process owns.
 
+                        // Barenya :
+                        // sprintf (strBuffer, "for 
                         assert(false);
 
                     //This is hardcoded here, need to change     
