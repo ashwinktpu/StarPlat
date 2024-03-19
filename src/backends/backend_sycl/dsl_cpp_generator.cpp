@@ -377,8 +377,6 @@ namespace spsycl
             main.pushstr_newL(strBuffer);
             sprintf(strBuffer, "int* d_rev_meta;");
             main.pushstr_newL(strBuffer);
-            sprintf(strBuffer, "bool* d_modified_next;");
-            main.pushstr_newL(strBuffer);
             main.NewLine();
 
             generateMallocDeviceStr("d_meta", "int", "(1+V)");
@@ -386,7 +384,6 @@ namespace spsycl
             generateMallocDeviceStr("d_src", "int", "(E)");
             generateMallocDeviceStr("d_weight", "int", "(E)");
             generateMallocDeviceStr("d_rev_meta", "int", "(V+1)");
-            generateMallocDeviceStr("d_modified_next", "bool", "(V)");
 
             main.NewLine();
 
@@ -1324,15 +1321,7 @@ namespace spsycl
                 {
                     main.pushstr_newL("//BEGIN FIXED POINT");
 
-                    main.pushstr_newL("Q.submit([&](handler &h){ h.parallel_for(NUM_THREADS, [=](id<1> i){");
-
-                    sprintf(strBuffer, "for (; i < V; i += stride) %s[i] = false", modifiedVarNext);
-                    main.pushString(strBuffer);
-                    main.pushstr_newL(";});");
-                    main.pushstr_newL("}).wait();");
                     main.NewLine();
-
-                    // main.pushstr_newL("int k=0; // #fixpt-Iterations");
                     sprintf(strBuffer, "while(!%s) {", fixPointVar);
                     main.pushstr_newL(strBuffer);
 
@@ -1349,23 +1338,17 @@ namespace spsycl
                     else
                         generateBlock((blockStatement *)fixedPointConstruct->getBody(), false, isMainFile);
 
+                    main.pushstr_newL("Q.submit([ & ](handler & h) {");
+                    main.pushstr_newL("  h.parallel_for(NUM_THREADS, [ = ](id < 1 > i) {");
+                    main.pushstr_newL("    for(; i < V; i += stride) {");
+                    sprintf(strBuffer,"      if(d_%s[i]) *d_%s = false;", modifiedVar, fixPointVar);
+                    main.pushString(strBuffer);
+                    main.pushstr_newL("    }");
+                    main.pushstr_newL("  });");
+                    main.pushstr_newL("}).wait();");
+
                     generateMemCpySymbol(fixPointVar, fixPointVarType, false);
 
-                    main.pushstr_newL("Q.submit([&](handler &h){ h.parallel_for(NUM_THREADS, [=](id<1> i){");
-                    sprintf(strBuffer, "for (; i < V; i += stride) d_%s[i] = %s[i]", modifiedVar, modifiedVarNext);
-                    main.pushString(strBuffer);
-                    main.pushstr_newL(";});");
-                    main.pushstr_newL("}).wait();");
-                    main.NewLine();
-
-                    main.pushstr_newL("Q.submit([&](handler &h){ h.parallel_for(NUM_THREADS, [=](id<1> i){");
-                    sprintf(strBuffer, "for (; i < V; i += stride) %s[i] = false", modifiedVarNext);
-                    main.pushString(strBuffer);
-                    main.pushstr_newL(";});");
-                    main.pushstr_newL("}).wait();");
-                    main.NewLine();
-
-                    // main.pushstr_newL("k++;");
                     Expression *initializer = dependentId->getSymbolInfo()->getId()->get_assignedExpr();
                     assert(initializer->isBooleanLiteral());
                 }
@@ -1734,15 +1717,7 @@ namespace spsycl
             for (itr = argList.begin(); itr != argList.end(); itr++)
             {
                 assignment *assign = (*itr)->getAssignExpr();
-
-                if (argList.size() == 1)
-                {
-                    generateInitkernel1(assign, isMainFile);
-                }
-                else if (argList.size() == 2)
-                {
-                    generateInitkernel1(assign, isMainFile);
-                }
+                generateInitkernel1(assign, isMainFile);
             }
         }
         string IDCoded1("attachEdgeProperty");
