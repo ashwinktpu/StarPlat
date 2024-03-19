@@ -28,6 +28,7 @@ class dsl_cpp_generator
     fixedPointStmt* fixedPointEnv;
     //bool isOptimized;
   public:
+   bool ifStatementInForAll ;
   dsl_cpp_generator()
   {
     //std::cout << "***********************Inside construtor" << std::endl;
@@ -39,7 +40,7 @@ class dsl_cpp_generator
     inFuncCount = 0;
     decFuncCount = 0;
     dynFuncCount = 0;
-    
+    ifStatementInForAll = false ; 
     fixedPointEnv = NULL;
     printf("set to null\n");
     //isOptimized = false;

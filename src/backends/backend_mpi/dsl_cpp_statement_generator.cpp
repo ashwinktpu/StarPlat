@@ -802,8 +802,7 @@ namespace spmpi {
 
         statement* body = forAll->getBody();
         
-
-
+        
         generateForAllSignature(forAll);
 
         if (forAll->hasFilterExpr()) {
@@ -871,7 +870,7 @@ namespace spmpi {
             sprintf(strBuffer,"%s.sync_reduction();",forAll->getSourceGraph()->getIdentifier());
             main.pushstr_newL(strBuffer);
         }
-        if(forAll->isForall())
+        if(forAll->isForall() && !ifStatementInForAll)
             main.pushstr_newL("world.barrier();");
         // Genereate code related to reduction at the end of for all
 
@@ -922,6 +921,14 @@ namespace spmpi {
 
         if(forAll->isForall())
             insideParallelConstruct.pop_back();
+        
+        // Barenya :
+        if (forAll->isForall() && ifStatementInForAll) {
+            main.pushstr_newL ("}") ;
+            ifStatementInForAll = true ;
+            main.pushstr_newL ("world.barrier ()") ;
+        }
+        main.NewLine () ;
     }
 
     void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll) {
@@ -938,9 +945,10 @@ namespace spmpi {
                 if (s.compare("nodes") == 0) {
                     cout << "INSIDE NODES VALUE"
                     << "\n";
-                    if(forAll->isForall())
-                        sprintf(strBuffer, "for (%s %s = %s.%s(); %s <= %s.%s(); %s ++) ", "int", iterator->getIdentifier(),graphId,"start_node" ,iterator->getIdentifier(), graphId, "end_node", iterator->getIdentifier());
-                    else 
+                    if(forAll->isForall()) {
+                        sprintf(strBuffer, "if (world.rank () == g.get_node_owner (%s) ) \n { \n for (%s %s = %s.%s(); %s <= %s.%s(); %s ++) ", iterator->getIdentifier () ,"int", iterator->getIdentifier(),graphId,"start_node" ,iterator->getIdentifier(), graphId, "end_node", iterator->getIdentifier());
+                    ifStatementInForAll = true ;
+                    } else 
                         sprintf(strBuffer, "for (%s %s = 0; %s < %s.%s(); %s ++) ", "int", iterator->getIdentifier() ,iterator->getIdentifier(), graphId, "num_nodes", iterator->getIdentifier());
                 } else
                     //TODO :(Atharva) start_edge and end_edge is not yet supported in header file
@@ -955,24 +963,23 @@ namespace spmpi {
                 char* graphId = sourceGraph->getIdentifier();
                 char* methodId = iteratorMethodId->getIdentifier();
                 string s(methodId);
+                
                 if (s.compare("neighbors") == 0) {
                     list<argument*> argList = extractElemFunc->getArgList();
                     assert(argList.size() == 1);
                     Identifier* nodeNbr = argList.front()->getExpr()->getId();
-                    if(forAll->isForall())
-                        //TODO : Yet to add, add for loop and add another if condition so that proc will consider 
-                        // only those neighbors which the process owns.
-
-                        // Barenya :
-                        // sprintf (strBuffer, "for 
-                        assert(false);
-
+                    if(forAll->isForall()){
+                        sprintf (strBuffer, "if ( world.rank () == g.get_node_owner (%s) )\n { \nfor (%s %s:%s.%s(%s))", iterator->getIdentifier(), "int", iterator->getIdentifier(), graphId, "localNeighboursOnly", nodeNbr->getIdentifier()) ;
+                        ifStatementInForAll = true ;
+                        main.pushstr_newL (strBuffer) ;
+                    }
                     //This is hardcoded here, need to change     
-                    else if(forAll->getParent()->getParent()->getTypeofNode() == NODE_ITRBFS || forAll->getParent()->getParent()->getTypeofNode() == NODE_ITRRBFS)
+                    else if(forAll->getParent()->getParent()->getTypeofNode() == NODE_ITRBFS || forAll->getParent()->getParent()->getTypeofNode() == NODE_ITRRBFS){
                         sprintf(strBuffer, "for (%s %s :%s.%s(%s))","int",iterator->getIdentifier(), graphId, "get_bfs_children", nodeNbr->getIdentifier());
-                    else 
+                    } else {
                         sprintf(strBuffer, "for (%s %s : %s.%s(%s)) ", "int", iterator->getIdentifier(), graphId, "getNeighbors", nodeNbr->getIdentifier());
                     main.pushstr_newL(strBuffer);
+                    }
                 }
                 if (s.compare("nodes_to") == 0) {
                     list<argument*> argList = extractElemFunc->getArgList();
@@ -991,6 +998,7 @@ namespace spmpi {
             }
         } else if (forAll->isSourceField()) {
             // TODO : Yet to add code for this case
+            
 
         } else {
             Identifier* sourceId = forAll->getSource();
@@ -1010,7 +1018,7 @@ namespace spmpi {
     }    
 
 
-    blockStatement* dsl_cpp_generator::includeIfToBlock(forallStmt* forAll) {
+        blockStatement* dsl_cpp_generator::includeIfToBlock(forallStmt* forAll) {
         Expression* filterExpr = forAll->getfilterExpr();
         statement* body = forAll->getBody();
         Expression* modifiedFilterExpr = filterExpr;

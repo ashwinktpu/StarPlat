@@ -17,7 +17,7 @@ function __push__ (Graph g, node u, node v, propNode <int> excess,propEdge <int>
     }
 }
 
-function relabel (Graph g, node u, propEdge <int> residue, propNode <int> label) {
+function relabel (Graph g, node u, propEdge <int> residue, propNode <int> label, container<int> count) {
     
     int new_label = INT_MAX ;
     for (v in g.neighbors (u)) {
@@ -29,11 +29,13 @@ function relabel (Graph g, node u, propEdge <int> residue, propNode <int> label)
         }
     }
     
-    if (new_label < INT_MAX)
+    if (new_label < INT_MAX) {
         u.label = new_label+1 ;
+        updateGap (count, u.label, amount) ;
+    }
 }
 
-function discharge (Graph g, node u, propNode <int> label, propNode <int> excess, propNode <int> curr_edge, propEdge <int> residue) {
+function discharge (Graph g, node u, propNode <int> label, propNode <int> excess, propNode <int> curr_edge, propEdge <int> residue, container<int> count) {
     
     while (u.excess > 0) {
         
@@ -46,34 +48,47 @@ function discharge (Graph g, node u, propNode <int> label, propNode <int> excess
         }
         
         if (u.excess > 0) {
-            relabel (g, u, residue, label) ;
+            relabel (g, u, residue, label, count) ;
+            fixGap (count, label) ;
         }
     }
 }
 
+function updateGap (container<int> count, int height, int amount) {
+    count[height] = amount ;
+} 
+
+function fixGap (container<int> count, propNode <int> label) {
+    int gap = count.getIdx (0) ;
+    int t ;
+    forall (v in g.nodes()) {
+        if (v.label >= gap ) {
+            v.label = INT_MAX ;
+        }
+    }  
+}
 
 function do_max_flow (Graph g, node source, node sink, propNode<int> label, propNode<int> excess, propNode<int> curr_edge, propEdge<int> residue) {
 
     residue=g.weights ;
-    for (auto &weight:g.weights) {
-        residue.push_back (weight) ;
-    }
     g.attachNodeProperty (label = INF) ;
     g.attachNodeProperty (excess = 0) ;
     g.attachNodeProperty (curr_edge = 0) ;
+    container<int> count ;
+    count.assign (g.numNodes (), 0) ;
 
     int temp = 0;
     int res = 0 ;
 
-    for (v in g.neighbors(source)) {
+    forall (v in g.neighbors(source)) {
         edge e = g.get_edge (source, v) ;
-        temp = e.residue ;
-        res = res + temp ;
+        v.excess = e.residue; 
     }
 
     
     source.excess=temp ;
     source.label=g.num_nodes ();
+    int x = source.label ;
     
     while (!g.frontier_empty (world)) {
         node u = g.frontier_pop_local (world) ;

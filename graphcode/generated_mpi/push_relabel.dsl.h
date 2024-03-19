@@ -10,10 +10,12 @@
 
 void push__(Graph& g, int u, int v, NodeProperty<int>& excess, 
   EdgeProperty<int>& residual_capacity, boost::mpi::communicator world );
-void relabel(Graph& g, int u, EdgeProperty<int>& residue, NodeProperty<int>& label
-  , boost::mpi::communicator world );
+void relabel(Graph& g, int u, EdgeProperty<int>& residue, NodeProperty<int>& label, 
+  Container<int>& count, boost::mpi::communicator world );
 void discharge(Graph& g, int u, NodeProperty<int>& label, NodeProperty<int>& excess, 
-  NodeProperty<int>& curr_edge, EdgeProperty<int>& residue, boost::mpi::communicator world );
+  NodeProperty<int>& curr_edge, EdgeProperty<int>& residue, Container<int>& count, boost::mpi::communicator world );
+void updateGap(Container<int>& count, int height, int amount, boost::mpi::communicator world );
+void fixGap(Container<int>& count, NodeProperty<int>& label, boost::mpi::communicator world );
 void do_max_flow(Graph& g, int source, int sink, NodeProperty<int>& label, 
   NodeProperty<int>& excess, NodeProperty<int>& curr_edge, EdgeProperty<int>& residue, boost::mpi::communicator world );
 

@@ -1,0 +1,8 @@
+function testingForAll (Graph g) {
+    int t = 0 ;
+    if (t == 0) {
+        forall (v in g.neighbors(u)) {
+            t = 0 ;
+        }
+    }
+}
