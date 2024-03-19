@@ -5,18 +5,30 @@
 #include"../graph_properties/edge_property/edge_property.h"
 #include<unordered_set>
 
+void mpiAssert (int mpiStatus, char* errorMessage) {
+    if (mpiStatus != MPI_SUCCESS) {
+        printf ("%s\n", errorMessage) ;
+    }
+}
+
 template<typename T>
 class Container {
 
     private :
-        std::vector<T> vect;
+        MPI_Win array ;
+        int * baseArray ;
+        int globalSize ; // Total size of the distributed Array.
+        int localSize ; // Size of the distributed Array in local.
+        int dispUnit ; // Offset for the process.
+        std::vector<T> vect; 
         std::unordered_map<int, T> modified_values;
+        boost::mpi::communicator comm ;
 
     public :
         Container();
         Container(int size);
         Container(int size, T intital_value);
-
+        void assign (const int &size, const int &initVal, boost::mpi::communicator comm) ;
         void push(T value);
         
         void pop();
