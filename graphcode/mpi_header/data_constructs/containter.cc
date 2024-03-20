@@ -1,5 +1,7 @@
 #include"data_constructs.h"
 
+// Barenya : todo : switch to advanced passive synchronization with lock_all and flush_all.
+
 template<typename T>
 Container<T>::Container()
 {
@@ -19,12 +21,15 @@ void Contaner<T>::assign (const int &size, const int &initVal, boost::mpi::commu
 template<typename T>
 Container<T>::Container(int size) : vect(size)
 {
+    // Barenya : todo : fix compilation errors with constructors.
+    assert (false) ;
 }
 
 template<typename T>
 Container<T>::Container(int size, T initial_value) : vect(size,initial_value)
 {
-
+    // Barenya : todo : fix compilation errors with constructors.
+    assert (false) ;
 }
 
 template<typename T>
@@ -51,7 +56,7 @@ void Container<T>::clear()
 }
 
 template<typename T>
-T& Container<T>::operator[](int index)
+T& Container<T>::getValue(const int &idx)
 {
     if(index>= this->globalSize)
     {
@@ -60,6 +65,7 @@ T& Container<T>::operator[](int index)
     }
 
     int actualValue ;
+
     mpiAssert (MPI_Win_lock (SHARED, this->rank, lockAssertion, &this->array), "failed to acquire lock") ;
     mpiAssert (MPI_Get (&actualValue, 1, MPI_INT, targetRank, targetDisp, targetSize, MPI_INT, &this->array), "MPI Get failed while [] operation")  ;
     mpiAssert (MPI_Win_unlock (this->rank, &this->array), "failed to release lock") ;
@@ -67,7 +73,7 @@ T& Container<T>::operator[](int index)
     return actualValue ;
 }
 
-void Container<T>::operator=(int value) {
+void Container<T>::setValue(const int &idx, const int &value) {
 
     mpiAssert (MPI_Win_lock (SHARED, this->rank, this->lockAssertion, &this->array), "failed to acquire lock while setting value") ;
     mpiAssert (MPI_Put (&value, 1, MPI_INT, targetRank, targetDisp, targetCount, MPI_INT, &this->array), "failed while assignment\n") ;
@@ -77,21 +83,21 @@ void Container<T>::operator=(int value) {
 template<typename T>
 void Container<T>::queue_assignment(int index, T value)
 {
-
-    
+   // Why would this even be needed if it's RMA ?
+   assert (false) ; 
 }
 
 template<typename T>
 void Container<T>::queue_push(T value)
 {
-
-    
+   // This should not be needed.
+   assert (false) ; 
 }
 
 template<typename T>
 void Container<T>::sync_assignments()
 {
-
+    MPI_Win_Flush (&this->array) ; // Synchronize the window.
 }
 
 
