@@ -1,7 +1,7 @@
 function __push__ (Graph g, node u, node v, propNode <int> excess,propEdge <int> residual_capacity) {
     edge forward_edge = g.get_edge (u, v) ;
     edge backward_edge = g.get_edge (v, u) ;
-    int d = min (u.excess, forward_edge.residual_capacity) ;
+    int d = std::min (u.excess, forward_edge.residual_capacity) ;
     int temp ;
     temp = (u.excess - d) ;
     u.excess = temp ;
@@ -75,7 +75,7 @@ function do_max_flow (Graph g, node source, node sink, propNode<int> label, prop
     g.attachNodeProperty (excess = 0) ;
     g.attachNodeProperty (curr_edge = 0) ;
     container<int> count ;
-    count.assign (g.numNodes (), 0) ;
+    count.assign (g.num_nodes (), 0) ;
 
     int temp = 0;
     int res = 0 ;
