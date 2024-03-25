@@ -1,4 +1,6 @@
 #include <iostream>
+#include <unordered_map>
+#include <utility>
 
 
 void fileIO(){
@@ -12,12 +14,16 @@ int main (int argc, char ** argv) {
     srand (atoi(argv[1])) ;
     int v = 7 ;
     int e = 10;
+    std::unordered_map<std::pair<int,int>,int > check ;
     for (int i=0; i<e; i++) {
         int u, x, w ;
         u = rand () % v ;
         x = rand () % v ;
         w = rand () % v ;
         if (u==x) {i-- ; continue;}
+        if (check.find (std::make_pair(u,x)) == check.end () || check.find (std::make_pair(x,u)) == check.end ()) { i--; continue ;}
+        check[std::make_pair(u,x)]=1 ;
+        check[std::make_pair(u,x)]=1 ;
         printf ("%d %d %d\n", u, x, w ) ;
     }
     int temp = rand () % v ;
@@ -33,3 +39,4 @@ int main (int argc, char ** argv) {
     twe = rand () % v ;
     printf ("%d 1 %d\n", temp, twe) ;
 }
+
