@@ -1,8 +1,9 @@
 #ifndef MPI_DATA_CONSTRUCTS
 #define MPI_DATA_CONSTRUCTS
 
-//#include"../graph_properties/node_property/node_property.h"
-//#include"../graph_properties/edge_property/edge_property.h"
+#include"../../mpi_header/graph_properties/node_property/node_property.h"
+#include"../../mpi_header/graph_properties/edge_property/edge_property.h"
+#include "../../mpi_header/graph_mpi.h"
 #include <assert.h>
 #include <vector>
 #include <mpi.h>
@@ -48,8 +49,8 @@ class Container {
         void clear();
         
         // Getters and Setters.
-        T& getValue (const int &idx) ;
-        void setValue (const int &idx, const int &value) ;
+        int getValue (const int &node_owner, const int &idx) ;
+        void setValue (const int &node_owner, const int &idx, const int &value) ;
         int getIdx (const int& idx) ;
 
         // Might get deprecated functions.

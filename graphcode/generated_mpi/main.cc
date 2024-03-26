@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
     Graph residual_graph(argv[1],world, 1);
     world.barrier();
     printf ("residual graph csr\n") ;
-    residual_graph.print_csr () ;
+    // residual_graph.print_csr () ;
     world.barrier () ;
 
     NodeProperty<int> label, excess, curr_edge ;

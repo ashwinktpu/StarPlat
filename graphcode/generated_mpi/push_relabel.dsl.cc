@@ -47,13 +47,15 @@ void relabel(Graph& g, int u, EdgeProperty<int>& residue, NodeProperty<int>& lab
     int oldVal = count.getValue (g.get_node_owner(u), oldIdx) ;
     count.setValue (g.get_node_owner(u), oldIdx, oldVal - 1) ;
     label.setValue (u,new_label + 1);
+    int newVal = count.getValue (g.get_node_owner(u), new_label+1) ;
+    count.setValue (g.get_node_owner(u), new_label+1, newVal + 1) ;
   }
 
 }
 void discharge(Graph& g, int u, NodeProperty<int>& label, NodeProperty<int>& excess, 
   NodeProperty<int>& curr_edge, EdgeProperty<int>& residue, Container<int>& count, boost::mpi::communicator world )
 {
-    printf ("discharging %d \n", u) ;
+    printf ("discharging %d at height = %d with excess = %d \n", u, label.getValue (u), excess.getValue (u)) ;
   while (excess.getValue(u) > 0 ){
     for (int v : g.getNeighbors(u)) 
     {
@@ -82,8 +84,8 @@ void fixGap(Graph &g, Container<int>& count, NodeProperty<int>& label, boost::mp
 {
   printf ("fixing gap \n") ;
   int gap = count.getIdx(0);
-  printf ("found gap of %d\n", gap); 
   if (gap == -1) return ;
+  printf ("found gap of %d\n", gap); 
   int t = 0 ;
   world.barrier();
      for (int v = g.start_node(); v <= g.end_node(); v ++) 
@@ -141,13 +143,12 @@ void do_max_flow(Graph& g, int source, int sink, NodeProperty<int>& label,
   count.setValue(g.get_node_owner(sink), 0, g.num_nodes()-1) ;
   x = count.getValue (g.get_node_owner(sink), 0) ;
   printf ("checking for ok set value at height 0 %d \n", x) ;
-  count.printArr () ;
   while (!g.frontier_empty(world)){
     int u = g.frontier_pop_local(world);
     if (u != -1) 
     discharge(g,u,label,excess,curr_edge,residue, count, world);
     fixGap(g,count,label, world);
-    printf ("fixed gap\n") ;
+    // printf ("fixed gap\n") ;
     world.barrier () ;
   }
 

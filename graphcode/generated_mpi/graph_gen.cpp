@@ -1,6 +1,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <utility>
+#include <set>
 
 
 void fileIO(){
@@ -12,31 +13,34 @@ int main (int argc, char ** argv) {
 
     fileIO () ;
     srand (atoi(argv[1])) ;
-    int v = 7 ;
-    int e = 10;
-    std::unordered_map<std::pair<int,int>,int > check ;
-    for (int i=0; i<e; i++) {
-        int u, x, w ;
-        u = rand () % v ;
-        x = rand () % v ;
-        w = rand () % v ;
-        if (u==x) {i-- ; continue;}
-        if (check.find (std::make_pair(u,x)) == check.end () || check.find (std::make_pair(x,u)) == check.end ()) { i--; continue ;}
-        check[std::make_pair(u,x)]=1 ;
-        check[std::make_pair(u,x)]=1 ;
-        printf ("%d %d %d\n", u, x, w ) ;
+    int numVertices = 7 ;
+    int sparsityFactor = 5 ;
+    std::set<std::pair<int,int> > recorder ;
+    int source = 0, sink = 1 ;
+    int fromSource = rand () % numVertices ;
+    while (fromSource == 0) {
+        fromSource = rand () % numVertices ;
+    } 
+    printf ("%d %d %d\n", source, fromSource, rand () % 100) ;
+    recorder.insert ({source, fromSource}) ;
+    recorder.insert ({fromSource, source}) ;
+    int fromSink = rand () % numVertices ;
+    while (fromSink == sink) {
+        fromSink = rand () % numVertices ;
+    } 
+    printf ("%d %d %d\n", fromSink, sink, rand () % 100) ;
+    recorder.insert ({sink, fromSink}) ;
+    recorder.insert ({fromSink, sink}) ;
+    for (int u = 0; u < numVertices; u++) {
+        for (int v = 0; v < numVertices; v++) {
+            if (u != v) {
+                if (recorder.find ({u,v}) == recorder.end () && rand () % sparsityFactor == 0) {
+                    printf ("%d %d %d\n", u, v, rand () % 100);
+                    recorder.insert ({u,v}) ;
+                    recorder.insert ({v,u}) ;
+                }
+            }
+        }
     }
-    int temp = rand () % v ;
-    while (temp == 0 ) {
-        temp = rand () % v ;
-    }
-    int twe = rand () % v ;
-    printf ("0 %d %d\n", temp, twe) ;
-    temp = rand () % v ;
-    while (temp == 1) {
-        temp = rand () % v ;
-    }
-    twe = rand () % v ;
-    printf ("%d 1 %d\n", temp, twe) ;
 }
 
