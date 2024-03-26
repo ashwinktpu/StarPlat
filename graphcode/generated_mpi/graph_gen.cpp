@@ -13,19 +13,19 @@ int main (int argc, char ** argv) {
 
     fileIO () ;
     srand (atoi(argv[1])) ;
-    int numVertices = 7 ;
+    int numVertices = 10000 ;
     int sparsityFactor = 5 ;
     std::set<std::pair<int,int> > recorder ;
     int source = 0, sink = 1 ;
     int fromSource = rand () % numVertices ;
-    while (fromSource == 0) {
+    while (fromSource == source || fromSource == sink) {
         fromSource = rand () % numVertices ;
     } 
     printf ("%d %d %d\n", source, fromSource, rand () % 100) ;
     recorder.insert ({source, fromSource}) ;
     recorder.insert ({fromSource, source}) ;
     int fromSink = rand () % numVertices ;
-    while (fromSink == sink) {
+    while (fromSink == sink || fromSink == source) {
         fromSink = rand () % numVertices ;
     } 
     printf ("%d %d %d\n", fromSink, sink, rand () % 100) ;

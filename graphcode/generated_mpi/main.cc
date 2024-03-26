@@ -25,7 +25,11 @@ int main(int argc, char *argv[])
     // Triangle Counting
     // need to add print statement in generated code to check the value of triangle count
     do_max_flow(residual_graph,0,1, label, excess, curr_edge, residue,  world);
-    
+    FILE* out = fopen (argv[2], "w") ;
+    if (world.rank () == 0) {
+        int ans = excess.getValue (1) ;
+        fprintf (out, "%d\n", ans) ;
+    } 
 
 //    printf ("residual graph csr post max flow\n") ;
  //   residual_graph.print_csr () ;

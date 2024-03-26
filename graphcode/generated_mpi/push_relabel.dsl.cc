@@ -3,7 +3,7 @@ int src, snk ;
 void push__(Graph& g, int u, int v, NodeProperty<int>& excess, 
   EdgeProperty<int>& residual_capacity, boost::mpi::communicator world )
 {
-  printf ("pushing from %d to %d\n",u,v); 
+  // printf ("pushing from %d to %d\n",u,v); 
   Edge forward_edge = g.get_edge(u, v);
   Edge backward_edge = g.get_edge(v, u);
   int d = std::min(excess.getValue(u),residual_capacity.getValue(forward_edge));
@@ -26,7 +26,7 @@ void push__(Graph& g, int u, int v, NodeProperty<int>& excess,
 void relabel(Graph& g, int u, EdgeProperty<int>& residue, NodeProperty<int>& label, 
   Container<int>& count, boost::mpi::communicator world )
 {
-  printf ("relabeling %d\n", u) ;
+  // printf ("relabeling %d\n", u) ;
   int new_label = g.num_nodes() + 2;
   for (int v : g.getNeighbors(u)) 
   {
@@ -55,7 +55,7 @@ void relabel(Graph& g, int u, EdgeProperty<int>& residue, NodeProperty<int>& lab
 void discharge(Graph& g, int u, NodeProperty<int>& label, NodeProperty<int>& excess, 
   NodeProperty<int>& curr_edge, EdgeProperty<int>& residue, Container<int>& count, boost::mpi::communicator world )
 {
-    printf ("discharging %d at height = %d with excess = %d \n", u, label.getValue (u), excess.getValue (u)) ;
+  //  printf ("discharging %d at height = %d with excess = %d \n", u, label.getValue (u), excess.getValue (u)) ;
   while (excess.getValue(u) > 0 ){
     for (int v : g.getNeighbors(u)) 
     {
@@ -82,7 +82,7 @@ void discharge(Graph& g, int u, NodeProperty<int>& label, NodeProperty<int>& exc
 
 void fixGap(Graph &g, Container<int>& count, NodeProperty<int>& label, boost::mpi::communicator world )
 {
-  printf ("fixing gap \n") ;
+  // printf ("fixing gap \n") ;
   int gap = count.getIdx(0);
   if (gap == -1) return ;
   printf ("found gap of %d\n", gap); 
@@ -126,23 +126,10 @@ void do_max_flow(Graph& g, int source, int sink, NodeProperty<int>& label,
       }
     }
   //}
-  int rank ;
-  MPI_Comm_rank (MPI_COMM_WORLD, &rank) ;
-  world.barrier () ;
-  MPI_Barrier (MPI_COMM_WORLD) ;
-  printf ("rank %d in barrier region\n", rank) ;
-  count.printArr () ;
-  MPI_Barrier (MPI_COMM_WORLD) ;
-  world.barrier () ;
-
-  int x = count.getValue (g.get_node_owner(sink), 0) ;
-  printf ("checking for ok before set value at height 0 %d \n", x) ;
 
   label.setValue(source,g.num_nodes( ));
   count.setValue(g.get_node_owner(source), g.num_nodes(), 1) ;
   count.setValue(g.get_node_owner(sink), 0, g.num_nodes()-1) ;
-  x = count.getValue (g.get_node_owner(sink), 0) ;
-  printf ("checking for ok set value at height 0 %d \n", x) ;
   while (!g.frontier_empty(world)){
     int u = g.frontier_pop_local(world);
     if (u != -1) 
