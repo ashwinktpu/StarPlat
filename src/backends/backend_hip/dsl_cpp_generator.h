@@ -8,10 +8,102 @@
 #ifndef HIP_DSL_CPP_GENERATOR
 #define HIP_DSL_CPP_GENERATOR
 
+#include <unordered_map>
+
 #include "../../ast/ASTNodeTypes.hpp"
+#include "../../symbolutil/SymbolTable.h"
 #include "../dslCodePad.h"
 
+#define propKey pair<TableEntry *, TableEntry *>
+
 namespace sphip {
+
+    enum VariableType {
+        READ = 1,
+        WRITE,
+        READ_WRITE
+    };
+
+    class UsedVariables {
+
+    private:
+
+        struct hash_pair {
+
+            template <class T1, class T2>
+            size_t operator()(const pair<T1, T2> &p) const {
+
+                auto hash1 = hash<T1>{}(p.first);
+                auto hash2 = hash<T2>{}(p.second);
+                
+                return hash1 ^ hash2;
+            }
+        };
+
+        unordered_map<TableEntry *, Identifier *> readVars;
+        unordered_map<TableEntry *, Identifier *> writeVars;
+        unordered_map<propKey, PropAccess *, hash_pair> readProp;
+        unordered_map<propKey, PropAccess *, hash_pair> writeProp;
+
+    public:
+
+        UsedVariables() {}
+
+        /**
+        * TODO
+        */
+        void AddVariable(Identifier *iden, int type);
+
+        /**
+        * TODO
+        */
+        void AddPropAccess(PropAccess *prop, int type);
+
+        /**
+        * TODO
+        */
+        void Merge(UsedVariables usedVars);
+
+        /**
+        * TODO
+        */
+        void RemoveVariable(Identifier *iden, int type);
+
+        /**
+        * TODO
+        */
+        bool IsUsedVariable(Identifier *iden, int type = READ_WRITE);
+
+        /**
+        * TODO
+        */
+        list<Identifier *> GetUsedVariables(int type = READ_WRITE);
+
+        /**
+        * TODO
+        */
+        bool HasVariables(int type = READ_WRITE);
+
+        /**
+        * TODO
+        */
+        bool IsUsedPropAccess(PropAccess *prop, int type = READ_WRITE);
+
+        /**
+        * TODO
+        */
+        bool IsUsedProp(PropAccess *prop, int type = READ_WRITE);
+
+        /**
+        * TODO
+        */
+        list<PropAccess *> GetPropAccess(int type = READ_WRITE);
+    
+        /**
+        * TODO
+        */
+        void Clear();
+    };
 
     class DslCppGenerator {
 
@@ -238,22 +330,22 @@ namespace sphip {
         /**
          * TODO
          */
-        void GenerateHipMemCpySymbol(const std::string &var, const std::string &typeStr, bool direction);
-
-        /**
-         * TODO
-         */
         void GenerateHipMallocStr(const std::string &dVar, const std::string &typeStr, const std::string &sizeOfType);
 
         /**
          * TODO
          */
-        void GenerateHipMemCpyStr(const std::string &dst, const std::string &src, const std::string &typeStr, const std::string &sizeOfType, bool isHostToDevice = true);
+        void GenerateHipMemcpyStr(const std::string &dst, const std::string &src, const std::string &typeStr, const std::string &sizeOfType, bool isHostToDevice = true);
 
         /**
          * TODO
          */
         void GenerateHipMalloc(Type* type, const std::string &identifier);
+
+        /**
+         * TODO
+         */
+        void GenerateHipMemcpySymbol(const std::string &var, const std::string &typeStr, const bool direction);
 
         /**
          * TODO
@@ -305,6 +397,71 @@ namespace sphip {
         [[deprecated("Function is deprecated. Use constructor for setting names instead.")]] 
         void SetFileName(const std::string& fileName);
 
+        /**
+         * Functions related to currently active variables.
+         * Implemented in get_used_meta_data.cpp
+        */
+
+        /**
+        * Returns the meta data consturcts that currently in use.
+        */
+        UsedVariables GetUsedVariablesInStatement(statement *statment);
+
+        /**
+        * TODO
+        */
+        UsedVariables GetUsedVariablesInExpression(Expression *expr);
+
+        /**
+        * TODO
+        */
+        UsedVariables GetUsedVariablesInWhile(whileStmt *whileStmt);
+
+        /**
+        * TODO
+        */
+        UsedVariables GetUsedVariablesInDoWhile(dowhileStmt *dowhileStmt);
+
+        /**
+        * TODO
+        */
+        UsedVariables GetUsedVariablesInAssignment(assignment *stmt);
+
+        /**
+        * TODO
+        */
+        UsedVariables GetUsedVariablesInIf(ifStmt *ifStmt);
+
+        /**
+        * TODO
+        */
+        UsedVariables GetUsedVariablesInFixedPoint(fixedPointStmt *fixedPt);
+
+        /**
+        * TODO
+        */
+        UsedVariables GetUsedVariablesInReductionCall(reductionCallStmt *stmt);
+
+        /**
+        * TODO
+        */
+        UsedVariables GetUsedVariablesInUnaryStmt(unary_stmt *stmt);
+
+        /**
+        * TODO
+        */
+        UsedVariables GetUsedVariablesInForAll(forallStmt *forAllStmt);
+
+        /**
+        * TODO
+        */
+        UsedVariables GetUsedVariablesInBlock(blockStatement *block);
+
+        /**
+         * TODO
+        */
+        UsedVariables GetDeclaredPropertyVariablesOfBlock(blockStatement *block);
+
     private:
 
         const std::string fileName;
@@ -319,6 +476,7 @@ namespace sphip {
 
         Function* function;
         bool generateCsr;
+
     };
 }  
 

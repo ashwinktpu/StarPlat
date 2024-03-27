@@ -1,7 +1,7 @@
 EXPENDABLES_WINDOWS = bin/MainContextj.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c bin/deviceVarsAnalyser.o bin/analyserUtil.o bin/dv*.o bin/bv*.o
 EXPENDABLES = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c  bin/deviceVarsAnalyser.o bin/blockVarsAnalyser.o
 ANALYSER = bin/dataRaceAnalyser.o
-PROGRAMS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/cu_dsl_cpp_generator.o  bin/ac_dsl_cpp_generator.o bin/om_dsl_cpp_generator.o bin/mpi_dsl_cpp_generator.o bin/om_dyn_dsl_cpp_generator.o bin/mpi_dsl_cpp_generator_helper.o bin/mpi_dsl_cpp_expression_generator.o bin/mpi_dsl_cpp_statement_generator.o bin/mpi_dsl_dyn_cpp_generator.o bin/sycl_dsl_cpp_generator.o bin/multigpu_dsl_cpp_generator.o  bin/amd_dsl_cpp_generator.o bin/hip_dsl_cpp_generator.o bin/hip_auxillary.o bin/hip_code_gen.o
+PROGRAMS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/cu_dsl_cpp_generator.o  bin/ac_dsl_cpp_generator.o bin/om_dsl_cpp_generator.o bin/mpi_dsl_cpp_generator.o bin/om_dyn_dsl_cpp_generator.o bin/mpi_dsl_cpp_generator_helper.o bin/mpi_dsl_cpp_expression_generator.o bin/mpi_dsl_cpp_statement_generator.o bin/mpi_dsl_dyn_cpp_generator.o bin/sycl_dsl_cpp_generator.o bin/multigpu_dsl_cpp_generator.o  bin/amd_dsl_cpp_generator.o bin/hip_dsl_cpp_generator.o bin/hip_auxillary.o bin/hip_code_gen.o bin/hip_get_used.o bin/hip_analyzer.o
 #bin/ac_dsl_cpp_generator.o 
 #bin/om_dsl_cpp_generator.o
 A_PROGRAM = bin/attachPropAnalyser.o bin/dataRaceAnalyser.o bin/deviceVarsAnalyser.o bin/blockVarsAnalyser.o bin/analyserUtil.o bin/pushpullAnalyser.o
@@ -30,8 +30,14 @@ bin/hip_dsl_cpp_generator.o: backends/backend_hip/dsl_cpp_generator.cpp backends
 bin/hip_auxillary.o: backends/backend_hip/auxillary_functions.cpp backends/dslCodePad.h
 	$(CC) $(CFLAGS) -c backends/backend_hip/auxillary_functions.cpp -o bin/hip_auxillary.o
 
-bin/hip_code_gen.o:backends/backend_hip/hip_gen_functions.cpp backends/dslCodePad.h
+bin/hip_code_gen.o: backends/backend_hip/hip_gen_functions.cpp backends/dslCodePad.h
 	$(CC) $(CFLAGS) -c backends/backend_hip/hip_gen_functions.cpp -o bin/hip_code_gen.o
+
+bin/hip_analyzer.o: backends/backend_hip/analyzer_utility.cpp backends/dslCodePad.h
+	$(CC) $(CFLAGS) -c backends/backend_hip/analyzer_utility.cpp -o bin/hip_analyzer.o
+
+bin/hip_get_used.o: backends/backend_hip/get_used_data.cpp backends/dslCodePad.h
+	$(CC) $(CFLAGS) -c backends/backend_hip/get_used_data.cpp -o bin/hip_get_used.o
 
 #amd
 bin/amd_dsl_cpp_generator.o: backends/backend_amd/dsl_cpp_generator.cpp backends/dslCodePad.h

@@ -305,6 +305,8 @@ namespace sphip {
 
     void DslCppGenerator::GenerateStatement(statement* stmt, bool isMainFile) {
 
+        cout << "FLAG " << stmt->getTypeofNode() << "\n";
+
         switch (stmt->getTypeofNode()) {
 
         case NODE_BLOCKSTMT:
@@ -370,7 +372,8 @@ namespace sphip {
 
         dslCodePad &targetFile = isMainFile ? main : header;
 
-        //TODO: Used variables thingy
+        UsedVariables usedVariables = GetDeclaredPropertyVariablesOfBlock(blockStmt);
+        //TODO : Add the cuda free handling and what not
         
         list<statement*> stmtList = blockStmt->returnStatements();
 
@@ -448,10 +451,18 @@ namespace sphip {
         } else if(type->isPrimitiveType()) {
 
             std::cerr << "Hit in primitive type\n";
+
+            std::string strBuffer;
+
+            const std::string varType = ConvertToCppType(type);
+            const std::string varName = stmt->getdeclId()->getIdentifier();
+
+            cout << varName << " " << varType << "\n";
         }
     }
 
     void DslCppGenerator::GenerateDeviceAssignment(assignment* asmt, bool isMainFile) {
+
         dslCodePad& targetFile = isMainFile ? main : header;
         bool isDevice = false;
         string str;        
@@ -515,12 +526,14 @@ namespace sphip {
         PropAccess* sourceField = stmt->getPropSource();
         Identifier* sourceId = stmt->getSource();
         Identifier* collectionId;
-
-        if(sourceField) 
+                
+        if(sourceField){ 
             collectionId = sourceField->getIdentifier1();
+        }
 
-        if(sourceId)
+        if(sourceId){
             collectionId = sourceId;
+        }
 
         Identifier* iteratorMethodId;
 
@@ -528,22 +541,118 @@ namespace sphip {
             iteratorMethodId = extractElemFunc->getMethodId();
 
         statement* body = stmt->getBody();
-
         string buffer;
 
-        if(stmt->isForall()) {
+        if(stmt->isForall()) { // This makes sure that this a parallelizable outer for-loop and not the inside for loop, which won't be parallelized.
 
-            cout << "HIT inside FORALL";
+            // // TODO: Check OMP Line 1160
+
+            // if(stmt->hasFilterExpr() || stmt->hasFilterExprAssoc()) {
+                
+            //     Expression *filterExpression = stmt->hasFilterExpr() ? stmt->getfilterExpr() : stmt->getAssocExpr();
+            //     Expression *lhs = filterExpression->getLeft();
+            //     Identifier *filterId = lhs->isIdentifierExpr() ? lhs->getId() : NULL;
+            //     TableEntry *entry = (filterId != NULL) ? filterId->getSymbolInfo() : NULL;
+
+            //     if(entry && entry->getId()->get_fp_association()) {
+
+            //         main.pushString(string(function->getIdentifier()->getIdentifier()) + "Kernel");
+            //         main.pushString("<<<numBlocks, numThreads>>>");
+            //         main.pushString("(V, E");
+                    
+            //         if(stmt->getIsMetaUsed())
+            //             main.pushString(", dOffsetArray");
+
+            //         if(stmt->getIsDataUsed())
+            //             main.pushString(", dEdgeList");
+
+            //         if(stmt->getIsSrcUsed())
+            //             main.pushString(", dSrcList");
+
+            //         if(stmt->getIsWeightUsed()) 
+            //             main.pushString(", dWeight");
+
+            //         if(stmt->getIsRevMetaUsed())
+            //             main.pushString(", dRevOffsetArray");
+
+            //         main.pushStringWithNewLine(");");
+            //     }
+
+
+            // } else {
+            //     cout << "HIT filter else\n";
+            // }
+
+            // UsedVariables usedVariables = GetUsedVariablesInForAll(stmt);
+            UsedVariables use;
+
+            for(auto iden: use.GetUsedVariables()) {
+
+                std::cout << "MAXXX" << iden->getIdentifier() << "\n";
+            }
+
         } else {
 
-            cout << "HIT inside FORALL ELSE";
         }
+            cout << "HIT inside FORALL ELSE\n";
     }
 
     void DslCppGenerator::GenerateFixedPoint(fixedPointStmt* stmt, bool isMainFile) {
 
-        //TODO: 
-        cout << "Inside GenerateFixedPoint\n";
+        dslCodePad& targetFile = isMainFile ? main : header;
+
+        string buffer;
+
+        Expression* convergenceExpr = stmt->getDependentProp();
+        Identifier* fixedPointId = stmt->getFixedPointId();
+        
+        //TODO : Add assertions
+
+        Identifier* dependentId = convergenceExpr->getUnaryExpr()->getId();  // TODO: Possible checks avoided
+
+        string modifiedVar = dependentId->getIdentifier();
+        string fixedPointVar = fixedPointId->getIdentifier();
+        string fixedPointVarType = ConvertToCppType(fixedPointId->getSymbolInfo()->getType());
+
+        modifiedVar[0] = std::toupper(modifiedVar[0]);
+        modifiedVar = "d" + modifiedVar;
+
+        string modifiedVarNext = modifiedVar + "Next";
+
+        if(convergenceExpr->getExpressionFamily() == EXPR_ID) {
+            dependentId = convergenceExpr->getId();
+        }
+
+        if(dependentId != NULL && dependentId->getSymbolInfo()->getType()->isPropNodeType()) {
+
+            targetFile.pushStringWithNewLine(
+                "initKernel<" + fixedPointVarType + "><<<numBlocks, numThreads>>>(V, " + modifiedVarNext + ", false);"
+            );
+
+            targetFile.pushStringWithNewLine("int k = 0;");
+            targetFile.NewLine();
+            targetFile.pushStringWithNewLine("while(!" + fixedPointVar + ") {");
+            targetFile.NewLine();
+            targetFile.pushStringWithNewLine(fixedPointVar + " = true;");
+
+            GenerateHipMemcpySymbol(fixedPointVar, fixedPointVarType, true); //! TODO: Implement
+            
+            if(stmt->getBody()->getTypeofNode() != NODE_BLOCKSTMT) {
+                GenerateStatement(stmt->getBody(), isMainFile);
+            } else {
+                GenerateBlock(static_cast<blockStatement*>(stmt->getBody()), false, isMainFile);
+            }
+
+            GenerateHipMemcpySymbol(fixedPointVar, fixedPointVarType, false); //! TODO: Implement
+            GenerateHipMemcpyStr(modifiedVar, modifiedVarNext, fixedPointVarType, "V", false); //! TODO: Implement
+            
+            targetFile.pushStringWithNewLine(
+                "initKernel<" + fixedPointVarType + "><<<numBlocks, numThreads>>>(V, " + modifiedVarNext + ", false);"
+            );
+
+            targetFile.pushStringWithNewLine("k++;");
+            targetFile.pushStringWithNewLine("}");
+        }
 
     }
 
@@ -777,8 +886,8 @@ namespace sphip {
 
             Identifier* nodeId = argList.front()->getExpr()->getId();
 
-            strBuffer = string("(d_meta[") + nodeId->getIdentifier() + " + 1] -" +
-                         "d_meta[" + nodeId->getIdentifier() + "]";
+            strBuffer = string("(dOffsetArray[") + nodeId->getIdentifier() + " + 1] -" +
+                         "dOffsetArray[" + nodeId->getIdentifier() + "]";
 
             targetFile.pushString(strBuffer);
 
@@ -831,6 +940,7 @@ namespace sphip {
         const std::string &typeStr, 
         const std::string &sizeOfType
     ) {
+        cout << "FLAGFLAG2\n";
 
         main.pushStringWithNewLine(
             hVar + " = (" + typeStr + "*) malloc(sizeof(" + typeStr + ")" +
@@ -846,6 +956,7 @@ namespace sphip {
      * TODO
     */
     void DslCppGenerator::CheckAndGenerateVariables(Function *function, const std::string &loc) {
+
 
         if(function->getIsMetaUsed()) 
             main.pushStringWithNewLine("int *" + loc +"OffsetArray;");
@@ -869,6 +980,7 @@ namespace sphip {
      * TODO
     */
     void DslCppGenerator::CheckAndGenerateHipMalloc(Function *function) {
+        cout << "FLAGFLAG\n";
 
         if(function->getIsMetaUsed()) 
             GenerateHipMallocStr("dOffsetArray", "int", "V + 1");
@@ -917,19 +1029,19 @@ namespace sphip {
     void DslCppGenerator::CheckAndGenerateMemcpy(Function *function) {
 
         if(function->getIsMetaUsed())
-            GenerateHipMemCpyStr("dOffsetArray", "hOffsetArray", "int", "V + 1");
+            GenerateHipMemcpyStr("dOffsetArray", "hOffsetArray", "int", "V + 1");
 
         if(function->getIsDataUsed())
-            GenerateHipMemCpyStr("dEdgelist", "hEdgelist", "int", "E");
+            GenerateHipMemcpyStr("dEdgelist", "hEdgelist", "int", "E");
 
         if(function->getIsSrcUsed())
-            GenerateHipMemCpyStr("dSrcList", "hSrcList", "int", "E");
+            GenerateHipMemcpyStr("dSrcList", "hSrcList", "int", "E");
 
         if(function->getIsWeightUsed())
-            GenerateHipMemCpyStr("dWeight", "hWeight", "int", "E");
+            GenerateHipMemcpyStr("dWeight", "hWeight", "int", "E");
 
         if(function->getIsRevMetaUsed())
-            GenerateHipMemCpyStr("dRevOffsetArray", "hRevOffsetArray", "int", "V + 1");
+            GenerateHipMemcpyStr("dRevOffsetArray", "hRevOffsetArray", "int", "V + 1");
 
         main.NewLine();
     }

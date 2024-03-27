@@ -24,7 +24,7 @@ namespace sphip {
         main.pushStringWithNewLine(oss.str());
     }
 
-    void DslCppGenerator::GenerateHipMemCpyStr(
+    void DslCppGenerator::GenerateHipMemcpyStr(
         const std::string &dst,
         const std::string &src,
         const std::string &typeStr,
@@ -132,6 +132,14 @@ namespace sphip {
     }
 
     void DslCppGenerator::GenerateInitKernel(const std::string str) {
+
+    }
+
+    void DslCppGenerator::GenerateHipMemcpySymbol(
+        const std::string &var, 
+        const std::string &typeStr, 
+        const bool direction
+    ) {
 
     }
 }
