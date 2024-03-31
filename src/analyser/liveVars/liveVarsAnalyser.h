@@ -20,8 +20,6 @@ class liveVarsAnalyser
     bool analyseNode(liveVarsNode*);
     void printLiveVarsNode(ASTNode*);
 
-    void eliminateDeadcode(ASTNode*);
-
     void initFunc(Function*);
     liveVarsNode* initStatement(statement*, liveVarsNode*);
     liveVarsNode* initAssignment(assignment*, liveVarsNode*);
