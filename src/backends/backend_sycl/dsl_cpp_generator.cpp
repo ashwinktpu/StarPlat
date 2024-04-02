@@ -172,6 +172,7 @@ namespace spsycl
         main.pushstr_newL("int *h_src;");
         main.pushstr_newL("int *h_weight;");
         main.pushstr_newL("int *h_rev_meta;"); // done only to handle PR since other doesn't uses it
+        main.pushstr_newL("int *h_degree;"); // done only to handle vc since other doesn't uses it
         main.NewLine();
 
         main.pushstr_newL("h_meta = (int *)malloc( (V+1)*sizeof(int));");
@@ -179,6 +180,7 @@ namespace spsycl
         main.pushstr_newL("h_src = (int *)malloc( (E)*sizeof(int));");
         main.pushstr_newL("h_weight = (int *)malloc( (E)*sizeof(int));");
         main.pushstr_newL("h_rev_meta = (int *)malloc( (V+1)*sizeof(int));");
+        main.pushstr_newL("h_degree = (int *)malloc( (V+1)*sizeof(int));");
         main.NewLine();
 
         main.pushstr_newL("for(int i=0; i<= V; i++) {");
@@ -188,6 +190,10 @@ namespace spsycl
         sprintf(strBuffer, "temp = %s.rev_indexofNodes[i];", gId);
         main.pushstr_newL(strBuffer);
         main.pushstr_newL("h_rev_meta[i] = temp;");
+        main.pushstr_newL("}");
+        sprintf(strBuffer, "temp = %s.indeg[i];", gId);
+        main.pushstr_newL(strBuffer);
+        main.pushstr_newL("h_degree[i] = temp;");
         main.pushstr_newL("}");
         main.NewLine();
 
@@ -375,6 +381,8 @@ namespace spsycl
             main.pushstr_newL(strBuffer);
             sprintf(strBuffer, "int* d_weight;");
             main.pushstr_newL(strBuffer);
+            sprintf(strBuffer, "int* d_degree;");
+            main.pushstr_newL(strBuffer);
             sprintf(strBuffer, "int* d_rev_meta;");
             main.pushstr_newL(strBuffer);
             main.NewLine();
@@ -383,6 +391,7 @@ namespace spsycl
             generateMallocDeviceStr("d_data", "int", "(E)");
             generateMallocDeviceStr("d_src", "int", "(E)");
             generateMallocDeviceStr("d_weight", "int", "(E)");
+            generateMallocDeviceStr("d_degree", "int", "(V+1)");
             generateMallocDeviceStr("d_rev_meta", "int", "(V+1)");
 
             main.NewLine();
@@ -391,6 +400,7 @@ namespace spsycl
             generateMemCpyStr("d_data", "h_data", "int", "E");
             generateMemCpyStr("d_src", "h_src", "int", "E");
             generateMemCpyStr("d_weight", "h_weight", "int", "E");
+            generateMemCpyStr("d_degree", "h_degree", "int", "(V+1)");
             generateMemCpyStr("d_rev_meta", "h_rev_meta", "int", "(V+1)");
             main.NewLine();
 
@@ -686,6 +696,11 @@ namespace spsycl
             cout << "varT:" << varType << endl;
             cout << "varN:" << varName << endl;
 
+            sprintf(strBuffer, "%s *d_%s;", varType, varName);
+            main.pushString(strBuffer);
+            main.pushstr_newL("");
+            generateMallocDeviceStr(varName, varType, "1");
+
             sprintf(strBuffer, "%s %s", varType, varName);
             main.pushString(strBuffer);
 
@@ -705,14 +720,23 @@ namespace spsycl
         }
         else if (type->isNodeEdgeType())
         {
-            main.pushstr_space(convertToCppType(type));
-            main.pushString(declStmt->getdeclId()->getIdentifier());
+            char strBuffer[1024];
+            const char *varType = convertToCppType(type);
+            const char *varName = declStmt->getdeclId()->getIdentifier();
+
+            sprintf(strBuffer, "%s *d_%s;", varType, varName);
+            main.pushString(strBuffer);
+            main.pushstr_newL("");
+            generateMallocDeviceStr(varName, varType, "1");
+
+            main.pushstr_space(varType);
+            main.pushString(varName);
             if (declStmt->isInitialized())
             {
                 main.pushString(" = ");
                 generateExpr(declStmt->getExpressionAssigned(), isMainFile);
-                main.pushstr_newL(";");
             }
+            main.pushstr_newL(";");
         }
     }
 
@@ -792,7 +816,7 @@ namespace spsycl
             }
             else
             {
-                if (fixedPointVariables.find(id->getIdentifier()) != fixedPointVariables.end())
+                if (fixedPointVariables.find(id->getIdentifier()) != fixedPointVariables.end() || !isMainFile)
                 {
                     main.pushString("*d_");
                 }
@@ -902,8 +926,6 @@ namespace spsycl
         char strBuffer[1024];
         if (direction)
         {
-            sprintf(strBuffer, "%s *d_%s = malloc_device<%s>(1, Q);", typeStr, var, typeStr);
-            main.pushstr_newL(strBuffer);
             main.pushstr_newL("Q.submit([&](handler &h)");
             sprintf(strBuffer, "{ h.memcpy(d_%s, &%s, 1 * sizeof(%s)); })", var, var, typeStr);
             main.pushstr_newL(strBuffer);
@@ -1121,7 +1143,7 @@ namespace spsycl
                     std::cout << "varName:" << iden->getIdentifier() << '\n';
                     Type *type = iden->getSymbolInfo()->getType();
 
-                    if (type->isPrimitiveType() && (fixedPointVariables.find(iden->getIdentifier()) == fixedPointVariables.end()))
+                    if ((type->isPrimitiveType() || type->isNodeType()) && (fixedPointVariables.find(iden->getIdentifier()) == fixedPointVariables.end()))
                     {
                         generateMemCpySymbol(iden->getIdentifier(), convertToCppType(type), true);
                     }
@@ -1144,7 +1166,7 @@ namespace spsycl
                 for (Identifier *iden : vars)
                 {
                     Type *type = iden->getSymbolInfo()->getType();
-                    if (type->isPrimitiveType())
+                    if (type->isPrimitiveType() || type->isNodeType())
                         generateMemCpySymbol(iden->getIdentifier(), convertToCppType(type), false);
                     /*else if(type->isPropType())
                     {
