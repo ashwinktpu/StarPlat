@@ -1,4 +1,5 @@
 #include"graph_mpi.h"
+#include "synchronize_p2p.hpp"
 #include"rma_datatype/rma_datatype.h"
 #include<iostream>
 #include <fstream>
@@ -12,22 +13,22 @@
   }
 
   int Graph::frontier_pop_local (boost::mpi::communicator world) {
+    std::vector<int*> updates = synchronize(frontier_sync, 1) ;
+    for (auto &update:updates) {
+      frontier.insert (update[0]) ;
+    } 
     if (frontier.empty()) return -1 ;
     int popper = *frontier.begin () ;
     assert (!frontier.empty ()) ;
-//    printf ("Before erasing : %d elements in frontier\n", frontier.size ()) ;
     frontier.erase (popper) ;
-//    printf ("After erasing : %d elements in frontier\n", frontier.size ()) ;
     return popper  ;
   }
 
   void Graph::frontier_push (int &u, boost::mpi::communicator world) {
-//    printf ("pushing %d into frontier\n", u) ; 
     if (world.rank () == get_node_owner (u) ) {
       frontier.insert (u) ;
     } else {
-      // Barenya : TODO, insert mechanism for u to be added in queue of process 2.
-      frontier.insert (u) ;
+      frontier_sync.push_back ({world.rank(), get_node_owner(u), u}) ;
     }
   } 
   

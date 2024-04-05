@@ -10,7 +10,8 @@ do
     # generate input file
     ./graph_gen.out $i
     ./control.out input.txt > outputControl.txt
-    mpirun -np 1 ./push_relabel.dsl.out input.txt outputActual.txt > log
+    echo "control finished execution"
+    mpirun -np 2 ./push_relabel.dsl.out input.txt outputActual.txt > log
     diff -q outputControl.txt outputActual.txt
     
 done

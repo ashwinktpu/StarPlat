@@ -67,9 +67,12 @@ class Graph
   Rma_Datatype<int32_t> perNodeDiffCSRSpace;
   Rma_Datatype<int32_t> perNodeDiffRevCSRSpace;
   std::vector<int32_t> diff_edgeProcMap;
-  // Distributed Hash set local view.
-  std::unordered_set<int32_t> frontier ;
+  // Queue using RMA.
+  MPI_Win frontierWindow ;
+  int * frontierWindowBase ;
+  std::vector<std::vector<int> > frontier_sync ;
   // Till here.
+  std::unordered_set<int32_t> frontier ;
   
 
   int bfs_phases ;   

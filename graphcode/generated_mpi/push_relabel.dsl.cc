@@ -72,6 +72,7 @@ void discharge(Graph& g, int u, NodeProperty<int>& label, NodeProperty<int>& exc
     {
       int prevValue = label.getValue (u) ;
       relabel(g,u,residue,label,count, world);
+      // printf ("relabeled %d from %d to %d\n", u, prevValue, label.getValue(u)) ;
       if (label.getValue (u) == prevValue) break ;
 
 
@@ -90,8 +91,9 @@ void fixGap(Graph &g, Container<int>& count, NodeProperty<int>& label, boost::mp
   world.barrier();
      for (int v = g.start_node(); v <= g.end_node(); v ++) 
     {
-      if (label.getValue(v) >= gap )
+      if (v != snk && v!= src && label.getValue(v) >= gap )
       {
+        printf ("sent %d to unreachable\n", v) ;
         label.setValue(v,g.num_nodes()+1);
       }
     }
@@ -126,7 +128,7 @@ void do_max_flow(Graph& g, int source, int sink, NodeProperty<int>& label,
       }
     }
   //}
-
+  int activate = 0 ;
   label.setValue(source,g.num_nodes( ));
   count.setValue(g.get_node_owner(source), g.num_nodes(), 1) ;
   count.setValue(g.get_node_owner(sink), 0, g.num_nodes()-1) ;
@@ -134,7 +136,10 @@ void do_max_flow(Graph& g, int source, int sink, NodeProperty<int>& label,
     int u = g.frontier_pop_local(world);
     if (u != -1) 
     discharge(g,u,label,excess,curr_edge,residue, count, world);
+    if (activate == 0) {
     fixGap(g,count,label, world);
+    activate = 10000 ;}
+    else {activate--;}
     // printf ("fixed gap\n") ;
     world.barrier () ;
   }

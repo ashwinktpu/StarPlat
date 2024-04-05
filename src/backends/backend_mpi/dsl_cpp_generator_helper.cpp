@@ -170,6 +170,8 @@ namespace spmpi {
 
     void dsl_cpp_generator::getDefaultValueforTypes(int type) 
     {
+      // Barenya : to debug the type issue : 
+      printf ("type = %d\n", type) ;
         switch (type) {
             case TYPE_INT:
             case TYPE_LONG:
@@ -181,6 +183,7 @@ namespace spmpi {
                 break;
             case TYPE_BOOL:
                 main.pushstr_space("false");
+                break ;
             default:
                 assert(false);
             return;

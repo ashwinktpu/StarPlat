@@ -24,8 +24,8 @@ void Container<T>::assign (const int &size, const int &initVal, MPI_Comm comm) {
     if (this->rank == this->numProcs-1) {
         this->localSize = globalSize - (this->rank * this->localSize) ;
     }
-    printf ("global size = %d\n", this->globalSize) ;
-    printf ("set localSize for rank %d to %d\n", this->rank, this->localSize) ;
+//    printf ("global size = %d\n", this->globalSize) ;
+    //printf ("set localSize for rank %d to %d\n", this->rank, this->localSize) ;
     // allocate an array using new.
     this->baseArray = new int[this->localSize] ;
     memset (baseArray, 0 , sizeof(int) * this->localSize) ;
@@ -52,7 +52,7 @@ int Container<T>::getIdx (const int &val) {
     if (!foundFlag) return -1 ;
     checkMPIComm(MPI_Win_unlock_all (this->array), "unlocking failed in getIdx") ;
     checkMPIComm(MPI_Allreduce (&idx, &idx, 1, MPI_INT, MPI_MIN, comm), "all reduce failed") ;
-    printf ("returning idx %d\n", idx) ;
+    //printf ("returning idx %d\n", idx) ;
     return this->rank * this->localSize + idx ;
 }
 
@@ -125,15 +125,15 @@ int  Container<T>::getValue(const int &node_owner, const int &idx)
 
     //sync_assignments () ;
     //if (this->rank == node_owner) {
-    printf ("from inside a get call sourceRank = %d targetRank = %d  with displacement %d\n", node_owner, targetRank , targetDisp) ;
+    // printf ("from inside a get call sourceRank = %d targetRank = %d  with displacement %d\n", node_owner, targetRank , targetDisp) ;
       MPI_Win_lock (MPI_LOCK_EXCLUSIVE, targetRank, this->lockAssertion, this->array) ;
-      printf ("lock request sent\n") ;
+//      printf ("lock request sent\n") ;
       MPI_Get (&actualValue, 1, MPI_INT, targetRank, targetDisp, 1, MPI_INT, this->array);
       if (actualValue < 0) {
         printf ("failed at get op from rank %d targetRank = %d and disp = %d\n", this->rank, targetRank, targetDisp) ;
         assert (false) ;
       }
-      printf ("get returned with value %d\n", actualValue) ;
+      // printf ("get returned with value %d\n", actualValue) ;
       MPI_Win_unlock (targetRank, this->array);
     // }
     return actualValue ;
@@ -146,11 +146,11 @@ void Container<T>::setValue(const int &node_owner, const int &idx, const int &va
     int targetDisp = this->calculateTargetDisp (idx) ;
     int targetCount = this->calculateTargetCount (idx) ;
     //if (this->rank == node_owner) {
-    printf ("from inside a set call sourceRank = %d targetRank = %d with displacement = %d \n", node_owner, targetRank , targetDisp) ;
+    // printf ("from inside a set call sourceRank = %d targetRank = %d with displacement = %d \n", node_owner, targetRank , targetDisp) ;
       checkMPIComm (MPI_Win_lock (MPI_LOCK_EXCLUSIVE, targetRank, this->lockAssertion, this->array), "failed to acquire lock while setting value") ;
-      printf ("acquired lock\n") ;
+      // printf ("acquired lock\n") ;
       checkMPIComm (MPI_Put (&value, 1, MPI_INT, targetRank, targetDisp, 1, MPI_INT, this->array), "failed while assignment\n") ;
-      printf ("put successful??\n"); 
+      // printf ("put successful??\n"); 
       checkMPIComm (MPI_Win_unlock (targetRank, this->array), "failed to release lock") ;
     // }
     // MPI_Win_flush (this->rank, this->array) ;
