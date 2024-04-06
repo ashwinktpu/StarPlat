@@ -444,6 +444,16 @@ public:
             cout<<(cstmt->direction ? "GPU to CPU" : "CPU to GPU")<<endl;
             tabSpace--;
         }
+
+        case NODE_ITERBFSREV:
+        {
+            printTabs();
+            cout << "BFS ITER on transpose of the graph\n";
+            tabSpace++;
+            printStatement(((iterateBFSReverse *)stmt)->getBody());
+            tabSpace--;
+            break;
+        }
         default:
             break;
         }

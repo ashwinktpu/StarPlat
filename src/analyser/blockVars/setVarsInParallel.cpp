@@ -20,6 +20,10 @@ void blockVarsAnalyser::setVarsInParallelStatment(statement* stmt)
             setVarsInParallelFixedPoint((fixedPointStmt*)stmt); break;
         case NODE_ITRBFS:
             setVarsInParallelBFS((iterateBFS*)stmt); break;
+        case NODE_ITRBFS2:
+            setVarsInParallelBFS2((iterateBFS2*)stmt); break;
+        case NODE_ITERBFSREV:
+            setVarsInParallelBFSRev((iterateBFSReverse*)stmt); break;
         default:
             break;
     }
@@ -130,6 +134,36 @@ void blockVarsAnalyser::setVarsInParallelBFS(iterateBFS* bfs)
         if (rbfs->getBFSFilter() != NULL)
             usedVars.merge(getVarsExpr(rbfs->getBFSFilter()));
     }
+
+    // Set the flag of the tableentry of the variables in the parallel section
+    for (auto var: usedVars.getVariables()) 
+        var->getSymbolInfo()->setInParallelSection(true);
+}
+
+void blockVarsAnalyser::setVarsInParallelBFS2(iterateBFS2* bfs)
+{
+    // get used variables in the BFS body
+    usedVariables_t usedVars = getVarsStatement(bfs->getBody());
+
+    // Check if bfs has a reverse bfs attached
+    if (bfs->getRBFS() != NULL)
+    {
+        iterateReverseBFS* rbfs = bfs->getRBFS();
+        // get used variables in the reverse BFS body
+        usedVars.merge(getVarsStatement(rbfs->getBody()));
+        if (rbfs->getBFSFilter() != NULL)
+            usedVars.merge(getVarsExpr(rbfs->getBFSFilter()));
+    }
+
+    // Set the flag of the tableentry of the variables in the parallel section
+    for (auto var: usedVars.getVariables()) 
+        var->getSymbolInfo()->setInParallelSection(true);
+}
+
+void blockVarsAnalyser::setVarsInParallelBFSRev(iterateBFSReverse* bfs)
+{
+    // get used variables in the BFS Rev body
+    usedVariables_t usedVars = getVarsStatement(bfs->getBody());
 
     // Set the flag of the tableentry of the variables in the parallel section
     for (auto var: usedVars.getVariables()) 

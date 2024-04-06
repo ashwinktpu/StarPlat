@@ -57,7 +57,7 @@
 %token T_GRAPH T_DIR_GRAPH  T_NODE T_EDGE T_UPDATES T_CONTAINER T_NODEMAP
 %token T_NP  T_EP
 %token T_LIST T_SET_NODES T_SET_EDGES  T_FROM
-%token T_BFS T_REVERSE
+%token T_BFS T_REVERSE T_BFSREVERSE T_BFS2
 %token T_INCREMENTAL T_DECREMENTAL T_STATIC T_DYNAMIC
 %token T_BATCH T_ONADD T_ONDELETE
 
@@ -74,7 +74,7 @@
 %type <node> type type1 type2
 %type <node> primitive graph collections property container nodemap
 %type <node> id leftSide rhs expression oid val boolean_expr unary_expr indexExpr tid  
-%type <node> bfs_abstraction filterExpr reverse_abstraction
+%type <node> bfs_abstraction filterExpr reverse_abstraction bfs_reverse_abstraction bfs_abstraction2
 %type <nodeList> leftList rightList
 %type <node> iteration_cf selection_cf
 %type <node> reductionCall 
@@ -139,7 +139,7 @@ function_data: T_FUNC id '(' paramList ')' {
 											Util::resetTemp(tempIds);
 											tempIds.clear();
 											};	
-			  // | return_func {$$ = $1};	
+			// | return_func {$$ = $1};	
 
 paramList: param {$$=Util::createPList($1);};
                | param ',' paramList {$$=Util::addToPList($3,$1); 
@@ -184,6 +184,8 @@ statement: declaration ';'{$$=$1;};
 	|control_flow {$$=$1;};
 	|reduction ';'{$$=$1;};
 	| bfs_abstraction {$$=$1; };
+	| bfs_abstraction2 {$$=$1; };
+	| bfs_reverse_abstraction {$$=$1;};
 	| blockstatements {$$=$1;};
 	| unary_expr ';' {$$=Util::createNodeForUnaryStatements($1);};
 	| return_stmt ';' {$$ = $1 ;};
@@ -442,10 +444,13 @@ arg_list :    {
 bfs_abstraction	: T_BFS '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr blockstatements reverse_abstraction{$$=Util::createIterateInBFSNode($3,$5,$7,$9,$11,$12,$13) ;};
 			| T_BFS '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr blockstatements {$$=Util::createIterateInBFSNode($3,$5,$7,$9,$11,$12,NULL) ; };
 
-
+bfs_abstraction2	: T_BFS2 '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr blockstatements reverse_abstraction{$$=Util::createIterateInBFSNode2($3,$5,$7,$9,$11,$12,$13) ;};
+			| T_BFS2 '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr blockstatements {$$=Util::createIterateInBFSNode2($3,$5,$7,$9,$11,$12,NULL) ; };
 
 reverse_abstraction :  T_REVERSE blockstatements {$$=Util::createIterateInReverseBFSNode(NULL,$2);};
                      | T_REVERSE '(' boolean_expr ')'  blockstatements {$$=Util::createIterateInReverseBFSNode($3,$5);};
+
+bfs_reverse_abstraction :  T_BFSREVERSE '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr blockstatements {$$=Util::createIterateInBFSReverseNode($3,$5,$7,$9,$11,$12);};
 
 
 oid :  id '.' id { //Identifier* id1=(Identifier*)Util::createIdentifierNode($1);

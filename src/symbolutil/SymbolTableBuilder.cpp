@@ -687,6 +687,70 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
 
     break;
   }
+
+  case NODE_ITRBFS2:
+  {
+    iterateBFS2 *iBFS = (iterateBFS2 *)stmt;
+    string backend(backendTarget);
+
+    if ((backend.compare("omp") == 0) || (backend.compare("amd") == 0) || (backend.compare("cuda") == 0) || (backend.compare("multigpu") == 0)|| (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0) || (backend.compare("hip") == 0))
+
+    {
+      parallelConstruct.push_back(iBFS);
+    }
+
+    currentFunc->setIsMetaUsed();   // d_meta is used in itrbfs
+    iBFS->setIsMetaUsed();          // d_meta is used in itrbfs
+    currentFunc->setIsDataUsed();   // d_data is used in itrbfs
+    iBFS->setIsDataUsed();          // d_data is used in itrbfs
+    currentFunc->setIsWeightUsed(); // d_weight is used in itrbfs
+    iBFS->setIsWeightUsed();        // d_weight is used in itrbfs
+
+    buildForStatements(iBFS->getBody());
+
+    iterateReverseBFS *iRevBFS = iBFS->getRBFS();
+    if (iRevBFS != NULL)
+    {
+      iRevBFS->addAccumulateAssignment();
+      buildForStatements(iRevBFS->getBody());
+    }
+    if ((backend.compare("omp") == 0) || (backend.compare("amd") == 0) || (backend.compare("cuda") == 0) || (backend.compare("multigpu") == 0)|| (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0) || (backend.compare("hip") == 0))
+
+    {
+      parallelConstruct.pop_back();
+    }
+
+    break;
+  }
+
+  case NODE_ITERBFSREV:
+  {
+    iterateBFSReverse *iBFS = (iterateBFSReverse *)stmt;
+    string backend(backendTarget);
+
+    if ((backend.compare("omp") == 0) || (backend.compare("amd") == 0) || (backend.compare("cuda") == 0) || (backend.compare("multigpu") == 0)|| (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0) || (backend.compare("hip") == 0))
+
+    {
+      parallelConstruct.push_back(iBFS);
+    }
+
+    currentFunc->setIsMetaUsed();   // d_meta is used in itrbfsrev
+    iBFS->setIsMetaUsed();          // d_meta is used in itrbfsrev
+    currentFunc->setIsDataUsed();   // d_data is used in itrbfsrev
+    iBFS->setIsDataUsed();          // d_data is used in itrbfsrev
+    currentFunc->setIsWeightUsed(); // d_weight is used in itrbfsrev
+    iBFS->setIsWeightUsed();        // d_weight is used in itrbfsrev
+
+    buildForStatements(iBFS->getBody());
+
+    if ((backend.compare("omp") == 0) || (backend.compare("amd") == 0) || (backend.compare("cuda") == 0) || (backend.compare("multigpu") == 0)|| (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0) || (backend.compare("hip") == 0))
+    {
+      parallelConstruct.pop_back();
+    }
+
+    break;
+  }
+
   case NODE_DOWHILESTMT:
   {
     dowhileStmt *doStmt = (dowhileStmt *)stmt;
