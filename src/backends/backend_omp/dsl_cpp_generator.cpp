@@ -1594,6 +1594,12 @@ void dsl_cpp_generator:: generateVariableDecl(declaration* declStmt)
              freeIdStore.back().push_back(declStmt->getdeclId());
              
    }
+   else if(type->isHeapType())
+   { 
+     main.pushstr_space(convertToCppType(type));
+     main.pushString(declStmt->getdeclId()->getIdentifier());
+     main.pushstr_newL(";");
+   }
    else if(type->isPrimitiveType())
    { 
      main.pushstr_space(convertToCppType(type));
@@ -2622,7 +2628,10 @@ void dsl_cpp_generator::generateFunc(ASTNode* proc)
 
 const char* dsl_cpp_generator:: convertToCppType(Type* type)
 {
-  if(type->isPrimitiveType())
+  if(type->isHeapType()){
+  	return "Heap";
+  }
+  else if(type->isPrimitiveType())
   {
       int typeId=type->gettypeId();
       switch(typeId)

@@ -60,6 +60,7 @@
 %token T_BFS T_REVERSE
 %token T_INCREMENTAL T_DECREMENTAL T_STATIC T_DYNAMIC
 %token T_BATCH T_ONADD T_ONDELETE
+%token T_HEAP
 
 
 %token <text> ID
@@ -72,7 +73,7 @@
 %type <pList> paramList
 %type <node> statement blockstatements assignment declaration proc_call control_flow reduction return_stmt batch_blockstmt on_add_blockstmt on_delete_blockstmt
 %type <node> type type1 type2
-%type <node> primitive graph collections property container nodemap
+%type <node> primitive graph collections heap property container nodemap
 %type <node> id leftSide rhs expression oid val boolean_expr unary_expr indexExpr tid  
 %type <node> bfs_abstraction filterExpr reverse_abstraction
 %type <nodeList> leftList rightList
@@ -228,6 +229,7 @@ declaration : type1 id   {
 type1: primitive {$$=$1; };
 	| graph {$$=$1;};
 	| collections { $$=$1;};
+	| heap { $$=$1;};
 
 
 primitive: T_INT { $$=Util::createPrimitiveTypeNode(TYPE_INT);};
@@ -248,6 +250,8 @@ collections : T_LIST { $$=Util::createCollectionTypeNode(TYPE_LIST,NULL);};
 		| T_UPDATES '<' id '>'   { $$=Util::createCollectionTypeNode(TYPE_UPDATES,$3);}
 	    | container {$$ = $1;}
 		| nodemap   {$$ = $1;}
+		
+heap : T_HEAP { $$=Util::createHeapTypeNode(TYPE_HEAP);};
 
 container : T_CONTAINER '<' type '>' '(' arg_list ',' type ')' {$$ = Util::createContainerTypeNode(TYPE_CONTAINER, $3, $6->AList, $8);}
           | T_CONTAINER '<' type '>' '(' arg_list ')' { $$ =  Util::createContainerTypeNode(TYPE_CONTAINER, $3, $6->AList, NULL);}

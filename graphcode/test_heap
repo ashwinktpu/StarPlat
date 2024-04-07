@@ -1,0 +1,6 @@
+function Test(Graph g, node src)
+{
+       Heap hp;
+       hp.insert();
+       int b;
+}
