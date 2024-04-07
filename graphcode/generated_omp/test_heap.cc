@@ -2,9 +2,10 @@
 
 void Test(graph& g , int src)
 {
+  int siz = 4;
   Heap hp;
-  hp.insert(hp.end(),.begin(),.end());
+  double* sigma=new double[g.num_nodes()];
+  hp.someFunc(siz);
 
-  int b = 0 ;
 
 }

@@ -1,6 +1,8 @@
 function Test(Graph g, node src)
 {
-       Heap hp;
-       hp.insert();
-       int b;
+       int siz = 4;
+       Heap hp1
+       Heap hp2;
+       hp1.someFunc(siz);
 }
+
