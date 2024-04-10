@@ -42,6 +42,8 @@ class Rma_Datatype {
 
   void get_lock(int32_t proc_num, locktype lock,  bool no_checks_needed = false);
 
+  void flush (int32_t targetRank) ;
+
   void unlock(int32_t proc_num ,locktype lock );
 
   T * get_data(int32_t proc_num, int startIndex , int length, locktype lock);

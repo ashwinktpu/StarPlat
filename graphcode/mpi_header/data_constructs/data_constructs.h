@@ -15,53 +15,64 @@ template<typename T>
 class Container {
 
     private :
-        MPI_Win array ; // MPI Window.
-        int * baseArray ; // Buffer array for the MPI Window.
-        int globalSize ; // Total size of the distributed Array.
-        int localSize ; // Size of the distributed Array in local.
-        int dispUnit ; // Offset for the process.
-        int rank ; // Rank of native process.
-        int lockAssertion ; // What type of lock assertion to use.
-        int numProcs ; // total number of process in comm.
-        std::vector<T> vect; 
-        MPI_Comm comm ;
+      MPI_Win array ; // MPI Window.
+      int * baseArray ; // Buffer array for the MPI Window.
+      int globalSize ; // Total size of the distributed Array.
+      int localSize ; // Size of the distributed Array in local.
+      int dispUnit ; // Offset for the process.
+      int rank ; // Rank of native process.
+      int lockAssertion ; // What type of lock assertion to use.
+      int numProcs ; // total number of process in comm.
+			int __idx ; // The end index of a vector.
+      std::vector<T> vect; // This should store the values.
+      MPI_Comm comm ; // communicator.
 
     public :
         
-        // Constructors.
-        Container();
+      // Constructors.
+      Container();
         
-        // Constructors not implemented.
-        Container(int size);
-        Container(int size, T intital_value);
+      // Constructors not implemented.
+      Container(int size);
+      Container(int size, T intital_value);
 
-        // Will use this in workaround.
-        void assign (const int &size, const int &initVal, MPI_Comm comm) ;
-        // Functions not in use.
-        void push(T value);
-        void pop();
-        
-        // Helper Functions.
-        int calculateTargetRank (const int &idx) ;
-        int calculateTargetDisp (const int &idx) ;
-        int calculateTargetCount (const int &idx) ; 
-        
-        void clear();
-        
-        // Getters and Setters.
-        int getValue (const int &node_owner, const int &idx) ;
-        void setValue (const int &node_owner, const int &idx, const int &value) ;
-        int getIdx (const int& idx) ;
+			// serialize the vector.
+		  void serializeContainer () ;
 
-        // Might get deprecated functions.
-        void queue_assignment(int index , T value);
-        void queue_push(T value);
+			// deserialize the vector.
+			void deserializeContainer () ;
+
+      // Will use this in workaround.
+      void assign (const int &size, const int &initVal, MPI_Comm comm) ;
+
+		  // adding a value at the container.
+      void push_back (T value);
+
+			// Remove a value from the end of the container.
+      void pop_back ();
         
-        // Synchronizeation assist.
-        void sync_assignments();
+      // Helper Functions.
+      int calculateTargetRank (const int &idx) ;
+      int calculateTargetDisp (const int &idx) ;
+      int calculateTargetCount (const int &idx) ; 
         
-        // Useful for unit testing.
-        void printArr () ;
+      void clear();
+        
+      // Getters and Setters.
+      int getValue (const int &node_owner, const int &idx) ;
+      void setValue (const int &node_owner, const int &idx, const int &value) ;
+      int getIdx (const int& idx) ;
+			void atomicAdd (const int &idx, const int &val) ;
+
+      // Might get deprecated functions.
+      void queue_assignment(int index , T value);
+      void queue_push(T value);
+        
+      // Synchronizeation assist.
+      void sync_assignments();
+        
+      // Useful for unit testing.
+      void printArr () ;
 };
 
 

@@ -7,14 +7,101 @@ void checkMPIComm (int mpiStatus, char* errorMessage) {
     }
 }
 
-template<typename T>
-Container<T>::Container()
-{
-    this->array = NULL ;
+void customAssert (bool conditionVal, char * failMessage) {
+	if (!conditionVal) {
+		printf ("custom assertion failed : %s\n", failMessage) ;	
+		assert (false) ;
+	}
 }
 
 template<typename T>
+Container<T>::Container () {
+	// set implementation.
+	this->implementation = 0 ;
+	// set array to null.
+	this->array = NULL ;
+}
+
+template<typename T>
+Container<T>::Container(const int &dims, MPI_Comm comm)
+{
+		// Initialize the numPorcs
+		MPI_Comm_size (comm, &this->size) ;
+		// Initialize the rank
+		MPI_Comm_rank (comm, &this->rank) ;
+		// clear the unordered_map
+		this->mapObj.clear () ;
+		// set number of dimensions.
+		this->mapDims = dims ;
+		// set implementation
+		this->implementation = 1 ;
+}
+
+template<typename T>
+void Container<T>::push_back (const int &idx, const int &val) {
+	// Check if the implementation is correct.
+	customAssert (this->implementation == 1, "push_back is not implemented for single dimensional array") ;
+	// Deduce rank of owner and push back there.
+	int targetRank = calculateTargetRank (idx) ;
+	//acquire lock.
+	acquireLock (targetRank, idx, EXCLUSIVE) ;
+	// Send the message via an RMA interface.
+	sendMessage (targetRank, idx, val, PUSH_BACK) ;	
+	// release lock.
+	releaseLock (targetRank, idx, EXCLUSIVE) ;
+}
+
+template<typename T>
+void Container<T>::pop_back (const int &idx, const int &val) {
+	// Check if implementation is correct.
+	customAssert (this->implemetation == 1, "pop_back is not implemented for single dimensional array") ;
+	// Deduce the rank of owner to pop_back at.
+	int targetRank = calculateTargetRank (idx) ;
+	// acquire lock.
+	acquireLock (targetRank, idx, EXCLUSIVE) ;
+	// send message to RMA interface.
+	sendMessage (targetRank, idx, val, POP_BACK) ;
+	// relase lock.
+	releaseLock (targetRank, idx, EXCLUSIVE) ;
+}
+
+template<typename T>
+void Container<T>::setValue (int * idx, const int value) {
+	// Check if implementation is correct.
+	customAssert (this->implementation == 1, "Wrong kind of set Vale") ;
+	// deduce target rank
+	int targetRank = calculateTargetRank (idx) ;
+	// acquire lock.
+	acquireLock (targetRank, idx, EXCLUSIVE) ;
+	// send message to RMA interface.
+	sendMessage (targetRank, idx, val, setValue) ;
+	// release lock.
+	releaseLock (targetRank, idx, GET_VAL) ;
+}
+
+template<typename T>
+int Container<T>::getValue (int * idx) {
+	// Check if implementation is correct.
+	customAssert (this->implementation == 1, "wrong kind of get value") ;
+	// deduce the target rank.
+	int targetRank = calculateTargetRank (idx) ;
+	// acquire lock.
+	acquireLock (targetRank, idx, SHARED) ;
+	// send message to RMA interface.
+	sendMessage (targetRank, idx, val, GET_VALUE) ;
+	// receive actual value.
+	recvMessage (targetRank, idx, val, GET_VALUE) ;
+	// reqlese lock.
+	releaseLock (targetRank, idx, SHARED) ;
+}
+
+
+template<typename T>
 void Container<T>::assign (const int &size, const int &initVal, MPI_Comm comm) {
+
+	// Check if assign is not implemented.
+	customAssert (this->implementation == 0, "assign is not implemented for multidimensional array.") ;
+
     this->globalSize = size ;
     MPI_Comm_size (comm, &this->numProcs) ;
     this->localSize = (ceil(float(size)/this->numProcs)) ;
@@ -31,6 +118,8 @@ void Container<T>::assign (const int &size, const int &initVal, MPI_Comm comm) {
     memset (baseArray, 0 , sizeof(int) * this->localSize) ;
     MPI_Win_create (this->baseArray, (MPI_Aint) this->localSize * sizeof(int), sizeof(int), MPI_INFO_NULL, this->comm, &this->array) ;
 }
+
+
 
 template<typename T>
 int Container<T>::getIdx (const int &val) {
