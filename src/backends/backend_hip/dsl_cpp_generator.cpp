@@ -117,32 +117,58 @@ namespace sphip {
 
         list<formalParam*> parameterList = func->getParamList();
 
-        for(auto itr = parameterList.begin(); itr != parameterList.end(); itr++) {
+        int arg_currNo = 0;
+        int argumentTotal = func->getParamList().size();
+        int maximum_arginline = 4;
 
+        for(auto itr = parameterList.begin(); itr != parameterList.end(); itr++) {
+            arg_currNo++;
+            argumentTotal--;
             Type *type = (*itr)->getType();
             targetFile.pushString(ConvertToCppType(type)); // TODO: add function in header and impl
             targetFile.AddSpace();
 
-            std::string parameterName = (*itr)->getIdentifier()->getIdentifier();
-            parameterName[0] = std::toupper(parameterName[0]);
-            parameterName = "d" + parameterName;
-            if(type->isGraphType())
-                parameterName = (*itr)->getIdentifier()->getIdentifier();
+            char* parName = (*itr)->getIdentifier()->getIdentifier();
 
-            targetFile.pushString(parameterName);
+            targetFile.pushString(" ");
 
-            if(!isMainFile && type->isGraphType())
-                generateCsr = true;
+            if (!isMainFile) {
+                if (type->isGraphType()) {
+                    generateCsr = true;
+                }
+            }
+            targetFile.pushString(/*createParamName(*/ parName);
+            if (argumentTotal > 0) targetFile.pushString(",");
 
-            if(std::next(itr) != parameterList.end())
-                targetFile.pushString(",");
-            targetFile.NewLine();
+            if (arg_currNo == maximum_arginline) {
+                targetFile.NewLine();
+                arg_currNo = 0;
+            }
         }
 
         //TODO: Remove indent
         targetFile.pushString(")");
-        if(!isMainFile)
+        // if(!isMainFile)
+        //     targetFile.pushString(";");
+
+        if (!isMainFile) {
             targetFile.pushString(";");
+            targetFile.NewLine();
+            targetFile.NewLine();
+
+            for (auto itr = parameterList.begin(); itr != parameterList.end(); itr++) {
+                Type* type = (*itr)->getType();
+                char* parName = (*itr)->getIdentifier()->getIdentifier();
+
+                if (type->isPrimitiveType()) {
+                    char strBuffer[1024];
+
+                    sprintf(strBuffer, "__device__ %s %s ;", ConvertToCppType(type).c_str(), parName);
+                    targetFile.pushString(strBuffer);
+                    targetFile.NewLine();
+                }
+            }
+        }
 
         targetFile.NewLine();
     }
