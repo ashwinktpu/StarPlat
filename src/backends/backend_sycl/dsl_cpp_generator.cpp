@@ -8,6 +8,7 @@
 
 bool flag_for_device_variable = 0; // temporary fix to accomodate device variable and
 std::unordered_set<string> fixedPointVariables = {};
+std::unordered_set<string> ForAllVariables = {};
 //~ using namespace spsycl;
 namespace spsycl
 {
@@ -190,7 +191,6 @@ namespace spsycl
         sprintf(strBuffer, "temp = %s.rev_indexofNodes[i];", gId);
         main.pushstr_newL(strBuffer);
         main.pushstr_newL("h_rev_meta[i] = temp;");
-        main.pushstr_newL("}");
         sprintf(strBuffer, "temp = %s.indeg[i];", gId);
         main.pushstr_newL(strBuffer);
         main.pushstr_newL("h_degree[i] = temp;");
@@ -341,6 +341,11 @@ namespace spsycl
 
         const char *gId;
 
+        sprintf(strBuffer, "queue Q(default_selector_v);");
+        main.pushstr_newL(strBuffer);
+        sprintf(strBuffer, "std::cout << \"Selected device: \" << Q.get_device().get_info<info::device::name>() << std::endl;");
+        main.pushstr_newL(strBuffer);
+
         for (itr = paramList.begin(); itr != paramList.end(); itr++)
         {
             arg_currNo++;
@@ -355,17 +360,22 @@ namespace spsycl
                 genCSR = true;
                 gId = parName;
             }
+            if(type->isPrimitiveType()){
+                const char *varType = convertToCppType(type);
+                const char *varName = (*itr)->getIdentifier()->getIdentifier();
+
+                sprintf(strBuffer, "%s *d_%s;", varType, parName);
+                main.pushString(strBuffer);
+                main.pushstr_newL("");
+                sprintf(strBuffer, "d_%s=malloc_device<%s>(%s, Q);", varName, varType, "1");
+                main.pushstr_newL(strBuffer);
+            }
 
             if (arg_currNo == maximum_arginline)
             {
                 arg_currNo = 0;
             }
         }
-
-        sprintf(strBuffer, "queue Q(default_selector_v);");
-        main.pushstr_newL(strBuffer);
-        sprintf(strBuffer, "std::cout << \"Selected device: \" << Q.get_device().get_info<info::device::name>() << std::endl;");
-        main.pushstr_newL(strBuffer);
 
         if (genCSR)
         {
@@ -627,6 +637,8 @@ namespace spsycl
 
     void dsl_cpp_generator::generate_exprIdentifier(Identifier *id, bool isMainFile)
     {
+        if(!isMainFile && ForAllVariables.find(id->getIdentifier()) != ForAllVariables.end())
+            main.pushString("*d_");
         main.pushString(id->getIdentifier());
     }
 
@@ -696,10 +708,13 @@ namespace spsycl
             cout << "varT:" << varType << endl;
             cout << "varN:" << varName << endl;
 
-            sprintf(strBuffer, "%s *d_%s;", varType, varName);
-            main.pushString(strBuffer);
-            main.pushstr_newL("");
-            generateMallocDeviceStr(varName, varType, "1");
+            if(isMainFile){
+                sprintf(strBuffer, "%s *d_%s;", varType, varName);
+                main.pushString(strBuffer);
+                main.pushstr_newL("");
+                sprintf(strBuffer, "d_%s=malloc_device<%s>(%s, Q);", varName, varType, "1");
+                main.pushstr_newL(strBuffer);
+            }
 
             sprintf(strBuffer, "%s %s", varType, varName);
             main.pushString(strBuffer);
@@ -723,11 +738,14 @@ namespace spsycl
             char strBuffer[1024];
             const char *varType = convertToCppType(type);
             const char *varName = declStmt->getdeclId()->getIdentifier();
-
-            sprintf(strBuffer, "%s *d_%s;", varType, varName);
-            main.pushString(strBuffer);
-            main.pushstr_newL("");
-            generateMallocDeviceStr(varName, varType, "1");
+            
+            if(isMainFile){
+                sprintf(strBuffer, "%s *d_%s;", varType, varName);
+                main.pushString(strBuffer);
+                main.pushstr_newL("");
+                sprintf(strBuffer, "d_%s=malloc_device<%s>(%s, Q);", varName, varType, "1");
+                main.pushstr_newL(strBuffer);
+            }
 
             main.pushstr_space(varType);
             main.pushString(varName);
@@ -760,7 +778,8 @@ namespace spsycl
                 Type *typeB = propId->getIdentifier2()->getSymbolInfo()->getType()->getInnerTargetType();
                 const char *varType = convertToCppType(typeB);
 
-                main.pushstr_newL("Q.submit([&](handler &h){ h.single_task([=](){");
+                if(isMainFile)
+                    main.pushstr_newL("Q.submit([&](handler &h){ h.single_task([=](){");
 
                 sprintf(strBuffer, "d_%s[%s] = (%s)",
                         propId->getIdentifier2()->getIdentifier(),
@@ -783,7 +802,7 @@ namespace spsycl
 
         generateExpr(asmt->getExpr(), isMainFile);
 
-        if (isDevice)
+        if (isDevice && isMainFile)
         {
             main.pushstr_newL(";});");
             main.pushstr_newL("}).wait(); //InitIndexDevice");
@@ -816,7 +835,8 @@ namespace spsycl
             }
             else
             {
-                if (fixedPointVariables.find(id->getIdentifier()) != fixedPointVariables.end() || !isMainFile)
+                if (fixedPointVariables.find(id->getIdentifier()) != fixedPointVariables.end() || 
+                    ForAllVariables.find(id->getIdentifier()) != ForAllVariables.end())
                 {
                     main.pushString("*d_");
                 }
@@ -1143,6 +1163,8 @@ namespace spsycl
                     std::cout << "varName:" << iden->getIdentifier() << '\n';
                     Type *type = iden->getSymbolInfo()->getType();
 
+                    ForAllVariables.insert(iden->getIdentifier());
+
                     if ((type->isPrimitiveType() || type->isNodeType()) && (fixedPointVariables.find(iden->getIdentifier()) == fixedPointVariables.end()))
                     {
                         generateMemCpySymbol(iden->getIdentifier(), convertToCppType(type), true);
@@ -1165,6 +1187,8 @@ namespace spsycl
                 list<Identifier *> vars = usedVars.getVariables();
                 for (Identifier *iden : vars)
                 {
+                    ForAllVariables.erase(iden->getIdentifier());
+                    
                     Type *type = iden->getSymbolInfo()->getType();
                     if (type->isPrimitiveType() || type->isNodeType())
                         generateMemCpySymbol(iden->getIdentifier(), convertToCppType(type), false);
