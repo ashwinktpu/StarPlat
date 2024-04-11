@@ -305,7 +305,7 @@ namespace sphip {
 
     void DslCppGenerator::GenerateStatement(statement* stmt, bool isMainFile) {
 
-        cout << "FLAG " << stmt->getTypeofNode() << "\n";
+        cout << "STMT " << stmt->getTypeofNode() << "\n";
 
         switch (stmt->getTypeofNode()) {
 
@@ -372,7 +372,7 @@ namespace sphip {
 
         dslCodePad &targetFile = isMainFile ? main : header;
 
-        UsedVariables usedVariables = GetDeclaredPropertyVariablesOfBlock(blockStmt);
+        usedVariables usedVars = GetDeclaredPropertyVariablesOfBlock(blockStmt);
         //TODO : Add the cuda free handling and what not
         
         list<statement*> stmtList = blockStmt->returnStatements();
@@ -525,16 +525,6 @@ namespace sphip {
         proc_callExpr* extractElemFunc = stmt->getExtractElementFunc();
         PropAccess* sourceField = stmt->getPropSource();
         Identifier* sourceId = stmt->getSource();
-        Identifier* collectionId;
-                
-        if(sourceField){ 
-            collectionId = sourceField->getIdentifier1();
-        }
-
-        if(sourceId){
-            collectionId = sourceId;
-        }
-
         Identifier* iteratorMethodId;
 
         if(extractElemFunc)
@@ -543,58 +533,250 @@ namespace sphip {
         statement* body = stmt->getBody();
         string buffer;
 
-        if(stmt->isForall()) { // This makes sure that this a parallelizable outer for-loop and not the inside for loop, which won't be parallelized.
+        if(stmt->isForall()) { 
+            // This deals with the outer for loop which is parallelizable
+            
+            usedVariables usedVars = GetUsedVariablesInForAll(stmt);
 
-            // // TODO: Check OMP Line 1160
+            for(auto identifier: usedVars.getVariables()) {
 
-            // if(stmt->hasFilterExpr() || stmt->hasFilterExprAssoc()) {
-                
-            //     Expression *filterExpression = stmt->hasFilterExpr() ? stmt->getfilterExpr() : stmt->getAssocExpr();
-            //     Expression *lhs = filterExpression->getLeft();
-            //     Identifier *filterId = lhs->isIdentifierExpr() ? lhs->getId() : NULL;
-            //     TableEntry *entry = (filterId != NULL) ? filterId->getSymbolInfo() : NULL;
+                Type *type = identifier->getSymbolInfo()->getType();
 
-            //     if(entry && entry->getId()->get_fp_association()) {
-
-            //         main.pushString(string(function->getIdentifier()->getIdentifier()) + "Kernel");
-            //         main.pushString("<<<numBlocks, numThreads>>>");
-            //         main.pushString("(V, E");
-                    
-            //         if(stmt->getIsMetaUsed())
-            //             main.pushString(", dOffsetArray");
-
-            //         if(stmt->getIsDataUsed())
-            //             main.pushString(", dEdgeList");
-
-            //         if(stmt->getIsSrcUsed())
-            //             main.pushString(", dSrcList");
-
-            //         if(stmt->getIsWeightUsed()) 
-            //             main.pushString(", dWeight");
-
-            //         if(stmt->getIsRevMetaUsed())
-            //             main.pushString(", dRevOffsetArray");
-
-            //         main.pushStringWithNewLine(");");
-            //     }
-
-
-            // } else {
-            //     cout << "HIT filter else\n";
-            // }
-
-            // UsedVariables usedVariables = GetUsedVariablesInForAll(stmt);
-            UsedVariables use;
-
-            for(auto iden: use.GetUsedVariables()) {
-
-                std::cout << "MAXXX" << iden->getIdentifier() << "\n";
+                if(type->isPrimitiveType()) {
+                    // TODO: Implement
+                    //! REQUIRED commented below 
+                    std::cout << "UNIMPL " << identifier->getIdentifier() << "\n";
+                    // GenerateHipMemcpyStr(identifier->getIdentifier(), ConvertToCppType(type), ) 
+                }
+                // TODO: For proptype
             }
 
-        } else {
+            main.pushString(this->function->getIdentifier()->getIdentifier());
+            main.pushString("Kernel<<<numBlocks, numThreads>>>(V, E");
+
+            if(stmt->getIsMetaUsed())
+                main.pushString(", dOffsetArray");
+            
+            if(stmt->getIsDataUsed())
+                main.pushString(", dEdgelist");
+
+            if(stmt->getIsSrcUsed())
+                main.pushString(", dSrcList");
+
+            if(stmt->getIsWeightUsed())
+                main.pushString(", dWeight");
+
+            if(stmt->getIsRevMetaUsed())
+                main.pushString(", dRevOffsetArray");
+
+            for(auto identifier: usedVars.getVariables()) {
+
+                if(identifier->getSymbolInfo()->getType()->isPropType()) {
+
+                    main.pushString(", d");
+                    std::string temp = identifier->getIdentifier();
+                    temp[0] = toupper(temp[0]);
+                    main.pushString(temp);
+                }
+            }
+
+            for(auto identifier: stmt->getUsedVariables()) {
+
+                // Either the above for block or this for block is required. I think!
+                // Look into it.
+                //TODO: Implement
+                //! IMPORTANT
+                std::cout << "HIT UNIMPL\n";
+            }
+
+            main.pushStringWithNewLine(");");
+            main.pushStringWithNewLine("hipDeviceSynchronize();");
+
+            // TODO: Add necessary cudaMemCopy calls
+
+            for(auto iden: usedVars.getVariables()) {
+
+                Type *type = iden->getSymbolInfo()->getType();
+                
+                if(type->isPrimitiveType()) {
+                    cout << "UNIMPL\n";
+                }
+            }
+
+            GenerateHipKernel(stmt);
+
+        } else { // This is the inner for loop which is not parallelizableWh
+
+            GenerateInnerForAll(stmt, false);
+
+            if(stmt->hasFilterExpr()) {
+                // stmt->setBody(UpdateForAllBody(stmt));
+                cout << "UNIMPL\n"; 
+            }
+
+            if(extractElemFunc != NULL) {
+
+                if(IsNeighbourIteration(iteratorMethodId->getIdentifier())) {
+
+                    if(stmt->getParent()->getParent()->getTypeofNode() == NODE_ITRBFS) {
+                        cout << "UNIMPL\n"; 
+
+                    } else if(stmt->getParent()->getParent()->getTypeofNode() == NODE_ITRRBFS) {
+                        cout << "UNIMPL\n"; 
+
+                    } else {
+                            
+                        GenerateStatement(stmt->getBody(), isMainFile);
+                        targetFile.pushStringWithNewLine("}");
+                    }
+
+                } else {
+
+                    GenerateStatement(stmt->getBody(), isMainFile);
+                } 
+
+                if(stmt->isForall() && stmt->hasFilterExpr()) {
+                        cout << "UNIMPL\n"; 
+
+                    // GenerateFixedPointFilter(stmt->getfilterExpr(), false);
+                }
+           } else {
+
+                cout << "UNIMPL\n";
+           }
 
         }
-            cout << "HIT inside FORALL ELSE\n";
+    }
+
+    void DslCppGenerator::GenerateInnerForAll(forallStmt* stmt, bool isMainFile) {
+
+        cout << "Inside GenerateInnerForAll\n";
+
+    }
+
+    bool DslCppGenerator::IsNeighbourIteration(const std::string input) {
+
+        return input == "neighbors" || input == "nodes_to";
+    }
+
+    void DslCppGenerator::GenerateHipKernel(forallStmt* stmt) {
+
+        usedVariables usedVars = GetUsedVariablesInForAll(stmt);
+
+        header.pushStringWithNewLine("__global__");
+        header.pushString("void ");
+        header.pushString(this->function->getIdentifier()->getIdentifier());
+        header.pushString("Kernel(int V, int E");
+
+        if(stmt->getIsMetaUsed())
+            header.pushString(", int *dOffsetArray");
+
+        if(stmt->getIsDataUsed())
+            header.pushString(", int *dEdgelist");
+
+        if(stmt->getIsSrcUsed())
+            header.pushString(", int *dSrcList");
+
+        if(stmt->getIsWeightUsed())
+            header.pushString(", int *dWeight");
+
+        if(stmt->getIsRevMetaUsed())    
+            header.pushString(", int *dRevOffsetArray");
+
+        for(auto identifier: usedVars.getVariables()) {
+
+            Type *type = identifier->getSymbolInfo()->getType();
+
+            if(type->isPropType()) {
+
+                header.pushString(", ");
+                header.pushString(ConvertToCppType(type));
+                header.pushString(" d");
+                std::string temp = identifier->getIdentifier();
+                temp[0] = toupper(temp[0]);
+                header.pushString(temp);
+
+                // !note: Below code note required as it is handled from the DSL
+                // if(identifier->getSymbolInfo()->getId()->get_fp_association()) {
+
+                //     header.pushString(", ");
+                //     header.pushString(ConvertToCppType(type->getInnerTargetType()));
+                //     header.pushString(" d");
+                //     header.pushString(temp);
+                //     header.pushString("Next");
+                // }
+            }
+        }
+
+        for(auto identifier: stmt->getUsedVariables()) {
+
+            //TODO: Implement
+            //! IMPORTANT
+            std::cout << "HIT UNIMPL\n";
+        }
+
+        header.pushStringWithNewLine(") {");
+        header.NewLine();
+
+        header.pushStringWithNewLine("int tid = threadIdx.x + blockIdx.x * blockDim.x;");
+        header.pushStringWithNewLine("if (tid >= V) {");
+        header.pushStringWithNewLine("return;");
+        header.pushStringWithNewLine("}");
+        header.NewLine();
+
+        if(stmt->hasFilterExpr()) {            
+            stmt->setBody(UpdateForAllBody(stmt));
+        }
+
+        assert(stmt->getBody()->getTypeofNode() == NODE_BLOCKSTMT);
+        list<statement*> statementList = static_cast<blockStatement*>(stmt->getBody())->returnStatements();
+
+        for(auto statement: statementList)
+            GenerateStatement(statement, false);
+
+        header.pushStringWithNewLine("}");
+    }
+
+    blockStatement* DslCppGenerator::UpdateForAllBody(forallStmt *stmt) {
+
+        Expression *filterExpr = stmt->getfilterExpr();
+        Expression *modifiedFilterExpr = filterExpr;
+
+        if(filterExpr->getExpressionFamily() == EXPR_RELATIONAL) {
+
+            Expression *exprRight = filterExpr->getRight();
+            Expression *exprLeft = filterExpr->getLeft();  
+
+            if(exprLeft->isIdentifierExpr()) {
+
+                if(
+                    exprLeft->getId()->getSymbolInfo() != NULL &&
+                    exprLeft->getId()->getSymbolInfo()->getType()->isPropNodeType() 
+                ) {
+
+                    PropAccess *propIdNode = (PropAccess*) Util::createPropIdNode(
+                        stmt->getIterator(),
+                        exprLeft->getId()
+                    );
+
+                    modifiedFilterExpr = (Expression*) Util::createNodeForRelationalExpr(
+                        Expression::nodeForPropAccess(propIdNode),
+                        exprLeft, filterExpr->getOperatorType()
+                    );
+
+                }
+            } 
+        }
+
+        ifStmt *modifiedIfStmt = (ifStmt*) Util::createNodeForIfStmt(
+            modifiedFilterExpr, stmt->getBody(), NULL
+        );
+
+        blockStatement *newBlock = new blockStatement();
+        newBlock->setTypeofNode(NODE_BLOCKSTMT);
+        newBlock->addStmtToBlock(modifiedIfStmt);
+
+        return newBlock;
     }
 
     void DslCppGenerator::GenerateFixedPoint(fixedPointStmt* stmt, bool isMainFile) {
@@ -617,7 +799,7 @@ namespace sphip {
         modifiedVar[0] = std::toupper(modifiedVar[0]);
         modifiedVar = "d" + modifiedVar;
 
-        string modifiedVarNext = modifiedVar + "Next";
+        // string modifiedVarNext = modifiedVar + "Next";
 
         if(convergenceExpr->getExpressionFamily() == EXPR_ID) {
             dependentId = convergenceExpr->getId();
@@ -625,9 +807,9 @@ namespace sphip {
 
         if(dependentId != NULL && dependentId->getSymbolInfo()->getType()->isPropNodeType()) {
 
-            targetFile.pushStringWithNewLine(
-                "initKernel<" + fixedPointVarType + "><<<numBlocks, numThreads>>>(V, " + modifiedVarNext + ", false);"
-            );
+            // targetFile.pushStringWithNewLine(
+            //     "initKernel<" + fixedPointVarType + "><<<numBlocks, numThreads>>>(V, " + modifiedVarNext + ", false);"
+            // );
 
             targetFile.pushStringWithNewLine("int k = 0;");
             targetFile.NewLine();
@@ -644,11 +826,11 @@ namespace sphip {
             }
 
             GenerateHipMemcpySymbol(fixedPointVar, fixedPointVarType, false); //! TODO: Implement
-            GenerateHipMemcpyStr(modifiedVar, modifiedVarNext, fixedPointVarType, "V", false); //! TODO: Implement
+            // GenerateHipMemcpyStr(modifiedVar, modifiedVarNext, fixedPointVarType, "V", false); //! TODO: Implement
             
-            targetFile.pushStringWithNewLine(
-                "initKernel<" + fixedPointVarType + "><<<numBlocks, numThreads>>>(V, " + modifiedVarNext + ", false);"
-            );
+            // targetFile.pushStringWithNewLine(
+            //     "initKernel<" + fixedPointVarType + "><<<numBlocks, numThreads>>>(V, " + modifiedVarNext + ", false);"
+            // );
 
             targetFile.pushStringWithNewLine("k++;");
             targetFile.pushStringWithNewLine("}");
@@ -809,8 +991,10 @@ namespace sphip {
             id2->getSymbolInfo() &&
             id2->getSymbolInfo()->getId()->get_fp_association() &&
             isRelatedToReduction
-        ) 
-            value = string("d") + id2->getIdentifier() + "Next[" + id1->getIdentifier() + "]";
+        ) {
+
+        }
+            // value = string("d") + id2->getIdentifier() + "Next[" + id1->getIdentifier() + "]";
         else {
 
             if(isMainFile)

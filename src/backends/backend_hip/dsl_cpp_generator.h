@@ -14,96 +14,109 @@
 #include "../../symbolutil/SymbolTable.h"
 #include "../dslCodePad.h"
 
+#include "analyzer_utility.h"
+
 #define propKey pair<TableEntry *, TableEntry *>
+
+/**
+ * The below declaration is crucial. 
+ * TODO: Add the remaining reason for this declaration.
+*/
+class usedVariables;
 
 namespace sphip {
 
-    enum VariableType {
-        READ = 1,
-        WRITE,
-        READ_WRITE
-    };
+    /**
+     * @note enum VariableType and class usedVariables are defined in analyzer_utility.h
+     * They are no longer needer here. 
+     * TODO: Remove the definitions from here.
+    */
+    // enum VariableType {
+    //     READ = 1,
+    //     WRITE,
+    //     READ_WRITE
+    // };
 
-    class UsedVariables {
+    // class usedVariables {
 
-    private:
+    // private:
 
-        struct hash_pair {
+    //     struct hash_pair {
 
-            template <class T1, class T2>
-            size_t operator()(const pair<T1, T2> &p) const {
+    //         template <class T1, class T2>
+    //         size_t operator()(const pair<T1, T2> &p) const {
 
-                auto hash1 = hash<T1>{}(p.first);
-                auto hash2 = hash<T2>{}(p.second);
+    //             auto hash1 = hash<T1>{}(p.first);
+    //             auto hash2 = hash<T2>{}(p.second);
                 
-                return hash1 ^ hash2;
-            }
-        };
+    //             return hash1 ^ hash2;
+    //         }
+    //     };
 
-        unordered_map<TableEntry *, Identifier *> readVars;
-        unordered_map<TableEntry *, Identifier *> writeVars;
-        unordered_map<propKey, PropAccess *, hash_pair> readProp;
-        unordered_map<propKey, PropAccess *, hash_pair> writeProp;
+    //     unordered_map<TableEntry *, Identifier *> readVars;
+    //     unordered_map<TableEntry *, Identifier *> writeVars;
+    //     unordered_map<propKey, PropAccess *, hash_pair> readProp;
+    //     unordered_map<propKey, PropAccess *, hash_pair> writeProp;
 
-    public:
+    // public:
 
-        UsedVariables() {}
+    //     usedVariables() {}
 
-        /**
-        * TODO
-        */
-        void AddVariable(Identifier *iden, int type);
+    //     /**
+    //     * TODO
+    //     */
+    //     void addVariable(Identifier *iden, int type);
 
-        /**
-        * TODO
-        */
-        void AddPropAccess(PropAccess *prop, int type);
+    //     /**
+    //     * TODO
+    //     */
+    //     void addPropAccess(PropAccess *prop, int type);
 
-        /**
-        * TODO
-        */
-        void Merge(UsedVariables usedVars);
+    //     /**
+    //     * TODO
+    //     */
+    //     void merge(usedVariables usedVars);
 
-        /**
-        * TODO
-        */
-        void RemoveVariable(Identifier *iden, int type);
+    //     /**
+    //     * TODO
+    //     */
+    //     void removeVariable(Identifier *iden, int type);
 
-        /**
-        * TODO
-        */
-        bool IsUsedVariable(Identifier *iden, int type = READ_WRITE);
+    //     /**
+    //     * TODO
+    //     */
+    //     bool isUsedVariable(Identifier *iden, int type = READ_WRITE);
 
-        /**
-        * TODO
-        */
-        list<Identifier *> GetUsedVariables(int type = READ_WRITE);
+    //     /**
+    //     * TODO
+    //     */
+    //     list<Identifier *> getVariables(int type = READ_WRITE);
 
-        /**
-        * TODO
-        */
-        bool HasVariables(int type = READ_WRITE);
+    //     /**
+    //     * TODO
+    //     */
+    //     bool hasVariables(int type = READ_WRITE);
 
-        /**
-        * TODO
-        */
-        bool IsUsedPropAccess(PropAccess *prop, int type = READ_WRITE);
+    //     /**
+    //     * TODO
+    //     */
+    //     bool isUsedPropAccess(PropAccess *prop, int type = READ_WRITE);
 
-        /**
-        * TODO
-        */
-        bool IsUsedProp(PropAccess *prop, int type = READ_WRITE);
+    //     /**
+    //     * TODO
+    //     */
+    //     bool isUsedProp(PropAccess *prop, int type = READ_WRITE);
 
-        /**
-        * TODO
-        */
-        list<PropAccess *> GetPropAccess(int type = READ_WRITE);
+    //     /**
+    //     * TODO
+    //     */
+    //     list<PropAccess *> getPropAccess(int type = READ_WRITE);
     
-        /**
-        * TODO
-        */
-        void Clear();
-    };
+    //     /**
+    //     * TODO
+    //     */
+    //     void clear();
+    // };
 
     class DslCppGenerator {
 
@@ -314,6 +327,29 @@ namespace sphip {
         void GenerateInitKernel(const std::string str);
 
         /**
+         * TODO
+        */
+        void GenerateHipKernel(forallStmt *forAll);
+
+        /**
+         * TODO
+        */
+        void GenerateInnerForAll(forallStmt *forAll, bool isMainFile);
+
+        /**
+         * TODO
+        */
+        bool IsNeighbourIteration(const std::string methodId);
+            
+        /**
+         * Some other class of functions
+        */
+        /**
+         * TODO
+        */
+        blockStatement *UpdateForAllBody(forallStmt *forAll);
+
+        /**
          * HIP Specific Functions
          */
 
@@ -405,62 +441,62 @@ namespace sphip {
         /**
         * Returns the meta data consturcts that currently in use.
         */
-        UsedVariables GetUsedVariablesInStatement(statement *statment);
+        usedVariables GetUsedVariablesInStatement(statement *statment);
 
         /**
         * TODO
         */
-        UsedVariables GetUsedVariablesInExpression(Expression *expr);
+        usedVariables GetUsedVariablesInExpression(Expression *expr);
 
         /**
         * TODO
         */
-        UsedVariables GetUsedVariablesInWhile(whileStmt *whileStmt);
+        usedVariables GetUsedVariablesInWhile(whileStmt *whileStmt);
 
         /**
         * TODO
         */
-        UsedVariables GetUsedVariablesInDoWhile(dowhileStmt *dowhileStmt);
+        usedVariables GetUsedVariablesInDoWhile(dowhileStmt *dowhileStmt);
 
         /**
         * TODO
         */
-        UsedVariables GetUsedVariablesInAssignment(assignment *stmt);
+        usedVariables GetUsedVariablesInAssignment(assignment *stmt);
 
         /**
         * TODO
         */
-        UsedVariables GetUsedVariablesInIf(ifStmt *ifStmt);
+        usedVariables GetUsedVariablesInIf(ifStmt *ifStmt);
 
         /**
         * TODO
         */
-        UsedVariables GetUsedVariablesInFixedPoint(fixedPointStmt *fixedPt);
+        usedVariables GetUsedVariablesInFixedPoint(fixedPointStmt *fixedPt);
 
         /**
         * TODO
         */
-        UsedVariables GetUsedVariablesInReductionCall(reductionCallStmt *stmt);
+        usedVariables GetUsedVariablesInReductionCall(reductionCallStmt *stmt);
 
         /**
         * TODO
         */
-        UsedVariables GetUsedVariablesInUnaryStmt(unary_stmt *stmt);
+        usedVariables GetUsedVariablesInUnaryStmt(unary_stmt *stmt);
 
         /**
         * TODO
         */
-        UsedVariables GetUsedVariablesInForAll(forallStmt *forAllStmt);
+        usedVariables GetUsedVariablesInForAll(forallStmt *forAllStmt);
 
         /**
         * TODO
         */
-        UsedVariables GetUsedVariablesInBlock(blockStatement *block);
+        usedVariables GetUsedVariablesInBlock(blockStatement *block);
 
         /**
          * TODO
         */
-        UsedVariables GetDeclaredPropertyVariablesOfBlock(blockStatement *block);
+        usedVariables GetDeclaredPropertyVariablesOfBlock(blockStatement *block);
 
     private:
 
