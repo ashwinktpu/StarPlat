@@ -146,6 +146,8 @@ namespace sphip {
          */
         void GenerateIfStmt(ifStmt* stmt, bool isMainFile);
 
+        void GenerateDoWhileStmt(dowhileStmt* doWhile, bool isMainFile);
+
         /**
          * TODO
          */

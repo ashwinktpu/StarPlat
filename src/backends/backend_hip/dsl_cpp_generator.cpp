@@ -383,6 +383,10 @@ namespace sphip {
                 GenerateExpression(unaryStmt->getUnaryExpr(), isMainFile);
                 break;
             }
+
+        case NODE_DOWHILESTMT:
+            GenerateDoWhileStmt((dowhileStmt*)stmt, isMainFile);
+            break;
         
         default:
             string temp = "Generation function not implemented for this node! and type is " + (int)stmt->getTypeofNode();
@@ -531,11 +535,15 @@ namespace sphip {
                 Type* typeB = propId->getIdentifier2()->getSymbolInfo()->getType()->getInnerTargetType();
                 
                 const char* varType = ConvertToCppType(typeB).c_str();  //DONE: get the type from id
-                sprintf(strBuffer, "initIndex<%s><<<1,1>>>(V, d%s, %s, (%s)",
-                        varType,
+                sprintf(strBuffer, "d%s[%s] = (",
                         CapitalizeFirstLetter(propId->getIdentifier2()->getIdentifier()),
-                        propId->getIdentifier1()->getIdentifier(),
-                        varType);
+                        propId->getIdentifier1()->getIdentifier());
+
+                // sprintf(strBuffer, "initIndex<%s><<<1,1>>>(V, d%s, %s, (%s)",
+                //         varType,
+                //         CapitalizeFirstLetter(propId->getIdentifier2()->getIdentifier()),
+                //         propId->getIdentifier1()->getIdentifier(),
+                //         varType);
 
                 targetFile.pushString(strBuffer);
                 generateInitIndex = true;
@@ -640,6 +648,18 @@ namespace sphip {
         } else {
             targetFile.NewLine();
         }
+    }
+
+    void DslCppGenerator::GenerateDoWhileStmt(dowhileStmt* doWhile, bool isMainFile) {
+        dslCodePad& targetFile = isMainFile ? main : header;
+        //flag_for_device_var = 1;  //done for PR fix
+        targetFile.pushstr_newL("do{");
+        //~ targetFile.pushString("{");
+        GenerateStatement(doWhile->getBody(), isMainFile);
+        //~ targetFile.pushString("}");
+        targetFile.pushString("}while(");
+        GenerateExpression(doWhile->getCondition(), isMainFile);
+        targetFile.pushstr_newL(");");
     }
 
     void DslCppGenerator::GenerateForAll(forallStmt* stmt, bool isMainFile) {
