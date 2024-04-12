@@ -960,7 +960,7 @@ namespace spmpi {
                     << "\n";
                     if(forAll->isForall()) {
                         sprintf(strBuffer, "for (%s %s = %s.%s(); %s <= %s.%s(); %s ++) ", "int", iterator->getIdentifier(),graphId,"start_node" ,iterator->getIdentifier(), graphId, "end_node", iterator->getIdentifier());
-                    ifStatementInForAll = true ;
+                    // ifStatementInForAll = true ;
                     } else 
                         sprintf(strBuffer, "for (%s %s = 0; %s < %s.%s(); %s ++) ", "int", iterator->getIdentifier() ,iterator->getIdentifier(), graphId, "num_nodes", iterator->getIdentifier());
                 } else

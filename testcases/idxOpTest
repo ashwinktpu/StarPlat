@@ -1,0 +1,3 @@
+function indexTest (int a, int b, container<int> someArr) {
+  someArr[a] = b ;
+}

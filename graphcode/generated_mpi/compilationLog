@@ -1,0 +1,169 @@
+In file included from ../mpi_header/graph_mpi.cc:2:
+../mpi_header/synchronize_p2p.hpp: In function ‘std::vector<int*> synchronize(std::vector<std::vector<int> >&, int)’:
+../mpi_header/synchronize_p2p.hpp:40:21: warning: unused variable ‘from_process’ [-Wunused-variable]
+   40 |                 int from_process = sync_this[0] ;
+      |                     ^~~~~~~~~~~~
+../mpi_header/synchronize_p2p.hpp:41:21: warning: unused variable ‘to_process’ [-Wunused-variable]
+   41 |                 int to_process = sync_this[1] ;
+      |                     ^~~~~~~~~~
+../mpi_header/graph_properties/edge_property/edge_property.cc: In member function ‘std::vector<std::vector<int> > EdgeProperty<T>::perform_reduction(MPI_Op)’:
+../mpi_header/graph_properties/edge_property/edge_property.cc:421:5: warning: no return statement in function returning non-void [-Wreturn-type]
+  421 |     }
+      |     ^
+../mpi_header/graph_properties/edge_property/edge_property.cc: In instantiation of ‘std::vector<std::vector<int> > EdgeProperty<T>::perform_reduction(MPI_Op) [with T = int; MPI_Op = ompi_op_t*]’:
+../mpi_header/graph_properties/edge_property/edge_property.cc:470:16:   required from here
+../mpi_header/graph_properties/edge_property/edge_property.cc:421:5: warning: no return statement in function returning non-void [-Wreturn-type]
+../mpi_header/graph_properties/edge_property/edge_property.cc: In instantiation of ‘std::vector<std::vector<int> > EdgeProperty<T>::perform_reduction(MPI_Op) [with T = bool; MPI_Op = ompi_op_t*]’:
+../mpi_header/graph_properties/edge_property/edge_property.cc:473:16:   required from here
+../mpi_header/graph_properties/edge_property/edge_property.cc:421:5: warning: no return statement in function returning non-void [-Wreturn-type]
+../mpi_header/rma_datatype/rma_datatype.cc: In instantiation of ‘void Rma_Datatype<T>::get_lock(int32_t, locktype, bool) [with T = int; int32_t = int]’:
+../mpi_header/rma_datatype/rma_datatype.cc:120:16:   required from here
+../mpi_header/rma_datatype/rma_datatype.cc:50:9: warning: unused variable ‘assert’ [-Wunused-variable]
+   50 |     int assert = no_checks_needed == false ? 0 : MPI_MODE_NOCHECK;
+      |         ^~~~~~
+../mpi_header/rma_datatype/rma_datatype.cc: In instantiation of ‘void Rma_Datatype<T>::get_lock(int32_t, locktype, bool) [with T = float; int32_t = int]’:
+../mpi_header/rma_datatype/rma_datatype.cc:121:16:   required from here
+../mpi_header/rma_datatype/rma_datatype.cc:50:9: warning: unused variable ‘assert’ [-Wunused-variable]
+../mpi_header/rma_datatype/rma_datatype.cc: In instantiation of ‘void Rma_Datatype<T>::get_lock(int32_t, locktype, bool) [with T = double; int32_t = int]’:
+../mpi_header/rma_datatype/rma_datatype.cc:122:16:   required from here
+../mpi_header/rma_datatype/rma_datatype.cc:50:9: warning: unused variable ‘assert’ [-Wunused-variable]
+../mpi_header/rma_datatype/rma_datatype.cc: In instantiation of ‘void Rma_Datatype<T>::get_lock(int32_t, locktype, bool) [with T = bool; int32_t = int]’:
+../mpi_header/rma_datatype/rma_datatype.cc:123:16:   required from here
+../mpi_header/rma_datatype/rma_datatype.cc:50:9: warning: unused variable ‘assert’ [-Wunused-variable]
+../mpi_header/data_constructs/container.cc: In instantiation of ‘int Container<T>::getValue(const int&, const int&) [with T = int]’:
+../mpi_header/data_constructs/container.cc:208:16:   required from here
+../mpi_header/data_constructs/container.cc:127:9: warning: unused variable ‘targetCount’ [-Wunused-variable]
+  127 |     int targetCount = this->calculateTargetCount(idx) ;
+      |         ^~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘void Container<T>::setValue(const int&, const int&, const int&) [with T = int]’:
+../mpi_header/data_constructs/container.cc:208:16:   required from here
+../mpi_header/data_constructs/container.cc:153:102: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  153 |       checkMPIComm (MPI_Win_lock (MPI_LOCK_EXCLUSIVE, targetRank, this->lockAssertion, this->array), "failed to acquire lock while setting value") ;
+      |                                                                                                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc:155:100: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  155 |       checkMPIComm (MPI_Put (&value, 1, MPI_INT, targetRank, targetDisp, 1, MPI_INT, this->array), "failed while assignment\n") ;
+      |                                                                                                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc:157:63: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  157 |       checkMPIComm (MPI_Win_unlock (targetRank, this->array), "failed to release lock") ;
+      |                                                               ^~~~~~~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc:150:9: warning: unused variable ‘targetCount’ [-Wunused-variable]
+  150 |     int targetCount = this->calculateTargetCount (idx) ;
+      |         ^~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘int Container<T>::getIdx(const int&) [with T = int]’:
+../mpi_header/data_constructs/container.cc:208:16:   required from here
+../mpi_header/data_constructs/container.cc:56:73: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   56 |     checkMPIComm(MPI_Allreduce (&idx, &idx, 1, MPI_INT, MPI_MIN, comm), "all reduce failed") ;
+      |                                                                         ^~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘void Container<T>::atomicAdd(const int&, const int&) [with T = int]’:
+../mpi_header/data_constructs/container.cc:208:16:   required from here
+../mpi_header/data_constructs/container.cc:166:9: warning: unused variable ‘targetCount’ [-Wunused-variable]
+  166 |     int targetCount = this->calculateTargetCount (idx) ;
+      |         ^~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘int Container<T>::getValue(const int&, const int&) [with T = float]’:
+../mpi_header/data_constructs/container.cc:209:16:   required from here
+../mpi_header/data_constructs/container.cc:127:9: warning: unused variable ‘targetCount’ [-Wunused-variable]
+  127 |     int targetCount = this->calculateTargetCount(idx) ;
+      |         ^~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘void Container<T>::setValue(const int&, const int&, const int&) [with T = float]’:
+../mpi_header/data_constructs/container.cc:209:16:   required from here
+../mpi_header/data_constructs/container.cc:153:102: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  153 |       checkMPIComm (MPI_Win_lock (MPI_LOCK_EXCLUSIVE, targetRank, this->lockAssertion, this->array), "failed to acquire lock while setting value") ;
+      |                                                                                                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc:155:100: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  155 |       checkMPIComm (MPI_Put (&value, 1, MPI_INT, targetRank, targetDisp, 1, MPI_INT, this->array), "failed while assignment\n") ;
+      |                                                                                                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc:157:63: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  157 |       checkMPIComm (MPI_Win_unlock (targetRank, this->array), "failed to release lock") ;
+      |                                                               ^~~~~~~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc:150:9: warning: unused variable ‘targetCount’ [-Wunused-variable]
+  150 |     int targetCount = this->calculateTargetCount (idx) ;
+      |         ^~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘int Container<T>::getIdx(const int&) [with T = float]’:
+../mpi_header/data_constructs/container.cc:209:16:   required from here
+../mpi_header/data_constructs/container.cc:56:73: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   56 |     checkMPIComm(MPI_Allreduce (&idx, &idx, 1, MPI_INT, MPI_MIN, comm), "all reduce failed") ;
+      |                                                                         ^~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘void Container<T>::atomicAdd(const int&, const int&) [with T = float]’:
+../mpi_header/data_constructs/container.cc:209:16:   required from here
+../mpi_header/data_constructs/container.cc:166:9: warning: unused variable ‘targetCount’ [-Wunused-variable]
+  166 |     int targetCount = this->calculateTargetCount (idx) ;
+      |         ^~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘int Container<T>::getValue(const int&, const int&) [with T = double]’:
+../mpi_header/data_constructs/container.cc:210:16:   required from here
+../mpi_header/data_constructs/container.cc:127:9: warning: unused variable ‘targetCount’ [-Wunused-variable]
+  127 |     int targetCount = this->calculateTargetCount(idx) ;
+      |         ^~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘void Container<T>::setValue(const int&, const int&, const int&) [with T = double]’:
+../mpi_header/data_constructs/container.cc:210:16:   required from here
+../mpi_header/data_constructs/container.cc:153:102: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  153 |       checkMPIComm (MPI_Win_lock (MPI_LOCK_EXCLUSIVE, targetRank, this->lockAssertion, this->array), "failed to acquire lock while setting value") ;
+      |                                                                                                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc:155:100: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  155 |       checkMPIComm (MPI_Put (&value, 1, MPI_INT, targetRank, targetDisp, 1, MPI_INT, this->array), "failed while assignment\n") ;
+      |                                                                                                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc:157:63: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  157 |       checkMPIComm (MPI_Win_unlock (targetRank, this->array), "failed to release lock") ;
+      |                                                               ^~~~~~~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc:150:9: warning: unused variable ‘targetCount’ [-Wunused-variable]
+  150 |     int targetCount = this->calculateTargetCount (idx) ;
+      |         ^~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘int Container<T>::getIdx(const int&) [with T = double]’:
+../mpi_header/data_constructs/container.cc:210:16:   required from here
+../mpi_header/data_constructs/container.cc:56:73: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   56 |     checkMPIComm(MPI_Allreduce (&idx, &idx, 1, MPI_INT, MPI_MIN, comm), "all reduce failed") ;
+      |                                                                         ^~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘void Container<T>::atomicAdd(const int&, const int&) [with T = double]’:
+../mpi_header/data_constructs/container.cc:210:16:   required from here
+../mpi_header/data_constructs/container.cc:166:9: warning: unused variable ‘targetCount’ [-Wunused-variable]
+  166 |     int targetCount = this->calculateTargetCount (idx) ;
+      |         ^~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘int Container<T>::getValue(const int&, const int&) [with T = bool]’:
+../mpi_header/data_constructs/container.cc:211:16:   required from here
+../mpi_header/data_constructs/container.cc:127:9: warning: unused variable ‘targetCount’ [-Wunused-variable]
+  127 |     int targetCount = this->calculateTargetCount(idx) ;
+      |         ^~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘void Container<T>::setValue(const int&, const int&, const int&) [with T = bool]’:
+../mpi_header/data_constructs/container.cc:211:16:   required from here
+../mpi_header/data_constructs/container.cc:153:102: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  153 |       checkMPIComm (MPI_Win_lock (MPI_LOCK_EXCLUSIVE, targetRank, this->lockAssertion, this->array), "failed to acquire lock while setting value") ;
+      |                                                                                                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc:155:100: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  155 |       checkMPIComm (MPI_Put (&value, 1, MPI_INT, targetRank, targetDisp, 1, MPI_INT, this->array), "failed while assignment\n") ;
+      |                                                                                                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc:157:63: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  157 |       checkMPIComm (MPI_Win_unlock (targetRank, this->array), "failed to release lock") ;
+      |                                                               ^~~~~~~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc:150:9: warning: unused variable ‘targetCount’ [-Wunused-variable]
+  150 |     int targetCount = this->calculateTargetCount (idx) ;
+      |         ^~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘int Container<T>::getIdx(const int&) [with T = bool]’:
+../mpi_header/data_constructs/container.cc:211:16:   required from here
+../mpi_header/data_constructs/container.cc:56:73: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   56 |     checkMPIComm(MPI_Allreduce (&idx, &idx, 1, MPI_INT, MPI_MIN, comm), "all reduce failed") ;
+      |                                                                         ^~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘void Container<T>::atomicAdd(const int&, const int&) [with T = bool]’:
+../mpi_header/data_constructs/container.cc:211:16:   required from here
+../mpi_header/data_constructs/container.cc:166:9: warning: unused variable ‘targetCount’ [-Wunused-variable]
+  166 |     int targetCount = this->calculateTargetCount (idx) ;
+      |         ^~~~~~~~~~~
+quickSeq.dsl.h:1:24: warning: extra tokens at end of #ifndef directive
+    1 | #ifndef GENCPP_QUICKSEQ.DSL_H
+      |                        ^
+quickSeq.dsl.h:2:9: warning: ISO C++11 requires whitespace after the macro name
+    2 | #define GENCPP_QUICKSEQ.DSL_H
+      |         ^~~~~~~~~~~~~~~
+In file included from quickSeq.dsl.cc:1:
+quickSeq.dsl.h:1:24: warning: extra tokens at end of #ifndef directive
+    1 | #ifndef GENCPP_QUICKSEQ.DSL_H
+      |                        ^
+quickSeq.dsl.h:2:9: warning: ISO C++11 requires whitespace after the macro name
+    2 | #define GENCPP_QUICKSEQ.DSL_H
+      |         ^~~~~~~~~~~~~~~
+quickSeq.dsl.cc: In function ‘auto quicksi(std::vector<int>, std::vector<std::vector<int> >, Graph&, int, int*, int*, bool)’:
+quickSeq.dsl.cc:81:9: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<std::vector<int> >::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+   81 |   if (d >= records.size() )
+      |       ~~^~~~~~~~~~~~~~~~~
+quickSeq.dsl.cc:96:22: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<int>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+   96 |         while (index < temp.size() - 1 ){
+      |                ~~~~~~^~~~~~~~~~~~~~~~~
+/usr/bin/ld: warning: libmpi_cxx.so.40, needed by /home/cs22m028/boost/lib/libboost_mpi.so, not found (try using -rpath or -rpath-link)
