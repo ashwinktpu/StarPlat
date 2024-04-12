@@ -89,10 +89,10 @@ namespace spmpi {
         Identifier* mapExprId = mapExpr->getId();
 
         if(mapExpr->isIdentifierExpr()){  
-            sprintf(strBuffer , "%s[", mapExprId->getIdentifier());
+            sprintf(strBuffer , "%s.getValue (", mapExprId->getIdentifier());
             main.pushString(strBuffer);
             generateExpr(indexExpr);
-            main.pushString("]");
+            main.pushString(")");
         }
         else if(mapExpr->isPropIdExpr()){
             PropAccess * propId = (PropAccess *)mapExpr;

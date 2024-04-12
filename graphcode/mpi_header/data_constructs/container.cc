@@ -89,7 +89,7 @@ int Container<T>::calculateTargetCount (const int &idx) {
 }
 
 template<typename T>
-void Container<T>::push(T value)
+void Container<T>::push_back(T value)
 {
     // Barenya : todo : make distributed amortized logic for push.
     assert (false) ;
@@ -97,7 +97,7 @@ void Container<T>::push(T value)
 }
 
 template<typename T>
-void Container<T>::pop()
+void Container<T>::pop_back()
 {
     // Barenya : todo : make distributed amortized logic for pop.
     assert (false) ;

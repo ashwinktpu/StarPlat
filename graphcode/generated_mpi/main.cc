@@ -4,12 +4,17 @@
 #include"sssp_dslV3.h"
 #include"bc_dslV2.h"
 #include "push_relabel.dsl.h"
+#include "newPPR.dsl.h"
 
 int main(int argc, char *argv[])
 {
    
     boost::mpi::environment env(argc, argv);
     boost::mpi::communicator world;
+
+//     printf("program started\n"); 
+  //   Graph residual_graph(argv[2],world, 0);
+    // world.barrier();
     
     printf("program started\n"); 
  //   Graph graph(argv[1],world);
@@ -24,7 +29,9 @@ int main(int argc, char *argv[])
     world.barrier () ;
     // Triangle Counting
     // need to add print statement in generated code to check the value of triangle count
-    do_max_flow(residual_graph,0,1, label, excess, curr_edge, residue,  world);
+//     do_max_flow(residual_graph,0,1, label, excess, curr_edge, residue,  world);
+   do_max_flow (residual_graph, 0, 1, residue, world) ;
+
     FILE* out = fopen (argv[2], "w") ;
     if (world.rank () == 0) {
         int ans = excess.getValue (1) ;

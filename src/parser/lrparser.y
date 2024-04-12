@@ -1,3 +1,4 @@
+%define parse.trace
 %{
 	#include <stdio.h>
 	#include <string.h>
@@ -92,6 +93,7 @@
 %left ':'
 %left T_OR_OP
 %left T_AND_OP
+%left T_ADD_ASSIGN
 %left T_EQ_OP  T_NE_OP
 %left '<' '>'  T_LE_OP T_GE_OP
 %left '+' '-' 
@@ -271,7 +273,6 @@ property : T_NP '<' primitive '>' { $$=Util::createPropertyTypeNode(TYPE_PROPNOD
 
 assignment :  leftSide '=' rhs  { printf("testassign\n");$$=Util::createAssignmentNode($1,$3);};
               | indexExpr '=' rhs { $$=Util::createAssignmentNode($1 , $3);};        
-
 rhs : expression { $$=$1;};
 
 expression : proc_call { $$=$1;};

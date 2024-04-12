@@ -300,6 +300,7 @@ static ASTNode* createAssignmentNode(ASTNode* leftSide, ASTNode* rhs)
     return assignmentNode;
 }
 
+
 static ASTNode* createNodeForProcCallStmt(ASTNode* procCall)
 {
     statement* procCallStmt;
@@ -580,7 +581,7 @@ static ASTNode* createNodeForReductionOpStmt(ASTNode* leftSide,int reduction_op,
     }
     if(leftSide->getTypeofNode()==NODE_PROPACCESS)
     {
-        reductionStmtNode=reductionCallStmt::propId_reduc_opStmt((PropAccess*)leftSide,reduction_op,(Expression*)rightSide);
+      reductionStmtNode=reductionCallStmt::propId_reduc_opStmt((PropAccess*)leftSide,reduction_op,(Expression*)rightSide);
     }
 
     return reductionStmtNode;
@@ -623,5 +624,6 @@ static ASTNode* createIterateInBFSNode(ASTNode* iterator,ASTNode* graphId,ASTNod
     return iterateBFSNode;
 }
 };
+
 
 #endif

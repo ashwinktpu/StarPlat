@@ -582,17 +582,30 @@ namespace spmpi {
             const char* operatorString = getOperatorString(stmt->reduction_op());
             main.pushstr_space(operatorString);
             generateExpr(stmt->getRightSide());
+            main.pushString (") ") ;
             main.pushstr_newL(";");
 
         } 
         // TODO : Yet to update this
         else {
-            generate_exprPropId(stmt->getPropAccess());
-            main.pushString(" = ");
-            generate_exprPropId(stmt->getPropAccess());
+            // generate_exprPropId(stmt->getPropAccess());
+            auto propId = stmt->getPropAccess () ;
+            auto index = propId->getIdentifier1 () -> getIdentifier ()  ;
+            auto propertyName = propId->getIdentifier2 () -> getIdentifier ();
+            main.pushString (propertyName) ;
+            // main.pushString(" = ");
+            // generate_exprPropId(stmt->getPropAccess());
+            // main.pushString (stmt->getLeftId()->getIdentifier()) ;
+            main.pushString (".") ;
             const char* operatorString = getOperatorString(stmt->reduction_op());
-            main.pushstr_space(operatorString);
+            if (!strcmp(operatorString ,(const char*) "+")) main.pushString ("atomicAdd (") ;
+            if (!strcmp(operatorString ,(const char*) "-")) main.pushString ("atomicAdd (") ;
+            main.pushString (index) ;
+            main.pushString (", ") ;
+            if (!strcmp(operatorString ,(const char*) "-")) main.pushString ("-") ;
+            // main.pushstr_space(operatorString);
             generateExpr(stmt->getRightSide());
+            main.pushString (")") ;
             main.pushstr_newL(";");
         }
     }
@@ -946,7 +959,7 @@ namespace spmpi {
                     cout << "INSIDE NODES VALUE"
                     << "\n";
                     if(forAll->isForall()) {
-                        sprintf(strBuffer, "if (world.rank () == g.get_node_owner (%s) ) \n { \n for (%s %s = %s.%s(); %s <= %s.%s(); %s ++) ", iterator->getIdentifier () ,"int", iterator->getIdentifier(),graphId,"start_node" ,iterator->getIdentifier(), graphId, "end_node", iterator->getIdentifier());
+                        sprintf(strBuffer, "for (%s %s = %s.%s(); %s <= %s.%s(); %s ++) ", "int", iterator->getIdentifier(),graphId,"start_node" ,iterator->getIdentifier(), graphId, "end_node", iterator->getIdentifier());
                     ifStatementInForAll = true ;
                     } else 
                         sprintf(strBuffer, "for (%s %s = 0; %s < %s.%s(); %s ++) ", "int", iterator->getIdentifier() ,iterator->getIdentifier(), graphId, "num_nodes", iterator->getIdentifier());
