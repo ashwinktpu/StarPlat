@@ -120,7 +120,7 @@ namespace sphip {
 
         cout << "--->" << parameterName << "\n"; //! TODO
 
-        buffer = "initKernel<" + 
+        buffer = "initArray<" + 
                 ConvertToCppType(id->getSymbolInfo()->getType()->getInnerTargetType()) +
                 "><<<numBlocks, numThreads>>>(V, d" +
                 parameterName + ", ";
@@ -131,8 +131,35 @@ namespace sphip {
         (isMainFile ? main : header).pushStringWithNewLine(buffer);
     }
 
-    void DslCppGenerator::GenerateInitKernel(const std::string str) {
+    void DslCppGenerator::GenerateAuxillaryKernels() {
 
+        GenerateInitArrayKernelDefinition();
+        GenerateInitIndexKernelDefinition();
+    }
+
+    void DslCppGenerator::GenerateInitIndexKernelDefinition() {
+
+        header.pushStringWithNewLine("template <typename T>");
+        header.pushStringWithNewLine("__global__");
+        header.pushStringWithNewLine("void initIndex(const unsigned V, T* dArray, T value, int index) {");
+        header.pushStringWithNewLine("if(index < V) {");
+        header.pushStringWithNewLine("dArray[index] = value;"); 
+        header.pushStringWithNewLine("}");
+        header.pushStringWithNewLine("}");
+        header.NewLine();
+    }
+
+    void DslCppGenerator::GenerateInitArrayKernelDefinition() {
+
+        header.pushStringWithNewLine("template <typename T>");
+        header.pushStringWithNewLine("__global__");
+        header.pushStringWithNewLine("void initArray(const unsigned V, T* dArray, T value) {");
+        header.pushStringWithNewLine("unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;");
+        header.pushStringWithNewLine("if(idx < V) {");
+        header.pushStringWithNewLine("dArray[idx] = value;");
+        header.pushStringWithNewLine("}");
+        header.pushStringWithNewLine("}");
+        header.NewLine();
     }
 
     void DslCppGenerator::GenerateHipMemcpySymbol(

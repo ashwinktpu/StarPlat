@@ -324,7 +324,17 @@ namespace sphip {
         /**
          * TODO
          */
-        void GenerateInitKernel(const std::string str);
+        void GenerateInitArrayKernelDefinition();
+
+        /**
+         * TODO
+        */
+        void GenerateInitIndexKernelDefinition();
+
+        /**
+         * TODO
+        */
+        void GenerateAuxillaryKernels();
 
         /**
          * TODO
@@ -350,6 +360,16 @@ namespace sphip {
         blockStatement *UpdateForAllBody(forallStmt *forAll);
 
         /**
+         * TODO
+        */
+       void GenerateReductionCall(reductionCallStmt *stmt, bool isMainFile);
+       
+        /**
+            * TODO
+        */
+        void GenerateReductionOperation(reductionCallStmt *stmt, bool isMainFile);
+
+        /**
          * HIP Specific Functions
          */
 
@@ -369,7 +389,9 @@ namespace sphip {
         void GenerateHipMallocStr(const std::string &dVar, const std::string &typeStr, const std::string &sizeOfType);
 
         /**
-         * TODO
+         * This function will push the hipMemcpy statement of the form
+         * hipMemcpy(dst, src, sizeof(typeStr) * sizeOfType, direction); to the output file, 
+         * where direction is either hipMemcpyHostToDevice or hipMemcpyDeviceToHost.
          */
         void GenerateHipMemcpyStr(const std::string &dst, const std::string &src, const std::string &typeStr, const std::string &sizeOfType, bool isHostToDevice = true);
 
@@ -399,8 +421,13 @@ namespace sphip {
 
         /**
          * TODO
+        */
+        std::string CapitalizeFirstLetter(const std::string &str);
+
+        /**
+         * TODO
          */
-        const string GetOperatorString(int operatorId);
+        const std::string GetOperatorString(int operatorId);
 
         /**
          * TODO
