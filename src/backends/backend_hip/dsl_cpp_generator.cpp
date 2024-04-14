@@ -41,6 +41,7 @@ namespace sphip {
         }
 
         GenerateAuxillaryKernels();
+        GenerateAuxillaryFunctions();
         GenerateEndOfFile(); 
         CloseOutputFile();  
 
@@ -83,14 +84,9 @@ namespace sphip {
 
         GenerateFunctionBody(func);
         main.NewLine();
-        main.pushStringWithNewLine("// Comment");  
-        // GenerateHipMallocParams(func->getParamList()); //TODO: impl
-        GenerateBlock(func->getBlockStatement(), false); //TODO: 
-        
+        GenerateBlock(func->getBlockStatement(), false);
         GenerateTimerStop();
-
-        GenerateHipMemcpyParams(func->getParamList());
-
+        GenerateHipMemcpyParams(func->getParamList()); // TODO: Check if this is required
         main.pushStringWithNewLine("}");
     }
 
@@ -361,7 +357,7 @@ namespace sphip {
             break;
 
         case NODE_ITRRBFS:
-            // HIT_CHECK
+            HIT_CHECK
             // GenerateItrRevBfs(static_cast<iterateReverseBFS*>(stmt), isMainFile);
             break;
 
@@ -369,6 +365,9 @@ namespace sphip {
             GenerateProcCallStmt(static_cast<proc_callStmt*>(stmt), isMainFile);
             break;
         
+        case NODE_RETURN:
+            break; //TODO: No implementation but gets called;
+
         default:
             throw std::runtime_error("Generation function not implemented for this node!");
             break;
@@ -601,12 +600,13 @@ namespace sphip {
                 Type *type = identifier->getSymbolInfo()->getType();
 
                 if(type->isPrimitiveType()) {
-                    // TODO: Implement
-                    //! REQUIRED commented below 
-                    HIT_CHECK
-                    // GenerateHipMemcpyStr(identifier->getIdentifier(), ConvertToCppType(type), ) 
+
+                    GenerateHipMemcpyStr(
+                        "d" + CapitalizeFirstLetter(identifier->getIdentifier()),
+                        "h" + CapitalizeFirstLetter(identifier->getIdentifier()),
+                        ConvertToCppType(type), "1", true
+                    );
                 }
-                // TODO: For proptype
             }
 
             main.pushString(this->function->getIdentifier()->getIdentifier());
@@ -657,7 +657,11 @@ namespace sphip {
                 Type *type = iden->getSymbolInfo()->getType();
                 
                 if(type->isPrimitiveType()) {
-                    HIT_CHECK
+                    GenerateHipMemcpyStr(
+                        "h" + CapitalizeFirstLetter(iden->getIdentifier()),
+                        "d" + CapitalizeFirstLetter(iden->getIdentifier()),
+                        ConvertToCppType(type), "1", false
+                    );
                 }
             }
 
@@ -672,8 +676,7 @@ namespace sphip {
             GenerateInnerForAll(stmt, false);
 
             if(stmt->hasFilterExpr()) {
-                // stmt->setBody(UpdateForAllBody(stmt));
-                HIT_CHECK
+                stmt->setBody(UpdateForAllBody(stmt));
             }
 
             if(extractElemFunc != NULL) {
@@ -687,7 +690,6 @@ namespace sphip {
                         HIT_CHECK 
 
                     } else {
-                            
                         GenerateStatement(stmt->getBody(), isMainFile);
                         targetFile.pushStringWithNewLine("}");
                     }
@@ -720,7 +722,8 @@ namespace sphip {
 
             if(false) {
 
-                //! TODO: Impl
+
+                HIT_CHECK
             } else if(IsNeighbourIteration(stmt->getExtractElementFunc()->getMethodId()->getIdentifier())) {
 
                 if(strcmp(stmt->getExtractElementFunc()->getMethodId()->getIdentifier(), "neighbors") == 0) {
@@ -822,7 +825,6 @@ namespace sphip {
         if(stmt->hasFilterExpr()) {            
             stmt->setBody(UpdateForAllBody(stmt));
         }
-
         assert(stmt->getBody()->getTypeofNode() == NODE_BLOCKSTMT);
         list<statement*> statementList = static_cast<blockStatement*>(stmt->getBody())->returnStatements();
 
@@ -849,7 +851,6 @@ namespace sphip {
                     exprLeft->getId()->getSymbolInfo() != NULL &&
                     exprLeft->getId()->getSymbolInfo()->getType()->isPropNodeType() 
                 ) {
-
                     PropAccess *propIdNode = (PropAccess*) Util::createPropIdNode(
                         stmt->getIterator(),
                         exprLeft->getId()
@@ -859,7 +860,6 @@ namespace sphip {
                         Expression::nodeForPropAccess(propIdNode),
                         exprRight, filterExpr->getOperatorType()
                     );
-
                 }
             } 
         }
@@ -976,7 +976,8 @@ namespace sphip {
                 targetFile.pushString("updated" + temp);
                 targetFile.pushString(" = ");                
                 GenerateExpression(
-                    (*std::next(reductionCall->getargList().begin()))->getExpr(), isMainFile
+                    (*std::next(reductionCall->getargList().begin()))->getExpr(), 
+                    isMainFile
                 );
                 targetFile.pushStringWithNewLine(";");
 
@@ -1088,7 +1089,7 @@ namespace sphip {
                         GenerateExpressionIdentifier(id, isMainFile);
                     }
 
-                    targetFile.pushString(";");
+                    targetFile.pushStringWithNewLine(";");
                 }
                 targetFile.pushStringWithNewLine("}");
             }
@@ -1099,18 +1100,25 @@ namespace sphip {
 
         dslCodePad& targetFile = isMainFile ? main : header;
 
-        HIT_CHECK
+        if(stmt->isLeftIdentifier()) {
+
+            GenerateAtomicStatementFromReductionOp(stmt, isMainFile);
+        } else {
+
+            HIT_CHECK
+
+        }
     }
 
     void DslCppGenerator::GenerateItrBfs(iterateBFS* stmt, bool isMainFile) {
 
-        cout << "Inside GenerateItrRevBfs\n";
+        HIT_CHECK
        
     }
 
     void DslCppGenerator::GenerateItrRevBfs(iterateReverseBFS* stmt, bool isMainFile) {
 
-        cout << "Inside GenerateItrRevBfs\n";
+        HIT_CHECK
 
     }
 
@@ -1142,9 +1150,7 @@ namespace sphip {
         
     }
 
-    void DslCppGenerator::GenerateExpression(
-        Expression *expr, bool isMainFile, bool isAtomic
-    ) {
+    void DslCppGenerator::GenerateExpression(Expression *expr, bool isMainFile, bool isNotToUpper, bool isAtomic) {
 
         if(expr->isLiteral()) 
             GenerateExpressionLiteral(expr, isMainFile);
@@ -1153,7 +1159,7 @@ namespace sphip {
             GenerateExpressionInfinity(expr, isMainFile);
 
         else if(expr->isIdentifierExpr())
-            GenerateExpressionIdentifier(expr->getId(), isMainFile);
+            GenerateExpressionIdentifier(expr->getId(), isMainFile, isNotToUpper);
 
         else if(expr->isPropIdExpr())
             GenerateExpressionPropId(expr->getPropId(), isMainFile);
@@ -1229,7 +1235,12 @@ namespace sphip {
         (isMainFile ? main : header).pushString(value);
     }
 
-    void DslCppGenerator::GenerateExpressionIdentifier(Identifier* id, bool isMainFile) {
+    void DslCppGenerator::GenerateExpressionIdentifier(Identifier* id, bool isMainFile, bool isNotToUpper) {
+
+        if(isNotToUpper) {
+            (isMainFile ? main : header).pushString(id->getIdentifier());
+            return;
+        }
 
         (isMainFile ? main : header).pushString(CapitalizeFirstLetter(id->getIdentifier()));
     }
@@ -1242,7 +1253,7 @@ namespace sphip {
         Identifier *id2 = propId->getIdentifier2();
         ASTNode *propParent = propId->getParent();
         bool isRelatedToReduction = false;
-        
+ 
         if(propParent)
             isRelatedToReduction = propParent->getTypeofNode() == NODE_REDUCTIONCALLSTMT;
 
@@ -1251,6 +1262,7 @@ namespace sphip {
             id2->getSymbolInfo()->getId()->get_fp_association() &&
             isRelatedToReduction
         ) {
+            HIT_CHECK
 
         }
             // value = string("d") + id2->getIdentifier() + "Next[" + id1->getIdentifier() + "]";
@@ -1299,12 +1311,12 @@ namespace sphip {
         if(expr->hasEnclosedBrackets())
             target.pushString("(");
 
-        GenerateExpression(expr->getLeft(), isMainFile);
+        GenerateExpression(expr->getLeft(), isMainFile, true);
         target.AddSpace();
-
         const string op = GetOperatorString(expr->getOperatorType());
         target.pushString(op);
-        GenerateExpression(expr->getRight(), isMainFile);
+        target.AddSpace();
+        GenerateExpression(expr->getRight(), isMainFile, true);
 
         if(expr->hasEnclosedBrackets())
             target.pushString(")");
@@ -1336,12 +1348,19 @@ namespace sphip {
 
         } else if (methodId == "is_an_edge") {
 
-            //TODO: Implement
-            cout << "DANGER HIT";
+            assert(expr->getArgList().size() == 2);
+            Identifier *src = expr->getArgList().front()->getExpr()->getId();
+            Identifier *dest = expr->getArgList().back()->getExpr()->getId();
+            targetFile.pushString(
+                "IsAnEdge(" + std::string(src->getIdentifier())
+                + ", " + std::string(dest->getIdentifier()) 
+                + ", dOffsetArray, dEdgelist)"
+            );
 
+            HIT_CHECK
+            cout << "SET SOME FLAG TO GENERATE IS_AN_EDGE\n";
         } else {
-            
-            cout << "DANGER HIT";
+            HIT_CHECK
         }
     }
 

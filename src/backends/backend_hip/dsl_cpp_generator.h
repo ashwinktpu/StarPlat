@@ -267,7 +267,7 @@ namespace sphip {
         /**
          * TODO
          */
-        void GenerateExpression(Expression* expr, bool isMainFile, bool isAtomic = false);
+        void GenerateExpression(Expression* expr, bool isMainFile, bool isNotToUpper = false, bool isAtomic = false);
 
         /**
          * TODO
@@ -282,7 +282,7 @@ namespace sphip {
         /**
          * TODO
          */
-        void GenerateExpressionIdentifier(Identifier* id, bool isMainFile);
+        void GenerateExpressionIdentifier(Identifier* id, bool isMainFile, bool isNotToUpper = false);
 
         /**
          * TODO
@@ -335,6 +335,16 @@ namespace sphip {
          * TODO
         */
         void GenerateAuxillaryKernels();
+
+        /**
+         * TODO
+        */
+        void GenerateAuxillaryFunctions();
+
+        /**
+         * TODO
+        */
+       void GenerateAtomicStatementFromReductionOp(reductionCallStmt *stmt, bool isMainFile);
 
         /**
          * TODO

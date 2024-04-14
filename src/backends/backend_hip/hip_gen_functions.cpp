@@ -138,6 +138,11 @@ namespace sphip {
         (isMainFile ? main : header).pushStringWithNewLine(buffer);
     }
 
+    void DslCppGenerator::GenerateAuxillaryFunctions() {
+
+        cout << "HIT UNIMPLEMENTED FUNCTION HIP_GEN_FUN\n"; //! TODO
+    }
+
     void DslCppGenerator::GenerateAuxillaryKernels() {
 
         GenerateInitArrayKernelDefinition();
@@ -174,6 +179,101 @@ namespace sphip {
         const std::string &typeStr, 
         const bool direction
     ) {
+        std::cout << "HIT UNIMPLEMENTED FUNCTION HIP_GEN_FUN\n"; 
+    }
 
+    void DslCppGenerator::GenerateAtomicStatementFromReductionOp(
+        reductionCallStmt* stmt,
+        bool isMainFile
+    ) {
+
+        /**
+         * As of April 14, 2024, the reduction operations which are used by the DSL
+         * are Add, Sub, Mul, And, Or and the date types are int, long, bool, float and double.
+         * This information was obtained from the reduc_op variable set in the reductionCallStmt
+         * class inside ASTNodeTypes.hpp (function or variable names may have changed since then).
+         * The following OPERATOR_ADDASSIGN, OPERATOR_MULASSIGN, OPERATOR_ORASSIGN, 
+         * OPERATOR_ANDASSIGN, OPERATOR_SUBASSIGN enums are used by the DSL.
+         * Based on this we are implementing only the following atomic operations which 
+         * are supported by ROCm:
+         * 
+         * int atomicAdd(int* address, int val) for int, Add
+         * unsigned long long atomicAdd(unsigned long long* address,unsigned long long val) for long, Add
+         * float atomicAdd(float* address, float val) for float, Add
+         * double atomicAdd(double* address, double val) for double, Add
+         * int atomicSub(int* address, int val) for int, Sub
+         * int atomicAnd(int* address, int val) for int, And
+         * unsigned long long atomicAnd(unsigned long long* address,unsigned long long val) for long, And
+         * int atomicOr(int* address, int val) for int, Or
+         * unsigned long long atomicOr(unsigned long long int* address,unsigned long long val) for long, Or
+         * 
+         * Since ROCm HIP doesn't support all operations by the DSL, we will throw an error here.
+         * 
+         * Check if the above information is still valid.
+        */
+
+        std::string type = "int";
+        std::string atomicOp = "atomicAdd";
+
+        switch(stmt->getLeftId()->getSymbolInfo()->getType()->gettypeId()) {
+
+            case TYPE_INT:
+                type = "int";
+                break;
+
+            case TYPE_LONG:
+                type = "unsigned long long";
+                break;
+
+            case TYPE_FLOAT:
+                type = "float";
+                break;
+
+            case TYPE_DOUBLE:
+                type = "double";
+                break;
+
+            default:
+                throw std::runtime_error(
+                    "Reduction operation not supported by ROCm HIP. Please check GenerateAtomicStatementFromReductionOp(...) "
+                    "function inside hip_gen_functions.cpp for HIP Backend for more information."
+                );
+                std::cerr << "Error: Reduction operation not supported by HIP\n";
+                exit(1);
+        } 
+
+        switch(stmt->reduction_op()) {
+
+            case OPERATOR_ADDASSIGN:
+                atomicOp = "atomicAdd";
+                break;
+
+            case OPERATOR_SUBASSIGN:
+                atomicOp = "atomicSub";
+                break;
+
+            case OPERATOR_ANDASSIGN:
+                atomicOp = "atomicAnd";
+                break;
+
+            case OPERATOR_ORASSIGN:
+                atomicOp = "atomicOr";
+                break;
+
+            default:
+                throw std::runtime_error(
+                    "Reduction operation not supported by ROCm HIP. Please check GenerateAtomicStatementFromReductionOp(...) "
+                    "function inside hip_gen_functions.cpp for HIP Backend for more information."
+                );
+                std::cerr << "Error: Reduction operation not supported by HIP\n";
+                exit(1);
+        }
+
+        (isMainFile ? main : header).pushString(
+            atomicOp + "((" + type + "*) &" + stmt->getLeftId()->getIdentifier() + ", (" + 
+            type + ") "
+        );
+        GenerateExpression(stmt->getRightSide(), isMainFile);
+        (isMainFile ? main : header).pushStringWithNewLine(");");
     }
 }
