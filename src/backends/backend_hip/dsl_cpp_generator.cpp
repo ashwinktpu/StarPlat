@@ -79,13 +79,11 @@ namespace sphip {
         GenerateFunctionHeader(func, false);
         GenerateFunctionHeader(func, true);
 
-        main.pushStringWithNewLine("{");
+        GenerateTimerStart(); // TODO: Make this flag dependent
 
         GenerateFunctionBody(func);
         main.NewLine();
-
-        GenerateTimerStart();
-        
+        main.pushStringWithNewLine("// Comment");  
         // GenerateHipMallocParams(func->getParamList()); //TODO: impl
         GenerateBlock(func->getBlockStatement(), false); //TODO: 
         
@@ -104,7 +102,6 @@ namespace sphip {
 
         targetFile.pushString("void");
         targetFile.AddSpace();
-        std::cout << func->getIdentifier()->getIdentifier() << std::endl;
         targetFile.pushString(func->getIdentifier()->getIdentifier());
         targetFile.pushString("(");
         targetFile.NewLine();
@@ -121,8 +118,11 @@ namespace sphip {
             targetFile.AddSpace();
 
             std::string parameterName = (*itr)->getIdentifier()->getIdentifier();
-            // parameterName[0] = std::toupper(parameterName[0]);
-            // parameterName = "d" + parameterName;
+
+            if(type->isPropType()) {
+                parameterName[0] = std::toupper(parameterName[0]);
+                parameterName = "h" + parameterName;
+            }
 
             targetFile.pushString(parameterName);
 
@@ -136,10 +136,13 @@ namespace sphip {
 
         //TODO: Remove indent
         targetFile.pushString(")");
-        if(!isMainFile)
+        if(!isMainFile) {
             targetFile.pushString(";");
-
+        } else {
+            targetFile.pushStringWithNewLine(" {");        
+        }
         targetFile.NewLine();
+
     }
 
     void DslCppGenerator::GenerateFunctionBody(Function* func) {
@@ -165,9 +168,15 @@ namespace sphip {
             main.NewLine();
         }
 
+        // TODO" The below code will generate all variables
+        // ie the ones which are part of the function formal
+        // parameters and the ones which we get from the graph(IsMetaUsed etc)
+        // TODO: Check if this is okay or if we need seperate 
+        // functions for both 
         CheckAndGenerateVariables(func, "d");
         CheckAndGenerateHipMalloc(func);
         CheckAndGenerateMemcpy(func);
+        GenerateFormalParameterDeclAllocCopy(func->getParamList());
         GenerateLaunchConfiguration();
     }
 
@@ -246,10 +255,11 @@ namespace sphip {
 
         main.NewLine();
 
-        if(func->getIsWeightUsed())
+        if(func->getIsWeightUsed()) {
+            
             main.pushStringWithNewLine("int *edgeLens = " + graphId + ".getEdgeLen();");
-
-        main.NewLine();
+            main.NewLine();
+        }
 
         CheckAndGenerateVariables(func, "h");
         CheckAndGenerateMalloc(func);
@@ -262,7 +272,7 @@ namespace sphip {
 
             if(func->getIsMetaUsed())
                 main.pushStringWithNewLine(
-                    "hOffsetArray[i] = " + graphId + ".indexOfNodes[i];"
+                    "hOffsetArray[i] = " + graphId + ".indexofNodes[i];"
                 );
 
             if(func->getIsRevMetaUsed())
@@ -894,9 +904,9 @@ namespace sphip {
             targetFile.pushStringWithNewLine("int k = 0;"); // TODO: Is this required?
             targetFile.pushStringWithNewLine("hipDeviceSynchronize();"); // TODO: This might not be generic
             targetFile.NewLine();
-            targetFile.pushStringWithNewLine("while(!" + fixedPointVar + ") {");
+            targetFile.pushStringWithNewLine("while(!h" + CapitalizeFirstLetter(fixedPointVar) + ") {");
             targetFile.NewLine();
-            targetFile.pushStringWithNewLine(fixedPointVar + " = true;"); //TODO: Can this be generic?
+            targetFile.pushStringWithNewLine("h" + CapitalizeFirstLetter(fixedPointVar) + " = true;"); //TODO: Can this be generic?
 
             GenerateHipMemcpyStr(
                 "d" + CapitalizeFirstLetter(fixedPointVar),
@@ -1405,6 +1415,8 @@ namespace sphip {
 
         if(function->getIsRevMetaUsed())
             main.pushStringWithNewLine("int *" + loc +"RevOffsetArray;");
+
+        
 
         main.NewLine();
     }

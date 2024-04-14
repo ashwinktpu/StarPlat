@@ -376,7 +376,7 @@ namespace sphip {
         /**
          * TODO
          */
-        void GenerateHipMallocParams(const list<formalParam*> &paramList);
+        void GenerateFormalParameterDeclAllocCopy(const list<formalParam*> &paramList);
 
         /**
          * TODO

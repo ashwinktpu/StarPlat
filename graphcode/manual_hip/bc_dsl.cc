@@ -273,9 +273,10 @@ int main(int argc, char* argv[]) {
 	ComputeBetweennessCentrality(G, src, bc);
 
 	// Process bc data
+	cout << i << " " << bc[1] << " " << bc[2] << NL;
 
-	// for(int i: src)
-	// 	cout << i << " " << bc[i] << NL;
+	for(int i: src)
+		cout << i << " " << bc[i] << NL;
 
 	free(bc);
 

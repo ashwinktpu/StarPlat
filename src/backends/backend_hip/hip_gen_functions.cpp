@@ -67,7 +67,9 @@ namespace sphip {
         //TODO
     }
 
-    void DslCppGenerator::GenerateHipMallocParams(const list<formalParam*> &paramList) {
+    void DslCppGenerator::GenerateFormalParameterDeclAllocCopy(
+        const list<formalParam*> &paramList
+    ) {
 
         for(auto itr = paramList.begin(); itr != paramList.end(); itr++) {
 
@@ -75,20 +77,25 @@ namespace sphip {
 
             if(type->isPropType() && type->getInnerTargetType()->isPrimitiveType()) {
 
-                // ! FIXME
-                // main.pushString(ConvertToCppType(type->getInnerTargetType()));
-                // main.pushString(" *");
+                main.pushString(ConvertToCppType(type->getInnerTargetType()));
+                main.pushString(" *");
 
                 std::string identifier = (*itr)->getIdentifier()->getIdentifier();
                 identifier[0] = std::toupper(identifier[0]);
-                // main.pushString("d" + identifier);
-                // main.pushStringWithNewLine(";");
+                main.pushString("d" + identifier);
+                main.pushStringWithNewLine(";");
 
-                // GenerateHipMalloc(type, identifier);
+                GenerateHipMalloc(type, identifier);
+                GenerateHipMemcpyStr(
+                    "d" + identifier, 
+                    "h" + identifier, 
+                    ConvertToCppType(type->getInnerTargetType()), 
+                    (type->isPropNodeType() ? "V" : "E"), 
+                    true
+                );
             } 
         }
 
-        main.NewLine();
     }
 
     void DslCppGenerator::GenerateHipMemcpyParams(const list<formalParam*> &paramList) {
