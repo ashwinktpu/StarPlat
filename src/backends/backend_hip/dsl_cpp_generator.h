@@ -261,6 +261,16 @@ namespace sphip {
          */
         void GenerateProcCallStmt(proc_callStmt* stmt, bool isMainFile);
 
+        /**
+         * TODO
+        */
+        void GenerateDoWhile(dowhileStmt* stmt, bool isMainFile);
+
+        /**
+         * TODO
+        */
+        void GenerateUnaryStmt(unary_stmt* stmt, bool isMainFile);
+
         /* STATEMENTS END*/
 
         /* GenerateExpressions */
@@ -324,6 +334,16 @@ namespace sphip {
         /**
          * TODO
          */
+        void GenerateInitArrayString(const std::string type, const std::string identifier, const std::string value);
+        
+        /**
+         * TODO
+         */
+        void GenerateInitIndexString(const std::string type, const std::string identifier, const std::string value, const std::string index);
+
+        /**
+         * TODO
+         */
         void GenerateInitArrayKernelDefinition();
 
         /**
@@ -360,7 +380,37 @@ namespace sphip {
          * TODO
         */
         bool IsNeighbourIteration(const std::string methodId);
-            
+
+        /**
+         * TODO
+         */
+        void GenerateAdditionalVariablesAndInitializeForBfs(iterateBFS* stmt);
+
+        /**
+         * TODO
+        */
+        void GenerateItrBfsBody(blockStatement *stmt);
+        
+        /**
+         * TODO
+        */
+        void GenerateItrRevBfsBody(blockStatement *stmt);
+        
+        /**
+         * TODO
+        */
+        void GeneratePropParamsAsFormalParams(list<formalParam*> params, bool isTypeNeeded = true, bool isMainFile = true);
+        
+        /**
+         * TODO
+        */
+        void GenerateForwardBfsKernel(blockStatement *stmt);
+        
+        /**
+         * TODO
+        */
+        void GenerateReverseBfsKernel(blockStatement *stmt);
+        
         /**
          * Some other class of functions
         */

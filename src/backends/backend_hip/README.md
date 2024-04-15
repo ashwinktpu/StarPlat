@@ -1,6 +1,6 @@
 ## TODO
 
-### Pre Completion Stuff
+### Major stuff
 
 1. Copy kernel for SSSP. Refer SSSP Manual Code impl for comments.  
 2. Check other comment in manual code impl
@@ -8,8 +8,9 @@
 4. Remove all HIT_CHECKs
 
 
-### Post Completion
+### Post Completion of Major Stuff
 
+1. All additionally generated method to be made optional.
 1. Re-order the functions into the appropriate implementation files i.e make sure all hip generator functions are in the file hip_gen_functions.cpp
 1. Make use of return value of hip function to generate error messages
 1. Look into [[nodiscard]]

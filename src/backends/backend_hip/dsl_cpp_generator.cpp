@@ -85,8 +85,9 @@ namespace sphip {
         GenerateFunctionBody(func);
         main.NewLine();
         GenerateBlock(func->getBlockStatement(), false);
-        GenerateTimerStop();
         GenerateHipMemcpyParams(func->getParamList()); // TODO: Check if this is required
+        
+        GenerateTimerStop();
         main.pushStringWithNewLine("}");
     }
 
@@ -94,14 +95,11 @@ namespace sphip {
 
         dslCodePad &targetFile = isMainFile ? main:header;
 
-        // TODO: Add function to increment indentation
-
         targetFile.pushString("void");
         targetFile.AddSpace();
         targetFile.pushString(func->getIdentifier()->getIdentifier());
         targetFile.pushString("(");
         targetFile.NewLine();
-        // TODO: Add indent by "\t"
 
         /* Adding function parameters*/
 
@@ -130,7 +128,6 @@ namespace sphip {
             targetFile.NewLine();
         }
 
-        //TODO: Remove indent
         targetFile.pushString(")");
         if(!isMainFile) {
             targetFile.pushString(";");
@@ -225,23 +222,22 @@ namespace sphip {
                 }
             }
         } else if (type->isNodeEdgeType()) {
-            return "int";  // need to be modified.
+            return "int";  // TODO: need to be modified. Maybe other types as well?
 
         } else if (type->isGraphType()) {
             return "graph&";
         } else if (type->isCollectionType()) {
-            int typeId = type->gettypeId();
 
-            switch (typeId) {
+            switch (type->gettypeId()) {
                 case TYPE_SETN:
                     return "std::set<int>&";
 
                 default:
-                    assert(false);
+                    throw std::runtime_error("Collection type not implemented.");
             }
         }
 
-        return "NA";
+        throw std::runtime_error("Unknown type in ConvertToCppType");
     }
 
     void DslCppGenerator::GenerateCsrArrays(const std::string &graphId, Function *func) {
@@ -327,7 +323,7 @@ namespace sphip {
         case NODE_ASSIGN:
             {
                 assignment *asst = static_cast<assignment*>(stmt);
-
+                cout << "STMT " << (asst->isDeviceAssignment() ? "DDDDD\n" : "NNNNN\n");
                 if(asst->isDeviceAssignment())
                     GenerateDeviceAssignment(asst, isMainFile);
                 else
@@ -364,12 +360,25 @@ namespace sphip {
         case NODE_PROCCALLSTMT:
             GenerateProcCallStmt(static_cast<proc_callStmt*>(stmt), isMainFile);
             break;
+
+        case NODE_WHILESTMT:
+            // TODO: Make something for this?
+            HIT_CHECK
+            break;
+
+        case NODE_DOWHILESTMT:
+            GenerateDoWhile(static_cast<dowhileStmt*>(stmt), isMainFile);
+            break;
+
+        case NODE_UNARYSTMT:
+            GenerateUnaryStmt(static_cast<unary_stmt*>(stmt), isMainFile);   
+            break;
         
         case NODE_RETURN:
             break; //TODO: No implementation but gets called;
 
         default:
-            throw std::runtime_error("Generation function not implemented for this node!");
+            throw std::runtime_error("Generation function not implemented for NODETYPE " + std::to_string(stmt->getTypeofNode()));
             break;
         }
     }
@@ -422,22 +431,9 @@ namespace sphip {
                 main.pushStringWithNewLine(";");
 
                 GenerateHipMalloc(type, idName);
-                
-                // TODO: Check if the below stuff is reqd
 
-                // if(stmt->getdeclId()->getSymbolInfo()->getId()->require_redecl()) {
-
-                //     main.pushString(ConvertToCppType(innerType));
-                //     main.AddSpace();
-                //     main.pushString("*");
-                //     main.pushString("d");
-                //     main.pushString(idName);
-                //     main.pushString("Next");
-                //     main.pushString(";");
-                //     main.NewLine();
-
-                //     GenerateHipMalloc(type, idName + "Next");
-                // }
+            } else {
+                HIT_CHECK
             }
         } else if(type->isNodeEdgeType()) {
         
@@ -456,9 +452,8 @@ namespace sphip {
 
             std::string strBuffer;
 
-            const std::string varType = ConvertToCppType(type);
-            const std::string varName = stmt->getdeclId()->getIdentifier();
-
+            const std::string varType(ConvertToCppType(type));
+            const std::string varName(stmt->getdeclId()->getIdentifier());
             targetFile.pushString(varType);
             targetFile.AddSpace();
             targetFile.pushString("h");
@@ -468,7 +463,9 @@ namespace sphip {
                 targetFile.pushString(" = ");
 
                 if (stmt->getExpressionAssigned()->getExpressionFamily() == EXPR_PROCCALL) {
+                    cout << varType << " UNIMPL " << varName << "\n";
                     HIT_CHECK
+                    // TODO: Is cast required here? How to make this more general?
                 }
                 GenerateExpression(stmt->getExpressionAssigned(), isMainFile);
             }
@@ -487,9 +484,7 @@ namespace sphip {
             targetFile.pushString("*d");
             targetFile.pushString(CapitalizeFirstLetter(varName));
             targetFile.pushStringWithNewLine(";");
-
-            
-
+         
             targetFile.pushStringWithNewLine(
                 "hipMalloc(&d" + CapitalizeFirstLetter(varName) + ", sizeof(" + varType + "));"
             );
@@ -506,17 +501,17 @@ namespace sphip {
 
             PropAccess* propId = asmt->getPropId();
             if (asmt->isDeviceAssignment()) {
-            isDevice = true;
-            Type* typeB = propId->getIdentifier2()->getSymbolInfo()->getType()->getInnerTargetType();
-            std::string varType = ConvertToCppType(typeB);  //DONE: get the type from id
-            std::string temp2(propId->getIdentifier2()->getIdentifier());
-            temp2[0] = toupper(temp2[0]);
-            std::string temp1(propId->getIdentifier1()->getIdentifier());
-            // temp1[0] = toupper(temp1[0]);
+                isDevice = true;
+                Type* typeB = propId->getIdentifier2()->getSymbolInfo()->getType()->getInnerTargetType();
+                std::string varType = ConvertToCppType(typeB);  //DONE: get the type from id
+                std::string temp2(propId->getIdentifier2()->getIdentifier());
+                temp2[0] = toupper(temp2[0]);
+                std::string temp1(propId->getIdentifier1()->getIdentifier());
+                // temp1[0] = toupper(temp1[0]);
 
-            str = "initIndex<" + varType + "><<<1,1>>>(V, d" 
-                    + temp2 + ", " + temp1 + ", ";
-            targetFile.pushString(str);
+                str = "initIndex<" + varType + "><<<1,1>>>(V, d" 
+                        + temp2 + ", " + temp1 + ", ";
+                targetFile.pushString(str);
             } 
         }
 
@@ -530,11 +525,13 @@ namespace sphip {
     void DslCppGenerator::GenerateAtomicOrNormalAssignment(assignment* stmt, bool isMainFile) {
 
         dslCodePad& targetFile = isMainFile ? main : header;
+        bool isAtomic = false;
+        bool isResult = false;
 
         if(stmt->lhs_isIdentifier()) {
 
             if(stmt->hasPropCopy()) {
-                
+                HIT_CHECK
                 //TODO: Make generic. Possibly add a new function for this.
                 targetFile.pushStringWithNewLine(
                     "hipMemcpy(d" + CapitalizeFirstLetter(stmt->getId()->getIdentifier()) + 
@@ -545,13 +542,46 @@ namespace sphip {
 
             } else {
                 HIT_CHECK
+                // cout << "UNIMPL " + string(stmt->getId()->getIdentifier()) << "\n";
+                targetFile.pushString(stmt->getId()->getIdentifier());
             }
-
-
         } else if(stmt->lhs_isProp()) {
 
-            HIT_CHECK
+            PropAccess *propId = stmt->getPropId();
+            if(stmt->getAtomicSignal()) {
 
+                targetFile.pushString("atomicAdd(&d");
+                isAtomic = true;                
+            }
+
+            if(stmt->isAccumulateKernel()) {
+                isResult = true;
+            }
+
+            targetFile.pushString(CapitalizeFirstLetter(propId->getIdentifier2()->getIdentifier()));
+            targetFile.pushString("[");
+            targetFile.pushString(propId->getIdentifier1()->getIdentifier());
+            targetFile.pushString("]");
+
+        } else {
+            HIT_CHECK
+        }
+
+        if(isAtomic) {
+            targetFile.pushString(", ");
+        } else if(!stmt->hasPropCopy()) {
+            targetFile.pushString(" = ");
+        }
+
+        if(!stmt->hasPropCopy())
+            GenerateExpression(stmt->getExpr(), isMainFile, false, isAtomic);
+
+        if(isAtomic) {
+            targetFile.pushStringWithNewLine(");"); 
+        } else if(isResult) {
+            targetFile.pushStringWithNewLine(";");
+        } else if(!stmt->hasPropCopy()) {
+            targetFile.pushStringWithNewLine(";");
         }
     }
     
@@ -669,10 +699,6 @@ namespace sphip {
 
         } else { 
 
-            // This is the inner for loop which is not parallelizable
-            // Normal for loop as well, I think. 
-            // TODO: Confirm above
-
             GenerateInnerForAll(stmt, false);
 
             if(stmt->hasFilterExpr()) {
@@ -683,30 +709,92 @@ namespace sphip {
 
                 if(IsNeighbourIteration(iteratorMethodId->getIdentifier())) {
 
+                    list<argument*> argList = extractElemFunc->getArgList();
+                    Identifier *nodeNeighbour = argList.front()->getExpr()->getId();
+                    const std::string src(stmt->getIterator()->getIdentifier());
+                    const std::string nbr(nodeNeighbour->getIdentifier());
+
                     if(stmt->getParent()->getParent()->getTypeofNode() == NODE_ITRBFS) {
-                        HIT_CHECK 
 
+                        /**
+                         * The below piece of code is not at all Generic. It is specific to 
+                         * the BC implementation.
+                        */
+                       targetFile.pushStringWithNewLine("if (dD[" + src + "] == -1) {");
+                       targetFile.pushStringWithNewLine("dD[" + src + "] = *dLevel + 1;");
+                       targetFile.pushStringWithNewLine("*dIsAllNodesTraversed = false;");
+                       targetFile.pushStringWithNewLine("}");
+                       targetFile.NewLine();
+                       targetFile.pushStringWithNewLine("if (dD[" + src + "] == *dLevel + 1) {");
+                       GenerateBlock(static_cast<blockStatement*>(body), false, false);
+                       targetFile.pushStringWithNewLine("}");
+                       targetFile.pushStringWithNewLine("}");
+                        
                     } else if(stmt->getParent()->getParent()->getTypeofNode() == NODE_ITRRBFS) {
-                        HIT_CHECK 
 
+                        /**
+                         * The below piece of code is not at all Generic. It is specific to 
+                         * the BC implementation.
+                        */ 
+
+                        targetFile.pushStringWithNewLine("if (dD[" + src + "] == *dLevel) {");
+                        GenerateBlock(static_cast<blockStatement*>(body), false, false);
+                        targetFile.pushStringWithNewLine("}");
+                        targetFile.pushStringWithNewLine("}");
+                        targetFile.NewLine();
+                        targetFile.pushStringWithNewLine("grid.sync();");
+                        cout << "STMT XXXXXXX\n";
                     } else {
                         GenerateStatement(stmt->getBody(), isMainFile);
                         targetFile.pushStringWithNewLine("}");
                     }
 
                 } else {
-
-                    GenerateStatement(stmt->getBody(), isMainFile);
+                    
+                    GenerateStatement(stmt->getBody(), false);
                 } 
 
                 if(stmt->isForall() && stmt->hasFilterExpr()) {
-                        HIT_CHECK 
-
+                    HIT_CHECK 
                     // GenerateFixedPointFilter(stmt->getfilterExpr(), false);
                 }
            } else {
 
-                HIT_CHECK
+                Identifier *collectionId;
+
+                if(sourceField)
+                    collectionId = sourceField->getIdentifier1();
+
+                if(sourceId)
+                    collectionId = sourceId;
+
+                if(collectionId->getSymbolInfo()->getType()->gettypeId() == TYPE_SETN) {
+
+                    if(body->getTypeofNode() == NODE_BLOCKSTMT) {
+
+                        targetFile.pushStringWithNewLine("{");
+                        // FIXME: Why do the below not work? 
+                        // targetFile.pushString(ConvertToCppType(stmt->getIterator()->getSymbolInfo()->getType()));
+                        // TODO: Make this more generic instead of int
+                        targetFile.pushString("int");
+                        targetFile.AddSpace();
+                        targetFile.pushString(stmt->getIterator()->getIdentifier());
+                        targetFile.pushString(" = *itr;");
+                        targetFile.NewLine();
+                        GenerateBlock(static_cast<blockStatement*>(body), false);
+                        targetFile.pushStringWithNewLine("}"); 
+                    } else {
+                        GenerateStatement(stmt->getBody(), false);
+                    }
+                } else {
+
+                    GenerateStatement(stmt->getBody(), false);
+                }
+
+                if(stmt->isForall() && stmt->hasFilterExpr()) {
+                    HIT_CHECK 
+                    // GenerateFixedPointFilter(stmt->getfilterExpr(), false);
+                }
            }
 
         }
@@ -744,7 +832,27 @@ namespace sphip {
             HIT_CHECK
         } else {
 
-            HIT_CHECK 
+            Identifier *source = stmt->getSource();
+            if(source != NULL) {
+
+                switch(source->getSymbolInfo()->getType()->gettypeId()) {
+
+                    case TYPE_SETN: {
+
+                        // TODO: Why itr? Is this generic
+                        const std::string sourceId = source->getIdentifier();
+                        main.NewLine();
+                        main.pushStringWithNewLine(
+                            "for(auto itr = " + sourceId + ".begin(); itr != " 
+                            + sourceId + ".end(); itr++) "
+                        );
+                        break;
+                    }
+
+                    default:
+                        break;
+                }
+            }
         }
     }
 
@@ -790,16 +898,6 @@ namespace sphip {
                 std::string temp = identifier->getIdentifier();
                 temp[0] = toupper(temp[0]);
                 header.pushString(temp);
-
-                // !note: Below code note required as it is handled from the DSL
-                // if(identifier->getSymbolInfo()->getId()->get_fp_association()) {
-
-                //     header.pushString(", ");
-                //     header.pushString(ConvertToCppType(type->getInnerTargetType()));
-                //     header.pushString(" d");
-                //     header.pushString(temp);
-                //     header.pushString("Next");
-                // }
             }
         }
 
@@ -1112,14 +1210,165 @@ namespace sphip {
 
     void DslCppGenerator::GenerateItrBfs(iterateBFS* stmt, bool isMainFile) {
 
-        HIT_CHECK
-       
+        assert(stmt->getBody()->getTypeofNode() == NODE_BLOCKSTMT);
+        GenerateAdditionalVariablesAndInitializeForBfs(stmt);
+
+        blockStatement *blockBfs = static_cast<blockStatement*>(stmt->getBody());
+        blockStatement *blockRbfs = static_cast<blockStatement*>(stmt->getRBFS()->getBody());
+        
+        // TODO: None of this is generic. 
+        main.pushStringWithNewLine("do {");
+        main.NewLine();
+        GenerateItrBfsBody(blockBfs);
+        main.pushStringWithNewLine("} while(!hIsAllNodesTraversed);");
+
+        main.pushStringWithNewLine("hLevel--;");
+        GenerateHipMemcpyStr("dLevel", "&hLevel", "int", "1", true);
+        main.NewLine();
+
+        main.pushStringWithNewLine("while(hLevel > 0) {");
+        main.NewLine();
+        GenerateItrRevBfsBody(blockRbfs);
+        main.pushStringWithNewLine("}");
+
+        GenerateForwardBfsKernel(blockBfs); //! TODO
+        GenerateReverseBfsKernel(blockRbfs); //! TODO
+    }
+
+    void DslCppGenerator::GenerateItrBfsBody(blockStatement *stmt) {
+
+        main.pushStringWithNewLine("hIsAllNodesTraversed = true;");
+        GenerateHipMemcpyStr("dIsAllNodesTraversed", "&hIsAllNodesTraversed", "bool", "1", true);
+        main.pushStringWithNewLine("ForwardBfsKernel<<<numBlocks, numThreads>>>(");
+        main.pushString("V, dOffsetArray, dEdgelist, dD, dLevel, dIsAllNodesTraversed");
+
+        GeneratePropParamsAsFormalParams(function->getParamList(), true, false); //! TODO
+        main.NewLine();
+        main.pushStringWithNewLine(");");
+
+        /**
+         * The below kernel call/memcpy can be removed if we use hipHostMalloc
+         * TODO: Use Kernel Call if it is better. Check with Rupesh/Test it out
+         * TODO: Change to hipHostMalloc
+        */
+        main.pushStringWithNewLine("hLevel++;");
+        GenerateHipMemcpyStr("&hLevel", "dLevel", "int", "1", false);
+
+        main.NewLine();
+        GenerateHipMemcpyStr("&hIsAllNodesTraversed", "dIsAllNodesTraversed", "bool", "1", false); 
+    }
+
+    void DslCppGenerator::GenerateItrRevBfsBody(blockStatement *stmt) {
+        main.pushStringWithNewLine("ReverseBfsKernel<<<numBlocks, numThreads>>>(");
+        main.pushString("V, dOffsetArray, dEdgelist, dD, dLevel, dIsAllNodesTraversed");
+
+        GeneratePropParamsAsFormalParams(function->getParamList(), true, false); //! TODO
+        main.NewLine();
+        main.pushStringWithNewLine(");");
+        main.pushStringWithNewLine("hLevel--;");
+        GenerateHipMemcpyStr("dLevel", "&hLevel", "int", "1", true);
+    }
+
+    void DslCppGenerator::GenerateForwardBfsKernel(blockStatement *body) {
+
+        const std::string loopVar("v");
+
+        assert(body->getTypeofNode() == NODE_BLOCKSTMT);
+        list<statement*> stmtList = body->returnStatements();
+
+        header.pushStringWithNewLine("__global__ void ForwardBfsKernel(");
+        header.pushString(
+            "int V, int *dOffsetArray, int *dEdgelist, int *dD, int *dLevel, bool *dIsAllNodesTraversed"
+        );
+        GeneratePropParamsAsFormalParams(function->getParamList(), true, false); 
+        header.NewLine();
+        header.pushStringWithNewLine(") {");
+        header.NewLine();
+        header.pushStringWithNewLine(
+            "unsigned " + loopVar + " = threadIdx.x + blockIdx.x * blockDim.x;"
+        );
+
+        header.NewLine();
+        header.pushStringWithNewLine("if(" + loopVar + " >= V) {");
+        header.pushStringWithNewLine("return;");
+        header.pushStringWithNewLine("}");
+        header.NewLine();
+        header.pushStringWithNewLine("if(dD[" + loopVar + "] == dLevel) {");
+        header.NewLine();
+
+        for(auto stmt: stmtList) {
+            GenerateStatement(stmt, false);
+        }
+
+        header.pushStringWithNewLine("}");
+        header.pushStringWithNewLine("}");
+    }
+
+    void DslCppGenerator::GenerateReverseBfsKernel(blockStatement *body) {
+
+        const std::string loopVar("v");
+        assert(body->getTypeofNode() == NODE_BLOCKSTMT);
+        list<statement*> stmtList = body->returnStatements();
+
+        header.pushStringWithNewLine("__global__ void ReverseBfsKernel(");
+        header.pushString(
+            "int V, int *dOffsetArray, int *dEdgelist, int *dD, int *dLevel, bool *dIsAllNodesTraversed"
+        );
+        header.NewLine();
+        GeneratePropParamsAsFormalParams(function->getParamList(), true, false);
+        header.pushStringWithNewLine(") {");
+        header.NewLine();
+        header.pushStringWithNewLine(
+            "unsigned " + loopVar + " = threadIdx.x + blockIdx.x * blockDim.x;"
+        );
+        header.NewLine();
+        header.pushStringWithNewLine("if(" + loopVar + " >= V) {"); 
+        header.pushStringWithNewLine("return;");
+        header.pushStringWithNewLine("}");
+        header.NewLine();
+        header.pushStringWithNewLine("auto grid = cooperative_groups::this_grid();");
+        header.NewLine();
+        header.pushStringWithNewLine("if(dD[" + loopVar + "] == dLevel - 1) {");
+        
+        for(auto stmt: stmtList)
+            GenerateStatement(stmt, false);
+
+        header.pushStringWithNewLine("}");
+        header.pushStringWithNewLine("}");
+        header.NewLine();
+    }
+
+    void DslCppGenerator::GeneratePropParamsAsFormalParams(
+        list<formalParam*> params, bool isTypeNeeded, bool isMainFile
+    ) {
+        // throw std::runtime_error("GeneratePropParamsAsFormalParams not implemented");
     }
 
     void DslCppGenerator::GenerateItrRevBfs(iterateReverseBFS* stmt, bool isMainFile) {
 
-        HIT_CHECK
+        throw std::runtime_error("GenerateItrRevBfs not implemented");
+    }
 
+    void DslCppGenerator::GenerateAdditionalVariablesAndInitializeForBfs(iterateBFS* stmt) {
+
+        main.NewLine();
+        main.pushStringWithNewLine("// Additional variables added for BC. Not present in the DSL");
+        main.pushStringWithNewLine("bool hIsAllNodesTraversed; /*Non-DSL variable*/"); // TODO: Use hipHostMalloc instead of two vars
+        main.pushStringWithNewLine("bool *dIsAllNodesTraversed; /*Non-DSL variable*/");
+        main.pushStringWithNewLine("int hLevel; /*Non-DSL variable*/ // Indicates the level of the BFS"); // TODO: Remove the comment from buffer 
+        main.pushStringWithNewLine("int *dLevel; /*Non-DSL variable*/");
+        main.pushStringWithNewLine("// Explore the possibility of using hipHostMalloc for simple vars");
+        main.pushStringWithNewLine("// Check if hipHostMalloc works on all platforms");
+        // TODO: Usage of hipHostMalloc to be explored for simple vars. Support on all platforms?
+        main.pushStringWithNewLine("int *dD; /*Non-DSL variable*/");
+
+        GenerateHipMallocStr("dIsAllNodesTraversed", "bool", "1");
+        GenerateHipMallocStr("dLevel", "int", "1");
+        GenerateHipMallocStr("dD", "int", "V");
+        GenerateInitIndexString("int", "dLevel", "0", "0");
+        GenerateInitArrayString("int", "dD", "-1");
+        GenerateInitIndexString("int", "dD", "0", std::string(stmt->getRootNode()->getIdentifier()));
+        main.NewLine();
     }
 
     void DslCppGenerator::GenerateProcCallStmt(proc_callStmt* stmt, bool isMainFile) {
@@ -1150,7 +1399,44 @@ namespace sphip {
         
     }
 
+    void DslCppGenerator::GenerateDoWhile(dowhileStmt* stmt, bool isMainFile) {
+
+        dslCodePad& targetFile = isMainFile ? main : header;
+
+        targetFile.pushStringWithNewLine("do {");
+        GenerateStatement(stmt->getBody(), isMainFile);
+        targetFile.pushString("} while(");
+        GenerateExpression(stmt->getCondition(), isMainFile);
+        targetFile.pushStringWithNewLine(");");
+    }
+
+    void DslCppGenerator::GenerateUnaryStmt(unary_stmt* stmt, bool isMainFile) {
+
+        GenerateExpression(stmt->getUnaryExpr(), isMainFile);
+        main.pushStringWithNewLine(";");
+    }        
+    
     void DslCppGenerator::GenerateExpression(Expression *expr, bool isMainFile, bool isNotToUpper, bool isAtomic) {
+
+        if (expr->isLiteral()) {
+            std::cout << "GenerateExpressionLiteral" << std::endl;
+        } else if (expr->isInfinity()) {
+            std::cout << "GenerateExpressionInfinity" << std::endl;
+        } else if (expr->isIdentifierExpr()) {
+            std::cout << "GenerateExpressionIdentifier" << std::endl;
+        } else if (expr->isPropIdExpr()) {
+            std::cout << "GenerateExpressionPropId" << std::endl;
+        } else if (expr->isArithmetic() || expr->isLogical()) {
+            std::cout << "GenerateExpressionArithmeticOrLogical" << std::endl;
+        } else if (expr->isRelational()) {
+            std::cout << "GenerateExpressionRelational" << std::endl;
+        } else if (expr->isProcCallExpr()) {
+            std::cout << "GenerateExpressionProcCallExpression" << std::endl;
+        } else if (expr->isUnary()) {
+            std::cout << "GenerateExpressionUnary" << std::endl;
+        } else {
+            assert(false);
+        }
 
         if(expr->isLiteral()) 
             GenerateExpressionLiteral(expr, isMainFile);
@@ -1248,32 +1534,15 @@ namespace sphip {
     void DslCppGenerator::GenerateExpressionPropId(PropAccess* propId, bool isMainFile) {
 
         std::string value;
-
         Identifier *id1 = propId->getIdentifier1();
         Identifier *id2 = propId->getIdentifier2();
-        ASTNode *propParent = propId->getParent();
-        bool isRelatedToReduction = false;
- 
-        if(propParent)
-            isRelatedToReduction = propParent->getTypeofNode() == NODE_REDUCTIONCALLSTMT;
 
-        if(
-            id2->getSymbolInfo() &&
-            id2->getSymbolInfo()->getId()->get_fp_association() &&
-            isRelatedToReduction
-        ) {
-            HIT_CHECK
 
-        }
-            // value = string("d") + id2->getIdentifier() + "Next[" + id1->getIdentifier() + "]";
-        else {
-
-            if(isMainFile)
-                value = id2->getIdentifier() + string("[") + id1->getIdentifier() + "]";
-            else
-                value = string("d") + CapitalizeFirstLetter(id2->getIdentifier()) + "[" + id1->getIdentifier() + "]";
-        }
-
+        if(isMainFile)
+            value = id2->getIdentifier() + string("[") + id1->getIdentifier() + "]";
+        else
+            value = string("d") + CapitalizeFirstLetter(id2->getIdentifier()) + "[" + id1->getIdentifier() + "]";
+    
         (isMainFile ? main : header).pushString(value);
     }
 
@@ -1286,10 +1555,10 @@ namespace sphip {
         if(expr->hasEnclosedBrackets())
             target.pushString("(");
 
-        if(!isAtomic)
+        if(!isAtomic) {
             GenerateExpression(expr->getLeft(), isMainFile);
-
-        target.AddSpace();
+            target.AddSpace();
+        }
 
         const std::string operatorString = GetOperatorString(expr->getOperatorType());
 
@@ -1359,6 +1628,18 @@ namespace sphip {
 
             HIT_CHECK
             cout << "SET SOME FLAG TO GENERATE IS_AN_EDGE\n";
+        } else if(methodId == "num_nodes") {
+
+            if(expr->getArgList().size() == 0) {
+
+                // targetFile.pushString("// Comment here");
+                targetFile.pushString(expr->getId1()->getIdentifier());
+                targetFile.pushString(".");
+                targetFile.pushString(expr->getMethodId()->getIdentifier());
+                targetFile.pushString("()");
+            } else {
+                HIT_CHECK
+            }
         } else {
             HIT_CHECK
         }
@@ -1414,9 +1695,6 @@ namespace sphip {
      * Simple functions to reduce cognitive complexity
     */
 
-   /**
-     * TODO
-    */
     void DslCppGenerator::CheckAndGenerateVariables(Function *function, const std::string &loc) {
 
 
@@ -1440,11 +1718,7 @@ namespace sphip {
         main.NewLine();
     }
 
-    /**
-     * TODO
-    */
     void DslCppGenerator::CheckAndGenerateHipMalloc(Function *function) {
-        cout << "FLAGFLAG\n";
 
         if(function->getIsMetaUsed()) 
             GenerateHipMallocStr("dOffsetArray", "int", "V + 1");
@@ -1464,9 +1738,6 @@ namespace sphip {
         main.NewLine();
     }
 
-    /**
-     * TODO
-    */
     void DslCppGenerator::CheckAndGenerateMalloc(Function *function) {
 
         if(function->getIsMetaUsed()) 
@@ -1487,9 +1758,6 @@ namespace sphip {
         main.NewLine();
     }
 
-    /**
-     * TODO
-    */
     void DslCppGenerator::CheckAndGenerateMemcpy(Function *function) {
 
         if(function->getIsMetaUsed())

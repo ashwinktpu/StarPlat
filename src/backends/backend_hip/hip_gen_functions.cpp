@@ -125,8 +125,7 @@ namespace sphip {
         std::string parameterName(id->getIdentifier());
         parameterName[0] = toupper(parameterName[0]);
 
-        cout << "--->" << parameterName << "\n"; //! TODO
-
+        //TODO: Use the init arrya call function
         buffer = "initArray<" + 
                 ConvertToCppType(id->getSymbolInfo()->getType()->getInnerTargetType()) +
                 "><<<numBlocks, numThreads>>>(V, d" +
@@ -147,6 +146,29 @@ namespace sphip {
 
         GenerateInitArrayKernelDefinition();
         GenerateInitIndexKernelDefinition();
+    }
+
+    void DslCppGenerator::GenerateInitArrayString(
+        const std::string type,
+        const std::string identifier,
+        const std::string value
+    ) {
+        // TODO: We are assuming V to be the size of the array. This may not be the case always.
+        main.pushStringWithNewLine(
+            "initArray<" + type + "><<<numBlocks, numThreads>>>(V, " + identifier + ", " + value + ");"
+        );
+    }
+
+    void DslCppGenerator::GenerateInitIndexString(
+        const std::string type,
+        const std::string identifier,
+        const std::string value,
+        const std::string index
+    ) {
+        // TODO: We are assuming V to be the size of the array. This may not be the case always.
+        main.pushStringWithNewLine(
+            "initIndex<" + type + "><<<1, 1>>>(V, " + identifier + ", " + value + ", " + index + ");"
+        );
     }
 
     void DslCppGenerator::GenerateInitIndexKernelDefinition() {
@@ -212,8 +234,8 @@ namespace sphip {
          * Check if the above information is still valid.
         */
 
-        std::string type = "int";
-        std::string atomicOp = "atomicAdd";
+        std::string type("int");
+        std::string atomicOp("atomicAdd");
 
         switch(stmt->getLeftId()->getSymbolInfo()->getType()->gettypeId()) {
 
