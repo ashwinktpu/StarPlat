@@ -24,6 +24,7 @@ namespace sphip {
         threadsPerBlock(threadsPerBlock) {
 
         generateCsr = false;
+        generateIsAnEdgeFunction = false;
 
         if(threadsPerBlock > 1024)
             throw std::runtime_error("Threads per block should be less than 1024");
@@ -661,12 +662,16 @@ namespace sphip {
 
             for(auto identifier: usedVars.getVariables()) {
 
-                if(identifier->getSymbolInfo()->getType()->isPropType()) {
+                if(
+                    identifier->getSymbolInfo()->getType()->isPropType() ||
+                    identifier->getSymbolInfo()->getType()->isPrimitiveType() 
+                ) {
 
                     main.pushString(", d");
-                    std::string temp = identifier->getIdentifier();
-                    temp[0] = toupper(temp[0]);
-                    main.pushString(temp);
+                    main.pushString(CapitalizeFirstLetter(identifier->getIdentifier()));
+                } else {
+
+                    HIT_CHECK
                 }
             }
 
@@ -893,28 +898,19 @@ namespace sphip {
 
             Type *type = identifier->getSymbolInfo()->getType();
 
-            if(type->isPropType()) {
+            if(type->isPropType() || type->isPrimitiveType()) {
 
                 header.pushString(", ");
                 header.pushString(ConvertToCppType(type));
                 header.pushString(" d");
-                std::string temp = identifier->getIdentifier();
-                temp[0] = toupper(temp[0]);
-                header.pushString(temp);
+                header.pushString(CapitalizeFirstLetter(identifier->getIdentifier()));
             }
-        }
-
-        for(auto identifier: stmt->getUsedVariables()) {
-            // ! Probably not required
-            //TODO: Implement
-            //! IMPORTANT
-            HIT_CHECK
         }
 
         header.pushStringWithNewLine(") {");
         header.NewLine();
 
-        // TODO: Get the varaible name from the DSL.
+        // TODO: Get the variable name v from the DSL.
         // forall (v in g.nodes().filter(modified == True)) 
         header.pushStringWithNewLine("unsigned v = threadIdx.x + blockIdx.x * blockDim.x;");
         header.NewLine();
@@ -1719,8 +1715,7 @@ namespace sphip {
                 + ", dOffsetArray, dEdgelist)"
             );
 
-            HIT_CHECK
-            cout << "SET SOME FLAG TO GENERATE IS_AN_EDGE\n";
+            generateIsAnEdgeFunction = true;
         } else if(methodId == "num_nodes") {
 
             if(expr->getArgList().size() == 0) {

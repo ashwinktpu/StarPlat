@@ -364,6 +364,11 @@ namespace sphip {
         /**
          * TODO
         */
+        void GenerateIsAnEdgeFunction();
+
+        /**
+         * TODO
+        */
        void GenerateAtomicStatementFromReductionOp(reductionCallStmt *stmt, bool isMainFile);
 
         /**
@@ -400,6 +405,7 @@ namespace sphip {
          * TODO
         */
         void GeneratePropParamsAsFormalParams(bool isFunctionDefinition = true, bool isMainFile = true);
+
         
         /**
          * TODO
@@ -605,6 +611,7 @@ namespace sphip {
         Function* function;
         bool generateCsr;
 
+        bool generateIsAnEdgeFunction;
     };
 }  
 

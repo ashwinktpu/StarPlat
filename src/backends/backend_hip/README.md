@@ -10,11 +10,12 @@
 
 ### Post Completion of Major Stuff
 
-1. All additionally generated method to be made optional.
+
+1. All additionally generated method like isAnEdge (or even initArray?) to be made optional.
 1. Re-order the functions into the appropriate implementation files i.e make sure all hip generator functions are in the file hip_gen_functions.cpp
 1. Make use of return value of hip function to generate error messages
 1. Look into [[nodiscard]]
-1. In DSL, add new lines after eaach multi line block beginings
+1. In DSL i.e. generated code, add new lines after eaach multi line block beginings
 2. Add documentation for all the functions.
     1. Add styluing and formating options
 3. Add necessary assertions statements and exceptions throws

@@ -139,7 +139,52 @@ namespace sphip {
 
     void DslCppGenerator::GenerateAuxillaryFunctions() {
 
-        cout << "HIT UNIMPLEMENTED FUNCTION HIP_GEN_FUN\n"; //! TODO
+        if(generateIsAnEdgeFunction) {
+            
+            GenerateIsAnEdgeFunction();
+            generateIsAnEdgeFunction = false;
+        }
+    }
+
+    void DslCppGenerator::GenerateIsAnEdgeFunction() {
+
+        /**
+         * This is definitely a very stupid way to do this.
+         * If you are reading this, please don't judge me.
+        */
+        header.pushStringWithNewLine("__device__");
+        header.pushStringWithNewLine("bool IsAnEdge(const int s, const int d, const int* dOffsetArray, const int *dEdgeList) {");
+        header.NewLine();
+        header.pushStringWithNewLine("int startEdge = dOffsetArray[s];");
+        header.pushStringWithNewLine("int endEdge = dOffsetArray[s + 1] - 1;");
+        header.NewLine();
+        header.pushStringWithNewLine("if (dEdgeList[startEdge] == d) {");
+        header.pushStringWithNewLine("return true;");
+        header.pushStringWithNewLine("}");
+        header.NewLine();
+        header.pushStringWithNewLine("if (dEdgeList[endEdge] == d) {");
+        header.pushStringWithNewLine("return true;");
+        header.pushStringWithNewLine("}");
+        header.NewLine();
+        header.pushStringWithNewLine("int mid = (startEdge + endEdge) / 2;");
+        header.NewLine();
+        header.pushStringWithNewLine("while (startEdge <= endEdge) {");
+        header.NewLine();
+        header.pushStringWithNewLine("if (dEdgeList[mid] == d) {");
+        header.pushStringWithNewLine("return true;");
+        header.pushStringWithNewLine("}");
+        header.NewLine();
+        header.pushStringWithNewLine("if (d < dEdgeList[mid]) {");
+        header.pushStringWithNewLine("endEdge = mid - 1;");
+        header.pushStringWithNewLine("} else {");
+        header.pushStringWithNewLine("startEdge = mid + 1;");
+        header.pushStringWithNewLine("}");
+        header.NewLine();
+        header.pushStringWithNewLine("mid = (startEdge + endEdge) / 2;");
+        header.pushStringWithNewLine("}");
+        header.NewLine();
+        header.pushStringWithNewLine("return false;");
+        header.pushStringWithNewLine("}");
     }
 
     void DslCppGenerator::GenerateAuxillaryKernels() {
@@ -291,9 +336,11 @@ namespace sphip {
                 exit(1);
         }
 
+        assert(!isMainFile); // Well, if this is gonna be printed in the main file, then we have a problem.
+
         (isMainFile ? main : header).pushString(
-            atomicOp + "((" + type + "*) &" + stmt->getLeftId()->getIdentifier() + ", (" + 
-            type + ") "
+            atomicOp + "((" + type + "*) &d" + CapitalizeFirstLetter(stmt->getLeftId()->getIdentifier())
+             + ", (" + type + ") "
         );
         GenerateExpression(stmt->getRightSide(), isMainFile);
         (isMainFile ? main : header).pushStringWithNewLine(");");
