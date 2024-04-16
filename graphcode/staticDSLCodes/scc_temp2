@@ -26,6 +26,7 @@ function scc_fw(Graph g) {
                 if(inNbrCount == 0 || outNbrCount == 0) {
                     v.visit = true;
                     sccCount++;
+                    sccCount = sccCount;
                     noNewNode = false;
                 }
                 v.inDeg = inNbrCount;

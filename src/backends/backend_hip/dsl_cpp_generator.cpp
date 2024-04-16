@@ -1202,6 +1202,7 @@ namespace sphip {
 
                 GenerateInitKernelCall((*itr)->getAssignExpr(), isMainFile);
             }
+            generateInitKernel = true;
 
         } else if(methodId.compare(edgeCall) == 0) {
 
