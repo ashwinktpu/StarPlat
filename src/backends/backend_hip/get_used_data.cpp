@@ -268,6 +268,7 @@ usedVariables DslCppGenerator::GetDeclaredPropertyVariablesOfBlock(blockStatemen
     usedVariables currVars;
 
     for (statement *stmt : stmtList) {
+        cout << "STMT IN SOMEWHERE " << stmt->getTypeofNode() << "\n";
         if (stmt->getTypeofNode() == NODE_DECL) {
             declaration *decl = (declaration *)stmt;
 

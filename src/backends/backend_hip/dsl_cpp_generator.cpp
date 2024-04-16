@@ -9,6 +9,7 @@
 #include <cstring>
 #include <sstream>
 #include <stdexcept>
+#include <unordered_set>
 
 #include "../../ast/ASTHelper.cpp"
 #include "dsl_cpp_generator.h"
@@ -419,7 +420,7 @@ namespace sphip {
             if(type->getInnerTargetType()->isPrimitiveType()) {
 
                 Type *innerType = type->getInnerTargetType();
-
+                main.pushStringWithNewLine("// COMMENT");
                 main.pushString(ConvertToCppType(innerType));
                 main.AddSpace();
                 main.pushString("*");
@@ -847,6 +848,7 @@ namespace sphip {
                             "for(auto itr = " + sourceId + ".begin(); itr != " 
                             + sourceId + ".end(); itr++) "
                         );
+                        cout << "STMT for(auto itr)\n";
                         break;
                     }
 
@@ -1232,8 +1234,8 @@ namespace sphip {
         GenerateItrRevBfsBody(blockRbfs);
         main.pushStringWithNewLine("}");
 
-        GenerateForwardBfsKernel(blockBfs); //! TODO
-        GenerateReverseBfsKernel(blockRbfs); //! TODO
+        GenerateForwardBfsKernel(blockBfs); 
+        GenerateReverseBfsKernel(blockRbfs);
     }
 
     void DslCppGenerator::GenerateItrBfsBody(blockStatement *stmt) {
@@ -1243,7 +1245,8 @@ namespace sphip {
         main.pushStringWithNewLine("ForwardBfsKernel<<<numBlocks, numThreads>>>(");
         main.pushString("V, dOffsetArray, dEdgelist, dD, dLevel, dIsAllNodesTraversed");
 
-        GeneratePropParamsAsFormalParams(function->getParamList(), false, true); //! TODO
+        GeneratePropParamsAsFormalParams(false, true);
+        GenerateUsedVarsInBlockAsFormalParams(stmt, false, true);
         main.NewLine();
         main.pushStringWithNewLine(");");
 
@@ -1263,7 +1266,8 @@ namespace sphip {
         main.pushStringWithNewLine("ReverseBfsKernel<<<numBlocks, numThreads>>>(");
         main.pushString("V, dOffsetArray, dEdgelist, dD, dLevel, dIsAllNodesTraversed");
 
-        GeneratePropParamsAsFormalParams(function->getParamList(), false, true); //! TODO
+        GeneratePropParamsAsFormalParams(false, true); 
+        GenerateUsedVarsInBlockAsFormalParams(stmt, false, true);   
         main.NewLine();
         main.pushStringWithNewLine(");");
         main.pushStringWithNewLine("hLevel--;");
@@ -1281,7 +1285,8 @@ namespace sphip {
         header.pushString(
             "int V, int *dOffsetArray, int *dEdgelist, int *dD, int *dLevel, bool *dIsAllNodesTraversed"
         );
-        GeneratePropParamsAsFormalParams(function->getParamList(), true, false); 
+        GeneratePropParamsAsFormalParams(true, false); 
+        GenerateUsedVarsInBlockAsFormalParams(body, true, false);
         header.NewLine();
         header.pushStringWithNewLine(") {");
         header.NewLine();
@@ -1315,7 +1320,8 @@ namespace sphip {
         header.pushString(
             "int V, int *dOffsetArray, int *dEdgelist, int *dD, int *dLevel, bool *dIsAllNodesTraversed"
         );
-        GeneratePropParamsAsFormalParams(function->getParamList(), true, false);
+        GeneratePropParamsAsFormalParams(true, false);
+        GenerateUsedVarsInBlockAsFormalParams(body, true, false);
         header.NewLine();
         header.pushStringWithNewLine(") {");
         header.NewLine();
@@ -1329,7 +1335,7 @@ namespace sphip {
         header.NewLine();
         header.pushStringWithNewLine("auto grid = cooperative_groups::this_grid();");
         header.NewLine();
-        header.pushStringWithNewLine("if(dD[" + loopVar + "] == dLevel - 1) {");
+        header.pushStringWithNewLine("if(dD[" + loopVar + "] == *dLevel - 1) {");
         
         for(auto stmt: stmtList)
             GenerateStatement(stmt, false);
@@ -1339,11 +1345,13 @@ namespace sphip {
         header.NewLine();
     }
 
-    void DslCppGenerator::GeneratePropParamsAsFormalParams(
-        list<formalParam*> params, bool isFunctionDefinition, bool isMainFile
-    ) {
+    void DslCppGenerator::GeneratePropParamsAsFormalParams(bool isFunctionDefinition, bool isMainFile) {
 
-        for(auto itr = params.begin(); itr != params.end(); itr++) {
+        dslCodePad &targetFile = isMainFile ? main : header;
+
+        list<formalParam*> paramList = function->getParamList();
+
+        for(auto itr = paramList.begin(); itr != paramList.end(); itr++) {
 
             Type *type = (*itr)->getType();
 
@@ -1352,19 +1360,73 @@ namespace sphip {
                 if(type->getInnerTargetType()->isPrimitiveType()) {
 
                     std::string var("d" + CapitalizeFirstLetter((*itr)->getIdentifier()->getIdentifier()));
-
+                    cout << "STMT PROP " << var << "\n";
                     if(isFunctionDefinition) {
-                        header.pushString(", ");
-                        header.pushString(ConvertToCppType(type->getInnerTargetType()));
-                        header.AddSpace();
-                        header.pushString("*");
-                        header.pushString(var);
+                        targetFile.pushString(", ");
+                        targetFile.pushString(ConvertToCppType(type->getInnerTargetType()));
+                        targetFile.AddSpace();
+                        targetFile.pushString("*");
+                        targetFile.pushString(var);
                     } else {
-                        main.pushString(", ");
-                        main.pushString(var);
+                        targetFile.pushString(", ");
+                        targetFile.pushString(var);
                     }
                 } else {
 
+                    HIT_CHECK
+                }
+            } else {
+
+                HIT_CHECK
+                std::cout << "UNIMPL " << (*itr)->getIdentifier()->getIdentifier() << "\n";
+            }
+        }
+    }
+
+    void DslCppGenerator::GenerateUsedVarsInBlockAsFormalParams(
+        blockStatement *stmt, bool isFunctionDefinition, bool isMainFile
+    ) {
+
+        dslCodePad &targetFile = isMainFile ? main : header;
+        usedVariables usedVars = GetUsedVariablesInBlock(stmt); 
+
+        /**
+         * NOTE:
+         * 
+         * Below section and the first for loop is used to find out
+         * the variable which are prop variables. If it is a prop variable
+         * then we ignore it as it will be handled by the GeneratePropParamsAsFormalParams
+        */
+        std::unordered_set<std::string> propVars;
+        list<formalParam*> paramList = function->getParamList();
+        for(auto itr = paramList.begin(); itr != paramList.end(); itr++) {
+            propVars.insert((*itr)->getIdentifier()->getIdentifier());
+        }
+
+        for(auto identifier: usedVars.getVariables()) {
+
+            if(propVars.find(identifier->getIdentifier()) != propVars.end()) {
+                continue;
+            }
+
+            Type *type = identifier->getSymbolInfo()->getType();
+
+            if(type->isPropType()) {
+
+                if(type->getInnerTargetType()->isPrimitiveType()) {
+
+                    std::string var("d" + CapitalizeFirstLetter(identifier->getIdentifier()));
+                    if(isFunctionDefinition) {
+                        targetFile.pushString(", ");
+                        targetFile.pushString(ConvertToCppType(type->getInnerTargetType()));
+                        targetFile.AddSpace();
+                        targetFile.pushString("*");
+                        targetFile.pushString(var);
+                    } else {
+                        targetFile.pushString(", ");
+                        targetFile.pushString(var);
+                    }
+                } else {
                     HIT_CHECK
                 }
             } else {
@@ -1411,11 +1473,12 @@ namespace sphip {
         if(methodId.compare(nodeCall) == 0) {
 
             list<argument*> argList = proc->getArgList();
-
+            
+            main.pushStringWithNewLine("// SOMETHING");
             for(auto itr =  argList.begin(); itr != argList.end(); itr++) {
+                cout << "STMT " << (*itr)->getAssignExpr()->getId()->getIdentifier() << "\n";
                 GenerateInitKernelCall((*itr)->getAssignExpr(), isMainFile);
             }
-            
 
         } else if(methodId.compare(edgeCall) == 0) {
 

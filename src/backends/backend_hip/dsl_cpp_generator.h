@@ -399,8 +399,13 @@ namespace sphip {
         /**
          * TODO
         */
-        void GeneratePropParamsAsFormalParams(list<formalParam*> params, bool isFunctionDefinition = true, bool isMainFile = true);
+        void GeneratePropParamsAsFormalParams(bool isFunctionDefinition = true, bool isMainFile = true);
         
+        /**
+         * TODO
+        */
+        void GenerateUsedVarsInBlockAsFormalParams(blockStatement *stmt, bool isFunctionDefinition = true, bool isMainFile = true);
+
         /**
          * TODO
         */
