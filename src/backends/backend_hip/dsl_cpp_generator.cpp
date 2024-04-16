@@ -323,7 +323,7 @@ namespace sphip {
         case NODE_ASSIGN:
             {
                 assignment *asst = static_cast<assignment*>(stmt);
-                cout << "STMT " << (asst->isDeviceAssignment() ? "DDDDD\n" : "NNNNN\n");
+                cout << "STMT " << (asst->isDeviceAssignment() ? "Device\n" : "Normal\n");
                 if(asst->isDeviceAssignment())
                     GenerateDeviceAssignment(asst, isMainFile);
                 else
@@ -550,7 +550,7 @@ namespace sphip {
             PropAccess *propId = stmt->getPropId();
             if(stmt->getAtomicSignal()) {
 
-                targetFile.pushString("atomicAdd(&d");
+                targetFile.pushString("atomicAdd(&");
                 isAtomic = true;                
             }
 
@@ -558,6 +558,7 @@ namespace sphip {
                 isResult = true;
             }
 
+            targetFile.pushString("d");
             targetFile.pushString(CapitalizeFirstLetter(propId->getIdentifier2()->getIdentifier()));
             targetFile.pushString("[");
             targetFile.pushString(propId->getIdentifier1()->getIdentifier());
@@ -743,14 +744,14 @@ namespace sphip {
                         targetFile.pushStringWithNewLine("}");
                         targetFile.NewLine();
                         targetFile.pushStringWithNewLine("grid.sync();");
-                        cout << "STMT XXXXXXX\n";
+                        cout << "STMT grid.sync()\n";
                     } else {
                         GenerateStatement(stmt->getBody(), isMainFile);
                         targetFile.pushStringWithNewLine("}");
                     }
 
                 } else {
-                    
+
                     GenerateStatement(stmt->getBody(), false);
                 } 
 
@@ -1242,7 +1243,7 @@ namespace sphip {
         main.pushStringWithNewLine("ForwardBfsKernel<<<numBlocks, numThreads>>>(");
         main.pushString("V, dOffsetArray, dEdgelist, dD, dLevel, dIsAllNodesTraversed");
 
-        GeneratePropParamsAsFormalParams(function->getParamList(), true, false); //! TODO
+        GeneratePropParamsAsFormalParams(function->getParamList(), false, true); //! TODO
         main.NewLine();
         main.pushStringWithNewLine(");");
 
@@ -1262,7 +1263,7 @@ namespace sphip {
         main.pushStringWithNewLine("ReverseBfsKernel<<<numBlocks, numThreads>>>(");
         main.pushString("V, dOffsetArray, dEdgelist, dD, dLevel, dIsAllNodesTraversed");
 
-        GeneratePropParamsAsFormalParams(function->getParamList(), true, false); //! TODO
+        GeneratePropParamsAsFormalParams(function->getParamList(), false, true); //! TODO
         main.NewLine();
         main.pushStringWithNewLine(");");
         main.pushStringWithNewLine("hLevel--;");
@@ -1293,7 +1294,7 @@ namespace sphip {
         header.pushStringWithNewLine("return;");
         header.pushStringWithNewLine("}");
         header.NewLine();
-        header.pushStringWithNewLine("if(dD[" + loopVar + "] == dLevel) {");
+        header.pushStringWithNewLine("if(dD[" + loopVar + "] == *dLevel) {");
         header.NewLine();
 
         for(auto stmt: stmtList) {
@@ -1314,8 +1315,8 @@ namespace sphip {
         header.pushString(
             "int V, int *dOffsetArray, int *dEdgelist, int *dD, int *dLevel, bool *dIsAllNodesTraversed"
         );
-        header.NewLine();
         GeneratePropParamsAsFormalParams(function->getParamList(), true, false);
+        header.NewLine();
         header.pushStringWithNewLine(") {");
         header.NewLine();
         header.pushStringWithNewLine(
@@ -1339,9 +1340,38 @@ namespace sphip {
     }
 
     void DslCppGenerator::GeneratePropParamsAsFormalParams(
-        list<formalParam*> params, bool isTypeNeeded, bool isMainFile
+        list<formalParam*> params, bool isFunctionDefinition, bool isMainFile
     ) {
-        // throw std::runtime_error("GeneratePropParamsAsFormalParams not implemented");
+
+        for(auto itr = params.begin(); itr != params.end(); itr++) {
+
+            Type *type = (*itr)->getType();
+
+            if(type->isPropType()) {
+
+                if(type->getInnerTargetType()->isPrimitiveType()) {
+
+                    std::string var("d" + CapitalizeFirstLetter((*itr)->getIdentifier()->getIdentifier()));
+
+                    if(isFunctionDefinition) {
+                        header.pushString(", ");
+                        header.pushString(ConvertToCppType(type->getInnerTargetType()));
+                        header.AddSpace();
+                        header.pushString("*");
+                        header.pushString(var);
+                    } else {
+                        main.pushString(", ");
+                        main.pushString(var);
+                    }
+                } else {
+
+                    HIT_CHECK
+                }
+            } else {
+
+                HIT_CHECK
+            }
+        }
     }
 
     void DslCppGenerator::GenerateItrRevBfs(iterateReverseBFS* stmt, bool isMainFile) {

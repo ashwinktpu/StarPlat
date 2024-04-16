@@ -399,7 +399,7 @@ namespace sphip {
         /**
          * TODO
         */
-        void GeneratePropParamsAsFormalParams(list<formalParam*> params, bool isTypeNeeded = true, bool isMainFile = true);
+        void GeneratePropParamsAsFormalParams(list<formalParam*> params, bool isFunctionDefinition = true, bool isMainFile = true);
         
         /**
          * TODO
