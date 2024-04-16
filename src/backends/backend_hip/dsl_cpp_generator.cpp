@@ -133,6 +133,9 @@ namespace sphip {
         targetFile.pushString(")");
         if(!isMainFile) {
             targetFile.pushString(";");
+            targetFile.NewLine();
+            targetFile.NewLine();
+            targetFile.pushStringWithNewLine("__device__ bool IsAnEdge(const int, const int, const int*, const int*);");
         } else {
             targetFile.pushStringWithNewLine(" {");        
         }
@@ -458,16 +461,14 @@ namespace sphip {
             const std::string varName(stmt->getdeclId()->getIdentifier());
             targetFile.pushString(varType);
             targetFile.AddSpace();
-            targetFile.pushString("h");
+            targetFile.pushString("*h");
             targetFile.pushString(CapitalizeFirstLetter(varName));
             if(stmt->isInitialized()) {
 
                 targetFile.pushString(" = ");
 
                 if (stmt->getExpressionAssigned()->getExpressionFamily() == EXPR_PROCCALL) {
-                    cout << varType << " UNIMPL " << varName << "\n";
                     HIT_CHECK
-                    // TODO: Is cast required here? How to make this more general?
                 }
                 GenerateExpression(stmt->getExpressionAssigned(), isMainFile);
             }
@@ -636,7 +637,7 @@ namespace sphip {
 
                     GenerateHipMemcpyStr(
                         "d" + CapitalizeFirstLetter(identifier->getIdentifier()),
-                        "h" + CapitalizeFirstLetter(identifier->getIdentifier()),
+                        "&h" + CapitalizeFirstLetter(identifier->getIdentifier()),
                         ConvertToCppType(type), "1", true
                     );
                 }
@@ -675,15 +676,6 @@ namespace sphip {
                 }
             }
 
-            for(auto identifier: stmt->getUsedVariables()) {
-
-                // Either the above for block or this for block is required. I think!
-                // Look into it.
-                //TODO: Implement
-                //! IMPORTANT
-                HIT_CHECK
-            }
-
             main.pushStringWithNewLine(");");
             main.pushStringWithNewLine("hipDeviceSynchronize();");
 
@@ -695,7 +687,7 @@ namespace sphip {
                 
                 if(type->isPrimitiveType()) {
                     GenerateHipMemcpyStr(
-                        "h" + CapitalizeFirstLetter(iden->getIdentifier()),
+                        "&h" + CapitalizeFirstLetter(iden->getIdentifier()),
                         "d" + CapitalizeFirstLetter(iden->getIdentifier()),
                         ConvertToCppType(type), "1", false
                     );

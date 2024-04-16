@@ -139,6 +139,12 @@ namespace sphip {
 
     void DslCppGenerator::GenerateAuxillaryFunctions() {
 
+        /**
+         * NOTE
+         * 
+         * Make sure that the declaration of the function is done in the header file.
+        */
+
         if(generateIsAnEdgeFunction) {
             
             GenerateIsAnEdgeFunction();
