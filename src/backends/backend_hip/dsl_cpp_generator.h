@@ -9,6 +9,7 @@
 #define HIP_DSL_CPP_GENERATOR
 
 #include <unordered_map>
+#include <unordered_set>
 
 #include "../../ast/ASTNodeTypes.hpp"
 #include "../../symbolutil/SymbolTable.h"
@@ -617,7 +618,19 @@ namespace sphip {
         Function* function;
         bool generateCsr;
 
-        bool generateIsAnEdgeFunction;
+        bool generateIsAnEdgeFunction = false;
+        /**
+         * TODO: The below boolean might not be a good idea. Check if it can be omitted.
+         * Added to handle dereferencing of pointers in device code. Without this
+         * the pointers are themselves taken for Arithmetic operations.
+        */
+        bool isCurrentExpressionArithmeticOrLogical = false; // Not used?
+
+        /**
+         * TODO: The below set can also be replaced. If HipHostMalloc is used then
+         * most of the problems can be fixed.
+        */
+        std::unordered_set<std::string> primitiveVarsInKernel;
     };
 }  
 

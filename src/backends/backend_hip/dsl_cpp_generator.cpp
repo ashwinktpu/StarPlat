@@ -89,7 +89,7 @@ namespace sphip {
         GenerateBlock(func->getBlockStatement(), false);
         GenerateTimerStop();
         
-        GenerateHipMemcpyParams(func->getParamList()); // TODO: Check if this is required
+        GenerateHipMemcpyParams(func->getParamList()); // TODO: This is required when the resullt is to be pass back via a paramenter
         HIT_CHECK // Add increment function count method. refer cuda
         main.pushStringWithNewLine("}");
     }
@@ -121,6 +121,8 @@ namespace sphip {
                 parameterName = "h" + parameterName;
             }
 
+            
+
             targetFile.pushString(parameterName);
 
             if(!isMainFile && type->isGraphType())
@@ -136,7 +138,10 @@ namespace sphip {
             targetFile.pushString(";");
             targetFile.NewLine();
             targetFile.NewLine();
-            targetFile.pushStringWithNewLine("__device__ bool IsAnEdge(const int, const int, const int*, const int*);");
+            /**
+             * All auxillary function declaratiions should be added here
+            */
+            targetFile.pushStringWithNewLine("__device__ \nbool IsAnEdge(const int, const int, const int*, const int*);");
         } else {
             targetFile.pushStringWithNewLine(" {");        
         }
@@ -228,7 +233,7 @@ namespace sphip {
                 }
             }
         } else if (type->isNodeEdgeType()) {
-            return "int";  // TODO: need to be modified. Maybe other types as well?
+            return "int"; 
 
         } else if (type->isGraphType()) {
             return "graph&";
@@ -667,8 +672,8 @@ namespace sphip {
 
             targetFile.pushString("d");
             targetFile.pushString(CapitalizeFirstLetter(propId->getIdentifier2()->getIdentifier()));
-            targetFile.pushString("[");
-            targetFile.pushString(propId->getIdentifier1()->getIdentifier());
+            targetFile.pushString("[d");
+            targetFile.pushString(CapitalizeFirstLetter(propId->getIdentifier1()->getIdentifier()));
             targetFile.pushString("]");
 
         } else {
@@ -706,7 +711,7 @@ namespace sphip {
 
         if(stmt->getElseBody() != NULL) {
 
-            targetFile.pushStringWithNewLine(" else {");
+            targetFile.pushStringWithNewLine("else {");
             GenerateStatement(stmt->getElseBody(), isMainFile);
             targetFile.pushStringWithNewLine("}");
         } else {
@@ -839,7 +844,7 @@ namespace sphip {
                          * the BC implementation.
                         */ 
 
-                        targetFile.pushStringWithNewLine("if (dD[" + src + "] == *dLevel) {");
+                        targetFile.pushStringWithNewLine("if (dD[d" + CapitalizeFirstLetter(src) + "] == *dLevel) {");
                         GenerateBlock(static_cast<blockStatement*>(body), false, false);
                         targetFile.pushStringWithNewLine("}");
                         targetFile.pushStringWithNewLine("}");
@@ -918,6 +923,8 @@ namespace sphip {
 
             if(IsNeighbourIteration(stmt->getExtractElementFunc()->getMethodId()->getIdentifier())) {
 
+                list<argument*> argumentList = stmt->getExtractElementFunc()->getArgList();
+
                 if(strcmp(stmt->getExtractElementFunc()->getMethodId()->getIdentifier(), "neighbors") == 0) {
 
                     assert(stmt->getExtractElementFunc()->getArgList().size() == 1);
@@ -945,9 +952,10 @@ namespace sphip {
                      * 
                      * FIXME: The whole GenerateForAll function needs to be restructured.
                     */
+                    Identifier *nodeNeighbour = argumentList.front()->getExpr()->getId();
                     targetFile.pushStringWithNewLine(
-                        "for(int edge = dRevOffsetArray[" + std::string(iterator->getIdentifier()) + "];"
-                        " edge < dRevOffsetArray[" + std::string(iterator->getIdentifier()) + " + 1]; edge++) {"
+                        "for(int edge = dRevOffsetArray[d" + CapitalizeFirstLetter(nodeNeighbour->getIdentifier()) + "];"
+                        " edge < dRevOffsetArray[d" + CapitalizeFirstLetter(nodeNeighbour->getIdentifier()) + " + 1]; edge++) {"
                     );
                     targetFile.pushStringWithNewLine(
                         "int d" + CapitalizeFirstLetter(iterator->getIdentifier()) + " = dSrcList[edge];"
@@ -1025,30 +1033,31 @@ namespace sphip {
 
             Type *type = identifier->getSymbolInfo()->getType();
 
+            // TODO: Merge both to reduce LOCs
             if(type->isPropType()) {
-
                 header.pushString(", ");
                 header.pushString(ConvertToCppType(type));
                 header.pushString(" d");
                 header.pushString(CapitalizeFirstLetter(identifier->getIdentifier()));
             } else if (type->isPrimitiveType()) {
-                
                 header.pushString(", ");
                 header.pushString(ConvertToCppType(type));
                 header.pushString(" *d");
                 header.pushString(CapitalizeFirstLetter(identifier->getIdentifier()));
-
+                primitiveVarsInKernel.insert(identifier->getIdentifier());
             }
         }
 
         header.pushStringWithNewLine(") {");
         header.NewLine();
 
-        // TODO: Get the variable name v from the DSL.
+        // TODO: Get the variable name  (now dV) from the DSL.
         // forall (v in g.nodes().filter(modified == True)) 
-        header.pushStringWithNewLine("unsigned dV = threadIdx.x + blockIdx.x * blockDim.x;");
+        header.pushStringWithNewLine(
+            "unsigned d" + CapitalizeFirstLetter(stmt->getIterator()->getIdentifier()) + " = blockIdx.x * blockDim.x + threadIdx.x;"
+        );
         header.NewLine();
-        header.pushStringWithNewLine("if (dV >= V) {");
+        header.pushStringWithNewLine("if (d" + CapitalizeFirstLetter(stmt->getIterator()->getIdentifier()) +" >= V) {");
         header.pushStringWithNewLine("return;");
         header.pushStringWithNewLine("}");
         header.NewLine();
@@ -1064,6 +1073,7 @@ namespace sphip {
 
         header.pushStringWithNewLine("}");
         header.NewLine();
+        primitiveVarsInKernel.clear();
     }
 
     blockStatement* DslCppGenerator::UpdateForAllBody(forallStmt *stmt) {
@@ -1411,7 +1421,7 @@ namespace sphip {
         assert(body->getTypeofNode() == NODE_BLOCKSTMT);
         list<statement*> stmtList = body->returnStatements();
 
-        header.pushStringWithNewLine("__global__ void ForwardBfsKernel(");
+        header.pushStringWithNewLine("__global__ \nvoid ForwardBfsKernel(");
         header.pushString(
             "int V, int *dOffsetArray, int *dEdgelist, int *dD, int *dLevel, bool *dIsAllNodesTraversed"
         );
@@ -1421,7 +1431,7 @@ namespace sphip {
         header.pushStringWithNewLine(") {");
         header.NewLine();
         header.pushStringWithNewLine(
-            "unsigned " + loopVar + " = threadIdx.x + blockIdx.x * blockDim.x;"
+            "unsigned d" + CapitalizeFirstLetter(loopVar) + " = threadIdx.x + blockIdx.x * blockDim.x;"
         );
 
         header.NewLine();
@@ -1429,7 +1439,7 @@ namespace sphip {
         header.pushStringWithNewLine("return;");
         header.pushStringWithNewLine("}");
         header.NewLine();
-        header.pushStringWithNewLine("if(dD[" + loopVar + "] == *dLevel) {");
+        header.pushStringWithNewLine("if(dD[d" + CapitalizeFirstLetter(loopVar) + "] == *dLevel) {");
         header.NewLine();
 
         for(auto stmt: stmtList) {
@@ -1438,15 +1448,16 @@ namespace sphip {
 
         header.pushStringWithNewLine("}");
         header.pushStringWithNewLine("}");
+        header.NewLine();
     }
 
     void DslCppGenerator::GenerateReverseBfsKernel(blockStatement *body) {
 
-        const std::string loopVar("v");
+        const std::string loopVar("v"); //TODO Make generic
         assert(body->getTypeofNode() == NODE_BLOCKSTMT);
         list<statement*> stmtList = body->returnStatements();
 
-        header.pushStringWithNewLine("__global__ void ReverseBfsKernel(");
+        header.pushStringWithNewLine("__global__ \nvoid ReverseBfsKernel(");
         header.pushString(
             "int V, int *dOffsetArray, int *dEdgelist, int *dD, int *dLevel, bool *dIsAllNodesTraversed"
         );
@@ -1456,16 +1467,16 @@ namespace sphip {
         header.pushStringWithNewLine(") {");
         header.NewLine();
         header.pushStringWithNewLine(
-            "unsigned " + loopVar + " = threadIdx.x + blockIdx.x * blockDim.x;"
+            "unsigned d" + CapitalizeFirstLetter(loopVar) + " = threadIdx.x + blockIdx.x * blockDim.x;"
         );
         header.NewLine();
-        header.pushStringWithNewLine("if(" + loopVar + " >= V) {"); 
+        header.pushStringWithNewLine("if(d" + CapitalizeFirstLetter(loopVar) + " >= V) {"); 
         header.pushStringWithNewLine("return;");
         header.pushStringWithNewLine("}");
         header.NewLine();
         header.pushStringWithNewLine("auto grid = cooperative_groups::this_grid();");
         header.NewLine();
-        header.pushStringWithNewLine("if(dD[" + loopVar + "] == *dLevel - 1) {");
+        header.pushStringWithNewLine("if(dD[d" + CapitalizeFirstLetter(loopVar) + "] == *dLevel - 1) {");
         
         for(auto stmt: stmtList)
             GenerateStatement(stmt, false);
@@ -1647,7 +1658,7 @@ namespace sphip {
         (isMainFile ? main : header).pushStringWithNewLine(";"); // FIXME: Shouldn't this be to main or header?
     }        
     
-    void DslCppGenerator::GenerateExpression(Expression *expr, bool isMainFile, bool isNotToUpper, bool isAtomic) {
+    void DslCppGenerator::GenerateExpression(Expression *expr, bool isMainFile, bool shouldPrefix, bool isAtomic) {
 
 
         // (isMainFile ? main : header).pushStringWithNewLine("\n/* Expression */");
@@ -1758,15 +1769,29 @@ namespace sphip {
 
     void DslCppGenerator::GenerateExpressionIdentifier(Identifier* id, bool isMainFile, bool shouldPrefix) {
 
+        
 
-        const std::string prefix = shouldPrefix ? (isMainFile ? "h" : "d") : "";
+        // This is not a generic solution. Please check the comment in 
+        // GenerateExpressionArithmeticOrLogical for more details.
 
-        // if(isNotToUpper) {
-        //     (isMainFile ? main : header).pushString(id->getIdentifier());
-        //     return;
-        // }
+        if(primitiveVarsInKernel.find(id->getIdentifier()) != primitiveVarsInKernel.end()) {
+            // (isMainFile ? main : header).pushString(CapitalizeFirstLetter(id->getIdentifier()));
+            header.pushString("(*d" + CapitalizeFirstLetter(id->getIdentifier()) + ")");
+            return;
+        }
 
+        const std::string prefix(shouldPrefix ? (isMainFile ? "h" : "d") : "");
         (isMainFile ? main : header).pushString(prefix + CapitalizeFirstLetter(id->getIdentifier()));
+
+
+        // bool shouldDereference = false;
+        
+        // if(id->getSymbolInfo() != NULL)
+        //     shouldDereference = id->getSymbolInfo()->getType()->isPrimitiveType() &&  isCurrentExpressionArithmeticOrLogical;
+        // // This is just bad coding.
+        // const std::string prefix1 = shouldPrefix ? (isMainFile ? "h" : (shouldDereference ? "*d" : "d")) : "";
+        // // std::string prefix = isMainFile ? "h" : "d";
+        // (isMainFile ? main : header).pushString(prefix1 + CapitalizeFirstLetter(id->getIdentifier()));
     }
 
     void DslCppGenerator::GenerateExpressionPropId(PropAccess* propId, bool isMainFile) {
@@ -1788,6 +1813,20 @@ namespace sphip {
     ) {
 
         dslCodePad &target = isMainFile ? main : header;
+        /**
+         * FIXME: TODO: The below approach is not good. This has been added
+         * to avoid the issue of not dereferencing the pointer. This 
+         * boolean is checked while generating Identifiers. This will go 
+         * wrong when Relational Expressions use passed parameters in
+         * device code. The underlying problem is that we are passing all
+         * variables as pointers into the kernel.
+         * The solution is to use something like hipHostMalloc, this way the 
+         * primitives can be used as primitives and not as pointers.
+         * 
+         * This can go wrong in Arithmetic ops itself if we have the variable i
+         * local and we still append * to it. This is a hacky solution.
+         */ 
+        isCurrentExpressionArithmeticOrLogical = true;
 
         if(expr->hasEnclosedBrackets())
             target.pushString("(");
@@ -1808,6 +1847,7 @@ namespace sphip {
 
         if(expr->hasEnclosedBrackets())
             target.pushString(")");
+        isCurrentExpressionArithmeticOrLogical = false;
     }
 
     void DslCppGenerator::GenerateExpressionRelational(Expression* expr, bool isMainFile) {

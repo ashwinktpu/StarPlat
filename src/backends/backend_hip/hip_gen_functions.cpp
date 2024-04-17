@@ -75,25 +75,30 @@ namespace sphip {
 
             Type *type = (*itr)->getType();
 
-            if(type->isPropType() && type->getInnerTargetType()->isPrimitiveType()) {
+            if(
+                (type->isPropType() && type->getInnerTargetType()->isPrimitiveType()) ||
+                (type->isPrimitiveType())            
+            ) {
 
-                main.pushString(ConvertToCppType(type->getInnerTargetType()));
-                main.pushString(" *");
+                Type *innerType = type->isPrimitiveType() ? type : type->getInnerTargetType();
 
-                std::string identifier = (*itr)->getIdentifier()->getIdentifier();
-                identifier[0] = std::toupper(identifier[0]);
-                main.pushString("d" + identifier);
+                main.pushString(ConvertToCppType(innerType));
+                // main.pushString(" *");
+
+                const std::string identifier = CapitalizeFirstLetter((*itr)->getIdentifier()->getIdentifier());
+                main.pushString(" *d");
+                main.pushString(identifier);
                 main.pushStringWithNewLine(";");
 
-                GenerateHipMalloc(type, identifier);
+                GenerateHipMalloc(innerType, identifier);
                 GenerateHipMemcpyStr(
                     "d" + identifier, 
-                    "h" + identifier, 
-                    ConvertToCppType(type->getInnerTargetType()), 
-                    (type->isPropNodeType() ? "V" : "E"), 
+                    (type->isPrimitiveType() ? "&h" : "h") + identifier, 
+                    ConvertToCppType(innerType), 
+                    type->isPrimitiveType() ? "1" : (type->isPropNodeType() ? "V" : "E"), 
                     true
                 );
-            } 
+            }
         }
 
     }
@@ -110,8 +115,8 @@ namespace sphip {
 
         main.pushStringWithNewLine(
             "hipMalloc(&d" + identifier + ", sizeof(" + 
-            ConvertToCppType(type->getInnerTargetType()) + ") * (" +
-            (type->isPropNodeType() ? "V" : "E") + "));"
+            ConvertToCppType(type) + ") * (" +
+            (type->isPrimitiveType() ? "1" : (type->isPropNodeType() ? "V" : "E")) + "));"
         );
     }
 
@@ -238,7 +243,7 @@ namespace sphip {
 
         header.pushStringWithNewLine("template <typename T>");
         header.pushStringWithNewLine("__global__");
-        header.pushStringWithNewLine("void initArray(const unsigned V, T* dArray, T value) {");
+        header.pushStringWithNewLine("void initArray(const unsigned V, T *dArray, T value) {");
         header.pushStringWithNewLine("unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;");
         header.pushStringWithNewLine("if(idx < V) {");
         header.pushStringWithNewLine("dArray[idx] = value;");

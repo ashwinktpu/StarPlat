@@ -189,6 +189,10 @@ temp: #TODO: Remove or make it a little more generic
 	./StarPlat -s -f ../graphcode/staticDSLCodes/bc_dslV2 -b hip
 	./StarPlat -s -f ../graphcode/staticDSLCodes/sssp_dslV3 -b hip
 	./StarPlat -s -f ../graphcode/staticDSLCodes/triangle_counting_dsl -b hip
+	-hipcc ../graphcode/generated_hip/sssp_dslV3.cc
+	-hipcc ../graphcode/generated_hip/triangle_counting_dsl.cc
+	-hipcc ../graphcode/generated_hip/bc_dslV2.cc
+	-hipcc ../graphcode/generated_hip/PageRankDSLV3.cc
 
 # Below flag used to test the hip code.
 hip: all # Is it possible to make this for only hip

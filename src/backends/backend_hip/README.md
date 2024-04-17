@@ -6,11 +6,12 @@
 2. Check other comment in manual code impl
 3. Add another flag to indicate if timing stuff have to be generated
 4. Remove all HIT_CHECKs
+5. Make a proper README, with instructions of usage.
 
 
 ### Post Completion of Major Stuff
 
-
+1. Correct the spacing between pointer types and varnames
 1. All additionally generated method like isAnEdge (or even initArray?) to be made optional.
 1. Re-order the functions into the appropriate implementation files i.e make sure all hip generator functions are in the file hip_gen_functions.cpp
 1. Make use of return value of hip function to generate error messages
