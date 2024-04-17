@@ -822,12 +822,12 @@ namespace sphip {
                          * The below piece of code is not at all Generic. It is specific to 
                          * the BC implementation.
                         */
-                       targetFile.pushStringWithNewLine("if (dD[" + src + "] == -1) {");
-                       targetFile.pushStringWithNewLine("dD[" + src + "] = *dLevel + 1;");
+                       targetFile.pushStringWithNewLine("if (dD[d" + CapitalizeFirstLetter(src) + "] == -1) {");
+                       targetFile.pushStringWithNewLine("dD[d" + CapitalizeFirstLetter(src) + "] = *dLevel + 1;");
                        targetFile.pushStringWithNewLine("*dIsAllNodesTraversed = false;");
                        targetFile.pushStringWithNewLine("}");
                        targetFile.NewLine();
-                       targetFile.pushStringWithNewLine("if (dD[" + src + "] == *dLevel + 1) {");
+                       targetFile.pushStringWithNewLine("if (dD[d" + CapitalizeFirstLetter(src) + "] == *dLevel + 1) {");
                        GenerateBlock(static_cast<blockStatement*>(body), false, false);
                        targetFile.pushStringWithNewLine("}");
                        targetFile.pushStringWithNewLine("}");
@@ -849,6 +849,8 @@ namespace sphip {
                         // targetFile.pushStringWithNewLine("{ // Comment " + std::to_string(stmt->getBody()->getTypeofNode()));
                         // targetFile.pushStringWithNewLine("}");
                         HIT_CHECK
+                        GenerateStatement(stmt->getBody(), isMainFile);
+                        targetFile.pushStringWithNewLine("}");
                     }
 
                 } else {
@@ -922,13 +924,13 @@ namespace sphip {
 
                     // TODO: Make this generic
                     targetFile.pushStringWithNewLine(
-                        "for(int edge = dOffsetArray[v]; edge < dOffsetArray[v + 1]; edge++) {"
+                        "for(int edge = dOffsetArray[dV]; edge < dOffsetArray[dV + 1]; edge++) {"
                     );
                     targetFile.pushStringWithNewLine(
                         "int d" + CapitalizeFirstLetter(iterator->getIdentifier()) + " = dEdgelist[edge];" 
                     );
-                    GenerateStatement(stmt->getBody(), isMainFile);
-                    targetFile.pushStringWithNewLine("}");
+                    // GenerateStatement(stmt->getBody(), isMainFile);
+                    // targetFile.pushStringWithNewLine("}");
 
 
                 } else if(strcmp(stmt->getExtractElementFunc()->getMethodId()->getIdentifier(), "nodes_to") == 0) {
@@ -950,8 +952,8 @@ namespace sphip {
                     targetFile.pushStringWithNewLine(
                         "int d" + CapitalizeFirstLetter(iterator->getIdentifier()) + " = dSrcList[edge];"
                     );
-                    GenerateStatement(stmt->getBody(), isMainFile);
-                    targetFile.pushStringWithNewLine("}");
+                    // GenerateStatement(stmt->getBody(), isMainFile);
+                    // targetFile.pushStringWithNewLine("}");
                     
                 } else {
                     HIT_CHECK
@@ -1269,7 +1271,7 @@ namespace sphip {
                 targetFile.pushString("d" + CapitalizeFirstLetter(stmt->getAssignedId()->getIdentifier()));
                 //TODO: Get these variables from the DSL and INT_MAX as well
                 //Check stmt->getIterator() to get v
-                targetFile.pushString("[v] != INT_MAX && ");
+                targetFile.pushString("[dV] != INT_MAX && ");
                 GenerateExpressionPropId(stmt->getTargetPropId(), isMainFile);
                 targetFile.pushString(" > ");
                 targetFile.pushString("dUpdated" + CapitalizeFirstLetter(stmt->getAssignedId()->getIdentifier()));
@@ -1423,7 +1425,7 @@ namespace sphip {
         );
 
         header.NewLine();
-        header.pushStringWithNewLine("if(" + loopVar + " >= V) {");
+        header.pushStringWithNewLine("if(d" + CapitalizeFirstLetter(loopVar) + " >= V) {");
         header.pushStringWithNewLine("return;");
         header.pushStringWithNewLine("}");
         header.NewLine();
@@ -1678,7 +1680,7 @@ namespace sphip {
             GenerateExpressionInfinity(expr, isMainFile);
 
         else if(expr->isIdentifierExpr())
-            GenerateExpressionIdentifier(expr->getId(), isMainFile, isNotToUpper);
+            GenerateExpressionIdentifier(expr->getId(), isMainFile);
 
         else if(expr->isPropIdExpr())
             GenerateExpressionPropId(expr->getPropId(), isMainFile);
