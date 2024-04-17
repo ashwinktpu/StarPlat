@@ -99,7 +99,7 @@ namespace sphip {
     }
 
     void DslCppGenerator::GenerateHipMemcpyParams(const list<formalParam*> &paramList) {
-
+        HIT_CHECK
         //TODO
     }
 

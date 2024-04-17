@@ -16,6 +16,7 @@
 
 #include "analyzer_utility.h"
 
+#define HIT_CHECK std::cout << "UNIMPL Hit at line " << __LINE__ << " of function " << __func__ << " in file " << __FILE__ << "\n";
 #define propKey pair<TableEntry *, TableEntry *>
 
 /**
@@ -269,6 +270,11 @@ namespace sphip {
         /**
          * TODO
         */
+        void GenerateWhileStmt(whileStmt* stmt, bool isMainFile);
+
+        /**
+         * TODO
+        */
         void GenerateUnaryStmt(unary_stmt* stmt, bool isMainFile);
 
         /* STATEMENTS END*/
@@ -292,7 +298,7 @@ namespace sphip {
         /**
          * TODO
          */
-        void GenerateExpressionIdentifier(Identifier* id, bool isMainFile, bool isNotToUpper = false);
+        void GenerateExpressionIdentifier(Identifier* id, bool isMainFile, bool isNotToUpper = true);
 
         /**
          * TODO

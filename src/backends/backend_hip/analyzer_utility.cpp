@@ -1,6 +1,6 @@
 /**
  * @deprecated file
- * @brief Only the analyzer_utility.cpp file is required. The implementation
+ * @brief Only the analyzer_utility.h file is required. The implementation
  *        exists inside the analyzer folder.
  * @details TO BE DELETED post testing
 */

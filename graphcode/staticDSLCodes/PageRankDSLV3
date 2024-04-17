@@ -12,7 +12,11 @@ function ComputePageRank(Graph g, float beta, float delta, int maxIter, propNode
                 sum = sum + nbr.pageRank / g.count_outNbrs(nbr);
             }
             float newPageRank = (1 - delta) / numNodes + delta * sum;
-            diff = diff + newPageRank - v.pageRank;
+            if(newPageRank - v.pageRank >= 0) {
+                diff += newPageRank - v.pageRank;
+            } else {
+                diff += v.pageRank - newPageRank;
+            }
             v.pageRank = newPageRank;
         }
         pageRank = pageRankNext;

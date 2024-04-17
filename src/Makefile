@@ -1,7 +1,8 @@
 EXPENDABLES_WINDOWS = bin/MainContextj.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c bin/deviceVarsAnalyser.o bin/analyserUtil.o bin/dv*.o bin/bv*.o
 EXPENDABLES = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o parser/y.tab.c parser/lex.yy.c  bin/deviceVarsAnalyser.o bin/blockVarsAnalyser.o
-ANALYSER = bin/dataRaceAnalyser.o
-PROGRAMS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/cu_dsl_cpp_generator.o  bin/ac_dsl_cpp_generator.o bin/om_dsl_cpp_generator.o bin/mpi_dsl_cpp_generator.o bin/om_dyn_dsl_cpp_generator.o bin/mpi_dsl_cpp_generator_helper.o bin/mpi_dsl_cpp_expression_generator.o bin/mpi_dsl_cpp_statement_generator.o bin/mpi_dsl_dyn_cpp_generator.o bin/sycl_dsl_cpp_generator.o bin/multigpu_dsl_cpp_generator.o  bin/amd_dsl_cpp_generator.o bin/hip_dsl_cpp_generator.o bin/hip_auxillary.o bin/hip_code_gen.o bin/hip_get_used.o bin/hip_analyzer.o
+ANALYSER = bin/dataRaceAnalyser.
+DSL_PROGRAMS = bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o
+PROGRAMS = $(DSL_PROGRAMS) bin/cu_dsl_cpp_generator.o  bin/ac_dsl_cpp_generator.o bin/om_dsl_cpp_generator.o bin/mpi_dsl_cpp_generator.o bin/om_dyn_dsl_cpp_generator.o bin/mpi_dsl_cpp_generator_helper.o bin/mpi_dsl_cpp_expression_generator.o bin/mpi_dsl_cpp_statement_generator.o bin/mpi_dsl_dyn_cpp_generator.o bin/sycl_dsl_cpp_generator.o bin/multigpu_dsl_cpp_generator.o  bin/amd_dsl_cpp_generator.o $(HIP_PROGRAMS)
 #bin/ac_dsl_cpp_generator.o 
 #bin/om_dsl_cpp_generator.o
 A_PROGRAM = bin/attachPropAnalyser.o bin/dataRaceAnalyser.o bin/deviceVarsAnalyser.o bin/blockVarsAnalyser.o bin/analyserUtil.o bin/pushpullAnalyser.o
@@ -24,6 +25,8 @@ all: starplat
 #~ 	$(CC) bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o $(A_PROGRAM) -o starplat
 
 #hip
+HIP_PROGRAMS = bin/hip_dsl_cpp_generator.o bin/hip_auxillary.o bin/hip_code_gen.o bin/hip_analyzer.o bin/hip_get_used.o
+
 bin/hip_dsl_cpp_generator.o: backends/backend_hip/dsl_cpp_generator.cpp backends/dslCodePad.h backends/backend_hip/auxillary_functions.cpp
 	$(CC) $(CFLAGS) -c backends/backend_hip/dsl_cpp_generator.cpp -o bin/hip_dsl_cpp_generator.o
 
@@ -178,5 +181,19 @@ clean_windows:
 
 clean:
 #~ 	rm -f $(EXPENDABLES)
-	rm bin/*.o StarPlat
-	rmdir bin
+	-rm bin/*.o StarPlat 
+	-rmdir bin
+
+temp: #TODO: Remove or make it a little more generic
+	./StarPlat -s -f ../graphcode/staticDSLCodes/PageRankDSLV3 -b hip
+	./StarPlat -s -f ../graphcode/staticDSLCodes/bc_dslV2 -b hip
+	./StarPlat -s -f ../graphcode/staticDSLCodes/sssp_dslV3 -b hip
+	./StarPlat -s -f ../graphcode/staticDSLCodes/triangle_counting_dsl -b hip
+
+# Below flag used to test the hip code.
+hip: all # Is it possible to make this for only hip
+	-rm ../graphcode/generated_hip/*
+	$(MAKE) temp
+
+hip-test: hip # to add a flag in hip code gen to add main for hipcc 
+	@echo "Testing HIP code generation"

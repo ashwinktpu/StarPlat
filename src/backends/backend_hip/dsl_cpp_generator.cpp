@@ -14,7 +14,7 @@
 #include "../../ast/ASTHelper.cpp"
 #include "dsl_cpp_generator.h"
 
-#define HIT_CHECK std::cout << "UNIMPL Hit at line " << __LINE__ << " of function " << __func__ << " in file " << __FILE__ << "\n";
+const bool debug = false;
 
 namespace sphip {
 
@@ -87,9 +87,10 @@ namespace sphip {
         GenerateFunctionBody(func);
         main.NewLine();
         GenerateBlock(func->getBlockStatement(), false);
-        GenerateHipMemcpyParams(func->getParamList()); // TODO: Check if this is required
-        
         GenerateTimerStop();
+        
+        GenerateHipMemcpyParams(func->getParamList()); // TODO: Check if this is required
+        HIT_CHECK // Add increment function count method. refer cuda
         main.pushStringWithNewLine("}");
     }
 
@@ -115,7 +116,7 @@ namespace sphip {
 
             std::string parameterName = (*itr)->getIdentifier()->getIdentifier();
 
-            if(type->isPropType()) {
+            if(type->isPropType() || type->isPrimitiveType()) {
                 parameterName[0] = std::toupper(parameterName[0]);
                 parameterName = "h" + parameterName;
             }
@@ -166,7 +167,7 @@ namespace sphip {
             main.NewLine();
         }
 
-        // TODO" The below code will generate all variables
+        // TODO The below code will generate all variables
         // ie the ones which are part of the function formal
         // parameters and the ones which we get from the graph(IsMetaUsed etc)
         // TODO: Check if this is okay or if we need seperate 
@@ -315,6 +316,43 @@ namespace sphip {
 
         cout << "STMT " << stmt->getTypeofNode() << "\n";
 
+        //TODO: Remove
+        if(debug){if (stmt->getTypeofNode() == NODE_BLOCKSTMT) {
+            (isMainFile ? main : header).pushStringWithNewLine("// GenerateBlock");
+        } else if (stmt->getTypeofNode() == NODE_DECL) {
+            (isMainFile ? main : header).pushStringWithNewLine("// GenerateVariableDeclaration");
+        } else if (stmt->getTypeofNode() == NODE_ASSIGN) {
+            assignment *asst = static_cast<assignment*>(stmt);
+            if (asst->isDeviceAssignment())
+                (isMainFile ? main : header).pushStringWithNewLine("// GenerateDeviceAssignment");
+            else
+                (isMainFile ? main : header).pushStringWithNewLine("// GenerateNormalAssignment");
+        } else if (stmt->getTypeofNode() == NODE_IFSTMT) {
+            (isMainFile ? main : header).pushStringWithNewLine("// GenerateIfStmt");
+        } else if (stmt->getTypeofNode() == NODE_FORALLSTMT) {
+            (isMainFile ? main : header).pushStringWithNewLine("// GenerateForAll");
+        } else if (stmt->getTypeofNode() == NODE_FIXEDPTSTMT) {
+            (isMainFile ? main : header).pushStringWithNewLine("// GenerateFixedPoint");
+        } else if (stmt->getTypeofNode() == NODE_REDUCTIONCALLSTMT) {
+            (isMainFile ? main : header).pushStringWithNewLine("// GenerateReductionCallStmt");
+        } else if (stmt->getTypeofNode() == NODE_ITRBFS) {
+            (isMainFile ? main : header).pushStringWithNewLine("// GenerateItrBfs");
+        } else if (stmt->getTypeofNode() == NODE_ITRRBFS) {
+            (isMainFile ? main : header).pushStringWithNewLine("// GenerateItrRevBfs");
+        } else if (stmt->getTypeofNode() == NODE_PROCCALLSTMT) {
+            (isMainFile ? main : header).pushStringWithNewLine("// GenerateProcCallStmt");
+        } else if (stmt->getTypeofNode() == NODE_WHILESTMT) {
+            (isMainFile ? main : header).pushStringWithNewLine("// GenerateWhileStmt");
+        } else if (stmt->getTypeofNode() == NODE_DOWHILESTMT) {
+            (isMainFile ? main : header).pushStringWithNewLine("// GenerateDoWhile");
+        } else if (stmt->getTypeofNode() == NODE_UNARYSTMT) {
+            (isMainFile ? main : header).pushStringWithNewLine("// GenerateUnaryStmt");
+        } else if (stmt->getTypeofNode() == NODE_RETURN) {
+            (isMainFile ? main : header).pushStringWithNewLine("// GenerateReturnStmt");
+        } else {
+            (isMainFile ? main : header).pushStringWithNewLine("// Unknown node type");
+        }}
+
         switch (stmt->getTypeofNode()) {
 
         case NODE_BLOCKSTMT:
@@ -328,8 +366,7 @@ namespace sphip {
         case NODE_ASSIGN:
             {
                 assignment *asst = static_cast<assignment*>(stmt);
-                cout << "STMT " << (asst->isDeviceAssignment() ? "Device\n" : "Normal\n");
-                if(asst->isDeviceAssignment())
+                if (asst->isDeviceAssignment())
                     GenerateDeviceAssignment(asst, isMainFile);
                 else
                     GenerateAtomicOrNormalAssignment(asst, isMainFile);
@@ -358,8 +395,7 @@ namespace sphip {
             break;
 
         case NODE_ITRRBFS:
-            HIT_CHECK
-            // GenerateItrRevBfs(static_cast<iterateReverseBFS*>(stmt), isMainFile);
+            throw std::runtime_error("Generation function not implemented for NODETYPE " + std::to_string(stmt->getTypeofNode()));
             break;
 
         case NODE_PROCCALLSTMT:
@@ -367,8 +403,7 @@ namespace sphip {
             break;
 
         case NODE_WHILESTMT:
-            // TODO: Make something for this?
-            HIT_CHECK
+            GenerateWhileStmt(static_cast<whileStmt*>(stmt), isMainFile);
             break;
 
         case NODE_DOWHILESTMT:
@@ -379,13 +414,56 @@ namespace sphip {
             GenerateUnaryStmt(static_cast<unary_stmt*>(stmt), isMainFile);   
             break;
         
-        case NODE_RETURN:
-            break; //TODO: No implementation but gets called;
+        case NODE_RETURN:{
+            HIT_CHECK
+            // TODO: the return value of the method should be changed in both main and header
+            returnStmt *retStmt = static_cast<returnStmt*>(stmt);
+            cout << "STMT " << retStmt->getReturnExpression()->getId()->getIdentifier() << "\n";
+            // TODO: To be implemented for functions which return values
+            break; }
 
         default:
             throw std::runtime_error("Generation function not implemented for NODETYPE " + std::to_string(stmt->getTypeofNode()));
             break;
         }
+
+        if(debug){
+
+               if (stmt->getTypeofNode() == NODE_BLOCKSTMT) {
+            (isMainFile ? main : header).pushStringWithNewLine("// End GenerateBlock");
+        } else if (stmt->getTypeofNode() == NODE_DECL) {
+            (isMainFile ? main : header).pushStringWithNewLine("// End GenerateVariableDeclaration");
+        } else if (stmt->getTypeofNode() == NODE_ASSIGN) {
+            assignment *asst = static_cast<assignment*>(stmt);
+            if (asst->isDeviceAssignment())
+                (isMainFile ? main : header).pushStringWithNewLine("// End GenerateDeviceAssignment");
+            else
+                (isMainFile ? main : header).pushStringWithNewLine("// End GenerateNormalAssignment");
+        } else if (stmt->getTypeofNode() == NODE_IFSTMT) {
+            (isMainFile ? main : header).pushStringWithNewLine("// End GenerateIfStmt");
+        } else if (stmt->getTypeofNode() == NODE_FORALLSTMT) {
+            (isMainFile ? main : header).pushStringWithNewLine("// End GenerateForAll");
+        } else if (stmt->getTypeofNode() == NODE_FIXEDPTSTMT) {
+            (isMainFile ? main : header).pushStringWithNewLine("// End GenerateFixedPoint");
+        } else if (stmt->getTypeofNode() == NODE_REDUCTIONCALLSTMT) {
+            (isMainFile ? main : header).pushStringWithNewLine("// End GenerateReductionCallStmt");
+        } else if (stmt->getTypeofNode() == NODE_ITRBFS) {
+            (isMainFile ? main : header).pushStringWithNewLine("// End GenerateItrBfs");
+        } else if (stmt->getTypeofNode() == NODE_ITRRBFS) {
+            (isMainFile ? main : header).pushStringWithNewLine("// End GenerateItrRevBfs");
+        } else if (stmt->getTypeofNode() == NODE_PROCCALLSTMT) {
+            (isMainFile ? main : header).pushStringWithNewLine("// End GenerateProcCallStmt");
+        } else if (stmt->getTypeofNode() == NODE_WHILESTMT) {
+            (isMainFile ? main : header).pushStringWithNewLine("// End GenerateWhileStmt");
+        } else if (stmt->getTypeofNode() == NODE_DOWHILESTMT) {
+            (isMainFile ? main : header).pushStringWithNewLine("// End GenerateDoWhile");
+        } else if (stmt->getTypeofNode() == NODE_UNARYSTMT) {
+            (isMainFile ? main : header).pushStringWithNewLine("// End GenerateUnaryStmt");
+        } else if (stmt->getTypeofNode() == NODE_RETURN) {
+            (isMainFile ? main : header).pushStringWithNewLine("// End GenerateReturnStmt");
+        } else {
+            (isMainFile ? main : header).pushStringWithNewLine("// End Unknown node type");
+        }}
     }
 
     void DslCppGenerator::GenerateBlock(
@@ -424,7 +502,6 @@ namespace sphip {
             if(type->getInnerTargetType()->isPrimitiveType()) {
 
                 Type *innerType = type->getInnerTargetType();
-                main.pushStringWithNewLine("// COMMENT");
                 main.pushString(ConvertToCppType(innerType));
                 main.AddSpace();
                 main.pushString("*");
@@ -435,16 +512,20 @@ namespace sphip {
                 main.pushString(idName);
                 main.pushStringWithNewLine(";");
 
+                (isMainFile ? main : header).pushStringWithNewLine(
+                    "// COMMENT"
+                );
                 GenerateHipMalloc(type, idName);
 
             } else {
                 HIT_CHECK
             }
         } else if(type->isNodeEdgeType()) {
-        
+            
             targetFile.pushString(ConvertToCppType(type));
             targetFile.AddSpace();
-            targetFile.pushString(stmt->getdeclId()->getIdentifier());
+            const std::string prefix(isMainFile ? "h" : "d");
+            targetFile.pushString(prefix +  CapitalizeFirstLetter(stmt->getdeclId()->getIdentifier()));
 
             if(stmt->isInitialized()) {
 
@@ -455,43 +536,67 @@ namespace sphip {
         
         } else if(type->isPrimitiveType()) {
 
-            std::string strBuffer;
+            if(isMainFile) {
 
-            const std::string varType(ConvertToCppType(type));
-            const std::string varName(stmt->getdeclId()->getIdentifier());
-            targetFile.pushString(varType);
-            targetFile.AddSpace();
-            targetFile.pushString("*h");
-            targetFile.pushString(CapitalizeFirstLetter(varName));
-            if(stmt->isInitialized()) {
+                const std::string varType(ConvertToCppType(type));
+                const std::string varName(stmt->getdeclId()->getIdentifier());
+                targetFile.pushString(varType);
+                targetFile.AddSpace();
+                targetFile.pushString("h");
+                targetFile.pushString(CapitalizeFirstLetter(varName));
+                if(stmt->isInitialized()) {
 
-                targetFile.pushString(" = ");
+                    targetFile.pushString(" = ");
 
-                if (stmt->getExpressionAssigned()->getExpressionFamily() == EXPR_PROCCALL) {
-                    HIT_CHECK
+                    if (stmt->getExpressionAssigned()->getExpressionFamily() == EXPR_PROCCALL) {
+                        HIT_CHECK
+                    }
+                    GenerateExpression(stmt->getExpressionAssigned(), isMainFile);
                 }
-                GenerateExpression(stmt->getExpressionAssigned(), isMainFile);
+                targetFile.pushStringWithNewLine(";");
+
+                /**
+                 * ALTERNATIVE POSSIBLE (BETTER) APPROACH
+                 * 
+                 * Usage of hipMallocManaged
+                 * Currently, it is not supported on all GPUs
+                 * Hence we will use the normal memory allocation
+                */
+
+                targetFile.pushString(varType);
+                targetFile.AddSpace();
+                targetFile.pushString("*d");
+                targetFile.pushString(CapitalizeFirstLetter(varName));
+                targetFile.pushStringWithNewLine(";");
+            
+                targetFile.pushStringWithNewLine(
+                    "hipMalloc(&d" + CapitalizeFirstLetter(varName) + ", sizeof(" + varType + "));"
+                );
+            } else {
+
+                const std::string varType(ConvertToCppType(type));
+                const std::string varName(stmt->getdeclId()->getIdentifier());
+                targetFile.pushString(varType);
+                targetFile.AddSpace();
+                targetFile.pushString("d");
+                targetFile.pushString(CapitalizeFirstLetter(varName));
+                
+                if(stmt->isInitialized()) {
+                    targetFile.pushString(" = ");
+
+                    if (stmt->getExpressionAssigned()->getExpressionFamily() == EXPR_PROCCALL) {
+                        HIT_CHECK
+                    }
+                    GenerateExpression(stmt->getExpressionAssigned(), isMainFile);
+                }
+                targetFile.pushStringWithNewLine(";");
             }
-            targetFile.pushStringWithNewLine(";");
+            
+        } else {
+            HIT_CHECK
+        }
 
-            /**
-             * ALTERNATIVE POSSIBLE (BETTER) APPROACH
-             * 
-             * Usage of hipMallocManaged
-             * Currently, it is not supported on all GPUs
-             * Hence we will use the normal memory allocation
-            */
-
-            targetFile.pushString(varType);
-            targetFile.AddSpace();
-            targetFile.pushString("*d");
-            targetFile.pushString(CapitalizeFirstLetter(varName));
-            targetFile.pushStringWithNewLine(";");
-         
-            targetFile.pushStringWithNewLine(
-                "hipMalloc(&d" + CapitalizeFirstLetter(varName) + ", sizeof(" + varType + "));"
-            );
-        } 
+        
     }
 
     void DslCppGenerator::GenerateDeviceAssignment(assignment* asmt, bool isMainFile) {
@@ -544,9 +649,8 @@ namespace sphip {
                 );
 
             } else {
-                HIT_CHECK
-                // cout << "UNIMPL " + string(stmt->getId()->getIdentifier()) << "\n";
-                targetFile.pushString(stmt->getId()->getIdentifier());
+                const std::string prefix(isMainFile ? "h" : "d");
+                targetFile.pushString(prefix + CapitalizeFirstLetter(stmt->getId()->getIdentifier()));
             }
         } else if(stmt->lhs_isProp()) {
 
@@ -703,7 +807,6 @@ namespace sphip {
             if(stmt->hasFilterExpr()) {
                 stmt->setBody(UpdateForAllBody(stmt));
             }
-
             if(extractElemFunc != NULL) {
 
                 if(IsNeighbourIteration(iteratorMethodId->getIdentifier())) {
@@ -742,10 +845,10 @@ namespace sphip {
                         targetFile.pushStringWithNewLine("}");
                         targetFile.NewLine();
                         targetFile.pushStringWithNewLine("grid.sync();");
-                        cout << "STMT grid.sync()\n";
                     } else {
-                        GenerateStatement(stmt->getBody(), isMainFile);
-                        targetFile.pushStringWithNewLine("}");
+                        // targetFile.pushStringWithNewLine("{ // Comment " + std::to_string(stmt->getBody()->getTypeofNode()));
+                        // targetFile.pushStringWithNewLine("}");
+                        HIT_CHECK
                     }
 
                 } else {
@@ -801,17 +904,17 @@ namespace sphip {
 
     void DslCppGenerator::GenerateInnerForAll(forallStmt* stmt, bool isMainFile) {
 
+        /**
+         * FIXME: The whole GenerateForAll function needs to be restructured.
+        */
+
         dslCodePad& targetFile = isMainFile ? main : header;
         
         Identifier* iterator = stmt->getIterator();
 
         if(stmt->isSourceProcCall()) {
 
-            if(false) {
-
-
-                HIT_CHECK
-            } else if(IsNeighbourIteration(stmt->getExtractElementFunc()->getMethodId()->getIdentifier())) {
+            if(IsNeighbourIteration(stmt->getExtractElementFunc()->getMethodId()->getIdentifier())) {
 
                 if(strcmp(stmt->getExtractElementFunc()->getMethodId()->getIdentifier(), "neighbors") == 0) {
 
@@ -822,9 +925,40 @@ namespace sphip {
                         "for(int edge = dOffsetArray[v]; edge < dOffsetArray[v + 1]; edge++) {"
                     );
                     targetFile.pushStringWithNewLine(
-                        "int " + std::string(iterator->getIdentifier()) + " = dEdgelist[edge];" 
+                        "int d" + CapitalizeFirstLetter(iterator->getIdentifier()) + " = dEdgelist[edge];" 
                     );
+                    GenerateStatement(stmt->getBody(), isMainFile);
+                    targetFile.pushStringWithNewLine("}");
+
+
+                } else if(strcmp(stmt->getExtractElementFunc()->getMethodId()->getIdentifier(), "nodes_to") == 0) {
+
+                    assert(stmt->getExtractElementFunc()->getArgList().size() == 1);
+                    /**
+                     * WARNING
+                     * 
+                     * See if the below part can be made generic. The for loop is being opened here
+                     * But closed at a later point. The GenerateInnerForAll function is not closing the
+                     * for loop. This is done in the GenerateForAll function. 
+                     * 
+                     * FIXME: The whole GenerateForAll function needs to be restructured.
+                    */
+                    targetFile.pushStringWithNewLine(
+                        "for(int edge = dRevOffsetArray[" + std::string(iterator->getIdentifier()) + "];"
+                        " edge < dRevOffsetArray[" + std::string(iterator->getIdentifier()) + " + 1]; edge++) {"
+                    );
+                    targetFile.pushStringWithNewLine(
+                        "int d" + CapitalizeFirstLetter(iterator->getIdentifier()) + " = dSrcList[edge];"
+                    );
+                    GenerateStatement(stmt->getBody(), isMainFile);
+                    targetFile.pushStringWithNewLine("}");
+                    
+                } else {
+                    HIT_CHECK
                 }
+            } else {
+
+                HIT_CHECK
             }
         } else if(stmt->isSourceField()) {
 
@@ -845,7 +979,6 @@ namespace sphip {
                             "for(auto itr = " + sourceId + ".begin(); itr != " 
                             + sourceId + ".end(); itr++) "
                         );
-                        cout << "STMT for(auto itr)\n";
                         break;
                     }
 
@@ -890,12 +1023,19 @@ namespace sphip {
 
             Type *type = identifier->getSymbolInfo()->getType();
 
-            if(type->isPropType() || type->isPrimitiveType()) {
+            if(type->isPropType()) {
 
                 header.pushString(", ");
                 header.pushString(ConvertToCppType(type));
                 header.pushString(" d");
                 header.pushString(CapitalizeFirstLetter(identifier->getIdentifier()));
+            } else if (type->isPrimitiveType()) {
+                
+                header.pushString(", ");
+                header.pushString(ConvertToCppType(type));
+                header.pushString(" *d");
+                header.pushString(CapitalizeFirstLetter(identifier->getIdentifier()));
+
             }
         }
 
@@ -904,9 +1044,9 @@ namespace sphip {
 
         // TODO: Get the variable name v from the DSL.
         // forall (v in g.nodes().filter(modified == True)) 
-        header.pushStringWithNewLine("unsigned v = threadIdx.x + blockIdx.x * blockDim.x;");
+        header.pushStringWithNewLine("unsigned dV = threadIdx.x + blockIdx.x * blockDim.x;");
         header.NewLine();
-        header.pushStringWithNewLine("if (v >= V) {");
+        header.pushStringWithNewLine("if (dV >= V) {");
         header.pushStringWithNewLine("return;");
         header.pushStringWithNewLine("}");
         header.NewLine();
@@ -1060,9 +1200,7 @@ namespace sphip {
                     targetFile.AddSpace();
                 }
 
-                std::string temp = stmt->getAssignedId()->getIdentifier();
-                temp[0] = toupper(temp[0]);
-                targetFile.pushString("updated" + temp);
+                targetFile.pushString("dUpdated" + CapitalizeFirstLetter(stmt->getAssignedId()->getIdentifier()));
                 targetFile.pushString(" = ");                
                 GenerateExpression(
                     (*std::next(reductionCall->getargList().begin()))->getExpr(), 
@@ -1094,7 +1232,7 @@ namespace sphip {
                         );
                         targetFile.AddSpace();
                         targetFile.pushString(
-                            "updated" + std::string(static_cast<Identifier*>(node2)->getIdentifier())
+                            "dUpdated" + CapitalizeFirstLetter(static_cast<Identifier*>(node2)->getIdentifier())
                         );
                         targetFile.pushString(" = ");
 
@@ -1115,7 +1253,7 @@ namespace sphip {
                             );
                             targetFile.AddSpace();
                             targetFile.pushString(
-                                "updated" + 
+                                "dUpdated" + 
                                 CapitalizeFirstLetter(std::string(static_cast<PropAccess*>(node2)->getIdentifier2()->getIdentifier()))
                             );
                             targetFile.pushString(" = ");
@@ -1130,10 +1268,11 @@ namespace sphip {
                 targetFile.pushString("if(");
                 targetFile.pushString("d" + CapitalizeFirstLetter(stmt->getAssignedId()->getIdentifier()));
                 //TODO: Get these variables from the DSL and INT_MAX as well
+                //Check stmt->getIterator() to get v
                 targetFile.pushString("[v] != INT_MAX && ");
                 GenerateExpressionPropId(stmt->getTargetPropId(), isMainFile);
                 targetFile.pushString(" > ");
-                targetFile.pushString("updated" + CapitalizeFirstLetter(stmt->getAssignedId()->getIdentifier()));
+                targetFile.pushString("dUpdated" + CapitalizeFirstLetter(stmt->getAssignedId()->getIdentifier()));
                 targetFile.pushStringWithNewLine(") {");
                 
                 if(stmt->isTargetId()) {
@@ -1142,9 +1281,10 @@ namespace sphip {
                     HIT_CHECK
                 }
 
+                // TODO: Only atomic Min? What the ..?
                 targetFile.pushString("atomicMin(&");
                 GenerateExpressionPropId(stmt->getTargetPropId(), isMainFile);
-                targetFile.pushString(", updated" + CapitalizeFirstLetter(stmt->getAssignedId()->getIdentifier()));
+                targetFile.pushString(", dUpdated" + CapitalizeFirstLetter(stmt->getAssignedId()->getIdentifier()));
                 targetFile.pushString(");");
                 targetFile.NewLine();
 
@@ -1166,16 +1306,16 @@ namespace sphip {
                     }
 
                     targetFile.pushString(" = ");
-                    targetFile.pushString("updated");
+                    targetFile.pushString("dUpdated");
                     
                     if(node->getTypeofNode() == NODE_ID) {
                         id = static_cast<Identifier*>(node);
-                        GenerateExpressionIdentifier(id, isMainFile);
+                        GenerateExpressionIdentifier(id, isMainFile, false);
                     }
 
                     if(node->getTypeofNode() == NODE_PROPACCESS) {
                         id = static_cast<PropAccess*>(node)->getIdentifier2();
-                        GenerateExpressionIdentifier(id, isMainFile);
+                        GenerateExpressionIdentifier(id, isMainFile, false);
                     }
 
                     targetFile.pushStringWithNewLine(";");
@@ -1348,7 +1488,6 @@ namespace sphip {
                 if(type->getInnerTargetType()->isPrimitiveType()) {
 
                     std::string var("d" + CapitalizeFirstLetter((*itr)->getIdentifier()->getIdentifier()));
-                    cout << "STMT PROP " << var << "\n";
                     if(isFunctionDefinition) {
                         targetFile.pushString(", ");
                         targetFile.pushString(ConvertToCppType(type->getInnerTargetType()));
@@ -1462,9 +1601,7 @@ namespace sphip {
 
             list<argument*> argList = proc->getArgList();
             
-            main.pushStringWithNewLine("// SOMETHING");
             for(auto itr =  argList.begin(); itr != argList.end(); itr++) {
-                cout << "STMT " << (*itr)->getAssignExpr()->getId()->getIdentifier() << "\n";
                 GenerateInitKernelCall((*itr)->getAssignExpr(), isMainFile);
             }
 
@@ -1478,6 +1615,17 @@ namespace sphip {
 
         }
         
+    }
+
+    void DslCppGenerator::GenerateWhileStmt(whileStmt *stmt, bool isMainFile) {
+
+        dslCodePad& targetFile = isMainFile ? main : header;
+        
+        targetFile.pushString("while(");
+        GenerateExpression(stmt->getCondition(), isMainFile);
+        targetFile.pushStringWithNewLine(") {");
+        GenerateStatement(stmt->getBody(), isMainFile);
+        targetFile.pushStringWithNewLine("}");
     }
 
     void DslCppGenerator::GenerateDoWhile(dowhileStmt* stmt, bool isMainFile) {
@@ -1494,30 +1642,34 @@ namespace sphip {
     void DslCppGenerator::GenerateUnaryStmt(unary_stmt* stmt, bool isMainFile) {
 
         GenerateExpression(stmt->getUnaryExpr(), isMainFile);
-        main.pushStringWithNewLine(";");
+        (isMainFile ? main : header).pushStringWithNewLine(";"); // FIXME: Shouldn't this be to main or header?
     }        
     
     void DslCppGenerator::GenerateExpression(Expression *expr, bool isMainFile, bool isNotToUpper, bool isAtomic) {
 
+
+        // (isMainFile ? main : header).pushStringWithNewLine("\n/* Expression */");
+        // TODO: Remove
+        if(debug){
         if (expr->isLiteral()) {
-            std::cout << "GenerateExpressionLiteral" << std::endl;
+            (isMainFile ? main : header).pushStringWithNewLine("/* Condition: Literal */");
         } else if (expr->isInfinity()) {
-            std::cout << "GenerateExpressionInfinity" << std::endl;
+            (isMainFile ? main : header).pushStringWithNewLine("/* Condition: Infinity */");
         } else if (expr->isIdentifierExpr()) {
-            std::cout << "GenerateExpressionIdentifier" << std::endl;
+            (isMainFile ? main : header).pushStringWithNewLine("/* Condition: Identifier Expression */");
         } else if (expr->isPropIdExpr()) {
-            std::cout << "GenerateExpressionPropId" << std::endl;
+            (isMainFile ? main : header).pushStringWithNewLine("/* Condition: Property ID Expression */");
         } else if (expr->isArithmetic() || expr->isLogical()) {
-            std::cout << "GenerateExpressionArithmeticOrLogical" << std::endl;
+            (isMainFile ? main : header).pushStringWithNewLine("/* Condition: Arithmetic or Logical Expression */");
         } else if (expr->isRelational()) {
-            std::cout << "GenerateExpressionRelational" << std::endl;
+            (isMainFile ? main : header).pushStringWithNewLine("/* Condition: Relational Expression */");
         } else if (expr->isProcCallExpr()) {
-            std::cout << "GenerateExpressionProcCallExpression" << std::endl;
+            (isMainFile ? main : header).pushStringWithNewLine("/* Condition: Procedure Call Expression */");
         } else if (expr->isUnary()) {
-            std::cout << "GenerateExpressionUnary" << std::endl;
+            (isMainFile ? main : header).pushStringWithNewLine("/* Condition: Unary Expression */");
         } else {
             assert(false);
-        }
+        }}
 
         if(expr->isLiteral()) 
             GenerateExpressionLiteral(expr, isMainFile);
@@ -1602,14 +1754,17 @@ namespace sphip {
         (isMainFile ? main : header).pushString(value);
     }
 
-    void DslCppGenerator::GenerateExpressionIdentifier(Identifier* id, bool isMainFile, bool isNotToUpper) {
+    void DslCppGenerator::GenerateExpressionIdentifier(Identifier* id, bool isMainFile, bool shouldPrefix) {
 
-        if(isNotToUpper) {
-            (isMainFile ? main : header).pushString(id->getIdentifier());
-            return;
-        }
 
-        (isMainFile ? main : header).pushString(CapitalizeFirstLetter(id->getIdentifier()));
+        const std::string prefix = shouldPrefix ? (isMainFile ? "h" : "d") : "";
+
+        // if(isNotToUpper) {
+        //     (isMainFile ? main : header).pushString(id->getIdentifier());
+        //     return;
+        // }
+
+        (isMainFile ? main : header).pushString(prefix + CapitalizeFirstLetter(id->getIdentifier()));
     }
 
     void DslCppGenerator::GenerateExpressionPropId(PropAccess* propId, bool isMainFile) {
@@ -1619,10 +1774,9 @@ namespace sphip {
         Identifier *id2 = propId->getIdentifier2();
 
 
-        if(isMainFile)
-            value = id2->getIdentifier() + string("[") + id1->getIdentifier() + "]";
-        else
-            value = string("d") + CapitalizeFirstLetter(id2->getIdentifier()) + "[" + id1->getIdentifier() + "]";
+        const std::string prefix(isMainFile ? "h" : "d");
+        value = prefix + CapitalizeFirstLetter(id2->getIdentifier()) 
+        + "[" + prefix + CapitalizeFirstLetter(id1->getIdentifier()) + "]";
     
         (isMainFile ? main : header).pushString(value);
     }
@@ -1691,8 +1845,9 @@ namespace sphip {
 
             Identifier* nodeId = argList.front()->getExpr()->getId();
 
-            strBuffer = string("(dOffsetArray[") + nodeId->getIdentifier() + " + 1] -" +
-                         "dOffsetArray[" + nodeId->getIdentifier() + "]";
+            /*dOffsetArray will only be accessed on device. Hence prefixing d to Identifier*/
+            strBuffer = string("(dOffsetArray[d") + CapitalizeFirstLetter(nodeId->getIdentifier()) + " + 1] - " +
+                         "dOffsetArray[d" + CapitalizeFirstLetter(nodeId->getIdentifier()) + "])";
 
             targetFile.pushString(strBuffer);
 
@@ -1702,8 +1857,8 @@ namespace sphip {
             Identifier *src = expr->getArgList().front()->getExpr()->getId();
             Identifier *dest = expr->getArgList().back()->getExpr()->getId();
             targetFile.pushString(
-                "IsAnEdge(" + std::string(src->getIdentifier())
-                + ", " + std::string(dest->getIdentifier()) 
+                "IsAnEdge(d" + CapitalizeFirstLetter(src->getIdentifier())
+                + ", d" + CapitalizeFirstLetter(dest->getIdentifier()) 
                 + ", dOffsetArray, dEdgelist)"
             );
 
