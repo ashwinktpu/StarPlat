@@ -9,6 +9,7 @@
 bool flag_for_device_variable = 0; // temporary fix to accomodate device variable and
 std::unordered_set<string> fixedPointVariables = {};
 std::unordered_set<string> ForAllVariables = {};
+int atomicDataVariableCount = 0;
 //~ using namespace spsycl;
 namespace spsycl
 {
@@ -173,7 +174,6 @@ namespace spsycl
         main.pushstr_newL("int *h_src;");
         main.pushstr_newL("int *h_weight;");
         main.pushstr_newL("int *h_rev_meta;"); // done only to handle PR since other doesn't uses it
-        main.pushstr_newL("int *h_degree;"); // done only to handle vc since other doesn't uses it
         main.NewLine();
 
         main.pushstr_newL("h_meta = (int *)malloc( (V+1)*sizeof(int));");
@@ -181,7 +181,6 @@ namespace spsycl
         main.pushstr_newL("h_src = (int *)malloc( (E)*sizeof(int));");
         main.pushstr_newL("h_weight = (int *)malloc( (E)*sizeof(int));");
         main.pushstr_newL("h_rev_meta = (int *)malloc( (V+1)*sizeof(int));");
-        main.pushstr_newL("h_degree = (int *)malloc( (V+1)*sizeof(int));");
         main.NewLine();
 
         main.pushstr_newL("for(int i=0; i<= V; i++) {");
@@ -191,9 +190,6 @@ namespace spsycl
         sprintf(strBuffer, "temp = %s.rev_indexofNodes[i];", gId);
         main.pushstr_newL(strBuffer);
         main.pushstr_newL("h_rev_meta[i] = temp;");
-        sprintf(strBuffer, "temp = %s.indeg[i];", gId);
-        main.pushstr_newL(strBuffer);
-        main.pushstr_newL("h_degree[i] = temp;");
         main.pushstr_newL("}");
         main.NewLine();
 
@@ -391,8 +387,6 @@ namespace spsycl
             main.pushstr_newL(strBuffer);
             sprintf(strBuffer, "int* d_weight;");
             main.pushstr_newL(strBuffer);
-            sprintf(strBuffer, "int* d_degree;");
-            main.pushstr_newL(strBuffer);
             sprintf(strBuffer, "int* d_rev_meta;");
             main.pushstr_newL(strBuffer);
             main.NewLine();
@@ -401,7 +395,6 @@ namespace spsycl
             generateMallocDeviceStr("d_data", "int", "(E)");
             generateMallocDeviceStr("d_src", "int", "(E)");
             generateMallocDeviceStr("d_weight", "int", "(E)");
-            generateMallocDeviceStr("d_degree", "int", "(V+1)");
             generateMallocDeviceStr("d_rev_meta", "int", "(V+1)");
 
             main.NewLine();
@@ -410,7 +403,6 @@ namespace spsycl
             generateMemCpyStr("d_data", "h_data", "int", "E");
             generateMemCpyStr("d_src", "h_src", "int", "E");
             generateMemCpyStr("d_weight", "h_weight", "int", "E");
-            generateMemCpyStr("d_degree", "h_degree", "int", "(V+1)");
             generateMemCpyStr("d_rev_meta", "h_rev_meta", "int", "(V+1)");
             main.NewLine();
 
@@ -863,7 +855,7 @@ namespace spsycl
                 main.pushstr_newL("// atomic update");
                 defaultAction = false;
                 const char *typVar = convertToCppType(propId->getIdentifier2()->getSymbolInfo()->getType(), true);
-                sprintf(strBuffer, "atomic_ref<%s, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data(", typVar);
+                sprintf(strBuffer, "atomic_ref<%s, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data_%d(", typVar, atomicDataVariableCount);
                 main.pushString(strBuffer);
                 main.pushString("d_"); /// IMPORTANT
                 main.pushString(propId->getIdentifier2()->getIdentifier());
@@ -897,7 +889,9 @@ namespace spsycl
         if (isAtomic)
         {
             main.pushstr_newL(");");
-            main.pushString("atomic_data += ");
+            sprintf(strBuffer, "atomic_data_%d += ", atomicDataVariableCount);
+            main.pushString(strBuffer);
+            atomicDataVariableCount++;
         }
         else if (!asmt->hasPropCopy())
             main.pushString(" = ");
@@ -1500,12 +1494,15 @@ namespace spsycl
                     }
                 }
 
-                main.pushString("atomic_ref<int, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data(");
+                sprintf(strBuffer, "atomic_ref<int, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data_%d(", atomicDataVariableCount);
+                main.pushString(strBuffer);
                 generate_exprPropId(stmt->getTargetPropId(), isMainFile);
                 main.pushstr_newL(");");
-                main.pushString("atomic_data.fetch_min(");
+                sprintf(strBuffer, "atomic_data_%d.fetch_min(", atomicDataVariableCount);
+                main.pushString(strBuffer);
                 sprintf(strBuffer, "%s_new);", stmt->getAssignedId()->getIdentifier());
                 main.pushstr_newL(strBuffer);
+                atomicDataVariableCount++;
 
                 itr1 = leftList.begin();
                 itr1++;
@@ -1556,13 +1553,40 @@ namespace spsycl
         {
             Identifier *id = stmt->getLeftId();
             const char *typVar = convertToCppType(id->getSymbolInfo()->getType());
-            sprintf(strBuffer, "atomic_ref<%s, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data(d_%s[0])", typVar, id->getIdentifier());
+            sprintf(strBuffer, "atomic_ref<%s, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data_%d(d_%s[0])", typVar, atomicDataVariableCount, id->getIdentifier());
             main.pushString(strBuffer);
             main.pushstr_newL(";");
-            sprintf(strBuffer, "atomic_data += ");
+            sprintf(strBuffer, "atomic_data_%d ", atomicDataVariableCount);
             main.pushString(strBuffer);
+            const char *operatorString = getOperatorString(stmt->reduction_op());
+            main.pushString(operatorString);
+            main.pushString("= ");
+            atomicDataVariableCount++;
             generateExpr(stmt->getRightSide(), isMainFile);
             main.pushstr_newL(";");
+        }
+        else if(!isMainFile){
+            PropAccess *propId = stmt->getPropAccess();
+            main.pushstr_newL("// atomic update");
+            Identifier* id2 = propId->getIdentifier2();
+            const char *typVar = convertToCppType(propId->getIdentifier2()->getSymbolInfo()->getType(), true);
+            sprintf(strBuffer, "atomic_ref<%s, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data_%d(", typVar, atomicDataVariableCount);
+            main.pushString(strBuffer);
+            main.pushString("d_"); /// IMPORTANT
+            main.pushString(propId->getIdentifier2()->getIdentifier());
+            main.push('[');
+            main.pushString(propId->getIdentifier1()->getIdentifier());
+            main.push(']');
+            main.pushstr_newL(");");
+            sprintf(strBuffer, "atomic_data_%d ", atomicDataVariableCount);
+            atomicDataVariableCount++;
+            main.pushString(strBuffer);
+            const char *operatorString = getOperatorString(stmt->reduction_op());
+            main.pushString(operatorString);
+            main.pushString("= ");
+            generateExpr(stmt->getRightSide(), isMainFile);
+            main.pushstr_newL(";");
+            std::cout << "\t  ATOMIC ASST" << '\n';
         }
         else
         {
