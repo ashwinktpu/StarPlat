@@ -1,0 +1,72 @@
+function colorGraph(Graph g) {
+
+    bool allVerticesColored = false;
+
+    propNode<bool> modifiedAllVerticesColored;
+    propNode<bool> modifiedAllVerticesColored_next;
+    propNode<int> result;
+    
+
+    g.attachNodeProperty(modifiedAllVerticesColored = False, result = -1, modifiedAllVerticesColored = False);
+
+    forall(v in g.nodes()) {
+        if(v == 0) v.result = 0;
+    }
+
+    int iterations = 0;
+
+    fixedPoint until(allVerticesColored: !modifiedAllVerticesColored) {
+
+        forall(v in g.nodes()) {
+
+            if(v.result == -1) {
+                bool colorMax = True;
+                bool colorMin = True;
+
+                int color = 2 * iterations;
+
+                forall(u in g.neighbors(v)) {
+                    if(u.result == -1 || u.result == color + 1 || u.result == color + 2) {
+                        if(v < u) {
+                            colorMax = False;
+                        }
+                        if(u > v) {
+                            colorMin = False;
+                        }
+                    }
+                }
+
+                if(colorMax) v.result = color + 1;
+                if(colorMin) v.result = color + 2;
+
+                if(v.result == -1) {
+                    v.modifiedAllVerticesColored_next = True;
+                }
+
+                
+            }
+        }
+
+
+        forall(v in g.nodes()) {
+            forall(u in g.neighbors(v)) {
+                if(u != v && u.result == v.result) {
+                    if(u < v) {
+                        v.result = -1;
+                    } else {
+                        u.result = -1;
+                    }
+                    v.modifiedAllVerticesColored_next = True;
+                    u.modifiedAllVerticesColored_next = True;
+                }
+            }
+        }
+        modifiedAllVerticesColored = modifiedAllVerticesColored_next;
+        g.attachNodeProperty(modifiedAllVerticesColored_next = False);
+
+        iterations = iterations + 1;
+
+    }
+
+
+}
