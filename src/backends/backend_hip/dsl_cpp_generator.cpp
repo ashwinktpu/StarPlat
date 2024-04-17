@@ -79,6 +79,20 @@ namespace sphip {
 
     void DslCppGenerator::GenerateFunction(Function* func) {
 
+        // TODO: make this a seperate function or add the returnType part into function header things
+        std::string returnType = "void";
+        blockStatement* blockStmt = func->getBlockStatement();
+        list<statement*> stmtList = blockStmt->returnStatements();
+        for(auto stmt: stmtList) {
+            if(stmt->getTypeofNode() == NODE_RETURN) {
+                returnType = ConvertToCppType(static_cast<returnStmt*>(stmt)->getReturnExpression()->getId()->getSymbolInfo()->getType());
+                break;
+            }
+        } 
+
+        main.pushString(returnType);
+        header.pushString(returnType);
+        // TODO: ends here
         GenerateFunctionHeader(func, false);
         GenerateFunctionHeader(func, true);
 
@@ -98,7 +112,7 @@ namespace sphip {
 
         dslCodePad &targetFile = isMainFile ? main:header;
 
-        targetFile.pushString("void");
+        // targetFile.pushString("void");
         targetFile.AddSpace();
         targetFile.pushString(func->getIdentifier()->getIdentifier());
         targetFile.pushString("(");
@@ -187,6 +201,7 @@ namespace sphip {
     void DslCppGenerator::SetCurrentFunction(Function* func) {
 
         this->function = func;
+
     }
 
     std::string DslCppGenerator::ConvertToCppType(Type *type) {
@@ -423,8 +438,9 @@ namespace sphip {
             HIT_CHECK
             // TODO: the return value of the method should be changed in both main and header
             returnStmt *retStmt = static_cast<returnStmt*>(stmt);
-            cout << "STMT " << retStmt->getReturnExpression()->getId()->getIdentifier() << "\n";
-            // TODO: To be implemented for functions which return values
+            main.pushString("return h");
+            main.pushString(CapitalizeFirstLetter(retStmt->getReturnExpression()->getId()->getIdentifier()));
+            main.pushString(";");
             break; }
 
         default:
