@@ -5,6 +5,7 @@
 #include"bc_dslV2.h"
 #include "push_relabel.dsl.h"
 #include "newPPR.dsl.h"
+#include "anupDsl.h"
 
 int main(int argc, char *argv[])
 {
@@ -30,7 +31,7 @@ int main(int argc, char *argv[])
     // Triangle Counting
     // need to add print statement in generated code to check the value of triangle count
 //     do_max_flow(residual_graph,0,1, label, excess, curr_edge, residue,  world);
-   do_max_flow (residual_graph, 0, 1, residue, world) ;
+   do_max_flow (residual_graph, 0, 1, 100, world) ;
 
     FILE* out = fopen (argv[2], "w") ;
     if (world.rank () == 0) {

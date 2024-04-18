@@ -318,12 +318,16 @@ template <typename T>
         int owner_proc = graph->get_node_owner(node_id);
         int local_node_id = graph->get_node_local_index(node_id);
 
+        /* Barenya : Trying to optimize atomic Add
         if(!already_locked_processors[owner_proc])
           propList.get_lock(owner_proc,SHARED_LOCK);
         propList.accumulate(owner_proc,&value,local_node_id,1,MPI_SUM,SHARED_LOCK);
         if(!already_locked_processors[owner_proc])
           propList.unlock(owner_proc, SHARED_LOCK);
-            
+          */
+
+        /* Optimisation  == > accumulate all updates using a map and do them in bulk*/
+        propList.accumulate (owner_proc, &value, local_node_id, 1, MPI_SUM, SHARED_LOCK) ;
     }
 
 template class NodeProperty<int>;

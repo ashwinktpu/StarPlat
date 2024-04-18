@@ -85,6 +85,7 @@ auto quicksi(std::vector<int> degree , std::vector<std::vector<int>> records , G
   std::vector<int> temp;
   temp = records[d];
   int par = temp.back();
+  #pragma omp for
   for (int v = g.start_node (); v < g.end_node (); v++) 
   {
     if (!res && F[v] == 0 && ((d == 0) || (d > 0 && (par == -1 || (par != -1 && g.check_if_nbr(H[par],v))))) )
