@@ -104,7 +104,8 @@ namespace sphip {
         GenerateTimerStop();
         
         GenerateHipMemcpyParams(func->getParamList()); // TODO: This is required when the resullt is to be pass back via a paramenter
-        HIT_CHECK // Add increment function count method. refer cuda
+        HIT_CHECK // TODO: Add increment function count method. refer cuda
+        //TODO: Add cuda free and other host free
         main.pushStringWithNewLine("}");
     }
 
@@ -637,7 +638,8 @@ namespace sphip {
                 temp2[0] = toupper(temp2[0]);
                 std::string temp1(propId->getIdentifier1()->getIdentifier());
                 // temp1[0] = toupper(temp1[0]);
-
+                HIT_CHECK
+                std::cout << "Check order of vars here\n";
                 str = "initIndex<" + varType + "><<<1,1>>>(V, d" 
                         + temp2 + ", " + temp1 + ", ";
                 targetFile.pushString(str);
@@ -1183,13 +1185,6 @@ namespace sphip {
                 "d" + CapitalizeFirstLetter(fixedPointVar),
                 fixedPointVarType, "1", false  
             );
-
-            // GenerateHipMemcpySymbol(fixedPointVar, fixedPointVarType, false); //! TODO: Implement
-            // GenerateHipMemcpyStr(modifiedVar, modifiedVarNext, fixedPointVarType, "V", false); //! TODO: Implement
-            
-            // targetFile.pushStringWithNewLine(
-            //     "initKernel<" + fixedPointVarType + "><<<numBlocks, numThreads>>>(V, " + modifiedVarNext + ", false);"
-            // );
 
             targetFile.pushStringWithNewLine("k++;"); // TODO: Is this required?
             targetFile.pushStringWithNewLine("}");

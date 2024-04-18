@@ -7,6 +7,8 @@
 3. Add another flag to indicate if timing stuff have to be generated
 4. Remove all HIT_CHECKs
 5. Make a proper README, with instructions of usage.
+6. Inform limited usage of atomics
+7. Add compile and launch guidelines
 
 
 ### Post Completion of Major Stuff

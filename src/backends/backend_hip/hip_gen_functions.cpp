@@ -223,7 +223,7 @@ namespace sphip {
     ) {
         // TODO: We are assuming V to be the size of the array. This may not be the case always.
         main.pushStringWithNewLine(
-            "initIndex<" + type + "><<<1, 1>>>(V, " + identifier + ", " + value + ", " + index + ");"
+            "initIndex<" + type + "><<<1, 1>>>(V, " + identifier + ", " + index + ", " + value + ");"
         );
     }
 
@@ -231,7 +231,7 @@ namespace sphip {
 
         header.pushStringWithNewLine("template <typename T>");
         header.pushStringWithNewLine("__global__");
-        header.pushStringWithNewLine("void initIndex(const unsigned V, T* dArray, T value, int index) {");
+        header.pushStringWithNewLine("void initIndex(const unsigned V, T* dArray, int index, T value) {");
         header.pushStringWithNewLine("if(index < V) {");
         header.pushStringWithNewLine("dArray[index] = value;"); 
         header.pushStringWithNewLine("}");
