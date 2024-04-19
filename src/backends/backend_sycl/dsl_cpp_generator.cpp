@@ -811,6 +811,8 @@ namespace spsycl
         std::cout << "\tASST\n";
         char strBuffer[1024];
 
+        bool defaultAction = true;
+
         if (asmt->lhs_isIdentifier())
         {
             Identifier *id = asmt->getId();
@@ -839,7 +841,6 @@ namespace spsycl
                                      // carried out.
         {
             PropAccess *propId = asmt->getPropId();
-            bool defaultAction = true;
             if (asmt->isDeviceAssignment())
             {
                 std::cout << "\t  DEVICE ASST" << '\n';
@@ -855,7 +856,7 @@ namespace spsycl
                 main.pushstr_newL("// atomic update");
                 defaultAction = false;
                 const char *typVar = convertToCppType(propId->getIdentifier2()->getSymbolInfo()->getType(), true);
-                sprintf(strBuffer, "atomic_ref<%s, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data_%d(", typVar, atomicDataVariableCount);
+                sprintf(strBuffer, "atomic_ref<%s, sycl::memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data_%d(", typVar, atomicDataVariableCount);
                 main.pushString(strBuffer);
                 main.pushString("d_"); /// IMPORTANT
                 main.pushString(propId->getIdentifier2()->getIdentifier());
@@ -878,6 +879,9 @@ namespace spsycl
             }
             if (defaultAction)
             {
+                if(isMainFile)
+                    main.pushstr_newL("Q.submit([&](handler &h){ h.single_task([=](){");
+
                 main.pushString("d_"); /// IMPORTANT
                 main.pushString(propId->getIdentifier2()->getIdentifier());
                 main.push('[');
@@ -907,6 +911,13 @@ namespace spsycl
             main.pushstr_newL(";"); // No need "/2.0;" for directed graphs
         else if (!asmt->hasPropCopy())
             main.pushstr_newL(";");
+        
+        if (isMainFile && defaultAction && asmt->lhs_isProp())
+        {
+            main.pushstr_newL("});");
+            main.pushstr_newL("}).wait(); //InitIndexDevice");
+            main.NewLine();
+        }
     }
 
     void dsl_cpp_generator::generateIfStmt(ifStmt *ifstmt, bool isMainFile)
@@ -1494,7 +1505,7 @@ namespace spsycl
                     }
                 }
 
-                sprintf(strBuffer, "atomic_ref<int, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data_%d(", atomicDataVariableCount);
+                sprintf(strBuffer, "atomic_ref<int, sycl::memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data_%d(", atomicDataVariableCount);
                 main.pushString(strBuffer);
                 generate_exprPropId(stmt->getTargetPropId(), isMainFile);
                 main.pushstr_newL(");");
@@ -1553,7 +1564,7 @@ namespace spsycl
         {
             Identifier *id = stmt->getLeftId();
             const char *typVar = convertToCppType(id->getSymbolInfo()->getType());
-            sprintf(strBuffer, "atomic_ref<%s, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data_%d(d_%s[0])", typVar, atomicDataVariableCount, id->getIdentifier());
+            sprintf(strBuffer, "atomic_ref<%s, sycl::memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data_%d(d_%s[0])", typVar, atomicDataVariableCount, id->getIdentifier());
             main.pushString(strBuffer);
             main.pushstr_newL(";");
             sprintf(strBuffer, "atomic_data_%d ", atomicDataVariableCount);
@@ -1570,7 +1581,7 @@ namespace spsycl
             main.pushstr_newL("// atomic update");
             Identifier* id2 = propId->getIdentifier2();
             const char *typVar = convertToCppType(propId->getIdentifier2()->getSymbolInfo()->getType(), true);
-            sprintf(strBuffer, "atomic_ref<%s, memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data_%d(", typVar, atomicDataVariableCount);
+            sprintf(strBuffer, "atomic_ref<%s, sycl::memory_order::relaxed, memory_scope::device, access::address_space::global_space> atomic_data_%d(", typVar, atomicDataVariableCount);
             main.pushString(strBuffer);
             main.pushString("d_"); /// IMPORTANT
             main.pushString(propId->getIdentifier2()->getIdentifier());
