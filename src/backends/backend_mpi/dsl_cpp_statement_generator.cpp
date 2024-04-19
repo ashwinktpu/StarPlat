@@ -724,7 +724,7 @@ namespace spmpi {
                     TableEntry* tableEntry = filterId != NULL ? filterId->getSymbolInfo() : NULL;
                     if (tableEntry != NULL && tableEntry->getId()->get_fp_association()) 
                     {
-                        sprintf(strBuffer,"%s.remeberHistory()", filterId->getIdentifier());
+                        sprintf(strBuffer,"%s.rememberHistory();", filterId->getIdentifier());
                         if(!already_remebered)
                             main.pushstr_newL(strBuffer);
 
