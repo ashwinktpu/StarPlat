@@ -4,7 +4,6 @@
 #include"sssp_dslV3.h"
 #include"bc_dslV2.h"
 #include "push_relabel.dsl.h"
-#include "newPPR.dsl.h"
 #include "anupDsl.h"
 
 int main(int argc, char *argv[])
@@ -12,27 +11,28 @@ int main(int argc, char *argv[])
    
     boost::mpi::environment env(argc, argv);
     boost::mpi::communicator world;
-
-//     printf("program started\n"); 
-  //   Graph residual_graph(argv[2],world, 0);
-    // world.barrier();
     
     printf("program started\n"); 
  //   Graph graph(argv[1],world);
-    Graph residual_graph(argv[1],world, 1);
+    Graph residual_graph(argv[1],world, 1, true);
     world.barrier();
-    printf ("residual graph csr\n") ;
-    // residual_graph.print_csr () ;
+    printf ("graph ready\n") ;
+//    residual_graph.print_csr () ;
     world.barrier () ;
+	  MPI_Barrier (MPI_COMM_WORLD) ;
 
     NodeProperty<int> label, excess, curr_edge ;
     EdgeProperty<int> residue ;
     world.barrier () ;
     // Triangle Counting
     // need to add print statement in generated code to check the value of triangle count
-//     do_max_flow(residual_graph,0,1, label, excess, curr_edge, residue,  world);
-   do_max_flow (residual_graph, 0, 1, 100, world) ;
+    double t1 = MPI_Wtime () ;
+    do_max_flow(residual_graph,0,1, label, excess, curr_edge, residue,  world);
+    // do_max_flow(residual_graph,0,1,1, world);
+	  MPI_Barrier (MPI_COMM_WORLD) ;
 
+    double t2 = MPI_Wtime () ;
+    printf ("time taken = %f\n", (t2-t1)) ;
     FILE* out = fopen (argv[2], "w") ;
     if (world.rank () == 0) {
         int ans = excess.getValue (1) ;

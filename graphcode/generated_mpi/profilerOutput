@@ -1,0 +1,772 @@
+Flat profile:
+
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls  ms/call  ms/call  name    
+ 18.64      0.11     0.11  4180843     0.00     0.00  std::__detail::_Map_base<int, std::pair<int const, int>, std::allocator<std::pair<int const, int> >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true>, true>::operator[](int const&)
+ 16.95      0.21     0.10 14877919     0.00     0.00  Rma_Datatype<int>::get_data(int, int, int, locktype)
+  8.47      0.26     0.05  9230737     0.00     0.00  Graph::get_edge_local_index(Edge)
+  6.78      0.30     0.04  9187161     0.00     0.00  EdgeProperty<int>::getValue(Edge, bool)
+  5.08      0.33     0.03 14987531     0.00     0.00  Rma_Datatype<int>::unlock(int, locktype)
+  5.08      0.36     0.03 14987531     0.00     0.00  Rma_Datatype<int>::get_lock(int, locktype, bool)
+  5.08      0.39     0.03  9230737     0.00     0.00  Graph::get_edge_owner(Edge)
+  5.08      0.42     0.03  3825692     0.00     0.00  Graph::get_edge(int, int)
+  5.08      0.45     0.03                             _init
+  3.39      0.47     0.02 14948046     0.00     0.00  Graph::get_node_owner(int)
+  3.39      0.49     0.02 14870937     0.00     0.00  NodeProperty<int>::getValue(int, bool)
+  3.39      0.51     0.02  7713275     0.00     0.00  Graph::num_out_nbrs(int)
+  1.69      0.52     0.01 14936973     0.00     0.00  Graph::get_node_local_index(int)
+  1.69      0.53     0.01  7713616     0.00     0.00  Graph::get_other_vertex(int, int)
+  1.69      0.54     0.01    11067     0.00     0.05  discharge(Graph&, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, Container<int>&, boost::mpi::communicator)
+  1.69      0.55     0.01       26     0.38     0.38  Rma_Datatype<int>::create_window(int*, int, int, boost::mpi::communicator, ompi_info_t*)
+  1.69      0.56     0.01        2     5.00    18.18  Graph::Graph(char*, boost::mpi::communicator, int, bool)
+  1.69      0.57     0.01        1    10.00    10.00  Graph::readFromFile(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, int&, int&, std::vector<int, std::allocator<int> >&, std::vector<int, std::allocator<int> >&, std::vector<int, std::allocator<int> >&, int&)
+  1.69      0.58     0.01                             Graph::addEdges_RevCsr(std::vector<std::pair<int, std::pair<int, int> >, std::allocator<std::pair<int, std::pair<int, int> > > >&)
+  1.69      0.59     0.01                             Graph::num_nodes_owned()
+  0.00      0.59     0.00  7713616     0.00     0.00  Graph::get_edge_i(int, int)
+  0.00      0.59     0.00   188907     0.00     0.00  _dl_relocate_static_pie
+  0.00      0.59     0.00   179598     0.00     0.00  void std::vector<int, std::allocator<int> >::_M_realloc_insert<int const&>(__gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, int const&)
+  0.00      0.59     0.00    87152     0.00     0.00  Rma_Datatype<int>::accumulate(int, int*, int, int, ompi_op_t*, locktype)
+  0.00      0.59     0.00    43576     0.00     0.00  EdgeProperty<int>::atomicAdd(Edge&, int)
+  0.00      0.59     0.00    43576     0.00     0.00  NodeProperty<int>::atomicAdd(int, int)
+  0.00      0.59     0.00    40254     0.00     0.00  synchronize(std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >&, int)
+  0.00      0.59     0.00    22460     0.00     0.00  NodeProperty<int>::setValue(int, int, bool)
+  0.00      0.59     0.00    22460     0.00     0.00  Rma_Datatype<int>::put_data(int, int*, int, int, locktype)
+  0.00      0.59     0.00    22216     0.00     0.00  Graph::num_nodes()
+  0.00      0.59     0.00    21877     0.00     0.00  Graph::frontier_push(int&, boost::mpi::communicator)
+  0.00      0.59     0.00    21877     0.00     0.00  Graph::sync_reduction()
+  0.00      0.59     0.00    21788     0.00     0.00  push__(Graph&, int, int, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator)
+  0.00      0.59     0.00    21088     0.00     0.00  Container<int>::atomicAdd(int const&, int const&)
+  0.00      0.59     0.00    21088     0.00     0.00  std::__detail::_Map_base<int, std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::allocator<std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true>, true>::operator[](int const&)
+  0.00      0.59     0.00    20128     0.00     0.00  Graph::frontier_empty(boost::mpi::communicator)
+  0.00      0.59     0.00    20126     0.00     0.00  Graph::frontier_pop_local(boost::mpi::communicator)
+  0.00      0.59     0.00    11067     0.00     0.00  std::_Hashtable<int, int, std::allocator<int>, std::__detail::_Identity, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_insert_unique_node(unsigned long, unsigned long, std::__detail::_Hash_node<int, false>*, unsigned long)
+  0.00      0.59     0.00    10606     0.00     0.00  Graph::getNeighbors(int)
+  0.00      0.59     0.00    10605     0.00     0.02  relabel(Graph&, int, EdgeProperty<int>&, NodeProperty<int>&, Container<int>&, boost::mpi::communicator)
+  0.00      0.59     0.00     6000     0.00     0.00  std::_Hashtable<int, std::pair<int const, int>, std::allocator<std::pair<int const, int> >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true> >::_M_rehash(unsigned long, unsigned long const&)
+  0.00      0.59     0.00     3000     0.00     0.00  boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<int, std::allocator<int> > >::save_object_data(boost::archive::detail::basic_oarchive&, void const*) const
+  0.00      0.59     0.00     2004     0.00     0.00  Graph::end_node()
+  0.00      0.59     0.00     1912     0.00     0.00  void std::vector<int*, std::allocator<int*> >::_M_realloc_insert<int*>(__gnu_cxx::__normal_iterator<int**, std::vector<int*, std::allocator<int*> > >, int*&&)
+  0.00      0.59     0.00     1455     0.00     0.00  std::vector<int, std::allocator<int> >::_M_default_append(unsigned long)
+  0.00      0.59     0.00      258     0.00     0.00  void std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >::_M_realloc_insert<std::vector<int, std::allocator<int> > >(__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> >*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >&&)
+  0.00      0.59     0.00       38     0.00     0.00  Rma_Datatype<int>::Rma_Datatype()
+  0.00      0.59     0.00       38     0.00     0.00  Rma_Datatype<int>::~Rma_Datatype()
+  0.00      0.59     0.00       16     0.00     0.00  boost::detail::sp_counted_base::release()
+  0.00      0.59     0.00       10     0.00     0.00  std::_Hashtable<int, std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::allocator<std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true> >::clear()
+  0.00      0.59     0.00       10     0.00     0.00  std::_Hashtable<int, int, std::allocator<int>, std::__detail::_Identity, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash(unsigned long, unsigned long const&)
+  0.00      0.59     0.00       10     0.00     0.00  std::__detail::_Map_base<int, std::pair<int const, Property*>, std::allocator<std::pair<int const, Property*> >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true>, true>::operator[](int const&)
+  0.00      0.59     0.00        6     0.00     0.38  NodeProperty<int>::attachToGraph(Graph*, int)
+  0.00      0.59     0.00        6     0.00     0.00  NodeProperty<int>::NodeProperty()
+  0.00      0.59     0.00        6     0.00     0.00  NodeProperty<int>::~NodeProperty()
+  0.00      0.59     0.00        6     0.00     0.00  void boost::mpi::all_to_all<std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >(boost::mpi::communicator const&, std::vector<std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >, std::allocator<std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > > const&, std::vector<std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >, std::allocator<std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >&)
+  0.00      0.59     0.00        6     0.00     0.00  void boost::mpi::all_to_all<int>(boost::mpi::communicator const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> >&)
+  0.00      0.59     0.00        6     0.00     0.00  boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >::save_object_data(boost::archive::detail::basic_oarchive&, void const*) const
+  0.00      0.59     0.00        6     0.00     0.00  std::vector<int, std::allocator<int> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*>(__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, __gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*)
+  0.00      0.59     0.00        6     0.00     0.00  std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >* std::__do_uninit_fill_n<std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >*, unsigned long, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >(std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >*, unsigned long, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > const&)
+  0.00      0.59     0.00        4     0.00     0.01  fixGap(Graph&, Container<int>&, NodeProperty<int>&, boost::mpi::communicator)
+  0.00      0.59     0.00        4     0.00     0.38  EdgeProperty<int>::attachToGraph(Graph*, int*, int*, bool, bool)
+  0.00      0.59     0.00        4     0.00     0.00  Graph::start_node()
+  0.00      0.59     0.00        4     0.00     0.00  Container<int>::getIdx(int const&)
+  0.00      0.59     0.00        4     0.00     0.00  Container<int>::setValue(int const&, int const&, int const&)
+  0.00      0.59     0.00        2     0.00   251.83  do_max_flow(Graph&, int, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator)
+  0.00      0.59     0.00        2     0.00     0.00  EdgeProperty<int>::~EdgeProperty()
+  0.00      0.59     0.00        2     0.00     0.00  EdgeProperty<int>::operator=(EdgeProperty<int> const&)
+  0.00      0.59     0.00        2     0.00     0.00  Graph::~Graph()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::serialization::extended_type_info_typeid<Update> >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::serialization::extended_type_info_typeid<std::unordered_set<int, std::hash<int>, std::equal_to<int>, std::allocator<int> > > >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::serialization::extended_type_info_typeid<std::vector<Update, std::allocator<Update> > > >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::serialization::extended_type_info_typeid<std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::serialization::extended_type_info_typeid<std::vector<std::pair<int, std::pair<int, int> >, std::allocator<std::pair<int, std::pair<int, int> > > > > >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::serialization::extended_type_info_typeid<std::vector<std::pair<int, bool>, std::allocator<std::pair<int, bool> > > > >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::serialization::extended_type_info_typeid<std::vector<std::pair<int, double>, std::allocator<std::pair<int, double> > > > >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::serialization::extended_type_info_typeid<std::vector<std::pair<int, float>, std::allocator<std::pair<int, float> > > > >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::serialization::extended_type_info_typeid<std::vector<std::pair<int, int>, std::allocator<std::pair<int, int> > > > >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::serialization::extended_type_info_typeid<std::vector<int, std::allocator<int> > > >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, Update> >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, std::unordered_set<int, std::hash<int>, std::equal_to<int>, std::allocator<int> > > >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, std::vector<Update, std::allocator<Update> > > >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, std::vector<std::pair<int, std::pair<int, int> >, std::allocator<std::pair<int, std::pair<int, int> > > > > >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, std::vector<std::pair<int, bool>, std::allocator<std::pair<int, bool> > > > >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, std::vector<std::pair<int, double>, std::allocator<std::pair<int, double> > > > >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, std::vector<std::pair<int, float>, std::allocator<std::pair<int, float> > > > >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, std::vector<std::pair<int, int>, std::allocator<std::pair<int, int> > > > >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, std::vector<int, std::allocator<int> > > >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, Update> >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::unordered_set<int, std::hash<int>, std::equal_to<int>, std::allocator<int> > > >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<Update, std::allocator<Update> > > >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<std::pair<int, std::pair<int, int> >, std::allocator<std::pair<int, std::pair<int, int> > > > > >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<std::pair<int, bool>, std::allocator<std::pair<int, bool> > > > >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<std::pair<int, double>, std::allocator<std::pair<int, double> > > > >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<std::pair<int, float>, std::allocator<std::pair<int, float> > > > >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<std::pair<int, int>, std::allocator<std::pair<int, int> > > > >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<int, std::allocator<int> > > >::get_instance()
+  0.00      0.59     0.00        2     0.00     0.00  Container<int>::assign(int const&, int const&, ompi_communicator_t*)
+  0.00      0.59     0.00        2     0.00     0.00  Container<int>::Container()
+  0.00      0.59     0.00        2     0.00     0.00  std::_Hashtable<int, std::pair<int const, Property*>, std::allocator<std::pair<int const, Property*> >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true> >::_M_rehash(unsigned long, unsigned long const&)
+  0.00      0.59     0.00        2     0.00     0.00  std::_Hashtable<int, std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::allocator<std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true> >::_M_rehash(unsigned long, unsigned long const&)
+  0.00      0.59     0.00        2     0.00     0.00  std::_Hashtable<int, std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::allocator<std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true> >::~_Hashtable()
+
+ %         the percentage of the total running time of the
+time       program used by this function.
+
+cumulative a running sum of the number of seconds accounted
+ seconds   for by this function and those listed above it.
+
+ self      the number of seconds accounted for by this
+seconds    function alone.  This is the major sort for this
+           listing.
+
+calls      the number of times this function was invoked, if
+           this function is profiled, else blank.
+
+ self      the average number of milliseconds spent in this
+ms/call    function per call, if this function is profiled,
+	   else blank.
+
+ total     the average number of milliseconds spent in this
+ms/call    function and its descendents per call, if this
+	   function is profiled, else blank.
+
+name       the name of the function.  This is the minor sort
+           for this listing. The index shows the location of
+	   the function in the gprof listing. If the index is
+	   in parenthesis it shows where it would appear in
+	   the gprof listing if it were to be printed.
+
+Copyright (C) 2012-2024 Free Software Foundation, Inc.
+
+Copying and distribution of this file, with or without modification,
+are permitted in any medium without royalty provided the copyright
+notice and this notice are preserved.
+
+		     Call graph (explanation follows)
+
+
+granularity: each sample hit covers 2 byte(s) for 1.69% of 0.59 seconds
+
+index % time    self  children    called     name
+                                                 <spontaneous>
+[1]     91.5    0.00    0.54                 main [1]
+                0.00    0.50       2/2           do_max_flow(Graph&, int, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [2]
+                0.01    0.03       2/2           Graph::Graph(char*, boost::mpi::communicator, int, bool) [11]
+                0.00    0.00       1/14870937     NodeProperty<int>::getValue(int, bool) [4]
+                0.00    0.00       6/16          boost::detail::sp_counted_base::release() [57]
+                0.00    0.00       6/6           NodeProperty<int>::NodeProperty() [61]
+                0.00    0.00       6/6           NodeProperty<int>::~NodeProperty() [62]
+                0.00    0.00       4/38          Rma_Datatype<int>::Rma_Datatype() [55]
+                0.00    0.00       2/2           EdgeProperty<int>::~EdgeProperty() [71]
+                0.00    0.00       2/2           Graph::~Graph() [73]
+-----------------------------------------------
+                0.00    0.50       2/2           main [1]
+[2]     85.4    0.00    0.50       2         do_max_flow(Graph&, int, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [2]
+                0.01    0.49   11067/11067       discharge(Graph&, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, Container<int>&, boost::mpi::communicator) [3]
+                0.00    0.00       6/6           NodeProperty<int>::attachToGraph(Graph*, int) [25]
+                0.00    0.00       2/4           EdgeProperty<int>::attachToGraph(Graph*, int*, int*, bool, bool) [26]
+                0.00    0.00       4/4           fixGap(Graph&, Container<int>&, NodeProperty<int>&, boost::mpi::communicator) [30]
+                0.00    0.00   11073/14948046     Graph::get_node_owner(int) [16]
+                0.00    0.00     372/3825692     Graph::get_edge(int, int) [6]
+                0.00    0.00     372/9187161     EdgeProperty<int>::getValue(Edge, bool) [7]
+                0.00    0.00     374/22460       NodeProperty<int>::setValue(int, int, bool) [29]
+                0.00    0.00       2/14870937     NodeProperty<int>::getValue(int, bool) [4]
+                0.00    0.00   20128/20128       Graph::frontier_empty(boost::mpi::communicator) [45]
+                0.00    0.00   20126/20126       Graph::frontier_pop_local(boost::mpi::communicator) [46]
+                0.00    0.00     371/21877       Graph::frontier_push(int&, boost::mpi::communicator) [41]
+                0.00    0.00     179/21877       Graph::sync_reduction() [42]
+                0.00    0.00       8/22216       Graph::num_nodes() [40]
+                0.00    0.00       4/4           Container<int>::setValue(int const&, int const&, int const&) [70]
+                0.00    0.00       2/2           EdgeProperty<int>::operator=(EdgeProperty<int> const&) [72]
+                0.00    0.00       2/2           Container<int>::Container() [105]
+                0.00    0.00       2/2           Container<int>::assign(int const&, int const&, ompi_communicator_t*) [104]
+                0.00    0.00       1/10606       Graph::getNeighbors(int) [48]
+-----------------------------------------------
+                0.01    0.49   11067/11067       do_max_flow(Graph&, int, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [2]
+[3]     84.8    0.01    0.49   11067         discharge(Graph&, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, Container<int>&, boost::mpi::communicator) [3]
+                0.00    0.21   10605/10605       relabel(Graph&, int, EdgeProperty<int>&, NodeProperty<int>&, Container<int>&, boost::mpi::communicator) [5]
+                0.02    0.16 12847045/14870937     NodeProperty<int>::getValue(int, bool) [4]
+                0.02    0.05 5361469/9187161     EdgeProperty<int>::getValue(Edge, bool) [7]
+                0.02    0.00 7713275/7713275     Graph::num_out_nbrs(int) [17]
+                0.01    0.00 7691828/7713616     Graph::get_other_vertex(int, int) [19]
+                0.00    0.00   21788/21788       push__(Graph&, int, int, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [24]
+                0.00    0.00   10544/22460       NodeProperty<int>::setValue(int, int, bool) [29]
+                0.00    0.00 7691828/7713616     Graph::get_edge_i(int, int) [34]
+-----------------------------------------------
+                0.00    0.00       1/14870937     main [1]
+                0.00    0.00       2/14870937     do_max_flow(Graph&, int, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [2]
+                0.00    0.00    1996/14870937     fixGap(Graph&, Container<int>&, NodeProperty<int>&, boost::mpi::communicator) [30]
+                0.00    0.00   43576/14870937     push__(Graph&, int, int, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [24]
+                0.00    0.03 1978317/14870937     relabel(Graph&, int, EdgeProperty<int>&, NodeProperty<int>&, Container<int>&, boost::mpi::communicator) [5]
+                0.02    0.16 12847045/14870937     discharge(Graph&, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, Container<int>&, boost::mpi::communicator) [3]
+[4]     35.5    0.02    0.19 14870937         NodeProperty<int>::getValue(int, bool) [4]
+                0.10    0.00 14870937/14877919     Rma_Datatype<int>::get_data(int, int, int, locktype) [9]
+                0.03    0.00 14870937/14987531     Rma_Datatype<int>::get_lock(int, locktype, bool) [13]
+                0.03    0.00 14870937/14987531     Rma_Datatype<int>::unlock(int, locktype) [12]
+                0.02    0.00 14870937/14948046     Graph::get_node_owner(int) [16]
+                0.01    0.00 14870937/14936973     Graph::get_node_local_index(int) [18]
+-----------------------------------------------
+                0.00    0.21   10605/10605       discharge(Graph&, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, Container<int>&, boost::mpi::communicator) [3]
+[5]     35.1    0.00    0.21   10605         relabel(Graph&, int, EdgeProperty<int>&, NodeProperty<int>&, Container<int>&, boost::mpi::communicator) [5]
+                0.03    0.10 3803532/3825692     Graph::get_edge(int, int) [6]
+                0.02    0.03 3803532/9187161     EdgeProperty<int>::getValue(Edge, bool) [7]
+                0.00    0.03 1978317/14870937     NodeProperty<int>::getValue(int, bool) [4]
+                0.00    0.00   10544/22460       NodeProperty<int>::setValue(int, int, bool) [29]
+                0.00    0.00   21210/22216       Graph::num_nodes() [40]
+                0.00    0.00   21088/21088       Container<int>::atomicAdd(int const&, int const&) [43]
+                0.00    0.00   10605/10606       Graph::getNeighbors(int) [48]
+-----------------------------------------------
+                0.00    0.00     372/3825692     do_max_flow(Graph&, int, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [2]
+                0.00    0.00   21788/3825692     push__(Graph&, int, int, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [24]
+                0.03    0.10 3803532/3825692     relabel(Graph&, int, EdgeProperty<int>&, NodeProperty<int>&, Container<int>&, boost::mpi::communicator) [5]
+[6]     22.1    0.03    0.10 3825692         Graph::get_edge(int, int) [6]
+                0.10    0.00 3822201/4180843     std::__detail::_Map_base<int, std::pair<int const, int>, std::allocator<std::pair<int const, int> >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true>, true>::operator[](int const&) [8]
+                0.00    0.00    6982/14877919     Rma_Datatype<int>::get_data(int, int, int, locktype) [9]
+                0.00    0.00    6982/14987531     Rma_Datatype<int>::get_lock(int, locktype, bool) [13]
+                0.00    0.00    6982/14987531     Rma_Datatype<int>::unlock(int, locktype) [12]
+-----------------------------------------------
+                0.00    0.00     372/9187161     do_max_flow(Graph&, int, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [2]
+                0.00    0.00   21788/9187161     push__(Graph&, int, int, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [24]
+                0.02    0.03 3803532/9187161     relabel(Graph&, int, EdgeProperty<int>&, NodeProperty<int>&, Container<int>&, boost::mpi::communicator) [5]
+                0.02    0.05 5361469/9187161     discharge(Graph&, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, Container<int>&, boost::mpi::communicator) [3]
+[7]     20.3    0.04    0.08 9187161         EdgeProperty<int>::getValue(Edge, bool) [7]
+                0.05    0.00 9187161/9230737     Graph::get_edge_local_index(Edge) [10]
+                0.03    0.00 9187161/9230737     Graph::get_edge_owner(Edge) [14]
+-----------------------------------------------
+                0.01    0.00  358642/4180843     Graph::Graph(char*, boost::mpi::communicator, int, bool) [11]
+                0.10    0.00 3822201/4180843     Graph::get_edge(int, int) [6]
+[8]     18.6    0.11    0.00 4180843         std::__detail::_Map_base<int, std::pair<int const, int>, std::allocator<std::pair<int const, int> >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true>, true>::operator[](int const&) [8]
+                0.00    0.00    6000/6000        std::_Hashtable<int, std::pair<int const, int>, std::allocator<std::pair<int const, int> >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true> >::_M_rehash(unsigned long, unsigned long const&) [49]
+-----------------------------------------------
+                0.00    0.00    6982/14877919     Graph::get_edge(int, int) [6]
+                0.10    0.00 14870937/14877919     NodeProperty<int>::getValue(int, bool) [4]
+[9]     16.9    0.10    0.00 14877919         Rma_Datatype<int>::get_data(int, int, int, locktype) [9]
+-----------------------------------------------
+                0.00    0.00   43576/9230737     EdgeProperty<int>::atomicAdd(Edge&, int) [27]
+                0.05    0.00 9187161/9230737     EdgeProperty<int>::getValue(Edge, bool) [7]
+[10]     8.5    0.05    0.00 9230737         Graph::get_edge_local_index(Edge) [10]
+-----------------------------------------------
+                0.01    0.03       2/2           main [1]
+[11]     6.2    0.01    0.03       2         Graph::Graph(char*, boost::mpi::communicator, int, bool) [11]
+                0.01    0.00       1/1           Graph::readFromFile(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, int&, int&, std::vector<int, std::allocator<int> >&, std::vector<int, std::allocator<int> >&, std::vector<int, std::allocator<int> >&, int&) [21]
+                0.01    0.00  358642/4180843     std::__detail::_Map_base<int, std::pair<int const, int>, std::allocator<std::pair<int const, int> >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true>, true>::operator[](int const&) [8]
+                0.01    0.00      16/26          Rma_Datatype<int>::create_window(int*, int, int, boost::mpi::communicator, ompi_info_t*) [20]
+                0.00    0.00       2/4           EdgeProperty<int>::attachToGraph(Graph*, int*, int*, bool, bool) [26]
+                0.00    0.00   73479/179598      void std::vector<int, std::allocator<int> >::_M_realloc_insert<int const&>(__gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, int const&) [36]
+                0.00    0.00    3014/188907      _dl_relocate_static_pie [35]
+                0.00    0.00      28/38          Rma_Datatype<int>::Rma_Datatype() [55]
+                0.00    0.00      10/16          boost::detail::sp_counted_base::release() [57]
+                0.00    0.00       6/6           std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >* std::__do_uninit_fill_n<std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >*, unsigned long, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >(std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >*, unsigned long, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > const&) [67]
+                0.00    0.00       6/6           std::vector<int, std::allocator<int> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*>(__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, __gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*) [66]
+                0.00    0.00       6/6           void boost::mpi::all_to_all<std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >(boost::mpi::communicator const&, std::vector<std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >, std::allocator<std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > > const&, std::vector<std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >, std::allocator<std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >&) [63]
+-----------------------------------------------
+                0.00    0.00    6982/14987531     Graph::get_edge(int, int) [6]
+                0.00    0.00   22460/14987531     NodeProperty<int>::setValue(int, int, bool) [29]
+                0.00    0.00   43576/14987531     NodeProperty<int>::atomicAdd(int, int) [28]
+                0.00    0.00   43576/14987531     EdgeProperty<int>::atomicAdd(Edge&, int) [27]
+                0.03    0.00 14870937/14987531     NodeProperty<int>::getValue(int, bool) [4]
+[12]     5.1    0.03    0.00 14987531         Rma_Datatype<int>::unlock(int, locktype) [12]
+-----------------------------------------------
+                0.00    0.00    6982/14987531     Graph::get_edge(int, int) [6]
+                0.00    0.00   22460/14987531     NodeProperty<int>::setValue(int, int, bool) [29]
+                0.00    0.00   43576/14987531     NodeProperty<int>::atomicAdd(int, int) [28]
+                0.00    0.00   43576/14987531     EdgeProperty<int>::atomicAdd(Edge&, int) [27]
+                0.03    0.00 14870937/14987531     NodeProperty<int>::getValue(int, bool) [4]
+[13]     5.1    0.03    0.00 14987531         Rma_Datatype<int>::get_lock(int, locktype, bool) [13]
+-----------------------------------------------
+                0.00    0.00   43576/9230737     EdgeProperty<int>::atomicAdd(Edge&, int) [27]
+                0.03    0.00 9187161/9230737     EdgeProperty<int>::getValue(Edge, bool) [7]
+[14]     5.1    0.03    0.00 9230737         Graph::get_edge_owner(Edge) [14]
+-----------------------------------------------
+                                                 <spontaneous>
+[15]     5.1    0.03    0.00                 _init [15]
+-----------------------------------------------
+                0.00    0.00   11073/14948046     do_max_flow(Graph&, int, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [2]
+                0.00    0.00   22460/14948046     NodeProperty<int>::setValue(int, int, bool) [29]
+                0.00    0.00   43576/14948046     NodeProperty<int>::atomicAdd(int, int) [28]
+                0.02    0.00 14870937/14948046     NodeProperty<int>::getValue(int, bool) [4]
+[16]     3.4    0.02    0.00 14948046         Graph::get_node_owner(int) [16]
+-----------------------------------------------
+                0.02    0.00 7713275/7713275     discharge(Graph&, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, Container<int>&, boost::mpi::communicator) [3]
+[17]     3.4    0.02    0.00 7713275         Graph::num_out_nbrs(int) [17]
+-----------------------------------------------
+                0.00    0.00   22460/14936973     NodeProperty<int>::setValue(int, int, bool) [29]
+                0.00    0.00   43576/14936973     NodeProperty<int>::atomicAdd(int, int) [28]
+                0.01    0.00 14870937/14936973     NodeProperty<int>::getValue(int, bool) [4]
+[18]     1.7    0.01    0.00 14936973         Graph::get_node_local_index(int) [18]
+-----------------------------------------------
+                0.00    0.00   21788/7713616     push__(Graph&, int, int, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [24]
+                0.01    0.00 7691828/7713616     discharge(Graph&, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, Container<int>&, boost::mpi::communicator) [3]
+[19]     1.7    0.01    0.00 7713616         Graph::get_other_vertex(int, int) [19]
+-----------------------------------------------
+                0.00    0.00       4/26          EdgeProperty<int>::attachToGraph(Graph*, int*, int*, bool, bool) [26]
+                0.00    0.00       6/26          NodeProperty<int>::attachToGraph(Graph*, int) [25]
+                0.01    0.00      16/26          Graph::Graph(char*, boost::mpi::communicator, int, bool) [11]
+[20]     1.7    0.01    0.00      26         Rma_Datatype<int>::create_window(int*, int, int, boost::mpi::communicator, ompi_info_t*) [20]
+-----------------------------------------------
+                0.01    0.00       1/1           Graph::Graph(char*, boost::mpi::communicator, int, bool) [11]
+[21]     1.7    0.01    0.00       1         Graph::readFromFile(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, int&, int&, std::vector<int, std::allocator<int> >&, std::vector<int, std::allocator<int> >&, std::vector<int, std::allocator<int> >&, int&) [21]
+                0.00    0.00  179321/188907      _dl_relocate_static_pie [35]
+                0.00    0.00      59/179598      void std::vector<int, std::allocator<int> >::_M_realloc_insert<int const&>(__gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, int const&) [36]
+-----------------------------------------------
+                                                 <spontaneous>
+[22]     1.7    0.01    0.00                 Graph::addEdges_RevCsr(std::vector<std::pair<int, std::pair<int, int> >, std::allocator<std::pair<int, std::pair<int, int> > > >&) [22]
+-----------------------------------------------
+                                                 <spontaneous>
+[23]     1.7    0.01    0.00                 Graph::num_nodes_owned() [23]
+-----------------------------------------------
+                0.00    0.00   21788/21788       discharge(Graph&, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, Container<int>&, boost::mpi::communicator) [3]
+[24]     0.4    0.00    0.00   21788         push__(Graph&, int, int, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [24]
+                0.00    0.00   21788/3825692     Graph::get_edge(int, int) [6]
+                0.00    0.00   43576/14870937     NodeProperty<int>::getValue(int, bool) [4]
+                0.00    0.00   43576/43576       EdgeProperty<int>::atomicAdd(Edge&, int) [27]
+                0.00    0.00   21788/9187161     EdgeProperty<int>::getValue(Edge, bool) [7]
+                0.00    0.00   43576/43576       NodeProperty<int>::atomicAdd(int, int) [28]
+                0.00    0.00   21788/7713616     Graph::get_other_vertex(int, int) [19]
+                0.00    0.00   21788/7713616     Graph::get_edge_i(int, int) [34]
+                0.00    0.00   21506/21877       Graph::frontier_push(int&, boost::mpi::communicator) [41]
+                0.00    0.00   18132/21877       Graph::sync_reduction() [42]
+-----------------------------------------------
+                0.00    0.00       6/6           do_max_flow(Graph&, int, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [2]
+[25]     0.4    0.00    0.00       6         NodeProperty<int>::attachToGraph(Graph*, int) [25]
+                0.00    0.00       6/26          Rma_Datatype<int>::create_window(int*, int, int, boost::mpi::communicator, ompi_info_t*) [20]
+                0.00    0.00       6/10          std::__detail::_Map_base<int, std::pair<int const, Property*>, std::allocator<std::pair<int const, Property*> >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true>, true>::operator[](int const&) [60]
+-----------------------------------------------
+                0.00    0.00       2/4           Graph::Graph(char*, boost::mpi::communicator, int, bool) [11]
+                0.00    0.00       2/4           do_max_flow(Graph&, int, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [2]
+[26]     0.3    0.00    0.00       4         EdgeProperty<int>::attachToGraph(Graph*, int*, int*, bool, bool) [26]
+                0.00    0.00       4/26          Rma_Datatype<int>::create_window(int*, int, int, boost::mpi::communicator, ompi_info_t*) [20]
+                0.00    0.00       4/10          std::__detail::_Map_base<int, std::pair<int const, Property*>, std::allocator<std::pair<int const, Property*> >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true>, true>::operator[](int const&) [60]
+-----------------------------------------------
+                0.00    0.00   43576/43576       push__(Graph&, int, int, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [24]
+[27]     0.1    0.00    0.00   43576         EdgeProperty<int>::atomicAdd(Edge&, int) [27]
+                0.00    0.00   43576/9230737     Graph::get_edge_local_index(Edge) [10]
+                0.00    0.00   43576/9230737     Graph::get_edge_owner(Edge) [14]
+                0.00    0.00   43576/14987531     Rma_Datatype<int>::get_lock(int, locktype, bool) [13]
+                0.00    0.00   43576/14987531     Rma_Datatype<int>::unlock(int, locktype) [12]
+                0.00    0.00   43576/87152       Rma_Datatype<int>::accumulate(int, int*, int, int, ompi_op_t*, locktype) [37]
+-----------------------------------------------
+                0.00    0.00   43576/43576       push__(Graph&, int, int, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [24]
+[28]     0.0    0.00    0.00   43576         NodeProperty<int>::atomicAdd(int, int) [28]
+                0.00    0.00   43576/14987531     Rma_Datatype<int>::unlock(int, locktype) [12]
+                0.00    0.00   43576/14987531     Rma_Datatype<int>::get_lock(int, locktype, bool) [13]
+                0.00    0.00   43576/14948046     Graph::get_node_owner(int) [16]
+                0.00    0.00   43576/14936973     Graph::get_node_local_index(int) [18]
+                0.00    0.00   43576/87152       Rma_Datatype<int>::accumulate(int, int*, int, int, ompi_op_t*, locktype) [37]
+-----------------------------------------------
+                0.00    0.00     374/22460       do_max_flow(Graph&, int, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [2]
+                0.00    0.00     998/22460       fixGap(Graph&, Container<int>&, NodeProperty<int>&, boost::mpi::communicator) [30]
+                0.00    0.00   10544/22460       relabel(Graph&, int, EdgeProperty<int>&, NodeProperty<int>&, Container<int>&, boost::mpi::communicator) [5]
+                0.00    0.00   10544/22460       discharge(Graph&, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, Container<int>&, boost::mpi::communicator) [3]
+[29]     0.0    0.00    0.00   22460         NodeProperty<int>::setValue(int, int, bool) [29]
+                0.00    0.00   22460/14987531     Rma_Datatype<int>::get_lock(int, locktype, bool) [13]
+                0.00    0.00   22460/14987531     Rma_Datatype<int>::unlock(int, locktype) [12]
+                0.00    0.00   22460/14948046     Graph::get_node_owner(int) [16]
+                0.00    0.00   22460/14936973     Graph::get_node_local_index(int) [18]
+                0.00    0.00   22460/22460       Rma_Datatype<int>::put_data(int, int*, int, int, locktype) [39]
+-----------------------------------------------
+                0.00    0.00       4/4           do_max_flow(Graph&, int, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [2]
+[30]     0.0    0.00    0.00       4         fixGap(Graph&, Container<int>&, NodeProperty<int>&, boost::mpi::communicator) [30]
+                0.00    0.00    1996/14870937     NodeProperty<int>::getValue(int, bool) [4]
+                0.00    0.00     998/22460       NodeProperty<int>::setValue(int, int, bool) [29]
+                0.00    0.00    2004/2004        Graph::end_node() [51]
+                0.00    0.00     998/22216       Graph::num_nodes() [40]
+                0.00    0.00       4/4           Container<int>::getIdx(int const&) [69]
+                0.00    0.00       4/4           Graph::start_node() [68]
+-----------------------------------------------
+                0.00    0.00   21788/7713616     push__(Graph&, int, int, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [24]
+                0.00    0.00 7691828/7713616     discharge(Graph&, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, Container<int>&, boost::mpi::communicator) [3]
+[34]     0.0    0.00    0.00 7713616         Graph::get_edge_i(int, int) [34]
+-----------------------------------------------
+                0.00    0.00       6/188907      boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >::save_object_data(boost::archive::detail::basic_oarchive&, void const*) const [65]
+                0.00    0.00    3000/188907      boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<int, std::allocator<int> > >::save_object_data(boost::archive::detail::basic_oarchive&, void const*) const [50]
+                0.00    0.00    3014/188907      Graph::Graph(char*, boost::mpi::communicator, int, bool) [11]
+                0.00    0.00    3566/188907      Graph::frontier_push(int&, boost::mpi::communicator) [41]
+                0.00    0.00  179321/188907      Graph::readFromFile(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, int&, int&, std::vector<int, std::allocator<int> >&, std::vector<int, std::allocator<int> >&, std::vector<int, std::allocator<int> >&, int&) [21]
+[35]     0.0    0.00    0.00  188907         _dl_relocate_static_pie [35]
+-----------------------------------------------
+                0.00    0.00      59/179598      Graph::readFromFile(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, int&, int&, std::vector<int, std::allocator<int> >&, std::vector<int, std::allocator<int> >&, std::vector<int, std::allocator<int> >&, int&) [21]
+                0.00    0.00   73479/179598      Graph::Graph(char*, boost::mpi::communicator, int, bool) [11]
+                0.00    0.00  106060/179598      Graph::getNeighbors(int) [48]
+[36]     0.0    0.00    0.00  179598         void std::vector<int, std::allocator<int> >::_M_realloc_insert<int const&>(__gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, int const&) [36]
+-----------------------------------------------
+                0.00    0.00   43576/87152       NodeProperty<int>::atomicAdd(int, int) [28]
+                0.00    0.00   43576/87152       EdgeProperty<int>::atomicAdd(Edge&, int) [27]
+[37]     0.0    0.00    0.00   87152         Rma_Datatype<int>::accumulate(int, int*, int, int, ompi_op_t*, locktype) [37]
+-----------------------------------------------
+                0.00    0.00   20126/40254       Graph::frontier_pop_local(boost::mpi::communicator) [46]
+                0.00    0.00   20128/40254       Graph::frontier_empty(boost::mpi::communicator) [45]
+[38]     0.0    0.00    0.00   40254         synchronize(std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >&, int) [38]
+                0.00    0.00    1912/1912        void std::vector<int*, std::allocator<int*> >::_M_realloc_insert<int*>(__gnu_cxx::__normal_iterator<int**, std::vector<int*, std::allocator<int*> > >, int*&&) [52]
+-----------------------------------------------
+                0.00    0.00   22460/22460       NodeProperty<int>::setValue(int, int, bool) [29]
+[39]     0.0    0.00    0.00   22460         Rma_Datatype<int>::put_data(int, int*, int, int, locktype) [39]
+-----------------------------------------------
+                0.00    0.00       8/22216       do_max_flow(Graph&, int, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [2]
+                0.00    0.00     998/22216       fixGap(Graph&, Container<int>&, NodeProperty<int>&, boost::mpi::communicator) [30]
+                0.00    0.00   21210/22216       relabel(Graph&, int, EdgeProperty<int>&, NodeProperty<int>&, Container<int>&, boost::mpi::communicator) [5]
+[40]     0.0    0.00    0.00   22216         Graph::num_nodes() [40]
+-----------------------------------------------
+                0.00    0.00     371/21877       do_max_flow(Graph&, int, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [2]
+                0.00    0.00   21506/21877       push__(Graph&, int, int, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [24]
+[41]     0.0    0.00    0.00   21877         Graph::frontier_push(int&, boost::mpi::communicator) [41]
+                0.00    0.00    3566/188907      _dl_relocate_static_pie [35]
+-----------------------------------------------
+                0.00    0.00     179/21877       do_max_flow(Graph&, int, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [2]
+                0.00    0.00    3566/21877       Graph::frontier_empty(boost::mpi::communicator) [45]
+                0.00    0.00   18132/21877       push__(Graph&, int, int, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [24]
+[42]     0.0    0.00    0.00   21877         Graph::sync_reduction() [42]
+                0.00    0.00   11067/11067       std::_Hashtable<int, int, std::allocator<int>, std::__detail::_Identity, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_insert_unique_node(unsigned long, unsigned long, std::__detail::_Hash_node<int, false>*, unsigned long) [47]
+-----------------------------------------------
+                0.00    0.00   21088/21088       relabel(Graph&, int, EdgeProperty<int>&, NodeProperty<int>&, Container<int>&, boost::mpi::communicator) [5]
+[43]     0.0    0.00    0.00   21088         Container<int>::atomicAdd(int const&, int const&) [43]
+                0.00    0.00   21088/21088       std::__detail::_Map_base<int, std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::allocator<std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true>, true>::operator[](int const&) [44]
+                0.00    0.00     258/258         void std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >::_M_realloc_insert<std::vector<int, std::allocator<int> > >(__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> >*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >&&) [54]
+-----------------------------------------------
+                0.00    0.00   21088/21088       Container<int>::atomicAdd(int const&, int const&) [43]
+[44]     0.0    0.00    0.00   21088         std::__detail::_Map_base<int, std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::allocator<std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true>, true>::operator[](int const&) [44]
+                0.00    0.00       2/2           std::_Hashtable<int, std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::allocator<std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true> >::_M_rehash(unsigned long, unsigned long const&) [107]
+-----------------------------------------------
+                0.00    0.00   20128/20128       do_max_flow(Graph&, int, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [2]
+[45]     0.0    0.00    0.00   20128         Graph::frontier_empty(boost::mpi::communicator) [45]
+                0.00    0.00   20128/40254       synchronize(std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >&, int) [38]
+                0.00    0.00    3566/21877       Graph::sync_reduction() [42]
+-----------------------------------------------
+                0.00    0.00   20126/20126       do_max_flow(Graph&, int, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [2]
+[46]     0.0    0.00    0.00   20126         Graph::frontier_pop_local(boost::mpi::communicator) [46]
+                0.00    0.00   20126/40254       synchronize(std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >&, int) [38]
+-----------------------------------------------
+                0.00    0.00   11067/11067       Graph::sync_reduction() [42]
+[47]     0.0    0.00    0.00   11067         std::_Hashtable<int, int, std::allocator<int>, std::__detail::_Identity, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_insert_unique_node(unsigned long, unsigned long, std::__detail::_Hash_node<int, false>*, unsigned long) [47]
+                0.00    0.00      10/10          std::_Hashtable<int, int, std::allocator<int>, std::__detail::_Identity, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash(unsigned long, unsigned long const&) [59]
+-----------------------------------------------
+                0.00    0.00       1/10606       do_max_flow(Graph&, int, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [2]
+                0.00    0.00   10605/10606       relabel(Graph&, int, EdgeProperty<int>&, NodeProperty<int>&, Container<int>&, boost::mpi::communicator) [5]
+[48]     0.0    0.00    0.00   10606         Graph::getNeighbors(int) [48]
+                0.00    0.00  106060/179598      void std::vector<int, std::allocator<int> >::_M_realloc_insert<int const&>(__gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, int const&) [36]
+-----------------------------------------------
+                0.00    0.00    6000/6000        std::__detail::_Map_base<int, std::pair<int const, int>, std::allocator<std::pair<int const, int> >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true>, true>::operator[](int const&) [8]
+[49]     0.0    0.00    0.00    6000         std::_Hashtable<int, std::pair<int const, int>, std::allocator<std::pair<int const, int> >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true> >::_M_rehash(unsigned long, unsigned long const&) [49]
+-----------------------------------------------
+                0.00    0.00    3000/3000        boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >::save_object_data(boost::archive::detail::basic_oarchive&, void const*) const [65]
+[50]     0.0    0.00    0.00    3000         boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<int, std::allocator<int> > >::save_object_data(boost::archive::detail::basic_oarchive&, void const*) const [50]
+                0.00    0.00    3000/188907      _dl_relocate_static_pie [35]
+-----------------------------------------------
+                0.00    0.00    2004/2004        fixGap(Graph&, Container<int>&, NodeProperty<int>&, boost::mpi::communicator) [30]
+[51]     0.0    0.00    0.00    2004         Graph::end_node() [51]
+-----------------------------------------------
+                0.00    0.00    1912/1912        synchronize(std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >&, int) [38]
+[52]     0.0    0.00    0.00    1912         void std::vector<int*, std::allocator<int*> >::_M_realloc_insert<int*>(__gnu_cxx::__normal_iterator<int**, std::vector<int*, std::allocator<int*> > >, int*&&) [52]
+-----------------------------------------------
+                0.00    0.00    1455/1455        boost::archive::detail::iserializer<boost::mpi::packed_iarchive, std::vector<int, std::allocator<int> > >::load_object_data(boost::archive::detail::basic_iarchive&, void*, unsigned int) const [828]
+[53]     0.0    0.00    0.00    1455         std::vector<int, std::allocator<int> >::_M_default_append(unsigned long) [53]
+-----------------------------------------------
+                0.00    0.00     258/258         Container<int>::atomicAdd(int const&, int const&) [43]
+[54]     0.0    0.00    0.00     258         void std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >::_M_realloc_insert<std::vector<int, std::allocator<int> > >(__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> >*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >&&) [54]
+-----------------------------------------------
+                0.00    0.00       4/38          main [1]
+                0.00    0.00       6/38          NodeProperty<int>::NodeProperty() [61]
+                0.00    0.00      28/38          Graph::Graph(char*, boost::mpi::communicator, int, bool) [11]
+[55]     0.0    0.00    0.00      38         Rma_Datatype<int>::Rma_Datatype() [55]
+-----------------------------------------------
+                0.00    0.00       4/38          EdgeProperty<int>::~EdgeProperty() [71]
+                0.00    0.00       6/38          NodeProperty<int>::~NodeProperty() [62]
+                0.00    0.00      28/38          Graph::~Graph() [73]
+[56]     0.0    0.00    0.00      38         Rma_Datatype<int>::~Rma_Datatype() [56]
+-----------------------------------------------
+                0.00    0.00       6/16          main [1]
+                0.00    0.00      10/16          Graph::Graph(char*, boost::mpi::communicator, int, bool) [11]
+[57]     0.0    0.00    0.00      16         boost::detail::sp_counted_base::release() [57]
+-----------------------------------------------
+                0.00    0.00       4/10          Container<int>::getIdx(int const&) [69]
+                0.00    0.00       6/10          NodeProperty<int>::~NodeProperty() [62]
+[58]     0.0    0.00    0.00      10         std::_Hashtable<int, std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::allocator<std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true> >::clear() [58]
+-----------------------------------------------
+                0.00    0.00      10/10          std::_Hashtable<int, int, std::allocator<int>, std::__detail::_Identity, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_insert_unique_node(unsigned long, unsigned long, std::__detail::_Hash_node<int, false>*, unsigned long) [47]
+[59]     0.0    0.00    0.00      10         std::_Hashtable<int, int, std::allocator<int>, std::__detail::_Identity, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash(unsigned long, unsigned long const&) [59]
+-----------------------------------------------
+                0.00    0.00       4/10          EdgeProperty<int>::attachToGraph(Graph*, int*, int*, bool, bool) [26]
+                0.00    0.00       6/10          NodeProperty<int>::attachToGraph(Graph*, int) [25]
+[60]     0.0    0.00    0.00      10         std::__detail::_Map_base<int, std::pair<int const, Property*>, std::allocator<std::pair<int const, Property*> >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true>, true>::operator[](int const&) [60]
+                0.00    0.00       2/2           std::_Hashtable<int, std::pair<int const, Property*>, std::allocator<std::pair<int const, Property*> >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true> >::_M_rehash(unsigned long, unsigned long const&) [106]
+-----------------------------------------------
+                0.00    0.00       6/6           main [1]
+[61]     0.0    0.00    0.00       6         NodeProperty<int>::NodeProperty() [61]
+                0.00    0.00       6/38          Rma_Datatype<int>::Rma_Datatype() [55]
+-----------------------------------------------
+                0.00    0.00       6/6           main [1]
+[62]     0.0    0.00    0.00       6         NodeProperty<int>::~NodeProperty() [62]
+                0.00    0.00       6/38          Rma_Datatype<int>::~Rma_Datatype() [56]
+                0.00    0.00       6/10          std::_Hashtable<int, std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::allocator<std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true> >::clear() [58]
+-----------------------------------------------
+                0.00    0.00       6/6           Graph::Graph(char*, boost::mpi::communicator, int, bool) [11]
+[63]     0.0    0.00    0.00       6         void boost::mpi::all_to_all<std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >(boost::mpi::communicator const&, std::vector<std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >, std::allocator<std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > > const&, std::vector<std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >, std::allocator<std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >&) [63]
+-----------------------------------------------
+                0.00    0.00       6/6           std::vector<int, std::allocator<int> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*>(__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, __gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*) [66]
+[64]     0.0    0.00    0.00       6         void boost::mpi::all_to_all<int>(boost::mpi::communicator const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> >&) [64]
+-----------------------------------------------
+                0.00    0.00       6/6           std::vector<int, std::allocator<int> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*>(__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, __gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*) [66]
+[65]     0.0    0.00    0.00       6         boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >::save_object_data(boost::archive::detail::basic_oarchive&, void const*) const [65]
+                0.00    0.00    3000/3000        boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<int, std::allocator<int> > >::save_object_data(boost::archive::detail::basic_oarchive&, void const*) const [50]
+                0.00    0.00       6/188907      _dl_relocate_static_pie [35]
+-----------------------------------------------
+                0.00    0.00       6/6           Graph::Graph(char*, boost::mpi::communicator, int, bool) [11]
+[66]     0.0    0.00    0.00       6         std::vector<int, std::allocator<int> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*>(__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, __gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*) [66]
+                0.00    0.00       6/6           boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >::save_object_data(boost::archive::detail::basic_oarchive&, void const*) const [65]
+                0.00    0.00       6/6           void boost::mpi::all_to_all<int>(boost::mpi::communicator const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> >&) [64]
+-----------------------------------------------
+                0.00    0.00       6/6           Graph::Graph(char*, boost::mpi::communicator, int, bool) [11]
+[67]     0.0    0.00    0.00       6         std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >* std::__do_uninit_fill_n<std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >*, unsigned long, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >(std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >*, unsigned long, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > const&) [67]
+-----------------------------------------------
+                0.00    0.00       4/4           fixGap(Graph&, Container<int>&, NodeProperty<int>&, boost::mpi::communicator) [30]
+[68]     0.0    0.00    0.00       4         Graph::start_node() [68]
+-----------------------------------------------
+                0.00    0.00       4/4           fixGap(Graph&, Container<int>&, NodeProperty<int>&, boost::mpi::communicator) [30]
+[69]     0.0    0.00    0.00       4         Container<int>::getIdx(int const&) [69]
+                0.00    0.00       4/10          std::_Hashtable<int, std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::allocator<std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true> >::clear() [58]
+-----------------------------------------------
+                0.00    0.00       4/4           do_max_flow(Graph&, int, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [2]
+[70]     0.0    0.00    0.00       4         Container<int>::setValue(int const&, int const&, int const&) [70]
+-----------------------------------------------
+                0.00    0.00       2/2           main [1]
+[71]     0.0    0.00    0.00       2         EdgeProperty<int>::~EdgeProperty() [71]
+                0.00    0.00       4/38          Rma_Datatype<int>::~Rma_Datatype() [56]
+-----------------------------------------------
+                0.00    0.00       2/2           do_max_flow(Graph&, int, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [2]
+[72]     0.0    0.00    0.00       2         EdgeProperty<int>::operator=(EdgeProperty<int> const&) [72]
+-----------------------------------------------
+                0.00    0.00       2/2           main [1]
+[73]     0.0    0.00    0.00       2         Graph::~Graph() [73]
+                0.00    0.00      28/38          Rma_Datatype<int>::~Rma_Datatype() [56]
+                0.00    0.00       2/2           std::_Hashtable<int, std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::allocator<std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true> >::~_Hashtable() [108]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__Z19readFromUpdatesFilePcRiRSt6vectorIcSaIcEERS1_IiSaIiEES7_S7_bii [110]
+[74]     0.0    0.00    0.00       2         boost::serialization::singleton<boost::serialization::extended_type_info_typeid<Update> >::get_instance() [74]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__Z11synchronizeRSt6vectorIS_IiSaIiEESaIS1_EEi [109]
+[75]     0.0    0.00    0.00       2         boost::serialization::singleton<boost::serialization::extended_type_info_typeid<std::unordered_set<int, std::hash<int>, std::equal_to<int>, std::allocator<int> > > >::get_instance() [75]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__Z19readFromUpdatesFilePcRiRSt6vectorIcSaIcEERS1_IiSaIiEES7_S7_bii [110]
+[76]     0.0    0.00    0.00       2         boost::serialization::singleton<boost::serialization::extended_type_info_typeid<std::vector<Update, std::allocator<Update> > > >::get_instance() [76]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__Z11synchronizeRSt6vectorIS_IiSaIiEESaIS1_EEi [109]
+[77]     0.0    0.00    0.00       2         boost::serialization::singleton<boost::serialization::extended_type_info_typeid<std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >::get_instance() [77]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__Z19readFromUpdatesFilePcRiRSt6vectorIcSaIcEERS1_IiSaIiEES7_S7_bii [110]
+[78]     0.0    0.00    0.00       2         boost::serialization::singleton<boost::serialization::extended_type_info_typeid<std::vector<std::pair<int, std::pair<int, int> >, std::allocator<std::pair<int, std::pair<int, int> > > > > >::get_instance() [78]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__ZN12NodePropertyIbE14aggregateValueE12Aggregate_Op [111]
+[79]     0.0    0.00    0.00       2         boost::serialization::singleton<boost::serialization::extended_type_info_typeid<std::vector<std::pair<int, bool>, std::allocator<std::pair<int, bool> > > > >::get_instance() [79]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__ZN12NodePropertyIbE14aggregateValueE12Aggregate_Op [111]
+[80]     0.0    0.00    0.00       2         boost::serialization::singleton<boost::serialization::extended_type_info_typeid<std::vector<std::pair<int, double>, std::allocator<std::pair<int, double> > > > >::get_instance() [80]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__ZN12NodePropertyIbE14aggregateValueE12Aggregate_Op [111]
+[81]     0.0    0.00    0.00       2         boost::serialization::singleton<boost::serialization::extended_type_info_typeid<std::vector<std::pair<int, float>, std::allocator<std::pair<int, float> > > > >::get_instance() [81]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__ZN12NodePropertyIbE14aggregateValueE12Aggregate_Op [111]
+[82]     0.0    0.00    0.00       2         boost::serialization::singleton<boost::serialization::extended_type_info_typeid<std::vector<std::pair<int, int>, std::allocator<std::pair<int, int> > > > >::get_instance() [82]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__Z11synchronizeRSt6vectorIS_IiSaIiEESaIS1_EEi [109]
+[83]     0.0    0.00    0.00       2         boost::serialization::singleton<boost::serialization::extended_type_info_typeid<std::vector<int, std::allocator<int> > > >::get_instance() [83]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__Z19readFromUpdatesFilePcRiRSt6vectorIcSaIcEERS1_IiSaIiEES7_S7_bii [110]
+[84]     0.0    0.00    0.00       2         boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, Update> >::get_instance() [84]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__Z11synchronizeRSt6vectorIS_IiSaIiEESaIS1_EEi [109]
+[85]     0.0    0.00    0.00       2         boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, std::unordered_set<int, std::hash<int>, std::equal_to<int>, std::allocator<int> > > >::get_instance() [85]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__Z19readFromUpdatesFilePcRiRSt6vectorIcSaIcEERS1_IiSaIiEES7_S7_bii [110]
+[86]     0.0    0.00    0.00       2         boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, std::vector<Update, std::allocator<Update> > > >::get_instance() [86]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__Z11synchronizeRSt6vectorIS_IiSaIiEESaIS1_EEi [109]
+[87]     0.0    0.00    0.00       2         boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >::get_instance() [87]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__Z19readFromUpdatesFilePcRiRSt6vectorIcSaIcEERS1_IiSaIiEES7_S7_bii [110]
+[88]     0.0    0.00    0.00       2         boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, std::vector<std::pair<int, std::pair<int, int> >, std::allocator<std::pair<int, std::pair<int, int> > > > > >::get_instance() [88]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__ZN12NodePropertyIbE14aggregateValueE12Aggregate_Op [111]
+[89]     0.0    0.00    0.00       2         boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, std::vector<std::pair<int, bool>, std::allocator<std::pair<int, bool> > > > >::get_instance() [89]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__ZN12NodePropertyIbE14aggregateValueE12Aggregate_Op [111]
+[90]     0.0    0.00    0.00       2         boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, std::vector<std::pair<int, double>, std::allocator<std::pair<int, double> > > > >::get_instance() [90]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__ZN12NodePropertyIbE14aggregateValueE12Aggregate_Op [111]
+[91]     0.0    0.00    0.00       2         boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, std::vector<std::pair<int, float>, std::allocator<std::pair<int, float> > > > >::get_instance() [91]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__ZN12NodePropertyIbE14aggregateValueE12Aggregate_Op [111]
+[92]     0.0    0.00    0.00       2         boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, std::vector<std::pair<int, int>, std::allocator<std::pair<int, int> > > > >::get_instance() [92]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__Z11synchronizeRSt6vectorIS_IiSaIiEESaIS1_EEi [109]
+[93]     0.0    0.00    0.00       2         boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, std::vector<int, std::allocator<int> > > >::get_instance() [93]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__Z19readFromUpdatesFilePcRiRSt6vectorIcSaIcEERS1_IiSaIiEES7_S7_bii [110]
+[94]     0.0    0.00    0.00       2         boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, Update> >::get_instance() [94]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__Z11synchronizeRSt6vectorIS_IiSaIiEESaIS1_EEi [109]
+[95]     0.0    0.00    0.00       2         boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::unordered_set<int, std::hash<int>, std::equal_to<int>, std::allocator<int> > > >::get_instance() [95]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__Z19readFromUpdatesFilePcRiRSt6vectorIcSaIcEERS1_IiSaIiEES7_S7_bii [110]
+[96]     0.0    0.00    0.00       2         boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<Update, std::allocator<Update> > > >::get_instance() [96]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__Z11synchronizeRSt6vectorIS_IiSaIiEESaIS1_EEi [109]
+[97]     0.0    0.00    0.00       2         boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >::get_instance() [97]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__Z19readFromUpdatesFilePcRiRSt6vectorIcSaIcEERS1_IiSaIiEES7_S7_bii [110]
+[98]     0.0    0.00    0.00       2         boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<std::pair<int, std::pair<int, int> >, std::allocator<std::pair<int, std::pair<int, int> > > > > >::get_instance() [98]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__ZN12NodePropertyIbE14aggregateValueE12Aggregate_Op [111]
+[99]     0.0    0.00    0.00       2         boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<std::pair<int, bool>, std::allocator<std::pair<int, bool> > > > >::get_instance() [99]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__ZN12NodePropertyIbE14aggregateValueE12Aggregate_Op [111]
+[100]    0.0    0.00    0.00       2         boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<std::pair<int, double>, std::allocator<std::pair<int, double> > > > >::get_instance() [100]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__ZN12NodePropertyIbE14aggregateValueE12Aggregate_Op [111]
+[101]    0.0    0.00    0.00       2         boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<std::pair<int, float>, std::allocator<std::pair<int, float> > > > >::get_instance() [101]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__ZN12NodePropertyIbE14aggregateValueE12Aggregate_Op [111]
+[102]    0.0    0.00    0.00       2         boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<std::pair<int, int>, std::allocator<std::pair<int, int> > > > >::get_instance() [102]
+-----------------------------------------------
+                0.00    0.00       2/2           _GLOBAL__sub_I__Z11synchronizeRSt6vectorIS_IiSaIiEESaIS1_EEi [109]
+[103]    0.0    0.00    0.00       2         boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<int, std::allocator<int> > > >::get_instance() [103]
+-----------------------------------------------
+                0.00    0.00       2/2           do_max_flow(Graph&, int, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [2]
+[104]    0.0    0.00    0.00       2         Container<int>::assign(int const&, int const&, ompi_communicator_t*) [104]
+-----------------------------------------------
+                0.00    0.00       2/2           do_max_flow(Graph&, int, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [2]
+[105]    0.0    0.00    0.00       2         Container<int>::Container() [105]
+-----------------------------------------------
+                0.00    0.00       2/2           std::__detail::_Map_base<int, std::pair<int const, Property*>, std::allocator<std::pair<int const, Property*> >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true>, true>::operator[](int const&) [60]
+[106]    0.0    0.00    0.00       2         std::_Hashtable<int, std::pair<int const, Property*>, std::allocator<std::pair<int const, Property*> >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true> >::_M_rehash(unsigned long, unsigned long const&) [106]
+-----------------------------------------------
+                0.00    0.00       2/2           std::__detail::_Map_base<int, std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::allocator<std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true>, true>::operator[](int const&) [44]
+[107]    0.0    0.00    0.00       2         std::_Hashtable<int, std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::allocator<std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true> >::_M_rehash(unsigned long, unsigned long const&) [107]
+-----------------------------------------------
+                0.00    0.00       2/2           Graph::~Graph() [73]
+[108]    0.0    0.00    0.00       2         std::_Hashtable<int, std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::allocator<std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true> >::~_Hashtable() [108]
+-----------------------------------------------
+
+ This table describes the call tree of the program, and was sorted by
+ the total amount of time spent in each function and its children.
+
+ Each entry in this table consists of several lines.  The line with the
+ index number at the left hand margin lists the current function.
+ The lines above it list the functions that called this function,
+ and the lines below it list the functions this one called.
+ This line lists:
+     index	A unique number given to each element of the table.
+		Index numbers are sorted numerically.
+		The index number is printed next to every function name so
+		it is easier to look up where the function is in the table.
+
+     % time	This is the percentage of the `total' time that was spent
+		in this function and its children.  Note that due to
+		different viewpoints, functions excluded by options, etc,
+		these numbers will NOT add up to 100%.
+
+     self	This is the total amount of time spent in this function.
+
+     children	This is the total amount of time propagated into this
+		function by its children.
+
+     called	This is the number of times the function was called.
+		If the function called itself recursively, the number
+		only includes non-recursive calls, and is followed by
+		a `+' and the number of recursive calls.
+
+     name	The name of the current function.  The index number is
+		printed after it.  If the function is a member of a
+		cycle, the cycle number is printed between the
+		function's name and the index number.
+
+
+ For the function's parents, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the function into this parent.
+
+     children	This is the amount of time that was propagated from
+		the function's children into this parent.
+
+     called	This is the number of times this parent called the
+		function `/' the total number of times the function
+		was called.  Recursive calls to the function are not
+		included in the number after the `/'.
+
+     name	This is the name of the parent.  The parent's index
+		number is printed after it.  If the parent is a
+		member of a cycle, the cycle number is printed between
+		the name and the index number.
+
+ If the parents of the function cannot be determined, the word
+ `<spontaneous>' is printed in the `name' field, and all the other
+ fields are blank.
+
+ For the function's children, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the child into the function.
+
+     children	This is the amount of time that was propagated from the
+		child's children to the function.
+
+     called	This is the number of times the function called
+		this child `/' the total number of times the child
+		was called.  Recursive calls by the child are not
+		listed in the number after the `/'.
+
+     name	This is the name of the child.  The child's index
+		number is printed after it.  If the child is a
+		member of a cycle, the cycle number is printed
+		between the name and the index number.
+
+ If there are any cycles (circles) in the call graph, there is an
+ entry for the cycle-as-a-whole.  This entry shows who called the
+ cycle (as parents) and the members of the cycle (as children.)
+ The `+' recursive calls entry shows the number of function calls that
+ were internal to the cycle, and the calls entry for each member shows,
+ for that member, how many times it was called from other members of
+ the cycle.
+
+Copyright (C) 2012-2024 Free Software Foundation, Inc.
+
+Copying and distribution of this file, with or without modification,
+are permitted in any medium without royalty provided the copyright
+notice and this notice are preserved.
+
+Index by function name
+
+   [2] do_max_flow(Graph&, int, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [22] Graph::addEdges_RevCsr(std::vector<std::pair<int, std::pair<int, int> >, std::allocator<std::pair<int, std::pair<int, int> > > >&) [98] boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<std::pair<int, std::pair<int, int> >, std::allocator<std::pair<int, std::pair<int, int> > > > > >::get_instance()
+  [38] synchronize(std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >&, int) [23] Graph::num_nodes_owned() [99] boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<std::pair<int, bool>, std::allocator<std::pair<int, bool> > > > >::get_instance()
+  [30] fixGap(Graph&, Container<int>&, NodeProperty<int>&, boost::mpi::communicator) [19] Graph::get_other_vertex(int, int) [100] boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<std::pair<int, double>, std::allocator<std::pair<int, double> > > > >::get_instance()
+  [24] push__(Graph&, int, int, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator) [46] Graph::frontier_pop_local(boost::mpi::communicator) [101] boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<std::pair<int, float>, std::allocator<std::pair<int, float> > > > >::get_instance()
+   [5] relabel(Graph&, int, EdgeProperty<int>&, NodeProperty<int>&, Container<int>&, boost::mpi::communicator) [10] Graph::get_edge_local_index(Edge) [102] boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<std::pair<int, int>, std::allocator<std::pair<int, int> > > > >::get_instance()
+   [3] discharge(Graph&, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, Container<int>&, boost::mpi::communicator) [18] Graph::get_node_local_index(int) [103] boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<int, std::allocator<int> > > >::get_instance()
+  [26] EdgeProperty<int>::attachToGraph(Graph*, int*, int*, bool, bool) [51] Graph::end_node() [63] void boost::mpi::all_to_all<std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >(boost::mpi::communicator const&, std::vector<std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >, std::allocator<std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > > const&, std::vector<std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >, std::allocator<std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >&)
+   [7] EdgeProperty<int>::getValue(Edge, bool) [6] Graph::get_edge(int, int) [64] void boost::mpi::all_to_all<int>(boost::mpi::communicator const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> >&)
+  [27] EdgeProperty<int>::atomicAdd(Edge&, int) [40] Graph::num_nodes() [57] boost::detail::sp_counted_base::release()
+  [71] EdgeProperty<int>::~EdgeProperty() [11] Graph::Graph(char*, boost::mpi::communicator, int, bool) [104] Container<int>::assign(int const&, int const&, ompi_communicator_t*)
+  [72] EdgeProperty<int>::operator=(EdgeProperty<int> const&) [73] Graph::~Graph() [69] Container<int>::getIdx(int const&)
+  [25] NodeProperty<int>::attachToGraph(Graph*, int) [74] boost::serialization::singleton<boost::serialization::extended_type_info_typeid<Update> >::get_instance() [70] Container<int>::setValue(int const&, int const&, int const&)
+   [4] NodeProperty<int>::getValue(int, bool) [75] boost::serialization::singleton<boost::serialization::extended_type_info_typeid<std::unordered_set<int, std::hash<int>, std::equal_to<int>, std::allocator<int> > > >::get_instance() [43] Container<int>::atomicAdd(int const&, int const&)
+  [29] NodeProperty<int>::setValue(int, int, bool) [76] boost::serialization::singleton<boost::serialization::extended_type_info_typeid<std::vector<Update, std::allocator<Update> > > >::get_instance() [105] Container<int>::Container()
+  [28] NodeProperty<int>::atomicAdd(int, int) [77] boost::serialization::singleton<boost::serialization::extended_type_info_typeid<std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >::get_instance() [65] boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >::save_object_data(boost::archive::detail::basic_oarchive&, void const*) const
+  [61] NodeProperty<int>::NodeProperty() [78] boost::serialization::singleton<boost::serialization::extended_type_info_typeid<std::vector<std::pair<int, std::pair<int, int> >, std::allocator<std::pair<int, std::pair<int, int> > > > > >::get_instance() [50] boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<int, std::allocator<int> > >::save_object_data(boost::archive::detail::basic_oarchive&, void const*) const
+  [62] NodeProperty<int>::~NodeProperty() [79] boost::serialization::singleton<boost::serialization::extended_type_info_typeid<std::vector<std::pair<int, bool>, std::allocator<std::pair<int, bool> > > > >::get_instance() [106] std::_Hashtable<int, std::pair<int const, Property*>, std::allocator<std::pair<int const, Property*> >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true> >::_M_rehash(unsigned long, unsigned long const&)
+  [37] Rma_Datatype<int>::accumulate(int, int*, int, int, ompi_op_t*, locktype) [80] boost::serialization::singleton<boost::serialization::extended_type_info_typeid<std::vector<std::pair<int, double>, std::allocator<std::pair<int, double> > > > >::get_instance() [58] std::_Hashtable<int, std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::allocator<std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true> >::clear()
+  [20] Rma_Datatype<int>::create_window(int*, int, int, boost::mpi::communicator, ompi_info_t*) [81] boost::serialization::singleton<boost::serialization::extended_type_info_typeid<std::vector<std::pair<int, float>, std::allocator<std::pair<int, float> > > > >::get_instance() [107] std::_Hashtable<int, std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::allocator<std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true> >::_M_rehash(unsigned long, unsigned long const&)
+  [12] Rma_Datatype<int>::unlock(int, locktype) [82] boost::serialization::singleton<boost::serialization::extended_type_info_typeid<std::vector<std::pair<int, int>, std::allocator<std::pair<int, int> > > > >::get_instance() [108] std::_Hashtable<int, std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::allocator<std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true> >::~_Hashtable()
+   [9] Rma_Datatype<int>::get_data(int, int, int, locktype) [83] boost::serialization::singleton<boost::serialization::extended_type_info_typeid<std::vector<int, std::allocator<int> > > >::get_instance() [49] std::_Hashtable<int, std::pair<int const, int>, std::allocator<std::pair<int const, int> >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true> >::_M_rehash(unsigned long, unsigned long const&)
+  [13] Rma_Datatype<int>::get_lock(int, locktype, bool) [84] boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, Update> >::get_instance() [47] std::_Hashtable<int, int, std::allocator<int>, std::__detail::_Identity, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_insert_unique_node(unsigned long, unsigned long, std::__detail::_Hash_node<int, false>*, unsigned long)
+  [39] Rma_Datatype<int>::put_data(int, int*, int, int, locktype) [85] boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, std::unordered_set<int, std::hash<int>, std::equal_to<int>, std::allocator<int> > > >::get_instance() [59] std::_Hashtable<int, int, std::allocator<int>, std::__detail::_Identity, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash(unsigned long, unsigned long const&)
+  [55] Rma_Datatype<int>::Rma_Datatype() [86] boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, std::vector<Update, std::allocator<Update> > > >::get_instance() [52] void std::vector<int*, std::allocator<int*> >::_M_realloc_insert<int*>(__gnu_cxx::__normal_iterator<int**, std::vector<int*, std::allocator<int*> > >, int*&&)
+  [56] Rma_Datatype<int>::~Rma_Datatype() [87] boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >::get_instance() [54] void std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >::_M_realloc_insert<std::vector<int, std::allocator<int> > >(__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> >*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >&&)
+  [34] Graph::get_edge_i(int, int) [88] boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, std::vector<std::pair<int, std::pair<int, int> >, std::allocator<std::pair<int, std::pair<int, int> > > > > >::get_instance() [53] std::vector<int, std::allocator<int> >::_M_default_append(unsigned long)
+  [68] Graph::start_node()    [89] boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, std::vector<std::pair<int, bool>, std::allocator<std::pair<int, bool> > > > >::get_instance() [36] void std::vector<int, std::allocator<int> >::_M_realloc_insert<int const&>(__gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, int const&)
+  [48] Graph::getNeighbors(int) [90] boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, std::vector<std::pair<int, double>, std::allocator<std::pair<int, double> > > > >::get_instance() [60] std::__detail::_Map_base<int, std::pair<int const, Property*>, std::allocator<std::pair<int const, Property*> >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true>, true>::operator[](int const&)
+  [17] Graph::num_out_nbrs(int) [91] boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, std::vector<std::pair<int, float>, std::allocator<std::pair<int, float> > > > >::get_instance() [44] std::__detail::_Map_base<int, std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::allocator<std::pair<int const, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true>, true>::operator[](int const&)
+  [21] Graph::readFromFile(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, int&, int&, std::vector<int, std::allocator<int> >&, std::vector<int, std::allocator<int> >&, std::vector<int, std::allocator<int> >&, int&) [92] boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, std::vector<std::pair<int, int>, std::allocator<std::pair<int, int> > > > >::get_instance() [8] std::__detail::_Map_base<int, std::pair<int const, int>, std::allocator<std::pair<int const, int> >, std::__detail::_Select1st, std::equal_to<int>, std::hash<int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true>, true>::operator[](int const&)
+  [41] Graph::frontier_push(int&, boost::mpi::communicator) [93] boost::serialization::singleton<boost::archive::detail::iserializer<boost::mpi::packed_iarchive, std::vector<int, std::allocator<int> > > >::get_instance() [66] std::vector<int, std::allocator<int> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*>(__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, __gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*)
+  [45] Graph::frontier_empty(boost::mpi::communicator) [94] boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, Update> >::get_instance() [67] std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >* std::__do_uninit_fill_n<std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >*, unsigned long, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >(std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >*, unsigned long, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > const&)
+  [14] Graph::get_edge_owner(Edge) [95] boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::unordered_set<int, std::hash<int>, std::equal_to<int>, std::allocator<int> > > >::get_instance() [35] _dl_relocate_static_pie
+  [16] Graph::get_node_owner(int) [96] boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<Update, std::allocator<Update> > > >::get_instance() [15] _init
+  [42] Graph::sync_reduction() [97] boost::serialization::singleton<boost::archive::detail::oserializer<boost::mpi::packed_oarchive, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > > >::get_instance()

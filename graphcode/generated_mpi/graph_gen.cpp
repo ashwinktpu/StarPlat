@@ -13,7 +13,7 @@ int main (int argc, char ** argv) {
 
     fileIO () ;
     srand (atoi(argv[1])) ;
-    int numVertices = 10 ;
+    int numVertices = atoi(argv[2]);
     int sparsityFactor = 5 ;
     std::set<std::pair<int,int> > recorder ;
     int source = 0, sink = 1 ;
