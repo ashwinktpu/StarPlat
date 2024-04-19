@@ -1,0 +1,24 @@
+// function with for all
+
+function test (Graph g, int n)
+{
+    int res = 0;
+    int sum = 0;
+    forall(row in g.nodes())
+    {
+        if(row > n)
+        {
+            res++;
+        }
+
+        forall(row1 in g.nodes())
+        {
+            if(sum < row1)
+            {
+                sum++;
+            }
+            res++;                  // sum has to be live here because this forAll is not parallelized
+        }
+    }
+    return res;
+}

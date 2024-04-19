@@ -1,0 +1,20 @@
+// function with a while statement
+
+function test (int n)
+{
+    int res = 1;
+    int num = n;
+
+    while(n)
+    {
+        res = num*res;
+        n--;
+    }
+
+    while(true)         // "res" should be live here
+    {
+        return num;     // "res" should not live here
+    }
+    
+    return res;
+}

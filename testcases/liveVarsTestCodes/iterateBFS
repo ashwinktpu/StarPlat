@@ -1,0 +1,31 @@
+// funcion with iterateBFS construct
+
+function Compute_BC ( Graph g,propNode <float> BC,SetN<g> sourceSet)
+{
+    g.attachNodeProperty(BC = 0);
+    propNode<float> sigma;
+    propNode<float> delta;
+
+    for(src in sourceSet){
+        g.attachNodeProperty(delta = 0);
+        g.attachNodeProperty(sigma = 0);
+        src.sigma = 1;
+     
+        iterateInBFS(v in g.nodes() from src)
+        {
+            for(w in g.neighbors(v))
+            {
+                v.sigma = v.sigma + w.sigma;
+            }
+        }
+        iterateInReverse(v!=src)
+        {
+            for(w in g.neighbors(v))
+            {
+       	        v.delta = v.delta + (v.sigma / w.sigma) * ( 1 + w.delta);
+            }
+     
+	        v.BC = v.BC + v.delta;
+        } 
+  }
+}

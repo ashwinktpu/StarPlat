@@ -364,6 +364,15 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
 
     PropAccess *propId = forAll->isSourceField() ? forAll->getPropSource() : NULL;
     Identifier *iterator = forAll->getIterator();
+
+    bool createsFine = create_Symbol(currVarSymbT, iterator, new Type());
+    /*
+      Here we are passing an empty instance of type
+      This works fine but if proper type is required,
+      Either create a new type for the iterator in forALL
+      Or infer the type??
+    */
+
     searchSuccess = checkHeaderSymbols(source1, propId, forAll);
 
     if (forAll->isSourceExpr())
@@ -433,6 +442,15 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
       {
         string methodString(extractElem->getMethodId()->getIdentifier());
         list<argument *> argList = extractElem->getArgList();
+        list<argument *>::iterator itr;
+        for (itr = argList.begin(); itr != argList.end(); itr++)
+        {
+          argument *arg = (*itr);
+          if (arg->isAssignExpr())
+            buildForStatements(arg->getAssignExpr());
+          else
+            checkForExpressions(arg->getExpr());
+        }
         if (methodString == nbrCall)
         {
           forAll->addAtomicSignalToStatements();
@@ -656,6 +674,21 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
   case NODE_ITRBFS:
   {
     iterateBFS *iBFS = (iterateBFS *)stmt;
+
+    Identifier *rootNode = iBFS->getRootNode();
+    findSymbolId(rootNode);
+    Identifier *graphId = iBFS->getGraphCandidate();
+    findSymbolId(graphId);
+    
+    Identifier* iterator = iBFS->getIteratorNode();
+    bool createsFine = create_Symbol(currVarSymbT, iterator, new Type());
+    /*
+      Here we are passing an empty instance of type
+      This works fine but if proper type is required,
+      Either create a new type for the iterator in forALL
+      Or infer the type??
+    */
+    
     string backend(backendTarget);
 
     if ((backend.compare("omp") == 0) || (backend.compare("amd") == 0) || (backend.compare("cuda") == 0) || (backend.compare("multigpu") == 0)|| (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0))
@@ -733,6 +766,12 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
     preprocessEnv = onDeleteStmt;
     buildForStatements(onDeleteStmt->getStatements());
     preprocessEnv = NULL;
+    break;
+  }
+  case NODE_UNARYSTMT:
+  {
+    unary_stmt* unaryStmt = (unary_stmt*)stmt;
+    checkForExpressions(unaryStmt->getUnaryExpr());
     break;
   }
   }

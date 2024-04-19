@@ -1,7 +1,6 @@
-#include "../../analyser/analyserUtil.h"
+#include "liveVarsAnalyser.h"
 
-usedVariables getVarsStatement(statement* stmt);
-usedVariables getVarsExpr(Expression *expr)
+usedVariables liveVarsAnalyser::getVarsExpr(Expression *expr)
 {
     usedVariables result;
 
@@ -38,28 +37,40 @@ usedVariables getVarsExpr(Expression *expr)
         result = getVarsExpr(expr->getLeft());
         result.merge(getVarsExpr(expr->getRight()));
     }
+    else if (expr->isProcCallExpr()) {
+        result = getVarsExprProcCall((proc_callExpr*) expr);
+    }
     return result;
 }
 
-
-usedVariables getVarsWhile(whileStmt *stmt)
+usedVariables liveVarsAnalyser::getVarsWhile(whileStmt *stmt)
 {
   usedVariables currVars = getVarsExpr(stmt->getCondition());
   currVars.merge(getVarsStatement(stmt->getBody()));
+  return currVars;
+}
+
+usedVariables liveVarsAnalyser::getVarsDoWhile(dowhileStmt *stmt)
+{
+  usedVariables currVars = getVarsExpr(stmt->getCondition());
+  currVars.merge(getVarsStatement(stmt->getBody()));
+  return currVars;
+}
+
+usedVariables liveVarsAnalyser::getVarsDeclaration(declaration *stmt)
+{
+  usedVariables currVars;
+  currVars.addVariable(stmt->getdeclId(), WRITE);
+  if(stmt->isInitialized())
+  {
+    usedVariables exprVars = getVarsExpr(stmt->getExpressionAssigned());
+    currVars.merge(exprVars);
+  }
 
   return currVars;
 }
 
-
-usedVariables getVarsDoWhile(dowhileStmt *stmt)
-{
-  usedVariables currVars = getVarsExpr(stmt->getCondition());
-  currVars.merge(getVarsStatement(stmt->getBody()));
-
-  return currVars;
-}
-
-usedVariables getVarsAssignment(assignment *stmt)
+usedVariables liveVarsAnalyser::getVarsAssignment(assignment *stmt)
 {
   usedVariables currVars;
   if (stmt->lhs_isProp())
@@ -76,7 +87,7 @@ usedVariables getVarsAssignment(assignment *stmt)
   return currVars;
 }
 
-usedVariables getVarsIf(ifStmt *stmt)
+usedVariables liveVarsAnalyser::getVarsIf(ifStmt *stmt)
 {
   usedVariables currVars = getVarsExpr(stmt->getCondition());
   currVars.merge(getVarsStatement(stmt->getIfBody()));
@@ -86,20 +97,115 @@ usedVariables getVarsIf(ifStmt *stmt)
   return currVars;
 }
 
-usedVariables getVarsFixedPoint(fixedPointStmt *stmt)
+usedVariables liveVarsAnalyser::getVarsFixedPoint(fixedPointStmt *stmt)
 {
   usedVariables currVars = getVarsExpr(stmt->getDependentProp());
-  currVars.addVariable(stmt->getFixedPointId(), READ);
+  currVars.addVariable(stmt->getFixedPointId(), READ_WRITE);
   currVars.merge(getVarsStatement(stmt->getBody()));
   return currVars;
 }
-// TODO : Handle this atlast
 
-usedVariables getVarsReduction(reductionCallStmt *stmt)
+usedVariables liveVarsAnalyser::getVarsUnary(unary_stmt *stmt)
+{
+  Expression *unaryExpr = stmt->getUnaryExpr();
+  Expression *varExpr = unaryExpr->getUnaryExpr();
+
+  usedVariables currUsed;
+  if (varExpr->isIdentifierExpr())
+    currUsed.addVariable(varExpr->getId(), READ_WRITE);
+  else if (varExpr->isPropIdExpr())
+  {
+    currUsed.addVariable(varExpr->getPropId()->getIdentifier1(), READ);
+    currUsed.addVariable(varExpr->getPropId()->getIdentifier2(), WRITE);
+  }
+
+  return currUsed;
+}
+
+usedVariables liveVarsAnalyser::getVarsBFS(iterateBFS *stmt)
+{
+  usedVariables currVars = getVarsStatement(stmt->getBody());
+  return currVars;
+}
+
+usedVariables liveVarsAnalyser::getVarsRBFS(iterateReverseBFS *stmt)
+{
+  usedVariables currVars = getVarsStatement(stmt->getBody());
+  if(stmt->hasFilter())
+  {
+    currVars.merge(getVarsExpr(stmt->getBFSFilter()));
+  }
+
+  return currVars;
+}
+
+usedVariables liveVarsAnalyser::getVarsForAll(forallStmt *stmt)
+{
+  usedVariables currVars = getVarsStatement(stmt->getBody());
+  currVars.removeVariable(stmt->getIterator(), READ_WRITE);
+
+  if(stmt->isSourceProcCall())
+  {
+      proc_callExpr *expr = stmt->getExtractElementFunc();
+        for(argument* arg: expr->getArgList()){
+            if(arg->getExpr() != nullptr) 
+                currVars.merge(getVarsExpr(arg->getExpr()));
+        }
+  }
+  else if(!stmt->isSourceField())
+  {
+      Identifier *iden = stmt->getSource();
+      currVars.addVariable(iden, READ);
+  }
+  else
+  {
+      PropAccess *propId = stmt->getPropSource();
+      currVars.addVariable(propId->getIdentifier1(), READ);
+  }
+
+  if (stmt->hasFilterExpr())
+    currVars.merge(getVarsExpr(stmt->getfilterExpr()));
+
+  return currVars;
+}
+
+usedVariables liveVarsAnalyser::getVarsBlock(blockStatement *blockStmt)
+{
+  list<statement *> stmtList = blockStmt->returnStatements();
+  list<Identifier *> declVars;
+
+  usedVariables currVars;
+  for (statement *stmt : stmtList)
+  {
+    if (stmt->getTypeofNode() == NODE_DECL)
+    {
+      declaration *decl = (declaration *)stmt;
+      declVars.push_back(decl->getdeclId());
+
+      if (decl->isInitialized())
+      {
+        usedVariables exprVars = getVarsExpr(decl->getExpressionAssigned());
+        currVars.merge(exprVars);
+      }
+    }
+    else
+    {
+      usedVariables stmtVars = getVarsStatement(stmt);
+      currVars.merge(stmtVars);
+    }
+  }
+
+  for (Identifier *dVars : declVars)
+    currVars.removeVariable(dVars, READ_WRITE);
+
+  return currVars;
+}
+
+usedVariables liveVarsAnalyser::getVarsReduction(reductionCallStmt *stmt)
 {
   usedVariables currVars;
 
-  auto getVarsReductionCall = [&currVars](reductionCall* callExpr) -> void
+  auto getVarsReductionCall = [this, &currVars](reductionCall* callExpr) -> void
   {
     for(argument* arg: callExpr->getargList()){
       if(arg->isExpr())
@@ -147,7 +253,7 @@ usedVariables getVarsReduction(reductionCallStmt *stmt)
         }
       }
       getVarsReductionCall(stmt->getReducCall());
-
+      
       for(ASTNode* node: stmt->getRightList())
       {
         if(node->getTypeofNode() == NODE_ID)
@@ -183,133 +289,37 @@ usedVariables getVarsReduction(reductionCallStmt *stmt)
   return currVars;
 }
 
-usedVariables getVarsUnary(unary_stmt *stmt)
+usedVariables liveVarsAnalyser::getVarsProcCall(proc_callStmt *procCall)
 {
-  Expression *unaryExpr = stmt->getUnaryExpr();
-  Expression *varExpr = unaryExpr->getUnaryExpr();
-
-  usedVariables currUsed;
-  if (varExpr->isIdentifierExpr())
-    currUsed.addVariable(varExpr->getId(), READ_WRITE);
-  else if (varExpr->isPropIdExpr())
-  {
-    currUsed.addVariable(varExpr->getPropId()->getIdentifier1(), READ);
-    currUsed.addVariable(varExpr->getPropId()->getIdentifier2(), WRITE);
-  }
-
-  return currUsed;
+  proc_callExpr *callExpr = procCall->getProcCallExpr();
+  return getVarsExprProcCall(callExpr);
 }
 
-/*
-usedVariables getVarsBFS(iterateBFS *stmt)
+usedVariables liveVarsAnalyser::getVarsExprProcCall(proc_callExpr *procCall)
 {
-  usedVariables currVars = getVarsStatement(stmt->getBody());
-  if (stmt->getRBFS() != nullptr)
-  {
-    iterateReverseBFS *RBFSstmt = stmt->getRBFS();
-    if (RBFSstmt->getBFSFilter() != nullptr)
-      currVars.merge(RBFSstmt->getBFSFilter());
-    currVars.merge(RBFSstmt->getBody());
-  }
-
-  return currVars;
-}*/
-
-usedVariables getVarsForAll(forallStmt *stmt)
-{
-  usedVariables currVars = getVarsStatement(stmt->getBody());
-  currVars.removeVariable(stmt->getIterator(), READ_WRITE);
-
-  if(stmt->isSourceProcCall())
-  {
-      proc_callExpr *expr = stmt->getExtractElementFunc();
-        for(argument* arg: expr->getArgList()){
-            if(arg->getExpr() != nullptr)
-                currVars.merge(getVarsExpr(arg->getExpr()));
-        }
-  }
-  else if(!stmt->isSourceField())
-  {
-      Identifier *iden = stmt->getSource();
-      currVars.addVariable(iden, READ);
-  }
-  else
-  {
-      PropAccess *propId = stmt->getPropSource();
-      currVars.addVariable(propId->getIdentifier1(), READ);
-  }
-
-  if (stmt->hasFilterExpr())
-    currVars.merge(getVarsExpr(stmt->getfilterExpr()));
-
-  return currVars;
-}
-
-usedVariables getVarsBlock(blockStatement *blockStmt)
-{
-  list<statement *> stmtList = blockStmt->returnStatements();
-  list<Identifier *> declVars;
-
   usedVariables currVars;
-  for (statement *stmt : stmtList)
+  // if(procCall->getId1() != NULL)
+  //   currVars.addVariable(procCall->getId1(), READ);
+  for (argument *arg : procCall->getArgList())
   {
-    if (stmt->getTypeofNode() == NODE_DECL)
-    {
-      declaration *decl = (declaration *)stmt;
-      declVars.push_back(decl->getdeclId());
-
-      if (decl->isInitialized())
-      {
-        usedVariables exprVars = getVarsExpr(decl->getExpressionAssigned());
-        for (Identifier *dVars : declVars)
-          exprVars.removeVariable(dVars, READ_WRITE);
-
-        currVars.merge(exprVars);
-      }
-    }
-    else
-    {
-      usedVariables stmtVars = getVarsStatement(stmt);
-      for (Identifier *dVars : declVars)
-        stmtVars.removeVariable(dVars, READ_WRITE);
-
-      currVars.merge(stmtVars);
-    }
+    if (arg->isExpr())
+      currVars.merge(getVarsExpr(arg->getExpr()));
+    else if (arg->isAssignExpr())
+      currVars.merge(getVarsAssignment(arg->getAssignExpr()));
   }
-
-  return currVars;
-}
-/* Function: getDeclaredPropertyVarsOfBlock
- * Return all the Property variables declared in a the block!
- * Used for cudaFree those variables
- * usedVariables may be a misnomer?! for this function.
- * --rajesh
- */
-usedVariables getDeclaredPropertyVarsOfBlock(blockStatement *blockStmt)
-{
-  list<statement *> stmtList = blockStmt->returnStatements();
-  list<Identifier *> declVars;
-
-  usedVariables currVars;
-  for (statement *stmt : stmtList)
-  {
-    if (stmt->getTypeofNode() == NODE_DECL) {
-      declaration *decl = (declaration *)stmt;
-      if(decl->getType()->isPropNodeType()) {
-        currVars.addVariable(decl->getdeclId(),READ_WRITE); //2nd arg may be not used by us
-      }
-    }
-  }
-
+  
   return currVars;
 }
 
-usedVariables getVarsStatement(statement *stmt)
+usedVariables liveVarsAnalyser::getVarsStatement(statement *stmt)
 {
   switch (stmt->getTypeofNode())
   {
   case NODE_BLOCKSTMT:
     return getVarsBlock((blockStatement *)stmt);
+
+  case NODE_DECL:
+    return getVarsDeclaration((declaration *)stmt);
 
   case NODE_ASSIGN:
     return getVarsAssignment((assignment *)stmt);
@@ -325,20 +335,24 @@ usedVariables getVarsStatement(statement *stmt)
 
   case NODE_DOWHILESTMT:
       return getVarsDoWhile((dowhileStmt *)stmt);
-
+  
   case NODE_FORALLSTMT:
       return getVarsForAll((forallStmt *) stmt);
 
   case NODE_REDUCTIONCALLSTMT:
     return getVarsReduction((reductionCallStmt *)stmt);
 
-    /*case NODE_ITRBFS:
-      return getVarsBFS((iterateBFS *)stmt);*/
+  case NODE_ITRBFS:
+    return getVarsBFS((iterateBFS *)stmt);
+
+  case NODE_ITRRBFS:
+    return getVarsRBFS((iterateReverseBFS *)stmt);
 
   case NODE_FIXEDPTSTMT:
-      return getVarsFixedPoint((fixedPointStmt *)stmt);
-  default:
-    ; // added to fix warning!
+    return getVarsFixedPoint((fixedPointStmt *)stmt);
+
+  case NODE_PROCCALLSTMT:
+    return getVarsProcCall((proc_callStmt *)stmt);
   }
 
   return usedVariables();
