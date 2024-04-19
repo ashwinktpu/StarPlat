@@ -108,9 +108,14 @@ template <typename T>
       
       bool no_checks_needed = !check_concurrency;
       /* Barenya ==> Trying one more optimisation */
-	    propList.get_lock (owner_proc, SHARED_LOCK, no_checks_needed) ;
+      if (already_locked_processors_shared[owner_proc]) {
+        propList.flush (owner_proc) ;
+      } else {
+	      propList.get_lock (owner_proc, SHARED_LOCK, no_checks_needed) ;
+      }
 	    T* data = propList.get_data(owner_proc, local_node_id, 1, SHARED_LOCK);
-      propList.unlock(owner_proc, SHARED_LOCK);
+      if (!already_locked_processors_shared[owner_proc])
+        propList.unlock(owner_proc, SHARED_LOCK);
 			int val = data[0] ;
 			delete[] data ;
 			data =NULL ;

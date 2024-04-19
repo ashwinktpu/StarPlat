@@ -197,7 +197,7 @@ void do_max_flow(Graph& g, int source, int sink, NodeProperty<int>& label,
     discharge(g,u,label,excess,curr_edge,residue, count, world);
     if (activate == 0) {
     fixGap(g,count,label, world);
-    activate = 10000 ;}
+    activate = 100 ;}
     else {activate--;}
   //  printf ("fat barriers started\n") ;
     // excess.fatBarrier () ;
