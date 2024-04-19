@@ -17,7 +17,7 @@ function ComputePageRank(Graph g, float beta, float delta, int maxIter, propNode
             } else {
                 diff += v.pageRank - newPageRank;
             }
-            v.pageRank = newPageRank;
+            v.pageRankNext = newPageRank;
         }
         pageRank = pageRankNext;
         iterCount++;

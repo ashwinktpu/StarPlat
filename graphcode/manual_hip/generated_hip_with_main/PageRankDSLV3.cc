@@ -1,13 +1,6 @@
 #include "PageRankDSLV3.h"
 
 
-__global__ void PrintArray(int size, float* array) {
-  int tid = blockIdx.x * blockDim.x + threadIdx.x;
-  if (tid < size) {
-    printf("Array[%d]: %f\n", tid, array[tid]);
-  }
-}
-
 void ComputePageRank(
   graph& g,
   float hBeta,
@@ -18,9 +11,6 @@ void ComputePageRank(
 
   int V = g.num_nodes();
   int E = g.num_edges();
-
-  std::cout << "V: " << V << std::endl;
-  std::cout << "E: " << E << std::endl;
 
   int *hOffsetArray;
   int *hSrcList;
@@ -85,26 +75,26 @@ void ComputePageRank(
   hipMalloc(&dDiff, sizeof(float));
   do {
     hDiff = 0;
-    hipMemcpy(dIterCount, &hIterCount, sizeof(int) * (1), hipMemcpyHostToDevice);
     hipMemcpy(dDiff, &hDiff, sizeof(float) * (1), hipMemcpyHostToDevice);
+    hipMemcpy(dIterCount, &hIterCount, sizeof(int) * (1), hipMemcpyHostToDevice);
     hipMemcpy(dDelta, &hDelta, sizeof(float) * (1), hipMemcpyHostToDevice);
     hipMemcpy(dNumNodes, &hNumNodes, sizeof(float) * (1), hipMemcpyHostToDevice);
-    ComputePageRankKernel<<<numBlocks, numThreads>>>(V, E, dOffsetArray, dSrcList, dRevOffsetArray, dDiff, dDelta, dNumNodes, dPageRank);
+    ComputePageRankKernel<<<numBlocks, numThreads>>>(V, E, dOffsetArray, dSrcList, dRevOffsetArray, dDiff, dDelta, dNumNodes, dPageRank, dPageRankNext);
     hipDeviceSynchronize();
     hipMemcpy(&hDiff, dDiff, sizeof(float) * (1), hipMemcpyDeviceToHost);
     hipMemcpy(&hDelta, dDelta, sizeof(float) * (1), hipMemcpyDeviceToHost);
     hipMemcpy(&hNumNodes, dNumNodes, sizeof(float) * (1), hipMemcpyDeviceToHost);
 
-
-
     hipMemcpy(dPageRank, dPageRankNext, sizeof(float) * (V), hipMemcpyDeviceToDevice);
     hIterCount++;
+    PrintArrayKernel<<<1, 1>>>(dPageRank, V);
+    hipDeviceSynchronize();
+    std::cout << "iter: " << hIterCount << " hDiff: " << hDiff << " hBeta: " << hBeta << std::endl;
 
   } while((hDiff > hBeta) && (hIterCount < hMaxIter));
 
+  hipMemcpy(hPageRank, dPageRank, sizeof(float) * (V), hipMemcpyDeviceToHost);
 }
-
-
 
 int main(int argc, char* argv[]) {
   if (argc != 2) {
@@ -116,10 +106,8 @@ int main(int argc, char* argv[]) {
   graph g(filepath);
   g.parseGraph();
 
-
-
-  float beta = 0.85;
-  float delta = 0.0001;
+  float beta = 0.000000000000001;
+  float delta = 0.85;
   int maxIter = 100;
 
   int V = g.num_nodes();
