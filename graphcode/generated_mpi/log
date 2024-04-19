@@ -1,10 +1,5 @@
 program started
-program started
-start node = 0 and end node = 499
-start node = 500 and end node = 999
-graph ready
+start node = 0 and end node = 999
 graph ready
 excess at sink = 7059
-time taken = 8.482371
-excess at sink = 7059
-time taken = 8.482371
+time taken = 5.980387
