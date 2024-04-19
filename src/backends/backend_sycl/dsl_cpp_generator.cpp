@@ -10,6 +10,8 @@ bool flag_for_device_variable = 0; // temporary fix to accomodate device variabl
 std::unordered_set<string> fixedPointVariables = {};
 std::unordered_set<string> ForAllVariables = {};
 int atomicDataVariableCount = 0;
+string forAllSrcVariable = "";
+string forAllNbrVariable = "";
 //~ using namespace spsycl;
 namespace spsycl
 {
@@ -674,6 +676,55 @@ namespace spsycl
         }
     }
 
+    bool dsl_cpp_generator::generateVariableDeclGetEdge(declaration *declStmt, bool isMainFile){
+        char strBuffer[1024];
+        if(declStmt->isInitialized() && declStmt->getExpressionAssigned()->isProcCallExpr()){
+            Expression* expr = declStmt->getExpressionAssigned();
+            proc_callExpr *proc = (proc_callExpr *)expr;
+            string methodId(proc->getMethodId()->getIdentifier());
+            if(methodId == "get_edge"){
+
+                list<argument *> argList = proc->getArgList();
+                assert(argList.size() == 2);
+                char* srcId = argList.front()->getExpr()->getId()->getIdentifier();
+                char *destId = argList.back()->getExpr()->getId()->getIdentifier(); 
+
+                main.pushstr_newL("");
+                main.pushstr_newL("// Traversing for get_edge");
+
+                const char *varType = convertToCppType(declStmt->getType());
+                const char *varName = declStmt->getdeclId()->getIdentifier();
+
+                sprintf(strBuffer, "%s %s = edge;", varType, varName);
+                main.pushstr_newL(strBuffer);
+
+                if(!isMainFile && forAllSrcVariable!="" && forAllNbrVariable!="" && forAllSrcVariable==srcId && forAllNbrVariable==destId){
+                    return true;
+                }
+
+                if(isMainFile){
+                    sprintf(strBuffer, "for(int edge=h_meta[%s]; edge<h_meta[%s+1]; edge++){", srcId, srcId);
+                    main.pushstr_newL(strBuffer);
+                    sprintf(strBuffer, "if(h_data[edge] == %s){", destId);
+                    main.pushstr_newL(strBuffer);
+                }
+                else{
+                    sprintf(strBuffer, "for(int edge=d_meta[%s]; edge<d_meta[%s+1]; edge++){", srcId, srcId);
+                    main.pushstr_newL(strBuffer);
+                    sprintf(strBuffer, "if(d_data[edge] == %s){", destId);
+                    main.pushstr_newL(strBuffer);
+                }
+                sprintf(strBuffer, "%s = edge;", varName);
+                main.pushstr_newL(strBuffer);
+                main.pushstr_newL("}");
+                main.pushstr_newL("}");
+                main.pushstr_newL("");
+                return true;
+            }
+        }
+        return false;
+    }
+
     void dsl_cpp_generator::generateVariableDecl(declaration *declStmt, bool isMainFile)
     {
         Type *type = declStmt->getType();
@@ -727,6 +778,9 @@ namespace spsycl
         }
         else if (type->isNodeEdgeType())
         {
+            if(generateVariableDeclGetEdge(declStmt, isMainFile))  //if decl stmt has been given assigned get_edge then return.
+                return;
+
             char strBuffer[1024];
             const char *varType = convertToCppType(type);
             const char *varName = declStmt->getdeclId()->getIdentifier();
@@ -1011,6 +1065,8 @@ namespace spsycl
         usedVariables usedVars = getVariablesForAll(forAll);
         list<Identifier *> vars = usedVars.getVariables();
 
+        forAllSrcVariable = loopVar;
+
         sprintf(strBuffer, "Q.submit([&](handler &h){ h.parallel_for(NUM_THREADS, [=](id<1> %s){for (; %s < V; %s += NUM_THREADS)", loopVar, loopVar, loopVar);
         main.pushString(strBuffer);
         main.pushstr_newL("{ // BEGIN KER FUN via ADDKERNEL");
@@ -1037,6 +1093,8 @@ namespace spsycl
         main.pushstr_newL("}");
         main.pushstr_newL("}); }).wait(); // end KER FUNC");
         main.NewLine();
+
+        forAllSrcVariable = "";
     }
 
     bool dsl_cpp_generator::allGraphIteration(char *methodId)
@@ -1099,6 +1157,7 @@ namespace spsycl
                     main.pushstr_newL(strBuffer);
                     sprintf(strBuffer, "%s %s = %s[%s];", "int", iterator->getIdentifier(), "d_data", "edge"); // needs to move the addition of
                     main.pushstr_newL(strBuffer);
+                    forAllNbrVariable = iterator->getIdentifier();
                 }
                 if (s.compare("nodes_to") == 0) // for pageRank
                 {
@@ -1229,7 +1288,12 @@ namespace spsycl
                     std::cout << "src:" << wItr << '\n';
                     char *nbrVar;
 
-                    if (forAll->getParent()->getParent()->getTypeofNode() == NODE_ITRBFS)
+                    ASTNode* par =  forAll->getParent()->getParent();
+
+                    while(par!=NULL && par->getTypeofNode()!=NODE_ITRBFS && par->getTypeofNode()!=NODE_ITRRBFS){
+                        par = par->getParent();
+                    }
+                    if (par!=NULL && par->getTypeofNode()==NODE_ITRBFS)
                     {
                         list<argument *> argList = extractElemFunc->getArgList();
                         assert(argList.size() == 1);
@@ -1253,7 +1317,7 @@ namespace spsycl
 
                         main.pushstr_newL("}");
                     }
-                    else if (forAll->getParent()->getParent()->getTypeofNode() == NODE_ITRRBFS)
+                    else if (par!=NULL && par->getTypeofNode()==NODE_ITRRBFS)
                     { // ITERATE REV BFS
                         char strBuffer[1024];
                         list<argument *> argList = extractElemFunc->getArgList();
@@ -1308,6 +1372,12 @@ namespace spsycl
                     Expression *filterExpr = forAll->getfilterExpr();
                     generatefixedpt_filter(filterExpr, false);
                 }
+            }
+
+            if(neighbourIteration(iteratorMethodId->getIdentifier())){
+                string s = string(forAll->getExtractElementFunc()->getMethodId()->getIdentifier());
+                if(s.compare("neighours") == 0)
+                    forAllNbrVariable = "";
             }
         }
     }
@@ -1735,24 +1805,27 @@ namespace spsycl
 
         main.pushstr_newL("}while(!finished);");
 
-        blockStatement *
-            revBlock = (blockStatement *)bfsAbstraction->getRBFS()->getBody();
-        list<statement *> revStmtList = revBlock->returnStatements();
-        addRevBFSIterationLoop(bfsAbstraction);
+        if((blockStatement *)bfsAbstraction->getRBFS()!=NULL && (blockStatement *)bfsAbstraction->getRBFS()->getBody()!=NULL)
+        {
+            blockStatement *
+                revBlock = (blockStatement *)bfsAbstraction->getRBFS()->getBody();
+            list<statement *> revStmtList = revBlock->returnStatements();
+            addRevBFSIterationLoop(bfsAbstraction);
 
-        main.pushstr_newL("//BACKWARD PASS");
-        main.pushstr_newL("while(hops_from_source > 1) {");
+            main.pushstr_newL("//BACKWARD PASS");
+            main.pushstr_newL("while(hops_from_source > 1) {");
 
-        main.NewLine();
-        main.pushstr_newL("//KERNEL Launch");
+            main.NewLine();
+            main.pushstr_newL("//KERNEL Launch");
 
-        main.NewLine();
-        addRevBFSIterKernel(revStmtList); // KERNEL BODY
+            main.NewLine();
+            addRevBFSIterKernel(revStmtList); // KERNEL BODY
 
-        main.pushstr_newL("hops_from_source--;");
-        generateMemCpyStr("d_hops_from_source", "&hops_from_source", "int", "1");
+            main.pushstr_newL("hops_from_source--;");
+            generateMemCpyStr("d_hops_from_source", "&hops_from_source", "int", "1");
 
-        main.pushstr_newL("}");
+            main.pushstr_newL("}");
+        }
     }
 
     void dsl_cpp_generator::generateInitkernel1(assignment *assign, bool isMainFile, bool isPropEdge = false)

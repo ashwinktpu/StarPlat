@@ -66,6 +66,7 @@ namespace spsycl
         void generateFunc(ASTNode *proc);
         void generateFuncHeader(Function *proc);
         void generateProcCall(proc_callStmt *procCall, bool isMainFile);
+        bool generateVariableDeclGetEdge(declaration *declStmt, bool isMainFile);
         void generateVariableDecl(declaration *decl, bool isMainFile);
         void generateStatement(statement *stmt, bool isMainFile);
         // void generateAssignmentStmt(assignment* assignStmt);
