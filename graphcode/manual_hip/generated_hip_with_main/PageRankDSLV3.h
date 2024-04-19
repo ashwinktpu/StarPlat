@@ -20,7 +20,16 @@ bool IsAnEdge(const int, const int, const int*, const int*);
 
 
 __global__
-void ComputePageRankKernel(int V, int E, int *dOffsetArray, int *dSrcList, int *dRevOffsetArray, float *dDiff, float *dDelta, float *dNumNodes, float* dPageRank) {
+void PrintArrayKernel(float* array, int size) {
+    printf("Array: ");
+    for (int i = 0; i < size; i++) {
+        printf("%f ", array[i]);
+    }
+    printf("\n");
+}
+
+__global__
+void ComputePageRankKernel(int V, int E, int *dOffsetArray, int *dSrcList, int *dRevOffsetArray, float *dDiff, float *dDelta, float *dNumNodes, float* dPageRank, float* dPageRankNext) {
 
   unsigned dV = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -39,8 +48,9 @@ void ComputePageRankKernel(int V, int E, int *dOffsetArray, int *dSrcList, int *
   } else {
     atomicAdd((float*) dDiff, (float) dPageRank[dV] - dNewPageRank);
   }
-  dPageRank[dV] = dNewPageRank;
+  dPageRankNext[dV] = dNewPageRank;
   printf("dV: %d, dSum: %f dNewPageRank: %f, dPageRank[%d]: %f, dDiff: %f\n", dV, dSum, dNewPageRank, dV, dPageRank[dV], *dDiff);
+
 }
 
 template <typename T>
@@ -54,7 +64,7 @@ void initArray(const unsigned V, T *dArray, T value) {
 
 template <typename T>
 __global__
-void initIndex(const unsigned V, T* dArray, T value, int index) {
+void initIndex(const unsigned V, T* dArray, int index, T value) {
   if(index < V) {
     dArray[index] = value;
   }
