@@ -1,12 +1,28 @@
 function v_cover(Graph g)
 {
-    propNode<bool> visited;
-    g.attachNodeProperty(visited = False);
-    forall(v in g.nodes().filter(visited == False)){
+    propNode<int> degree;
+    g.attachNodeProperty(degree = 0);
+
+    propNode<bool> vertexTaken;
+    g.attachNodeProperty(vertexTaken = False);
+
+    forall(v in g.nodes){
+        forall(nbr in g.neighbors(v)){
+            v.degree = v.degree + 1;
+        }
+    }
+
+    forall(v in g.nodes().filter(vertexTaken == False)){
+        bool flag = True;
         for(nbr in g.neighbors(v)){
-            if(nbr.visited == False){
-                nbr.visited = True;
-                v.visited = True;
+            if(flag && v.vertexTaken == False && nbr.vertexTaken == False){
+                if(v.degree > nbr.degree){
+                    v.vertexTaken = True;
+                    flag = False;
+                }
+                else{
+                    nbr.vertexTaken = True;
+                }
             }
         }
     }

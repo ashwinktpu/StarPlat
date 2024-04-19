@@ -1,0 +1,138 @@
+function vc(Graph g){
+    propNode <bool> vertexTaken;
+    g.attachNodeProperty(vertexTaken = False);
+
+    propNode < int > label;
+    g.attachNodeProperty(label = -1);
+
+    propNode < int > degree;
+    g.attachNodeProperty(degree = 0);
+
+    propNode <bool> temp;
+    g.attachNodeProperty(temp = False);
+
+    forall(v in g.nodes){
+        forall(nbr in g.neighbors(v)){
+            v.degree = v.degree + 1;
+        }
+    }
+    
+    bool finish = False;
+    do{
+        finish = True;
+
+        node source;
+
+        forall(v in g.nodes().filter(v.vertexTaken == False)){
+            forall(nbr in g.neighbors(v)){
+                if(nbr.vertexTaken == False){
+                    finish = False;
+                    source = v;
+                }
+            }
+        }
+
+        if(finish == False){
+
+            forall(v in g.nodes()){
+                v.label = -1;
+                v.temp = False;
+            }
+
+            source.label = 0;
+
+            iterateInBFS(v in g.nodes() from source) {
+                forall(w in g.neighbors(v)) {
+                    if(v.label!=-1 && w.label == -1 && w.vertexTaken==False) {
+                        w.label = v.label+1;
+                    }
+                }
+            }
+
+            forall(v in g.nodes()){
+                if(v.label!=-1 && v.label-(v.label/2) == 0){
+                    v.temp = True;
+                }
+            }
+
+            forall(v in g.nodes().filter(temp == True)){
+                forall(nbr in g.neighbors(v)){
+                    if(v.temp == True && nbr.temp == True){
+                        if(nbr.degree > v.degree){
+                            v.temp = False;
+                        }
+                        else{
+                            nbr.temp = False;
+                        }
+                    }
+                }
+            }
+
+            forall(v in g.nodes().filter(temp == True)){
+                v.vertexTaken = True;
+            }
+
+            forall(v in g.nodes()){
+                v.degree = 0;
+            }
+
+            forall(v in g.nodes().filter(v.vertexTaken == False)){
+                forall(nbr in g.neighbors(v)){
+                    if(nbr.vertexTaken == False){
+                        v.degree = v.degree + 1;
+                    }
+                }
+            }
+
+            bool flag = True;
+            do{
+                flag = False;
+
+                forall(v in g.nodes().filter(vertexTaken == False)) {
+                    if(v.degree == 2){
+                        v.vertexTaken = True;
+                        forall(nbr in g.neighbors(v)){
+                            if(nbr.vertexTaken!=False){
+                                nbr.degree = nbr.degree - 1;
+                            }
+                        }
+                    }
+                }
+
+                forall(v in g.nodes().filter(vertexTaken == False)) {
+                    if(v.degree > 0){
+                        forall(nbr in g.neighbors(v)){
+                            if(v.vertexTaken==False && nbr.vertexTaken == False && nbr.degree == 1){
+                                v.vertexTaken = True;
+                                flag = True;
+                            }
+                        }
+
+                        if(v.vertexTaken == False){
+                            forall(nbr in g.neighbors(v)){
+                                nbr.degree -= 1;
+                            }
+                        }
+                    }
+                }
+            }while(flag);
+
+
+            forall(v in g.nodes().filter(vertexTaken == False)){
+                bool flag = True;
+                for(nbr in g.neighbors(v)){
+                    if(flag && v.vertexTaken == False && nbr.vertexTaken == False){
+                        if(v.degree > nbr.degree){
+                            v.vertexTaken = True;
+                            flag = False;
+                        }
+                        else{
+                            nbr.vertexTaken = True;
+                        }
+                    }
+                }
+            }
+        }
+    }while(finish==False);
+
+}
