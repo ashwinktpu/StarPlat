@@ -444,26 +444,51 @@
     }
 
     template <typename T>
-    void EdgeProperty<T>::atomicAdd(Edge edge, T value)
+    void EdgeProperty<T>::atomicAdd(Edge &edge, T value)
     {
         int owner_proc = graph->get_edge_owner(edge);
         int local_edge_id = graph->get_edge_local_index(edge);
+        // sync_later[edge.get_id()].push_back ({owner_proc, local_edge_id, value}) ;
+
         if(edge.is_in_csr())
         {
+          
         //if(!already_locked_processors[owner_proc])
           propList.get_lock(owner_proc,SHARED_LOCK);
           propList.accumulate(owner_proc,&value,local_edge_id,1,MPI_SUM,SHARED_LOCK);
         //if(!already_locked_processors[owner_proc])
           propList.unlock(owner_proc, SHARED_LOCK);
+          
+
         }
         else
         {
+           
           diff_propList.get_lock(owner_proc,SHARED_LOCK);
           diff_propList.accumulate(owner_proc,&value,local_edge_id,1,MPI_SUM,SHARED_LOCK);
         //if(!already_locked_processors[owner_proc])
           diff_propList.unlock(owner_proc, SHARED_LOCK);
+          
         }
       
+    }
+    template <typename T>
+    void EdgeProperty<T>::fatBarrier () {
+       
+      /* experiencing slow down because of this
+      propList.get_lock (0, SHARED_ALL_PROCESS_LOCK) ;
+      for (auto &sync_now:sync_later) {
+        int idx = sync_now.first ;
+        for (auto &message:sync_now.second) {
+            T owner_proc = message[0] ;
+            T local_node_id = message[1] ;
+            T value = message[2] ;
+            propList.accumulate(owner_proc,&value,local_node_id,1,MPI_SUM,SHARED_LOCK);
+          }
+      }
+      propList.unlock (0, SHARED_ALL_PROCESS_LOCK) ;
+      */
+      sync_later.clear () ;
     }
 
 

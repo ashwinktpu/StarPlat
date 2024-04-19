@@ -48,12 +48,11 @@
   void Rma_Datatype<T>::get_lock(int32_t proc_num, locktype lock,  bool no_checks_needed )  
   {
     int assert = no_checks_needed == false ? 0 : MPI_MODE_NOCHECK;
-	MPI_Win_lock (MPI_LOCK_EXCLUSIVE, proc_num, 0, win) ;
-     /*if(lock == SHARED_LOCK || lock == EXCLUSIVE_LOCK)
+     if(lock == SHARED_LOCK || lock == EXCLUSIVE_LOCK)
     {   
         int mpi_lock = lock == SHARED_LOCK  ? MPI_LOCK_SHARED : MPI_LOCK_EXCLUSIVE;
-        // MPI_Win_lock(mpi_lock, proc_num, assert , win);
-        MPI_Win_lock(mpi_lock, proc_num, 0, win);
+        MPI_Win_lock(mpi_lock, proc_num, assert , win);
+        // MPI_Win_lock(mpi_lock, proc_num, 0, win);
     }
     else if(lock == SHARED_ALL_PROCESS_LOCK)
     {
@@ -62,26 +61,24 @@
     else {
         std::cerr <<"Invalid Lock Type\n";
         exit(-1);
-    }*/
+    }
   }
 
   // Barenya : Need to flush and sync before get. 
   template<typename T>
   void Rma_Datatype<T>::flush (int32_t targetRank) {
- 	MPI_Win_flush (targetRank, win) ; 
-	MPI_Win_sync (win) ;
+    printf ("starting to flush all the atomics on the window\n") ;
+ 	  MPI_Win_flush (targetRank, win) ; 
+    printf ("flush successfully done\n") ;
   }
   
   template<typename T>
   void Rma_Datatype<T>::unlock(int32_t proc_num ,locktype lock )
   {
-    MPI_Win_unlock(proc_num, win);
-	/*
     if(lock != SHARED_ALL_PROCESS_LOCK)
         MPI_Win_unlock(proc_num, win);
     else
         MPI_Win_unlock_all(win);
-	*/
   }
 
 
@@ -99,7 +96,6 @@
   {
     MPI_Accumulate(data_array,length, mpi_datatype, proc_num, startIndex, length, mpi_datatype, MPI_REPLACE, win);
     //MPI_Put(data_array , length, mpi_datatype, proc_num, startIndex, length, mpi_datatype, win);
-	// accumulate (proc_num, data_array, startIndex, length, MPI_SUM, lock) ;
     return ;
   }
 
@@ -113,7 +109,9 @@
   template<typename T>
   void Rma_Datatype<T>::accumulate(int32_t proc_num,  T* data_array,int startIndex,int length, MPI_Op op,locktype lock)
   {
+    // Optimising via a sync_later construct.
     MPI_Accumulate(data_array , length, mpi_datatype, proc_num, startIndex, length, mpi_datatype, op, win);
+    // sync_later[proc_num].push_back ({proc_num, startIndex, data_array[0]}) ;
     return;
   }
 

@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include <type_traits>
 #include <unordered_set>
+#include <queue>
 
 #include "types.h"
 #include"graph_properties/node_property/node_property.h"
@@ -73,7 +74,8 @@ class Graph
   std::vector<std::vector<int> > frontier_sync ;
   // Till here.
   std::unordered_set<int32_t> frontier ;
-  
+  // std::queue<int32_t> frontier ;
+  std::vector<std::unordered_map<int,int> > speedUpForGetEdge ; 
 
   int bfs_phases ;   
 
@@ -100,7 +102,9 @@ class Graph
   
 
 
-  Graph(char* file, boost::mpi::communicator world , int32_t undirected = 0);
+  Graph(char* file, boost::mpi::communicator world , int32_t undirected = 0, bool optimized = false);
+  Edge get_edge_i (int u, int v) ;
+  int get_other_vertex (int u, int v_idx) ;
   bool is_undirected(){return undirected;}
   // Distributed Hash set methods.
   void frontier_push (int &v, boost::mpi::communicator world) ;

@@ -8,6 +8,7 @@
 #include <vector>
 #include <mpi.h>
 #include <cmath>
+#include <unordered_map>
 
 void checkMPIComm (int mpiStatus, char* errorMessage) ;
 
@@ -26,6 +27,7 @@ class Container {
 			int __idx ; // The end index of a vector.
       std::vector<T> vect; // This should store the values.
       MPI_Comm comm ; // communicator.
+      std::unordered_map <int, std::vector<std::vector<int> > > sync_later ;
 
     public :
         

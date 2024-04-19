@@ -25,7 +25,7 @@ void Container<T>::assign (const int &size, const int &initVal, MPI_Comm comm) {
         this->localSize = globalSize - (this->rank * this->localSize) ;
     }
 //    printf ("global size = %d\n", this->globalSize) ;
-    printf ("set localSize for rank %d to %d\n", this->rank, this->localSize) ;
+    // printf ("set localSize for rank %d to %d\n", this->rank, this->localSize) ;
     // allocate an array using new.
     this->baseArray = new int[this->localSize] ;
     memset (baseArray, 0 , sizeof(int) * this->localSize) ;
@@ -38,15 +38,28 @@ int Container<T>::getIdx (const int &val) {
     int idx ;
     bool foundFlag = false ;
     // sync_assignments() ;
+    
+    MPI_Win_lock_all (0, this->array) ; // Risky optimisation.
+    for (auto &sync_now:sync_later) {
+      int idx = sync_now.first ;
+      for (auto &message:sync_now.second) {
+          int targetRank = message[0] ;
+          int targetDisp = message[1] ;
+          int targetVal = message[2] ;
+          MPI_Accumulate (&targetVal, 1, MPI_INT, targetRank, targetDisp, 1, MPI_INT, MPI_SUM, this->array) ;
+        }
+    }
+    sync_later.clear () ;
+    MPI_Win_unlock_all (this->array) ;
     // checkMPIComm (MPI_Win_lock_all (this->lockAssertion, this->array), "getting all lock in getIdx failed") ;
-	MPI_Win_lock (MPI_LOCK_EXCLUSIVE, this->rank, this->lockAssertion, this->array) ;
+	  MPI_Win_lock (MPI_LOCK_EXCLUSIVE, this->rank, this->lockAssertion, this->array) ;
     for (idx = 0; idx < this->localSize; idx++) {
         if (this->baseArray[idx] == 0) {
             foundFlag = true ;
             break ;
         } 
     } 
-	MPI_Win_unlock (this->rank, this->array) ;
+	  MPI_Win_unlock (this->rank, this->array) ;
     
     idx += this->rank * (this->globalSize/this->numProcs);
 
@@ -108,6 +121,7 @@ template<typename T>
 void Container<T>::clear()
 {
     MPI_Win_free (&this->array) ;
+		delete[] this->array ;
     this->array = NULL ;
 }
 
@@ -117,28 +131,41 @@ int  Container<T>::getValue(const int &node_owner, const int &idx)
     if(idx>= this->globalSize)
     {
         std::cerr<<"Invalid index for cotainer access "<< idx << std::endl;
-		printf ("overflow at idx %d\n", idx) ;
+		    printf ("overflow at idx %d\n", idx) ;
         assert (false) ;
     }
+
+
+    MPI_Win_lock_all (0, this->array) ; // Risky optimisation.
+    for (auto &sync_now:sync_later) {
+      int idx = sync_now.first ;
+      for (auto &message:sync_now.second) {
+          int targetRank = message[0] ;
+          int targetDisp = message[1] ;
+          int targetVal = message[2] ;
+          MPI_Accumulate (&targetVal, 1, MPI_INT, targetRank, targetDisp, 1, MPI_INT, MPI_SUM, this->array) ;
+        }
+    }
+    MPI_Win_unlock_all (this->array) ;
+    
+    sync_later.clear () ;
 
     int actualValue ;
     int targetRank = this->calculateTargetRank (idx) ;
     int targetDisp = this->calculateTargetDisp (idx) ;
     int targetCount = this->calculateTargetCount(idx) ;
+    // sync_assignments () ;
 
-    //sync_assignments () ;
-    //if (this->rank == node_owner) {
-    // printf ("from inside a get call sourceRank = %d targetRank = %d  with displacement %d\n", node_owner, targetRank , targetDisp) ;
-      MPI_Win_lock (MPI_LOCK_EXCLUSIVE, targetRank, this->lockAssertion, this->array) ;
-//      printf ("lock request sent\n") ;
+//    printf ("from inside a get call sourceRank = %d targetRank = %d  with displacement %d\n", node_owner, targetRank , targetDisp) ;
+      MPI_Win_lock (MPI_LOCK_SHARED, targetRank, this->lockAssertion, this->array) ;
+//    printf ("lock request sent\n") ;
       MPI_Get (&actualValue, 1, MPI_INT, targetRank, targetDisp, 1, MPI_INT, this->array);
       if (actualValue < 0) {
-        printf ("failed at get op from rank %d targetRank = %d and disp = %d value = %d\n", this->rank, targetRank, targetDisp, actualValue) ;
+        // Specifically for push relabel. Remove later, depending on application.
         assert (false) ;
       }
       // printf ("get returned with value %d\n", actualValue) ;
       MPI_Win_unlock (targetRank, this->array);
-    // }
     return actualValue ;
 }
 
@@ -149,7 +176,7 @@ void Container<T>::setValue(const int &node_owner, const int &idx, const int &va
     int targetDisp = this->calculateTargetDisp (idx) ;
     int targetCount = this->calculateTargetCount (idx) ;
     //if (this->rank == node_owner) {
-    printf ("from inside a set call sourceRank = %d targetRank = %d with displacement = %d \n", node_owner, targetRank , targetDisp) ;
+    // printf ("from inside a set call sourceRank = %d targetRank = %d with displacement = %d \n", node_owner, targetRank , targetDisp) ;
       checkMPIComm (MPI_Win_lock (MPI_LOCK_EXCLUSIVE, targetRank, this->lockAssertion, this->array), "failed to acquire lock while setting value") ;
       // printf ("acquired lock\n") ;
       checkMPIComm (MPI_Put (&value, 1, MPI_INT, targetRank, targetDisp, 1, MPI_INT, this->array), "failed while assignment\n") ;
@@ -164,9 +191,18 @@ void Container<T>::atomicAdd (const int &idx, const int &val) {
     int targetRank = this->calculateTargetRank (idx) ;
     int targetDisp = this->calculateTargetDisp (idx) ;
     int targetCount = this->calculateTargetCount (idx) ;
-	MPI_Win_lock (MPI_LOCK_EXCLUSIVE, targetRank, this->lockAssertion, this->array) ;
+    // Commenting out for experimenting with optimisation.
+    /*
+	  MPI_Win_lock (MPI_LOCK_EXCLUSIVE, targetRank, this->lockAssertion, this->array) ;
     MPI_Accumulate(&val,1, MPI_INT, targetRank, targetDisp, 1, MPI_INT, MPI_SUM, this->array);
-	MPI_Win_unlock (targetRank, this->array) ;
+	  MPI_Win_unlock (targetRank, this->array) ;
+    */
+    
+
+    //  optimization failed now
+    // Optimization :
+    sync_later[idx].push_back ({targetRank, targetDisp, val}) ;
+    
 }
 
 template<typename T>

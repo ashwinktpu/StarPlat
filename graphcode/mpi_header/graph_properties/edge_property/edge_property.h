@@ -22,6 +22,7 @@ class EdgeProperty : public Property
     private :
     int length;
     
+    std::unordered_map<int, std::vector<std::vector<int> > > sync_later ;
 
     bool diff_propList_present;
     
@@ -40,6 +41,7 @@ class EdgeProperty : public Property
     public :
     Rma_Datatype<T> propList;
     Rma_Datatype<T> diff_propList;
+    void fatBarrier () ;
 
     EdgeProperty() : Property(true) 
     {
@@ -107,7 +109,7 @@ class EdgeProperty : public Property
     
     T compareAndSwap(Edge edge, T compare, T swap);
 
-    void atomicAdd(Edge edge, T value);
+    void atomicAdd(Edge &edge, T value);
     
 };
     
