@@ -256,7 +256,7 @@ class graph
 
     }
 
-    void addEdge(int src, int dest)
+    void addEdge(int src, int dest,int aks)
      {
         int startIndex = indexofNodes[src];
         int endIndex = indexofNodes[src+1];
@@ -291,7 +291,7 @@ class graph
          }  
           
          edgeList[insertAt] = dest; 
-         edgeLen[insertAt] = 1; // to be changed. the weight should be from paramters.
+         edgeLen[insertAt] = aks; // to be changed. the weight should be from paramters.
          
          //update the CSR offset array.
          #pragma omp parallel for
@@ -303,6 +303,7 @@ class graph
           edge newEdge;
           newEdge.source = src;
           newEdge.destination = dest;
+          newEdge.weight=aks;
           edges[src].push_back(newEdge);
           edgesTotal++;
         
@@ -402,69 +403,268 @@ class graph
    void parseEdges()
   {
     //printf("OH HELLOHIHod \n");
-     std::ifstream infile;
-     infile.open(filePath);
-     std::string line;
-
-
-
-
-
-     while (std::getline(infile,line))
-     {
-
-      // std::stringstream(line);
-
-       if (line.length()==0||line[0] < '0' || line[0] >'9') {
-          continue;
-
-	    	}
+    std::ifstream infile;
+    infile.open(filePath);
+    std::string line;
+    std::map<std::pair<int, int>, int> mpp;
+    while (std::getline(infile, line)) {
+        if (line.length() == 0 || line[0] < '0' || line[0] > '9') {
+            continue;
+        }
 
         std::stringstream ss(line);
-
-        edgesTotal++;
-         
-        //edgesTotal++; //TO BE REMOVED 
-
-        //edgesTotal++; //TO BE REMOVED
-
-
         edge e;
-        
-    
         int32_t source;
         int32_t destination;
         int32_t weightVal;
 
-           ss>>source; 
-	    e.weight = weightVal;
-           if(source>nodesTotal)
-              nodesTotal=source;
+        ss >> source;
+        if (source > nodesTotal)
+            nodesTotal = source;
 
-            ss>>destination;  
-            if(destination>nodesTotal)
-               nodesTotal=destination;  
+        ss >> destination;
+        if (destination > nodesTotal)
+            nodesTotal = destination;
 
-           e.source=source;
-           e.destination=destination;
-           e.weight=1;
+        ss >> weightVal;
 
-           edges[source].push_back(e);
-           graph_edge.push_back(e);
+        std::pair<int, int> p;
+        p.first = source;
+        p.second = destination;
+        mpp[p] += weightVal;
+    }
 
-           ss>>weightVal; //for edgelists having weight too.      
-             
+    for (auto it = mpp.begin(); it != mpp.end(); ++it) {
+        std::pair<int, int> key = it->first;
+        int value = it->second;
+        edge e;
+        e.source = key.first;
+        e.destination = key.second;
+        e.weight = value;
+
+        edgesTotal++;
+        edges[e.source].push_back(e);
+        graph_edge.push_back(e);
+    }
+
+    infile.close();
+}
+
+    void parseEdgesResidual() {
+    //printf("OH HELLOHIHod \n");
+    std::ifstream infile;
+    infile.open(filePath);
+    std::string line;
+    std::map<std::pair<int, int>, int> mpp;
+    while (std::getline(infile, line)) {
+        if (line.length() == 0 || line[0] < '0' || line[0] > '9') {
+            continue;
+        }
+
+        std::stringstream ss(line);
+        edge e;
+        int32_t source;
+        int32_t destination;
+        int32_t weightVal;
+
+        ss >> source;
+        if (source > nodesTotal)
+            nodesTotal = source;
+
+        ss >> destination;
+        if (destination > nodesTotal)
+            nodesTotal = destination;
+
+        ss >> weightVal;
+
+        std::pair<int, int> p;
+        p.first = source;
+        p.second = destination;
+        mpp[p] += weightVal;
+        p.first = destination;
+        p.second = source;
+        mpp[p] += 0;
+    }
+
+    for (auto it = mpp.begin(); it != mpp.end(); ++it) {
+        std::pair<int, int> key = it->first;
+        int value = it->second;
+        edge e;
+        e.source = key.first;
+        e.destination = key.second;
+        e.weight = value;
+
+        edgesTotal++;
+        edges[e.source].push_back(e);
+        graph_edge.push_back(e);
+    }
+
+    infile.close();
+}
+
+    void parseGraphResidual()
+   {  
+     
+     
+     parseEdgesResidual();
+   
+     printf("Here half\n");
+     //printf("HELLO AFTER THIS %d \n",nodesTotal);
+     #pragma omp parallel for 
+     for(int i=0;i<=nodesTotal;i++)//change to 1-nodesTotal.
+     {
+       std::vector<edge>& edgeOfVertex=edges[i];
+     
+       sort(edgeOfVertex.begin(),edgeOfVertex.end(),
+                            [](const edge& e1,const edge& e2) {
+                               if(e1.source!=e2.source)
+                                  return e1.source<e2.source;
+
+                                return e1.destination<e2.destination;
+
+                            });
+
      }
 
+     indexofNodes=new int32_t[nodesTotal+2];
+     rev_indexofNodes=new int32_t[nodesTotal+2];
+     edgeList=new int32_t[edgesTotal]; //new int32_t[edgesTotal] ;
+     srcList=new int32_t[edgesTotal];
+     edgeLen=new int32_t[edgesTotal]; //new int32_t[edgesTotal] ;
+     edgeMap =  new int32_t[edgesTotal]; 
+     perNodeCSRSpace = new int32_t[nodesTotal+1];
+     perNodeRevCSRSpace = new int32_t[nodesTotal+1];
+     int* edgeMapInter = new int32_t[edgesTotal]; 
+     int* vertexInter = new int32_t[edgesTotal];         
      
-
-     infile.close();
+    int edge_no=0;
     
-     
-   }
+    /* Prefix Sum computation for out neighbours 
+       Loads indexofNodes and edgeList.
+    */
+    for(int i=0;i<=nodesTotal;i++) //change to 1-nodesTotal.
+    {
+      std::vector<edge> edgeofVertex=edges[i];
 
+      indexofNodes[i]=edge_no;
+
+      std::vector<edge>::iterator itr;
+
+      for(itr=edgeofVertex.begin();itr!=edgeofVertex.end();itr++)
+      {
+
+        edgeList[edge_no]=(*itr).destination;
+
+        edgeLen[edge_no]=(*itr).weight;
+        edge_no++;
+      }
+
+      perNodeCSRSpace[i] = 0;
+      perNodeRevCSRSpace[i] = 0;
+      
+    }
 
   
+    indexofNodes[nodesTotal+1]=edge_no;//change to nodesTotal+1.
+
+   
+     #pragma omp parallel for num_threads(4)
+     for(int i=0;i<nodesTotal+1;i++)
+       rev_indexofNodes[i] = 0;
+   
+
+        
+    /* Prefix Sum computation for in neighbours 
+       Loads rev_indexofNodes and srcList.
+    */
+
+    /* count indegrees first */
+   int32_t* edge_indexinrevCSR = new int32_t[edgesTotal];
+             
+    #pragma omp parallel for num_threads(4)
+    for(int i=0;i<=nodesTotal;i++)
+      {
+
+       for(int j=indexofNodes[i];j<indexofNodes[i+1];j++)
+           {
+             int dest = edgeList[j];
+             int temp = __sync_fetch_and_add( &rev_indexofNodes[dest], 1 );
+             edge_indexinrevCSR[j] = temp;
+           }
+
+      }   
+    
+      /* convert to revCSR */
+      int prefix_sum = 0;
+      for(int i=0;i<=nodesTotal;i++)
+        {
+          int temp = prefix_sum;
+          prefix_sum = prefix_sum + rev_indexofNodes[i];
+          rev_indexofNodes[i]=temp;
+      
+        }
+        rev_indexofNodes[nodesTotal+1] = prefix_sum;
+
+    /* store the sources in srcList */
+      #pragma omp parallel for num_threads(4)
+      for(int i=0;i<=nodesTotal;i++)
+        {
+          for(int j=indexofNodes[i];j<indexofNodes[i+1];j++)
+            {
+               int dest = edgeList[j];
+               int index_in_srcList=rev_indexofNodes[dest]+edge_indexinrevCSR[j];
+               srcList[index_in_srcList] = i;
+               edgeMapInter[index_in_srcList] = j ;// RevCSR to CSR edge mapping.
+               vertexInter[index_in_srcList] = srcList[index_in_srcList]; /*store the original content of srcList
+                                                                           before sorting srcList.
+                                                                           */                                                          
+            }   
+        }
+        
+      #pragma omp parallel for num_threads(4)
+        for(int i=0;i<=nodesTotal;i++)
+        {
+          std::vector<int> vect;
+          vect.insert(vect.begin(),srcList+rev_indexofNodes[i],srcList+rev_indexofNodes[i+1]);
+          std::sort(vect.begin(),vect.end());
+          for(int j=0;j<vect.size();j++)
+            srcList[j+rev_indexofNodes[i]]=vect[j];
+          int srcListIndex;  
+
+          for(int j=0;j<vect.size();j++)
+          {
+            srcListIndex = j+rev_indexofNodes[i]; 
+            for(int k=0;k<vect.size();k++)
+              {
+                if(vertexInter[k+rev_indexofNodes[i]]==srcList[srcListIndex])
+                  {
+                    edgeMap[srcListIndex] = edgeMapInter[k+rev_indexofNodes[i]];
+                    break;
+                  }
+              }
+          }
+            vect.clear();
+
+        }
+
+
+     infile.close();
+     
+     infile.close();
+      
+      for(int i = 0 ; i <= nodesTotal ; i++){
+         
+         inDeg[i] = rev_indexofNodes[i+1] - rev_indexofNodes[i];
+         outDeg[i] = indexofNodes[i+1] - indexofNodes[i];
+     }
+      free(vertexInter);
+      free(edgeMapInter);
+    //change to nodesTotal+1.
+    // printf("hello after this %d %d\n",nodesTotal,edgesTotal);
+    
+ }
+   
+   
    void parseGraph()
    {  
      
