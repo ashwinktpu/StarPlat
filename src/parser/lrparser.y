@@ -546,11 +546,19 @@ int main(int argc,char **argv)
    else
     {
 
-		if(!((strcmp(backendTarget,"omp")==0)|| (strcmp(backendTarget,"amd")==0) || (strcmp(backendTarget,"mpi")==0)||(strcmp(backendTarget,"cuda")==0) || (strcmp(backendTarget,"acc")==0) || (strcmp(backendTarget,"sycl")==0)|| (strcmp(backendTarget,"multigpu")==0)))
+		if(!(
+				(strcmp(backendTarget,"omp")==0) || 
+				(strcmp(backendTarget,"amd")==0) || 
+				(strcmp(backendTarget,"mpi")==0) || 
+				(strcmp(backendTarget,"cuda")==0) || 
+				(strcmp(backendTarget,"acc")==0) || 
+				(strcmp(backendTarget,"sycl")==0) || 
+				(strcmp(backendTarget,"hip")==0) || 
+				(strcmp(backendTarget,"multigpu")==0)
+			)) {
 
-		   {
-			  fprintf(stderr, "Specified backend target is not implemented in the current version!\n");
-			   exit(-1);
+				fprintf(stderr, "Specified backend target is not implemented in the current version!\n");
+				exit(-1);
 		   }
 	}
 
@@ -654,24 +662,31 @@ int main(int argc,char **argv)
 		pp.analyse(frontEndContext.getFuncList());
 		cpp_backend.setFileName(fileName);
 		cpp_backend.generate();
-}
-	  else if (strcmp(backendTarget, "sycl") == 0) {
-		std::cout<<"GENERATING SYCL CODE"<<std::endl;
-        spsycl::dsl_cpp_generator cpp_backend;
-        cpp_backend.setFileName(fileName);
-        cpp_backend.generate();
-	  }
-	  else if (strcmp(backendTarget, "amd") == 0) {
-		std::cout<<"GENERATING OPENCL CODE"<<std::endl;
-        spamd::dsl_cpp_generator cpp_backend;
-        cpp_backend.setFileName(fileName);
-        cpp_backend.generate();
-	  }
-      else
-	    std::cout<< "invalid backend" << '\n';
-	  }
-	else 
-	 {
+
+		} else if (strcmp(backendTarget, "sycl") == 0) {
+
+			std::cout<<"GENERATING SYCL CODE"<<std::endl;
+			spsycl::dsl_cpp_generator cpp_backend;
+			cpp_backend.setFileName(fileName);
+			cpp_backend.generate();
+
+		} else if (strcmp(backendTarget, "amd") == 0) {
+
+			std::cout<<"GENERATING OPENCL CODE"<<std::endl;
+			spamd::dsl_cpp_generator cpp_backend;
+			cpp_backend.setFileName(fileName);
+			cpp_backend.generate();
+
+		} else if(strcmp(backendTarget, "hip") == 0) {
+			
+			std::cout << "Generating HIP Code\n";
+			sphip::DslCppGenerator hip_backend(fileName, 512);
+			hip_backend.Generate();
+
+		} else std::cout<< "invalid backend" << '\n';
+
+	} else {
+
 		if(strcmp(backendTarget, "omp") == 0) {
 		   spdynomp::dsl_dyn_cpp_generator cpp_dyn_gen;
 		   cpp_dyn_gen.setFileName(fileName);
