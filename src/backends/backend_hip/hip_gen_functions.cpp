@@ -145,7 +145,7 @@ namespace sphip {
         parameterName[0] = toupper(parameterName[0]);
 
         //TODO: Use the init arrya call function
-        buffer = "initArray<" + 
+        buffer = "InitArray<" + 
                 ConvertToCppType(id->getSymbolInfo()->getType()->getInnerTargetType()) +
                 "><<<numBlocks, numThreads>>>(V, d" +
                 parameterName + ", ";
@@ -225,7 +225,7 @@ namespace sphip {
     ) {
         // TODO: We are assuming V to be the size of the array. This may not be the case always.
         main.pushStringWithNewLine(
-            "initArray<" + type + "><<<numBlocks, numThreads>>>(V, " + identifier + ", " + value + ");"
+            "InitArray<" + type + "><<<numBlocks, numThreads>>>(V, " + identifier + ", " + value + ");"
         );
     }
 
@@ -237,7 +237,7 @@ namespace sphip {
     ) {
         // TODO: We are assuming V to be the size of the array. This may not be the case always.
         main.pushStringWithNewLine(
-            "initIndex<" + type + "><<<1, 1>>>(V, " + identifier + ", " + index + ", " + value + ");"
+            "InitArrayIndex<" + type + "><<<1, 1>>>(V, " + identifier + ", " + index + ", " + value + ");"
         );
     }
 
@@ -245,7 +245,7 @@ namespace sphip {
 
         header.pushStringWithNewLine("template <typename T>");
         header.pushStringWithNewLine("__global__");
-        header.pushStringWithNewLine("void initIndex(const unsigned V, T* dArray, int index, T value) {");
+        header.pushStringWithNewLine("void InitArrayIndex(const unsigned V, T* dArray, int index, T value) {");
         header.pushStringWithNewLine("if(index < V) {");
         header.pushStringWithNewLine("dArray[index] = value;"); 
         header.pushStringWithNewLine("}");
@@ -257,7 +257,7 @@ namespace sphip {
 
         header.pushStringWithNewLine("template <typename T>");
         header.pushStringWithNewLine("__global__");
-        header.pushStringWithNewLine("void initArray(const unsigned V, T *dArray, T value) {");
+        header.pushStringWithNewLine("void InitArray(const unsigned V, T *dArray, T value) {");
         header.pushStringWithNewLine("unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;");
         header.pushStringWithNewLine("if(idx < V) {");
         header.pushStringWithNewLine("dArray[idx] = value;");
@@ -364,7 +364,7 @@ namespace sphip {
         assert(!isMainFile); // Well, if this is gonna be printed in the main file, then we have a problem.
 
         (isMainFile ? main : header).pushString(
-            atomicOp + "((" + type + "*) &d" + CapitalizeFirstLetter(stmt->getLeftId()->getIdentifier())
+            atomicOp + "((" + type + "*) d" + CapitalizeFirstLetter(stmt->getLeftId()->getIdentifier())
              + ", (" + type + ") "
         );
         GenerateExpression(stmt->getRightSide(), isMainFile);

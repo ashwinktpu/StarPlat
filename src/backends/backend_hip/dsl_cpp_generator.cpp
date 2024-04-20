@@ -538,10 +538,6 @@ namespace sphip {
                 idName[0] = std::toupper(idName[0]);
                 main.pushString(idName);
                 main.pushStringWithNewLine(";");
-
-                (isMainFile ? main : header).pushStringWithNewLine(
-                    "// COMMENT"
-                );
                 GenerateHipMalloc(type, idName);
 
             } else {
@@ -599,6 +595,12 @@ namespace sphip {
                 targetFile.pushStringWithNewLine(
                     "hipMalloc(&d" + CapitalizeFirstLetter(varName) + ", sizeof(" + varType + "));"
                 );
+
+                // GenerateHipMemcpyStr(
+                //     "d" + CapitalizeFirstLetter(varName),
+                //     "&h" + CapitalizeFirstLetter(varName),
+                //     varType, "1", true
+                // );
             } else {
 
                 const std::string varType(ConvertToCppType(type));
@@ -645,7 +647,7 @@ namespace sphip {
                 // temp1[0] = toupper(temp1[0]);
                 HIT_CHECK
                 std::cout << "Check order of vars here\n";
-                str = "initIndex<" + varType + "><<<1,1>>>(V, d" 
+                str = "InitArrayIndex<" + varType + "><<<1,1>>>(V, d" 
                         + temp2 + ", " + temp1 + ", ";
                 targetFile.pushString(str);
             } 
@@ -685,8 +687,7 @@ namespace sphip {
             PropAccess *propId = stmt->getPropId();
             if(stmt->getAtomicSignal()) {
 
-                /*Atomics don't need '&' since all shared variables are passed as pointers*/
-                targetFile.pushString("atomicAdd(");
+                targetFile.pushString("atomicAdd(&");
                 isAtomic = true;                
             }
 
@@ -812,6 +813,8 @@ namespace sphip {
             }
 
             if(
+                nodeStack.getCurrentNode() != nullptr &&
+                nodeStack.getParentNode() != nullptr &&
                 nodeStack.getCurrentNode()->getTypeofNode() == NODE_FORALLSTMT &&
                 nodeStack.getParentNode()->getTypeofNode() == NODE_FIXEDPTSTMT
             ) {
@@ -895,10 +898,8 @@ namespace sphip {
                         targetFile.pushStringWithNewLine("}");
                         targetFile.pushStringWithNewLine("}");
                         targetFile.NewLine();
-                        targetFile.pushStringWithNewLine("grid.sync();");
+                        // targetFile.pushStringWithNewLine("grid.sync();");
                     } else {
-                        // targetFile.pushStringWithNewLine("{ // Comment " + std::to_string(stmt->getBody()->getTypeofNode()));
-                        // targetFile.pushStringWithNewLine("}");
                         HIT_CHECK
                         GenerateStatement(stmt->getBody(), isMainFile);
                         targetFile.pushStringWithNewLine("}");
@@ -928,14 +929,14 @@ namespace sphip {
                     if(body->getTypeofNode() == NODE_BLOCKSTMT) {
 
                         targetFile.pushStringWithNewLine("{");
-                        // FIXME: Why do the below not work? 
+                        // FIXME: TODO Why do the below not work? 
                         // targetFile.pushString(ConvertToCppType(stmt->getIterator()->getSymbolInfo()->getType()));
                         // TODO: Make this more generic instead of int
-                        targetFile.pushString("int");
-                        targetFile.AddSpace();
-                        targetFile.pushString(stmt->getIterator()->getIdentifier());
-                        targetFile.pushString(" = *itr;");
-                        targetFile.NewLine();
+                        // targetFile.pushString("int");
+                        // targetFile.AddSpace();
+                        // targetFile.pushString(stmt->getIterator()->getIdentifier());
+                        // targetFile.pushString(" = *itr;");
+                        // targetFile.NewLine();
                         GenerateBlock(static_cast<blockStatement*>(body), false);
                         targetFile.pushStringWithNewLine("}"); 
                     } else {
@@ -958,7 +959,7 @@ namespace sphip {
     void DslCppGenerator::GenerateInnerForAll(forallStmt* stmt, bool isMainFile) {
 
         /**
-         * FIXME: The whole GenerateForAll function needs to be restructured.
+         * FIXME: TODO The whole GenerateForAll function needs to be restructured.
         */
 
         dslCodePad& targetFile = isMainFile ? main : header;
@@ -996,7 +997,7 @@ namespace sphip {
                      * But closed at a later point. The GenerateInnerForAll function is not closing the
                      * for loop. This is done in the GenerateForAll function. 
                      * 
-                     * FIXME: The whole GenerateForAll function needs to be restructured.
+                     * FIXME: TODO The whole GenerateForAll function needs to be restructured.
                     */
                     Identifier *nodeNeighbour = argumentList.front()->getExpr()->getId();
                     targetFile.pushStringWithNewLine(
@@ -1031,9 +1032,8 @@ namespace sphip {
                         // TODO: Why itr? Is this generic
                         const std::string sourceId = source->getIdentifier();
                         main.NewLine();
-                        main.pushStringWithNewLine(
-                            "for(auto itr = " + sourceId + ".begin(); itr != " 
-                            + sourceId + ".end(); itr++) "
+                        main.pushString(
+                            "for(auto " + std::string(stmt->getIterator()->getIdentifier()) + ": " + sourceId + ") "
                         );
                         break;
                     }
@@ -1095,28 +1095,30 @@ namespace sphip {
         }
 
         if(
-                nodeStack.getCurrentNode()->getTypeofNode() == NODE_FORALLSTMT &&
-                nodeStack.getParentNode()->getTypeofNode() == NODE_FIXEDPTSTMT
-            ) {
+            nodeStack.getCurrentNode() != nullptr &&
+            nodeStack.getParentNode() != nullptr &&
+            nodeStack.getCurrentNode()->getTypeofNode() == NODE_FORALLSTMT &&
+            nodeStack.getParentNode()->getTypeofNode() == NODE_FIXEDPTSTMT
+        ) {
 
-                usedVariables usedVars = GetUsedVariablesInFixedPoint(static_cast<fixedPointStmt*>(nodeStack.getParentNode()));
+            usedVariables usedVars = GetUsedVariablesInFixedPoint(static_cast<fixedPointStmt*>(nodeStack.getParentNode()));
 
-                for(auto identifier: usedVars.getVariables()) {
+            for(auto identifier: usedVars.getVariables()) {
 
-                    // TODO: This is added specifically to fix SSSP.
-                    // This should be done such that, all varaiables of enclosing
-                    // nodes and fixed point should taken together and added to
-                    // the kernel call, so that no variable repeats twice.
-                    if(identifier->getSymbolInfo()->getType()->isPrimitiveType()) {
+                // TODO: This is added specifically to fix SSSP.
+                // This should be done such that, all varaiables of enclosing
+                // nodes and fixed point should taken together and added to
+                // the kernel call, so that no variable repeats twice.
+                if(identifier->getSymbolInfo()->getType()->isPrimitiveType()) {
 
-                        header.pushString(", ");
-                        header.pushString(ConvertToCppType(identifier->getSymbolInfo()->getType()));
-                        header.pushString(" *d");
-                        header.pushString(CapitalizeFirstLetter(identifier->getIdentifier()));
-                        primitiveVarsInKernel.insert(identifier->getIdentifier());
-                    }
+                    header.pushString(", ");
+                    header.pushString(ConvertToCppType(identifier->getSymbolInfo()->getType()));
+                    header.pushString(" *d");
+                    header.pushString(CapitalizeFirstLetter(identifier->getIdentifier()));
+                    primitiveVarsInKernel.insert(identifier->getIdentifier());
                 }
             }
+        }
 
         header.pushStringWithNewLine(") {");
         header.NewLine();
@@ -1344,7 +1346,7 @@ namespace sphip {
                 // The DSL doesn't have an if check or comparision with
                 // INF at this point in the DSL code. This needs to be
                 // explored. 
-                // FIXME
+                // FIXME TODO
                 targetFile.pushString("if(");
                 targetFile.pushString("d" + CapitalizeFirstLetter(stmt->getAssignedId()->getIdentifier()));
                 //TODO: Get these variables from the DSL and INT_MAX as well
@@ -1378,7 +1380,7 @@ namespace sphip {
 
                         if(id->getSymbolInfo()->getType()->isPrimitiveType()) {
 
-                            targetFile.pushString("d");
+                            targetFile.pushString("*d");
                             targetFile.pushString(CapitalizeFirstLetter(id->getIdentifier()));
                             targetFile.pushString(" = ");
                             targetFile.pushString(" false;");
@@ -1468,8 +1470,14 @@ namespace sphip {
 
     void DslCppGenerator::GenerateItrBfsBody(blockStatement *stmt) {
 
+        /**
+         * The below kernel call/memcpy can be removed if we use hipHostMalloc
+         * TODO: Use Kernel Call if it is better. Check with Rupesh/Test it out
+         * TODO: Change to hipHostMalloc
+        */
         main.pushStringWithNewLine("hIsAllNodesTraversed = true;");
         GenerateHipMemcpyStr("dIsAllNodesTraversed", "&hIsAllNodesTraversed", "bool", "1", true);
+        GenerateHipMemcpyStr("dLevel", "&hLevel", "int", "1", true);
         main.pushStringWithNewLine("ForwardBfsKernel<<<numBlocks, numThreads>>>(");
         main.pushString("V, dOffsetArray, dEdgelist, dD, dLevel, dIsAllNodesTraversed");
 
@@ -1477,14 +1485,8 @@ namespace sphip {
         GenerateUsedVarsInBlockAsFormalParams(stmt, false, true);
         main.NewLine();
         main.pushStringWithNewLine(");");
-
-        /**
-         * The below kernel call/memcpy can be removed if we use hipHostMalloc
-         * TODO: Use Kernel Call if it is better. Check with Rupesh/Test it out
-         * TODO: Change to hipHostMalloc
-        */
         main.pushStringWithNewLine("hLevel++;");
-        GenerateHipMemcpyStr("&hLevel", "dLevel", "int", "1", false);
+        // GenerateHipMemcpyStr("&hLevel", "dLevel", "int", "1", false);
 
         main.NewLine();
         GenerateHipMemcpyStr("&hIsAllNodesTraversed", "dIsAllNodesTraversed", "bool", "1", false); 
@@ -1492,6 +1494,13 @@ namespace sphip {
 
     void DslCppGenerator::GenerateItrRevBfsBody(blockStatement *stmt) {
         main.pushStringWithNewLine("ReverseBfsKernel<<<numBlocks, numThreads>>>(");
+        main.pushString("V, dOffsetArray, dEdgelist, dD, dLevel, dIsAllNodesTraversed");
+
+        GeneratePropParamsAsFormalParams(false, true); 
+        GenerateUsedVarsInBlockAsFormalParams(stmt, false, true);   
+        main.NewLine();
+        main.pushStringWithNewLine(");");
+        main.pushStringWithNewLine("ReverseBfsKernelAddition<<<numBlocks, numThreads>>>(");
         main.pushString("V, dOffsetArray, dEdgelist, dD, dLevel, dIsAllNodesTraversed");
 
         GeneratePropParamsAsFormalParams(false, true); 
@@ -1562,12 +1571,48 @@ namespace sphip {
         header.pushStringWithNewLine("return;");
         header.pushStringWithNewLine("}");
         header.NewLine();
-        header.pushStringWithNewLine("auto grid = cooperative_groups::this_grid();");
-        header.NewLine();
         header.pushStringWithNewLine("if(dD[d" + CapitalizeFirstLetter(loopVar) + "] == *dLevel - 1) {");
         
+        /**
+         * FIXME: the below fix is temporary. 
+         * 
+         * This should be somehow fixed. Currently since HIP doesn't support
+         * grid.sync() we are using a workaround. The updation to bc should 
+         * happen in another kernel(for global sync) Since that assignment is in a 
+         * NODE_ASSIGN we are handling that seperately. This is not generic and 
+         * needs to be fixed.
+        */
         for(auto stmt: stmtList)
-            GenerateStatement(stmt, false);
+            if(stmt->getTypeofNode() != NODE_ASSIGN)   
+                GenerateStatement(stmt, false);
+
+        header.pushStringWithNewLine("}");
+        header.pushStringWithNewLine("}");
+        header.NewLine();
+
+        header.pushStringWithNewLine("__global__ \nvoid ReverseBfsKernelAddition(");
+        header.pushString(
+            "int V, int *dOffsetArray, int *dEdgelist, int *dD, int *dLevel, bool *dIsAllNodesTraversed"
+        );
+        GeneratePropParamsAsFormalParams(true, false);
+        GenerateUsedVarsInBlockAsFormalParams(body, true, false);
+        header.NewLine();
+        header.pushStringWithNewLine(") {");
+        header.NewLine();
+        header.pushStringWithNewLine(
+            "unsigned d" + CapitalizeFirstLetter(loopVar) + " = threadIdx.x + blockIdx.x * blockDim.x;"
+        );
+        header.NewLine();
+        header.pushStringWithNewLine("if(d" + CapitalizeFirstLetter(loopVar) + " >= V) {"); 
+        header.pushStringWithNewLine("return;");
+        header.pushStringWithNewLine("}");
+        header.NewLine();
+
+        header.pushStringWithNewLine("if(dD[d" + CapitalizeFirstLetter(loopVar) + "] == *dLevel - 1) {");
+
+        for(auto stmt: stmtList)
+            if(stmt->getTypeofNode() == NODE_ASSIGN)   
+                GenerateStatement(stmt, false);
 
         header.pushStringWithNewLine("}");
         header.pushStringWithNewLine("}");
@@ -1672,9 +1717,9 @@ namespace sphip {
 
         main.NewLine();
         main.pushStringWithNewLine("// Additional variables added for BC. Not present in the DSL");
-        main.pushStringWithNewLine("bool hIsAllNodesTraversed; /*Non-DSL variable*/"); // TODO: Use hipHostMalloc instead of two vars
+        main.pushStringWithNewLine("bool hIsAllNodesTraversed = false; /*Non-DSL variable*/"); // TODO: Use hipHostMalloc instead of two vars
         main.pushStringWithNewLine("bool *dIsAllNodesTraversed; /*Non-DSL variable*/");
-        main.pushStringWithNewLine("int hLevel; /*Non-DSL variable*/ // Indicates the level of the BFS"); // TODO: Remove the comment from buffer 
+        main.pushStringWithNewLine("int hLevel = 0; /*Non-DSL variable*/ // Indicates the level of the BFS"); // TODO: Remove the comment from buffer 
         main.pushStringWithNewLine("int *dLevel; /*Non-DSL variable*/");
         main.pushStringWithNewLine("// Explore the possibility of using hipHostMalloc for simple vars");
         main.pushStringWithNewLine("// Check if hipHostMalloc works on all platforms");
@@ -1742,7 +1787,7 @@ namespace sphip {
     void DslCppGenerator::GenerateUnaryStmt(unary_stmt* stmt, bool isMainFile) {
 
         GenerateExpression(stmt->getUnaryExpr(), isMainFile);
-        (isMainFile ? main : header).pushStringWithNewLine(";"); // FIXME: Shouldn't this be to main or header?
+        (isMainFile ? main : header).pushStringWithNewLine(";"); // FIXME: TODO Shouldn't this be to main or header?
     }        
     
     void DslCppGenerator::GenerateExpression(Expression *expr, bool isMainFile, bool shouldPrefix, bool isAtomic) {
@@ -1996,7 +2041,6 @@ namespace sphip {
 
             if(expr->getArgList().size() == 0) {
 
-                // targetFile.pushString("// Comment here");
                 targetFile.pushString(expr->getId1()->getIdentifier());
                 targetFile.pushString(".");
                 targetFile.pushString(expr->getMethodId()->getIdentifier());
