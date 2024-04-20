@@ -28,7 +28,7 @@ namespace sphip {
 
         if(threadsPerBlock > 1024)
             throw std::runtime_error("Threads per block should be less than 1024");
-    }   
+    }
 
     bool DslCppGenerator::Generate() {
 
@@ -336,6 +336,7 @@ namespace sphip {
     void DslCppGenerator::GenerateStatement(statement* stmt, bool isMainFile) {
 
         cout << "STMT " << stmt->getTypeofNode() << "\n";
+        nodeStack.push(stmt);
 
         //TODO: Remove
         if(debug){if (stmt->getTypeofNode() == NODE_BLOCKSTMT) {
@@ -449,6 +450,8 @@ namespace sphip {
             break;
         }
 
+        nodeStack.pop();
+
         if(debug){
 
                if (stmt->getTypeofNode() == NODE_BLOCKSTMT) {
@@ -486,6 +489,8 @@ namespace sphip {
         } else {
             (isMainFile ? main : header).pushStringWithNewLine("// End Unknown node type");
         }}
+
+
     }
 
     void DslCppGenerator::GenerateBlock(
@@ -680,7 +685,8 @@ namespace sphip {
             PropAccess *propId = stmt->getPropId();
             if(stmt->getAtomicSignal()) {
 
-                targetFile.pushString("atomicAdd(&");
+                /*Atomics don't need '&' since all shared variables are passed as pointers*/
+                targetFile.pushString("atomicAdd(");
                 isAtomic = true;                
             }
 
@@ -751,8 +757,10 @@ namespace sphip {
         statement* body = stmt->getBody();
         string buffer;
 
+
         if(stmt->isForall()) { 
-            // This deals with the outer for loop which is parallelizable
+            // This block deals with the outer for loop which is parallelizable
+            
             
             usedVariables usedVars = GetUsedVariablesInForAll(stmt);
 
@@ -803,6 +811,27 @@ namespace sphip {
                 }
             }
 
+            if(
+                nodeStack.getCurrentNode()->getTypeofNode() == NODE_FORALLSTMT &&
+                nodeStack.getParentNode()->getTypeofNode() == NODE_FIXEDPTSTMT
+            ) {
+
+                usedVariables usedVars = GetUsedVariablesInFixedPoint(static_cast<fixedPointStmt*>(nodeStack.getParentNode()));
+
+                for(auto identifier: usedVars.getVariables()) {
+
+                    // TODO: This is added specifically to fix SSSP.
+                    // This should be done such that, all varaiables of enclosing
+                    // nodes and fixed point should taken together and added to
+                    // the kernel call, so that no variable repeats twice.
+                    if(identifier->getSymbolInfo()->getType()->isPrimitiveType()) {
+
+                        main.pushString(", d");
+                        main.pushString(CapitalizeFirstLetter(identifier->getIdentifier()));
+                    }
+                }
+            }
+
             main.pushStringWithNewLine(");");
             main.pushStringWithNewLine("hipDeviceSynchronize();");
 
@@ -811,7 +840,6 @@ namespace sphip {
             for(auto iden: usedVars.getVariables()) {
 
                 Type *type = iden->getSymbolInfo()->getType();
-                
                 if(type->isPrimitiveType()) {
                     GenerateHipMemcpyStr(
                         "&h" + CapitalizeFirstLetter(iden->getIdentifier()),
@@ -1066,6 +1094,30 @@ namespace sphip {
             }
         }
 
+        if(
+                nodeStack.getCurrentNode()->getTypeofNode() == NODE_FORALLSTMT &&
+                nodeStack.getParentNode()->getTypeofNode() == NODE_FIXEDPTSTMT
+            ) {
+
+                usedVariables usedVars = GetUsedVariablesInFixedPoint(static_cast<fixedPointStmt*>(nodeStack.getParentNode()));
+
+                for(auto identifier: usedVars.getVariables()) {
+
+                    // TODO: This is added specifically to fix SSSP.
+                    // This should be done such that, all varaiables of enclosing
+                    // nodes and fixed point should taken together and added to
+                    // the kernel call, so that no variable repeats twice.
+                    if(identifier->getSymbolInfo()->getType()->isPrimitiveType()) {
+
+                        header.pushString(", ");
+                        header.pushString(ConvertToCppType(identifier->getSymbolInfo()->getType()));
+                        header.pushString(" *d");
+                        header.pushString(CapitalizeFirstLetter(identifier->getIdentifier()));
+                        primitiveVarsInKernel.insert(identifier->getIdentifier());
+                    }
+                }
+            }
+
         header.pushStringWithNewLine(") {");
         header.NewLine();
 
@@ -1288,6 +1340,11 @@ namespace sphip {
                     }
                 }
 
+                // The whole block below is specific to SSSP.
+                // The DSL doesn't have an if check or comparision with
+                // INF at this point in the DSL code. This needs to be
+                // explored. 
+                // FIXME
                 targetFile.pushString("if(");
                 targetFile.pushString("d" + CapitalizeFirstLetter(stmt->getAssignedId()->getIdentifier()));
                 //TODO: Get these variables from the DSL and INT_MAX as well
@@ -1305,11 +1362,31 @@ namespace sphip {
                 }
 
                 // TODO: Only atomic Min? What the ..?
+                // This seems specific to SSSP. This has to be made generic
                 targetFile.pushString("atomicMin(&");
                 GenerateExpressionPropId(stmt->getTargetPropId(), isMainFile);
                 targetFile.pushString(", dUpdated" + CapitalizeFirstLetter(stmt->getAssignedId()->getIdentifier()));
                 targetFile.pushString(");");
                 targetFile.NewLine();
+
+                ASTNode *node = nodeStack.getNearestAncestorOfType(NODE_FIXEDPTSTMT);
+                if(node != NULL) {
+
+                    usedVariables usedVars = GetUsedVariablesInFixedPoint(static_cast<fixedPointStmt*>(nodeStack.getNearestAncestorOfType(NODE_FIXEDPTSTMT)));
+
+                    for(auto id: usedVars.getVariables()) {
+
+                        if(id->getSymbolInfo()->getType()->isPrimitiveType()) {
+
+                            targetFile.pushString("d");
+                            targetFile.pushString(CapitalizeFirstLetter(id->getIdentifier()));
+                            targetFile.pushString(" = ");
+                            targetFile.pushString(" false;");
+                            targetFile.NewLine();
+                        }
+                    }
+                }
+                
 
                 for(auto itr = std::next(leftList.begin()); itr != leftList.end(); itr++) {
 

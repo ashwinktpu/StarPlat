@@ -25,7 +25,7 @@ all: starplat
 #~ 	$(CC) bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o $(A_PROGRAM) -o starplat
 
 #hip
-HIP_PROGRAMS = bin/hip_dsl_cpp_generator.o bin/hip_auxillary.o bin/hip_code_gen.o bin/hip_analyzer.o bin/hip_get_used.o
+HIP_PROGRAMS = bin/hip_dsl_cpp_generator.o bin/hip_auxillary.o bin/hip_code_gen.o bin/hip_get_used.o
 
 bin/hip_dsl_cpp_generator.o: backends/backend_hip/dsl_cpp_generator.cpp backends/dslCodePad.h backends/backend_hip/auxillary_functions.cpp
 	$(CC) $(CFLAGS) -c backends/backend_hip/dsl_cpp_generator.cpp -o bin/hip_dsl_cpp_generator.o
@@ -35,9 +35,6 @@ bin/hip_auxillary.o: backends/backend_hip/auxillary_functions.cpp backends/dslCo
 
 bin/hip_code_gen.o: backends/backend_hip/hip_gen_functions.cpp backends/dslCodePad.h
 	$(CC) $(CFLAGS) -c backends/backend_hip/hip_gen_functions.cpp -o bin/hip_code_gen.o
-
-bin/hip_analyzer.o: backends/backend_hip/analyzer_utility.cpp backends/dslCodePad.h
-	$(CC) $(CFLAGS) -c backends/backend_hip/analyzer_utility.cpp -o bin/hip_analyzer.o
 
 bin/hip_get_used.o: backends/backend_hip/get_used_data.cpp backends/dslCodePad.h
 	$(CC) $(CFLAGS) -c backends/backend_hip/get_used_data.cpp -o bin/hip_get_used.o

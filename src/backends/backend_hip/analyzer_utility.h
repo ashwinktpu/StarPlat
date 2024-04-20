@@ -1,3 +1,8 @@
+/*
+ * @brief Only the analyzer_utility.h file is required. The implementation
+ *        exists inside the analyzer folder.
+*/
+
 #ifndef ANALYSER_UTILITY
 #define ANALYSER_UTILITY
 
