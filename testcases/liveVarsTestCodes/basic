@@ -1,0 +1,10 @@
+// basic function
+
+function test (int a)  // input is passed by reference so "a" should be live everywhere
+{
+    int b = 7;
+    int temp = 5;           // "b" should not be live here
+    b = temp*a;
+    b++;
+    return b;
+}

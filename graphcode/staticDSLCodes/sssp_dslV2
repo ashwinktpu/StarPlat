@@ -8,7 +8,7 @@ function Compute_SSSP(Graph g, propNode < int > dist, propEdge < int > weight, n
     forall(v in g.nodes()) {
       forall(nbr in g.neighbors(v).filter(modified1 == True)) {
         edge e = g.get_edge(v, nbr); <
-        nbr.dist, nbr.modified > = < Min(nbr.dist, v.dist + e.weight), True > ;
+        nbr.dist, nbr.modified1 > = < Min(nbr.dist, v.dist + e.weight), True > ;
       }
     }
   }

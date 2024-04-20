@@ -10,6 +10,7 @@
 	#include "../analyser/pushpull/pushpullAnalyser.h"
 
 	#include "../analyser/blockVars/blockVarsAnalyser.h"
+	#include "../analyser/liveVars/liveVarsAnalyser.h"
 	#include<getopt.h>
 	//#include "../symbolutil/SymbolTableBuilder.cpp"
      
@@ -67,6 +68,7 @@
 %token <fval> FLOAT_NUM
 %token <bval> BOOL_VAL
 %token <cval> CHAR_VAL
+%token return_func
 
 %type <node> function_def function_data  return_func function_body param
 %type <pList> paramList
@@ -632,6 +634,10 @@ int main(int argc,char **argv)
         spomp::dsl_cpp_generator cpp_backend;
 	std::cout<< "size:" << frontEndContext.getFuncList().size() << '\n';
         cpp_backend.setFileName(fileName);
+		if(optimize) {
+			liveVarsAnalyser liveness;
+			liveness.analyse(frontEndContext.getFuncList());
+		}
         cpp_backend.generate();
       } 
 	  else if (strcmp(backendTarget, "mpi") == 0) {
