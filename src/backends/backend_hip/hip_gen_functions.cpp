@@ -90,7 +90,7 @@ namespace sphip {
                 main.pushString(identifier);
                 main.pushStringWithNewLine(";");
 
-                GenerateHipMalloc(innerType, identifier);
+                GenerateHipMalloc(type, identifier);
                 GenerateHipMemcpyStr(
                     "d" + identifier, 
                     (type->isPrimitiveType() ? "&h" : "h") + identifier, 
@@ -103,9 +103,21 @@ namespace sphip {
 
     }
 
-    void DslCppGenerator::GenerateHipMemcpyParams(const list<formalParam*> &paramList) {
-        HIT_CHECK
-        //TODO
+    void DslCppGenerator::GenerateCopyBackToHost(const list<formalParam*> &paramList) {
+        
+        for(auto param: paramList) {
+
+            if(param->getType()->isPropType() && param->getType()->getInnerTargetType()->isPrimitiveType()) {
+
+                GenerateHipMemcpyStr(
+                    "h" + CapitalizeFirstLetter(param->getIdentifier()->getIdentifier()), 
+                    "d" + CapitalizeFirstLetter(param->getIdentifier()->getIdentifier()), 
+                    ConvertToCppType(param->getType()->getInnerTargetType()), 
+                    param->getType()->isPropEdgeType() ? "E" : "V", 
+                    false
+                );
+            }
+        }
     }
 
     void DslCppGenerator::GenerateHipMalloc(
@@ -113,9 +125,11 @@ namespace sphip {
         const std::string &identifier
     ) {
 
+        const std::string typeStr = type->isPrimitiveType() ? 
+            ConvertToCppType(type) : ConvertToCppType(type->getInnerTargetType());
         main.pushStringWithNewLine(
             "hipMalloc(&d" + identifier + ", sizeof(" + 
-            ConvertToCppType(type) + ") * (" +
+            typeStr + ") * (" +
             (type->isPrimitiveType() ? "1" : (type->isPropNodeType() ? "V" : "E")) + "));"
         );
     }

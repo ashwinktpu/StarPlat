@@ -14,7 +14,7 @@
 #include "../../ast/ASTHelper.cpp"
 #include "dsl_cpp_generator.h"
 
-const bool debug = false;
+const bool debug = true;
 
 namespace sphip {
 
@@ -103,9 +103,9 @@ namespace sphip {
         GenerateBlock(func->getBlockStatement(), false);
         GenerateTimerStop();
         
-        GenerateHipMemcpyParams(func->getParamList()); // TODO: This is required when the resullt is to be pass back via a paramenter
+        GenerateCopyBackToHost(func->getParamList()); // TODO: This is required when the resullt is to be pass back via a paramenter
         HIT_CHECK // TODO: Add increment function count method. refer cuda
-        //TODO: Add cuda free and other host free
+        //TODO: Add hipfree and other host free. 
         main.pushStringWithNewLine("}");
     }
 
@@ -1606,7 +1606,6 @@ namespace sphip {
             } else {
 
                 HIT_CHECK
-                std::cout << "UNIMPL " << (*itr)->getIdentifier()->getIdentifier() << "\n";
             }
         }
     }

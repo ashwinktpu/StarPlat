@@ -454,7 +454,7 @@ namespace sphip {
         /**
          * TODO
          */
-        void GenerateHipMemcpyParams(const list<formalParam*> &paramList);
+        void GenerateCopyBackToHost(const list<formalParam*> &paramList);
 
         /**
          * TODO
