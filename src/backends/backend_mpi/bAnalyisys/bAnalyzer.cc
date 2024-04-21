@@ -1,7 +1,13 @@
 #include "bAnalyzer.h"
 
+bAnalyzer::bAnalyzer (statmemt * stmt) {
+  
+  TraverseAST (statement * stmt) ;
+}
+
 void bAnalyzer::TraverseAST (statement * stmt) {
   
+  // What all is to be done for the statment .
 
   if (stmt->getTypeofNode() == NODE_BLOCKSTMT) {
     list<statement*> stmtList = (blockStatement*)blockStmt->returnStatements();
@@ -69,6 +75,32 @@ int bAnalyzer::analyzeForAllStmt (forallStmt * forAll) {
   }
 }
 
-int canImproveEdge (assignment* stmt) {
-  
+
+int canImproveEdge (declaration* stmt) {
+  Type* type = decl->getType();
+  if (type->isPropType()) {
+    if (decl->isInitialized()) {
+      Expr * expr = decl->getExpressionAssigned();
+      if (expr->isProcCallExpr()) {
+        proc_callExpr* proc = (proc_callExpr*)expr;
+        string methodId(proc->getMethodId()->getIdentifier());
+        if (methodId == "get_edge") {
+                
+          list<argument*> argList = proc->getArgList();
+          assert(argList.size() == 2);
+      
+          Identifier* srcId = argList.front()->getExpr()->getId();
+          Identifier* destId = argList.back()->getExpr()->getId();
+          Identifier* objectId = proc->getId1();
+          if (srcId->getIdentifier() == u and destId->getIdentifier () == v) {
+            return 1 ;
+          }
+          if (srcId->getIdentifier() == v or destId->getIdentifier () == u) {
+            return 2 ; 
+          }
+        }
+      }
+    }
+  }
+  return 0 ;  
 }

@@ -1,8 +1,10 @@
 /*
   Analyzer made specific to mpi backend. May be extended to other backends if needs be.
+  There are multiple areas where this may be improved.
 */
 #ifndef B_ANALYZER
 #define B_ANALYZER
+#include "../../../ast/ASTNodeTypes.hpp"
 class bAnalazyer {
   private:
     std::unoredred_map<int, std::string> functionMapping ; 
@@ -11,8 +13,10 @@ class bAnalazyer {
     std::unordered_map<int, std::vector<int> > forAllNesting ;
 
   public:
-    void TraverseAST (list<Function * > funcList) ;
+    bAnalyzer (statement * stmt) ;
+    void TraverseAST (statment *) ;
     void analyzeForAllStmt (forallStmt * ) ;
     void analyseStatement(statement* );
+    int canImproveEdge (declatation * ) ;
 } ;
 #endif
