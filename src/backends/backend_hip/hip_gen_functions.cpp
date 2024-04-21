@@ -60,11 +60,30 @@ namespace sphip {
     }
 
     void DslCppGenerator::GenerateTimerStart() {
-        //TODO
+        
+        main.NewLine();
+        main.pushStringWithNewLine("// Timing starts here");
+        main.pushStringWithNewLine("hipEvent_t start;");
+        main.pushStringWithNewLine("hipEventCreate(&start);");
+        main.pushStringWithNewLine("hipEventRecord(start);");
+        main.NewLine();
     }
 
+
     void DslCppGenerator::GenerateTimerStop() {
-        //TODO
+        
+        main.NewLine();
+        main.pushStringWithNewLine("hipEvent_t stop;");
+        main.pushStringWithNewLine("hipEventCreate(&stop);");
+        main.pushStringWithNewLine("hipEventRecord(stop);");
+        main.pushStringWithNewLine("hipEventSynchronize(stop);");
+        main.pushStringWithNewLine("float milliseconds = 0;");
+        main.pushStringWithNewLine("hipEventElapsedTime(&milliseconds, start, stop);");
+        main.pushStringWithNewLine("std::cout << \"Time taken: \" << milliseconds << \" ms\" << std::endl;");
+        main.pushStringWithNewLine("hipEventDestroy(start);");
+        main.pushStringWithNewLine("hipEventDestroy(stop);");
+        main.pushStringWithNewLine("// Timing ends here");
+        main.NewLine();
     }
 
     void DslCppGenerator::GenerateFormalParameterDeclAllocCopy(

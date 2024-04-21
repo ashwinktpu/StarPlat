@@ -22,5 +22,6 @@ dump/
 runtests.sh
 cudadump/
 testcases/testAMD/*
-graphcode/generated_hip/
+graphcode/generated_hip/*cc
+graphcode/generated_hip/*h
 .idea/

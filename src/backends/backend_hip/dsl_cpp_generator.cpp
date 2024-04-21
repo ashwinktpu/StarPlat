@@ -14,7 +14,7 @@
 #include "../../ast/ASTHelper.cpp"
 #include "dsl_cpp_generator.h"
 
-const bool debug = true;
+const bool debug = false;
 
 namespace sphip {
 
@@ -93,12 +93,14 @@ namespace sphip {
         main.pushString(returnType);
         header.pushString(returnType);
         // TODO: ends here
+        
         GenerateFunctionHeader(func, false);
         GenerateFunctionHeader(func, true);
 
-        GenerateTimerStart(); // TODO: Make this flag dependent
-
         GenerateFunctionBody(func);
+
+        GenerateTimerStart(); // TODO: Make this flag dependent
+        
         main.NewLine();
         GenerateBlock(func->getBlockStatement(), false);
         GenerateTimerStop();
