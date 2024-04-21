@@ -984,7 +984,7 @@ namespace spmpi {
                     assert(argList.size() == 1);
                     Identifier* nodeNbr = argList.front()->getExpr()->getId();
                     if(forAll->isForall()){
-                        sprintf (strBuffer, "if ( world.rank () == g.get_node_owner (%s) )\n { \nfor (%s %s:%s.%s(%s))", nodeNbr->getIdentifier(), "int", iterator->getIdentifier(), graphId, "getNeighbors", nodeNbr->getIdentifier()) ;
+                        sprintf (strBuffer, "if ( world.rank () == g.get_node_owner (%s) )\n { int vIdx = 0 ;\nfor (%s %s:%s.%s(%s))", nodeNbr->getIdentifier(), "int", iterator->getIdentifier(), graphId, "getNeighbors", nodeNbr->getIdentifier()) ;
                         ifStatementInForAll = true ;
                         main.pushstr_newL (strBuffer) ;
                     }
@@ -1086,8 +1086,11 @@ namespace spmpi {
         Type* type = decl->getType();
         char strBuffer[1024];
 
+        printf ("inside variable declation but outside propType") ;
+
         if (type->isPropType()) 
         {
+          printf ("inside variable declation\n") ;
             if (type->getInnerTargetType()->isPrimitiveType()) 
             {
                 Type* innerType = type->getInnerTargetType();
@@ -1112,6 +1115,7 @@ namespace spmpi {
         } 
         else if (type->isPrimitiveType()) 
         {
+            printf ("get_edge maps to primitive ?? Don't think so\n") ;
             main.pushstr_space(convertToCppType(type));
             main.pushString(decl->getdeclId()->getIdentifier());
             if (decl->isInitialized()) 
@@ -1138,6 +1142,7 @@ namespace spmpi {
         } 
         else if (type->isNodeEdgeType()) 
         {
+            printf ("get edge maps to isNodeEdgeType () \n") ;
             main.pushstr_space(convertToCppType(type));
             main.pushString(decl->getdeclId()->getIdentifier());
             if (decl->isInitialized()) 

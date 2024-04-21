@@ -80,7 +80,7 @@ int bAnalyzer::analyzeForAllStmt (forallStmt * forAll) {
 
 int bAnalyzer::canImproveEdge (declaration* decl, char * u, char * v) {
   Type* type = decl->getType();
-  if (type->isPropType()) {
+  if (type->isNodeEdgeType()) {
     if (decl->isInitialized()) {
       Expression * expr = decl->getExpressionAssigned();
       if (expr->isProcCallExpr()) {
@@ -94,10 +94,10 @@ int bAnalyzer::canImproveEdge (declaration* decl, char * u, char * v) {
           Identifier* srcId = argList.front()->getExpr()->getId();
           Identifier* destId = argList.back()->getExpr()->getId();
           Identifier* objectId = proc->getId1();
-          if (srcId->getIdentifier() == u and destId->getIdentifier () == v) {
+          if (!strcmp(srcId->getIdentifier(),u) and !strcmp(destId->getIdentifier (), v)) {
             return 1 ;
           }
-          if (srcId->getIdentifier() == v or destId->getIdentifier () == u) {
+          if (!strcmp(srcId->getIdentifier(),v) and !strcmp(destId->getIdentifier (), u)) {
             return 2 ; 
           }
         }
