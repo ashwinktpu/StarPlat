@@ -78,7 +78,7 @@ int bAnalyzer::analyzeForAllStmt (forallStmt * forAll) {
 }
 
 
-int canImproveEdge (declaration* decl, char * u, char * v) {
+int bAnalyzer::canImproveEdge (declaration* decl, char * u, char * v) {
   Type* type = decl->getType();
   if (type->isPropType()) {
     if (decl->isInitialized()) {

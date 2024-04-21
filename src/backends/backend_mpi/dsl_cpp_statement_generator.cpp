@@ -978,11 +978,13 @@ namespace spmpi {
                 string s(methodId);
                 
                 if (s.compare("neighbors") == 0) {
+                    int analysisStatus = analysisForAll->analyzeForAllStmt (forAll) ;
+                    printf ("analysis returned %d\n", analysisStatus) ;
                     list<argument*> argList = extractElemFunc->getArgList();
                     assert(argList.size() == 1);
                     Identifier* nodeNbr = argList.front()->getExpr()->getId();
                     if(forAll->isForall()){
-                        sprintf (strBuffer, "if ( world.rank () == g.get_node_owner (%s) )\n { \nfor (%s %s:%s.%s(%s))", iterator->getIdentifier(), "int", iterator->getIdentifier(), graphId, "localNeighboursOnly", nodeNbr->getIdentifier()) ;
+                        sprintf (strBuffer, "if ( world.rank () == g.get_node_owner (%s) )\n { \nfor (%s %s:%s.%s(%s))", nodeNbr->getIdentifier(), "int", iterator->getIdentifier(), graphId, "getNeighbors", nodeNbr->getIdentifier()) ;
                         ifStatementInForAll = true ;
                         main.pushstr_newL (strBuffer) ;
                     }

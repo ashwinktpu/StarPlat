@@ -2,6 +2,7 @@
 #include "../dslCodePad.h"
 #include "../../ast/ASTNodeTypes.hpp"
 #include "../../parser/includeHeader.hpp"
+#include "bAnalyzer/bAnalyzer.h"
 
 #ifndef MPI_DSL_CPP_GENERATOR
 #define MPI_DSL_CPP_GENERATOR
@@ -23,6 +24,7 @@ class dsl_cpp_generator
     int decFuncCount;
     int dynFuncCount;
     int curFuncType;
+    bAnalyzer *  analysisForAll ;
     vector<pair<Identifier*, proc_callExpr*>> forallStack;
     std::vector<statement*> insideParallelConstruct;
     fixedPointStmt* fixedPointEnv;
@@ -42,6 +44,7 @@ class dsl_cpp_generator
     dynFuncCount = 0;
     ifStatementInForAll = false ; 
     fixedPointEnv = NULL;
+    analysisForAll = new bAnalyzer () ;
     printf("set to null\n");
     //isOptimized = false;
   }
