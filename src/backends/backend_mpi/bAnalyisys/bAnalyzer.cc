@@ -48,17 +48,27 @@ void bAnalyzer::TraverseAST (statement * stmt) {
   }
 }
 
-void bAnalyzer::analyzeForAllStmt (forallStmt * forAll) {
+int bAnalyzer::analyzeForAllStmt (forallStmt * forAll) {
   
   list<statement*> stmtList = (blockStatement*)(forAll->getBody());
-
-  for (auto &stmt:stmtList) {
-    if (stmt->getTypeofNode() == NODE_FORALLSTMT) {
-      analyzeForAllStmt (forallStmt *forAll) 
+  if (forAll->isSourceProcCall()) {
+    Identifier* sourceGraph = forAll->getSourceGraph();
+    proc_callExpr* extractElemFunc = forAll->getExtractElementFunc();
+    Identifier* iteratorMethodId = extractElemFunc->getMethodId();
+    if (strcmp (iteratorMethodId->getIdentifier (), "neighbors") == 0) {
+      for (auto &stmt:stmtList) {
+        if (stmt->getTypeofNode() == NODE_FORALLSTMT) {
+          analyzeForAllStmt ((forallStmt*) stmt) 
+          continue ;
+        }
+        if (stmt->getTypeofNode() == NODE_ASSIGN) {
+          return canImproveEdge (stmt) ;
+        }
+      }
     }
   }
 }
 
-void bAnalyzer::analuzeStatement (statement * ) {
-
+int canImproveEdge (assignment* stmt) {
+  
 }
