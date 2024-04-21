@@ -50,14 +50,6 @@ bin/om_dsl_cpp_generator.o: backends/backend_omp/dsl_cpp_generator.cpp backends/
 bin/mpi_dsl_cpp_generator.o: backends/backend_mpi/dsl_cpp_generator.h backends/backend_mpi/dsl_cpp_generator.cpp backends/dslCodePad.h
 	$(CC) $(CFLAGS) -c backends/backend_mpi/dsl_cpp_generator.cpp -o bin/mpi_dsl_cpp_generator.o
 
-#sycl
-bin/sycl_dsl_cpp_generator.o: backends/backend_sycl/dsl_cpp_generator.cpp backends/dslCodePad.h
-	$(CC) $(CFLAGS) -c backends/backend_sycl/dsl_cpp_generator.cpp -o bin/sycl_dsl_cpp_generator.o
-
-#dyn OMP
-bin/om_dyn_dsl_cpp_generator.o: backends/backend_omp/dsl_dyn_cpp_generator.cpp backends/dslCodePad.h
-	$(CC) $(CFLAGS) -c backends/backend_omp/dsl_dyn_cpp_generator.cpp -o bin/om_dyn_dsl_cpp_generator.o
-
 bin/mpi_dsl_cpp_generator_helper.o: backends/backend_mpi/dsl_cpp_generator.h backends/backend_mpi/dsl_cpp_generator_helper.cpp backends/dslCodePad.h
 	$(CC) $(CFLAGS) -c backends/backend_mpi/dsl_cpp_generator_helper.cpp -o bin/mpi_dsl_cpp_generator_helper.o
 
@@ -69,6 +61,18 @@ bin/mpi_dsl_cpp_statement_generator.o: backends/backend_mpi/dsl_cpp_generator.h 
 
 bin/mpi_dsl_dyn_cpp_generator.o : backends/backend_mpi/dsl_cpp_generator.h backends/backend_mpi/dsl_cpp_statement_generator.cpp backends/backend_mpi/dsl_dyn_cpp_generator.h backends/backend_mpi/dsl_dyn_cpp_generator.cpp backends/dslCodePad.h
 	$(CC) $(CFLAGS) -c backends/backend_mpi/dsl_dyn_cpp_generator.cpp -o bin/mpi_dsl_dyn_cpp_generator.o
+
+bin/bAnalyzer.o : backends/backend_mpi/bAnalyzer/bAnalyzer.h backends/backend_mpi/bAnalyzer/bAnalyzer.cc backends/backend_mpi/dsl_dyn_cpp_generator.h backends/backend_mpi/dsl_dyn_cpp_generator.cpp backends/dslCodePad.h
+	$(CC) $(CFLAGS) -c backends/backend_mpi/bAnalyzer/bAnalyzer.cc -o bin/mpi_dsl_dyn_cpp_generator.o
+
+#sycl
+bin/sycl_dsl_cpp_generator.o: backends/backend_sycl/dsl_cpp_generator.cpp backends/dslCodePad.h
+	$(CC) $(CFLAGS) -c backends/backend_sycl/dsl_cpp_generator.cpp -o bin/sycl_dsl_cpp_generator.o
+
+#dyn OMP
+bin/om_dyn_dsl_cpp_generator.o: backends/backend_omp/dsl_dyn_cpp_generator.cpp backends/dslCodePad.h
+	$(CC) $(CFLAGS) -c backends/backend_omp/dsl_dyn_cpp_generator.cpp -o bin/om_dyn_dsl_cpp_generator.o
+
 
 starplat: bin $(PROGRAMS) $(A_PROGRAM) 
 	$(CC)  $(PROGRAMS) $(A_PROGRAM) -o StarPlat
