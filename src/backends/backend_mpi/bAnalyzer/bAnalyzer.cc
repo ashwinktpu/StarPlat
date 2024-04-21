@@ -55,6 +55,8 @@ int bAnalyzer::analyzeForAllStmt (forallStmt * forAll) {
   
   list<statement*> stmtList = (((blockStatement*)(forAll)->getBody()))->returnStatements () ;
   if (forAll->isSourceProcCall()) {
+    counter++ ;
+    Identifier* vIdx = createIdNode (strcat ("_t", to_string (vIdx))) ;
     Identifier* sourceGraph = forAll->getSourceGraph();
     Identifier* iterator = forAll->getIterator();
     proc_callExpr* extractElemFunc = forAll->getExtractElementFunc();
@@ -64,26 +66,62 @@ int bAnalyzer::analyzeForAllStmt (forallStmt * forAll) {
     Identifier* nodeNbr = argList.front()->getExpr()->getId();
     if (strcmp (iteratorMethodId->getIdentifier (), "neighbors") == 0) {
       for (auto &stmt:stmtList) {
+        Statement * currStmt = NULL ;
         if (stmt->getTypeofNode() == NODE_FORALLSTMT) {
           analyzeForAllStmt ((forallStmt*) stmt)  ;
-          continue ;
         }
-        if (stmt->getTypeofNode() == NODE_DECL) {
-          return canImproveEdge ((declaration*)stmt, iterator->getIdentifier(), nodeNbr->getIdentifier()) ;
+        else if (stmt->getTypeofNode() == NODE_DECL) {
+          int status = canImproveEdge ((declaration*)stmt, iterator->getIdentifier(), nodeNbr->getIdentifier())  
+          if (status) {
+            stmt = createNewEdgeStatement (stmt, status, counter) ;
+          }
         }
+        newStatement.addStmtToBlock (stmt) ;
       }
     }
+    // Create a unary expression to add to the statement of the block.
+    newStatement.addStmtToBlock (
   }
   return 0 ;
 }
 
 
+
+statement * createNewEdgeStatement (declaration * stmt, int status)  {
+
+  assert (status == 1 || status == 2) ;
+
+  assert (decl->isInitialized) ;
+  Expression * expr = decl->getExpressionAssigned () ;
+
+  assert (expr->isPropCallExpr()) ;
+  proc_callExpr * proc = (proc_callExpr *) expr ;
+  Identifier * newMethodId ;
+
+  if (status == 1 ) {
+    newMethodId = createIdNode("get_edge_r_i") ;
+  } else if (status == 2) {
+    newMethodId = createIdNode("get_edge_i") ;
+  } else {
+    assert (false) ;
+  }
+  propc_call * newExpression = nodeForProc_Call(proc->getId1, proc->getId2, newMethodId, proc->getArgList, proc->getExpr)
+  stmt = assign_Declaration(stmt->getType(), stmt->getdeclId(), newExpression) 
+
+  return stmt ;
+}
+
 int bAnalyzer::canImproveEdge (declaration* decl, char * u, char * v) {
+
   Type* type = decl->getType();
+
   if (type->isNodeEdgeType()) {
+
     if (decl->isInitialized()) {
+
       Expression * expr = decl->getExpressionAssigned();
       if (expr->isProcCallExpr()) {
+      
         proc_callExpr* proc = (proc_callExpr*)expr;
         string methodId(proc->getMethodId()->getIdentifier());
         if (methodId == "get_edge") {
@@ -105,4 +143,12 @@ int bAnalyzer::canImproveEdge (declaration* decl, char * u, char * v) {
     }
   }
   return 0 ;  
+}
+
+statement *getNewBody () {
+  return newStatement ;  
+}
+
+int analysisStatus () {
+  return analysisStatus ;
 }
