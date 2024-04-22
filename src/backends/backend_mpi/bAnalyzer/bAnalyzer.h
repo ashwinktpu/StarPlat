@@ -19,6 +19,8 @@ class bAnalyzer {
     int counter ; 
 //    std::vector<list<argument *> > argListList ;
     list<argument *> newArgList ;
+    stack<char *> iterVar ;
+    char * lastIter ;
 
   public:
     bAnalyzer () ;
@@ -29,6 +31,7 @@ class bAnalyzer {
     int getAnalysisStatus () ;
     blockStatement * getNewBody () ;
     statement * createNewEdgeStatement (declaration * stmt, int status, const char * vIdx) ;
+    char *  getIteratorVar () ;
     void clearAllAnalysis () ;
 } ;
 #endif

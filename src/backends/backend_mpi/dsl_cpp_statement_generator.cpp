@@ -822,8 +822,11 @@ namespace spmpi {
             blockStatement* changedBody = includeIfToBlock(forAll);
             forAll->setBody(changedBody);
         }
+
         
         if (analysisForAll->getAnalysisStatus() > 0) {
+          sprintf (strBuffer,"%s ++ ;\n", analysisForAll->getIteratorVar ()) ;
+          main.pushstr_newL (strBuffer) ;
           blockStatement * newBody = analysisForAll->getNewBody () ; 
           forAll->setBody (newBody) ;
         }
@@ -987,8 +990,14 @@ namespace spmpi {
                     list<argument*> argList = extractElemFunc->getArgList();
                     assert(argList.size() == 1);
                     Identifier* nodeNbr = argList.front()->getExpr()->getId();
+                    analysisStatus = analysisForAll->getAnalysisStatus () ;
                     if(forAll->isForall()){
-                        sprintf (strBuffer, "if ( world.rank () == g.get_node_owner (%s) )\n { int vIdx = 0 ;\nfor (%s %s:%s.%s(%s))", nodeNbr->getIdentifier(), "int", iterator->getIdentifier(), graphId, "getNeighbors", nodeNbr->getIdentifier()) ;
+                        if (analysisStatus) {
+                          char * variableIter = analysisForAll->getIteratorVar () ;
+                          sprintf (strBuffer, "int %s = -1 ;\n", variableIter) ;
+                          main.pushstr_newL (strBuffer) ;
+                        }
+                        sprintf (strBuffer, "if ( world.rank () == g.get_node_owner (%s) )\n { for (%s %s:%s.%s(%s))", nodeNbr->getIdentifier(), "int", iterator->getIdentifier(), graphId, "getNeighbors", nodeNbr->getIdentifier()) ;
                         ifStatementInForAll = true ;
                         main.pushstr_newL (strBuffer) ;
                     }

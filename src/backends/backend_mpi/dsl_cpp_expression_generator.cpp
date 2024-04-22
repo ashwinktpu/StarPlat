@@ -131,7 +131,12 @@ namespace spmpi {
                 Identifier* srcId = argList.front()->getExpr()->getId();
                 Identifier* destId = argList.back()->getExpr()->getId();
                 Identifier* objectId = proc->getId1();
+                if (methodId == "get_edge") 
                 sprintf(strBuffer, "%s.%s(%s, %s)", objectId->getIdentifier(), "get_edge", srcId->getIdentifier(), destId->getIdentifier());
+                if (methodId == "get_edge_i") 
+                sprintf(strBuffer, "%s.%s(%s, %s)", objectId->getIdentifier(), "get_edge_i", srcId->getIdentifier(), destId->getIdentifier());
+                if (methodId == "get_edge_r_i") 
+                sprintf(strBuffer, "%s.%s(%s, %s)", objectId->getIdentifier(), "get_edge_r_i", srcId->getIdentifier(), destId->getIdentifier());
                 main.pushString(strBuffer);
                 // TODO : (Atharva) Some Dynamic specific code may come in here.
         } else if (methodId == "count_outNbrs") {

@@ -67,6 +67,7 @@ int bAnalyzer::analyzeForAllStmt (forallStmt * forAll) {
     char * prefix = "_t" ;
     sprintf (itVar, "%s", prefix) ;
     sprintf (itVar + strlen (itVar) , "%d", counter) ;
+    this->iterVar.push (itVar) ;
     Identifier* vIdx = Identifier::createIdNode (itVar) ;
     Identifier* sourceGraph = forAll->getSourceGraph();
     Identifier* iterator = forAll->getIterator();
@@ -96,6 +97,8 @@ int bAnalyzer::analyzeForAllStmt (forallStmt * forAll) {
       unary_stmt * incrementer = new unary_stmt () ; 
       newStatement.addStmtToBlock (
       */
+    this->lastIter = iterVar.top () ;
+    this->iterVar.pop () ;
   }
   return 0 ;
 }
@@ -184,4 +187,8 @@ blockStatement * bAnalyzer::getNewBody () {
 
 int bAnalyzer::getAnalysisStatus () {
   return this->analysisStatus ;
+}
+
+char * bAnalyzer::getIteratorVar () {
+  return this->lastIter ;
 }
