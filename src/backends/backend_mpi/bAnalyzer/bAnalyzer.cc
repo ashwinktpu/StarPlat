@@ -119,6 +119,7 @@ statement * bAnalyzer::createNewEdgeStatement (declaration * stmt, int status, c
   
   Identifier * newIdx = Identifier::createIdNode (vIdx) ;
   Expression * idxExpr = Expression::nodeForIdentifier (newIdx) ;
+  list<argument *> newArgList ;
 
   argument * a1 = new argument () ;
   argument * a2 = new argument () ;
@@ -136,6 +137,7 @@ statement * bAnalyzer::createNewEdgeStatement (declaration * stmt, int status, c
   }
   newArgList.push_back (a1) ;  
   newArgList.push_back (a2) ;  
+//   argListList.emplace_back(newArgList) ;
   proc_callExpr * newExpression = proc_callExpr::nodeForProc_Call(proc->getId1(), proc->getId2(),  newMethodId, newArgList, proc->getIndexExpr()) ;
   stmt = declaration::assign_Declaration(stmt->getType(), stmt->getdeclId(), newExpression) ;
 

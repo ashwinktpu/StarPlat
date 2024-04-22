@@ -1,0 +1,70 @@
+Makefile:66: warning: overriding recipe for target 'bin/mpi_dsl_dyn_cpp_generator.o'
+Makefile:63: warning: ignoring old recipe for target 'bin/mpi_dsl_dyn_cpp_generator.o'
+backends/backend_mpi/bAnalyzer/bAnalyzer.cc:3:22: error: expected constructor, destructor, or type conversion before ‘(’ token
+    3 | bAnalyzer::bAnalyzer (statememt * stmt) {
+      |                      ^
+backends/backend_mpi/bAnalyzer/bAnalyzer.cc: In member function ‘void bAnalyzer::TraverseAST(statement*)’:
+backends/backend_mpi/bAnalyzer/bAnalyzer.cc:13:50: error: ‘blockStmt’ was not declared in this scope
+   13 |     list<statement*> stmtList = (blockStatement*)blockStmt->returnStatements();
+      |                                                  ^~~~~~~~~
+backends/backend_mpi/bAnalyzer/bAnalyzer.cc:25:37: error: ‘class statement’ has no member named ‘getBody’
+   25 |     TraverseAST ((whileStmt*) stmt->getBody()) ;
+      |                                     ^~~~~~~
+backends/backend_mpi/bAnalyzer/bAnalyzer.cc:28:34: error: ‘class statement’ has no member named ‘getIfBody’
+   28 |     TraverseAST ((ifStmt*) stmt->getIfBody()) ;
+      |                                  ^~~~~~~~~
+backends/backend_mpi/bAnalyzer/bAnalyzer.cc:29:34: error: ‘class statement’ has no member named ‘getElseBody’
+   29 |     TraverseAST ((ifStmt*) stmt->getElseBody()) ;
+      |                                  ^~~~~~~~~~~
+backends/backend_mpi/bAnalyzer/bAnalyzer.cc:32:39: error: ‘class statement’ has no member named ‘getBody’
+   32 |     TraverseAST ((dowhileStmt*) stmt->getBody()) ;
+      |                                       ^~~~~~~
+backends/backend_mpi/bAnalyzer/bAnalyzer.cc:35:39: error: ‘class statement’ has no member named ‘getBody’
+   35 |     TraverseAST ((forallStmt*) stmt-> getBody()) ;
+      |                                       ^~~~~~~
+backends/backend_mpi/bAnalyzer/bAnalyzer.cc:38:42: error: ‘class statement’ has no member named ‘getBody’
+   38 |     TraverseAST ((fixedPointStmt*) stmt->getBody ()) ;
+      |                                          ^~~~~~~
+backends/backend_mpi/bAnalyzer/bAnalyzer.cc:41:45: error: ‘class statement’ has no member named ‘getBody’
+   41 |     TraverseAST ((reductionCallStmt*) stmt->getBody ()) ;
+      |                                             ^~~~~~~
+backends/backend_mpi/bAnalyzer/bAnalyzer.cc:47:41: error: ‘class statement’ has no member named ‘getBody’
+   47 |     TraverseAST ((proc_callStmt*) stmt->getBody()) ;
+      |                                         ^~~~~~~
+backends/backend_mpi/bAnalyzer/bAnalyzer.cc:50:38: error: ‘class statement’ has no member named ‘getBody’
+   50 |     TraverseAST ((unary_stmt*) stmt->getBody()) ;
+      |                                      ^~~~~~~
+backends/backend_mpi/bAnalyzer/bAnalyzer.cc: At global scope:
+backends/backend_mpi/bAnalyzer/bAnalyzer.cc:57:5: error: no declaration matches ‘int bAnalyzer::analyzeForAllStmt(forallStmt*)’
+   57 | int bAnalyzer::analyzeForAllStmt (forallStmt * forAll) {
+      |     ^~~~~~~~~
+In file included from backends/backend_mpi/bAnalyzer/bAnalyzer.cc:1:
+backends/backend_mpi/bAnalyzer/bAnalyzer.h:21:10: note: candidate is: ‘void bAnalyzer::analyzeForAllStmt(forallStmt*)’
+   21 |     void analyzeForAllStmt (forallStmt * ) ;
+      |          ^~~~~~~~~~~~~~~~~
+backends/backend_mpi/bAnalyzer/bAnalyzer.h:11:7: note: ‘class bAnalyzer’ defined here
+   11 | class bAnalyzer {
+      |       ^~~~~~~~~
+backends/backend_mpi/bAnalyzer/bAnalyzer.cc: In function ‘int canImproveEdge(declaration*)’:
+backends/backend_mpi/bAnalyzer/bAnalyzer.cc:80:16: error: ‘decl’ was not declared in this scope
+   80 |   Type* type = decl->getType();
+      |                ^~~~
+backends/backend_mpi/bAnalyzer/bAnalyzer.cc:83:7: error: ‘Expr’ was not declared in this scope
+   83 |       Expr * expr = decl->getExpressionAssigned();
+      |       ^~~~
+backends/backend_mpi/bAnalyzer/bAnalyzer.cc:83:14: error: ‘expr’ was not declared in this scope
+   83 |       Expr * expr = decl->getExpressionAssigned();
+      |              ^~~~
+backends/backend_mpi/bAnalyzer/bAnalyzer.cc:95:41: error: ‘u’ was not declared in this scope
+   95 |           if (srcId->getIdentifier() == u and destId->getIdentifier () == v) {
+      |                                         ^
+backends/backend_mpi/bAnalyzer/bAnalyzer.cc:95:75: error: ‘v’ was not declared in this scope
+   95 |           if (srcId->getIdentifier() == u and destId->getIdentifier () == v) {
+      |                                                                           ^
+backends/backend_mpi/bAnalyzer/bAnalyzer.cc:98:41: error: ‘v’ was not declared in this scope
+   98 |           if (srcId->getIdentifier() == v or destId->getIdentifier () == u) {
+      |                                         ^
+backends/backend_mpi/bAnalyzer/bAnalyzer.cc:98:74: error: ‘u’ was not declared in this scope
+   98 |           if (srcId->getIdentifier() == v or destId->getIdentifier () == u) {
+      |                                                                          ^
+make: *** [Makefile:66: bin/mpi_dsl_dyn_cpp_generator.o] Error 1

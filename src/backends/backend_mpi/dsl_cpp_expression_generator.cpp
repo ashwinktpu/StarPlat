@@ -123,7 +123,7 @@ namespace spmpi {
         char strBuffer[1024];
         proc_callExpr* proc = (proc_callExpr*)expr;
         string methodId(proc->getMethodId()->getIdentifier());
-        if (methodId == "get_edge") {
+        if (methodId == "get_edge" || methodId == "get_edge_i" || methodId == "get_edge_r_i") {
                 
                 list<argument*> argList = proc->getArgList();
                 assert(argList.size() == 2);

@@ -1,0 +1,10 @@
+/usr/bin/ld: bin/y.tab.o: warning: relocation against `_ZTVN8spdynmpi21dsl_dyn_cpp_generatorE' in read-only section `.text._ZN8spdynmpi21dsl_dyn_cpp_generatorD2Ev[_ZN8spdynmpi21dsl_dyn_cpp_generatorD5Ev]'
+/usr/bin/ld: bin/y.tab.o: in function `spdynmpi::dsl_dyn_cpp_generator::dsl_dyn_cpp_generator()':
+/home/cs22m028/MTP/StarPlat/src/parser/../backends/backend_mpi/dsl_dyn_cpp_generator.h:15:(.text._ZN8spdynmpi21dsl_dyn_cpp_generatorC2Ev[_ZN8spdynmpi21dsl_dyn_cpp_generatorC5Ev]+0x1b): undefined reference to `vtable for spdynmpi::dsl_dyn_cpp_generator'
+/usr/bin/ld: bin/y.tab.o: in function `spdynmpi::dsl_dyn_cpp_generator::~dsl_dyn_cpp_generator()':
+/home/cs22m028/MTP/StarPlat/src/parser/../backends/backend_mpi/dsl_dyn_cpp_generator.h:6:(.text._ZN8spdynmpi21dsl_dyn_cpp_generatorD2Ev[_ZN8spdynmpi21dsl_dyn_cpp_generatorD5Ev]+0xf): undefined reference to `vtable for spdynmpi::dsl_dyn_cpp_generator'
+/usr/bin/ld: bin/mpi_dsl_dyn_cpp_generator.o: in function `bAnalyzer::analyzeForAllStmt(forallStmt*)':
+/home/cs22m028/MTP/StarPlat/src/backends/backend_mpi/bAnalyzer/bAnalyzer.cc:72:(.text+0x54d): undefined reference to `bAnalyzer::canImproveEdge(declaration*, char*, char*)'
+/usr/bin/ld: warning: creating DT_TEXTREL in a PIE
+collect2: error: ld returned 1 exit status
+make: *** [Makefile:78: starplat] Error 1

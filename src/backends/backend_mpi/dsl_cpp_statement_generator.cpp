@@ -822,7 +822,11 @@ namespace spmpi {
             blockStatement* changedBody = includeIfToBlock(forAll);
             forAll->setBody(changedBody);
         }
-    
+        
+        if (analysisForAll->getAnalysisStatus() > 0) {
+          blockStatement * newBody = analysisForAll->getNewBody () ; 
+          forAll->setBody (newBody) ;
+        }
 
         if (extractElemFunc != NULL) {
             forallStack.push_back(make_pair(forAll->getIterator(), forAll->getExtractElementFunc()));

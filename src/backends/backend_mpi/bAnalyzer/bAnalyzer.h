@@ -17,7 +17,8 @@ class bAnalyzer {
     int analysisStatus ;
     blockStatement * newStatement ;
     int counter ; 
-    list<argument*> newArgList ;
+//    std::vector<list<argument *> > argListList ;
+    list<argument *> newArgList ;
 
   public:
     bAnalyzer () ;
