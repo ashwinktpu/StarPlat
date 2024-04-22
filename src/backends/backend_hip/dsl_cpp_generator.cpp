@@ -14,7 +14,7 @@
 #include "../../ast/ASTHelper.cpp"
 #include "dsl_cpp_generator.h"
 
-const bool debug = false;
+const bool debug = false; // Used for testing
 
 namespace sphip {
 
@@ -81,11 +81,13 @@ namespace sphip {
 
         // TODO: make this a seperate function or add the returnType part into function header things
         std::string returnType = "void";
+        bool isReturn = false;
         blockStatement* blockStmt = func->getBlockStatement();
         list<statement*> stmtList = blockStmt->returnStatements();
         for(auto stmt: stmtList) {
             if(stmt->getTypeofNode() == NODE_RETURN) {
                 returnType = ConvertToCppType(static_cast<returnStmt*>(stmt)->getReturnExpression()->getId()->getSymbolInfo()->getType());
+                isReturn = true;
                 break;
             }
         } 
@@ -103,7 +105,9 @@ namespace sphip {
         
         main.NewLine();
         GenerateBlock(func->getBlockStatement(), false);
-        GenerateTimerStop();
+
+        if(!isReturn) // In case of return, we will generate timer while handling NODE_RETURN
+            GenerateTimerStop();
         
         GenerateCopyBackToHost(func->getParamList()); // TODO: This is required when the resullt is to be pass back via a paramenter
         HIT_CHECK // TODO: Add increment function count method. refer cuda
@@ -337,45 +341,7 @@ namespace sphip {
 
     void DslCppGenerator::GenerateStatement(statement* stmt, bool isMainFile) {
 
-        cout << "STMT " << stmt->getTypeofNode() << "\n";
         nodeStack.push(stmt);
-
-        //TODO: Remove
-        if(debug){if (stmt->getTypeofNode() == NODE_BLOCKSTMT) {
-            (isMainFile ? main : header).pushStringWithNewLine("// GenerateBlock");
-        } else if (stmt->getTypeofNode() == NODE_DECL) {
-            (isMainFile ? main : header).pushStringWithNewLine("// GenerateVariableDeclaration");
-        } else if (stmt->getTypeofNode() == NODE_ASSIGN) {
-            assignment *asst = static_cast<assignment*>(stmt);
-            if (asst->isDeviceAssignment())
-                (isMainFile ? main : header).pushStringWithNewLine("// GenerateDeviceAssignment");
-            else
-                (isMainFile ? main : header).pushStringWithNewLine("// GenerateNormalAssignment");
-        } else if (stmt->getTypeofNode() == NODE_IFSTMT) {
-            (isMainFile ? main : header).pushStringWithNewLine("// GenerateIfStmt");
-        } else if (stmt->getTypeofNode() == NODE_FORALLSTMT) {
-            (isMainFile ? main : header).pushStringWithNewLine("// GenerateForAll");
-        } else if (stmt->getTypeofNode() == NODE_FIXEDPTSTMT) {
-            (isMainFile ? main : header).pushStringWithNewLine("// GenerateFixedPoint");
-        } else if (stmt->getTypeofNode() == NODE_REDUCTIONCALLSTMT) {
-            (isMainFile ? main : header).pushStringWithNewLine("// GenerateReductionCallStmt");
-        } else if (stmt->getTypeofNode() == NODE_ITRBFS) {
-            (isMainFile ? main : header).pushStringWithNewLine("// GenerateItrBfs");
-        } else if (stmt->getTypeofNode() == NODE_ITRRBFS) {
-            (isMainFile ? main : header).pushStringWithNewLine("// GenerateItrRevBfs");
-        } else if (stmt->getTypeofNode() == NODE_PROCCALLSTMT) {
-            (isMainFile ? main : header).pushStringWithNewLine("// GenerateProcCallStmt");
-        } else if (stmt->getTypeofNode() == NODE_WHILESTMT) {
-            (isMainFile ? main : header).pushStringWithNewLine("// GenerateWhileStmt");
-        } else if (stmt->getTypeofNode() == NODE_DOWHILESTMT) {
-            (isMainFile ? main : header).pushStringWithNewLine("// GenerateDoWhile");
-        } else if (stmt->getTypeofNode() == NODE_UNARYSTMT) {
-            (isMainFile ? main : header).pushStringWithNewLine("// GenerateUnaryStmt");
-        } else if (stmt->getTypeofNode() == NODE_RETURN) {
-            (isMainFile ? main : header).pushStringWithNewLine("// GenerateReturnStmt");
-        } else {
-            (isMainFile ? main : header).pushStringWithNewLine("// Unknown node type");
-        }}
 
         switch (stmt->getTypeofNode()) {
 
@@ -439,13 +405,13 @@ namespace sphip {
             break;
         
         case NODE_RETURN:{
-            HIT_CHECK
-            // TODO: the return value of the method should be changed in both main and header
+            GenerateTimerStop();
             returnStmt *retStmt = static_cast<returnStmt*>(stmt);
             main.pushString("return h");
             main.pushString(CapitalizeFirstLetter(retStmt->getReturnExpression()->getId()->getIdentifier()));
             main.pushString(";");
-            break; }
+            break; 
+        }
 
         default:
             throw std::runtime_error("Generation function not implemented for NODETYPE " + std::to_string(stmt->getTypeofNode()));
@@ -453,46 +419,6 @@ namespace sphip {
         }
 
         nodeStack.pop();
-
-        if(debug){
-
-               if (stmt->getTypeofNode() == NODE_BLOCKSTMT) {
-            (isMainFile ? main : header).pushStringWithNewLine("// End GenerateBlock");
-        } else if (stmt->getTypeofNode() == NODE_DECL) {
-            (isMainFile ? main : header).pushStringWithNewLine("// End GenerateVariableDeclaration");
-        } else if (stmt->getTypeofNode() == NODE_ASSIGN) {
-            assignment *asst = static_cast<assignment*>(stmt);
-            if (asst->isDeviceAssignment())
-                (isMainFile ? main : header).pushStringWithNewLine("// End GenerateDeviceAssignment");
-            else
-                (isMainFile ? main : header).pushStringWithNewLine("// End GenerateNormalAssignment");
-        } else if (stmt->getTypeofNode() == NODE_IFSTMT) {
-            (isMainFile ? main : header).pushStringWithNewLine("// End GenerateIfStmt");
-        } else if (stmt->getTypeofNode() == NODE_FORALLSTMT) {
-            (isMainFile ? main : header).pushStringWithNewLine("// End GenerateForAll");
-        } else if (stmt->getTypeofNode() == NODE_FIXEDPTSTMT) {
-            (isMainFile ? main : header).pushStringWithNewLine("// End GenerateFixedPoint");
-        } else if (stmt->getTypeofNode() == NODE_REDUCTIONCALLSTMT) {
-            (isMainFile ? main : header).pushStringWithNewLine("// End GenerateReductionCallStmt");
-        } else if (stmt->getTypeofNode() == NODE_ITRBFS) {
-            (isMainFile ? main : header).pushStringWithNewLine("// End GenerateItrBfs");
-        } else if (stmt->getTypeofNode() == NODE_ITRRBFS) {
-            (isMainFile ? main : header).pushStringWithNewLine("// End GenerateItrRevBfs");
-        } else if (stmt->getTypeofNode() == NODE_PROCCALLSTMT) {
-            (isMainFile ? main : header).pushStringWithNewLine("// End GenerateProcCallStmt");
-        } else if (stmt->getTypeofNode() == NODE_WHILESTMT) {
-            (isMainFile ? main : header).pushStringWithNewLine("// End GenerateWhileStmt");
-        } else if (stmt->getTypeofNode() == NODE_DOWHILESTMT) {
-            (isMainFile ? main : header).pushStringWithNewLine("// End GenerateDoWhile");
-        } else if (stmt->getTypeofNode() == NODE_UNARYSTMT) {
-            (isMainFile ? main : header).pushStringWithNewLine("// End GenerateUnaryStmt");
-        } else if (stmt->getTypeofNode() == NODE_RETURN) {
-            (isMainFile ? main : header).pushStringWithNewLine("// End GenerateReturnStmt");
-        } else {
-            (isMainFile ? main : header).pushStringWithNewLine("// End Unknown node type");
-        }}
-
-
     }
 
     void DslCppGenerator::GenerateBlock(
@@ -648,7 +574,6 @@ namespace sphip {
                 std::string temp1(propId->getIdentifier1()->getIdentifier());
                 // temp1[0] = toupper(temp1[0]);
                 HIT_CHECK
-                std::cout << "Check order of vars here\n";
                 str = "InitArrayIndex<" + varType + "><<<1,1>>>(V, d" 
                         + temp2 + ", " + temp1 + ", ";
                 targetFile.pushString(str);
@@ -1216,7 +1141,6 @@ namespace sphip {
 
         if(dependentId != NULL && dependentId->getSymbolInfo()->getType()->isPropNodeType()) {
 
-            targetFile.pushStringWithNewLine("int k = 0;"); // TODO: Is this required?
             targetFile.pushStringWithNewLine("hipDeviceSynchronize();"); // TODO: This might not be generic
             targetFile.NewLine();
             targetFile.pushStringWithNewLine("while(!h" + CapitalizeFirstLetter(fixedPointVar) + ") {");
@@ -1242,7 +1166,6 @@ namespace sphip {
                 fixedPointVarType, "1", false  
             );
 
-            targetFile.pushStringWithNewLine("k++;"); // TODO: Is this required?
             targetFile.pushStringWithNewLine("}");
         }
 
@@ -2093,7 +2016,6 @@ namespace sphip {
         const std::string &typeStr, 
         const std::string &sizeOfType
     ) {
-        cout << "FLAGFLAG2\n";
 
         main.pushStringWithNewLine(
             hVar + " = (" + typeStr + "*) malloc(sizeof(" + typeStr + ")" +

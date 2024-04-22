@@ -290,7 +290,7 @@ namespace sphip {
         const std::string &typeStr, 
         const bool direction
     ) {
-        std::cout << "HIT UNIMPLEMENTED FUNCTION HIP_GEN_FUN\n"; 
+        throw std::runtime_error("Not implemented");
     }
 
     void DslCppGenerator::GenerateAtomicStatementFromReductionOp(

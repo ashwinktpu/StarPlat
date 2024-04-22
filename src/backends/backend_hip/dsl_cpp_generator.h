@@ -52,17 +52,9 @@ namespace sphip {
             top = -1;
         }
 
-        void printStack() {
-            for (long i = 0; i <= top; i++) {
-                std::cout << stack[i]->getTypeofNode() << " -> ";
-            }
-            std::cout << "\n";
-        }
-
         void push(ASTNode* node) {
             stack.push_back(node);
             top++;
-            cout << "PUSH ";
             printStack();
         }
 
@@ -73,7 +65,6 @@ namespace sphip {
             ASTNode* node = stack[top];
             stack.pop_back();
             top--;
-            cout << "POP  ";
             printStack();
             return node;
         }
