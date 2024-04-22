@@ -25,3 +25,4 @@ testcases/testAMD/*
 graphcode/generated_hip/*cc
 graphcode/generated_hip/*h
 .idea/
+*.o

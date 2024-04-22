@@ -49,7 +49,7 @@ namespace sphip {
             std::to_string(threadsPerBlock) + ";"
         );
         main.pushStringWithNewLine(
-            "const unsigned numThreads = (V < threadsPerBlock) ? " +
+            "const unsigned numThreads = (V > threadsPerBlock) ? " +
             std::to_string(threadsPerBlock) + " : V;"
         );
         main.pushStringWithNewLine(

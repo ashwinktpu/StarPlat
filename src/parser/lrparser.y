@@ -680,7 +680,13 @@ int main(int argc,char **argv)
 		} else if(strcmp(backendTarget, "hip") == 0) {
 			
 			std::cout << "Generating HIP Code\n";
-			sphip::DslCppGenerator hip_backend(fileName, 512);
+			
+			const unsigned blockSize = 512;
+			//TODO: This block size can be a command line parameter.
+			// Hence the assertion.
+			assert(blockSize > 1 && blockSize <= 1024);
+
+			sphip::DslCppGenerator hip_backend(fileName, blockSize);
 			hip_backend.Generate();
 
 		} else std::cout<< "invalid backend" << '\n';
