@@ -1,6 +1,12 @@
 #include "bAnalyzer.h"
 
-bAnalyzer::bAnalyzer () {}
+bAnalyzer::bAnalyzer () {
+  newStatement = NULL ;
+  analysisStatus = 0 ;
+  counter = 0 ;
+  newStatement = new blockStatement () ; 
+  newStatement->setTypeofNode(NODE_BLOCKSTMT) ;
+}
 
 void bAnalyzer::TraverseAST (statement * stmt) {
   
@@ -52,11 +58,16 @@ void bAnalyzer::TraverseAST (statement * stmt) {
 }
 
 int bAnalyzer::analyzeForAllStmt (forallStmt * forAll) {
-  
   list<statement*> stmtList = (((blockStatement*)(forAll)->getBody()))->returnStatements () ;
+  bool needsInc = false ;
   if (forAll->isSourceProcCall()) {
     counter++ ;
-    Identifier* vIdx = createIdNode (strcat ("_t", to_string (vIdx))) ;
+    forAllNesting[counter] = forAll ;
+    char itVar [1024] ;
+    char * prefix = "_t" ;
+    sprintf (itVar, "%s", prefix) ;
+    sprintf (itVar + strlen (itVar) , "%d", counter) ;
+    Identifier* vIdx = Identifier::createIdNode (itVar) ;
     Identifier* sourceGraph = forAll->getSourceGraph();
     Identifier* iterator = forAll->getIterator();
     proc_callExpr* extractElemFunc = forAll->getExtractElementFunc();
@@ -66,49 +77,69 @@ int bAnalyzer::analyzeForAllStmt (forallStmt * forAll) {
     Identifier* nodeNbr = argList.front()->getExpr()->getId();
     if (strcmp (iteratorMethodId->getIdentifier (), "neighbors") == 0) {
       for (auto &stmt:stmtList) {
-        Statement * currStmt = NULL ;
         if (stmt->getTypeofNode() == NODE_FORALLSTMT) {
           analyzeForAllStmt ((forallStmt*) stmt)  ;
         }
         else if (stmt->getTypeofNode() == NODE_DECL) {
-          int status = canImproveEdge ((declaration*)stmt, iterator->getIdentifier(), nodeNbr->getIdentifier())  
+          int status = canImproveEdge ((declaration*)stmt, iterator->getIdentifier(), nodeNbr->getIdentifier()) ;  
           if (status) {
-            stmt = createNewEdgeStatement (stmt, status, counter) ;
+            analysisStatus = 1 ;
+            stmt = createNewEdgeStatement ((declaration*)stmt, status, itVar) ;
+            needsInc = true ;
           }
         }
-        newStatement.addStmtToBlock (stmt) ;
+        newStatement->addStmtToBlock (stmt) ;
       }
     }
     // Create a unary expression to add to the statement of the block.
-    newStatement.addStmtToBlock (
+    /*if (needsInc){
+      unary_stmt * incrementer = new unary_stmt () ; 
+      newStatement.addStmtToBlock (
+      */
   }
   return 0 ;
 }
 
 
 
-statement * createNewEdgeStatement (declaration * stmt, int status)  {
+statement * bAnalyzer::createNewEdgeStatement (declaration * stmt, int status, const char * vIdx)  {
 
   assert (status == 1 || status == 2) ;
 
-  assert (decl->isInitialized) ;
-  Expression * expr = decl->getExpressionAssigned () ;
+  // assert (stmt->isInitialized != 0) ;
+  Expression * expr = stmt->getExpressionAssigned () ;
 
-  assert (expr->isPropCallExpr()) ;
+  assert (expr->isProcCallExpr()) ;
   proc_callExpr * proc = (proc_callExpr *) expr ;
+  list<argument *> argList = proc->getArgList () ;
+
   Identifier * newMethodId ;
+  Identifier * src = argList.front()->getExpr()->getId() ;
+  Identifier * dest = argList.back()->getExpr()->getId() ;
+  
+  Identifier * newIdx = Identifier::createIdNode (vIdx) ;
+  Expression * idxExpr = Expression::nodeForIdentifier (newIdx) ;
+
+  argument * a1 = new argument () ;
+  argument * a2 = new argument () ;
 
   if (status == 1 ) {
-    newMethodId = createIdNode("get_edge_r_i") ;
+    newMethodId = Identifier::createIdNode("get_edge_r_i") ;
+    a1->setExpression (idxExpr) ;
+    a2->setExpression (argList.back()->getExpr ()) ;
   } else if (status == 2) {
-    newMethodId = createIdNode("get_edge_i") ;
+    newMethodId = Identifier::createIdNode("get_edge_i") ;
+    a1->setExpression (argList.front ()->getExpr ()) ;
+    a2->setExpression (idxExpr) ;
   } else {
     assert (false) ;
   }
-  propc_call * newExpression = nodeForProc_Call(proc->getId1, proc->getId2, newMethodId, proc->getArgList, proc->getExpr)
-  stmt = assign_Declaration(stmt->getType(), stmt->getdeclId(), newExpression) 
+  newArgList.push_back (a1) ;  
+  newArgList.push_back (a2) ;  
+  proc_callExpr * newExpression = proc_callExpr::nodeForProc_Call(proc->getId1(), proc->getId2(),  newMethodId, newArgList, proc->getIndexExpr()) ;
+  stmt = declaration::assign_Declaration(stmt->getType(), stmt->getdeclId(), newExpression) ;
 
-  return stmt ;
+  return (statement*) stmt ;
 }
 
 int bAnalyzer::canImproveEdge (declaration* decl, char * u, char * v) {
@@ -145,10 +176,10 @@ int bAnalyzer::canImproveEdge (declaration* decl, char * u, char * v) {
   return 0 ;  
 }
 
-statement *getNewBody () {
-  return newStatement ;  
+blockStatement * bAnalyzer::getNewBody () {
+  return this->newStatement ;  
 }
 
-int analysisStatus () {
-  return analysisStatus ;
+int bAnalyzer::getAnalysisStatus () {
+  return this->analysisStatus ;
 }

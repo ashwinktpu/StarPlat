@@ -13,9 +13,11 @@ class bAnalyzer {
     std::unordered_map<int, std::string> functionMapping ; 
     std::unordered_map<int, std::vector<int> > callGraph ;
     std::unordered_map<int, statement*> forallstatmentIndexing ;
-    std::unordered_map<int, std::vector<int> > forAllNesting ;
+    std::unordered_map<int, forallStmt * > forAllNesting ;
     int analysisStatus ;
     blockStatement * newStatement ;
+    int counter ; 
+    list<argument*> newArgList ;
 
   public:
     bAnalyzer () ;
@@ -23,9 +25,9 @@ class bAnalyzer {
     int analyzeForAllStmt (forallStmt * ) ;
     void analyseStatement(statement* );
     int canImproveEdge (declaration * , char * , char *) ;
-    int analysisStatus () ;
+    int getAnalysisStatus () ;
     blockStatement * getNewBody () ;
-    statement * createNewEdgeStatement (Statement * stmt, int status) ;
+    statement * createNewEdgeStatement (declaration * stmt, int status, const char * vIdx) ;
     void clearAllAnalysis () ;
 } ;
 #endif
