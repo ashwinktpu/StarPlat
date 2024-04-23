@@ -41,23 +41,6 @@ void relabel(Graph& g, int u, EdgeProperty<int>& residue, NodeProperty<int>& lab
    // printf ("relabeling %d\n", u) ;
   int x = label.getValue (u) ;
   int new_label = g.num_nodes() + 2;
-
-  int vIdx = 0;
-  for (int v : g.getNeighbors(u)) 
-  {
-    Edge residual_capacity = g.get_edge_i(u, vIdx);
-  //  printf ("residual capacity at %d -> %d = %d\n", u, v, residue.getValue(residual_capacity));
-    if (residue.getValue(residual_capacity) > 0)
-    {
-      if (new_label > label.getValue (v) )
-      {
-        new_label = label.getValue (v);
-      }
-    }
-    vIdx++ ;
-  }
-
-  /*// Experiment
   for (int v : g.getNeighbors(u)) 
   {
     Edge residual_capacity = g.get_edge(u, v);
@@ -71,7 +54,6 @@ void relabel(Graph& g, int u, EdgeProperty<int>& residue, NodeProperty<int>& lab
     }
   }
 
-*/
 
   // printf ("new laebel to be assigned = %d\n", new_label+1) ;
   if (new_label < g.num_nodes()+1 && new_label + 1> x )
@@ -80,8 +62,10 @@ void relabel(Graph& g, int u, EdgeProperty<int>& residue, NodeProperty<int>& lab
 		count.atomicAdd (oldIdx, -1) ;
 		count.atomicAdd (new_label+1, 1) ;
 
-    label.setValue (u,new_label + 1);
- //   printf ("new set to be assigned = %d\n", label.getValue (u)) ;
+    int adder = new_label + 1 - oldIdx ;
+    label.atomicAdd (u, adder) ;
+    // label.setValue (u,new_label + 1);
+    // printf ("new set to be assigned = %d\n", label.getValue (u)) ;
 //		g.frontier_push (u, world);
   }
 
@@ -123,7 +107,7 @@ void discharge(Graph& g, int u, NodeProperty<int>& label, NodeProperty<int>& exc
       if (label.getValue (u) == prevValue) {
 //				if (prevValue <= g.num_nodes()+1) g.frontier_push (u, world) ; 
 				break ;}
-      curr_edge.setValue (u, 0) ;
+      // curr_edge.setValue (u, 0) ;
 
     }
   }
@@ -144,7 +128,9 @@ void fixGap(Graph &g, Container<int>& count, NodeProperty<int>& label, boost::mp
       if (v != snk && v!= src && label.getValue(v) >= gap )
       {
     //    printf ("sent %d to unreachable\n", v) ;
-        label.setValue(v,g.num_nodes()+2);
+        int adder = g.num_nodes () + 2 - label.getValue(v) ;
+        label.atomicAdd (v, adder) ;
+        // label.setValue(v,g.num_nodes()+2);
       }
     }
 
@@ -213,5 +199,7 @@ void do_max_flow(Graph& g, int source, int sink, NodeProperty<int>& label,
 			// printf ("excess at %d is %d at height %d\n", i, excess.getValue (i), label.getValue (i) ) ;	
 		}
 	}*/
+  excess.leaveAllSharedLocks () ;
+  label.leaveAllSharedLocks () ;
   printf ("excess at sink = %d\n", ans) ;
 }

@@ -4,7 +4,7 @@ MPI_SOURCE_FILES = ../mpi_header/graph_mpi.cc ../mpi_header/updates.cc ../mpi_he
 
 
 CFLAGS=-g -Wall -I /home/cs22m028/boost/include -L /home/cs22m028/boost/lib -lboost_mpi -lboost_serialization  
-CC=mpic++ -std=c++17
+CC=/home/cs22m028/local/bin/mpic++ -std=c++17
 
 all: %.out
 
