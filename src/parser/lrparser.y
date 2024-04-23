@@ -684,7 +684,7 @@ int main(int argc,char **argv)
 			const unsigned blockSize = 512;
 			//TODO: This block size can be a command line parameter.
 			// Hence the assertion.
-			assert(blockSize > 1 && blockSize <= 1024);
+			assert(blockSize > 0 && blockSize <= 1024);
 
 			sphip::DslCppGenerator hip_backend(fileName, blockSize);
 			hip_backend.Generate();

@@ -55,7 +55,6 @@ namespace sphip {
         void push(ASTNode* node) {
             stack.push_back(node);
             top++;
-            printStack();
         }
 
         ASTNode* pop() {
@@ -65,7 +64,6 @@ namespace sphip {
             ASTNode* node = stack[top];
             stack.pop_back();
             top--;
-            printStack();
             return node;
         }
 
