@@ -1,0 +1,45 @@
+function k_core(Graph g, int k)
+{
+    int kcore_count = 0;
+    int update_count = 1;
+
+    propNode <int> indeg;
+    propNode <int> indeg_prev;
+    propNode <bool> modified; 
+    propNode <bool> modified_nxt;
+    g.attachNodeProperty(modified = False, modified_nxt = False );
+    forall(v in g.nodes())
+    {
+        v.indeg = g.count_outNbrs(v);
+        v.indeg_prev = v.indeg;
+    }
+
+
+    bool finished =False;
+    fixedPoint until (finished:!modified)
+    {
+        
+
+        forall(v in g.nodes())
+        {
+            if(v.indeg < k && v.indeg != 0)
+            {
+                v.indeg = 0;
+		
+
+                forall(nbr in g.neighbors(v))
+                {
+                    if(nbr.indeg >= k)
+                    {
+                        nbr.indeg-=1;
+                        nbr.modified_nxt=True;
+                    }
+                }
+            }
+        }
+	modified = modified_nxt;
+        g.attachNodeProperty(modified_nxt = False);
+
+    }
+
+}
