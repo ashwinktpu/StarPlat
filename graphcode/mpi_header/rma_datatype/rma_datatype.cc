@@ -67,9 +67,7 @@
   // Barenya : Need to flush and sync before get. 
   template<typename T>
   void Rma_Datatype<T>::flush (int32_t targetRank) {
-    printf ("starting to flush all the atomics on the window\n") ;
  	  MPI_Win_flush (targetRank, win) ; 
-    printf ("flush successfully done\n") ;
   }
   
   template<typename T>

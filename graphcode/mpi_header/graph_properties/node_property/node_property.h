@@ -25,6 +25,7 @@ class NodeProperty : public Property
     public :
     Rma_Datatype<T> propList;
     void fatBarrier () ;
+    void leaveAllSharedLocks () ;
     NodeProperty() : Property(true) 
     {
         if constexpr (std::is_same_v<T, int>)

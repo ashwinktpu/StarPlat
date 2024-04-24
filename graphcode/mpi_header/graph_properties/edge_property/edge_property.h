@@ -37,11 +37,14 @@ class EdgeProperty : public Property
 
     //TODO : Have to modify logic for reduction when diff_proplist is present
     std::vector<std::vector<std::pair<int32_t, T>>> reduction_queue;
+    std::vector<bool> already_locked_processors;
+    std::vector<bool> already_locked_processors_shared;
 
     public :
     Rma_Datatype<T> propList;
     Rma_Datatype<T> diff_propList;
     void fatBarrier () ;
+    void leaveAllSharedLocks () ;
 
     EdgeProperty() : Property(true) 
     {

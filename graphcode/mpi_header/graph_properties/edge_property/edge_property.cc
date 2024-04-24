@@ -35,6 +35,9 @@
         }
         attached_to_graph =true;
 
+        already_locked_processors = std::vector<bool>(world.size(),false);
+        already_locked_processors_shared = std::vector<bool>(world.size(),false);
+
         propertyId = graph->properties_counter;
         graph->properties[propertyId] = (Property*)this;
         graph->properties_counter = graph->properties_counter + 1;
@@ -135,6 +138,8 @@
             diff_data[i]=diff_initial_values[i];
           diff_propList.create_window(diff_data, diff_length, sizeof(T), world);
         }
+        already_locked_processors = std::vector<bool>(world.size(),false);
+        already_locked_processors_shared = std::vector<bool>(world.size(),false);
 
         this->graph = graph;
 
@@ -144,6 +149,15 @@
     template <typename T>
     int32_t EdgeProperty<T>::getPropertyId() {return propertyId;}
 
+    template<typename T>
+    void EdgeProperty<T>::leaveAllSharedLocks () {
+      for (int lockNo = 0 ; lockNo < world.size () ; lockNo++ ) {
+        if (already_locked_processors_shared [lockNo]) {
+          propList.unlock (lockNo, SHARED_LOCK) ;
+          already_locked_processors_shared[lockNo] = false ;
+        }
+      }
+    }
     template <typename T>
     T EdgeProperty<T>::getValue(Edge edge ,bool check_concurrency)
     {
@@ -157,11 +171,25 @@
         T value;
         if(edge.is_in_csr())
         {
-          //if(!already_locked_processors[owner_proc])
-          //  propList.get_lock(owner_proc,SHARED_LOCK,  no_checks_needed);
+        /*
+          if(!already_locked_processors[owner_proc])
+            propList.get_lock(owner_proc,SHARED_LOCK,  no_checks_needed);
           value = propList.data[local_edge_id];
-          //if(!already_locked_processors[owner_proc])
-          //  propList.unlock(owner_proc, SHARED_LOCK);
+          if(!already_locked_processors[owner_proc])
+            propList.unlock(owner_proc, SHARED_LOCK);
+            */
+          if (already_locked_processors_shared [owner_proc]) {
+            propList.flush (owner_proc) ;
+          } else {
+            already_locked_processors_shared[owner_proc]=true ;
+            propList.get_lock (owner_proc, SHARED_LOCK, no_checks_needed) ;
+          }
+          T* data = propList.get_data(owner_proc, local_edge_id, 1, SHARED_LOCK);
+
+          // propList.unlock(owner_proc, SHARED_LOCK); // doing an unlock later experiment.
+          value = data[0] ;
+          delete[] data ;
+          data =NULL ;
         }
         else
         {
@@ -214,6 +242,12 @@
       //}
       //else
      // {
+
+      if (already_locked_processors_shared[owner_proc] == true) {
+        propList.unlock (owner_proc, SHARED_LOCK) ;
+        already_locked_processors_shared[owner_proc]=false ;
+      }
+
       if(edge.is_in_csr())
       {
         //if(!already_locked_processors[owner_proc])
@@ -454,11 +488,16 @@
         {
           
         //if(!already_locked_processors[owner_proc])
-          propList.get_lock(owner_proc,SHARED_LOCK);
-          propList.accumulate(owner_proc,&value,local_edge_id,1,MPI_SUM,SHARED_LOCK);
+          //propList.get_lock(owner_proc,SHARED_LOCK);
+          //propList.accumulate(owner_proc,&value,local_edge_id,1,MPI_SUM,SHARED_LOCK);
         //if(!already_locked_processors[owner_proc])
-          propList.unlock(owner_proc, SHARED_LOCK);
+          //propList.unlock(owner_proc, SHARED_LOCK);
           
+          if(!already_locked_processors_shared[owner_proc]) {
+            already_locked_processors_shared[owner_proc]=true ;
+            propList.get_lock(owner_proc,SHARED_LOCK);
+          }
+          propList.accumulate(owner_proc,&value,local_edge_id,1,MPI_SUM,SHARED_LOCK);
 
         }
         else
