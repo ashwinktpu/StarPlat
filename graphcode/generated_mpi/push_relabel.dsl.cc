@@ -41,9 +41,12 @@ void relabel(Graph& g, int u, EdgeProperty<int>& residue, NodeProperty<int>& lab
    // printf ("relabeling %d\n", u) ;
   int x = label.getValue (u) ;
   int new_label = g.num_nodes() + 2;
+  int vIdx = -1 ;
   for (int v : g.getNeighbors(u)) 
   {
-    Edge residual_capacity = g.get_edge(u, v);
+    vIdx++ ;
+    Edge residual_capacity = g.get_edge_i(u, vIdx);
+    v = g.get_other_vertex (u, vIdx) ;
   //  printf ("residual capacity at %d -> %d = %d\n", u, v, residue.getValue(residual_capacity));
     if (residue.getValue(residual_capacity) > 0)
     {
