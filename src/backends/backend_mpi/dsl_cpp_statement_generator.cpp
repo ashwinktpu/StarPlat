@@ -454,6 +454,7 @@ namespace spmpi {
                     if(id->getSymbolInfo()->isGlobalVariable())
                     {   
 
+                        // Barenya : Commenting out some code generation that makes thigns incorrect.
                         sprintf(strBuffer,"%s_leader_rank",id->getIdentifier());
                         main.pushString(strBuffer);
                         main.pushString(" = world.rank()");
@@ -486,12 +487,12 @@ namespace spmpi {
             {
                 if(insideParallelConstruct.size()==0)
                 {   
-                    if(propId->getIdentifier2()->getSymbolInfo()->getType()->gettypeId()==TYPE_PROPNODE) 
-                        sprintf(strBuffer, "if(world.rank() == %s.%s(%s))", graphIds[0]->getIdentifier(),"get_node_owner", propId->getIdentifier1()->getIdentifier());
-                    else if(propId->getIdentifier2()->getSymbolInfo()->getType()->gettypeId()==TYPE_PROPEDGE)
-                        sprintf(strBuffer, "if(world.rank() == %s.%s(%s))", graphIds[0]->getIdentifier(),"get_edge_owner", propId->getIdentifier1()->getIdentifier());
-                    main.pushstr_newL(strBuffer);
-                    main.pushstr_newL("{");
+                    // if(propId->getIdentifier2()->getSymbolInfo()->getType()->gettypeId()==TYPE_PROPNODE) 
+                        // sprintf(strBuffer, "if(world.rank() == %s.%s(%s))", graphIds[0]->getIdentifier(),"get_node_owner", propId->getIdentifier1()->getIdentifier());
+                    // else if(propId->getIdentifier2()->getSymbolInfo()->getType()->gettypeId()==TYPE_PROPEDGE)
+                        // sprintf(strBuffer, "if(world.rank() == %s.%s(%s))", graphIds[0]->getIdentifier(),"get_edge_owner", propId->getIdentifier1()->getIdentifier());
+                    // main.pushstr_newL(strBuffer);
+                    // main.pushstr_newL("{");
                 }    
 
                 if(assignStmt->getExpr()->isArithmetic() && assignStmt->getExpr()->getLeft()->isPropIdExpr() )
@@ -533,8 +534,8 @@ namespace spmpi {
                     main.pushstr_newL(");");
                 }
 
-                if(insideParallelConstruct.size()==0)    
-                    main.pushstr_newL("}");
+                // if(insideParallelConstruct.size()==0)    
+                    // main.pushstr_newL("}");
 
                 Identifier* id2 = propId->getIdentifier2();
                 if (id2->getSymbolInfo() != NULL && id2->getSymbolInfo()->getId()->get_fp_association()) {
@@ -577,7 +578,7 @@ namespace spmpi {
         if (stmt->isLeftIdentifier()) {
             Identifier* id = stmt->getLeftId();
             main.pushString(id->getIdentifier());
-            main.pushString(" = ");
+            main.pushString(" = ( ");
             main.pushstr_space(id->getIdentifier());
             const char* operatorString = getOperatorString(stmt->reduction_op());
             main.pushstr_space(operatorString);
@@ -823,13 +824,13 @@ namespace spmpi {
             forAll->setBody(changedBody);
         }
 
-        
+        /* 
         if (analysisForAll->getAnalysisStatus() > 0) {
           sprintf (strBuffer,"%s ++ ;\n", analysisForAll->getIteratorVar ()) ;
           main.pushstr_newL (strBuffer) ;
           blockStatement * newBody = analysisForAll->getNewBody () ; 
           forAll->setBody (newBody) ;
-        }
+        }*/
 
         if (extractElemFunc != NULL) {
             forallStack.push_back(make_pair(forAll->getIterator(), forAll->getExtractElementFunc()));
@@ -949,6 +950,7 @@ namespace spmpi {
             main.pushstr_newL ("world.barrier ()") ;
         }
         main.NewLine () ;
+        analysisForAll->clearAllAnalysis () ;
     }
 
     void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll) {
@@ -985,18 +987,18 @@ namespace spmpi {
                 string s(methodId);
                 
                 if (s.compare("neighbors") == 0) {
-                    int analysisStatus = analysisForAll->analyzeForAllStmt (forAll) ;
-                    printf ("analysis returned %d\n", analysisStatus) ;
+                    // int analysisStatus = analysisForAll->analyzeForAllStmt (forAll) ;
+                    // printf ("analysis returned %d\n", analysisStatus) ;
                     list<argument*> argList = extractElemFunc->getArgList();
                     assert(argList.size() == 1);
                     Identifier* nodeNbr = argList.front()->getExpr()->getId();
-                    analysisStatus = analysisForAll->getAnalysisStatus () ;
+                    // analysisStatus = analysisForAll->getAnalysisStatus () ;
                     if(forAll->isForall()){
-                        if (analysisStatus) {
+                        /*if (analysisStatus) {
                           char * variableIter = analysisForAll->getIteratorVar () ;
                           sprintf (strBuffer, "int %s = -1 ;\n", variableIter) ;
                           main.pushstr_newL (strBuffer) ;
-                        }
+                        }*/
                         sprintf (strBuffer, "if ( world.rank () == g.get_node_owner (%s) )\n { for (%s %s:%s.%s(%s))", nodeNbr->getIdentifier(), "int", iterator->getIdentifier(), graphId, "getNeighbors", nodeNbr->getIdentifier()) ;
                         ifStatementInForAll = true ;
                         main.pushstr_newL (strBuffer) ;

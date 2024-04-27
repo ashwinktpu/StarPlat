@@ -379,7 +379,7 @@ void freeAllUpdateMemory (std::vector<int*> updates) {
         std::unordered_map <int, int> temp3 ;
         for (int vIdx = indexofNodes[u_temp]; vIdx < indexofNodes[u_temp+1]; vIdx++) {
           int v = destList[vIdx] ;
-//					if (temp3.find (v) == temp3.end ()) 
+					if (temp3.find (v) == temp3.end ()) 
           	temp3[v]=vIdx ;
         }
         speedUpForGetEdge[u_temp]=std::move(temp3) ;
@@ -506,7 +506,6 @@ void freeAllUpdateMemory (std::vector<int*> updates) {
         count = indexofNodes.data[index+1] - indexofNodes.data[index] - perNodeCSRSpace.data[index];    
       }
       else {
-        printf ("absolute obliteration\n") ;
         indexofNodes.get_lock(owner_proc, SHARED_LOCK, false);
         int * destListIndices = indexofNodes.get_data(owner_proc, index, 2,SHARED_LOCK);
         indexofNodes.unlock(owner_proc, SHARED_LOCK);
@@ -594,7 +593,7 @@ void freeAllUpdateMemory (std::vector<int*> updates) {
       assert (idx < indexofNodes.data[index+1]) ;
       return Edge (true, edgeProcMap[owner_proc]+idx) ;
     } else {
-      printf ("locking for getting edge via index proc %d\n", owner_proc) ;
+      // printf ("locking for getting edge via index proc %d\n", owner_proc) ;
       indexofNodes.get_lock (owner_proc, SHARED_LOCK, false) ;
       int * destListIndices = indexofNodes.get_data (owner_proc, index, 2, SHARED_LOCK) ;
       indexofNodes.unlock (owner_proc, SHARED_LOCK) ;

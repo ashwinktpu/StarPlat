@@ -192,3 +192,13 @@ int bAnalyzer::getAnalysisStatus () {
 char * bAnalyzer::getIteratorVar () {
   return this->lastIter ;
 }
+
+void bAnalyzer::clearAllAnalysis () {
+  newStatement = NULL ;
+  newStatement = new blockStatement () ; 
+  counter = 0 ;
+  analysisStatus = 0 ;
+  newArgList.clear () ;
+  iterVar = stack<char*> ();
+  lastIter = NULL ;
+}
