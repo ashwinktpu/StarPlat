@@ -1,6 +1,24 @@
 #include"edge_property.h"
 #include"../../graph_mpi.h"
 
+// debug.h
+#ifndef DEBUG_H
+#define DEBUG_H
+
+#include <stdio.h>
+
+// Define ENABLE_DEBUG to turn on debugging; comment it out to disable
+#define ENABLE_DEBUG
+
+#ifdef ENABLE_DEBUG
+    #define DEBUG(fmt, ...) fprintf(stderr, "DEBUG: %s:%d:%s(): " fmt, \
+        __FILE__, __LINE__, __func__, ##__VA_ARGS__)
+#else
+    #define DEBUG(fmt, ...) // Define it as an empty macro when debugging is disabled
+#endif
+
+#endif // DEBUG_H
+
 
     template <typename T>
     void EdgeProperty<T>::attachToGraph(Graph * graph, T initial_value, bool attach_only_to_diff_csr, bool create_new_diff)
@@ -181,7 +199,8 @@
           if (already_locked_processors_shared [owner_proc]) {
             propList.flush (owner_proc) ;
           } else {
-            already_locked_processors_shared[owner_proc]=true ;
+            // already_locked_processors_shared[owner_proc]=true ;
+            already_locked_processors_shared[owner_proc]=false;
             propList.get_lock (owner_proc, SHARED_LOCK, no_checks_needed) ;
           }
           T* data = propList.get_data(owner_proc, local_edge_id, 1, SHARED_LOCK);
@@ -252,7 +271,7 @@
       {
         //if(!already_locked_processors[owner_proc])
           propList.get_lock(owner_proc,SHARED_LOCK,  no_checks_needed);
-        propList.put_data(owner_proc,&value, local_edge_id, 1, SHARED_LOCK);
+          propList.put_data(owner_proc,&value, local_edge_id, 1, SHARED_LOCK);
         //if(!already_locked_processors[owner_proc])
           propList.unlock(owner_proc, SHARED_LOCK);
       }
@@ -483,6 +502,7 @@
         int owner_proc = graph->get_edge_owner(edge);
         int local_edge_id = graph->get_edge_local_index(edge);
         // sync_later[edge.get_id()].push_back ({owner_proc, local_edge_id, value}) ;
+        DEBUG ("Attempting atomic Add of value %d on an edge property\n", value) ;
 
         if(edge.is_in_csr())
         {
@@ -494,14 +514,19 @@
           //propList.unlock(owner_proc, SHARED_LOCK);
           
           if(!already_locked_processors_shared[owner_proc]) {
-            already_locked_processors_shared[owner_proc]=true ;
+            // already_locked_processors_shared[owner_proc]=true ;
+            already_locked_processors_shared[owner_proc]=false ;
             propList.get_lock(owner_proc,SHARED_LOCK);
+            DEBUG ("lock taken by %d on %d\n", owner_proc, world.rank ()) ;
+
           }
           propList.accumulate(owner_proc,&value,local_edge_id,1,MPI_SUM,SHARED_LOCK);
+          DEBUG ("atomic add of vale %d on edge property success\n", value) ;
 
         }
         else
         {
+          DEBUG ("unfortunately, got sent here\n") ;
            
           diff_propList.get_lock(owner_proc,SHARED_LOCK);
           diff_propList.accumulate(owner_proc,&value,local_edge_id,1,MPI_SUM,SHARED_LOCK);
