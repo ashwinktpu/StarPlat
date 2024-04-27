@@ -6,7 +6,8 @@
 #include<atomic>
 #include<omp.h>
 #include"../graph.hpp"
+#include"../atomicUtil.h"
 
-void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet);
+void Compute_BC(graph& g , float* BC , std::set<int>& sourceSet);
 
 #endif

@@ -10,6 +10,7 @@
 
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 #include "../../ast/ASTNodeTypes.hpp"
 #include "../../symbolutil/SymbolTable.h"
@@ -29,96 +30,79 @@ class usedVariables;
 namespace sphip {
 
     /**
-     * @note enum VariableType and class usedVariables are defined in analyzer_utility.h
-     * They are no longer needer here. 
-     * TODO: Remove the definitions from here.
+     * NOTE: This class might not be required as probably 
+     * the tree can be obtained from the ASTNode itself.
+     * This is implemented to get the finished variable in
+     * SSSP, when inside the forAll loop. I did try to get
+     * stmt->getParent()->getParent()->getVarSymbolTable(),
+     * but that seems to be empty. 
+     * 
+     * TODO: If this is indeed required, then the implementation
+     * can be made globally available. 
     */
-    // enum VariableType {
-    //     READ = 1,
-    //     WRITE,
-    //     READ_WRITE
-    // };
+    class NodeStack {
 
-    // class usedVariables {
+    private:
+        std::vector<ASTNode*> stack;
+        long top;
 
-    // private:
+    public:
 
-    //     struct hash_pair {
+        NodeStack() {
+            top = -1;
+        }
 
-    //         template <class T1, class T2>
-    //         size_t operator()(const pair<T1, T2> &p) const {
+        void push(ASTNode* node) {
+            stack.push_back(node);
+            top++;
+        }
 
-    //             auto hash1 = hash<T1>{}(p.first);
-    //             auto hash2 = hash<T2>{}(p.second);
-                
-    //             return hash1 ^ hash2;
-    //         }
-    //     };
+        ASTNode* pop() {
+            if (top == -1) {
+                return nullptr;
+            }
+            ASTNode* node = stack[top];
+            stack.pop_back();
+            top--;
+            return node;
+        }
 
-    //     unordered_map<TableEntry *, Identifier *> readVars;
-    //     unordered_map<TableEntry *, Identifier *> writeVars;
-    //     unordered_map<propKey, PropAccess *, hash_pair> readProp;
-    //     unordered_map<propKey, PropAccess *, hash_pair> writeProp;
+        ASTNode* getNearestAncestorOfType(NODETYPE type) {
+            for (long i = top; i >= 0; i--) {
+                if (stack[i]->getTypeofNode() == type) {
+                    return stack[i];
+                }
+            }
+            return nullptr;
+        }
 
-    // public:
+        bool isEmpty() {
+            return top == -1;
+        }
 
-    //     usedVariables() {}
+        ASTNode* getCurrentNode() {
+            if (top == -1) {
+                return nullptr;
+            }
+            return stack[top];
+        }
 
-    //     /**
-    //     * TODO
-    //     */
-    //     void addVariable(Identifier *iden, int type);
+        ASTNode* getParentNode() {
+            if (top < 1) {
+                return nullptr;
+            }
+            return stack[top - 1];
+        }
 
-    //     /**
-    //     * TODO
-    //     */
-    //     void addPropAccess(PropAccess *prop, int type);
+        bool hasParent() {
+            return top > 0;
+        }
 
-    //     /**
-    //     * TODO
-    //     */
-    //     void merge(usedVariables usedVars);
+        long size() {
+            return top + 1;
+        }
 
-    //     /**
-    //     * TODO
-    //     */
-    //     void removeVariable(Identifier *iden, int type);
-
-    //     /**
-    //     * TODO
-    //     */
-    //     bool isUsedVariable(Identifier *iden, int type = READ_WRITE);
-
-    //     /**
-    //     * TODO
-    //     */
-    //     list<Identifier *> getVariables(int type = READ_WRITE);
-
-    //     /**
-    //     * TODO
-    //     */
-    //     bool hasVariables(int type = READ_WRITE);
-
-    //     /**
-    //     * TODO
-    //     */
-    //     bool isUsedPropAccess(PropAccess *prop, int type = READ_WRITE);
-
-    //     /**
-    //     * TODO
-    //     */
-    //     bool isUsedProp(PropAccess *prop, int type = READ_WRITE);
-
-    //     /**
-    //     * TODO
-    //     */
-    //     list<PropAccess *> getPropAccess(int type = READ_WRITE);
-    
-    //     /**
-    //     * TODO
-    //     */
-    //     void clear();
-    // };
+    };
 
     class DslCppGenerator {
 
@@ -459,7 +443,7 @@ namespace sphip {
         /**
          * TODO
          */
-        void GenerateHipMemcpyParams(const list<formalParam*> &paramList);
+        void GenerateCopyBackToHost(const list<formalParam*> &paramList);
 
         /**
          * TODO
@@ -617,6 +601,8 @@ namespace sphip {
 
         Function* function;
         bool generateCsr;
+
+        NodeStack nodeStack;
 
         bool generateIsAnEdgeFunction = false;
         /**

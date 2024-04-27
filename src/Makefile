@@ -25,7 +25,7 @@ all: starplat
 #~ 	$(CC) bin/MainContext.o bin/ASTHelper.o bin/SymbolTableBuilder.o bin/SymbolTableNew.o bin/y.tab.o bin/lex.yy.o bin/dsl_cpp_generator.o $(A_PROGRAM) -o starplat
 
 #hip
-HIP_PROGRAMS = bin/hip_dsl_cpp_generator.o bin/hip_auxillary.o bin/hip_code_gen.o bin/hip_analyzer.o bin/hip_get_used.o
+HIP_PROGRAMS = bin/hip_dsl_cpp_generator.o bin/hip_auxillary.o bin/hip_code_gen.o bin/hip_get_used.o
 
 bin/hip_dsl_cpp_generator.o: backends/backend_hip/dsl_cpp_generator.cpp backends/dslCodePad.h backends/backend_hip/auxillary_functions.cpp
 	$(CC) $(CFLAGS) -c backends/backend_hip/dsl_cpp_generator.cpp -o bin/hip_dsl_cpp_generator.o
@@ -35,9 +35,6 @@ bin/hip_auxillary.o: backends/backend_hip/auxillary_functions.cpp backends/dslCo
 
 bin/hip_code_gen.o: backends/backend_hip/hip_gen_functions.cpp backends/dslCodePad.h
 	$(CC) $(CFLAGS) -c backends/backend_hip/hip_gen_functions.cpp -o bin/hip_code_gen.o
-
-bin/hip_analyzer.o: backends/backend_hip/analyzer_utility.cpp backends/dslCodePad.h
-	$(CC) $(CFLAGS) -c backends/backend_hip/analyzer_utility.cpp -o bin/hip_analyzer.o
 
 bin/hip_get_used.o: backends/backend_hip/get_used_data.cpp backends/dslCodePad.h
 	$(CC) $(CFLAGS) -c backends/backend_hip/get_used_data.cpp -o bin/hip_get_used.o
@@ -190,24 +187,36 @@ clean_windows:
 	rm -f $(EXPENDABLES_WINDOWS)
 
 clean:
-#~ 	rm -f $(EXPENDABLES)
 	-rm bin/*.o StarPlat 
 	-rmdir bin
 
-temp: #TODO: Remove or make it a little more generic
-	./StarPlat -s -f ../graphcode/staticDSLCodes/PageRankDSLV3 -b hip
-	./StarPlat -s -f ../graphcode/staticDSLCodes/bc_dslV2 -b hip
-	./StarPlat -s -f ../graphcode/staticDSLCodes/sssp_dslV3 -b hip
-	./StarPlat -s -f ../graphcode/staticDSLCodes/triangle_counting_dsl -b hip
-	-hipcc ../graphcode/generated_hip/sssp_dslV3.cc
-	-hipcc ../graphcode/generated_hip/triangle_counting_dsl.cc
-	-hipcc ../graphcode/generated_hip/bc_dslV2.cc
-	-hipcc ../graphcode/generated_hip/PageRankDSLV3.cc
+# END OF GENERAL MAKEFILE
 
-# Below flag used to test the hip code.
-hip: all # Is it possible to make this for only hip
-	-rm ../graphcode/generated_hip/*
-	$(MAKE) temp
+# HIP SPECIFIC TARGETS
 
-hip-test: hip # to add a flag in hip code gen to add main for hipcc 
-	@echo "Testing HIP code generation"
+define generate_hip_code
+	@./StarPlat -s -f ../graphcode/staticDSLCodes/$(1) -b hip > /dev/null 2>&1 && echo "\033[0;32m$(2) success for $(1)\033[0m" || echo "\033[0;31m$(2) failed for $(1)\033[0m"
+endef
+
+define compile_hip_code
+	@hipcc ../graphcode/generated_hip/$(1) -c > /dev/null 2>&1 && echo -e "\033[0;32mCompile success for $(1)\033[0m" || echo -e "\033[0;31mCompile failed for $(1)\033[0m"
+endef
+
+define check_hipcc_installation
+    @which hipcc > /dev/null 2>&1 || (echo "\033[0;31mhipcc is not installed. Please install hipcc to proceed.\033[0m" && exit 1)
+endef
+
+
+compile-hip: generate-hip
+	$(call check_hipcc_installation)
+	$(call compile_hip_code,sssp_dslV3.cc)
+	$(call compile_hip_code,triangle_counting_dsl.cc)
+	$(call compile_hip_code,bc_dslV2.cc)
+	$(call compile_hip_code,PageRankDSLV3.cc)
+
+generate-hip: all
+	$(call generate_hip_code,PageRankDSLV3,CodeGeneration)
+	$(call generate_hip_code,bc_dslV2,CodeGeneration)
+	$(call generate_hip_code,sssp_dslV3,CodeGeneration)
+	$(call generate_hip_code,triangle_counting_dsl,CodeGeneration)
+

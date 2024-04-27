@@ -49,7 +49,7 @@ namespace sphip {
             std::to_string(threadsPerBlock) + ";"
         );
         main.pushStringWithNewLine(
-            "const unsigned numThreads = (V < threadsPerBlock) ? " +
+            "const unsigned numThreads = (V > threadsPerBlock) ? " +
             std::to_string(threadsPerBlock) + " : V;"
         );
         main.pushStringWithNewLine(
@@ -60,11 +60,30 @@ namespace sphip {
     }
 
     void DslCppGenerator::GenerateTimerStart() {
-        //TODO
+        
+        main.NewLine();
+        main.pushStringWithNewLine("// Timing starts here");
+        main.pushStringWithNewLine("hipEvent_t start;");
+        main.pushStringWithNewLine("hipEventCreate(&start);");
+        main.pushStringWithNewLine("hipEventRecord(start);");
+        main.NewLine();
     }
 
+
     void DslCppGenerator::GenerateTimerStop() {
-        //TODO
+        
+        main.NewLine();
+        main.pushStringWithNewLine("hipEvent_t stop;");
+        main.pushStringWithNewLine("hipEventCreate(&stop);");
+        main.pushStringWithNewLine("hipEventRecord(stop);");
+        main.pushStringWithNewLine("hipEventSynchronize(stop);");
+        main.pushStringWithNewLine("float milliseconds = 0;");
+        main.pushStringWithNewLine("hipEventElapsedTime(&milliseconds, start, stop);");
+        main.pushStringWithNewLine("std::cout << \"Time taken: \" << milliseconds << \" ms\" << std::endl;");
+        main.pushStringWithNewLine("hipEventDestroy(start);");
+        main.pushStringWithNewLine("hipEventDestroy(stop);");
+        main.pushStringWithNewLine("// Timing ends here");
+        main.NewLine();
     }
 
     void DslCppGenerator::GenerateFormalParameterDeclAllocCopy(
@@ -90,7 +109,7 @@ namespace sphip {
                 main.pushString(identifier);
                 main.pushStringWithNewLine(";");
 
-                GenerateHipMalloc(innerType, identifier);
+                GenerateHipMalloc(type, identifier);
                 GenerateHipMemcpyStr(
                     "d" + identifier, 
                     (type->isPrimitiveType() ? "&h" : "h") + identifier, 
@@ -103,9 +122,21 @@ namespace sphip {
 
     }
 
-    void DslCppGenerator::GenerateHipMemcpyParams(const list<formalParam*> &paramList) {
-        HIT_CHECK
-        //TODO
+    void DslCppGenerator::GenerateCopyBackToHost(const list<formalParam*> &paramList) {
+        
+        for(auto param: paramList) {
+
+            if(param->getType()->isPropType() && param->getType()->getInnerTargetType()->isPrimitiveType()) {
+
+                GenerateHipMemcpyStr(
+                    "h" + CapitalizeFirstLetter(param->getIdentifier()->getIdentifier()), 
+                    "d" + CapitalizeFirstLetter(param->getIdentifier()->getIdentifier()), 
+                    ConvertToCppType(param->getType()->getInnerTargetType()), 
+                    param->getType()->isPropEdgeType() ? "E" : "V", 
+                    false
+                );
+            }
+        }
     }
 
     void DslCppGenerator::GenerateHipMalloc(
@@ -113,9 +144,11 @@ namespace sphip {
         const std::string &identifier
     ) {
 
+        const std::string typeStr = type->isPrimitiveType() ? 
+            ConvertToCppType(type) : ConvertToCppType(type->getInnerTargetType());
         main.pushStringWithNewLine(
             "hipMalloc(&d" + identifier + ", sizeof(" + 
-            ConvertToCppType(type) + ") * (" +
+            typeStr + ") * (" +
             (type->isPrimitiveType() ? "1" : (type->isPropNodeType() ? "V" : "E")) + "));"
         );
     }
@@ -131,7 +164,7 @@ namespace sphip {
         parameterName[0] = toupper(parameterName[0]);
 
         //TODO: Use the init arrya call function
-        buffer = "initArray<" + 
+        buffer = "InitArray<" + 
                 ConvertToCppType(id->getSymbolInfo()->getType()->getInnerTargetType()) +
                 "><<<numBlocks, numThreads>>>(V, d" +
                 parameterName + ", ";
@@ -211,7 +244,7 @@ namespace sphip {
     ) {
         // TODO: We are assuming V to be the size of the array. This may not be the case always.
         main.pushStringWithNewLine(
-            "initArray<" + type + "><<<numBlocks, numThreads>>>(V, " + identifier + ", " + value + ");"
+            "InitArray<" + type + "><<<numBlocks, numThreads>>>(V, " + identifier + ", " + value + ");"
         );
     }
 
@@ -223,7 +256,7 @@ namespace sphip {
     ) {
         // TODO: We are assuming V to be the size of the array. This may not be the case always.
         main.pushStringWithNewLine(
-            "initIndex<" + type + "><<<1, 1>>>(V, " + identifier + ", " + index + ", " + value + ");"
+            "InitArrayIndex<" + type + "><<<1, 1>>>(V, " + identifier + ", " + index + ", " + value + ");"
         );
     }
 
@@ -231,7 +264,7 @@ namespace sphip {
 
         header.pushStringWithNewLine("template <typename T>");
         header.pushStringWithNewLine("__global__");
-        header.pushStringWithNewLine("void initIndex(const unsigned V, T* dArray, int index, T value) {");
+        header.pushStringWithNewLine("void InitArrayIndex(const unsigned V, T* dArray, int index, T value) {");
         header.pushStringWithNewLine("if(index < V) {");
         header.pushStringWithNewLine("dArray[index] = value;"); 
         header.pushStringWithNewLine("}");
@@ -243,7 +276,7 @@ namespace sphip {
 
         header.pushStringWithNewLine("template <typename T>");
         header.pushStringWithNewLine("__global__");
-        header.pushStringWithNewLine("void initArray(const unsigned V, T *dArray, T value) {");
+        header.pushStringWithNewLine("void InitArray(const unsigned V, T *dArray, T value) {");
         header.pushStringWithNewLine("unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;");
         header.pushStringWithNewLine("if(idx < V) {");
         header.pushStringWithNewLine("dArray[idx] = value;");
@@ -257,7 +290,7 @@ namespace sphip {
         const std::string &typeStr, 
         const bool direction
     ) {
-        std::cout << "HIT UNIMPLEMENTED FUNCTION HIP_GEN_FUN\n"; 
+        throw std::runtime_error("Not implemented");
     }
 
     void DslCppGenerator::GenerateAtomicStatementFromReductionOp(
@@ -350,7 +383,7 @@ namespace sphip {
         assert(!isMainFile); // Well, if this is gonna be printed in the main file, then we have a problem.
 
         (isMainFile ? main : header).pushString(
-            atomicOp + "((" + type + "*) &d" + CapitalizeFirstLetter(stmt->getLeftId()->getIdentifier())
+            atomicOp + "((" + type + "*) d" + CapitalizeFirstLetter(stmt->getLeftId()->getIdentifier())
              + ", (" + type + ") "
         );
         GenerateExpression(stmt->getRightSide(), isMainFile);
