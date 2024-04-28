@@ -274,6 +274,11 @@ static ASTNode* createNodeEdgeTypeNode(int typeId)
 
 }
 
+static ASTNode * createAddAssignment (ASTNode* indexExpr, int reduction_op, ASTNode* rhs) {
+  printf ("called to creation of dummy node\n") ;
+  return NULL ;
+}
+
 static ASTNode* createAssignmentNode(ASTNode* leftSide, ASTNode* rhs)
 {  
      assignment* assignmentNode;
@@ -583,6 +588,10 @@ static ASTNode* createNodeForReductionOpStmt(ASTNode* leftSide,int reduction_op,
     {
       reductionStmtNode=reductionCallStmt::propId_reduc_opStmt((PropAccess*)leftSide,reduction_op,(Expression*)rightSide);
     }
+    if(leftSide->getTypeofNode()==NODE_EXPR) 
+    {
+
+      reductionStmtNode=reductionCallStmt::container_reduc_opStmt((PropAccess*)leftSide,reduction_op,(Expression*)rightSide);
 
     return reductionStmtNode;
 

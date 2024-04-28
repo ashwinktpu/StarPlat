@@ -2666,10 +2666,24 @@ class reductionCallStmt:public statement
 
      }
 
+
      static reductionCallStmt* propId_reduc_opStmt(PropAccess* propId,int reduce_op,Expression* rightSide)
      {
          reductionCallStmt* reducCallStmtNode=new reductionCallStmt();
          reducCallStmtNode->propAccessId=propId;
+         rightSide->setParent(reducCallStmtNode);
+         reducCallStmtNode->reduc_op=reduce_op;
+         reducCallStmtNode->rightSide=rightSide;
+         return reducCallStmtNode;
+
+     }
+
+     static reductionCallStmt* container_reduc_opStmt(Expression* leftSide,int reduce_op,Expression* rightSide)
+     {
+         if (leftSide->mapExpr == NULL) assert(false) ;
+         reductionCallStmt* reducCallStmtNode=new reductionCallStmt();
+         reducCallStmtNode->mapExpr=leftSide->mapExpr;
+         reducCallStmtNode->
          rightSide->setParent(reducCallStmtNode);
          reducCallStmtNode->reduc_op=reduce_op;
          reducCallStmtNode->rightSide=rightSide;

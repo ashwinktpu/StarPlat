@@ -178,20 +178,20 @@ function_body : blockstatements {$$=$1;};
 
 
 statements :  {};
-	| statements statement { Util::addToBlock($2); };
+	| statements statement {printf ("found one statement\n") ; Util::addToBlock($2); };
 
 statement: declaration ';'{$$=$1;};
-	|assignment ';'{$$=$1;};
-	|proc_call ';' {$$=Util::createNodeForProcCallStmt($1);};
-	|control_flow {$$=$1;};
-	|reduction ';'{$$=$1;};
-	| bfs_abstraction {$$=$1; };
-	| blockstatements {$$=$1;};
-	| unary_expr ';' {$$=Util::createNodeForUnaryStatements($1);};
-	| return_stmt ';' {$$ = $1 ;};
-	| batch_blockstmt  {$$ = $1;};
-	| on_add_blockstmt {$$ = $1;};
-	| on_delete_blockstmt {$$ = $1;};
+	|assignment ';'{printf ("found an assignment type statement" ); $$=$1;};
+	|proc_call ';' {printf ("found an proc call type statement" );$$=Util::createNodeForProcCallStmt($1);};
+	|control_flow {printf ("found an control flow type statement" );$$=$1;};
+	|reduction ';'{printf ("found an reduction type statement" );$$=$1;};
+	| bfs_abstraction {printf ("found bfs\n") ;$$=$1; };
+	| blockstatements {printf ("found block\n") ;$$=$1;};
+	| unary_expr ';' {printf ("found unary\n") ;$$=Util::createNodeForUnaryStatements($1);};
+	| return_stmt ';' {printf ("found return\n") ;$$ = $1 ;};
+	| batch_blockstmt  {printf ("found batch\n") ;$$ = $1;};
+	| on_add_blockstmt {printf ("found on add block\n") ;$$ = $1;};
+	| on_delete_blockstmt {printf ("found delete block\n") ;$$ = $1;};
 
 
 blockstatements : block_begin statements block_end { $$=Util::finishBlock();};
@@ -272,7 +272,9 @@ property : T_NP '<' primitive '>' { $$=Util::createPropertyTypeNode(TYPE_PROPNOD
 			                         $$=Util::createPropertyTypeNode(TYPE_PROPNODE, type); }	
 
 assignment :  leftSide '=' rhs  { printf("testassign\n");$$=Util::createAssignmentNode($1,$3);};
-              | indexExpr '=' rhs { $$=Util::createAssignmentNode($1 , $3);};        
+              | indexExpr '=' rhs {printf ("called assign for count\n") ; $$=Util::createAssignmentNode($1 , $3);};        
+
+
 rhs : expression { $$=$1;};
 
 expression : proc_call { $$=$1;};
@@ -361,6 +363,7 @@ reduction : leftSide '=' reductionCall { $$=Util::createNodeForReductionStmt($1,
 		   |'<' leftList '>' '=' '<' reductionCall ',' rightList '>'  { reductionCall* reduc=(reductionCall*)$6;
 		                                                               $$=Util::createNodeForReductionStmtList($2->ASTNList,reduc,$8->ASTNList);};
 		   | leftSide reduce_op expression {$$=Util::createNodeForReductionOpStmt($1,$2,$3);}; 															   
+       | expression reduce_op expression {printf ("here calling creation for red op\n") ;$$=Util::createNodeForReductionOpStmt ($1,$2,$3);};
 
 
 reduce_op : T_ADD_ASSIGN {$$=OPERATOR_ADDASSIGN;};
@@ -371,7 +374,7 @@ reduce_op : T_ADD_ASSIGN {$$=OPERATOR_ADDASSIGN;};
 
 leftList :  leftSide ',' leftList { $$=Util::addToNList($3,$1);
                                          };
-		 | leftSide { $$=Util::createNList($1);};
+		 | leftSide{ $$=Util::createNList($1);;};
 
 rightList : val ',' rightList { $$=Util::addToNList($3,$1);};
           | leftSide ',' rightList { ASTNode* node = Util::createNodeForId($1);
@@ -397,6 +400,7 @@ reduction_calls : T_SUM { $$=REDUCE_SUM;};
 leftSide : id { $$=$1; };
          | oid { printf("Here hello \n"); $$=$1; };
          | tid {$$ = $1; };	
+         | indexExpr{$$=$1;};
 		  
 
 arg_list :    {
