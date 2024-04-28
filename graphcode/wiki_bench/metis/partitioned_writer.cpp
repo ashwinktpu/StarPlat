@@ -6,14 +6,15 @@
 
 void writePartitionedGraph(const std::vector<std::tuple<int, int, int>>& edges, 
                            const std::vector<int>& partitionResult, 
-                           int numPartitions) {
+                           int numPartitions, int offset, std::string outputFolderPath) {
     std::vector<std::ofstream> files(numPartitions);
 
     // Open files for each partition
     for (int i = 0; i < numPartitions; ++i) {
         std::string filename ;
-        if (i < 10 ) filename = "../part_0" + std::to_string(i) ;
-        else filename = "../part_" + std::to_string(i) ;
+        int actNum = i + offset ;
+        if (i < 10 ) filename = outputFolderPath + "/part_0" + std::to_string(actNum) ;
+        else filename = outputFolderPath + "/part_" + std::to_string(actNum) ;
         files[i].open(filename);
     }
 

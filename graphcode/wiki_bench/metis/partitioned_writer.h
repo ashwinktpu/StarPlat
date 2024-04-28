@@ -5,4 +5,4 @@
 
 void writePartitionedGraph(const std::vector<std::tuple<int, int, int>>& edges, 
                            const std::vector<int>& partitionResult, 
-                           int numPartitions);
+                           int numPartitions, int offset, std::string outputFolderPath);

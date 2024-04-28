@@ -15,6 +15,8 @@
 int main(int argc, char** argv) {
     std::string inputFilename = argv[1]; // Replace with your actual input file
     int numPartitions = atoi(argv[2]); // Adjust the number of partitions as needed
+    int offset = atoi (argv[3]) ;
+    std::string outputFolderPath = (argv[4]) ;
 
     std::cout << inputFilename << std::endl ;
     // Step 1: Read the weighted directed graph
@@ -36,17 +38,17 @@ int main(int argc, char** argv) {
     convertToCSR(undirectedGraph, xadj, adjncy, weights);
 
     // Step 4: Partition the graph using METIS (placeholder)
-	auto start = std::chrono::high_resolution_clock::now();
+    auto start = std::chrono::high_resolution_clock::now();
     std::vector<int> partitionResult = partitionGraph(xadj, adjncy, weights, numPartitions);
-	auto stop = std::chrono::high_resolution_clock::now();
-	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 
-	std::cout << "Time taken by partitionGraph: "
-		              << duration.count() << " microseconds" << std::endl;
+    std::cout << "Time taken by partitionGraph: "
+                    << duration.count() << " microseconds" << std::endl;
 
 
     // Step 5: Write the partitioned graph into separate files
-    writePartitionedGraph(edges, partitionResult, numPartitions);
+    writePartitionedGraph(edges, partitionResult, numPartitions, offset, outputFolderPath);
 
     return 0;
 }

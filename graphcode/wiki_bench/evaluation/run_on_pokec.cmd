@@ -55,11 +55,13 @@ for file_name in "${file_names[@]}"; do
 		cd ../metis
 		echo "file name = $filename"
 		echo $graphs/$filename
-    	./main_program $graphs/$file_name 32
+    	./main_program $graphs/$file_name 2 0 $tempNumaDir
+      wait
+      ./main_program $tempNumDir/$numaPart 40 20 $partitionFolder
 		echo "splitter OK" 
 		wait
 		cd ../distributedv2.0
-		/lfs/sware/openmpi411/bin/mpirun -np 32 testing_distributed.out >>../evaluation/output.txt 
+		/lfs/sware/openmpi411/bin/mpirun -np 40 testing_distributed.out >>../evaluation/output.txt 
 		echo "MPI OK"
 		wait
 	else
