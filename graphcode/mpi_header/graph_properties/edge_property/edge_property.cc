@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 // Define ENABLE_DEBUG to turn on debugging; comment it out to disable
-#define ENABLE_DEBUG
+// #define ENABLE_DEBUG
 
 #ifdef ENABLE_DEBUG
     #define DEBUG(fmt, ...) fprintf(stderr, "DEBUG: %s:%d:%s(): " fmt, \

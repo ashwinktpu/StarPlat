@@ -118,15 +118,16 @@ template <typename T>
       
       bool no_checks_needed = !check_concurrency;
       /* Barenya ==> Trying one more optimisation */
+      /*
       if (already_locked_processors_shared [owner_proc]) {
         propList.flush (owner_proc) ;
       } else {
         already_locked_processors_shared[owner_proc]=true ;
 	      propList.get_lock (owner_proc, SHARED_LOCK, no_checks_needed) ;
-      }
+      }*/
+	    propList.get_lock (owner_proc, SHARED_LOCK, no_checks_needed) ;
 	    T* data = propList.get_data(owner_proc, local_node_id, 1, SHARED_LOCK);
-
-      // propList.unlock(owner_proc, SHARED_LOCK); // doing an unlock later experiment.
+      propList.unlock(owner_proc, SHARED_LOCK); // doing an unlock later experiment.
 			int val = data[0] ;
 			delete[] data ;
 			data =NULL ;
@@ -185,12 +186,14 @@ template <typename T>
       int local_node_id = graph->get_node_local_index(node_id);
 
       bool no_checks_needed = !check_concurrency;
-      
+     /* 
       if (already_locked_processors_shared[owner_proc] == false) {
         propList.get_lock(owner_proc,SHARED_LOCK,  no_checks_needed);
         already_locked_processors_shared[owner_proc]=true ;
-      }   
+      }*/   
+      propList.get_lock(owner_proc,SHARED_LOCK,  no_checks_needed);
       propList.put_data(owner_proc,&value, local_node_id, 1, SHARED_LOCK);
+      propList.unlock(owner_proc, SHARED_LOCK);
 			/*
       //if(owner_proc==world.rank())
       //{
@@ -411,13 +414,14 @@ template <typename T>
         /* Barenya ==> attempting an optimisation
 */
 
-        if(!already_locked_processors_shared[owner_proc]) {
+       /* if(!already_locked_processors_shared[owner_proc]) {
           already_locked_processors_shared[owner_proc]=true ;
           propList.get_lock(owner_proc,SHARED_LOCK);
-        }
+        }*/
+        propList.get_lock(owner_proc,SHARED_LOCK);
         propList.accumulate(owner_proc,&value,local_node_id,1,MPI_SUM,SHARED_LOCK);
         // if(!already_locked_processors_shared[owner_proc])
-          // propList.unlock(owner_proc, SHARED_LOCK);
+        propList.unlock(owner_proc, SHARED_LOCK);
             
     }
 

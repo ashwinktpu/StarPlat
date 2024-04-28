@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
     // need to add print statement in generated code to check the value of triangle count
     double t1 = MPI_Wtime () ;
     // do_max_flow(residual_graph,0,1, label, excess, curr_edge, residue,  world);
-    int excessVal = do_max_flow(residual_graph,0,1,1, world);
+    int excessVal = do_max_flow(residual_graph,0,1,100, world);
 	  MPI_Barrier (MPI_COMM_WORLD) ;
 
     double t2 = MPI_Wtime () ;
