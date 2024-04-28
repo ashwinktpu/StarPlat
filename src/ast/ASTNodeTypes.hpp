@@ -2618,6 +2618,8 @@ class reductionCallStmt:public statement
      Identifier* id;
      PropAccess* propAccessId;
      Expression* rightSide;
+     Expression* mapExpr ;
+     Expression* indexExpr;
      list<ASTNode*> leftList;
      list<ASTNode*> exprList;
      reductionCall* reducCall;
@@ -2680,10 +2682,10 @@ class reductionCallStmt:public statement
 
      static reductionCallStmt* container_reduc_opStmt(Expression* leftSide,int reduce_op,Expression* rightSide)
      {
-         if (leftSide->mapExpr == NULL) assert(false) ;
+         if (!leftSide->isIndexExpr()) assert(false) ;
          reductionCallStmt* reducCallStmtNode=new reductionCallStmt();
-         reducCallStmtNode->mapExpr=leftSide->mapExpr;
-         reducCallStmtNode->
+         reducCallStmtNode->mapExpr=leftSide->getMapExpr();
+         reducCallStmtNode->indexExpr=leftSide->getIndexExpr();
          rightSide->setParent(reducCallStmtNode);
          reducCallStmtNode->reduc_op=reduce_op;
          reducCallStmtNode->rightSide=rightSide;
@@ -2718,6 +2720,21 @@ class reductionCallStmt:public statement
     bool isLeftIdentifier()
     {
       return (id!=NULL);
+    }
+    
+    bool isContainerReduc() 
+    {
+      return (mapExpr != NULL) ;
+    }
+
+    Expression * getMapExprReduc () 
+    {
+      return mapExpr ;
+    }
+
+    Expression * getIndexExprReduc ()
+    {
+      return indexExpr ;
     }
 
     reductionCall* getReducCall()

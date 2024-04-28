@@ -645,6 +645,10 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
           forAll->push_reduction(reducStmt->reduction_op(), reducStmt->getLeftId());
         }
       }
+      else if (reducStmt->isContainerReduc()) 
+      {
+        printf ("Skipped symbol table entry for container reduction\n") ;
+      }
       else
       {
         findSymbolPropId(reducStmt->getPropAccess());

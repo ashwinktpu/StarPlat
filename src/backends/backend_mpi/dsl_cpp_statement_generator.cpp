@@ -588,6 +588,18 @@ namespace spmpi {
 
         } 
         // TODO : Yet to update this
+        else if (stmt->isContainerReduc() ) {
+          auto containerName = stmt->getMapExprReduc()->getId()->getIdentifier() ;
+          main.pushString (containerName) ;
+          main.pushString (".") ;
+          // TODO : Barenya : make this a little more operation agnostic
+          main.pushString ("atomicAdd (") ;
+          generateExpr (stmt->getIndexExprReduc ()) ;
+          main.pushString (", ") ;
+          generateExpr (stmt->getRightSide()) ;
+          main.pushString (")") ;
+          main.pushstr_newL(";") ;
+        }
         else {
             // generate_exprPropId(stmt->getPropAccess());
             auto propId = stmt->getPropAccess () ;

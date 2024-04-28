@@ -35,6 +35,7 @@ void Container<T>::assign (const int &size, const int &initVal, MPI_Comm comm) {
 template<typename T>
 int Container<T>::getIdx (const int &val) {
     // Must be called from all processes in communicator/group.
+    MPI_Barrier (comm) ;
     int idx ;
     bool foundFlag = false ;
     // sync_assignments() ;
@@ -68,6 +69,7 @@ int Container<T>::getIdx (const int &val) {
     //checkMPIComm(MPI_Win_unlock_all (this->array), "unlocking failed in getIdx") ;
     checkMPIComm(MPI_Allreduce (&idx, &idx, 1, MPI_INT, MPI_MIN, comm), "all reduce failed") ;
     //printf ("returning idx %d\n", idx) ;
+    MPI_Barrier (comm) ;
     return idx ;
 }
 

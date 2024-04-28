@@ -196,14 +196,17 @@
           if(!already_locked_processors[owner_proc])
             propList.unlock(owner_proc, SHARED_LOCK);
             */
-          if (already_locked_processors_shared [owner_proc]) {
-            propList.flush (owner_proc) ;
-          } else {
+          // if (already_locked_processors_shared [owner_proc]) {
+            // propList.flush (owner_proc) ;
+          // } else {
             // already_locked_processors_shared[owner_proc]=true ;
-            already_locked_processors_shared[owner_proc]=false;
-            propList.get_lock (owner_proc, SHARED_LOCK, no_checks_needed) ;
-          }
+            // already_locked_processors_shared[owner_proc]=false;
+            // propList.get_lock (owner_proc, SHARED_LOCK, no_checks_needed) ;
+          // }
+
+          propList.get_lock (owner_proc, SHARED_LOCK, no_checks_needed) ;
           T* data = propList.get_data(owner_proc, local_edge_id, 1, SHARED_LOCK);
+          propList.unlock(owner_proc, SHARED_LOCK);
 
           // propList.unlock(owner_proc, SHARED_LOCK); // doing an unlock later experiment.
           value = data[0] ;
@@ -262,10 +265,10 @@
       //else
      // {
 
-      if (already_locked_processors_shared[owner_proc] == true) {
+      /*if (already_locked_processors_shared[owner_proc] == true) {
         propList.unlock (owner_proc, SHARED_LOCK) ;
         already_locked_processors_shared[owner_proc]=false ;
-      }
+      }*/
 
       if(edge.is_in_csr())
       {
@@ -507,12 +510,12 @@
         if(edge.is_in_csr())
         {
           
-        //if(!already_locked_processors[owner_proc])
-          //propList.get_lock(owner_proc,SHARED_LOCK);
-          //propList.accumulate(owner_proc,&value,local_edge_id,1,MPI_SUM,SHARED_LOCK);
-        //if(!already_locked_processors[owner_proc])
-          //propList.unlock(owner_proc, SHARED_LOCK);
-          
+        if(!already_locked_processors[owner_proc])
+          propList.get_lock(owner_proc,SHARED_LOCK);
+          propList.accumulate(owner_proc,&value,local_edge_id,1,MPI_SUM,SHARED_LOCK);
+        if(!already_locked_processors[owner_proc])
+          propList.unlock(owner_proc, SHARED_LOCK);
+         /* 
           if(!already_locked_processors_shared[owner_proc]) {
             // already_locked_processors_shared[owner_proc]=true ;
             already_locked_processors_shared[owner_proc]=false ;
@@ -522,6 +525,7 @@
           }
           propList.accumulate(owner_proc,&value,local_edge_id,1,MPI_SUM,SHARED_LOCK);
           DEBUG ("atomic add of vale %d on edge property success\n", value) ;
+          */
 
         }
         else

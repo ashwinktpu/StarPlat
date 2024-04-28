@@ -186,13 +186,11 @@ template <typename T>
 
       bool no_checks_needed = !check_concurrency;
       
-      if (already_locked_processors_shared[owner_proc] == true) {
-        propList.unlock (owner_proc, SHARED_LOCK) ;
-        already_locked_processors_shared[owner_proc]=false ;
-      }
-      propList.get_lock(owner_proc,EXCLUSIVE_LOCK,  no_checks_needed);
+      if (already_locked_processors_shared[owner_proc] == false) {
+        propList.get_lock(owner_proc,SHARED_LOCK,  no_checks_needed);
+        already_locked_processors_shared[owner_proc]=true ;
+      }   
       propList.put_data(owner_proc,&value, local_node_id, 1, SHARED_LOCK);
-      propList.unlock(owner_proc, EXCLUSIVE_LOCK);
 			/*
       //if(owner_proc==world.rank())
       //{

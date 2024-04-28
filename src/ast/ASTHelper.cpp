@@ -591,7 +591,8 @@ static ASTNode* createNodeForReductionOpStmt(ASTNode* leftSide,int reduction_op,
     if(leftSide->getTypeofNode()==NODE_EXPR) 
     {
 
-      reductionStmtNode=reductionCallStmt::container_reduc_opStmt((PropAccess*)leftSide,reduction_op,(Expression*)rightSide);
+      reductionStmtNode=reductionCallStmt::container_reduc_opStmt((Expression*)leftSide,reduction_op,(Expression*)rightSide);
+    }
 
     return reductionStmtNode;
 
