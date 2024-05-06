@@ -153,6 +153,9 @@ namespace sphip {
          */
         void GenerateReductionCallStmt(reductionCallStmt* stmt, bool isMainFile);
 
+        void GenerateReductionStmt(reductionCallStmt* stmt, bool isMainFile);
+
+        void GenerateReductionOpStmt(reductionCallStmt* stmt, bool isMainFile);
         /**
          * TODO
          */
@@ -338,6 +341,8 @@ namespace sphip {
 
         char* CapitalizeFirstLetter(char* name);
 
+        bool GenerateVariableDeclGetEdge(declaration *declStmt, bool isMainFile);
+
         /**
          * DEPRECATED: Use the constructor for setting the file name
          */
@@ -360,6 +365,7 @@ namespace sphip {
         bool generateCsr;
         bool generateInitKernel;
         bool generateInitIndex;
+        bool isForwardBfsLoop = true;
     };
 }  
 

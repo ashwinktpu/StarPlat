@@ -15,6 +15,9 @@
 
 #define HIT_CHECK std::cout << "Hit at line " << __LINE__ << " of function " << __func__ << " in file " << __FILE__ << "\n";
 
+string forAllSrcVariable = "";
+string forAllNbrVariable = ""; 
+
 namespace sphip {
 
     DslCppGenerator::DslCppGenerator(const std::string& fileName, const int threadsPerBlock) : 
@@ -340,9 +343,7 @@ namespace sphip {
     }
 
     void DslCppGenerator::GenerateStatement(statement* stmt, bool isMainFile) {
-        // dslCodePad &targetFile = isMainFile ? main : header;
-        // string temp = "//STRING TYPE IS " + to_string(stmt->getTypeofNode());
-        // header.pushStringWithNewLine(temp);
+        dslCodePad &targetFile = isMainFile ? main : header;
         switch (stmt->getTypeofNode()) {
             
 
@@ -379,7 +380,7 @@ namespace sphip {
             break;
 
         case NODE_REDUCTIONCALLSTMT:
-            GenerateReductionCallStmt(static_cast<reductionCallStmt*>(stmt), isMainFile);
+            GenerateReductionStmt(static_cast<reductionCallStmt*>(stmt), isMainFile);
             break;
 
         case NODE_ITRBFS:
@@ -496,6 +497,8 @@ namespace sphip {
                 }
             }
         } else if(type->isNodeEdgeType()) {
+            if(GenerateVariableDeclGetEdge(stmt, isMainFile))  //if decl stmt has been given assigned get_edge then return.
+                return;
             targetFile.pushString(ConvertToCppType(type));
             targetFile.AddSpace();
             targetFile.pushString(stmt->getdeclId()->getIdentifier());
@@ -534,7 +537,7 @@ namespace sphip {
                 GenerateExpression(stmt->getExpressionAssigned(), isMainFile);  // PRINTS RHS? YES
             }
 
-            targetFile.pushStringWithNewLine(";");
+            targetFile.pushString(";  ");
 
             if(declInHeader) {
                 header.pushstr_newL("// DEVICE ASSTMENT in .h");
@@ -561,15 +564,18 @@ namespace sphip {
                 Type* typeB = propId->getIdentifier2()->getSymbolInfo()->getType()->getInnerTargetType();
                 
                 const char* varType = ConvertToCppType(typeB).c_str();  //DONE: get the type from id
-                sprintf(strBuffer, "d%s[%s] = (",
+                if(isMainFile) {
+                    sprintf(strBuffer, "initIndex<%s><<<1,1>>>(V,d%s,%s,(%s)",
+                        varType,
                         CapitalizeFirstLetter(propId->getIdentifier2()->getIdentifier()),
-                        propId->getIdentifier1()->getIdentifier());
-
-                // sprintf(strBuffer, "initIndex<%s><<<1,1>>>(V, d%s, %s, (%s)",
-                //         varType,
-                //         CapitalizeFirstLetter(propId->getIdentifier2()->getIdentifier()),
-                //         propId->getIdentifier1()->getIdentifier(),
-                //         varType);
+                        propId->getIdentifier1()->getIdentifier(),
+                        varType);                
+                }
+                else {
+                    sprintf(strBuffer, "d%s[%s] = (",
+                            CapitalizeFirstLetter(propId->getIdentifier2()->getIdentifier()),
+                            propId->getIdentifier1()->getIdentifier());
+                }
 
                 targetFile.pushString(strBuffer);
                 generateInitIndex = true;
@@ -971,10 +977,46 @@ namespace sphip {
         }
     }
 
-    void DslCppGenerator::GenerateReductionCallStmt(reductionCallStmt* stmt, bool isMainFile) {
+    void DslCppGenerator::GenerateReductionStmt(reductionCallStmt* stmt, bool isMainFile) {
+        if (stmt->is_reducCall()) {
+            // GenerateReductionCallStmt(stmt, isMainFile);
+        } else {
+            GenerateReductionOpStmt(stmt, isMainFile);
+        }
 
-        cout << "Inside GenerateReductionCallStmt\n";
+    }
 
+    void DslCppGenerator::GenerateReductionOpStmt(reductionCallStmt* stmt,
+                                                bool isMainFile) {
+        dslCodePad& targetFile = isMainFile ? main : header;
+        char strBuffer[1024];
+
+        if (stmt->isLeftIdentifier()) {
+
+            Identifier* id = stmt->getLeftId();  
+            const char* typVar = ConvertToCppType(id->getSymbolInfo()->getType()).c_str();
+            if (strcmp("long", typVar) == 0) {
+            sprintf(strBuffer, "atomicAdd((unsigned long long*)& %s, (unsigned long long)", id->getIdentifier());
+            } else {
+            sprintf(strBuffer, "atomicAdd(& %s, (%s)", id->getIdentifier(), typVar);
+            }
+            targetFile.pushString(strBuffer);
+            std::string operatorString = GetOperatorString(stmt->reduction_op());
+            if(operatorString == "-")
+                targetFile.pushString("-");
+            GenerateExpression(stmt->getRightSide(), isMainFile);
+            targetFile.pushstr_newL(");");
+
+        } else {
+            targetFile.pushString("atomicAdd(&");
+            GenerateExpressionPropId(stmt->getPropAccess(), isMainFile);
+            targetFile.pushString(", (int)");
+            std::string operatorString = GetOperatorString(stmt->reduction_op());
+            if(operatorString == "-")
+                targetFile.pushString("-");
+            GenerateExpression(stmt->getRightSide(), isMainFile);
+            targetFile.pushstr_newL(");");
+        }
     }
 
     void DslCppGenerator::GenerateItrBfs2(iterateBFS2* stmt, bool isMainFile) {
@@ -1390,7 +1432,7 @@ namespace sphip {
 
         string methodId(expr->getMethodId()->getIdentifier());
 
-        if (methodId == "get_edge") 
+        if (methodId == "get_edge")
             targetFile.pushString("edge");
         
         else if (methodId == "count_outNbrs"){
@@ -1411,6 +1453,8 @@ namespace sphip {
             //TODO: Implement
             cout << "DANGER HIT";
 
+        } else if (methodId == "num_nodes") {
+            targetFile.pushString("g.num_nodes()");
         } else {
             
             cout << "DANGER HIT";
@@ -1591,11 +1635,12 @@ namespace sphip {
 
     void DslCppGenerator::GenerateHipKernel(forallStmt *stmt) {
         static int kernelNum = 0;
-        const char* loopVar = "v";
+        Identifier* iterator = stmt->getIterator();
+        const char *loopVar = iterator->getIdentifier();
         char strBuffer[1024];
-
         usedVariables usedVars = GetVarsForAll(stmt);
         list<Identifier*> vars = usedVars.getVariables();
+        forAllSrcVariable = loopVar;
         
         header.pushString("__global__ void ");
         header.pushString(GetCurrentFunction()->getIdentifier()->getIdentifier());
@@ -1657,6 +1702,7 @@ namespace sphip {
 
         header.pushStringWithNewLine("} // end KER FUNC");
         header.NewLine();
+        forAllSrcVariable = "";
     }
 
     blockStatement* DslCppGenerator::IncludeIfToBlock(forallStmt* stmt) {
@@ -1706,10 +1752,12 @@ namespace sphip {
                     list<argument*> argList = extractElemFunc->getArgList();
                     assert(argList.size() == 1);
                     sprintf(strBuffer, "for (%s %s = %s[%s]; %s < %s[%s+1]; %s++) { // FOR NBR ITR ", "int", "edge", "dOffsetArray", "v", "edge", "dOffsetArray", "v", "edge");
+                    isForwardBfsLoop = true;
                     targetFile.pushstr_newL(strBuffer);
                     //~ targetFile.pushString("{");
                     sprintf(strBuffer, "%s %s = %s[%s];", "int", iterator->getIdentifier(), "dEdgelist", "edge");  //needs to move the addition of
                     targetFile.pushstr_newL(strBuffer);
+                    forAllNbrVariable = iterator->getIdentifier();
                 }
                 if (s.compare("nodes_to") == 0)  //for pageRank
                 {
@@ -1717,6 +1765,7 @@ namespace sphip {
                     assert(argList.size() == 1);
                     Identifier* nodeNbr = argList.front()->getExpr()->getId();
                     sprintf(strBuffer, "for (%s %s = %s[%s]; %s < %s[%s+1]; %s++)", "int", "edge", "dRevOffsetArray", nodeNbr->getIdentifier(), "edge", "dRevOffsetArray", nodeNbr->getIdentifier(), "edge");
+                    isForwardBfsLoop = false;
                     targetFile.pushstr_newL(strBuffer);
                     targetFile.pushstr_newL("{");
                     sprintf(strBuffer, "%s %s = %s[%s] ;", "int", iterator->getIdentifier(), "dSrcList", "edge");  //needs to move the addition of
@@ -1763,7 +1812,7 @@ namespace sphip {
 
         main.NewLine();
         main.pushstr_newL("//Kernel LAUNCH");
-        main.pushString("fwd_pass2<<<numBlocks,threadsPerBlock>>>(V, dRevOffsetArray, dSrcList, dWeight");
+        main.pushString("fwd_pass2<<<numBlocks,threadsPerBlock>>>(V, dOffsetArray, dEdgelist, dRevOffsetArray, dSrcList, dWeight");
         if(generateRevBfs)
             main.pushString(", dLevel2, dHopsFromSource2");
         main.pushString(", dFinished2, dVisitBfs2");
@@ -1800,7 +1849,7 @@ namespace sphip {
 
         main.NewLine();
         main.pushstr_newL("//Kernel LAUNCH");
-        main.pushString("fwd_pass<<<numBlocks,threadsPerBlock>>>(V, dOffsetArray, dEdgelist, dWeight");
+        main.pushString("fwd_pass<<<numBlocks,threadsPerBlock>>>(V, dOffsetArray, dEdgelist, dRevOffsetArray, dSrcList, dWeight");
         if(generateRevBfs)
             main.pushString(", dLevel, dHopsFromSource");
         main.pushString(", dFinished, dVisitBfs");
@@ -1851,7 +1900,7 @@ namespace sphip {
         blockStatement* block = (blockStatement*)body;
         list<statement*> statementList = block->returnStatements();
 
-        header.pushString("__global__ void fwd_pass(int n, int* dOffsetArray, int* dEdgelist, int* dWeight");
+        header.pushString("__global__ void fwd_pass(int n, int* dOffsetArray, int* dEdgelist, int* dRevOffsetArray, int* SrcList, int* dWeight");
         if(generateRevBfs)
             header.pushString(", int* dLevel, int* dHopsFromSource");
         header.pushString(", bool* dFinished, bool* dVisitBfs");
@@ -1891,13 +1940,24 @@ namespace sphip {
             header.pushstr_newL("} // end if d lvl");
 
         header.pushStringWithNewLine("dVisitBfs[v] = true;");
-        header.pushStringWithNewLine("for (int edge = dOffsetArray[v]; edge < dOffsetArray[v+1]; edge++) { // FOR NBR ITR ");
-        header.pushStringWithNewLine("int w = dEdgelist[edge];");
-        header.pushStringWithNewLine("if (dVisitBfs[w] == false) {");
-        header.pushStringWithNewLine("*dFinished = false;");
-        header.pushStringWithNewLine("dVisitBfs[w] = true;");
-        header.pushStringWithNewLine("}");
-        header.pushStringWithNewLine("}");
+        if(isForwardBfsLoop) {
+            header.pushStringWithNewLine("for (int edge = dOffsetArray[v]; edge < dOffsetArray[v+1]; edge++) { // FOR NBR ITR ");
+            header.pushStringWithNewLine("int w = dEdgelist[edge];");
+            header.pushStringWithNewLine("if (dVisitBfs[w] == false) {");
+            header.pushStringWithNewLine("*dFinished = false;");
+            header.pushStringWithNewLine("dVisitBfs[w] = true;");
+            header.pushStringWithNewLine("}");
+            header.pushStringWithNewLine("}");
+        }
+        else {
+            header.pushStringWithNewLine("for (int edge = dRevOffsetArray[v]; edge < dRevOffsetArray[v+1]; edge++) { // FOR NBR REV ITR ");
+            header.pushStringWithNewLine("int w = dSrcList[edge];");
+            header.pushStringWithNewLine("if (dVisitBfs[w] == false) {");
+            header.pushStringWithNewLine("*dFinished = false;");
+            header.pushStringWithNewLine("dVisitBfs[w] = true;");
+            header.pushStringWithNewLine("}");
+            header.pushStringWithNewLine("}");
+        }
         header.pushstr_newL("} // kernel end");
         header.NewLine();
     }
@@ -1911,7 +1971,7 @@ namespace sphip {
         blockStatement* block = (blockStatement*)body;
         list<statement*> statementList = block->returnStatements();
 
-        header.pushString("__global__ void fwd_pass2(int n, int* dRevOffsetArray, int* dSrcList, int* dWeight");
+        header.pushString("__global__ void fwd_pass2(int n, int* dOffsetArray, int* dEdgelist, int* dRevOffsetArray, int* dSrcList, int* dWeight");
         if(generateRevBfs)
             header.pushString(", int* dLevel2, int* dHopsFromSource2");
         header.pushString(", bool* dFinished2, bool* dVisitBfs2");
@@ -1951,13 +2011,24 @@ namespace sphip {
             header.pushstr_newL("} // end if d lvl");
 
         header.pushStringWithNewLine("dVisitBfs2[v] = true;");
-        header.pushStringWithNewLine("for (int edge = dRevOffsetArray[v]; edge < dRevOffsetArray[v+1]; edge++) { // FOR NBR REV ITR ");
-        header.pushStringWithNewLine("int w = dSrcList[edge];");
-        header.pushStringWithNewLine("if (dVisitBfs2[w] == false) {");
-        header.pushStringWithNewLine("*dFinished2 = false;");
-        header.pushStringWithNewLine("dVisitBfs2[w] = true;");
-        header.pushStringWithNewLine("}");
-        header.pushStringWithNewLine("}");
+        if(isForwardBfsLoop) {
+            header.pushStringWithNewLine("for (int edge = dOffsetArray[v]; edge < dOffsetArray[v+1]; edge++) { // FOR NBR ITR ");
+            header.pushStringWithNewLine("int w = dEdgelist[edge];");
+            header.pushStringWithNewLine("if (dVisitBfs2[w] == false) {");
+            header.pushStringWithNewLine("*dFinished2 = false;");
+            header.pushStringWithNewLine("dVisitBfs[w] = true;");
+            header.pushStringWithNewLine("}");
+            header.pushStringWithNewLine("}");
+        }
+        else {
+            header.pushStringWithNewLine("for (int edge = dRevOffsetArray[v]; edge < dRevOffsetArray[v+1]; edge++) { // FOR NBR REV ITR ");
+            header.pushStringWithNewLine("int w = dSrcList[edge];");
+            header.pushStringWithNewLine("if (dVisitBfs2[w] == false) {");
+            header.pushStringWithNewLine("*dFinished2 = false;");
+            header.pushStringWithNewLine("dVisitBfs2[w] = true;");
+            header.pushStringWithNewLine("}");
+            header.pushStringWithNewLine("}");
+        }
         header.pushstr_newL("} // kernel end");
         header.NewLine();
     }
@@ -2103,5 +2174,51 @@ namespace sphip {
         header.pushStringWithNewLine("init_array[id] = init_value;");
         header.pushStringWithNewLine("}");
         header.pushStringWithNewLine("}");
+    }
+
+    bool DslCppGenerator::GenerateVariableDeclGetEdge(declaration *declStmt, bool isMainFile){
+        dslCodePad &targetFile = isMainFile ? main : header;
+        char strBuffer[1024];
+        if(declStmt->isInitialized() && declStmt->getExpressionAssigned()->isProcCallExpr()){
+            Expression* expr = declStmt->getExpressionAssigned();
+            proc_callExpr *proc = (proc_callExpr *)expr;
+            string methodId(proc->getMethodId()->getIdentifier());
+            if(methodId == "get_edge"){
+
+                list<argument *> argList = proc->getArgList();
+                assert(argList.size() == 2);
+                char* srcId = argList.front()->getExpr()->getId()->getIdentifier();
+                char *destId = argList.back()->getExpr()->getId()->getIdentifier(); 
+
+                targetFile.pushstr_newL("");
+                targetFile.pushstr_newL("// Traversing for get_edge");
+
+                const char *varType = ConvertToCppType(declStmt->getType()).c_str();
+                const char *varName = declStmt->getdeclId()->getIdentifier();
+
+                sprintf(strBuffer, "%s %s = 0;", varType, varName);
+                targetFile.pushstr_newL(strBuffer);
+
+                if(isMainFile){
+                    sprintf(strBuffer, "for(int edge=hOffsetArray[%s]; edge<hOffsetArray[%s+1]; edge++){", srcId, srcId);
+                    targetFile.pushstr_newL(strBuffer);
+                    sprintf(strBuffer, "if(hEdgelist[edge] == %s){", destId);
+                    targetFile.pushstr_newL(strBuffer);
+                }
+                else{
+                    sprintf(strBuffer, "for(int edge=dOffsetArray[%s]; edge<dOffsetArray[%s+1]; edge++){", srcId, srcId);
+                    targetFile.pushstr_newL(strBuffer);
+                    sprintf(strBuffer, "if(dEdgelist[edge] == %s){", destId);
+                    targetFile.pushstr_newL(strBuffer);
+                }
+                sprintf(strBuffer, "%s = edge;", varName);
+                targetFile.pushstr_newL(strBuffer);
+                targetFile.pushstr_newL("}");
+                targetFile.pushstr_newL("}");
+                targetFile.pushstr_newL("");
+                return true;
+            }
+        }
+        return false;
     }
 }
