@@ -1,8 +1,9 @@
 function Test(Graph g, node src)
 {
        int siz = 4;
-       Heap hp1
-       Heap hp2;
-       hp1.someFunc(siz);
+       Heap hp1;
+       hp1.someFunc();
+       container <int> cn;
+       cn.push_back(3);
 }
 

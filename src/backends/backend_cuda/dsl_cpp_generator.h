@@ -52,6 +52,7 @@ class dsl_cpp_generator {
     decFuncCount = 0;
   }
 
+  void generateNestedContainer(Type* type,bool isMainFile);
   void generateParamList(list<formalParam*> paramList, dslCodePad& targetFile);
   void setCurrentFunc(Function* func);
   Function* getCurrentFunc();
