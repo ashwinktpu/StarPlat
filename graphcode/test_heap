@@ -4,6 +4,6 @@ function Test(Graph g, node src)
        Heap hp1;
        hp1.someFunc();
        container <int> cn;
-       cn.push_back(3);
+       cn.push_back(2);
 }
 

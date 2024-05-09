@@ -699,6 +699,7 @@ void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt) {  // cou
         main.pushstr_newL("}");
     }
        else {
+              cout << "hello"<<endl;
               generate_exprProcCall(procedure);
               main.pushstr_newL(";");
               main.NewLine();
@@ -2265,6 +2266,7 @@ void dsl_cpp_generator::generate_exprProcCall(Expression* expr)
 
         if(objectId!=NULL) 
           {
+            cout << "isnide here 1"<<endl;
              Identifier* id2 = proc->getId2();
              if(id2 != NULL)
                {
@@ -2279,6 +2281,7 @@ void dsl_cpp_generator::generate_exprProcCall(Expression* expr)
           }
         else if(indexExpr != NULL)
           {
+            cout << "isnide here 2"<<endl;
             cout<<"ENTERED HERE FOR INDEXEXPR GENERATION DYNAMIC"<<"\n";
             Expression* mapExpr = indexExpr->getMapExpr();
             Identifier* mapExprId = mapExpr->getId();
@@ -2291,7 +2294,7 @@ void dsl_cpp_generator::generate_exprProcCall(Expression* expr)
             sprintf(strBuffer,".%s", getProcName(proc).data());
           } 
         else {
-        
+          cout << "isnide here 3"<<endl;
           sprintf(strBuffer,"%s", getProcName(proc).data());
        
         }
@@ -2331,7 +2334,10 @@ void dsl_cpp_generator::generate_exprProcCall(Expression* expr)
                 
       }  
       else  
-        generateArgList(argList, true);    
+      {
+        cout << "isnide here 4"<<endl;
+        generateArgList(argList, true);   
+      } 
 
     }
   

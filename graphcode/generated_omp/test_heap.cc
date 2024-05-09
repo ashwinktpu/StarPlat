@@ -7,7 +7,7 @@ void Test(graph& g , int src)
   hp1.someFunc();
 
   std::vector<int> cn;
-  cn.push_back(3);
+  cn.push_back(2);
 
 
 }

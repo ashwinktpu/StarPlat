@@ -1100,6 +1100,13 @@ void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt,
       }
     }
   }
+   else {
+      cout << "hello"<<isMainFile<<endl;
+      generate_exprProcCall(procedure,isMainFile);
+      main.pushstr_newL(";");
+      main.NewLine();
+    }
+  
   /*
    if(x==0)
        {
@@ -2343,6 +2350,7 @@ void dsl_cpp_generator::generate_exprRelational(Expression* expr,
   }
 }
 
+
 void dsl_cpp_generator::generate_exprIdentifier(Identifier* id,
                                                 bool isMainFile) {
   dslCodePad& targetFile = isMainFile ? main : header;
@@ -2426,6 +2434,50 @@ void dsl_cpp_generator::generate_exprUnary(Expression* expr, bool isMainFile) {
   }
 }
 
+void dsl_cpp_generator::generateArgList(list<argument*> argList, bool addBraces, bool isMainFile)
+ {
+
+  char strBuffer[1024]; 
+
+  if(addBraces)
+     main.pushString("(") ;
+
+  int argListSize = argList.size();
+  int commaCounts = 0;
+  list<argument*>::iterator itr;
+  for(itr=argList.begin();itr!=argList.end();itr++)
+  {
+    commaCounts++;
+    argument* arg = *itr;
+    Expression* expr = arg->getExpr();//->getId();
+    //sprintf(strBuffer, "%s", id->getIdentifier());
+   // main.pushString(strBuffer);
+    generateExpr(expr,isMainFile);
+    if(commaCounts < argListSize)
+       main.pushString(",");
+
+  }
+  
+  if(addBraces)
+    main.pushString(")");
+
+ }
+
+string dsl_cpp_generator::getProcName(proc_callExpr* proc){
+
+string methodId(proc->getMethodId()->getIdentifier());
+
+if(methodId == "push") {
+
+    string modifiedId = "push_back";
+    return modifiedId;
+
+   }
+else
+   return methodId;
+
+}
+
 void dsl_cpp_generator::generate_exprProcCall(Expression* expr,
                                               bool isMainFile) {
   //~ cout << "inside the expr_proCall ggggggggggggggggggggggggg" << isMainFile;
@@ -2461,12 +2513,34 @@ void dsl_cpp_generator::generate_exprProcCall(Expression* expr,
   } else {
     char strBuffer[1024];
     list<argument*> argList = proc->getArgList();
-    if (argList.size() == 0) {
+    Identifier* objectId = proc->getId1();
+    if(objectId!=NULL) 
+    {
+      cout << "isnide here 1"<<endl;
+        Identifier* id2 = proc->getId2();
+        if(id2 != NULL)
+          {
+
+            sprintf(strBuffer,"%s.%s.%s",objectId->getIdentifier(), id2->getIdentifier(), getProcName(proc));
+          }
+        else
+        {
+            sprintf(strBuffer,"%s.%s",objectId->getIdentifier(), getProcName(proc).c_str());  
+      
+        }
+        targetFile.pushString(strBuffer);
+    }
+    else if (argList.size() == 0) {
+      cout << "isnide here 2"<<endl;
       Identifier* objectId = proc->getId1();
       sprintf(strBuffer, "%s.%s( )", objectId->getIdentifier(),
               proc->getMethodId()->getIdentifier());
       targetFile.pushString(strBuffer);
     }
+
+    cout << "isnide here 3"<<endl;
+    generateArgList(argList, true, isMainFile); 
+    
   }
 }
 

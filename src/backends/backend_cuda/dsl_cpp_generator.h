@@ -94,6 +94,8 @@ class dsl_cpp_generator {
   void generate_exprLiteral(Expression* expr, bool isMainFile);
   void generate_exprIdentifier(Identifier* id, bool isMainFile);
   void generate_exprPropId(PropAccess* propId, bool isMainFile);
+  void generateArgList(list<argument*> argList, bool addBraces,bool isMainFile);
+  string getProcName(proc_callExpr* proc);
   void generate_exprProcCall(Expression* expr, bool isMainFile);
 
   void generateForAll_header();
