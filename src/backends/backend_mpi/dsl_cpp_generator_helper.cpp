@@ -129,6 +129,17 @@ namespace spmpi {
                     cppString = vecString;
                     break;
                 }
+                case TYPE_VECTOR:
+                {
+                    string vecString = "std::vector<";   
+
+                    char* valType = (char*)convertToCppType(type->getInnerTargetType() , false);
+                    string innerString = valType;
+                    vecString = vecString + innerString;
+                    vecString = vecString + ">";
+                    cppString = vecString;
+                    break;
+                }
                 default:
                     assert(false);
             }

@@ -55,7 +55,7 @@
 %token T_ADD_ASSIGN T_SUB_ASSIGN T_MUL_ASSIGN T_DIV_ASSIGN T_MOD_ASSIGN T_AND_ASSIGN T_XOR_ASSIGN
 %token T_OR_ASSIGN T_INC_OP T_DEC_OP T_PTR_OP T_AND_OP T_OR_OP T_LE_OP T_GE_OP T_EQ_OP T_NE_OP
 %token T_AND T_OR T_SUM T_AVG T_COUNT T_PRODUCT T_MAX T_MIN
-%token T_GRAPH T_DIR_GRAPH  T_NODE T_EDGE T_UPDATES T_CONTAINER T_NODEMAP
+%token T_GRAPH T_DIR_GRAPH  T_NODE T_EDGE T_UPDATES T_CONTAINER T_NODEMAP, T_VECTOR
 %token T_NP  T_EP
 %token T_LIST T_SET_NODES T_SET_EDGES  T_FROM
 %token T_BFS T_REVERSE
@@ -73,7 +73,7 @@
 %type <pList> paramList
 %type <node> statement blockstatements assignment declaration proc_call control_flow reduction return_stmt batch_blockstmt on_add_blockstmt on_delete_blockstmt
 %type <node> type type1 type2
-%type <node> primitive graph collections property container nodemap
+%type <node> primitive graph collections property container nodemap, vector
 %type <node> id leftSide rhs expression oid val boolean_expr unary_expr indexExpr tid  
 %type <node> bfs_abstraction filterExpr reverse_abstraction
 %type <nodeList> leftList rightList

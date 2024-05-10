@@ -22,6 +22,7 @@ enum TYPE
  TYPE_UPDATES,
  TYPE_CONTAINER,
  TYPE_NODEMAP,
+ TYPE_VECTOR,
 };
 
 inline bool check_isNodeEdgeType(int typeId)
@@ -34,7 +35,7 @@ inline bool check_isPropType(int typeId)
 }
 inline bool check_isCollectionType(int typeId)
 {
-  return ((typeId == TYPE_LIST)||(typeId==TYPE_SETE)||(typeId==TYPE_SETN)||(typeId == TYPE_UPDATES) || (typeId == TYPE_NODEMAP) || (typeId == TYPE_CONTAINER));
+  return ((typeId == TYPE_LIST)||(typeId==TYPE_SETE)||(typeId==TYPE_SETN)||(typeId == TYPE_UPDATES) || (typeId == TYPE_NODEMAP) || (typeId == TYPE_CONTAINER) || (typeId == TYPE_VECTOR));
 }
 inline bool check_isGraphType(int typeId)
 {
