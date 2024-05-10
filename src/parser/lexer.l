@@ -127,6 +127,7 @@ NEGATE [-]
 "list" {printf("list type"); return T_LIST;}
 "updates" {printf("updates type"); return T_UPDATES;}
 "container" {printf("container type"); return T_CONTAINER;}
+"std::vector" {printf ("vector type"); return T_VECTOR;}
 "nodeMap"  {printf("nodeMap type"); return T_NODEMAP;}
 
 

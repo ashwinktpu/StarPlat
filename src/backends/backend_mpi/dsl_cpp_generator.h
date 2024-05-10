@@ -25,6 +25,7 @@ class dsl_cpp_generator
     int dynFuncCount;
     int curFuncType;
     bAnalyzer *  analysisForAll ;
+    stack<bAnalyzer*> callStackForAnalyzer ;
     vector<pair<Identifier*, proc_callExpr*>> forallStack;
     std::vector<statement*> insideParallelConstruct;
     fixedPointStmt* fixedPointEnv;
@@ -44,7 +45,6 @@ class dsl_cpp_generator
     dynFuncCount = 0;
     ifStatementInForAll = false ; 
     fixedPointEnv = NULL;
-    analysisForAll = new bAnalyzer () ;
     printf("set to null\n");
     //isOptimized = false;
   }

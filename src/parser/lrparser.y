@@ -249,6 +249,7 @@ collections : T_LIST { $$=Util::createCollectionTypeNode(TYPE_LIST,NULL);};
 					                    $$=Util::createCollectionTypeNode(TYPE_SETE,$3);};
 		| T_UPDATES '<' id '>'   { $$=Util::createCollectionTypeNode(TYPE_UPDATES,$3);}
 	    | container {$$ = $1;}
+      | vector {$$ = $1;}
 		| nodemap   {$$ = $1;}
 
 container : T_CONTAINER '<' type '>' '(' arg_list ',' type ')' {$$ = Util::createContainerTypeNode(TYPE_CONTAINER, $3, $6->AList, $8);}
@@ -256,6 +257,10 @@ container : T_CONTAINER '<' type '>' '(' arg_list ',' type ')' {$$ = Util::creat
           | T_CONTAINER '<' type '>' { list<argument*> argList;
 			                          $$ = Util::createContainerTypeNode(TYPE_CONTAINER, $3, argList, NULL);}		
 
+vector: T_VECTOR'<' type '>' '(' arg_list ',' type ')' {$$ = Util::createContainerTypeNode(TYPE_VECTOR, $3, $6->AList, $8);}
+          | T_VECTOR'<' type '>' '(' arg_list ')' { $$ =  Util::createContainerTypeNode(TYPE_VECTOR, $3, $6->AList, NULL);}
+          | T_VECTOR'<' type '>' { list<argument*> argList;
+			                          $$ = Util::createContainerTypeNode(TYPE_VECTOR, $3, argList, NULL);}		
 nodemap : T_NODEMAP '(' type ')' {$$ = Util::createNodeMapTypeNode(TYPE_NODEMAP, $3);}
 
 type2 : T_NODE {$$=Util::createNodeEdgeTypeNode(TYPE_NODE) ;};

@@ -1,39 +1,92 @@
-./parser/lexer.l:"container" {printf("container type"); return T_CONTAINER;}
-./parser/y.tab.h:    T_CONTAINER = 308,             /* T_CONTAINER  */
-./parser/y.tab.h:#define T_CONTAINER 308
-./parser/lrparser.y:%token T_GRAPH T_DIR_GRAPH  T_NODE T_EDGE T_UPDATES T_CONTAINER T_NODEMAP
-./parser/lrparser.y:container : T_CONTAINER '<' type '>' '(' arg_list ',' type ')' {$$ = Util::createContainerTypeNode(TYPE_CONTAINER, $3, $6->AList, $8);}
-./parser/lrparser.y:          | T_CONTAINER '<' type '>' '(' arg_list ')' { $$ =  Util::createContainerTypeNode(TYPE_CONTAINER, $3, $6->AList, NULL);}
-./parser/lrparser.y:          | T_CONTAINER '<' type '>' { list<argument*> argList;
-./parser/lex.yy.c:{printf("container type"); return T_CONTAINER;}
-./parser/y.gv:  12 -> 31 [style=solid label="T_CONTAINER"]
-./parser/y.gv:  13 -> 31 [style=solid label="T_CONTAINER"]
-./parser/y.gv:  20 -> 31 [style=solid label="T_CONTAINER"]
-./parser/y.gv:  31 [label="State 31\n\l 58 container: T_CONTAINER • '<' type '>' '(' arg_list ',' type ')'\l 59          | T_CONTAINER • '<' type '>' '(' arg_list ')'\l 60          | T_CONTAINER • '<' type '>'\l"]
-./parser/y.gv:  49 -> 31 [style=solid label="T_CONTAINER"]
-./parser/y.gv:  50 -> 31 [style=solid label="T_CONTAINER"]
-./parser/y.gv:  51 -> 31 [style=solid label="T_CONTAINER"]
-./parser/y.gv:  54 [label="State 54\n\l 58 container: T_CONTAINER '<' • type '>' '(' arg_list ',' type ')'\l 59          | T_CONTAINER '<' • type '>' '(' arg_list ')'\l 60          | T_CONTAINER '<' • type '>'\l"]
-./parser/y.gv:  54 -> 31 [style=solid label="T_CONTAINER"]
-./parser/y.gv:  55 -> 31 [style=solid label="T_CONTAINER"]
-./parser/y.gv:  56 -> 31 [style=solid label="T_CONTAINER"]
-./parser/y.gv:  57 -> 31 [style=solid label="T_CONTAINER"]
-./parser/y.gv:  61 -> 31 [style=solid label="T_CONTAINER"]
-./parser/y.gv:  117 [label="State 117\n\l 58 container: T_CONTAINER '<' type • '>' '(' arg_list ',' type ')'\l 59          | T_CONTAINER '<' type • '>' '(' arg_list ')'\l 60          | T_CONTAINER '<' type • '>'\l"]
-./parser/y.gv:  189 [label="State 189\n\l 58 container: T_CONTAINER '<' type '>' • '(' arg_list ',' type ')'\l 59          | T_CONTAINER '<' type '>' • '(' arg_list ')'\l 60          | T_CONTAINER '<' type '>' •\l"]
-./parser/y.gv:  248 [label="State 248\n\l 58 container: T_CONTAINER '<' type '>' '(' • arg_list ',' type ')'\l 59          | T_CONTAINER '<' type '>' '(' • arg_list ')'\l"]
-./parser/y.gv:  252 -> 31 [style=solid label="T_CONTAINER"]
-./parser/y.gv:  275 [label="State 275\n\l 58 container: T_CONTAINER '<' type '>' '(' arg_list • ',' type ')'\l 59          | T_CONTAINER '<' type '>' '(' arg_list • ')'\l"]
-./parser/y.gv:  297 [label="State 297\n\l 59 container: T_CONTAINER '<' type '>' '(' arg_list ')' •\l"]
-./parser/y.gv:  298 [label="State 298\n\l 58 container: T_CONTAINER '<' type '>' '(' arg_list ',' • type ')'\l"]
-./parser/y.gv:  298 -> 31 [style=solid label="T_CONTAINER"]
-./parser/y.gv:  305 -> 31 [style=solid label="T_CONTAINER"]
-./parser/y.gv:  316 [label="State 316\n\l 58 container: T_CONTAINER '<' type '>' '(' arg_list ',' type • ')'\l"]
-./parser/y.gv:  332 [label="State 332\n\l 58 container: T_CONTAINER '<' type '>' '(' arg_list ',' type ')' •\l"]
-./parser/y.tab.c:    T_CONTAINER = 308,             /* T_CONTAINER  */
-./parser/y.tab.c:#define T_CONTAINER 308
-./parser/y.tab.c:  YYSYMBOL_T_CONTAINER = 53,               /* T_CONTAINER  */
-./parser/y.tab.c:  "T_UPDATES", "T_CONTAINER", "T_NODEMAP", "T_NP", "T_EP", "T_LIST",
-./parser/y.tab.c:  case 59: /* container: T_CONTAINER '<' type '>' '(' arg_list ',' type ')'  */
-./parser/y.tab.c:  case 60: /* container: T_CONTAINER '<' type '>' '(' arg_list ')'  */
-./parser/y.tab.c:  case 61: /* container: T_CONTAINER '<' type '>'  */
+fileName ../testcases/mpiTests/filterExpressions/basicFilter
+Backend Target mpi
+Type: function
+
+'('Graph Type
+
+','
+Type: int
+
+','
+Type: int
+
+','Type: int
+
+')'currentFuncType check!!0
+tempID g funccount 0
+
+'{'Node Property'<'Type: int'>'
+';'found one statement
+'.'
+'('Here hello 
+
+'='
+')'testassign
+
+';'found an proc call type statementfound one statement
+'.'
+'='Here hello 
+
+'.''('Here hello 
+')'';'testassign
+found an assignment type statementfound one statement
+Node Property'<'Type: int'>'
+';'found one statement
+'.'
+'('Here hello 
+
+'='
+')'testassign
+
+';'found an proc call type statementfound one statement
+Keyword-forall: forall
+'('
+Keyword in 
+'.''('')''.'filter'(''.''>'Here hello 
+
+AND_OP
+NE_OP
+AND_OP
+NE_OP
+AND_OP
+'.'
+'<'Here hello 
+
+'.'
+'('Here hello 
+')'')'')'
+'{''}'CHECK FILTER TYPE0
+found an control flow type statementfound one statement
+
+'}'
+error val 0
+at 1
+entered here for symbol table stuff
+v
+v
+at 2
+set to null
+size:1
+OutFile: basicFilter 
+FRONTEND VALUES 6fileName basicFilter
+Funclist siz1
+inside2
+inside variable declation but outside propTypeinside variable declation
+TYPEID IN CPP1
+inside2
+inside11
+inside11
+inside3
+inside3
+inside2
+inside variable declation but outside propTypeinside variable declation
+TYPEID IN CPP1
+inside2
+inside11
+inside11
+inside7
+here befor
+here after
+Trying counter 0 with address 0x5da8bb1f28f0
+This particular analysis is for forAll nodes
+INSIDE NODES VALUE

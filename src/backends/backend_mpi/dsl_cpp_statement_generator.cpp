@@ -828,24 +828,33 @@ namespace spmpi {
 
         statement* body = forAll->getBody();
         
+        analysisForAll = new bAnalyzer () ;
+
+        analysisForAll->analyzeForAllStmt (forAll) ;  
         
         generateForAllSignature(forAll);
 
-        if (forAll->hasFilterExpr()) {
-            blockStatement* changedBody = includeIfToBlock(forAll);
-            forAll->setBody(changedBody);
-        }
-
-        /* 
         if (analysisForAll->getAnalysisStatus() > 0) {
-          sprintf (strBuffer,"%s ++ ;\n", analysisForAll->getIteratorVar ()) ;
-          main.pushstr_newL (strBuffer) ;
           blockStatement * newBody = analysisForAll->getNewBody () ; 
           forAll->setBody (newBody) ;
-        }*/
+        }
+
+        if (forAll->hasFilterExpr()) {
+          analysisForAll->evaluateFilter (forAll, (blockStatement *)forAll->getBody (), forAll->getfilterExpr()) ;
+          if (analysisForAll->getFilterAnalysisStatus()) {
+            blockStatement * addToQueueBody = analysisForAll-> getStatementForLoop () ;
+            // Barenya : Could cause potential deletion of the loop body.
+            forAll->setBody (addToQueueBody) ;
+          }
+          blockStatement* changedBody = includeIfToBlock(forAll);
+          forAll->setBody (changedBody);
+        }
+
+         
 
         if (extractElemFunc != NULL) {
             forallStack.push_back(make_pair(forAll->getIterator(), forAll->getExtractElementFunc()));
+            callStackForAnalyzer.push (analysisForAll) ;
             if (neighbourIteration(iteratorMethodId->getIdentifier())) 
             {
                 generateStatement(forAll->getBody());
@@ -861,10 +870,9 @@ namespace spmpi {
             }
 
             forallStack.pop_back();
-
-        }
-
-        else {
+            analysisForAll = callStackForAnalyzer.top () ;
+            callStackForAnalyzer.pop () ;
+        } else {
             // If Forall is iterating through a set 
             if (collectionId->getSymbolInfo()->getType()->gettypeId() == TYPE_SETN) 
             {
@@ -962,6 +970,8 @@ namespace spmpi {
             main.pushstr_newL ("world.barrier ()") ;
         }
         main.NewLine () ;
+        if (analysisForAll->getFilterAnalysisStatus() == true)
+          generateStatement ((statement*)analysisForAll->getStatementWithinWhileLoop () ) ;
         analysisForAll->clearAllAnalysis () ;
     }
 
@@ -997,6 +1007,7 @@ namespace spmpi {
                 char* graphId = sourceGraph->getIdentifier();
                 char* methodId = iteratorMethodId->getIdentifier();
                 string s(methodId);
+                strBuffer[0]='\0';
                 
                 if (s.compare("neighbors") == 0) {
                     // int analysisStatus = analysisForAll->analyzeForAllStmt (forAll) ;
@@ -1004,23 +1015,27 @@ namespace spmpi {
                     list<argument*> argList = extractElemFunc->getArgList();
                     assert(argList.size() == 1);
                     Identifier* nodeNbr = argList.front()->getExpr()->getId();
-                    // analysisStatus = analysisForAll->getAnalysisStatus () ;
+                    int analysisStatus = analysisForAll->getAnalysisStatus () ;
+                    printf ("analysisStats = %d\n", analysisStatus) ;
+                    if (analysisStatus) {
+                      char * variableIter = analysisForAll->getIteratorVar () ;
+                      printf ("LOG : variableIter = %s\n", variableIter) ;
+                      sprintf (strBuffer, "int %s = 0 ;\n", variableIter) ;
+                      main.pushstr_newL (strBuffer) ;
+                    }
                     if(forAll->isForall()){
-                        /*if (analysisStatus) {
-                          char * variableIter = analysisForAll->getIteratorVar () ;
-                          sprintf (strBuffer, "int %s = -1 ;\n", variableIter) ;
-                          main.pushstr_newL (strBuffer) ;
-                        }*/
                         sprintf (strBuffer, "if ( world.rank () == g.get_node_owner (%s) )\n { for (%s %s:%s.%s(%s))", nodeNbr->getIdentifier(), "int", iterator->getIdentifier(), graphId, "getNeighbors", nodeNbr->getIdentifier()) ;
                         ifStatementInForAll = true ;
                         main.pushstr_newL (strBuffer) ;
                     }
                     //This is hardcoded here, need to change     
-                    else if(forAll->getParent()->getParent()->getTypeofNode() == NODE_ITRBFS || forAll->getParent()->getParent()->getTypeofNode() == NODE_ITRRBFS){
-                        sprintf(strBuffer, "for (%s %s :%s.%s(%s))","int",iterator->getIdentifier(), graphId, "get_bfs_children", nodeNbr->getIdentifier());
-                    } else {
+                    // Barenya : Hardcoding here is causing analysis to fail. TO -> Issue with nested forAlls only.
+                    // else if(forAll->getParent()->getParent()->getTypeofNode() == NODE_ITRBFS || forAll->getParent()->getParent()->getTypeofNode() == NODE_ITRRBFS){
+                        // sprintf(strBuffer, "for (%s %s :%s.%s(%s))","int",iterator->getIdentifier(), graphId, "get_bfs_children", nodeNbr->getIdentifier());
+                    // }
+                    else {
                         sprintf(strBuffer, "for (%s %s : %s.%s(%s)) ", "int", iterator->getIdentifier(), graphId, "getNeighbors", nodeNbr->getIdentifier());
-                    main.pushstr_newL(strBuffer);
+                        main.pushstr_newL(strBuffer);
                     }
                 }
                 if (s.compare("nodes_to") == 0) {

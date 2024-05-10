@@ -123,7 +123,7 @@ namespace spmpi {
         char strBuffer[1024];
         proc_callExpr* proc = (proc_callExpr*)expr;
         string methodId(proc->getMethodId()->getIdentifier());
-        if (methodId == "get_edge" || methodId == "get_edge_i" || methodId == "get_edge_r_i") {
+        if (methodId == "get_edge" || methodId == "get_edge_i" || methodId == "get_edge_r_i"|| methodId == "get_other_vertex") {
                 
                 list<argument*> argList = proc->getArgList();
                 assert(argList.size() == 2);
@@ -137,6 +137,8 @@ namespace spmpi {
                 sprintf(strBuffer, "%s.%s(%s, %s)", objectId->getIdentifier(), "get_edge_i", srcId->getIdentifier(), destId->getIdentifier());
                 if (methodId == "get_edge_r_i") 
                 sprintf(strBuffer, "%s.%s(%s, %s)", objectId->getIdentifier(), "get_edge_r_i", srcId->getIdentifier(), destId->getIdentifier());
+                if (methodId == "get_other_vertex") 
+                sprintf(strBuffer, "%s.%s(%s, %s)", objectId->getIdentifier(), "get_other_vertex", srcId->getIdentifier(), destId->getIdentifier());
                 main.pushString(strBuffer);
                 // TODO : (Atharva) Some Dynamic specific code may come in here.
         } else if (methodId == "count_outNbrs") {
@@ -213,6 +215,7 @@ namespace spmpi {
                 main.pushString(strBuffer);
                 main.pushString("(");
                 generateArgList(argList);
+                main.pushString (", world") ; // Cleaner way would be to push into arg list.
                 if(objectId == NULL)
                 {   
                     sprintf(strBuffer,", %s","world");
