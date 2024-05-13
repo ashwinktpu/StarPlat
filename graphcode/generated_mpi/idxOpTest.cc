@@ -2,6 +2,6 @@
 
 void indexTest(int a, int b, Container<int>& someArr, boost::mpi::communicator world )
 {
-  someArr.getValue (a) = b;
+  someArr.atomicAdd (a, b);
 
 }

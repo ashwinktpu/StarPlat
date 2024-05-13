@@ -4,8 +4,10 @@
 #include"sssp_dslV3.h"
 #include"bc_dslV2.h"
 #include "push_relabel.dsl.h"
-#include "anupDsl.h"
+//#include "anupDsl.h"
 #include "../mpi_header/profileAndDebug/mpi_debug.c"
+#include "1anupDslAnalysis.h"
+#include "galloisDSL.h"
 
 
 int main(int argc, char *argv[])
@@ -30,12 +32,15 @@ int main(int argc, char *argv[])
     // need to add print statement in generated code to check the value of triangle count
     double t1 = MPI_Wtime () ;
     // do_max_flow(residual_graph,0,1, label, excess, curr_edge, residue,  world);
-    int excessVal = do_max_flow(residual_graph,0,1,100, world);
+    // int excessVal = do_max_flow(residual_graph,0,1,100, world);
+    int excessVal = maxFlow (residual_graph, 0 , 1, world) ;
+
 	  MPI_Barrier (MPI_COMM_WORLD) ;
 
     double t2 = MPI_Wtime () ;
     print_mpi_statistics();
     printf ("time taken = %f\n", (t2-t1)) ;
+    printf ("excess  = %d\n" , excessVal) ;
     FILE* out = fopen (argv[2], "w") ;
     if (world.rank () == 0) {
         int ans = excessVal ;
