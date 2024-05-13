@@ -42,11 +42,14 @@ int maxFlow(Graph& g, int source, int sink, boost::mpi::communicator world )
   world.barrier () ;
 
 
-  int activate = 10000;
+  int activate = 100;
   while (!g.frontier_empty( world) ){ //remove world from definition.
     int u = g.frontier_pop_local( world); // remove world from definition.
     int newLabel = g.num_nodes( ) + 1;
     int newLabel_leader_rank = -1 ;
+    int prevVal ;
+    if (u != -1) 
+    prevVal = excess.getValue (u) ;
 
 
     world.barrier();
@@ -86,7 +89,7 @@ int maxFlow(Graph& g, int source, int sink, boost::mpi::communicator world )
 
       DEBUG_LOG ("Relabeling %d from %d to %d\n", u, label.getValue(u), newLabel+1) ;
       // count.atomicAdd (u.label, 1); // expressions not being solved inside.
-      count.atomicAdd (label.getValue(u), 1); // expressions not being solved inside.
+      count.atomicAdd (label.getValue(u), -1); // expressions not being solved inside.
       label.setValue(u,newLabel + 1);
       // count.atomicAdd (u.label, 1);
       count.atomicAdd (label.getValue(u), 1); // expressions not being solved inside.
@@ -108,6 +111,7 @@ int maxFlow(Graph& g, int source, int sink, boost::mpi::communicator world )
         if (label.getValue (u) == label.getValue(v) + 1) {
           Edge backward = g.get_edge(v, u);
           int d = std::min(residual_capacity.getValue (forward),excess.getValue(u));
+          if (d > 0) {
           DEBUG_LOG ("Pushing %d from %d at height %d to %d at height %d\n", d, u, label.getValue (u),v,  label.getValue (v)) ;
           excess.atomicAdd (u, -d);
           excess.atomicAdd (v, d);
@@ -119,24 +123,22 @@ int maxFlow(Graph& g, int source, int sink, boost::mpi::communicator world )
             DEBUG_LOG ("pushed %d into queue\n", v) ;
 
           }
+          }
         }
         _t1++;
       }
     } // add support for u = -1.
     }
-    DEBUG_LOG ("Trivial cf statement\n") ;
     world.barrier () ;
 
-    if (u!=-1 &&  u!= source && excess.getValue(u) > 0 )
+    if (u!=-1 &&  u!= source && excess.getValue(u) > 0 && excess.getValue (u) != prevVal)
     {
-      DEBUG_LOG ("pushed %d into queue\n", u) ;
       g.frontier_push(u, world);
 
     }
-    DEBUG_LOG ("Trivial cf statement\n") ;
+    DEBUG_LOG ("activation value = %d\n", activate) ;
     if (activate-- == 0 )
     {
-      DEBUG_LOG ("Trivial cf statement\n") ;
       int gap = count.getIdx(0);
       DEBUG_LOG ("found a gap at %d\n", gap) ;
       world.barrier();
@@ -148,10 +150,9 @@ int maxFlow(Graph& g, int source, int sink, boost::mpi::communicator world )
         }
       }
       world.barrier () ;
+      activate=100 ;
     }
-    DEBUG_LOG ("Trivial cf statement\n") ;
     world.barrier () ;
-    DEBUG_LOG ("Trivial cf statement\n") ;
   }
   return excess.getValue (sink) ;
 }
