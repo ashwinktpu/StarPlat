@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 // Define ENABLE_DEBUG to turn on debugging; comment it out to disable
-#define ENABLE_DEBUG
+// #define ENABLE_DEBUG
 
 #ifdef ENABLE_DEBUG
     #define DEBUG_LOG(fmt, ...) fprintf(stderr, "DEBUG: PROCNO:%d %s:%d:%s(): " fmt, \
@@ -30,13 +30,16 @@ int maxFlow(Graph& g, int source, int sink, boost::mpi::communicator world )
   count.assign(g.num_nodes( ) + 2,0, world);
 
   if (g.get_node_owner (source) == world.rank ()) {
+    int _t1 = 0 ;
     for (int v : g.getNeighbors (source)) {
-      Edge e = g.get_edge (source,v) ;
+      Edge e = g.get_edge_i (source, _t1) ;
+      v = g.get_other_vertex(source, _t1) ;
       excess.atomicAdd (v, residual_capacity.getValue(e)) ;
       residual_capacity.setValue (e,0) ;
       Edge r_e = g.get_edge (v, source) ;
       residual_capacity.setValue (r_e, excess.getValue (v)) ;
       if (excess.getValue(v) > 0) g.frontier_push (v, world) ;
+      _t1++ ;
     }
   }
   world.barrier () ;
@@ -65,7 +68,7 @@ int maxFlow(Graph& g, int source, int sink, boost::mpi::communicator world )
         Edge e = g.get_edge_i (u, _t1) ;
         v = g.get_other_vertex (u, _t1) ;
         if (residual_capacity.getValue (e) > 0) {
-          newLabel_leader_rank = world.rank();
+          // newLabel_leader_rank = world.rank();
     //      DEBUG_LOG ("edge from %d at height %d to %d at height %d newLabel initally at : %d\n", u, label.getValue(u), v, label.getValue (v), newLabel) ;
           newLabel = std::min(newLabel,label.getValue(v)); // std:: not coming. Additional world
      //     DEBUG_LOG ("edge from %d at height %d to %d at height %d newLabel set to : %d\n", u, label.getValue(u), v, label.getValue (v), newLabel) ;
@@ -83,7 +86,7 @@ int maxFlow(Graph& g, int source, int sink, boost::mpi::communicator world )
     MPI_Allreduce(&newLabel,&newLabel,1,MPI_INT,MPI_MIN,MPI_COMM_WORLD);
     // if (u!=-1) 
     // DEBUG_LOG ("for u %d,height %d post reduction newLabel set to : %d\n", u, label.getValue(u), newLabel) ;
-    world.barrier () ; // add ;.
+    // world.barrier () ; // add ;.
 
     if (u != -1 && u != source ) {
 
@@ -96,7 +99,7 @@ int maxFlow(Graph& g, int source, int sink, boost::mpi::communicator world )
       DEBUG_LOG ("Relabeled %d to %d\n", u, label.getValue(u)) ;
 
     }
-    world.barrier();
+    // world.barrier();
     int _t1 = 0 ;
     if (u != -1) { // add support for u = - 1.
     if ( world.rank () == g.get_node_owner (u) )
@@ -117,7 +120,7 @@ int maxFlow(Graph& g, int source, int sink, boost::mpi::communicator world )
           excess.atomicAdd (v, d);
           residual_capacity.atomicAdd (forward, -d);
           residual_capacity.atomicAdd (backward, d);
-          if (d > 0 && v != source && v != sink )
+          if (d > 0 && v != source && v != sink && label.getValue (u) <= g.num_nodes ())
           {
             g.frontier_push(v, world); // change v to u.
             DEBUG_LOG ("pushed %d into queue\n", v) ;
@@ -131,7 +134,7 @@ int maxFlow(Graph& g, int source, int sink, boost::mpi::communicator world )
     }
     world.barrier () ;
 
-    if (u!=-1 &&  u!= source && excess.getValue(u) > 0 && excess.getValue (u) != prevVal)
+    if (u!=-1 &&  u!= source && excess.getValue(u) > 0 && excess.getValue (u) != prevVal && label.getValue(u) <= g.num_nodes () )
     {
       g.frontier_push(u, world);
 
@@ -141,6 +144,7 @@ int maxFlow(Graph& g, int source, int sink, boost::mpi::communicator world )
     {
       int gap = count.getIdx(0);
       DEBUG_LOG ("found a gap at %d\n", gap) ;
+      if (gap == -1) gap = g.num_nodes () + 2 ;
       world.barrier();
       for (int v = g.start_node(); v <= g.end_node(); v ++) 
       {
