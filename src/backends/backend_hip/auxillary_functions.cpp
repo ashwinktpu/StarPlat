@@ -133,9 +133,12 @@ namespace sphip {
     }
 
     std::string DslCppGenerator::CapitalizeFirstLetter(const std::string &str) {
-        std::string name = str;
-        name[0] = std::toupper(name[0]);
-        return name;
+        if (str.empty()) {
+            return str; 
+        }
+        std::string result = str;
+        result[0] = std::toupper(result[0]); 
+        return result;
     }
 
     char* DslCppGenerator::CapitalizeFirstLetter(char* str) {

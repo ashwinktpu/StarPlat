@@ -1,5 +1,5 @@
 #include "dataRaceAnalyser.h"
-#include "../analyserUtil.cpp"
+#include "../analyserUtil.h"
 #include "../../ast/ASTHelper.cpp"
 #include "../../symbolutil/SymbolTable.h"
 #include <unordered_map>

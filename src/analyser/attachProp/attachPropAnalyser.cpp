@@ -4,7 +4,7 @@
 #include <cassert>
 #include <unordered_map>
 #include <unordered_set>
-#include "../analyserUtil.cpp"
+#include "../analyserUtil.h"
 #include "../../ast/ASTHelper.cpp"
 
 //Stores the statement pointer and the index in it's parent block

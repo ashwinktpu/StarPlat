@@ -2109,6 +2109,11 @@ class fixedPointStmt:public statement
         return nodeCall;
       }
 
+      Expression* getBFSFilter()
+      {
+        return filterExpr;
+      }
+
 
       void initUsedVariable(list<Identifier*> usedVars)
       {

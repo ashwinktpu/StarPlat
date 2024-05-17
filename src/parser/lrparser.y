@@ -10,6 +10,7 @@
 	#include "../analyser/pushpull/pushpullAnalyser.h"
 
 	#include "../analyser/blockVars/blockVarsAnalyser.h"
+	#include "../analyser/liveVars/liveVarsAnalyser.h"
 	#include<getopt.h>
 	//#include "../symbolutil/SymbolTableBuilder.cpp"
      
@@ -67,6 +68,7 @@
 %token <fval> FLOAT_NUM
 %token <bval> BOOL_VAL
 %token <cval> CHAR_VAL
+%token return_func
 
 %type <node> function_def function_data  return_func function_body param
 %type <pList> paramList
@@ -637,6 +639,10 @@ int main(int argc,char **argv)
         spomp::dsl_cpp_generator cpp_backend;
 	std::cout<< "size:" << frontEndContext.getFuncList().size() << '\n';
         cpp_backend.setFileName(fileName);
+		if(optimize) {
+			liveVarsAnalyser liveness;
+			liveness.analyse(frontEndContext.getFuncList());
+		}
         cpp_backend.generate();
       } 
 	  else if (strcmp(backendTarget, "mpi") == 0) {
@@ -679,7 +685,13 @@ int main(int argc,char **argv)
 		} else if(strcmp(backendTarget, "hip") == 0) {
 			
 			std::cout << "Generating HIP Code\n";
-			sphip::DslCppGenerator hip_backend(fileName, 512);
+			
+			const unsigned blockSize = 512;
+			//TODO: This block size can be a command line parameter.
+			// Hence the assertion.
+			assert(blockSize > 0 && blockSize <= 1024);
+
+			sphip::DslCppGenerator hip_backend(fileName, blockSize);
 			hip_backend.Generate();
 
 		} else std::cout<< "invalid backend" << '\n';

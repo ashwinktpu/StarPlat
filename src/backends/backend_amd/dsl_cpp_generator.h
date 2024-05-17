@@ -5,7 +5,7 @@
 #include "../../ast/ASTNodeTypes.hpp"
 #include "../../parser/includeHeader.hpp"
 #include "../dslCodePad.h"
-#include "../../analyser/analyserUtil.cpp"
+#include "../../analyser/analyserUtil.h"
 
 namespace spamd
 {

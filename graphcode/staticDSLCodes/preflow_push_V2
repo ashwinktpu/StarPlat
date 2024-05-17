@@ -1,0 +1,132 @@
+function do_max_flow (Graph g, int source, int sink,int kernel_parameter) {
+
+    propNode<int> label;
+    g.attachNodeProperty (label = 0) ;
+    source.label = g.num_nodes();
+    
+    propNode<int> excess;
+    g.attachNodeProperty (excess = 0) ;
+	
+	propEdge<int> residual_capacity;
+	g.attachEdgeProperty(residual_capacity=g.getEdgeLen());
+	
+	int excesstotal=0;
+	propNode<int> visit;
+	
+	forall (v in g.nodes().filter(v==source)) {
+		for(vv in g.neighbors(v)){
+			edge forward_edge = g.get_edge(v, vv) ;
+			edge backward_edge = g.get_edge(vv, v) ;
+
+			int d = forward_edge.residual_capacity;
+			excesstotal +=d;
+			vv.excess += d;
+
+			forward_edge.residual_capacity -= d;
+
+			backward_edge.residual_capacity += d;
+		}
+    }
+	
+	bool flag=true;
+
+	do{
+        forall (v in g.nodes()) {
+			int x=kernel_parameter;
+            do{
+				x =x - 1;//change
+				int hh= 100000000;
+				int lv=-1;
+				if(v.excess>0 && v!=source && v!=sink &&v.label<V){
+					forall(vv in g.neighbors(v)) {
+						edge e = g.get_edge (v,vv);
+						int xxx=e.residual_capacity;
+						if(vv.label<hh && xxx >0){
+							lv=vv;
+							hh=vv.label;
+						}
+						
+					}
+					if(v.label>hh && lv!=-1){
+						edge current_edge = g.get_edge (v,lv) ;
+						int cec = current_edge.residual_capacity;
+						if (v.excess > 0 && cec > 0) {
+							edge forward_edge = g.get_edge (v, lv) ;
+							edge backward_edge = g.get_edge (lv, v) ;
+							
+							int fec = forward_edge.residual_capacity;
+							int bec = backward_edge.residual_capacity;
+							int d=fec;
+							if(v.excess<fec){
+								d=v.excess;
+							}
+							v.excess -= d ;
+							lv.excess += d ;
+							
+							forward_edge.residual_capacity -= d ;
+							backward_edge.residual_capacity += d ;
+						}
+					}
+					else if(lv!=-1){
+						v.label = hh + 1;
+					}
+                }
+            }while(x>0);
+        }
+		
+		forall(v in g.nodes()){
+			for(vv in g.neighbors(u)){
+				edge e = g.get_edge(v,vv);
+				edge ee = g.get_edge(vv,v); 
+				int ec= e.residual_capacity;
+				if(ec>0 && v.label>vv.label+1 && v.excess>0){
+					int d= ec;
+					if(d>v.excess) d=v.excess;
+					v.excess -= d;
+					vv.excess += d;
+					e.residual_capacity -= d;
+					ee.residual_capacity +=d;
+					
+				}
+			
+			}
+		}
+		
+		g.attachNodeProperty (visit= 0);
+		sink.label=0;
+		sink.visit=1;
+		
+		int finished=0;
+		do{
+			finished =0;
+			forall(v in g.nodes().filter(v.visit ==1 )){
+				forall(w in g.nodes_to(v)) {
+					edge e = g.get_edge(w,v);
+					int ec= e.residual_capacity;
+					if(w.visit == 0 && ec>0){
+						w.visit = 1;
+						w.label= v.label+1;
+						finished += 1;
+						
+					}
+				}
+				v.visit=2;
+			}
+		}while(finished>0);
+		
+		forall(v in g.nodes()){
+			if(v.visit == 0){
+				v.label = 1000000000;
+				int x= v.excess;
+				excesstotal -= x;
+				v.excess = 0;
+			}
+		}
+		
+		if(source.excess+sink.excess==excesstotal){
+			flag=false;
+		}
+		
+    }while(flag);    
+
+}

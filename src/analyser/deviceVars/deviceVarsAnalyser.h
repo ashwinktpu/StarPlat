@@ -4,7 +4,7 @@
 #include <unordered_map>
 //#include "../../ast/ASTNodeTypes.hpp"
 //#include "../../maincontext/MainContext.hpp"
-#include "../analyserUtil.cpp"
+#include "../analyserUtil.h"
 #include "../../ast/ASTHelper.cpp"
 //#include "../../symbolutil/SymbolTable.h"
 

@@ -112,25 +112,22 @@ class graph
 
   }
 
-  edge getEdge(int s, int d)
-    {
+  edge getEdge(int s, int d) {
 
-      int startEdge=indexofNodes[s];
-      int endEdge=indexofNodes[s+1]-1;
-      edge foundEdge ;
-  
-        for ( edge e: getNeighbors(s))
-           {
-             int nbr = e.destination;
-             if(nbr == d)
-                {
-                 return e;
-                }
-             
-           }
+    int startEdge=indexofNodes[s];
+    int endEdge=indexofNodes[s+1]-1;
+    edge foundEdge;
 
-          
+    for(edge e: getNeighbors(s)) {
+
+      int nbr = e.destination;
+      if(nbr == d) {
+        return e;
+      }
     }
+
+    return foundEdge; // TODO: Maybe return a default value?
+  }
 
 
   // library function to check candidate vertex is in the path from root to dest in SPT.
