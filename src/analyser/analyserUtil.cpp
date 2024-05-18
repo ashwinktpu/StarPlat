@@ -347,22 +347,29 @@ void printAST::printStatement(statement *stmt)
             printStatement(((ifStmt *)stmt)->getElseBody());
             tabSpace--;
         }
-        break;
-    
-    case NODE_TRANSFERSTMT:
-    {
-        varTransferStmt* cstmt = (varTransferStmt*) stmt;
-        printTabs();
-        cout<<"Tranfer statement\n";
+        case NODE_ITERBFSREV:
+        {
+            printTabs();
+            cout << "BFS ITER on transpose of the graph\n";
+            tabSpace++;
+            printStatement(((iterateBFSReverse *)stmt)->getBody());
+            tabSpace--;
+            break;
+        }
+        case NODE_TRANSFERSTMT:
+        {
+            varTransferStmt* cstmt = (varTransferStmt*) stmt;
+            printTabs();
+            cout<<"Tranfer statement\n";
 
-        tabSpace++;
-        printTabs();
-        cout<<cstmt->transferVar->getIdentifier()<<' ';
-        cout<<(cstmt->direction ? "GPU to CPU" : "CPU to GPU")<<endl;
-        tabSpace--;
-    }
-    default:
-        break;
+            tabSpace++;
+            printTabs();
+            cout<<cstmt->transferVar->getIdentifier()<<' ';
+            cout<<(cstmt->direction ? "GPU to CPU" : "CPU to GPU")<<endl;
+            tabSpace--;
+        }
+        default:
+            break;
     }
 }
 

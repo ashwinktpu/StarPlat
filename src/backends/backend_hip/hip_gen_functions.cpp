@@ -42,6 +42,24 @@ namespace sphip {
         main.pushStringWithNewLine(oss.str());
     }
 
+    void DslCppGenerator::GenerateHipMemCpySymbol(const char* var, const std::string typeStr, bool isHostToDevice) {
+
+        std::ostringstream oss;
+
+        if(isHostToDevice) {
+            oss << "hipMemcpyToSymbol(::" << var
+            << ", &" << var << ", " << "sizeof(" << typeStr  
+            << "), 0, hipMemcpyHostToDevice);";
+        }
+        else {
+            oss << "hipMemcpyFromSymbol(&" << var
+            << ", ::" << var << ", " << "sizeof(" << typeStr  
+            << "), 0, hipMemcpyDeviceToHost);";
+        }
+
+        main.pushStringWithNewLine(oss.str());
+    }
+
     void DslCppGenerator::GenerateLaunchConfiguration() {
 
         main.NewLine();
@@ -49,8 +67,9 @@ namespace sphip {
             std::to_string(threadsPerBlock) + ";"
         );
         main.pushStringWithNewLine(
-            "const unsigned numThreads = (V > threadsPerBlock) ? " +
-            std::to_string(threadsPerBlock) + " : V;"
+            "const unsigned numThreads = (V < threadsPerBlock) ? V : " +
+            std::to_string(threadsPerBlock) + ";"
+
         );
         main.pushStringWithNewLine(
             "const unsigned numBlocks = (V + threadsPerBlock - 1) / threadsPerBlock;"
@@ -60,7 +79,6 @@ namespace sphip {
     }
 
     void DslCppGenerator::GenerateTimerStart() {
-        
         main.NewLine();
         main.pushStringWithNewLine("// Timing starts here");
         main.pushStringWithNewLine("hipEvent_t start;");
@@ -71,7 +89,6 @@ namespace sphip {
 
 
     void DslCppGenerator::GenerateTimerStop() {
-        
         main.NewLine();
         main.pushStringWithNewLine("hipEvent_t stop;");
         main.pushStringWithNewLine("hipEventCreate(&stop);");
@@ -122,6 +139,29 @@ namespace sphip {
 
     }
 
+    void DslCppGenerator::GenerateHipMemcpyParams(const list<formalParam*> &paramList) {
+
+        for (auto itr = paramList.begin(); itr != paramList.end(); itr++) {
+            Type* type = (*itr)->getType();
+            if (type->isPropType()) {
+                if (type->getInnerTargetType()->isPrimitiveType()) {
+                    //~ Type* innerType = type->getInnerTargetType();
+
+                    const char* sizeofProp = NULL;
+                    if (type->isPropEdgeType())
+                    sizeofProp = "E";
+                    else
+                    sizeofProp = "V";
+                    const char* temp = "d";
+                    std::string temp1 = CapitalizeFirstLetter((*itr)->getIdentifier()->getIdentifier());
+                    temp1 = "d" + temp1;
+                    char* temp2 = (char*)malloc(1 + strlen(temp) + strlen(temp1.c_str()));
+                    strcpy(temp2, temp);
+                    strcat(temp2, temp1.c_str());
+
+                    GenerateHipMemCpyStr((*itr)->getIdentifier()->getIdentifier(), temp2, ConvertToCppType(type->getInnerTargetType()), sizeofProp, 0);
+                    
+                }
     void DslCppGenerator::GenerateCopyBackToHost(const list<formalParam*> &paramList) {
         
         for(auto param: paramList) {
@@ -135,6 +175,7 @@ namespace sphip {
                     param->getType()->isPropEdgeType() ? "E" : "V", 
                     false
                 );
+
             }
         }
     }
@@ -173,6 +214,7 @@ namespace sphip {
         GenerateExpression(expr, isMainFile);
         buffer = ");";
         (isMainFile ? main : header).pushStringWithNewLine(buffer);
+
     }
 
     void DslCppGenerator::GenerateAuxillaryFunctions() {

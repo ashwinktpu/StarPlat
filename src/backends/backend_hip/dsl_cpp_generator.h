@@ -134,6 +134,8 @@ namespace sphip {
          */
         void SetCurrentFunction(Function* func);
 
+        Function* GetCurrentFunction();
+
         /**
          * TODO
          */
@@ -217,30 +219,63 @@ namespace sphip {
          */
         void GenerateForAll(forallStmt* stmt, bool isMainFile);
 
+        void GenerateForAllSignature(forallStmt* stmt, bool isMainFile);
+
+        bool NeighbourIteration(char* methodId);
+
+        bool AllGraphIteration(char* methodId);
+
         /**
          * TODO
          */
         void GenerateFixedPoint(fixedPointStmt* stmt, bool isMainFile);
+
+        void GeneratefixedPoint_filter(Expression* stmt, bool isMainFile);
 
         /**
          * TODO
          */
         void GenerateIfStmt(ifStmt* stmt, bool isMainFile);
 
+        void GenerateDoWhileStmt(dowhileStmt* doWhile, bool isMainFile);
+
         /**
          * TODO
          */
         void GenerateReductionCallStmt(reductionCallStmt* stmt, bool isMainFile);
 
+        void GenerateReductionStmt(reductionCallStmt* stmt, bool isMainFile);
+
+        void GenerateReductionOpStmt(reductionCallStmt* stmt, bool isMainFile);
         /**
          * TODO
          */
         void GenerateItrBfs(iterateBFS* stmt, bool isMainFile);
 
+        void GenerateItrBfs2(iterateBFS2* stmt, bool isMainFile);
+
         /**
          * TODO
          */
         void GenerateItrRevBfs(iterateReverseBFS* stmt, bool isMainFile);
+
+        void GenerateItrBfsRev(iterateBFSReverse* stmt, bool isMainFile);
+
+        void AddHipBFSIterationLoop(iterateBFS* stmt, bool generateRevBfs);
+
+        void AddHipBFS2IterationLoop(iterateBFS2* stmt, bool generateRevBfs);
+
+        void AddHipRevBFSIterationLoop(iterateBFS* stmt);
+
+        void AddHipRevBFS2IterationLoop(iterateBFS2* stmt);
+
+        void AddHipBFSIterKernel(iterateBFS* stmt, bool generateRevBfs);
+
+        void AddHipBFS2IterKernel(iterateBFS2* stmt, bool generateRevBfs);
+
+        void AddHipRevBFSIterKernel(list<statement*>& revStmtList, iterateBFS* bfsAbstraction);
+
+        void AddHipRevBFS2IterKernel(list<statement*>& revStmtList, iterateBFS2* bfsAbstraction);
 
         /**
          * TODO
@@ -322,6 +357,8 @@ namespace sphip {
          */
         void GenerateInitKernelCall(assignment* assign, bool isMainFile);
 
+        void GenerateInitkernelStr(const char* inVarType, const char* inVarName, const char* initVal);
+
         /**
          * TODO
          */
@@ -331,6 +368,12 @@ namespace sphip {
          * TODO
          */
         void GenerateInitIndexString(const std::string type, const std::string identifier, const std::string value, const std::string index);
+
+        void GenerateHipKernel(forallStmt *stmt);
+
+        void GenerateInitIndex();
+
+        void GenerateInitKernel();
 
         /**
          * TODO
@@ -376,6 +419,10 @@ namespace sphip {
          * TODO
         */
         bool IsNeighbourIteration(const std::string methodId);
+
+        void GenerateHipMallocParams(const list<formalParam*> &paramList);
+
+        void GenerateHipMemcpyParams(const list<formalParam*> &paramList);
 
         /**
          * TODO
@@ -435,10 +482,16 @@ namespace sphip {
          * HIP Specific Functions
          */
 
+        void GeneratePropParams(list<formalParam*> paramList, bool isNeedType, bool isMainFile);
+
         /**
          * TODO
          */
+
+        void GenerateHipMemCpySymbol(const char* var, const std::string typeStr, bool isHostToDevice);
+
         void GenerateFormalParameterDeclAllocCopy(const list<formalParam*> &paramList);
+
 
         /**
          * TODO
@@ -457,10 +510,14 @@ namespace sphip {
          */
         void GenerateHipMemcpyStr(const std::string &dst, const std::string &src, const std::string &typeStr, const std::string &sizeOfType, bool isHostToDevice = true);
 
+        void 
+          (const char* var, const char* typeStr, bool isHostToDevice);
+
         /**
          * TODO
          */
         void GenerateHipMalloc(Type* type, const std::string &identifier);
+
 
         /**
          * TODO
@@ -472,9 +529,6 @@ namespace sphip {
          */
         void GenerateTimerStart();
 
-        /**
-         * TODO
-         */
         void GenerateTimerStop();
 
         /**
@@ -490,6 +544,8 @@ namespace sphip {
          * TODO
          */
         const std::string GetOperatorString(int operatorId);
+
+        blockStatement* IncludeIfToBlock(forallStmt* forAll);
 
         /**
          * TODO
@@ -515,6 +571,13 @@ namespace sphip {
          * TODO
          */
         std::string StripName(const std::string& name);
+        void CastIfRequired(Type* type, Identifier* methodID, dslCodePad& main);
+
+        std::string CapitalizeFirstLetter(const std::string& name);
+
+        char* CapitalizeFirstLetter(char* name);
+
+        bool GenerateVariableDeclGetEdge(declaration *declStmt, bool isMainFile);
 
         /**
          * DEPRECATED: Use the constructor for setting the file name
@@ -601,6 +664,9 @@ namespace sphip {
 
         Function* function;
         bool generateCsr;
+        bool generateInitKernel;
+        bool generateInitIndex;
+        bool isForwardBfsLoop = true;
 
         NodeStack nodeStack;
 

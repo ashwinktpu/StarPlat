@@ -2072,6 +2072,7 @@ class fixedPointStmt:public statement
         new_iterBFS->body=body;
         new_iterBFS->revBFS=revBFS;
         new_iterBFS->setTypeofNode(NODE_ITRBFS);
+        printf("set to iteratebfs");
         body->setParent(new_iterBFS);
         if(revBFS != NULL)
           revBFS->setParent(new_iterBFS);
@@ -2176,6 +2177,145 @@ class fixedPointStmt:public statement
 
   };
   
+  class iterateBFS2:public statement
+  {   private:
+      Identifier* iterator;
+      Identifier* rootNode;
+      Identifier* graphId;
+      proc_callExpr* nodeCall;
+      Expression* filterExpr;
+      statement* body;
+      iterateReverseBFS* revBFS;
+
+      list<Identifier*> usedVars;
+      MetaDataUsed metadata;
+      std::set<TableEntry *> modifiedGlobalVars;
+
+      public:
+
+      iterateBFS2()
+      {
+        iterator=NULL;
+        graphId=NULL;
+        nodeCall = NULL;
+        rootNode=NULL;
+        filterExpr=NULL;
+        body=NULL;
+        revBFS=NULL;
+        statementType="IterateInBFS2";
+      }
+    
+      static iterateBFS2* nodeForIterateBFS(Identifier* iterator,Identifier* graphId,proc_callExpr* nodeCall,Identifier* rootNode,Expression* filterExpr,statement* body,iterateReverseBFS* revBFS)
+      {
+        iterateBFS2* new_iterBFS=new iterateBFS2();
+        new_iterBFS->iterator=iterator;
+        new_iterBFS->graphId=graphId;
+        new_iterBFS->rootNode=rootNode;
+        new_iterBFS->nodeCall = nodeCall;
+        new_iterBFS->filterExpr=filterExpr;
+        new_iterBFS->body=body;
+        new_iterBFS->revBFS=revBFS;
+        new_iterBFS->setTypeofNode(NODE_ITRBFS2);
+        body->setParent(new_iterBFS);
+        if(revBFS != NULL)
+          revBFS->setParent(new_iterBFS);
+        return new_iterBFS;
+      }
+
+      Identifier* getRootNode()
+      {
+        return rootNode;
+      }
+
+      Identifier* getIteratorNode()
+      {
+        return iterator;
+      }
+
+      Identifier* getGraphCandidate()
+      {
+        return graphId;
+      }
+
+      statement* getBody()
+      {
+        return body;
+      }
+
+      iterateReverseBFS* getRBFS()
+      {
+        return revBFS;
+      }
+
+      proc_callExpr* getMethodCall()
+      {
+        return nodeCall;
+      }
+
+
+      void initUsedVariable(list<Identifier*> usedVars)
+      {
+        this->usedVars = usedVars;
+      }
+
+      bool getIsMetaUsed() {
+        return metadata.isMetaUsed;
+      }
+
+      void setIsMetaUsed() {
+        metadata.isMetaUsed = true;
+      }
+
+      bool getIsDataUsed() {
+        return metadata.isDataUsed;
+      }
+
+      void setIsDataUsed() {
+        metadata.isDataUsed = true;
+      }
+
+      bool getIsSrcUsed() {
+        return metadata.isSrcUsed;
+      }
+
+      void setIsSrcUsed() {
+        metadata.isSrcUsed = true;
+      }
+
+      bool getIsWeightUsed() {
+        return metadata.isWeightUsed;
+      }
+
+      void setIsWeightUsed() {
+        metadata.isWeightUsed = true;
+      }
+
+      bool getIsRevMetaUsed() {
+        return metadata.isRevMetaUsed;
+      }
+
+      void setIsRevMetaUsed() {
+        metadata.isRevMetaUsed = true;
+      }
+
+      MetaDataUsed getMetaDataUsed() {
+        return metadata;
+      }
+
+
+    void pushModifiedGlobalVariable(TableEntry * te)
+    {
+      modifiedGlobalVars.insert(te);
+    }
+
+    std::set<TableEntry *> getModifiedGlobalVariables()
+    {
+      return modifiedGlobalVars;
+    }
+
+  };
+
+
   class unary_stmt:public statement
   {
     private:
@@ -2814,4 +2954,132 @@ class varTransferStmt: public statement
     setTypeofNode(NODE_TRANSFERSTMT);
   } 
 };
+
+class iterateBFSReverse:public statement
+  {   private:
+      Identifier* iterator;
+      Identifier* rootNode;
+      Identifier* graphId;
+      proc_callExpr* nodeCall;
+      Expression* filterExpr;
+      statement* body;
+
+      list<Identifier*> usedVars;
+      MetaDataUsed metadata;
+      std::set<TableEntry *> modifiedGlobalVars;
+
+      public:
+
+      iterateBFSReverse()
+      {
+        iterator=NULL;
+        graphId=NULL;
+        nodeCall = NULL;
+        rootNode=NULL;
+        filterExpr=NULL;
+        body=NULL;
+        statementType="IterateBFSReverse";
+      }
+    
+      static iterateBFSReverse* nodeForIterateBFS(Identifier* iterator,Identifier* graphId,proc_callExpr* nodeCall,Identifier* rootNode,Expression* filterExpr,statement* body)
+      {
+        iterateBFSReverse* new_iterBFSRev=new iterateBFSReverse();
+        new_iterBFSRev->iterator=iterator;
+        new_iterBFSRev->graphId=graphId;
+        new_iterBFSRev->rootNode=rootNode;
+        new_iterBFSRev->nodeCall = nodeCall;
+        new_iterBFSRev->filterExpr=filterExpr;
+        new_iterBFSRev->body=body;
+        new_iterBFSRev->setTypeofNode(NODE_ITERBFSREV);
+        body->setParent(new_iterBFSRev);
+        return new_iterBFSRev;
+      }
+
+      Identifier* getRootNode()
+      {
+        return rootNode;
+      }
+
+      Identifier* getIteratorNode()
+      {
+        return iterator;
+      }
+
+      Identifier* getGraphCandidate()
+      {
+        return graphId;
+      }
+
+      statement* getBody()
+      {
+        return body;
+      }
+
+      proc_callExpr* getMethodCall()
+      {
+        return nodeCall;
+      }
+
+
+      void initUsedVariable(list<Identifier*> usedVars)
+      {
+        this->usedVars = usedVars;
+      }
+
+      bool getIsMetaUsed() {
+        return metadata.isMetaUsed;
+      }
+
+      void setIsMetaUsed() {
+        metadata.isMetaUsed = true;
+      }
+
+      bool getIsDataUsed() {
+        return metadata.isDataUsed;
+      }
+
+      void setIsDataUsed() {
+        metadata.isDataUsed = true;
+      }
+
+      bool getIsSrcUsed() {
+        return metadata.isSrcUsed;
+      }
+
+      void setIsSrcUsed() {
+        metadata.isSrcUsed = true;
+      }
+
+      bool getIsWeightUsed() {
+        return metadata.isWeightUsed;
+      }
+
+      void setIsWeightUsed() {
+        metadata.isWeightUsed = true;
+      }
+
+      bool getIsRevMetaUsed() {
+        return metadata.isRevMetaUsed;
+      }
+
+      void setIsRevMetaUsed() {
+        metadata.isRevMetaUsed = true;
+      }
+
+      MetaDataUsed getMetaDataUsed() {
+        return metadata;
+      }
+
+
+    void pushModifiedGlobalVariable(TableEntry * te)
+    {
+      modifiedGlobalVars.insert(te);
+    }
+
+    std::set<TableEntry *> getModifiedGlobalVariables()
+    {
+      return modifiedGlobalVars;
+    }
+
+  };
 #endif

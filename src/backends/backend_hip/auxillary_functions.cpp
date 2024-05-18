@@ -20,7 +20,7 @@ namespace sphip {
     bool DslCppGenerator::OpenOutputFile() {
 
         const string headerName = std::string(DslCppGenerator::HIP_GEN_DIR) + "/" + this->fileName + ".h";
-        const string mainfileName = std::string(DslCppGenerator::HIP_GEN_DIR) + "/" + this->fileName + ".cc";
+        const string mainfileName = std::string(DslCppGenerator::HIP_GEN_DIR) + "/" + this->fileName + ".hip";
         cout << "Filename: " << this->fileName 
              << "\nHeaderFile: "<< headerName 
              << "\nMainFile: " << mainfileName << NL;
@@ -133,12 +133,16 @@ namespace sphip {
     }
 
     std::string DslCppGenerator::CapitalizeFirstLetter(const std::string &str) {
-
         if (str.empty()) {
             return str; 
         }
         std::string result = str;
         result[0] = std::toupper(result[0]); 
         return result;
+    }
+
+    char* DslCppGenerator::CapitalizeFirstLetter(char* str) {
+        str[0] = std::toupper(str[0]);
+        return str;
     }
 }

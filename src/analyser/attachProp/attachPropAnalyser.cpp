@@ -362,9 +362,24 @@ void attachPropAnalyser::analyseStatement(statement *stmt)
     break;
   }
 
+  case NODE_ITRBFS2:
+  {
+    analyseStatement(((iterateBFS2 *)stmt)->getBody());
+    iterateReverseBFS *revBFS = ((iterateBFS2 *)stmt)->getRBFS();
+    if (revBFS != NULL)
+      analyseStatement(revBFS->getBody());
+    break;
+  }
+
   case NODE_FORALLSTMT:
     analyseStatement(((forallStmt *)stmt)->getBody());
     break;
+
+  case NODE_ITERBFSREV:
+  {
+    analyseStatement(((iterateBFSReverse *)stmt)->getBody());
+    break;
+  }
   }
 }
 
