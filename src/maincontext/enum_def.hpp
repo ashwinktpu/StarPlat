@@ -17,8 +17,11 @@ enum TYPE
  TYPE_NODE,
  TYPE_EDGE,
  TYPE_PROPNODE,
- TYPE_PROPEDGE
-
+ TYPE_PROPEDGE,
+ TYPE_NONE,
+ TYPE_UPDATES,
+ TYPE_CONTAINER,
+ TYPE_NODEMAP,
 };
 
 inline bool check_isNodeEdgeType(int typeId)
@@ -31,7 +34,7 @@ inline bool check_isPropType(int typeId)
 }
 inline bool check_isCollectionType(int typeId)
 {
-  return ((typeId==TYPE_LIST)||(typeId==TYPE_SETE)||(typeId==TYPE_SETN));
+  return ((typeId == TYPE_LIST)||(typeId==TYPE_SETE)||(typeId==TYPE_SETN)||(typeId == TYPE_UPDATES) || (typeId == TYPE_NODEMAP) || (typeId == TYPE_CONTAINER));
 }
 inline bool check_isGraphType(int typeId)
 {
@@ -45,7 +48,7 @@ inline bool check_isPrimitiveType(int typeId)
  inline bool check_isPropNodeType(int typeId)
  {
    return typeId==TYPE_PROPNODE;
- } 
+ }
 
  inline bool check_isPropEdgeType(int typeId)
  {
@@ -61,11 +64,23 @@ inline bool check_isSetCollectionType(int typeId)
 }
 inline bool check_isNodeType(int typeId)
 {
-  return typeId==TYPE_NODE;
+  return typeId == TYPE_NODE;
 }
 inline bool check_isEdgeType(int typeId)
 {
-  return typeId==TYPE_EDGE;
+  return typeId == TYPE_EDGE;
+}
+inline bool check_isContainerType(int typeId)
+{
+
+ return typeId == TYPE_CONTAINER;
+   
+}
+inline bool check_isNodeMapType(int typeId)
+{
+ 
+return typeId == TYPE_NODEMAP;
+
 }
 
 enum REDUCE
@@ -74,7 +89,9 @@ enum REDUCE
     REDUCE_COUNT,
     REDUCE_PRODUCT,
     REDUCE_MAX,
-    REDUCE_MIN
+    REDUCE_MIN,
+   
+
 };
 
 enum OPERATOR
@@ -91,13 +108,30 @@ enum OPERATOR
  OPERATOR_LE,
  OPERATOR_GE,
  OPERATOR_EQ,
- OPERATOR_NE
-
+ OPERATOR_NE,
+ OPERATOR_NOT,
+ OPERATOR_INC,
+ OPERATOR_DEC,
+ OPERATOR_ADDASSIGN,
+ OPERATOR_MULASSIGN,
+ OPERATOR_ORASSIGN,
+ OPERATOR_ANDASSIGN,
+ OPERATOR_SUBASSIGN,
+ OPERATOR_INDEX,
 
 };
 
-enum NODETYPE
+enum FUNCTYPE
 {
+  GEN_FUNC,
+  STATIC_FUNC,
+  INCREMENTAL_FUNC,
+  DECREMENTAL_FUNC,
+  DYNAMIC_FUNC,
+  
+};
+
+enum NODETYPE{
   NODE_ID,
   NODE_PROPACCESS,
   NODE_FUNC,
@@ -112,6 +146,7 @@ enum NODETYPE
   NODE_FIXEDPTSTMT,
   NODE_IFSTMT,
   NODE_ITRBFS,
+  NODE_ITRBFS2,
   NODE_ITRRBFS,
   NODE_EXPR,
   NODE_PROCCALLEXPR,
@@ -119,6 +154,13 @@ enum NODETYPE
   NODE_FORALLSTMT,
   NODE_REDUCTIONCALL,
   NODE_REDUCTIONCALLSTMT,
+  NODE_UNARYSTMT,
+  NODE_RETURN,
+  NODE_BATCHBLOCKSTMT,
+  NODE_ONADDBLOCK,
+  NODE_ONDELETEBLOCK,
+  NODE_TRANSFERSTMT,
+  NODE_ITERBFSREV,
 };
 
 
@@ -127,6 +169,7 @@ enum EXPR
    EXPR_RELATIONAL,
    EXPR_LOGICAL,
    EXPR_ARITHMETIC,
+   EXPR_UNARY,
    EXPR_BOOLCONSTANT,
    EXPR_INTCONSTANT,
    EXPR_LONGCONSTANT,
@@ -134,6 +177,21 @@ enum EXPR
    EXPR_FLOATCONSTANT,
    EXPR_ID,
    EXPR_PROPID,
-   EXPR_INFINITY
+   EXPR_INFINITY,
+   EXPR_PROCCALL,
+   EXPR_DEPENDENT,
+   EXPR_MAPGET,
 };
+
+static const char *currentBatch = "currentBatch";
+static const char *attachNodeCall = "attachNodeProperty";
+static const char *attachEdgeCall = "attachEdgeProperty" ;
+static const char* nbrCall = "neighbors" ;
+static const char* edgeCall   = "get_edge" ;
+static const char* countOutNbrCall = "count_outNbrs";
+static const char* isAnEdgeCall = "is_an_edge"; 
+static const char* nodesToCall = "nodes_to";
+static const char* nodesCall = "nodes";
+
 #endif
+

@@ -1,0 +1,65 @@
+function ek (Graph g,node s,node d,propNode<int> weight)
+{
+    int flow = 0 ;
+    node cur;
+    node prev;
+    int new_flow = -1;
+    int cnew_flow = 0 ;
+    int e_cap = 0 ;
+    bool terminate = False;
+    propEdge <int> cap;
+    g.attachEdgeProperty(cap = t.weight);
+    
+    do
+    {
+        new_flow = 0;
+        propNode<int> n_flow;
+        propNode<int> par;
+        propNode<bool> in_bfs;
+        g.attachNodeProperty(n_flow = INT_MAX, par = -1, in_bfs = False);
+        s.in_bfs = True;
+        s.par = -2;
+        terminate = False;
+        iterateInBFS(cur in g.nodes() from s){
+            if(cur.in_bfs == True && terminate == False)
+            {
+                for(nbr in g.neighbors(cur))
+                {
+                    edge e = g.get_edge(cur,nbr);
+                    if(nbr.par == -1 && e.cap > 0)
+                    {
+                        nbr.par = cur;
+                        cnew_flow = cur.n_flow;
+                        if(cnew_flow > e.cap)
+                        {
+                            cnew_flow = e.cap;
+                        }
+
+                        if(nbr == d)
+                        {
+                            new_flow = cnew_flow;
+                            terminate = True;
+                        }
+                        nbr.in_bfs = True;
+                        nbr.n_flow = cnew_flow;
+                    }
+                }
+            }
+        }
+        iterateInReverse(cur != s) 
+        {
+        }
+        flow = flow + new_flow;
+        cur = d;
+
+        while(cur != s)
+        {
+            prev = cur.par;
+            edge back = g.get_edge(prev,cur);
+            back.cap = back.cap - new_flow;
+            edge forw = g.get_edge(cur,prev);
+            forw.cap = forw.cap + new_flow;
+            cur = prev;
+        }
+    }while (new_flow != 0);
+}

@@ -1,0 +1,91 @@
+function scc_fw(Graph g) {
+    propNode<int> inDeg; propNode<int> outDeg;
+    propNode<bool> visit; propNode<bool> visitFw; propNode<bool> visitBw;
+    
+    g.attachNodeProperty(inDeg = 0, outDeg = 0);
+    g.attachNodeProperty(visit = False, visitFw = False, visitBw = False);
+
+    forall(u in g.nodes()) {
+        u.inDeg = g.inDeg[u];
+        u.outDeg = g.outDeg[u];
+    }
+
+    int nodeToBeVisited;
+    bool noNewComp = false;
+    int maxDegree;
+    int sccCount = 0;
+
+    fixedPoint until (noNewComp: False) {
+
+        bool noNewNode = false;
+        fixedPoint until(noNewNode: False) {
+            forall(src in g.nodes().filter(visit == false)) {
+                int outNbrCount = 0, inNbrCount = 0;
+                for(dst in g.neighbors(src).filter(visit == false)) {
+                    inNbrCount++;
+                }
+                for(dst in g.nodes_to(src).filter(visit == false)) {
+                    outNbrCount++;
+                }
+                if(inNbrCount == 0 || outNbrCount == 0) {
+                    src.visit = true;
+                    sccCount++;
+                    noNewNode = false;
+                }
+            }
+        }
+
+        nodeToBeVisited = -1;
+        maxDegree = -1;
+        forall(src in g.nodes().filter(visit == false)) {
+            int curNodeDegree = inDeg[src] + outDeg[src];
+            maxDegree = max(maxDegree, curNodeDegree);
+        }
+        forall(src in g.nodes().filter(visit == false)) {
+            int curNodeDegree = inDeg[src] + outDeg[src];
+            nodeToBeVisited = curNodeDegree;
+        }
+        
+        if(nodeToBeVisited == -1)
+            break;
+
+        g.attachNodeProperty(visitLevel = 0);
+        nodeToBeVisited.visitLevel = 1;
+        iterateInBFS(v in g.nodes() from nodeToBeVisited) {
+            if(visitLevel[v] == 1 && visit[v] == false) {
+                visitFw[v] = true;
+                for(w in g.neighbors(v)) {
+                    if(visitFw[w] == false && visitLevel[w] == 0) {
+                        visitLevel[w] = 1;
+                    }
+                }
+                visitLevel[v] = 2;
+            }
+        } 
+
+        g.attachNodeProperty(visitLevel = 0);
+        nodeToBeVisited.visitLevel = 1;
+        iterateInReverse(v!=nodeToBeVisited) {
+            if(visitLevel[v] == 1 && visit[v] == false && visitFw[v] == true) {
+                visitBw[v] = true;
+                for(w in g.neighbors(v)) {
+                    if(visitBw[w] == false && visitLevel[w] == 0) {
+                        visitLevel[w] = 1;
+                    }
+                }
+                visitLevel[v] = 2;
+            }
+        } 
+        
+        forall(src in g.nodes()) {
+            if(visitFw[src] && visitBw[src]) {
+                visit[src] = true;
+            }
+            else {
+                visitFw[src] = false;
+                visitBw[src] = false;
+            }
+        }
+        sccCount++;
+    }
+}

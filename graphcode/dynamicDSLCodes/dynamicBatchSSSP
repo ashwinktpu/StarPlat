@@ -1,0 +1,95 @@
+Static staticSSSP(Graph g, propNode<int> dist, propNode<int> parent, propEdge<int> weight, int src) {
+  propNode <bool> modified;
+  propNode <bool> modified_nxt;
+  g.attachNodeProperty(dist=INF, modified = False, modified_nxt = False, parent = -1);
+  src.modified = True; 
+  src.dist=0;
+  bool finished =False;
+  fixedPoint until (finished:!modified) {
+    forall (v in g.nodes().filter(modified == True) ) {
+      forall (nbr in g.neighbors(v)) {          
+        edge e = g.get_edge(v, nbr);
+        <nbr.dist,nbr.modified_nxt,nbr.parent> = <Min(nbr.dist, v.dist + e.weight), True, v>;
+      }
+    }
+    modified = modified_nxt;
+    g.attachNodeProperty(modified_nxt = False); 
+  }
+}
+
+Incremental(Graph g, propNode<int> dist, propNode<int> parent, propEdge<int> weight, propNode<bool> modified) {
+  propNode <bool> modified_nxt;
+  g.attachNodeProperty(modified_nxt = False);
+  bool finished =False;
+
+  fixedPoint until (finished:!modified) {
+    forall (v in g.nodes().filter(modified == True) ) {
+      forall (nbr in g.neighbors(v)) {          
+        edge e = g.get_edge(v, nbr);
+        <nbr.dist,nbr.modified_nxt,nbr.parent> = <Min (nbr.dist, v.dist + e.weight), True,v>;
+      }
+    }
+    modified = modified_nxt;
+    g.attachNodeProperty(modified_nxt = False);
+  }
+}
+
+Decremental(Graph g, propNode<int> dist, propNode<int> parent, propEdge<int> weight, propNode<bool> modified) {
+  bool finished = False;
+  while(!finished) {
+    finished = true;
+    forall (v in g.nodes().filter(modified == False) ) {
+      node parent_v = v.parent;
+      if(parent_v>-1 && parent_v.modified ) {
+        v.dist = INT_MAX/2;
+        v.modified = True;
+        v.parent= -1;
+        finished = false;
+      }    
+    }
+  } 
+  finished = False;
+  while(!finished) {
+    finished = true;
+    forall (v in g.nodes().filter(modified == True) ) {
+      forall (nbr in g.nodes_to(v)) {          
+        edge e = g.get_edge(nbr, v);
+        if(v.dist > nbr.dist + e.weight) {
+          v.dist = nbr.dist + e.weight;
+          v.parent = nbr;
+          finished = false;
+        }
+      }
+    }
+  }  
+}
+
+Dynamic DynSSSP(Graph g, propNode<int> dist, propNode<int> parent, propEdge<int> weight, updates<g> updateBatch, int batchSize, int src) {
+  staticSSSP(g, dist, parent, weight, src);
+  Batch(updateBatch:batchSize) {
+    propNode<bool> modified;
+    propNode<bool> modified_add;
+    g.attachNodeProperty(modified = false, modified_add = false);
+    OnDelete(u in updateBatch.currentBatch()): { 
+      int src = u.source;
+      int dest = u.destination;
+      if(dest.parent == src) {
+        dest.dist = INT_MAX/2;
+        dest.modified = True;
+        dest.parent = -1;
+      }
+    }
+    g.updateCSRDel(updateBatch); 
+    Decremental(g, dist, parent, weight, modified);   
+    OnAdd(u in updateBatch.currentBatch()):{
+      int src = u.source;
+      int dest = u.destination;
+      if(dest.dist > src.dist + 1) {
+        dest.modified_add = True;
+        src.modified_add = True;
+      }
+    }          
+    g.updateCSRAdd(updateBatch);      
+    Incremental(g, dist, parent, weight, modified_add);
+  }
+}

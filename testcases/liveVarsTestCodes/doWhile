@@ -1,0 +1,14 @@
+// function with a do while statement
+
+function test (int n)
+{
+    int res = 1;
+    int num = n;
+    do
+    {
+        res = num*res;
+        n--;
+    } while (n);            // "num"  should be live here for the loop
+    
+    return res;
+}

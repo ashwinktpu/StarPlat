@@ -1,0 +1,12 @@
+function test(Graph g)
+{
+    propNode<int> prop;
+    propNode<int> prop1;
+
+    int x;
+
+    x = 10;
+    g.attachNodeProperty(prop = x);
+    x = 11;
+    g.attachNodeProperty(prop1 = x);
+}

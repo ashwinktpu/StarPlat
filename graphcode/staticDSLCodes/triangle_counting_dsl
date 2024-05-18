@@ -1,0 +1,13 @@
+function Compute_TC(Graph g) {
+  long triangle_count = 0;
+  forall(v in g.nodes()) {
+    forall(u in g.neighbors(v).filter(u < v)) {
+      forall(w in g.neighbors(v).filter(w > v)) {
+        if (g.is_an_edge(u, w)) {
+          triangle_count += 1;
+        }
+      }
+    }
+  }
+  return triangle_count;
+}

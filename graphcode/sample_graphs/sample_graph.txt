@@ -1,0 +1,34 @@
+# Undirected graph: oregon1_010526.txt
+# AS peering information inferred from Oregon route-views BGP data, from May 26 2001
+# Nodes: 11174 Edges: 23409
+# FromNodeId	ToNodeId
+0	1
+0	2
+2	0
+2	4
+2	5
+1	0
+1	3
+3	1
+3	8
+3	6
+3	4
+4	2
+4	3
+4	5
+4	6
+5	2
+5	4
+5	7
+6	3
+6	4
+6	7
+6	9
+7	5
+7	6
+7	9
+8	3
+8	9
+9	6
+9	8
+9	7
