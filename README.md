@@ -5,6 +5,11 @@
 
 
 # StarPlat: A Versatile DSL for Graph Analytics
+
+```diff
+- Please use WorkingBranch
+```
+
 # GraphDSL MPI Backend
 
 ### How to compile Generated MPI Codes on Aqua Cluster
@@ -149,7 +154,7 @@ By default, MacOS comes with the `clang` compiler, which can cause syntax errors
 # How to generate
 ```
 # Step 3. Generate files from DSL files.  
-./StarPlat [-s|-d] -f <dsl.sp> -b [cuda|omp|mpi|acc]
+./StarPlat [-s|-d] -f <dsl.sp> -b [cuda|omp|mpi|acc|sycl]
 
 #Example
 ./StarPlat -s -f ../graphcode/generated_cuda/sssp_dslV2 -b omp
@@ -292,7 +297,6 @@ Graph DSL for basic graph algorithms
 ```
 This project is funded by India's National Supercomputing Mission, whose timely funding and regular reviews are greatly appreciated.
 ```
-
 ## Licensing
 The StarPlat codebase is made available for academic and non-commercial use.
 Commercial use of the code needs licensing. The interested may contact rupesh@cse.iitm.ac.in.
