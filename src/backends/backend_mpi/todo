@@ -1,0 +1,17 @@
+# bAnalyzer
+ - ✅ switch the createNewV to an assignment type creation.
+    - ✅ create symbol table entry for the parameters of forall.
+    - Harmless variable with rank.
+ - switch off get_edge_r_i
+
+# std::min 
+  - currently it creates min (var, var, world).  
+  - ✅ trail min (var, var)
+  - make statement generation, mapping to std::min (var, var).
+  - 
+
+# Symbol Table
+  - buildForStatements function not complete. 
+  - symbolTableBuilder.cpp:227 condition always fails. Functions not implemented.
+  - symbolTableBuilder.cpp::findSymbolId () 1024. Redundant search_and_connect.
+  - In case entry not in symbolTable, it should add it.

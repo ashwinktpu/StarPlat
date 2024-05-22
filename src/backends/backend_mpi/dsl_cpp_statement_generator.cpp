@@ -967,7 +967,7 @@ namespace spmpi {
         if (forAll->isForall() && ifStatementInForAll) {
             main.pushstr_newL ("}") ;
             ifStatementInForAll = true ;
-            main.pushstr_newL ("world.barrier ()") ;
+            main.pushstr_newL ("world.barrier () ;") ;
         }
         main.NewLine () ;
         if (analysisForAll->getFilterAnalysisStatus() == true)
@@ -1024,7 +1024,7 @@ namespace spmpi {
                       main.pushstr_newL (strBuffer) ;
                     }
                     if(forAll->isForall()){
-                        sprintf (strBuffer, "if ( world.rank () == g.get_node_owner (%s) )\n { for (%s %s:%s.%s(%s))", nodeNbr->getIdentifier(), "int", iterator->getIdentifier(), graphId, "getNeighbors", nodeNbr->getIdentifier()) ;
+                        sprintf (strBuffer, "if ( %s != -1 && world.rank () == g.get_node_owner (%s) )\n { for (%s %s:%s.%s(%s))", nodeNbr->getIdentifier(), nodeNbr->getIdentifier(), "int", iterator->getIdentifier(), graphId, "getNeighbors", nodeNbr->getIdentifier()) ;
                         ifStatementInForAll = true ;
                         main.pushstr_newL (strBuffer) ;
                     }

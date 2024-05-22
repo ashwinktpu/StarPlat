@@ -191,6 +191,8 @@ int bAnalyzer::analyzeForAllStmt (forallStmt * forAll) {
 
 statement * bAnalyzer::createNewV (declaration * stmt, Identifier * u,  Identifier * v, const char * _tx) {
 
+  /*Switch this to a proper assignment statement with expression handling.*/
+
   Expression * expr = stmt->getExpressionAssigned () ;
   assert (expr->isProcCallExpr()) ;
   proc_callExpr * proc = (proc_callExpr *) expr ;
@@ -208,8 +210,12 @@ statement * bAnalyzer::createNewV (declaration * stmt, Identifier * u,  Identifi
   newArgList.push_back (a1) ;  
   newArgList.push_back (a2) ;  
   proc_callExpr * newExpression = proc_callExpr::nodeForProc_Call(proc->getId1(), proc->getId2(),  newMethodId, newArgList, proc->getIndexExpr()) ;
-  declaration * newStmt = declaration::assign_Declaration((Type*)Util::createNodeEdgeTypeNode(TYPE_NODE), v, newExpression) ;
-  return newStmt ;
+  ASTNode * newStmt = Util::createAssignmentNode ((ASTNode*) v, (ASTNode*) newExpression) ;
+  // Make symbol Table entry 
+  Type *typeNode = Type::createForPrimitive (TYPE_INT, 1) ;
+  TableEntry newEntry (v, typeNode) ;
+  // declaration * newStmt = declaration::assign_Declaration((Type*)Util::createNodeEdgeTypeNode(TYPE_NODE), v, newExpression) ;
+  return (statement*)newStmt ;
 }
 
 statement * bAnalyzer::createFrontierPopStatement () {

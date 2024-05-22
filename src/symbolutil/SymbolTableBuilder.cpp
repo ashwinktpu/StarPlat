@@ -45,8 +45,10 @@ bool search_and_connect_toId(SymbolTable *sTab, Identifier *id)
   TableEntry *tableEntry = sTab->findEntryInST(id);
   if (tableEntry == NULL)
   {
-    return false;
-    // to be added.
+    // May cause sincere crashes. Request to document the entire symbol table.
+    // Type *typeNode = Type::createForPrimitive(TYPE_INT, 1);
+    // TableEntry newTableEntry (id, typeNode) ;
+    return false ;
   }
   if (id->getSymbolInfo() != NULL)
   {
