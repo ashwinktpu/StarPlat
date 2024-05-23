@@ -1,0 +1,346 @@
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value -86 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale -86 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 86 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 1 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 86 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value -86 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale -86 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 86 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 86 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value -59 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale -59 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 59 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 3 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 59 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 0 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 0 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 0 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 1 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 0 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 0 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 0 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 0 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 2 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 0 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 0 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 0 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 0 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 2 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 0 on edge property success
+DEBUG: anupDsl.cc:58:do_max_flow(): initialization OK
+DEBUG: anupDsl.cc:58:do_max_flow(): initialization OK
+DEBUG: anupDsl.cc:58:do_max_flow(): initialization OK
+DEBUG: anupDsl.cc:58:do_max_flow(): initialization OK
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 9 from rank 3
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 2 from rank 0
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 3 from rank 1
+DEBUG: anupDsl.cc:117:do_max_flow(): Relabeling 9 to 1 from rank 3 
+DEBUG: anupDsl.cc:119:do_max_flow(): completed Relabeling 9 to 1 from rank 3 
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 9 from rank 3 OK
+DEBUG: anupDsl.cc:117:do_max_flow(): Relabeling 2 to 1 from rank 0 
+DEBUG: anupDsl.cc:119:do_max_flow(): completed Relabeling 2 to 1 from rank 0 
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 2 from rank 0 OK
+DEBUG: anupDsl.cc:117:do_max_flow(): Relabeling 3 to 11 from rank 1 
+DEBUG: anupDsl.cc:119:do_max_flow(): completed Relabeling 3 to 11 from rank 1 
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 3 from rank 1 OK
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 9 from rank 3
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 3 from rank 1
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 2 from rank 0
+DEBUG: anupDsl.cc:117:do_max_flow(): Relabeling 9 to 11 from rank 3 
+DEBUG: anupDsl.cc:119:do_max_flow(): completed Relabeling 9 to 11 from rank 3 
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 9 from rank 3 OK
+DEBUG: anupDsl.cc:106:do_max_flow(): pushing from 3 to 0 a value of 86  from rank 1
+DEBUG: anupDsl.cc:106:do_max_flow(): pushing from 2 to 4 a value of 62  from rank 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value -62 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale -62 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 62 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 1 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 62 on edge property success
+DEBUG: anupDsl.cc:111:do_max_flow(): complete pushing from 2 to 4 a value of 62  from rank 0
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 2 from rank 0 OK
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value -86 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 1 on 1
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale -86 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 86 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 1
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 86 on edge property success
+DEBUG: anupDsl.cc:111:do_max_flow(): complete pushing from 3 to 0 a value of 86  from rank 1
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 3 from rank 1 OK
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 4 from rank 1
+DEBUG: anupDsl.cc:117:do_max_flow(): Relabeling 4 to 2 from rank 1 
+DEBUG: anupDsl.cc:119:do_max_flow(): completed Relabeling 4 to 2 from rank 1 
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 4 from rank 1 OK
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 4 from rank 1
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 9 from rank 3
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 2 from rank 0
+DEBUG: anupDsl.cc:106:do_max_flow(): pushing from 2 to 7 a value of 24  from rank 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value -24 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale -24 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 24 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 2 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 24 on edge property success
+DEBUG: anupDsl.cc:111:do_max_flow(): complete pushing from 2 to 7 a value of 24  from rank 0
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 2 from rank 0 OK
+DEBUG: anupDsl.cc:106:do_max_flow(): pushing from 4 to 2 a value of 62  from rank 1
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value -62 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 1 on 1
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale -62 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 62 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 1
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 62 on edge property success
+DEBUG: anupDsl.cc:111:do_max_flow(): complete pushing from 4 to 2 a value of 62  from rank 1
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 4 from rank 1 OK
+DEBUG: anupDsl.cc:106:do_max_flow(): pushing from 9 to 0 a value of 59  from rank 3
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value -59 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 3 on 3
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale -59 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 59 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 3
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 59 on edge property success
+DEBUG: anupDsl.cc:111:do_max_flow(): complete pushing from 9 to 0 a value of 59  from rank 3
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 9 from rank 3 OK
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 2 from rank 0
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 7 from rank 2
+DEBUG: anupDsl.cc:106:do_max_flow(): pushing from 2 to 7 a value of 5  from rank 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value -5 on an edDEBUG: anupDsl.cc:117:do_max_flow(): Relabeling 7 to 1 from rank 2 
+DEBUG: anupDsl.cc:119:do_max_flow(): completed Relabeling 7 to 1 from rank 2 
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 7 from rank 2 OK
+ge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale -5 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 5 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 2 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 5 on edge property success
+DEBUG: anupDsl.cc:111:do_max_flow(): complete pushing from 2 to 7 a value of 5  from rank 0
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 2 from rank 0 OK
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 7 from rank 2
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 2 from rank 0
+DEBUG: anupDsl.cc:117:do_max_flow(): Relabeling 2 to 3 from rank 0 
+DEBUG: anupDsl.cc:119:do_max_flow(): completed Relabeling 2 to 3 from rank 0 
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 2 from rank 0 OK
+DEBUG: anupDsl.cc:106:do_max_flow(): pushing from 7 to 1 a value of 15  from rank 2
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value -15 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 2 on 2
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale -15 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 15 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 2
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 15 on edge property success
+DEBUG: anupDsl.cc:111:do_max_flow(): complete pushing from 7 to 1 a value of 15  from rank 2
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 7 from rank 2 OK
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 2 from rank 0
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 7 from rank 2
+DEBUG: anupDsl.cc:117:do_max_flow(): Relabeling 7 to 4 from rank 2 
+DEBUG: anupDsl.cc:119:do_max_flow(): completed Relabeling 7 to 4 from rank 2 
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 7 from rank 2 OK
+DEBUG: anupDsl.cc:106:do_max_flow(): pushing from 2 to 4 a value of 57  from rank 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value -57 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale -57 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 57 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 1 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 57 on edge property success
+DEBUG: anupDsl.cc:111:do_max_flow(): complete pushing from 2 to 4 a value of 57  from rank 0
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 2 from rank 0 OK
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 4 from rank 1
+DEBUG: anupDsl.cc:117:do_max_flow(): Relabeling 4 to 4 from rank 1 
+DEBUG: anupDsl.cc:119:do_max_flow(): completed Relabeling 4 to 4 from rank 1 
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 4 from rank 1 OK
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 4 from rank 1
+DEBUG: anupDsl.cc:106:do_max_flow(): pushing from 4 to 2 a value of 57  from rank 1
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value -57 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 1 on 1
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale -57 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 57 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 1
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 57 on edge property success
+DEBUG: anupDsl.cc:111:do_max_flow(): complete pushing from 4 to 2 a value of 57  from rank 1
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 4 from rank 1 OK
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 4 from rank 1
+DEBUG: anupDsl.cc:117:do_max_flow(): Relabeling 4 to 6 from rank 1 
+DEBUG: anupDsl.cc:119:do_max_flow(): completed Relabeling 4 to 6 from rank 1 
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 4 from rank 1 OK
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 4 from rank 1
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 7 from rank 2
+DEBUG: anupDsl.cc:106:do_max_flow(): pushing from 7 to 2 a value of 14  from rank 2
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value -14 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 2 on 2
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale -14 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 14 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 2
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 14 on edge property success
+DEBUG: anupDsl.cc:111:do_max_flow(): complete pushing from 7 to 2 a value of 14  from rank 2
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 7 from rank 2 OK
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 7 from rank 2
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 2 from rank 0
+DEBUG: anupDsl.cc:117:do_max_flow(): Relabeling 2 to 5 from rank 0 
+DEBUG: anupDsl.cc:119:do_max_flow(): completed Relabeling 2 to 5 from rank 0 
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 2 from rank 0 OK
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 2 from rank 0
+DEBUG: anupDsl.cc:106:do_max_flow(): pushing from 2 to 4 a value of 62  from rank 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value -62 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale -62 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 62 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 1 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 62 on edge property success
+DEBUG: anupDsl.cc:111:do_max_flow(): complete pushing from 2 to 4 a value of 62  from rank 0
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 2 from rank 0 OK
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 2 from rank 0
+DEBUG: anupDsl.cc:106:do_max_flow(): pushing from 2 to 7 a value of 9  from rank 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value -9 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale -9 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 9 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 2 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 9 on edge property success
+DEBUG: anupDsl.cc:111:do_max_flow(): complete pushing from 2 to 7 a value of 9  from rank 0
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 2 from rank 0 OK
+DEBUG: anupDsl.cc:106:do_max_flow(): pushing from 4 to 2 a value of 62  from rank 1
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value -62 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 1 on 1
+DEBUG: anupDsl.cc:117:do_max_flow(): Relabeling 7 to 6 from rank 2 
+DEBUG: anupDsl.cc:119:do_max_flow(): completed Relabeling 7 to 6 from rank 2 
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 7 from rank 2 OK
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale -62 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 62 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 1
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 62 on edge property success
+DEBUG: anupDsl.cc:111:do_max_flow(): complete pushing from 4 to 2 a value of 62  from rank 1
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 4 from rank 1 OK
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 7 from rank 2
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 2 from rank 0
+DEBUG: anupDsl.cc:117:do_max_flow(): Relabeling 2 to 7 from rank 0 
+DEBUG: anupDsl.cc:119:do_max_flow(): completed Relabeling 2 to 7 from rank 0 
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 2 from rank 0 OK
+DEBUG: anupDsl.cc:106:do_max_flow(): pushing from 7 to 2 a value of 9  from rank 2
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value -9 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 2 on 2
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale -9 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 9 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 2
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 9 on edge property success
+DEBUG: anupDsl.cc:111:do_max_flow(): complete pushing from 7 to 2 a value of 9  from rank 2
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 7 from rank 2 OK
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 2 from rank 0
+DEBUG: anupDsl.cc:106:do_max_flow(): pushing from 2 to 4 a value of 62  from rank 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value -62 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale -62 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 62 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 1 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 62 on edge property success
+DEBUG: anupDsl.cc:111:do_max_flow(): complete pushing from 2 to 4 a value of 62  from rank 0
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 2 from rank 0 OK
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 4 from rank 1
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 2 from rank 0
+DEBUG: anupDsl.cc:106:do_max_flow(): pushing from 2 to 7 a value of 9  from rank 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value -9 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale -9 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 9 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 2 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 9 on edge property success
+DEBUG: anupDsl.cc:117:do_max_flow(): Relabeling 4 to 8 from rank 1 
+DEBUG: anupDsl.cc:119:do_max_flow(): completed Relabeling 4 to 8 from rank 1 
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 4 from rank 1 OK
+DEBUG: anupDsl.cc:111:do_max_flow(): complete pushing from 2 to 7 a value of 9  from rank 0
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 2 from rank 0 OK
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 4 from rank 1
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 7 from rank 2
+DEBUG: anupDsl.cc:106:do_max_flow(): pushing from 4 to 2 a value of 62  from rank 1
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value -62 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 1 on 1
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale -62 on edge property success
+DEBUG: anupDsl.cc:117:do_max_flow(): Relabeling 7 to 8 from rank 2 
+DEBUG: anupDsl.cc:119:do_max_flow(): completed Relabeling 7 to 8 from rank 2 
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 7 from rank 2 OK
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 62 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 1
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 62 on edge property success
+DEBUG: anupDsl.cc:111:do_max_flow(): complete pushing from 4 to 2 a value of 62  from rank 1
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 4 from rank 1 OK
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 2 from rank 0
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 7 from rank 2
+DEBUG: anupDsl.cc:117:do_max_flow(): Relabeling 2 to 9 from rank 0 
+DEBUG: anupDsl.cc:119:do_max_flow(): completed Relabeling 2 to 9 from rank 0 
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 2 from rank 0 OK
+DEBUG: anupDsl.cc:106:do_max_flow(): pushing from 7 to 2 a value of 9  from rank 2
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value -9 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 2 on 2
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale -9 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 9 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 2
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 9 on edge property success
+DEBUG: anupDsl.cc:111:do_max_flow(): complete pushing from 7 to 2 a value of 9  from rank 2
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 7 from rank 2 OK
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 2 from rank 0
+DEBUG: anupDsl.cc:106:do_max_flow(): pushing from 2 to 4 a value of 62  from rank 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value -62 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale -62 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 62 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 1 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 62 on edge property success
+DEBUG: anupDsl.cc:111:do_max_flow(): complete pushing from 2 to 4 a value of 62  from rank 0
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 2 from rank 0 OK
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 4 from rank 1
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 2 from rank 0
+DEBUG: anupDsl.cc:117:do_max_flow(): Relabeling 4 to 10 from rank 1 
+DEBUG: anupDsl.cc:119:do_max_flow(): completed Relabeling 4 to 10 from rank 1 
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 4 from rank 1 OK
+DEBUG: anupDsl.cc:106:do_max_flow(): pushing from 2 to 7 a value of 9  from rank 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value -9 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale -9 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 9 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 2 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 9 on edge property success
+DEBUG: anupDsl.cc:111:do_max_flow(): complete pushing from 2 to 7 a value of 9  from rank 0
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 2 from rank 0 OK
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 4 from rank 1
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 7 from rank 2
+DEBUG: anupDsl.cc:106:do_max_flow(): pushing from 4 to 2 a value of 62  from rank 1
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value -62 on an edge property
+DEBUG: anupDsl.cc:117:do_max_flow(): Relabeling 7 to 10 from rank 2 
+DEBUG: anupDsl.cc:119:do_max_flow(): completed Relabeling 7 to 10 from rank 2 
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 7 from rank 2 OK
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 1 on 1
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale -62 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 62 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 1
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 62 on edge property success
+DEBUG: anupDsl.cc:111:do_max_flow(): complete pushing from 4 to 2 a value of 62  from rank 1
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 4 from rank 1 OK
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 2 from rank 0
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 7 from rank 2
+DEBUG: anupDsl.cc:117:do_max_flow(): Relabeling 2 to 11 from rank 0 
+DEBUG: anupDsl.cc:119:do_max_flow(): completed Relabeling 2 to 11 from rank 0 
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 2 from rank 0 OK
+DEBUG: anupDsl.cc:106:do_max_flow(): pushing from 7 to 2 a value of 9  from rank 2
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value -9 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 2 on 2
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale -9 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 9 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 2
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 9 on edge property success
+DEBUG: anupDsl.cc:111:do_max_flow(): complete pushing from 7 to 2 a value of 9  from rank 2
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 7 from rank 2 OK
+DEBUG: anupDsl.cc:75:do_max_flow(): discharging 2 from rank 0
+DEBUG: anupDsl.cc:106:do_max_flow(): pushing from 2 to 0 a value of 71  from rank 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value -71 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale -71 on edge property success
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:505:atomicAdd(): Attempting atomic Add of value 71 on an edge property
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:520:atomicAdd(): lock taken by 0 on 0
+DEBUG: ../mpi_header/graph_properties/edge_property/edge_property.cc:524:atomicAdd(): atomic add of vale 71 on edge property success
+DEBUG: anupDsl.cc:111:do_max_flow(): complete pushing from 2 to 0 a value of 71  from rank 0
+DEBUG: anupDsl.cc:122:do_max_flow(): discharging 2 from rank 0 OK

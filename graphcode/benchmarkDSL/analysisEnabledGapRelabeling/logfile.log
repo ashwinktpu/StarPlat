@@ -1,0 +1,16 @@
+
+/lfs/usrhome/mtech/cs22m028/benchmarkDSL/analysisEnabledGapRelabeling
+rm *.out
+g++ -std=c++17 -o graph_gen.out graph_gen.cpp
+g++ -std=c++17 -o control.out control.cpp
+mpic++ -std=c++17 -g -O0 -Wall -I /lfs/usrhome/mtech/cs22m028/local/include -L /lfs/usrhome/mtech/cs22m028/local/lib -lboost_mpi -lboost_serialization   -o anupDslAnalysis.out anupDslAnalysis.cc ../mpi_header/graph_mpi.cc ../mpi_header/updates.cc ../mpi_header/graph_properties/node_property/node_property.cc ../mpi_header/graph_properties/edge_property/edge_property.cc ../mpi_header/rma_datatype/rma_datatype.cc ../mpi_header/data_constructs/container.cc main.cc  
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/germanyudwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/livjournalwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/orkutudwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/pokecwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/rmatwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/sinaweibowt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/twitterwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/u10m80mwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/USAudwt.txt
+/lfs1/usrscratch/phd/cs16d003/11suiteDSL/weightedGraphs/wikiwt.txt

@@ -1,0 +1,241 @@
+make: Warning: File `anupDslAnalysis.cc' has modification time 828 s in the future
+anupDslAnalysis.cc: In function ‘int do_max_flow(Graph&, int, int, int, boost::mpi::communicator)’:
+anupDslAnalysis.cc:79:15: warning: unused variable ‘lv’ [-Wunused-variable]
+   79 |           int lv = -1;
+      |               ^~
+In file included from ../mpi_header/graph_mpi.cc:2:
+../mpi_header/synchronize_p2p.hpp: In function ‘std::vector<int*> synchronize(std::vector<std::vector<int> >&, int)’:
+../mpi_header/synchronize_p2p.hpp:40:21: warning: unused variable ‘from_process’ [-Wunused-variable]
+   40 |                 int from_process = sync_this[0] ;
+      |                     ^~~~~~~~~~~~
+../mpi_header/synchronize_p2p.hpp:41:21: warning: unused variable ‘to_process’ [-Wunused-variable]
+   41 |                 int to_process = sync_this[1] ;
+      |                     ^~~~~~~~~~
+../mpi_header/graph_mpi.cc: In member function ‘int Graph::get_other_vertex(int, int)’:
+../mpi_header/graph_mpi.cc:613:45: warning: unused variable ‘end’ [-Wunused-variable]
+  613 |       int start = indexofNodes.data[index], end = indexofNodes.data[index+1];
+      |                                             ^~~
+../mpi_header/graph_properties/edge_property/edge_property.cc: In member function ‘std::vector<std::vector<int> > EdgeProperty<T>::perform_reduction(MPI_Op)’:
+../mpi_header/graph_properties/edge_property/edge_property.cc:478:5: warning: no return statement in function returning non-void [-Wreturn-type]
+  478 |     }
+      |     ^
+../mpi_header/graph_properties/edge_property/edge_property.cc: In instantiation of ‘std::vector<std::vector<int> > EdgeProperty<T>::perform_reduction(MPI_Op) [with T = int; MPI_Op = ompi_op_t*]’:
+../mpi_header/graph_properties/edge_property/edge_property.cc:567:16:   required from here
+../mpi_header/graph_properties/edge_property/edge_property.cc:478:5: warning: no return statement in function returning non-void [-Wreturn-type]
+../mpi_header/graph_properties/edge_property/edge_property.cc: In instantiation of ‘std::vector<std::vector<int> > EdgeProperty<T>::perform_reduction(MPI_Op) [with T = bool; MPI_Op = ompi_op_t*]’:
+../mpi_header/graph_properties/edge_property/edge_property.cc:570:16:   required from here
+../mpi_header/graph_properties/edge_property/edge_property.cc:478:5: warning: no return statement in function returning non-void [-Wreturn-type]
+../mpi_header/data_constructs/container.cc: In instantiation of ‘void Container<T>::clear() [with T = int]’:
+../mpi_header/data_constructs/container.cc:246:16:   required from here
+../mpi_header/data_constructs/container.cc:126:3: warning: possible problem detected in invocation of delete [] operator: [-Wdelete-incomplete]
+  126 |   delete[] this->array ;
+      |   ^~~~~~
+../mpi_header/data_constructs/container.cc:126:18: warning: invalid use of incomplete type ‘struct ompi_win_t’
+  126 |   delete[] this->array ;
+      |            ~~~~~~^~~~~
+In file included from ../mpi_header/data_constructs/../../mpi_header/graph_properties/node_property/../property.h:7,
+                 from ../mpi_header/data_constructs/../../mpi_header/graph_properties/node_property/node_property.h:4,
+                 from ../mpi_header/data_constructs/data_constructs.h:4,
+                 from ../mpi_header/data_constructs/container.cc:1:
+/lfs/sware/openmpi411/include/mpi.h:429:16: note: forward declaration of ‘struct ompi_win_t’
+  429 | typedef struct ompi_win_t *MPI_Win;
+      |                ^~~~~~~~~~
+../mpi_header/data_constructs/container.cc:126:3: note: neither the destructor nor the class-specific operator delete [] will be called, even if they are declared when the class is defined
+  126 |   delete[] this->array ;
+      |   ^~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘int Container<T>::getValue(const int&, const int&) [with T = int]’:
+../mpi_header/data_constructs/container.cc:246:16:   required from here
+../mpi_header/data_constructs/container.cc:143:11: warning: unused variable ‘idx’ [-Wunused-variable]
+  143 |       int idx = sync_now.first ;
+      |           ^~~
+../mpi_header/data_constructs/container.cc:158:9: warning: unused variable ‘targetCount’ [-Wunused-variable]
+  158 |     int targetCount = this->calculateTargetCount(idx) ;
+      |         ^~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘void Container<T>::setValue(const int&, const int&, const int&) [with T = int]’:
+../mpi_header/data_constructs/container.cc:246:16:   required from here
+../mpi_header/data_constructs/container.cc:182:102: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  182 |       checkMPIComm (MPI_Win_lock (MPI_LOCK_EXCLUSIVE, targetRank, this->lockAssertion, this->array), "failed to acquire lock while setting value") ;
+      |                                                                                                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc:184:100: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  184 |       checkMPIComm (MPI_Put (&value, 1, MPI_INT, targetRank, targetDisp, 1, MPI_INT, this->array), "failed while assignment\n") ;
+      |                                                                                                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc:186:63: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  186 |       checkMPIComm (MPI_Win_unlock (targetRank, this->array), "failed to release lock") ;
+      |                                                               ^~~~~~~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc:179:9: warning: unused variable ‘targetCount’ [-Wunused-variable]
+  179 |     int targetCount = this->calculateTargetCount (idx) ;
+      |         ^~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘int Container<T>::getIdx(const int&) [with T = int]’:
+../mpi_header/data_constructs/container.cc:246:16:   required from here
+../mpi_header/data_constructs/container.cc:46:11: warning: unused variable ‘idx’ [-Wunused-variable]
+   46 |       int idx = sync_now.first ;
+      |           ^~~
+../mpi_header/data_constructs/container.cc:71:73: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   71 |     checkMPIComm(MPI_Allreduce (&idx, &idx, 1, MPI_INT, MPI_MIN, comm), "all reduce failed") ;
+      |                                                                         ^~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘void Container<T>::atomicAdd(const int&, const int&) [with T = int]’:
+../mpi_header/data_constructs/container.cc:246:16:   required from here
+../mpi_header/data_constructs/container.cc:195:9: warning: unused variable ‘targetCount’ [-Wunused-variable]
+  195 |     int targetCount = this->calculateTargetCount (idx) ;
+      |         ^~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘void Container<T>::clear() [with T = float]’:
+../mpi_header/data_constructs/container.cc:247:16:   required from here
+../mpi_header/data_constructs/container.cc:126:3: warning: possible problem detected in invocation of delete [] operator: [-Wdelete-incomplete]
+  126 |   delete[] this->array ;
+      |   ^~~~~~
+../mpi_header/data_constructs/container.cc:126:18: warning: invalid use of incomplete type ‘struct ompi_win_t’
+  126 |   delete[] this->array ;
+      |            ~~~~~~^~~~~
+In file included from ../mpi_header/data_constructs/../../mpi_header/graph_properties/node_property/../property.h:7,
+                 from ../mpi_header/data_constructs/../../mpi_header/graph_properties/node_property/node_property.h:4,
+                 from ../mpi_header/data_constructs/data_constructs.h:4,
+                 from ../mpi_header/data_constructs/container.cc:1:
+/lfs/sware/openmpi411/include/mpi.h:429:16: note: forward declaration of ‘struct ompi_win_t’
+  429 | typedef struct ompi_win_t *MPI_Win;
+      |                ^~~~~~~~~~
+../mpi_header/data_constructs/container.cc:126:3: note: neither the destructor nor the class-specific operator delete [] will be called, even if they are declared when the class is defined
+  126 |   delete[] this->array ;
+      |   ^~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘int Container<T>::getValue(const int&, const int&) [with T = float]’:
+../mpi_header/data_constructs/container.cc:247:16:   required from here
+../mpi_header/data_constructs/container.cc:143:11: warning: unused variable ‘idx’ [-Wunused-variable]
+  143 |       int idx = sync_now.first ;
+      |           ^~~
+../mpi_header/data_constructs/container.cc:158:9: warning: unused variable ‘targetCount’ [-Wunused-variable]
+  158 |     int targetCount = this->calculateTargetCount(idx) ;
+      |         ^~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘void Container<T>::setValue(const int&, const int&, const int&) [with T = float]’:
+../mpi_header/data_constructs/container.cc:247:16:   required from here
+../mpi_header/data_constructs/container.cc:182:102: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  182 |       checkMPIComm (MPI_Win_lock (MPI_LOCK_EXCLUSIVE, targetRank, this->lockAssertion, this->array), "failed to acquire lock while setting value") ;
+      |                                                                                                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc:184:100: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  184 |       checkMPIComm (MPI_Put (&value, 1, MPI_INT, targetRank, targetDisp, 1, MPI_INT, this->array), "failed while assignment\n") ;
+      |                                                                                                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc:186:63: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  186 |       checkMPIComm (MPI_Win_unlock (targetRank, this->array), "failed to release lock") ;
+      |                                                               ^~~~~~~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc:179:9: warning: unused variable ‘targetCount’ [-Wunused-variable]
+  179 |     int targetCount = this->calculateTargetCount (idx) ;
+      |         ^~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘int Container<T>::getIdx(const int&) [with T = float]’:
+../mpi_header/data_constructs/container.cc:247:16:   required from here
+../mpi_header/data_constructs/container.cc:46:11: warning: unused variable ‘idx’ [-Wunused-variable]
+   46 |       int idx = sync_now.first ;
+      |           ^~~
+../mpi_header/data_constructs/container.cc:71:73: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   71 |     checkMPIComm(MPI_Allreduce (&idx, &idx, 1, MPI_INT, MPI_MIN, comm), "all reduce failed") ;
+      |                                                                         ^~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘void Container<T>::atomicAdd(const int&, const int&) [with T = float]’:
+../mpi_header/data_constructs/container.cc:247:16:   required from here
+../mpi_header/data_constructs/container.cc:195:9: warning: unused variable ‘targetCount’ [-Wunused-variable]
+  195 |     int targetCount = this->calculateTargetCount (idx) ;
+      |         ^~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘void Container<T>::clear() [with T = double]’:
+../mpi_header/data_constructs/container.cc:248:16:   required from here
+../mpi_header/data_constructs/container.cc:126:3: warning: possible problem detected in invocation of delete [] operator: [-Wdelete-incomplete]
+  126 |   delete[] this->array ;
+      |   ^~~~~~
+../mpi_header/data_constructs/container.cc:126:18: warning: invalid use of incomplete type ‘struct ompi_win_t’
+  126 |   delete[] this->array ;
+      |            ~~~~~~^~~~~
+In file included from ../mpi_header/data_constructs/../../mpi_header/graph_properties/node_property/../property.h:7,
+                 from ../mpi_header/data_constructs/../../mpi_header/graph_properties/node_property/node_property.h:4,
+                 from ../mpi_header/data_constructs/data_constructs.h:4,
+                 from ../mpi_header/data_constructs/container.cc:1:
+/lfs/sware/openmpi411/include/mpi.h:429:16: note: forward declaration of ‘struct ompi_win_t’
+  429 | typedef struct ompi_win_t *MPI_Win;
+      |                ^~~~~~~~~~
+../mpi_header/data_constructs/container.cc:126:3: note: neither the destructor nor the class-specific operator delete [] will be called, even if they are declared when the class is defined
+  126 |   delete[] this->array ;
+      |   ^~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘int Container<T>::getValue(const int&, const int&) [with T = double]’:
+../mpi_header/data_constructs/container.cc:248:16:   required from here
+../mpi_header/data_constructs/container.cc:143:11: warning: unused variable ‘idx’ [-Wunused-variable]
+  143 |       int idx = sync_now.first ;
+      |           ^~~
+../mpi_header/data_constructs/container.cc:158:9: warning: unused variable ‘targetCount’ [-Wunused-variable]
+  158 |     int targetCount = this->calculateTargetCount(idx) ;
+      |         ^~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘void Container<T>::setValue(const int&, const int&, const int&) [with T = double]’:
+../mpi_header/data_constructs/container.cc:248:16:   required from here
+../mpi_header/data_constructs/container.cc:182:102: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  182 |       checkMPIComm (MPI_Win_lock (MPI_LOCK_EXCLUSIVE, targetRank, this->lockAssertion, this->array), "failed to acquire lock while setting value") ;
+      |                                                                                                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc:184:100: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  184 |       checkMPIComm (MPI_Put (&value, 1, MPI_INT, targetRank, targetDisp, 1, MPI_INT, this->array), "failed while assignment\n") ;
+      |                                                                                                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc:186:63: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  186 |       checkMPIComm (MPI_Win_unlock (targetRank, this->array), "failed to release lock") ;
+      |                                                               ^~~~~~~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc:179:9: warning: unused variable ‘targetCount’ [-Wunused-variable]
+  179 |     int targetCount = this->calculateTargetCount (idx) ;
+      |         ^~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘int Container<T>::getIdx(const int&) [with T = double]’:
+../mpi_header/data_constructs/container.cc:248:16:   required from here
+../mpi_header/data_constructs/container.cc:46:11: warning: unused variable ‘idx’ [-Wunused-variable]
+   46 |       int idx = sync_now.first ;
+      |           ^~~
+../mpi_header/data_constructs/container.cc:71:73: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   71 |     checkMPIComm(MPI_Allreduce (&idx, &idx, 1, MPI_INT, MPI_MIN, comm), "all reduce failed") ;
+      |                                                                         ^~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘void Container<T>::atomicAdd(const int&, const int&) [with T = double]’:
+../mpi_header/data_constructs/container.cc:248:16:   required from here
+../mpi_header/data_constructs/container.cc:195:9: warning: unused variable ‘targetCount’ [-Wunused-variable]
+  195 |     int targetCount = this->calculateTargetCount (idx) ;
+      |         ^~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘void Container<T>::clear() [with T = bool]’:
+../mpi_header/data_constructs/container.cc:249:16:   required from here
+../mpi_header/data_constructs/container.cc:126:3: warning: possible problem detected in invocation of delete [] operator: [-Wdelete-incomplete]
+  126 |   delete[] this->array ;
+      |   ^~~~~~
+../mpi_header/data_constructs/container.cc:126:18: warning: invalid use of incomplete type ‘struct ompi_win_t’
+  126 |   delete[] this->array ;
+      |            ~~~~~~^~~~~
+In file included from ../mpi_header/data_constructs/../../mpi_header/graph_properties/node_property/../property.h:7,
+                 from ../mpi_header/data_constructs/../../mpi_header/graph_properties/node_property/node_property.h:4,
+                 from ../mpi_header/data_constructs/data_constructs.h:4,
+                 from ../mpi_header/data_constructs/container.cc:1:
+/lfs/sware/openmpi411/include/mpi.h:429:16: note: forward declaration of ‘struct ompi_win_t’
+  429 | typedef struct ompi_win_t *MPI_Win;
+      |                ^~~~~~~~~~
+../mpi_header/data_constructs/container.cc:126:3: note: neither the destructor nor the class-specific operator delete [] will be called, even if they are declared when the class is defined
+  126 |   delete[] this->array ;
+      |   ^~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘int Container<T>::getValue(const int&, const int&) [with T = bool]’:
+../mpi_header/data_constructs/container.cc:249:16:   required from here
+../mpi_header/data_constructs/container.cc:143:11: warning: unused variable ‘idx’ [-Wunused-variable]
+  143 |       int idx = sync_now.first ;
+      |           ^~~
+../mpi_header/data_constructs/container.cc:158:9: warning: unused variable ‘targetCount’ [-Wunused-variable]
+  158 |     int targetCount = this->calculateTargetCount(idx) ;
+      |         ^~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘void Container<T>::setValue(const int&, const int&, const int&) [with T = bool]’:
+../mpi_header/data_constructs/container.cc:249:16:   required from here
+../mpi_header/data_constructs/container.cc:182:102: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  182 |       checkMPIComm (MPI_Win_lock (MPI_LOCK_EXCLUSIVE, targetRank, this->lockAssertion, this->array), "failed to acquire lock while setting value") ;
+      |                                                                                                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc:184:100: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  184 |       checkMPIComm (MPI_Put (&value, 1, MPI_INT, targetRank, targetDisp, 1, MPI_INT, this->array), "failed while assignment\n") ;
+      |                                                                                                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc:186:63: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+  186 |       checkMPIComm (MPI_Win_unlock (targetRank, this->array), "failed to release lock") ;
+      |                                                               ^~~~~~~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc:179:9: warning: unused variable ‘targetCount’ [-Wunused-variable]
+  179 |     int targetCount = this->calculateTargetCount (idx) ;
+      |         ^~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘int Container<T>::getIdx(const int&) [with T = bool]’:
+../mpi_header/data_constructs/container.cc:249:16:   required from here
+../mpi_header/data_constructs/container.cc:46:11: warning: unused variable ‘idx’ [-Wunused-variable]
+   46 |       int idx = sync_now.first ;
+      |           ^~~
+../mpi_header/data_constructs/container.cc:71:73: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   71 |     checkMPIComm(MPI_Allreduce (&idx, &idx, 1, MPI_INT, MPI_MIN, comm), "all reduce failed") ;
+      |                                                                         ^~~~~~~~~~~~~~~~~~~
+../mpi_header/data_constructs/container.cc: In instantiation of ‘void Container<T>::atomicAdd(const int&, const int&) [with T = bool]’:
+../mpi_header/data_constructs/container.cc:249:16:   required from here
+../mpi_header/data_constructs/container.cc:195:9: warning: unused variable ‘targetCount’ [-Wunused-variable]
+  195 |     int targetCount = this->calculateTargetCount (idx) ;
+      |         ^~~~~~~~~~~
+make: warning:  Clock skew detected.  Your build may be incomplete.
+/var/spool/pbs/mom_priv/jobs/1292958.hn1.SC: line 30: [0: command not found

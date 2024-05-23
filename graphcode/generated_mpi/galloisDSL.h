@@ -8,6 +8,6 @@
 #include<vector>
 #include"../mpi_header/graph_mpi.h"
 
-int maxFlow(Graph& g, int source, int sink, boost::mpi::communicator world );
+void maxFlow(Graph& g, int source, int sink, boost::mpi::communicator world );
 
 #endif

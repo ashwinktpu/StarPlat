@@ -59,37 +59,14 @@ std::vector<int*> synchronize (std::vector<std::vector<int> > &syncer, int packe
     return update_these ;
 } 
 
-std::vector<int*> synchronizeRMA (std::vector<std::vector<int> > &syncer, int packet_size) {
-  int p_no, size ;
-  MPI_Comm_rank (MPI_COMM_WORLD, &p_no) ;
-  MPI_Comm_size (MPI_COMM_WORLD, &size) ;
+std::vector<int* > synchronize_boost (std::vector<std::vector<int> > &syncer, int packet_size) {
+   boost::mpi::alltoall (syncer, syncer) ;
 
-  std::vector<int> outgoing (size, 0) ;
-  std::vector<int> incoming (size, 0) ;
-  for (auto &message:syncer) {
-    int to_process = message[1] ;
-    outgoing[to_proces] ++ ;
-  }
-  
-  for (int proc = 0 ; proc < size ; proc++) {
-    MPI_AllReduce (&outgoing[proc], incoming[proc], 1, MPI_INT, MPI_SUM, MPI_Comm_world) ;
-  }
-
-  int * frontierWindowBase = new int [incoming[p_no] + 1] ;
-
-  MPI_Win_attach (frontierWindow, frontierWindowBase ) ;
-  MPI_Barrier (MPI_Comm_world) ;
-
-  for (int i=0; i<size-1; i++) {
-    incoming[i+1] = incoming[i] + incoming[i+1] ;
-  }
-
-
-  MPI_Win_lock_all (0, frontierWindow) ;
-  for (auto &message:syncer) {
-    MPI_Accumulate (message.data(), packet_size, MPI_INT, to_process, incoming[) ; 
-  }
-  MPI_Win_unlock_all (frontierWindow) ;
-
+   for (auto &sync : syncer ) {
+      if (syncer[1] == p_no) {
+        // extract
+      }
+   }
 }
+
 #endif

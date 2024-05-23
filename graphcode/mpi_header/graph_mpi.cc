@@ -14,7 +14,7 @@ void freeAllUpdateMemory (std::vector<int*> updates) {
 	}
 }
 
-  bool Graph::frontier_empty (boost::mpi::communicator world) {
+  bool Graph::frontier_empty (/*boost::mpi::communicator world*/) {
     std::vector<int*> updates = synchronize(frontier_sync, 1) ;
     for (auto &update:updates) {
 	  assert (get_node_owner (update[0]) == world.rank ()) ;
@@ -28,7 +28,7 @@ void freeAllUpdateMemory (std::vector<int*> updates) {
     return x==world.size () ?true:false;
   }
 
-  int Graph::frontier_pop_local (boost::mpi::communicator world) {
+  int Graph::frontier_pop_local (/*boost::mpi::communicator world*/) {
     std::vector<int*> updates = synchronize(frontier_sync, 1) ;
     for (auto &update:updates) {
 	  assert (get_node_owner (update[0]) == world.rank ()) ;
@@ -46,7 +46,8 @@ void freeAllUpdateMemory (std::vector<int*> updates) {
     return popper  ;
   }
 
-  void Graph::frontier_push (int &u, boost::mpi::communicator world) {
+  void Graph::frontier_push (int &u/*, boost::mpi::communicator world*/) {
+    if (u == -1 ) return ;
     if (world.rank () == get_node_owner (u) ) {
 			frontier.insert (u) ;
     } else {
@@ -541,11 +542,13 @@ void freeAllUpdateMemory (std::vector<int*> updates) {
 
   int Graph::get_node_owner(int node)
   {
+    if (node == -1) return -1 ;
     return node/nodesPartitionSize;
   }
 
   int  Graph::get_node_local_index(int node)
   {
+    if (node == -1) return -1 ;
     return node%nodesPartitionSize;
   }
 

@@ -1,0 +1,76 @@
+In file included from push_relabel.dsl.cc:1:
+push_relabel.dsl.h:1:28: warning: extra tokens at end of #ifndef directive
+    1 | #ifndef GENCPP_PUSH_RELABEL.DSL_H
+      |                            ^
+push_relabel.dsl.h:2:9: warning: ISO C++11 requires whitespace after the macro name
+    2 | #define GENCPP_PUSH_RELABEL.DSL_H
+      |         ^~~~~~~~~~~~~~~~~~~
+In file included from ../mpi_header/graph_properties/node_property/node_property.h:5,
+                 from ../mpi_header/graph_mpi.h:16,
+                 from push_relabel.dsl.h:9:
+../mpi_header/graph_properties/node_property/../../rma_datatype/rma_datatype.h:5:10: fatal error: boost/mpi.hpp: No such file or directory
+    5 | #include <boost/mpi.hpp>
+      |          ^~~~~~~~~~~~~~~
+compilation terminated.
+push_relabel.dsl.h:1:28: warning: extra tokens at end of #ifndef directive
+    1 | #ifndef GENCPP_PUSH_RELABEL.DSL_H
+      |                            ^
+push_relabel.dsl.h:2:9: warning: ISO C++11 requires whitespace after the macro name
+    2 | #define GENCPP_PUSH_RELABEL.DSL_H
+      |         ^~~~~~~~~~~~~~~~~~~
+In file included from ../mpi_header/graph_properties/node_property/node_property.h:5,
+                 from ../mpi_header/graph_mpi.h:16,
+                 from push_relabel.dsl.h:9:
+../mpi_header/graph_properties/node_property/../../rma_datatype/rma_datatype.h:5:10: fatal error: boost/mpi.hpp: No such file or directory
+    5 | #include <boost/mpi.hpp>
+      |          ^~~~~~~~~~~~~~~
+compilation terminated.
+push_relabel.dsl.cc: In function ‘void push__(Graph&, int, int, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator)’:
+push_relabel.dsl.cc:8:11: error: ‘min’ was not declared in this scope; did you mean ‘std::min’?
+    8 |   int d = min(excess.getValue(u),residual_capacity.getValue(forward_edge), world);
+      |           ^~~
+      |           std::min
+In file included from /usr/include/c++/13.2.1/algorithm:61,
+                 from ../mpi_header/graph_mpi.h:10,
+                 from push_relabel.dsl.h:9:
+/usr/include/c++/13.2.1/bits/stl_algo.h:5785:5: note: ‘std::min’ declared here
+ 5785 |     min(initializer_list<_Tp> __l, _Compare __comp)
+      |     ^~~
+push_relabel.dsl.cc:9:18: error: lvalue required as left operand of assignment
+    9 |   excess.getValue(u) = excess.getValue(u)- d;
+      |   ~~~~~~~~~~~~~~~^~~
+push_relabel.dsl.cc:10:18: error: lvalue required as left operand of assignment
+   10 |   excess.getValue(v) = excess.getValue(v)+ d;
+      |   ~~~~~~~~~~~~~~~^~~
+push_relabel.dsl.cc:11:29: error: lvalue required as left operand of assignment
+   11 |   residual_capacity.getValue(forward_edge) = residual_capacity.getValue(forward_edge)- d;
+      |   ~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~
+push_relabel.dsl.cc:12:29: error: lvalue required as left operand of assignment
+   12 |   residual_capacity.getValue(backward_edge) = residual_capacity.getValue(backward_edge)+ d;
+      |   ~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~
+push_relabel.dsl.cc:13:3: error: ‘push_into_queue’ was not declared in this scope
+   13 |   push_into_queue(v, world);
+      |   ^~~~~~~~~~~~~~~
+push_relabel.dsl.cc: In function ‘void relabel(Graph&, int, EdgeProperty<int>&, NodeProperty<int>&, boost::mpi::communicator)’:
+push_relabel.dsl.cc:28:19: error: ‘max’ was not declared in this scope; did you mean ‘std::max’?
+   28 |       new_label = max(new_label,v, world);
+      |                   ^~~
+      |                   std::max
+/usr/include/c++/13.2.1/bits/stl_algo.h:5805:5: note: ‘std::max’ declared here
+ 5805 |     max(initializer_list<_Tp> __l, _Compare __comp)
+      |     ^~~
+push_relabel.dsl.cc: In function ‘void discharge(Graph&, int, NodeProperty<int>&, NodeProperty<int>&, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator)’:
+push_relabel.dsl.cc:51:20: error: cannot convert ‘NodeProperty<int>’ to ‘int’
+   51 |         push__(g,u,excess,residue, world);
+      |                    ^~~~~~
+      |                    |
+      |                    NodeProperty<int>
+push_relabel.dsl.cc:3:34: note:   initializing argument 3 of ‘void push__(Graph&, int, int, NodeProperty<int>&, EdgeProperty<int>&, boost::mpi::communicator)’
+    3 | void push__(Graph& g, int u, int v, NodeProperty<int>& excess,
+      |                              ~~~~^
+push_relabel.dsl.h:1:28: warning: extra tokens at end of #ifndef directive
+    1 | #ifndef GENCPP_PUSH_RELABEL.DSL_H
+      |                            ^
+push_relabel.dsl.h:2:9: warning: ISO C++11 requires whitespace after the macro name
+    2 | #define GENCPP_PUSH_RELABEL.DSL_H
+      |         ^~~~~~~~~~~~~~~~~~~

@@ -1,0 +1,30 @@
+DEBUG: anupDslAnalysis.cc:69:do_max_flow(): count down to kernel shut down : 99
+DEBUG: ../mpi_header/graph_mpi.cc:76:frontier_push(): pushed 2 into frontier
+DEBUG: anupDslAnalysis.cc:69:do_max_flow(): count down to kernel shut down : 99
+DEBUG: ../mpi_header/graph_mpi.cc:76:frontier_push(): pushed 5 into frontier
+DEBUG: ../mpi_header/graph_mpi.cc:76:frontier_push(): pushed 6 into frontier
+DEBUG: ../mpi_header/graph_mpi.cc:76:frontier_push(): pushed 8 into frontier
+DEBUG: ../mpi_header/graph_mpi.cc:45:frontier_empty(): 8 rank = 1
+DEBUG: ../mpi_header/graph_mpi.cc:45:frontier_empty(): 5 rank = 1
+DEBUG: ../mpi_header/graph_mpi.cc:45:frontier_empty(): 6 rank = 1
+DEBUG: ../mpi_header/graph_mpi.cc:65:frontier_pop_local(): removed 8 from frontier
+DEBUG: ../mpi_header/graph_mpi.cc:45:frontier_empty(): 2 rank = 0
+DEBUG: ../mpi_header/graph_mpi.cc:65:frontier_pop_local(): removed 2 from frontier
+DEBUG: anupDslAnalysis.cc:85:do_max_flow(): Discharging 2 with excess 52 at height 0  
+DEBUG: anupDslAnalysis.cc:93:do_max_flow(): Trying 0 in neighborhood of 2 at height 10 residual_graph 52
+DEBUG: anupDslAnalysis.cc:85:do_max_flow(): Discharging 8 with excess 60 at height 0  
+DEBUG: anupDslAnalysis.cc:114:do_max_flow(): Could not find anywhere to push 2, relabeling to 10 + 1
+DEBUG: anupDslAnalysis.cc:93:do_max_flow(): Trying 0 in neighborhood of 8 at height 10 residual_graph 60
+DEBUG: anupDslAnalysis.cc:114:do_max_flow(): Could not find anywhere to push 8, relabeling to 10 + 1
+DEBUG: anupDslAnalysis.cc:93:do_max_flow(): Trying 5 in neighborhood of 2 at height 0 residual_graph 53
+DEBUG: anupDslAnalysis.cc:93:do_max_flow(): Trying 1 in neighborhood of 8 at height 0 residual_graph 60
+DEBUG: anupDslAnalysis.cc:114:do_max_flow(): Could not find anywhere to push 2, relabeling to 0 + 1
+DEBUG: anupDslAnalysis.cc:114:do_max_flow(): Could not find anywhere to push 8, relabeling to 0 + 1
+DEBUG: anupDslAnalysis.cc:120:do_max_flow(): 2 is pushing 5 into frontier
+DEBUG: ../mpi_header/graph_mpi.cc:76:frontier_push(): pushed 5 into frontier
+DEBUG: anupDslAnalysis.cc:93:do_max_flow(): Trying 7 in neighborhood of 2 at height 0 residual_graph 0
+DEBUG: anupDslAnalysis.cc:93:do_max_flow(): Trying 4 in neighborhood of 8 at height 0 residual_graph 76
+DEBUG: anupDslAnalysis.cc:114:do_max_flow(): Could not find anywhere to push 8, relabeling to 0 + 1
+DEBUG: anupDslAnalysis.cc:93:do_max_flow(): Trying 9 in neighborhood of 2 at height 0 residual_graph 0
+DEBUG: anupDslAnalysis.cc:127:do_max_flow(): Got out od the while loop
+DEBUG: anupDslAnalysis.cc:132:do_max_flow(): Relabeling 8 from 0 to 1

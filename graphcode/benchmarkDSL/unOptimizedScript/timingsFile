@@ -1,0 +1,620 @@
+size of fize = 100
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+start node = 0 and end node = 4
+graph ready
+start node = 5 and end node = 9
+graph ready
+start node = 10 and end node = 14
+graph ready
+start node = 15 and end node = 19
+graph ready
+start node = 20 and end node = 24
+graph ready
+start node = 25 and end node = 29
+graph ready
+start node = 30 and end node = 34
+graph ready
+start node = 35 and end node = 39
+graph ready
+start node = 40 and end node = 44
+graph ready
+start node = 45 and end node = 49
+graph ready
+start node = 50 and end node = 54
+graph ready
+start node = 55 and end node = 59
+graph ready
+start node = 60 and end node = 64
+graph ready
+start node = 65 and end node = 69
+graph ready
+start node = 70 and end node = 74
+graph ready
+start node = 75 and end node = 79
+graph ready
+start node = 80 and end node = 84
+graph ready
+start node = 85 and end node = 89
+graph ready
+start node = 90 and end node = 94
+graph ready
+start node = 95 and end node = 99
+graph ready
+time taken = 0.784611
+size of fize = 200
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+start node = 0 and end node = 9
+graph ready
+start node = 10 and end node = 19
+graph ready
+start node = 20 and end node = 29
+graph ready
+start node = 30 and end node = 39
+graph ready
+start node = 40 and end node = 49
+graph ready
+start node = 50 and end node = 59
+graph ready
+start node = 60 and end node = 69
+graph ready
+start node = 70 and end node = 79
+graph ready
+start node = 80 and end node = 89
+graph ready
+start node = 90 and end node = 99
+graph ready
+start node = 100 and end node = 109
+graph ready
+start node = 110 and end node = 119
+graph ready
+start node = 120 and end node = 129
+graph ready
+start node = 130 and end node = 139
+graph ready
+start node = 140 and end node = 149
+graph ready
+start node = 150 and end node = 159
+graph ready
+start node = 160 and end node = 169
+graph ready
+start node = 170 and end node = 179
+graph ready
+start node = 180 and end node = 189
+graph ready
+start node = 190 and end node = 199
+graph ready
+time taken = 6.486569
+size of fize = 300
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+start node = 0 and end node = 14
+graph ready
+start node = 15 and end node = 29
+graph ready
+start node = 30 and end node = 44
+graph ready
+start node = 45 and end node = 59
+graph ready
+start node = 60 and end node = 74
+graph ready
+start node = 75 and end node = 89
+graph ready
+start node = 90 and end node = 104
+graph ready
+start node = 105 and end node = 119
+graph ready
+start node = 120 and end node = 134
+graph ready
+start node = 135 and end node = 149
+graph ready
+start node = 150 and end node = 164
+graph ready
+start node = 165 and end node = 179
+graph ready
+start node = 180 and end node = 194
+graph ready
+start node = 195 and end node = 209
+graph ready
+start node = 210 and end node = 224
+graph ready
+start node = 225 and end node = 239
+graph ready
+start node = 240 and end node = 254
+graph ready
+start node = 255 and end node = 269
+graph ready
+start node = 270 and end node = 284
+graph ready
+start node = 285 and end node = 299
+graph ready
+time taken = 25.860532
+size of fize = 400
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+start node = 0 and end node = 19
+graph ready
+start node = 20 and end node = 39
+graph ready
+start node = 40 and end node = 59
+graph ready
+start node = 60 and end node = 79
+graph ready
+start node = 80 and end node = 99
+graph ready
+start node = 100 and end node = 119
+graph ready
+start node = 120 and end node = 139
+graph ready
+start node = 140 and end node = 159
+graph ready
+start node = 160 and end node = 179
+graph ready
+start node = 180 and end node = 199
+graph ready
+start node = 200 and end node = 219
+graph ready
+start node = 220 and end node = 239
+graph ready
+start node = 240 and end node = 259
+graph ready
+start node = 260 and end node = 279
+graph ready
+start node = 280 and end node = 299
+graph ready
+start node = 300 and end node = 319
+graph ready
+start node = 320 and end node = 339
+graph ready
+start node = 340 and end node = 359
+graph ready
+start node = 360 and end node = 379
+graph ready
+start node = 380 and end node = 399
+graph ready
+time taken = 0.414637
+size of fize = 500
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+start node = 0 and end node = 24
+graph ready
+start node = 25 and end node = 49
+graph ready
+start node = 50 and end node = 74
+graph ready
+start node = 75 and end node = 99
+graph ready
+start node = 100 and end node = 124
+graph ready
+start node = 125 and end node = 149
+graph ready
+start node = 150 and end node = 174
+graph ready
+start node = 175 and end node = 199
+graph ready
+start node = 200 and end node = 224
+graph ready
+start node = 225 and end node = 249
+graph ready
+start node = 250 and end node = 274
+graph ready
+start node = 275 and end node = 299
+graph ready
+start node = 300 and end node = 324
+graph ready
+start node = 325 and end node = 349
+graph ready
+start node = 350 and end node = 374
+graph ready
+start node = 375 and end node = 399
+graph ready
+start node = 400 and end node = 424
+graph ready
+start node = 425 and end node = 449
+graph ready
+start node = 450 and end node = 474
+graph ready
+start node = 475 and end node = 499
+graph ready
+time taken = 119.965977
+size of fize = 600
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+start node = 0 and end node = 29
+graph ready
+start node = 30 and end node = 59
+graph ready
+start node = 60 and end node = 89
+graph ready
+start node = 570 and end node = 599
+graph ready
+start node = 90 and end node = 119
+graph ready
+start node = 150 and end node = 179
+graph ready
+start node = 180 and end node = 209
+graph ready
+start node = 210 and end node = 239
+graph ready
+start node = 240 and end node = 269
+graph ready
+start node = 270 and end node = 299
+graph ready
+start node = 300 and end node = 329
+graph ready
+start node = 330 and end node = 359
+graph ready
+start node = 360 and end node = 389
+graph ready
+start node = 390 and end node = 419
+graph ready
+start node = 420 and end node = 449
+graph ready
+start node = 450 and end node = 479
+graph ready
+start node = 480 and end node = 509
+graph ready
+start node = 510 and end node = 539
+graph ready
+start node = 540 and end node = 569
+graph ready
+start node = 120 and end node = 149
+graph ready
+time taken = 176.567137
+size of fize = 700
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+start node = 0 and end node = 34
+start node = 35 and end node = 69
+start node = 70 and end node = 104
+start node = 105 and end node = 139
+start node = 140 and end node = 174
+start node = 175 and end node = 209
+start node = 210 and end node = 244
+start node = 245 and end node = 279
+start node = 280 and end node = 314
+start node = 315 and end node = 349
+start node = 350 and end node = 384
+start node = 385 and end node = 419
+start node = 420 and end node = 454
+start node = 455 and end node = 489
+start node = 490 and end node = 524
+start node = 525 and end node = 559
+start node = 560 and end node = 594
+start node = 595 and end node = 629
+start node = 630 and end node = 664
+start node = 665 and end node = 699
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+time taken = 256.849938
+size of fize = 800
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+start node = 0 and end node = 39
+start node = 40 and end node = 79
+start node = 80 and end node = 119
+start node = 120 and end node = 159
+start node = 160 and end node = 199
+start node = 200 and end node = 239
+start node = 240 and end node = 279
+start node = 280 and end node = 319
+start node = 320 and end node = 359
+start node = 360 and end node = 399
+start node = 400 and end node = 439
+start node = 440 and end node = 479
+start node = 480 and end node = 519
+start node = 520 and end node = 559
+start node = 560 and end node = 599
+start node = 600 and end node = 639
+start node = 640 and end node = 679
+start node = 680 and end node = 719
+start node = 720 and end node = 759
+start node = 760 and end node = 799
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+time taken = 329.231315
+size of fize = 900
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+start node = 855 and end node = 899
+start node = 45 and end node = 89
+start node = 90 and end node = 134
+start node = 135 and end node = 179
+start node = 180 and end node = 224
+start node = 225 and end node = 269
+start node = 270 and end node = 314
+start node = 315 and end node = 359
+start node = 360 and end node = 404
+start node = 405 and end node = 449
+start node = 450 and end node = 494
+start node = 495 and end node = 539
+start node = 540 and end node = 584
+start node = 585 and end node = 629
+start node = 630 and end node = 674
+start node = 675 and end node = 719
+start node = 720 and end node = 764
+start node = 765 and end node = 809
+start node = 810 and end node = 854
+start node = 0 and end node = 44
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+time taken = 456.735290
+size of fize = 1000
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+start node = 0 and end node = 49
+start node = 50 and end node = 99
+start node = 100 and end node = 149
+start node = 150 and end node = 199
+start node = 200 and end node = 249
+start node = 250 and end node = 299
+start node = 300 and end node = 349
+start node = 350 and end node = 399
+start node = 400 and end node = 449
+start node = 450 and end node = 499
+start node = 500 and end node = 549
+start node = 550 and end node = 599
+start node = 600 and end node = 649
+start node = 650 and end node = 699
+start node = 700 and end node = 749
+start node = 750 and end node = 799
+start node = 800 and end node = 849
+start node = 850 and end node = 899
+start node = 900 and end node = 949
+start node = 950 and end node = 999
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+time taken = 601.138702

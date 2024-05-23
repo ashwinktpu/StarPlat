@@ -1,0 +1,58 @@
+make: Warning: File `Makefile' has modification time 2494 s in the future
+In file included from ../exp_mpi_header/graph_properties/node_property/node_property.h:5,
+                 from ../exp_mpi_header/graph_mpi.h:17,
+                 from galloisDSL.h:9,
+                 from galloisDSL.cc:1:
+../exp_mpi_header/graph_properties/node_property/../../rma_datatype/rma_datatype.h:5:10: fatal error: boost/mpi.hpp: No such file or directory
+    5 | #include <boost/mpi.hpp>
+      |          ^~~~~~~~~~~~~~~
+compilation terminated.
+In file included from ../exp_mpi_header/graph_properties/node_property/node_property.h:5,
+                 from ../exp_mpi_header/graph_mpi.h:17,
+                 from ../exp_mpi_header/graph_mpi.cc:1:
+../exp_mpi_header/graph_properties/node_property/../../rma_datatype/rma_datatype.h:5:10: fatal error: boost/mpi.hpp: No such file or directory
+    5 | #include <boost/mpi.hpp>
+      |          ^~~~~~~~~~~~~~~
+compilation terminated.
+In file included from ../exp_mpi_header/updates.cc:1:
+../exp_mpi_header/updates.h:7:10: fatal error: boost/mpi.hpp: No such file or directory
+    7 | #include <boost/mpi.hpp>
+      |          ^~~~~~~~~~~~~~~
+compilation terminated.
+In file included from ../exp_mpi_header/graph_properties/node_property/node_property.h:5,
+                 from ../exp_mpi_header/graph_properties/node_property/node_property.cc:1:
+../exp_mpi_header/graph_properties/node_property/../../rma_datatype/rma_datatype.h:5:10: fatal error: boost/mpi.hpp: No such file or directory
+    5 | #include <boost/mpi.hpp>
+      |          ^~~~~~~~~~~~~~~
+compilation terminated.
+In file included from ../exp_mpi_header/graph_properties/edge_property/edge_property.h:6,
+                 from ../exp_mpi_header/graph_properties/edge_property/edge_property.cc:1:
+../exp_mpi_header/graph_properties/edge_property/../../rma_datatype/rma_datatype.h:5:10: fatal error: boost/mpi.hpp: No such file or directory
+    5 | #include <boost/mpi.hpp>
+      |          ^~~~~~~~~~~~~~~
+compilation terminated.
+In file included from ../exp_mpi_header/rma_datatype/rma_datatype.cc:1:
+../exp_mpi_header/rma_datatype/rma_datatype.h:5:10: fatal error: boost/mpi.hpp: No such file or directory
+    5 | #include <boost/mpi.hpp>
+      |          ^~~~~~~~~~~~~~~
+compilation terminated.
+In file included from ../exp_mpi_header/data_constructs/../../exp_mpi_header/graph_properties/node_property/node_property.h:5,
+                 from ../exp_mpi_header/data_constructs/data_constructs.h:4,
+                 from ../exp_mpi_header/data_constructs/container.cc:1:
+../exp_mpi_header/data_constructs/../../exp_mpi_header/graph_properties/node_property/../../rma_datatype/rma_datatype.h:5:10: fatal error: boost/mpi.hpp: No such file or directory
+    5 | #include <boost/mpi.hpp>
+      |          ^~~~~~~~~~~~~~~
+compilation terminated.
+../exp_mpi_header/metisReader/csrConverter.cc: In member function ‘void csrConverter::convert()’:
+../exp_mpi_header/metisReader/csrConverter.cc:96:11: warning: unused variable ‘r’ [-Wunused-variable]
+   96 |       int r = revEdgeDetails[4] ; // process rank where v resides.
+      |           ^
+In file included from ../exp_mpi_header/graph_properties/node_property/node_property.h:5,
+                 from ../exp_mpi_header/graph_mpi.h:17,
+                 from main.cc:1:
+../exp_mpi_header/graph_properties/node_property/../../rma_datatype/rma_datatype.h:5:10: fatal error: boost/mpi.hpp: No such file or directory
+    5 | #include <boost/mpi.hpp>
+      |          ^~~~~~~~~~~~~~~
+compilation terminated.
+make: *** [galloisDSL.out] Error 1
+/var/spool/pbs/mom_priv/jobs/1300810.hn1.SC: line 63: /lfs/sware/openmpi411/bin/mpiruni: No such file or directory

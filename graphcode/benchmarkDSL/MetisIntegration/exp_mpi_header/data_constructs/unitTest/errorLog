@@ -1,0 +1,124 @@
+mpic++ -std=c++17 -Wall -o testForContainer readFile.cc ../container.cc testForContainer.o
+readFile.cc: In function ‘void writeFile(char*, std::vector<int>)’:
+readFile.cc:15:16: warning: unused variable ‘res’ [-Wunused-variable]
+   15 |     for (auto &res:result) {
+      |                ^~~
+readFile.cc:14:12: warning: unused variable ‘output’ [-Wunused-variable]
+   14 |     FILE * output = fopen (fileName, "r") ;
+      |            ^~~~~~
+../container.cc:12:14: error: expected initializer before ‘<’ token
+   12 | void Contaner<T>::assign (const int &size, const int &initVal, MPI_Comm comm) {
+      |              ^
+../container.cc: In member function ‘void Container<T>::clear()’:
+../container.cc:55:25: error: cannot convert ‘MPI_Win’ {aka ‘ompi_win_t*’} to ‘ompi_win_t**’
+   55 |     MPI_Win_free (this->array) ;
+      |                   ~~~~~~^~~~~
+      |                         |
+      |                         MPI_Win {aka ompi_win_t*}
+In file included from ../data_constructs.h:8,
+                 from ../container.cc:1:
+/usr/include/mpi.h:1955:42: note:   initializing argument 1 of ‘int MPI_Win_free(ompi_win_t**)’
+ 1955 | OMPI_DECLSPEC  int MPI_Win_free(MPI_Win *win);
+      |                                 ~~~~~~~~~^~~
+../container.cc: In member function ‘T& Container<T>::getValue(const int&)’:
+../container.cc:62:13: error: invalid operands of types ‘<unresolved overloaded function type>’ and ‘int’ to binary ‘operator>=’
+   62 |     if(index>= this->globalSize)
+      |        ~~~~~^~~~~~~~~~~~~~~~~~~
+../container.cc:70:30: error: ‘SHARED’ was not declared in this scope
+   70 |     mpiAssert (MPI_Win_lock (SHARED, this->rank, lockAssertion, &this->array), "failed to acquire lock") ;
+      |                              ^~~~~~
+../container.cc:71:51: error: ‘targetRank’ was not declared in this scope
+   71 |     mpiAssert (MPI_Get (&actualValue, 1, MPI_INT, targetRank, targetDisp, targetSize, MPI_INT, &this->array), "MPI Get failed while [] operation")  ;
+      |                                                   ^~~~~~~~~~
+../container.cc:71:63: error: ‘targetDisp’ was not declared in this scope
+   71 |     mpiAssert (MPI_Get (&actualValue, 1, MPI_INT, targetRank, targetDisp, targetSize, MPI_INT, &this->array), "MPI Get failed while [] operation")  ;
+      |                                                               ^~~~~~~~~~
+../container.cc:71:75: error: ‘targetSize’ was not declared in this scope
+   71 |     mpiAssert (MPI_Get (&actualValue, 1, MPI_INT, targetRank, targetDisp, targetSize, MPI_INT, &this->array), "MPI Get failed while [] operation")  ;
+      |                                                                           ^~~~~~~~~~
+../container.cc:72:44: error: cannot convert ‘ompi_win_t**’ to ‘MPI_Win’ {aka ‘ompi_win_t*’}
+   72 |     mpiAssert (MPI_Win_unlock (this->rank, &this->array), "failed to release lock") ;
+      |                                            ^~~~~~~~~~~~
+      |                                            |
+      |                                            ompi_win_t**
+/usr/include/mpi.h:1974:53: note:   initializing argument 2 of ‘int MPI_Win_unlock(int, MPI_Win)’
+ 1974 | OMPI_DECLSPEC  int MPI_Win_unlock(int rank, MPI_Win win);
+      |                                             ~~~~~~~~^~~
+../container.cc: At global scope:
+../container.cc:77:16: error: ‘T’ was not declared in this scope
+   77 | void Container<T>::setValue(const int &idx, const int &value) {
+      |                ^
+../container.cc:77:17: error: template argument 1 is invalid
+   77 | void Container<T>::setValue(const int &idx, const int &value) {
+      |                 ^
+../container.cc: In function ‘void setValue(const int&, const int&)’:
+../container.cc:79:30: error: ‘SHARED’ was not declared in this scope
+   79 |     mpiAssert (MPI_Win_lock (SHARED, this->rank, this->lockAssertion, &this->array), "failed to acquire lock while setting value") ;
+      |                              ^~~~~~
+../container.cc:79:38: error: invalid use of ‘this’ in non-member function
+   79 |     mpiAssert (MPI_Win_lock (SHARED, this->rank, this->lockAssertion, &this->array), "failed to acquire lock while setting value") ;
+      |                                      ^~~~
+../container.cc:79:50: error: invalid use of ‘this’ in non-member function
+   79 |     mpiAssert (MPI_Win_lock (SHARED, this->rank, this->lockAssertion, &this->array), "failed to acquire lock while setting value") ;
+      |                                                  ^~~~
+../container.cc:79:72: error: invalid use of ‘this’ in non-member function
+   79 |     mpiAssert (MPI_Win_lock (SHARED, this->rank, this->lockAssertion, &this->array), "failed to acquire lock while setting value") ;
+      |                                                                        ^~~~
+../container.cc:80:45: error: ‘targetRank’ was not declared in this scope
+   80 |     mpiAssert (MPI_Put (&value, 1, MPI_INT, targetRank, targetDisp, targetCount, MPI_INT, &this->array), "failed while assignment\n") ;
+      |                                             ^~~~~~~~~~
+../container.cc:80:57: error: ‘targetDisp’ was not declared in this scope
+   80 |     mpiAssert (MPI_Put (&value, 1, MPI_INT, targetRank, targetDisp, targetCount, MPI_INT, &this->array), "failed while assignment\n") ;
+      |                                                         ^~~~~~~~~~
+../container.cc:80:69: error: ‘targetCount’ was not declared in this scope
+   80 |     mpiAssert (MPI_Put (&value, 1, MPI_INT, targetRank, targetDisp, targetCount, MPI_INT, &this->array), "failed while assignment\n") ;
+      |                                                                     ^~~~~~~~~~~
+../container.cc:80:92: error: invalid use of ‘this’ in non-member function
+   80 |     mpiAssert (MPI_Put (&value, 1, MPI_INT, targetRank, targetDisp, targetCount, MPI_INT, &this->array), "failed while assignment\n") ;
+      |                                                                                            ^~~~
+../container.cc:81:32: error: invalid use of ‘this’ in non-member function
+   81 |     mpiAssert (MPI_Win_unlock (this->rank, &this->array) ;
+      |                                ^~~~
+../container.cc:81:45: error: invalid use of ‘this’ in non-member function
+   81 |     mpiAssert (MPI_Win_unlock (this->rank, &this->array) ;
+      |                                             ^~~~
+../container.cc: In member function ‘void Container<T>::sync_assignments()’:
+../container.cc:101:19: error: too few arguments to function ‘int MPI_Win_flush(int, MPI_Win)’
+  101 |     MPI_Win_flush (&this->array) ; // Synchronize the window.
+      |     ~~~~~~~~~~~~~~^~~~~~~~~~~~~~
+/usr/include/mpi.h:1951:20: note: declared here
+ 1951 | OMPI_DECLSPEC  int MPI_Win_flush(int rank, MPI_Win win);
+      |                    ^~~~~~~~~~~~~
+../container.cc: In instantiation of ‘T& Container<T>::getValue(const int&) [with T = int]’:
+../container.cc:105:16:   required from here
+../container.cc:74:12: warning: reference to local variable ‘actualValue’ returned [-Wreturn-local-addr]
+   74 |     return actualValue ;
+      |            ^~~~~~~~~~~
+../container.cc:68:7: note: declared here
+   68 |     T actualValue ;
+      |       ^~~~~~~~~~~
+../container.cc: In instantiation of ‘T& Container<T>::getValue(const int&) [with T = float]’:
+../container.cc:106:16:   required from here
+../container.cc:74:12: warning: reference to local variable ‘actualValue’ returned [-Wreturn-local-addr]
+   74 |     return actualValue ;
+      |            ^~~~~~~~~~~
+../container.cc:68:7: note: declared here
+   68 |     T actualValue ;
+      |       ^~~~~~~~~~~
+../container.cc: In instantiation of ‘T& Container<T>::getValue(const int&) [with T = double]’:
+../container.cc:107:16:   required from here
+../container.cc:74:12: warning: reference to local variable ‘actualValue’ returned [-Wreturn-local-addr]
+   74 |     return actualValue ;
+      |            ^~~~~~~~~~~
+../container.cc:68:7: note: declared here
+   68 |     T actualValue ;
+      |       ^~~~~~~~~~~
+../container.cc: In instantiation of ‘T& Container<T>::getValue(const int&) [with T = bool]’:
+../container.cc:108:16:   required from here
+../container.cc:74:12: warning: reference to local variable ‘actualValue’ returned [-Wreturn-local-addr]
+   74 |     return actualValue ;
+      |            ^~~~~~~~~~~
+../container.cc:68:7: note: declared here
+   68 |     T actualValue ;
+      |       ^~~~~~~~~~~
+make: *** [makefile:22: testForContainer] Error 1

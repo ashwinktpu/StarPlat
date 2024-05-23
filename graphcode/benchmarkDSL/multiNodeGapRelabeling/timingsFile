@@ -1,0 +1,1150 @@
+size of fize = 100
+20 total processes failed to start
+size of fize = 200
+20 total processes failed to start
+size of fize = 300
+20 total processes failed to start
+size of fize = 400
+20 total processes failed to start
+size of fize = 500
+20 total processes failed to start
+size of fize = 600
+20 total processes failed to start
+size of fize = 700
+20 total processes failed to start
+size of fize = 800
+20 total processes failed to start
+size of fize = 900
+20 total processes failed to start
+size of fize = 1000
+20 total processes failed to start
+size of fize = 100
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+start node = 0 and end node = 4
+graph ready
+start node = 5 and end node = 9
+graph ready
+start node = 10 and end node = 14
+graph ready
+start node = 15 and end node = 19
+graph ready
+start node = 20 and end node = 24
+graph ready
+start node = 25 and end node = 29
+graph ready
+start node = 30 and end node = 34
+graph ready
+start node = 35 and end node = 39
+graph ready
+start node = 40 and end node = 44
+graph ready
+start node = 45 and end node = 49
+graph ready
+start node = 50 and end node = 54
+graph ready
+start node = 55 and end node = 59
+graph ready
+start node = 60 and end node = 64
+graph ready
+start node = 65 and end node = 69
+graph ready
+start node = 70 and end node = 74
+graph ready
+start node = 75 and end node = 79
+graph ready
+start node = 80 and end node = 84
+graph ready
+start node = 85 and end node = 89
+graph ready
+start node = 90 and end node = 94
+graph ready
+start node = 95 and end node = 99
+graph ready
+size of fize = 200
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+start node = 0 and end node = 9
+graph ready
+start node = 10 and end node = 19
+graph ready
+start node = 20 and end node = 29
+graph ready
+start node = 30 and end node = 39
+graph ready
+start node = 40 and end node = 49
+graph ready
+start node = 50 and end node = 59
+graph ready
+start node = 60 and end node = 69
+graph ready
+start node = 190 and end node = 199
+graph ready
+start node = 70 and end node = 79
+graph ready
+start node = 90 and end node = 99
+graph ready
+start node = 100 and end node = 109
+graph ready
+start node = 110 and end node = 119
+graph ready
+start node = 120 and end node = 129
+graph ready
+start node = 130 and end node = 139
+graph ready
+start node = 140 and end node = 149
+graph ready
+start node = 150 and end node = 159
+graph ready
+start node = 160 and end node = 169
+graph ready
+start node = 170 and end node = 179
+graph ready
+start node = 180 and end node = 189
+graph ready
+start node = 80 and end node = 89
+graph ready
+size of fize = 300
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+start node = 0 and end node = 14
+graph ready
+start node = 15 and end node = 29
+graph ready
+start node = 30 and end node = 44
+graph ready
+start node = 45 and end node = 59
+graph ready
+start node = 60 and end node = 74
+graph ready
+start node = 75 and end node = 89
+graph ready
+start node = 90 and end node = 104
+graph ready
+start node = 105 and end node = 119
+graph ready
+start node = 120 and end node = 134
+graph ready
+start node = 135 and end node = 149
+graph ready
+start node = 150 and end node = 164
+graph ready
+start node = 165 and end node = 179
+graph ready
+start node = 180 and end node = 194
+graph ready
+start node = 285 and end node = 299
+graph ready
+start node = 195 and end node = 209
+graph ready
+start node = 225 and end node = 239
+graph ready
+start node = 240 and end node = 254
+graph ready
+start node = 255 and end node = 269
+graph ready
+start node = 270 and end node = 284
+graph ready
+start node = 210 and end node = 224
+graph ready
+size of fize = 400
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+start node = 0 and end node = 19
+graph ready
+start node = 20 and end node = 39
+graph ready
+start node = 40 and end node = 59
+graph ready
+start node = 60 and end node = 79
+graph ready
+start node = 80 and end node = 99
+graph ready
+start node = 100 and end node = 119
+graph ready
+start node = 120 and end node = 139
+graph ready
+start node = 140 and end node = 159
+graph ready
+start node = 160 and end node = 179
+graph ready
+start node = 180 and end node = 199
+graph ready
+start node = 200 and end node = 219
+graph ready
+start node = 220 and end node = 239
+graph ready
+start node = 240 and end node = 259
+graph ready
+start node = 260 and end node = 279
+graph ready
+start node = 280 and end node = 299
+graph ready
+start node = 300 and end node = 319
+graph ready
+start node = 320 and end node = 339
+graph ready
+start node = 340 and end node = 359
+graph ready
+start node = 360 and end node = 379
+graph ready
+start node = 380 and end node = 399
+graph ready
+time taken = 0.718876
+time taken = 0.718866
+time taken = 0.718860
+time taken = 0.718876
+time taken = 0.718835
+time taken = 0.718857
+time taken = 0.718893
+time taken = 0.718866
+time taken = 0.718829
+time taken = 0.718899
+time taken = 0.718832
+time taken = 0.718827
+time taken = 0.718840
+time taken = 0.718843
+time taken = 0.718828
+time taken = 0.718896
+time taken = 0.718882
+time taken = 0.718876
+time taken = 0.718830
+time taken = 0.718845
+size of fize = 500
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+start node = 475 and end node = 499
+graph ready
+start node = 0 and end node = 24
+graph ready
+start node = 25 and end node = 49
+graph ready
+start node = 75 and end node = 99
+graph ready
+start node = 100 and end node = 124
+graph ready
+start node = 50 and end node = 74
+graph ready
+start node = 125 and end node = 149
+graph ready
+start node = 150 and end node = 174
+graph ready
+start node = 200 and end node = 224
+graph ready
+start node = 225 and end node = 249
+graph ready
+start node = 250 and end node = 274
+graph ready
+start node = 275 and end node = 299
+graph ready
+start node = 300 and end node = 324
+graph ready
+start node = 325 and end node = 349
+graph ready
+start node = 350 and end node = 374
+graph ready
+start node = 375 and end node = 399
+graph ready
+start node = 400 and end node = 424
+graph ready
+start node = 425 and end node = 449
+graph ready
+start node = 450 and end node = 474
+graph ready
+start node = 175 and end node = 199
+graph ready
+time taken = 14.394448
+time taken = 14.394442
+time taken = 14.394429
+time taken = 14.394490
+time taken = 14.394453
+time taken = 14.394434
+time taken = 14.394432
+time taken = 14.394501
+time taken = 14.394482
+time taken = 14.394450
+time taken = 14.394497
+time taken = 14.394429
+time taken = 14.394496
+time taken = 14.394432
+time taken = 14.394479
+time taken = 14.394424
+time taken = 14.394446
+time taken = 14.394447
+time taken = 14.394454
+time taken = 14.394425
+size of fize = 600
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+start node = 0 and end node = 29
+graph ready
+start node = 30 and end node = 59
+graph ready
+start node = 60 and end node = 89
+graph ready
+start node = 90 and end node = 119
+graph ready
+start node = 120 and end node = 149
+graph ready
+start node = 150 and end node = 179
+graph ready
+start node = 180 and end node = 209
+graph ready
+start node = 210 and end node = 239
+graph ready
+start node = 240 and end node = 269
+graph ready
+start node = 270 and end node = 299
+graph ready
+start node = 300 and end node = 329
+graph ready
+start node = 330 and end node = 359
+graph ready
+start node = 360 and end node = 389
+graph ready
+start node = 390 and end node = 419
+graph ready
+start node = 420 and end node = 449
+graph ready
+start node = 450 and end node = 479
+graph ready
+start node = 480 and end node = 509
+graph ready
+start node = 510 and end node = 539
+graph ready
+start node = 540 and end node = 569
+graph ready
+start node = 570 and end node = 599
+graph ready
+time taken = 20.522728
+time taken = 20.522780
+time taken = 20.522790
+time taken = 20.522733
+time taken = 20.522765
+time taken = 20.522737
+time taken = 20.522766
+time taken = 20.522757
+time taken = 20.522747
+time taken = 20.522741
+time taken = 20.522769
+time taken = 20.522723
+time taken = 20.522773
+time taken = 20.522783
+time taken = 20.522801
+time taken = 20.522767
+time taken = 20.522760
+time taken = 20.522759
+time taken = 20.522773
+time taken = 20.522776
+size of fize = 700
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+start node = 560 and end node = 594
+graph ready
+start node = 665 and end node = 699
+graph ready
+start node = 0 and end node = 34
+graph ready
+start node = 35 and end node = 69
+graph ready
+start node = 105 and end node = 139
+graph ready
+start node = 140 and end node = 174
+graph ready
+start node = 175 and end node = 209
+graph ready
+start node = 210 and end node = 244
+graph ready
+start node = 280 and end node = 314
+graph ready
+start node = 315 and end node = 349
+graph ready
+start node = 245 and end node = 279
+graph ready
+start node = 350 and end node = 384
+graph ready
+start node = 385 and end node = 419
+graph ready
+start node = 420 and end node = 454
+graph ready
+start node = 455 and end node = 489
+graph ready
+start node = 490 and end node = 524
+graph ready
+start node = 525 and end node = 559
+graph ready
+start node = 595 and end node = 629
+graph ready
+start node = 630 and end node = 664
+graph ready
+start node = 70 and end node = 104
+graph ready
+time taken = 29.503105
+time taken = 29.503102
+time taken = 29.503090
+time taken = 29.503134
+time taken = 29.503109
+time taken = 29.503095
+time taken = 29.503093
+time taken = 29.503131
+time taken = 29.503132
+time taken = 29.503142
+time taken = 29.503096
+time taken = 29.503116
+time taken = 29.503107
+time taken = 29.503144
+time taken = 29.503092
+time taken = 29.503081
+time taken = 29.503109
+time taken = 29.503115
+time taken = 29.503135
+time taken = 29.503109
+size of fize = 800
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+start node = 760 and end node = 799
+graph ready
+start node = 0 and end node = 39
+graph ready
+start node = 40 and end node = 79
+graph ready
+start node = 120 and end node = 159
+graph ready
+start node = 160 and end node = 199
+graph ready
+start node = 200 and end node = 239
+graph ready
+start node = 240 and end node = 279
+graph ready
+start node = 280 and end node = 319
+graph ready
+start node = 320 and end node = 359
+graph ready
+start node = 360 and end node = 399
+graph ready
+start node = 400 and end node = 439
+graph ready
+start node = 440 and end node = 479
+graph ready
+start node = 480 and end node = 519
+graph ready
+start node = 520 and end node = 559
+graph ready
+start node = 560 and end node = 599
+graph ready
+start node = 600 and end node = 639
+graph ready
+start node = 640 and end node = 679
+graph ready
+start node = 680 and end node = 719
+graph ready
+start node = 720 and end node = 759
+graph ready
+start node = 80 and end node = 119
+graph ready
+time taken = 38.453295
+time taken = 38.453326
+time taken = 38.453301
+time taken = 38.453298
+time taken = 38.453325
+time taken = 38.453303
+time taken = 38.453308
+time taken = 38.453285
+time taken = 38.453303
+time taken = 38.453315
+time taken = 38.453331
+time taken = 38.453288
+time taken = 38.453304
+time taken = 38.453322
+time taken = 38.453310
+time taken = 38.453300
+time taken = 38.453328
+time taken = 38.453320
+time taken = 38.453302
+time taken = 38.453300
+size of fize = 900
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+start node = 0 and end node = 44
+start node = 45 and end node = 89
+start node = 90 and end node = 134
+start node = 135 and end node = 179
+start node = 180 and end node = 224
+start node = 225 and end node = 269
+start node = 270 and end node = 314
+start node = 315 and end node = 359
+start node = 360 and end node = 404
+start node = 405 and end node = 449
+start node = 450 and end node = 494
+start node = 495 and end node = 539
+start node = 540 and end node = 584
+start node = 585 and end node = 629
+start node = 630 and end node = 674
+start node = 675 and end node = 719
+start node = 720 and end node = 764
+start node = 765 and end node = 809
+start node = 810 and end node = 854
+start node = 855 and end node = 899
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+time taken = 51.634278
+time taken = 51.634268
+time taken = 51.634256
+time taken = 51.634282
+time taken = 51.634295
+time taken = 51.634282
+time taken = 51.634250
+time taken = 51.634287
+time taken = 51.634246
+time taken = 51.634282
+time taken = 51.634285
+time taken = 51.634316
+time taken = 51.634283
+time taken = 51.634316
+time taken = 51.634284
+time taken = 51.634311
+time taken = 51.634310
+time taken = 51.634307
+time taken = 51.634275
+time taken = 51.634300
+size of fize = 1000
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+program started
+start node = 0 and end node = 49
+start node = 50 and end node = 99
+start node = 100 and end node = 149
+start node = 150 and end node = 199
+start node = 200 and end node = 249
+start node = 250 and end node = 299
+start node = 300 and end node = 349
+start node = 350 and end node = 399
+start node = 400 and end node = 449
+start node = 450 and end node = 499
+start node = 500 and end node = 549
+start node = 550 and end node = 599
+start node = 600 and end node = 649
+start node = 650 and end node = 699
+start node = 700 and end node = 749
+start node = 750 and end node = 799
+start node = 800 and end node = 849
+start node = 950 and end node = 999
+start node = 850 and end node = 899
+start node = 900 and end node = 949
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+graph ready
+time taken = 71.884936
+time taken = 71.884913
+time taken = 71.884933
+time taken = 71.884934
+time taken = 71.884938
+time taken = 71.884935
+time taken = 71.884912
+time taken = 71.884934
+time taken = 71.884953
+time taken = 71.884941
+time taken = 71.884937
+time taken = 71.884936
+time taken = 71.884921
+time taken = 71.884974
+time taken = 71.884909
+time taken = 71.884933
+time taken = 71.884926
+time taken = 71.884975
+time taken = 71.884931
+time taken = 71.884950
+size of fize = 50
+size of fize = 100
+time taken = 0.136550
+time taken = 0.136538
+time taken = 0.136588
+time taken = 0.136558
+time taken = 0.136537
+time taken = 0.136578
+time taken = 0.136552
+time taken = 0.136600
+time taken = 0.136534
+time taken = 0.136597
+time taken = 0.136581
+time taken = 0.136573
+time taken = 0.136584
+time taken = 0.136591
+time taken = 0.136566
+time taken = 0.136556
+time taken = 0.136541
+time taken = 0.136545
+time taken = 0.136543
+time taken = 0.136562
+size of fize = 150
+size of fize = 200
+time taken = 0.165292
+time taken = 0.165260
+time taken = 0.165247
+time taken = 0.165262
+time taken = 0.165282
+time taken = 0.165286
+time taken = 0.165268
+time taken = 0.165285
+time taken = 0.165264
+time taken = 0.165262
+time taken = 0.165295
+time taken = 0.165288
+time taken = 0.165293
+time taken = 0.165249
+time taken = 0.165282
+time taken = 0.165248
+time taken = 0.165254
+time taken = 0.165251
+time taken = 0.165266
+time taken = 0.165262
+size of fize = 250
+time taken = 1.664463
+time taken = 1.664479
+time taken = 1.664469
+time taken = 1.664463
+time taken = 1.664468
+time taken = 1.664504
+time taken = 1.664483
+time taken = 1.664471
+time taken = 1.664463
+time taken = 1.664498
+time taken = 1.664460
+time taken = 1.664504
+time taken = 1.664463
+time taken = 1.664469
+time taken = 1.664494
+time taken = 1.664458
+time taken = 1.664468
+time taken = 1.664476
+time taken = 1.664470
+time taken = 1.664457
+size of fize = 300
+time taken = 2.670293
+time taken = 2.670354
+time taken = 2.670300
+time taken = 2.670328
+time taken = 2.670314
+time taken = 2.670322
+time taken = 2.670320
+time taken = 2.670334
+time taken = 2.670320
+time taken = 2.670360
+time taken = 2.670304
+time taken = 2.670359
+time taken = 2.670294
+time taken = 2.670350
+time taken = 2.670354
+time taken = 2.670316
+time taken = 2.670310
+time taken = 2.670344
+time taken = 2.670319
+time taken = 2.670355
+size of fize = 350
+time taken = 3.676874
+time taken = 3.676871
+time taken = 3.676887
+time taken = 3.676873
+time taken = 3.676901
+time taken = 3.676871
+time taken = 3.676872
+time taken = 3.676903
+time taken = 3.676897
+time taken = 3.676872
+time taken = 3.676860
+time taken = 3.676870
+time taken = 3.676883
+time taken = 3.676865
+time taken = 3.676872
+time taken = 3.676870
+time taken = 3.676882
+time taken = 3.676870
+time taken = 3.676871
+time taken = 3.676873
+size of fize = 400
+time taken = 5.866517
+time taken = 5.866528
+time taken = 5.866527
+time taken = 5.866554
+time taken = 5.866549
+time taken = 5.866525
+time taken = 5.866525
+time taken = 5.866525
+time taken = 5.866568
+time taken = 5.866528
+time taken = 5.866524
+time taken = 5.866564
+time taken = 5.866527
+time taken = 5.866526
+time taken = 5.866520
+time taken = 5.866523
+time taken = 5.866525
+time taken = 5.866526
+time taken = 5.866526
+time taken = 5.866554
+size of fize = 450
+time taken = 7.068657
+time taken = 7.068654
+time taken = 7.068673
+time taken = 7.068674
+time taken = 7.068710
+time taken = 7.068688
+time taken = 7.068706
+time taken = 7.068671
+time taken = 7.068676
+time taken = 7.068666
+time taken = 7.068660
+time taken = 7.068690
+time taken = 7.068657
+time taken = 7.068671
+time taken = 7.068679
+time taken = 7.068675
+time taken = 7.068662
+time taken = 7.068670
+time taken = 7.068674
+time taken = 7.068677
+size of fize = 500
+time taken = 10.375836
+time taken = 10.375821
+time taken = 10.375816
+time taken = 10.375818
+time taken = 10.375818
+time taken = 10.375850
+time taken = 10.375813
+time taken = 10.375827
+time taken = 10.375815
+time taken = 10.375810
+time taken = 10.375816
+time taken = 10.375839
+time taken = 10.375806
+time taken = 10.375818
+time taken = 10.375832
+time taken = 10.375824
+time taken = 10.375821
+time taken = 10.375845
+time taken = 10.375835
+time taken = 10.375847
+size of fize = 550
+time taken = 12.930945
+time taken = 12.930943
+time taken = 12.930969
+time taken = 12.930966
+time taken = 12.930940
+time taken = 12.930942
+time taken = 12.930988
+time taken = 12.930942
+time taken = 12.930939
+time taken = 12.930982
+time taken = 12.930941
+time taken = 12.930942
+time taken = 12.930940
+time taken = 12.930941
+time taken = 12.930973
+time taken = 12.930941
+time taken = 12.930943
+time taken = 12.930942
+time taken = 12.930947
+time taken = 12.930965
+size of fize = 600
+time taken = 16.552979
+time taken = 16.552985
+time taken = 16.553032
+time taken = 16.553020
+time taken = 16.553046
+time taken = 16.553031
+time taken = 16.553015
+time taken = 16.553033
+time taken = 16.553045
+time taken = 16.553003
+time taken = 16.552990
+time taken = 16.553007
+time taken = 16.552974
+time taken = 16.553022
+time taken = 16.553009
+time taken = 16.553017
+time taken = 16.553000
+time taken = 16.553020
+time taken = 16.553026
+time taken = 16.552996
+size of fize = 650
+time taken = 30.363529
+time taken = 30.363542
+time taken = 30.363566
+time taken = 30.363525
+time taken = 30.363533
+time taken = 30.363544
+time taken = 30.363543
+time taken = 30.363553
+time taken = 30.363583
+time taken = 30.363583
+time taken = 30.363549
+time taken = 30.363557
+time taken = 30.363538
+time taken = 30.363552
+time taken = 30.363578
+time taken = 30.363547
+time taken = 30.363544
+time taken = 30.363560
+time taken = 30.363542
+time taken = 30.363555
+size of fize = 700
+time taken = 32.904508
+time taken = 32.904511
+time taken = 32.904530
+time taken = 32.904511
+time taken = 32.904512
+time taken = 32.904506
+time taken = 32.904550
+time taken = 32.904504
+time taken = 32.904503
+time taken = 32.904514
+time taken = 32.904503
+time taken = 32.904511
+time taken = 32.904509
+time taken = 32.904545
+time taken = 32.904506
+time taken = 32.904511
+time taken = 32.904503
+time taken = 32.904522
+time taken = 32.904538
+time taken = 32.904519
+size of fize = 750
+time taken = 34.777756
+time taken = 34.777761
+time taken = 34.777775
+time taken = 34.777755
+time taken = 34.777756
+time taken = 34.777816
+time taken = 34.777767
+time taken = 34.777765
+time taken = 34.777821
+time taken = 34.777772
+time taken = 34.777757
+time taken = 34.777776
+time taken = 34.777802
+time taken = 34.777770
+time taken = 34.777795
+time taken = 34.777798
+time taken = 34.777756
+time taken = 34.777755
+time taken = 34.777790
+time taken = 34.777751
+size of fize = 800
+time taken = 43.794504
+time taken = 43.794506
+time taken = 43.794501
+time taken = 43.794510
+time taken = 43.794500
+time taken = 43.794502
+time taken = 43.794550
+time taken = 43.794503
+time taken = 43.794506
+time taken = 43.794501
+time taken = 43.794549
+time taken = 43.794510
+time taken = 43.794511
+time taken = 43.794506
+time taken = 43.794497
+time taken = 43.794506
+time taken = 43.794497
+time taken = 43.794501
+time taken = 43.794495
+time taken = 43.794535
+size of fize = 850
+time taken = 44.004130
+time taken = 44.004139
+time taken = 44.004133
+time taken = 44.004142
+time taken = 44.004129
+time taken = 44.004128
+time taken = 44.004156
+time taken = 44.004161
+time taken = 44.004128
+time taken = 44.004143
+time taken = 44.004171
+time taken = 44.004129
+time taken = 44.004177
+time taken = 44.004126
+time taken = 44.004127
+time taken = 44.004173
+time taken = 44.004135
+time taken = 44.004163
+time taken = 44.004168
+time taken = 44.004137
+size of fize = 900
+time taken = 56.054903
+time taken = 56.054874
+time taken = 56.054907
+time taken = 56.054877
+time taken = 56.054863
+time taken = 56.054869
+time taken = 56.054863
+time taken = 56.054875
+time taken = 56.054897
+time taken = 56.054863
+time taken = 56.054867
+time taken = 56.054861
+time taken = 56.054895
+time taken = 56.054918
+time taken = 56.054887
+time taken = 56.054876
+time taken = 56.054888
+time taken = 56.054899
+time taken = 56.054918
+time taken = 56.054865
+size of fize = 950
+time taken = 63.080793
+time taken = 63.080788
+time taken = 63.080813
+time taken = 63.080817
+time taken = 63.080842
+time taken = 63.080779
+time taken = 63.080829
+time taken = 63.080817
+time taken = 63.080790
+time taken = 63.080776
+time taken = 63.080814
+time taken = 63.080801
+time taken = 63.080822
+time taken = 63.080786
+time taken = 63.080815
+time taken = 63.080803
+time taken = 63.080789
+time taken = 63.080819
+time taken = 63.080845
+time taken = 63.080811
+size of fize = 1000
+time taken = 74.765240
+time taken = 74.765247
+time taken = 74.765238
+time taken = 74.765239
+time taken = 74.765249
+time taken = 74.765295
+time taken = 74.765238
+time taken = 74.765277
+time taken = 74.765280
+time taken = 74.765269
+time taken = 74.765255
+time taken = 74.765281
+time taken = 74.765273
+time taken = 74.765243
+time taken = 74.765251
+time taken = 74.765265
+time taken = 74.765234
+time taken = 74.765236
+time taken = 74.765243
+time taken = 74.765271

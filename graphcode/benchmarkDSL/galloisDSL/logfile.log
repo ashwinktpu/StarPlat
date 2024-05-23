@@ -1,0 +1,4 @@
+
+/lfs/usrhome/mtech/cs22m028/benchmarkDSL/galloisDSL
+rm *.out
+mpic++ -std=c++17 -g -O0 -Wall -I /lfs/usrhome/mtech/cs22m028/local/include -L /lfs/usrhome/mtech/cs22m028/local/lib -lboost_mpi -lboost_serialization   -o galloisDSL.out galloisDSL.cc ../mpi_header/graph_mpi.cc ../mpi_header/updates.cc ../mpi_header/graph_properties/node_property/node_property.cc ../mpi_header/graph_properties/edge_property/edge_property.cc ../mpi_header/rma_datatype/rma_datatype.cc ../mpi_header/data_constructs/container.cc main.cc  
