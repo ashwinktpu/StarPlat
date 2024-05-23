@@ -52,7 +52,6 @@ void blockVarsAnalyser::toString(NODETYPE type)
         case NODE_FIXEDPTSTMT: cout << "NODE_FIXEDPTSTMT"; break;
         case NODE_IFSTMT: cout << "NODE_IFSTMT"; break;
         case NODE_ITRBFS: cout << "NODE_ITRBFS"; break;
-        case NODE_ITRBFS2: cout << "NODE_ITRBFS2"; break;
         case NODE_ITRRBFS: cout << "NODE_ITRRBFS"; break;
         case NODE_EXPR: cout << "NODE_EXPR"; break;
         case NODE_PROCCALLEXPR: cout << "NODE_PROCCALLEXPR"; break;

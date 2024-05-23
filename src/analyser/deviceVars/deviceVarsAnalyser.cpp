@@ -320,50 +320,6 @@ lattice deviceVarsAnalyser::analyseItrBFS(iterateBFS* stmt, lattice &inMap)
   return wrapNode->outMap;
 }
 
-lattice deviceVarsAnalyser::analyseItrBFS2(iterateBFS2* stmt, lattice &inMap)
-{
-  ASTNodeWrap *wrapNode = getWrapNode(stmt);
-  wrapNode->inMap = inMap;
-
-  wrapNode->outMap = wrapNode->inMap;
-  for (Identifier *iden : wrapNode->usedVars.getVariables(READ)){
-    wrapNode->outMap.meet(iden, lattice::GPU_READ);
-  }
-  for (Identifier *iden : wrapNode->usedVars.getVariables(WRITE)){
-    wrapNode->outMap.meet(iden, lattice::GPU_WRITE);
-  }
-
-  if(stmt->getRBFS() != nullptr)
-  {
-    ASTNodeWrap *revNode = getWrapNode(stmt->getRBFS());
-
-    for (Identifier *iden : revNode->usedVars.getVariables(READ)){
-      wrapNode->outMap.meet(iden, lattice::GPU_READ);
-    }
-    for (Identifier *iden : revNode->usedVars.getVariables(WRITE)){
-      wrapNode->outMap.meet(iden, lattice::GPU_WRITE);
-    }
-  }
-
-  return wrapNode->outMap;
-}
-
-lattice deviceVarsAnalyser::analyseItrBFSRev(iterateBFSReverse* stmt, lattice &inMap)
-{
-  ASTNodeWrap *wrapNode = getWrapNode(stmt);
-  wrapNode->inMap = inMap;
-
-  wrapNode->outMap = wrapNode->inMap;
-  for (Identifier *iden : wrapNode->usedVars.getVariables(READ)){
-    wrapNode->outMap.meet(iden, lattice::GPU_READ);
-  }
-  for (Identifier *iden : wrapNode->usedVars.getVariables(WRITE)){
-    wrapNode->outMap.meet(iden, lattice::GPU_WRITE);
-  }
-
-  return wrapNode->outMap;
-}
-
 lattice deviceVarsAnalyser::analyseUnary(unary_stmt *stmt, lattice &inMap)
 {
   Expression *unaryVar = stmt->getUnaryExpr()->getUnaryExpr();
@@ -437,10 +393,6 @@ lattice deviceVarsAnalyser::analyseStatement(statement *stmt, lattice &inMap)
     return analyseReduction((reductionCallStmt *)stmt, inMap);
   case NODE_ITRBFS:
       return analyseItrBFS((iterateBFS *)stmt, inMap);
-  case NODE_ITRBFS2:
-      return analyseItrBFS2((iterateBFS2 *)stmt, inMap);
-  case NODE_ITERBFSREV:
-      return analyseItrBFSRev((iterateBFSReverse *)stmt, inMap);
     /*
     case NODE_REDUCTIONCALLSTMT:
       return analyseReduction((reductionCallStmt *)stmt, inMap);

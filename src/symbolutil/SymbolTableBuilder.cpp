@@ -45,8 +45,10 @@ bool search_and_connect_toId(SymbolTable *sTab, Identifier *id)
   TableEntry *tableEntry = sTab->findEntryInST(id);
   if (tableEntry == NULL)
   {
-    return false;
-    // to be added.
+    // May cause sincere crashes. Request to document the entire symbol table.
+    // Type *typeNode = Type::createForPrimitive(TYPE_INT, 1);
+    // TableEntry newTableEntry (id, typeNode) ;
+    return false ;
   }
   if (id->getSymbolInfo() != NULL)
   {
@@ -282,7 +284,7 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
       checkForExpressions(expr);
     }
 
-    if (( backend.compare("amd") == 0 ||  backend.compare("cuda") == 0 || (backend.compare("sycl") == 0) || (backend.compare("multigpu") == 0) || (backend.compare("hip") == 0)) && assign->lhs_isProp())
+    if (( backend.compare("amd") == 0 ||  backend.compare("cuda") == 0 || (backend.compare("sycl") == 0) || (backend.compare("multigpu") == 0)) && assign->lhs_isProp())
     { // This flags device assingments OUTSIDE for
       //~ std::cout<< "varName1: " << assign->getPropId()->getIdentifier1()->getIdentifier() << '\n';
       //~ std::cout<< "varName2: " << assign->getPropId()->getIdentifier2()->getIdentifier() << '\n';
@@ -364,15 +366,6 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
 
     PropAccess *propId = forAll->isSourceField() ? forAll->getPropSource() : NULL;
     Identifier *iterator = forAll->getIterator();
-
-    bool createsFine = create_Symbol(currVarSymbT, iterator, new Type());
-    /*
-      Here we are passing an empty instance of type
-      This works fine but if proper type is required,
-      Either create a new type for the iterator in forALL
-      Or infer the type??
-    */
-
     searchSuccess = checkHeaderSymbols(source1, propId, forAll);
 
     if (forAll->isSourceExpr())
@@ -392,7 +385,7 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
        another forall which is to be generated with
        omp parallel pragma, and then disable the parallel loop*/
 
-    if ((backend.compare("omp") == 0) || (backend.compare("amd") == 0) || (backend.compare("cuda") == 0) || (backend.compare("multigpu") == 0)|| (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0)  || (backend.compare("hip") == 0))
+    if ((backend.compare("omp") == 0) || (backend.compare("amd") == 0) || (backend.compare("cuda") == 0) || (backend.compare("multigpu") == 0)|| (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0))
     {
       if (parallelConstruct.size() > 0)
       {
@@ -410,7 +403,7 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
       }
     }
 
-    if ((backend.compare("amd") == 0) || backend.compare("cuda") == 0 || (backend.compare("sycl") == 0) || (backend.compare("multigpu") == 0) || (backend.compare("hip") == 0))
+    if ((backend.compare("amd") == 0) || backend.compare("cuda") == 0 || (backend.compare("sycl") == 0) || (backend.compare("multigpu") == 0))
     { // This flags device assingments INSIDE for
       std::cout << "FORALL par   NAME1:" << forAll->getParent()->getTypeofNode() << '\n';
       if (forAll->getParent()->getParent())
@@ -442,15 +435,6 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
       {
         string methodString(extractElem->getMethodId()->getIdentifier());
         list<argument *> argList = extractElem->getArgList();
-        list<argument *>::iterator itr;
-        for (itr = argList.begin(); itr != argList.end(); itr++)
-        {
-          argument *arg = (*itr);
-          if (arg->isAssignExpr())
-            buildForStatements(arg->getAssignExpr());
-          else
-            checkForExpressions(arg->getExpr());
-        }
         if (methodString == nbrCall)
         {
           forAll->addAtomicSignalToStatements();
@@ -503,7 +487,7 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
 
     //~ delete_curr_SymbolTable();
 
-    if ((backend.compare("omp") == 0 || backend.compare("amd") == 0 || backend.compare("cuda") == 0 || (backend.compare("multigpu") == 0)|| backend.compare("acc") == 0 || backend.compare("mpi") == 0 || (backend.compare("sycl") == 0)  || (backend.compare("hip") == 0)) && forAll->isForall())
+    if ((backend.compare("omp") == 0 || backend.compare("amd") == 0 || backend.compare("cuda") == 0 || (backend.compare("multigpu") == 0)|| backend.compare("acc") == 0 || backend.compare("mpi") == 0 || (backend.compare("sycl") == 0)) && forAll->isForall())
     {
       if (forAll->isForall())
       {
@@ -663,6 +647,10 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
           forAll->push_reduction(reducStmt->reduction_op(), reducStmt->getLeftId());
         }
       }
+      else if (reducStmt->isContainerReduc()) 
+      {
+        printf ("Skipped symbol table entry for container reduction\n") ;
+      }
       else
       {
         findSymbolPropId(reducStmt->getPropAccess());
@@ -674,24 +662,9 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
   case NODE_ITRBFS:
   {
     iterateBFS *iBFS = (iterateBFS *)stmt;
-
-    Identifier *rootNode = iBFS->getRootNode();
-    findSymbolId(rootNode);
-    Identifier *graphId = iBFS->getGraphCandidate();
-    findSymbolId(graphId);
-    
-    Identifier* iterator = iBFS->getIteratorNode();
-    bool createsFine = create_Symbol(currVarSymbT, iterator, new Type());
-    /*
-      Here we are passing an empty instance of type
-      This works fine but if proper type is required,
-      Either create a new type for the iterator in forALL
-      Or infer the type??
-    */
-    
     string backend(backendTarget);
 
-    if ((backend.compare("omp") == 0) || (backend.compare("amd") == 0) || (backend.compare("cuda") == 0) || (backend.compare("multigpu") == 0)|| (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0) || (backend.compare("hip") == 0))
+    if ((backend.compare("omp") == 0) || (backend.compare("amd") == 0) || (backend.compare("cuda") == 0) || (backend.compare("multigpu") == 0)|| (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0))
 
     {
       parallelConstruct.push_back(iBFS);
@@ -712,7 +685,7 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
       iRevBFS->addAccumulateAssignment();
       buildForStatements(iRevBFS->getBody());
     }
-    if ((backend.compare("omp") == 0) || (backend.compare("amd") == 0) || (backend.compare("cuda") == 0) || (backend.compare("multigpu") == 0)|| (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0) || (backend.compare("hip") == 0))
+    if ((backend.compare("omp") == 0) || (backend.compare("amd") == 0) || (backend.compare("cuda") == 0) || (backend.compare("multigpu") == 0)|| (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0))
 
     {
       parallelConstruct.pop_back();
@@ -720,70 +693,6 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
 
     break;
   }
-
-  case NODE_ITRBFS2:
-  {
-    iterateBFS2 *iBFS = (iterateBFS2 *)stmt;
-    string backend(backendTarget);
-
-    if ((backend.compare("omp") == 0) || (backend.compare("amd") == 0) || (backend.compare("cuda") == 0) || (backend.compare("multigpu") == 0)|| (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0) || (backend.compare("hip") == 0))
-
-    {
-      parallelConstruct.push_back(iBFS);
-    }
-
-    currentFunc->setIsMetaUsed();   // d_meta is used in itrbfs
-    iBFS->setIsMetaUsed();          // d_meta is used in itrbfs
-    currentFunc->setIsDataUsed();   // d_data is used in itrbfs
-    iBFS->setIsDataUsed();          // d_data is used in itrbfs
-    currentFunc->setIsWeightUsed(); // d_weight is used in itrbfs
-    iBFS->setIsWeightUsed();        // d_weight is used in itrbfs
-
-    buildForStatements(iBFS->getBody());
-
-    iterateReverseBFS *iRevBFS = iBFS->getRBFS();
-    if (iRevBFS != NULL)
-    {
-      iRevBFS->addAccumulateAssignment();
-      buildForStatements(iRevBFS->getBody());
-    }
-    if ((backend.compare("omp") == 0) || (backend.compare("amd") == 0) || (backend.compare("cuda") == 0) || (backend.compare("multigpu") == 0)|| (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0) || (backend.compare("hip") == 0))
-
-    {
-      parallelConstruct.pop_back();
-    }
-
-    break;
-  }
-
-  case NODE_ITERBFSREV:
-  {
-    iterateBFSReverse *iBFS = (iterateBFSReverse *)stmt;
-    string backend(backendTarget);
-
-    if ((backend.compare("omp") == 0) || (backend.compare("amd") == 0) || (backend.compare("cuda") == 0) || (backend.compare("multigpu") == 0)|| (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0) || (backend.compare("hip") == 0))
-
-    {
-      parallelConstruct.push_back(iBFS);
-    }
-
-    currentFunc->setIsMetaUsed();   // d_meta is used in itrbfsrev
-    iBFS->setIsMetaUsed();          // d_meta is used in itrbfsrev
-    currentFunc->setIsDataUsed();   // d_data is used in itrbfsrev
-    iBFS->setIsDataUsed();          // d_data is used in itrbfsrev
-    currentFunc->setIsWeightUsed(); // d_weight is used in itrbfsrev
-    iBFS->setIsWeightUsed();        // d_weight is used in itrbfsrev
-
-    buildForStatements(iBFS->getBody());
-
-    if ((backend.compare("omp") == 0) || (backend.compare("amd") == 0) || (backend.compare("cuda") == 0) || (backend.compare("multigpu") == 0)|| (backend.compare("acc") == 0) || (backend.compare("mpi") == 0) || (backend.compare("sycl") == 0) || (backend.compare("hip") == 0))
-    {
-      parallelConstruct.pop_back();
-    }
-
-    break;
-  }
-
   case NODE_DOWHILESTMT:
   {
     dowhileStmt *doStmt = (dowhileStmt *)stmt;
@@ -830,12 +739,6 @@ void SymbolTableBuilder::buildForStatements(statement *stmt)
     preprocessEnv = onDeleteStmt;
     buildForStatements(onDeleteStmt->getStatements());
     preprocessEnv = NULL;
-    break;
-  }
-  case NODE_UNARYSTMT:
-  {
-    unary_stmt* unaryStmt = (unary_stmt*)stmt;
-    checkForExpressions(unaryStmt->getUnaryExpr());
     break;
   }
   }

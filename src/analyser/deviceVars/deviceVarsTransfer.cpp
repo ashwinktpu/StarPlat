@@ -70,10 +70,6 @@ statement* deviceVarsAnalyser::transferVarsStatement(statement* stmt, blockState
         return transferVarsReduction((reductionCallStmt *)stmt, parBlock);
     case NODE_ITRBFS:
         return transferVarsItrBFS((iterateBFS *)stmt, parBlock);
-    case NODE_ITRBFS2:
-        return transferVarsItrBFS2((iterateBFS2 *)stmt, parBlock);
-    case NODE_ITERBFSREV:
-        return transferVarsItrBFSRev((iterateBFSReverse *)stmt, parBlock);
     }
 
     return stmt;
@@ -299,24 +295,6 @@ statement* deviceVarsAnalyser::transferVarsReduction(reductionCallStmt* stmt, bl
 }
 
 statement* deviceVarsAnalyser::transferVarsItrBFS(iterateBFS* stmt, blockStatement *parBlock)
-{
-    ASTNodeWrap* wrapNode = getWrapNode(stmt);
-    for(statement* bstmt: transferStatements(wrapNode->inMap, wrapNode->outMap))
-        parBlock->addStmtToBlock(bstmt);    
-
-    return stmt;
-}
-
-statement* deviceVarsAnalyser::transferVarsItrBFS2(iterateBFS2* stmt, blockStatement *parBlock)
-{
-    ASTNodeWrap* wrapNode = getWrapNode(stmt);
-    for(statement* bstmt: transferStatements(wrapNode->inMap, wrapNode->outMap))
-        parBlock->addStmtToBlock(bstmt);    
-
-    return stmt;
-}
-
-statement* deviceVarsAnalyser::transferVarsItrBFSRev(iterateBFSReverse* stmt, blockStatement *parBlock)
 {
     ASTNodeWrap* wrapNode = getWrapNode(stmt);
     for(statement* bstmt: transferStatements(wrapNode->inMap, wrapNode->outMap))
