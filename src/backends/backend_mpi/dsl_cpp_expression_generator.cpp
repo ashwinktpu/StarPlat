@@ -89,10 +89,10 @@ namespace spmpi {
         Identifier* mapExprId = mapExpr->getId();
 
         if(mapExpr->isIdentifierExpr()){  
-            sprintf(strBuffer , "%s[", mapExprId->getIdentifier());
+            sprintf(strBuffer , "%s.getValue (", mapExprId->getIdentifier());
             main.pushString(strBuffer);
             generateExpr(indexExpr);
-            main.pushString("]");
+            main.pushString(")");
         }
         else if(mapExpr->isPropIdExpr()){
             PropAccess * propId = (PropAccess *)mapExpr;
@@ -123,7 +123,7 @@ namespace spmpi {
         char strBuffer[1024];
         proc_callExpr* proc = (proc_callExpr*)expr;
         string methodId(proc->getMethodId()->getIdentifier());
-        if (methodId == "get_edge") {
+        if (methodId == "get_edge" || methodId == "get_edge_i" || methodId == "get_edge_r_i"|| methodId == "get_other_vertex") {
                 
                 list<argument*> argList = proc->getArgList();
                 assert(argList.size() == 2);
@@ -131,7 +131,14 @@ namespace spmpi {
                 Identifier* srcId = argList.front()->getExpr()->getId();
                 Identifier* destId = argList.back()->getExpr()->getId();
                 Identifier* objectId = proc->getId1();
+                if (methodId == "get_edge") 
                 sprintf(strBuffer, "%s.%s(%s, %s)", objectId->getIdentifier(), "get_edge", srcId->getIdentifier(), destId->getIdentifier());
+                if (methodId == "get_edge_i") 
+                sprintf(strBuffer, "%s.%s(%s, %s)", objectId->getIdentifier(), "get_edge_i", srcId->getIdentifier(), destId->getIdentifier());
+                if (methodId == "get_edge_r_i") 
+                sprintf(strBuffer, "%s.%s(%s, %s)", objectId->getIdentifier(), "get_edge_r_i", srcId->getIdentifier(), destId->getIdentifier());
+                if (methodId == "get_other_vertex") 
+                sprintf(strBuffer, "%s.%s(%s, %s)", objectId->getIdentifier(), "get_other_vertex", srcId->getIdentifier(), destId->getIdentifier());
                 main.pushString(strBuffer);
                 // TODO : (Atharva) Some Dynamic specific code may come in here.
         } else if (methodId == "count_outNbrs") {
@@ -203,15 +210,18 @@ namespace spmpi {
                 }
                 else
                 {
-                    sprintf(strBuffer,"%s",proc->getMethodId()->getIdentifier());
+                  sprintf(strBuffer,"%s",proc->getMethodId()->getIdentifier()); // Hopefully this is the only instance where this happens.
                 } 
                 main.pushString(strBuffer);
                 main.pushString("(");
                 generateArgList(argList);
+                // main.pushString (", world") ; // Cleaner way would be to push into arg list.
                 if(objectId == NULL)
                 {   
-                    sprintf(strBuffer,", %s","world");
+                   if (!startsWith (proc->getMethodId () -> getIdentifier(), "std::")) {
+                    sprintf(strBuffer,", %s","world"); 
                     main.pushString(strBuffer);
+                   }
                 }
                 main.pushString(")");
             }

@@ -1,5 +1,27 @@
 #include"node_property.h"
 #include"../../graph_mpi.h"
+
+template <typename T>
+  void NodeProperty<T>::fatBarrier () {
+      /* Major slowdown ?? Investigating...    
+      // synchronize the window.
+      propList.get_lock (0, SHARED_ALL_PROCESS_LOCK) ;
+      // MPI_Win_lock_all (0, window) ;
+      for (auto &sync_now:sync_later) {
+        int idx = sync_now.first ;
+        for (auto &message:sync_now.second) {
+            T owner_proc = message[0] ;
+            T local_node_id = message[1] ;
+            T value = message[2] ;
+            propList.accumulate(owner_proc,&value,local_node_id,1,MPI_SUM,SHARED_LOCK);
+          }
+      }
+      //MPI_Win_unlock_all (window) ;
+      propList.unlock (0, SHARED_ALL_PROCESS_LOCK) ;
+      sync_later.clear () ;
+      */
+  }
+
 template <typename T>
     void NodeProperty<T>::attachToGraph(Graph * graph, T initial_value)
     { 
@@ -30,6 +52,7 @@ template <typename T>
         propList.create_window(data, length, sizeof(T), world);
 
         already_locked_processors = std::vector<bool>(world.size(),false);
+        already_locked_processors_shared = std::vector<bool>(world.size(),false);
         this->graph = graph;
 
         delete [] data;
@@ -66,6 +89,7 @@ template <typename T>
         propList.create_window(data, length, sizeof(T), world);
 
         already_locked_processors = std::vector<bool>(world.size(),false);
+        already_locked_processors_shared = std::vector<bool>(world.size(),false);
         this->graph = graph;
 
         delete [] data;
@@ -73,34 +97,84 @@ template <typename T>
 
     template <typename T>
     int32_t NodeProperty<T>::getPropertyId() {return propertyId;}
+
+    template <typename T>
+    void NodeProperty<T>::leaveAllSharedLocks () {
+      for (int lockNo = 0 ; lockNo < world.size () ; lockNo++ ) {
+        if (already_locked_processors_shared [lockNo]) {
+          propList.unlock (lockNo, SHARED_LOCK) ;
+          already_locked_processors_shared[lockNo] = false ;
+        }
+      }
+    }
     
     template <typename T>
     T NodeProperty<T>::getValue(int node_id ,bool check_concurrency)
     {
+      
+
       int owner_proc = graph->get_node_owner(node_id);
       int local_node_id = graph->get_node_local_index(node_id);
       
       bool no_checks_needed = !check_concurrency;
-
+      /* Barenya ==> Trying one more optimisation */
+      /*
+      if (already_locked_processors_shared [owner_proc]) {
+        propList.flush (owner_proc) ;
+      } else {
+        already_locked_processors_shared[owner_proc]=true ;
+	      propList.get_lock (owner_proc, SHARED_LOCK, no_checks_needed) ;
+      }*/
+	    propList.get_lock (owner_proc, SHARED_LOCK, no_checks_needed) ;
+	    T* data = propList.get_data(owner_proc, local_node_id, 1, SHARED_LOCK);
+      propList.unlock(owner_proc, SHARED_LOCK); // doing an unlock later experiment.
+			int val = data[0] ;
+			delete[] data ;
+			data =NULL ;
+      return val ;
+      
+			
+/*
       if(owner_proc==world.rank())
-      {
-        //if(!already_locked_processors[owner_proc])
-        //  propList.get_lock(owner_proc,SHARED_LOCK,  no_checks_needed);
+      { // This may be optimized further.
+        if(!already_locked_processors_shared[owner_proc]) {
+          // already_locked_processors_shared[owner_proc]=true ;
+          // propList.get_lock(owner_proc,SHARED_LOCK,  no_checks_needed);
+        }
+        else { 
+          propList.flush (owner_proc) ;
+        }
         T value = propList.data[local_node_id];
-        //if(!already_locked_processors[owner_proc])
-        //  propList.unlock(owner_proc, SHARED_LOCK);
-          
+        if(!already_locked_processors_shared[owner_proc]) {
+          propList.unlock(owner_proc, SHARED_LOCK);
+          already_locked_processors_shared[owner_proc]=false ;
+        }
         return value;
       }
       else
       {
-        if(!already_locked_processors[owner_proc])
+        if(!already_locked_processors_shared[owner_proc]) {
           propList.get_lock(owner_proc,SHARED_LOCK,  no_checks_needed);
+          already_locked_processors_shared[owner_proc]=true ;
+        }
+		    else {
+		      propList.flush (owner_proc) ;
+        }
         T* data = propList.get_data(owner_proc, local_node_id, 1, SHARED_LOCK);
-        if(!already_locked_processors[owner_proc])
+        
+        if(!already_locked_processors_shared[owner_proc]) {
+          already_locked_processors_shared[owner_proc]=false ;
           propList.unlock(owner_proc, SHARED_LOCK);
-        return data[0];
+        }
+				int val = data[0] ;
+				delete[] data ;
+				data =NULL ;
+	  		return val ;
       }
+      */
+
+      assert (false) ;
+			return -1;
       
     }
 
@@ -112,7 +186,15 @@ template <typename T>
       int local_node_id = graph->get_node_local_index(node_id);
 
       bool no_checks_needed = !check_concurrency;
-
+     /* 
+      if (already_locked_processors_shared[owner_proc] == false) {
+        propList.get_lock(owner_proc,SHARED_LOCK,  no_checks_needed);
+        already_locked_processors_shared[owner_proc]=true ;
+      }*/   
+      propList.get_lock(owner_proc,SHARED_LOCK,  no_checks_needed);
+      propList.put_data(owner_proc,&value, local_node_id, 1, SHARED_LOCK);
+      propList.unlock(owner_proc, SHARED_LOCK);
+			/*
       //if(owner_proc==world.rank())
       //{
       //  if(!already_locked_processors[owner_proc])
@@ -124,11 +206,17 @@ template <typename T>
       //else
       //{
         if(!already_locked_processors[owner_proc])
-          propList.get_lock(owner_proc,SHARED_LOCK,  no_checks_needed);
+          propList.get_lock(owner_proc,EXCLUSIVE_LOCK,  no_checks_needed);
+		//else
+		  //propList.flush (owner_proc) ;
         propList.put_data(owner_proc,&value, local_node_id, 1, SHARED_LOCK);
+		// propList.flush (owner_proc) ;
         if(!already_locked_processors[owner_proc])
-          propList.unlock(owner_proc, SHARED_LOCK);
+          propList.unlock(owner_proc, EXCLUSIVE_LOCK);
+		//else
+		  //propList.flush (owner_proc) ;
       //}
+	 */ 
       
       return ;
     }
@@ -142,6 +230,7 @@ template <typename T>
         {
             history_data[i] = propList.data[i];
         }
+        
         propList.unlock(world.rank(), SHARED_LOCK);
     }
 
@@ -162,6 +251,8 @@ template <typename T>
     template <typename T>
     void NodeProperty<T>::operator =(const NodeProperty<T>& property)
     {
+
+
         if(property.attached_to_graph == false)
           return;
         else 
@@ -318,11 +409,19 @@ template <typename T>
         int owner_proc = graph->get_node_owner(node_id);
         int local_node_id = graph->get_node_local_index(node_id);
 
-        if(!already_locked_processors[owner_proc])
+        // sync_later[node_id].push_back ({owner_proc, local_node_id, value}) ;
+
+        /* Barenya ==> attempting an optimisation
+*/
+
+       /* if(!already_locked_processors_shared[owner_proc]) {
+          already_locked_processors_shared[owner_proc]=true ;
           propList.get_lock(owner_proc,SHARED_LOCK);
+        }*/
+        propList.get_lock(owner_proc,SHARED_LOCK);
         propList.accumulate(owner_proc,&value,local_node_id,1,MPI_SUM,SHARED_LOCK);
-        if(!already_locked_processors[owner_proc])
-          propList.unlock(owner_proc, SHARED_LOCK);
+        // if(!already_locked_processors_shared[owner_proc])
+        propList.unlock(owner_proc, SHARED_LOCK);
             
     }
 

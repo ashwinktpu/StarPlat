@@ -44,9 +44,7 @@ NEGATE [-]
 "fixedPoint" {printf("Keyword fixedPoint"); return T_FIXEDPOINT;}
 "until"      {printf("Keyword until");  return T_UNTIL;}
 "iterateInBFS"  {printf("iterateInBFS");  return T_BFS;}
-"iterateInBFS2"  {printf("iterateInBFS2");  return T_BFS2;}
 "iterateInReverse" {printf("iterateInReverse");  return T_REVERSE;} 
-"iterateInBFSReverse" {printf("iterateInBFSReverse");  return T_BFSREVERSE;} 
 "from"          {printf("from"); return T_FROM;} 
 "filter"        {printf("filter");  return T_FILTER;} 
 "Incremental"   {printf("incremental"); return T_INCREMENTAL;}
@@ -129,10 +127,12 @@ NEGATE [-]
 "list" {printf("list type"); return T_LIST;}
 "updates" {printf("updates type"); return T_UPDATES;}
 "container" {printf("container type"); return T_CONTAINER;}
+"std::vector" {printf ("vector type"); return T_VECTOR;}
 "nodeMap"  {printf("nodeMap type"); return T_NODEMAP;}
 
 
  /* Numbers and Identifies */
+"std::min"          { yylval.text = yytext; return ID; }
 {ALPHANUM}          { yylval.text=yytext; /*printf("HELLO ID %s",yytext); /* printf("\n");*/ return ID;}
 {DIGIT}+"."{DIGIT}* { yylval.fval=atof(yytext);
                         return FLOAT_NUM;}

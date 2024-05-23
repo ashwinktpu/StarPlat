@@ -1,0 +1,86 @@
+function do_max_flow (Graph g, int source, int sink,int kernel_parameter) {
+
+  propNode<int> label;
+  g.attachNodeProperty (label = 0) ;
+  source.label = g.num_nodes();
+  
+  propNode<int> excess;
+  g.attachNodeProperty (excess = 0) ;
+
+  container <int> _count ;
+  _count.assign (g.num_nodes () + 2, 0) ;
+	
+	propEdge<int> residual_capacity;
+	g.attachEdgeProperty(residual_capacity=g.weights);
+	
+	int excesstotal=0;
+	
+	forall (v in g.nodes().filter(v==source)) {
+		forall(vv in g.neighbors(v)){
+			int x=source;
+			edge forward_edge = g.get_edge(x, vv) ;
+			edge backward_edge = g.get_edge(vv, x) ;
+
+			int d = forward_edge.residual_capacity;
+			excesstotal +=d;
+			vv.excess += d;
+
+			forward_edge.residual_capacity -= d;
+
+			backward_edge.residual_capacity += d;
+		}
+  }
+	bool flag=true;
+
+	do{
+    do{
+      int x=kernel_parameter;
+      x =x+ (-1);
+      forall (v in g.nodes().filter(v.excess>0 && v!=source && v!=sink )) {
+				int hh= INT_MAX;
+				int lv=-1;
+
+        forall (vv in g.neighbors(v)) {
+          edge forward_edge = g.get_edge (v,vv) ;
+          if (e.residual_capacity >0 ) {
+            if (vv.label == v.label + 1) {
+              edge backward_edge = g.get_edge (vv,v) ;
+              int d = forward_edge.residual_capacity ;
+              if (v.excess < d) {
+                d = v.excess ;
+              }
+              v.excess -= d ;
+              vv.excess += d ;
+              forward_edge.residual_capacity += d ;
+              backward_edge.residual_capacity -= d ;
+            } else {
+              hh = min (hh, vv.label) ;
+            }
+          }
+        }   
+		
+				if(v.excess > 0 && hh < g.num_nodes() + 1){
+          int currLab = v.label ;
+          __count[currLab] -= 1 ;
+					v.label = hh + 1;
+          __count[hh+1] += 1 ;
+				}
+      }
+    }while(x>0);
+
+    int gap = __count.getIdx (0) ;
+    if (gap > 0) {
+      forall (v in g.nodes (). filter (v != sink && v != source && v.label >= gap)) {
+        v.label = g.num_nodes() + 2 ;
+      }
+    }
+  
+		if(source.excess+sink.excess==excesstotal){
+			flag=false;
+		}
+		
+    }while(flag);    
+
+}
+
+

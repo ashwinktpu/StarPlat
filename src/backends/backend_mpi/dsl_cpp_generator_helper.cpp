@@ -129,6 +129,17 @@ namespace spmpi {
                     cppString = vecString;
                     break;
                 }
+                case TYPE_VECTOR:
+                {
+                    string vecString = "std::vector<";   
+
+                    char* valType = (char*)convertToCppType(type->getInnerTargetType() , false);
+                    string innerString = valType;
+                    vecString = vecString + innerString;
+                    vecString = vecString + ">";
+                    cppString = vecString;
+                    break;
+                }
                 default:
                     assert(false);
             }
@@ -170,6 +181,8 @@ namespace spmpi {
 
     void dsl_cpp_generator::getDefaultValueforTypes(int type) 
     {
+      // Barenya : to debug the type issue : 
+      printf ("type = %d\n", type) ;
         switch (type) {
             case TYPE_INT:
             case TYPE_LONG:
@@ -181,6 +194,7 @@ namespace spmpi {
                 break;
             case TYPE_BOOL:
                 main.pushstr_space("false");
+                break ;
             default:
                 assert(false);
             return;
@@ -254,6 +268,21 @@ namespace spmpi {
             default:
                 return "NA";
         }
+    }
+
+    bool dsl_cpp_generator::startsWith (char * actual, char * prefix) {
+      int endPointer = 0 ;
+      while (prefix[endPointer++] != '\0') ;
+      endPointer-- ;
+      for (int startPointer = 0 ; startPointer < endPointer ; startPointer++) {
+        if (actual[startPointer] == '\0') return false ;
+        if (prefix[startPointer] != actual[startPointer]) {
+          printf ("failed\n") ;
+          return false ;
+        }
+      }
+      printf ("matched\n") ;
+      return true ;
     }
 
     bool dsl_cpp_generator::allGraphIteration(char* methodId) {
