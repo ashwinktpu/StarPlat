@@ -132,6 +132,7 @@ NEGATE [-]
 
 
  /* Numbers and Identifies */
+"std::min"          { yylval.text = yytext; return ID; }
 {ALPHANUM}          { yylval.text=yytext; /*printf("HELLO ID %s",yytext); /* printf("\n");*/ return ID;}
 {DIGIT}+"."{DIGIT}* { yylval.fval=atof(yytext);
                         return FLOAT_NUM;}

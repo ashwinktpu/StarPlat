@@ -210,7 +210,7 @@ namespace spmpi {
                 }
                 else
                 {
-                    sprintf(strBuffer,"std::%s",proc->getMethodId()->getIdentifier()); // Hopefully this is the only instance where this happens.
+                  sprintf(strBuffer,"%s",proc->getMethodId()->getIdentifier()); // Hopefully this is the only instance where this happens.
                 } 
                 main.pushString(strBuffer);
                 main.pushString("(");
@@ -218,9 +218,10 @@ namespace spmpi {
                 // main.pushString (", world") ; // Cleaner way would be to push into arg list.
                 if(objectId == NULL)
                 {   
-                    // sprintf(strBuffer,", %s","world"); 
-                    // sprintf(strBuffer,", %s"); // Hopefully removing the additional world does not cause any problem.
-                    // main.pushString(strBuffer);
+                   if (!startsWith (proc->getMethodId () -> getIdentifier(), "std::")) {
+                    sprintf(strBuffer,", %s","world"); 
+                    main.pushString(strBuffer);
+                   }
                 }
                 main.pushString(")");
             }

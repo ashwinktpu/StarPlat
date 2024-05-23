@@ -270,6 +270,21 @@ namespace spmpi {
         }
     }
 
+    bool dsl_cpp_generator::startsWith (char * actual, char * prefix) {
+      int endPointer = 0 ;
+      while (prefix[endPointer++] != '\0') ;
+      endPointer-- ;
+      for (int startPointer = 0 ; startPointer < endPointer ; startPointer++) {
+        if (actual[startPointer] == '\0') return false ;
+        if (prefix[startPointer] != actual[startPointer]) {
+          printf ("failed\n") ;
+          return false ;
+        }
+      }
+      printf ("matched\n") ;
+      return true ;
+    }
+
     bool dsl_cpp_generator::allGraphIteration(char* methodId) {
         string methodString(methodId);
 

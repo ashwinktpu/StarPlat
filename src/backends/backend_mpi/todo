@@ -7,8 +7,11 @@
 # std::min 
   - currently it creates min (var, var, world).  
   - ✅ trail min (var, var)
-  - make statement generation, mapping to std::min (var, var).
-  - 
+  - ✅ make statement generation, mapping to std::min (var, var).
+
+# generate optimized DSL
+  - ⏳ add return for void.
+  - add break statement's fall through.
 
 # Symbol Table
   - buildForStatements function not complete. 

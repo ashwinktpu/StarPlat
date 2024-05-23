@@ -96,7 +96,8 @@ class dsl_cpp_generator
   void generateForAllSignature(forallStmt* forAll);
   void generatefixedpt_filter(Expression* filterExpr, bool & filter_generated);
   void generateParamList(list<formalParam*> paramList, dslCodePad& targetFile);
-  
+
+  bool startsWith (char * actual, char * prefix) ;
   bool neighbourIteration(char* methodId);
   bool allGraphIteration(char* methodId);
   bool elementsIteration(char* extractId);
