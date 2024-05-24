@@ -60,10 +60,6 @@ bool deviceVarsAnalyser::initStatement(statement *stmt, list<Identifier *> &vars
         return initReduction((reductionCallStmt *)stmt, vars);
     case NODE_ITRBFS:
         return initItrBFS((iterateBFS *)stmt, vars);
-    case NODE_ITRBFS2:
-        return initItrBFS2((iterateBFS2 *)stmt, vars);
-    case NODE_ITERBFSREV:
-        return initItrBFSRev((iterateBFSReverse *)stmt, vars);
         /*S
             case NODE_REDUCTIONCALLSTMT:
             return analyseReduction((reductionCallStmt *)stmt, inMap);
@@ -220,50 +216,6 @@ bool deviceVarsAnalyser::initItrBFS(iterateBFS *stmt, list<Identifier *> &vars)
         revStmt->initUsedVariable(revNode->usedVars.getVariables());
         gpuUsedVars.merge(revNode->usedVars);
     }
-
-    return true;
-}
-
-bool deviceVarsAnalyser::initItrBFS2(iterateBFS2 *stmt, list<Identifier *> &vars)
-{
-    ASTNodeWrap *stmtNode = initWrapNode(stmt, vars);
-    stmtNode->usedVars = getVarsStatement(stmt->getBody());
-    stmtNode->usedVars.removeVariable(stmt->getIteratorNode(), READ_WRITE);
-
-    stmt->initUsedVariable(stmtNode->usedVars.getVariables());
-    gpuUsedVars.merge(stmtNode->usedVars);
-
-    if (stmt->getRBFS() != nullptr)
-    {
-        iterateReverseBFS *revStmt = stmt->getRBFS();
-        ASTNodeWrap *revNode = initWrapNode(revStmt, vars);
-
-        usedVariables bVars = getVarsExpr(revStmt->getBFSFilter());
-        for (Identifier *iden : vars)
-            bVars.removeVariable(iden, READ_WRITE);
-
-        revNode->usedVars = getVarsStatement(revStmt->getBody());
-
-        if (bVars.getVariables().size() > 0) {
-            Identifier *itr = bVars.getVariables(READ_WRITE).front();
-            revNode->usedVars.removeVariable(itr, READ_WRITE);
-        }
-
-        revStmt->initUsedVariable(revNode->usedVars.getVariables());
-        gpuUsedVars.merge(revNode->usedVars);
-    }
-
-    return true;
-}
-
-bool deviceVarsAnalyser::initItrBFSRev(iterateBFSReverse *stmt, list<Identifier *> &vars)
-{
-    ASTNodeWrap *stmtNode = initWrapNode(stmt, vars);
-    stmtNode->usedVars = getVarsStatement(stmt->getBody());
-    stmtNode->usedVars.removeVariable(stmt->getIteratorNode(), READ_WRITE);
-
-    stmt->initUsedVariable(stmtNode->usedVars.getVariables());
-    gpuUsedVars.merge(stmtNode->usedVars);
 
     return true;
 }

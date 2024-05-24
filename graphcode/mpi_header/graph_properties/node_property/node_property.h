@@ -18,10 +18,14 @@ class NodeProperty : public Property
     boost::mpi::communicator world;
     T * history_data;
     std::vector<bool> already_locked_processors;
+    std::vector<bool> already_locked_processors_shared;
     std::vector<std::vector<std::pair<int32_t, T>>> reduction_queue;
+    std::unordered_map<int, std::vector<std::vector<int> > > sync_later ;
 
     public :
     Rma_Datatype<T> propList;
+    void fatBarrier () ;
+    void leaveAllSharedLocks () ;
     NodeProperty() : Property(true) 
     {
         if constexpr (std::is_same_v<T, int>)

@@ -1,3 +1,4 @@
+%define parse.trace
 %{
 	#include <stdio.h>
 	#include <string.h>
@@ -10,7 +11,6 @@
 	#include "../analyser/pushpull/pushpullAnalyser.h"
 
 	#include "../analyser/blockVars/blockVarsAnalyser.h"
-	#include "../analyser/liveVars/liveVarsAnalyser.h"
 	#include<getopt.h>
 	//#include "../symbolutil/SymbolTableBuilder.cpp"
      
@@ -55,10 +55,10 @@
 %token T_ADD_ASSIGN T_SUB_ASSIGN T_MUL_ASSIGN T_DIV_ASSIGN T_MOD_ASSIGN T_AND_ASSIGN T_XOR_ASSIGN
 %token T_OR_ASSIGN T_INC_OP T_DEC_OP T_PTR_OP T_AND_OP T_OR_OP T_LE_OP T_GE_OP T_EQ_OP T_NE_OP
 %token T_AND T_OR T_SUM T_AVG T_COUNT T_PRODUCT T_MAX T_MIN
-%token T_GRAPH T_DIR_GRAPH  T_NODE T_EDGE T_UPDATES T_CONTAINER T_NODEMAP
+%token T_GRAPH T_DIR_GRAPH  T_NODE T_EDGE T_UPDATES T_CONTAINER T_NODEMAP, T_VECTOR
 %token T_NP  T_EP
 %token T_LIST T_SET_NODES T_SET_EDGES  T_FROM
-%token T_BFS T_REVERSE T_BFSREVERSE T_BFS2
+%token T_BFS T_REVERSE
 %token T_INCREMENTAL T_DECREMENTAL T_STATIC T_DYNAMIC
 %token T_BATCH T_ONADD T_ONDELETE
 
@@ -68,15 +68,14 @@
 %token <fval> FLOAT_NUM
 %token <bval> BOOL_VAL
 %token <cval> CHAR_VAL
-%token return_func
 
 %type <node> function_def function_data  return_func function_body param
 %type <pList> paramList
 %type <node> statement blockstatements assignment declaration proc_call control_flow reduction return_stmt batch_blockstmt on_add_blockstmt on_delete_blockstmt
 %type <node> type type1 type2
-%type <node> primitive graph collections property container nodemap
+%type <node> primitive graph collections property container nodemap, vector
 %type <node> id leftSide rhs expression oid val boolean_expr unary_expr indexExpr tid  
-%type <node> bfs_abstraction filterExpr reverse_abstraction bfs_reverse_abstraction bfs_abstraction2
+%type <node> bfs_abstraction filterExpr reverse_abstraction
 %type <nodeList> leftList rightList
 %type <node> iteration_cf selection_cf
 %type <node> reductionCall 
@@ -94,6 +93,7 @@
 %left ':'
 %left T_OR_OP
 %left T_AND_OP
+%left T_ADD_ASSIGN
 %left T_EQ_OP  T_NE_OP
 %left '<' '>'  T_LE_OP T_GE_OP
 %left '+' '-' 
@@ -141,7 +141,7 @@ function_data: T_FUNC id '(' paramList ')' {
 											Util::resetTemp(tempIds);
 											tempIds.clear();
 											};	
-			// | return_func {$$ = $1};	
+			  // | return_func {$$ = $1};	
 
 paramList: param {$$=Util::createPList($1);};
                | param ',' paramList {$$=Util::addToPList($3,$1); 
@@ -178,22 +178,20 @@ function_body : blockstatements {$$=$1;};
 
 
 statements :  {};
-	| statements statement { Util::addToBlock($2); };
+	| statements statement {printf ("found one statement\n") ; Util::addToBlock($2); };
 
 statement: declaration ';'{$$=$1;};
-	|assignment ';'{$$=$1;};
-	|proc_call ';' {$$=Util::createNodeForProcCallStmt($1);};
-	|control_flow {$$=$1;};
-	|reduction ';'{$$=$1;};
-	| bfs_abstraction {$$=$1; };
-	| bfs_abstraction2 {$$=$1; };
-	| bfs_reverse_abstraction {$$=$1;};
-	| blockstatements {$$=$1;};
-	| unary_expr ';' {$$=Util::createNodeForUnaryStatements($1);};
-	| return_stmt ';' {$$ = $1 ;};
-	| batch_blockstmt  {$$ = $1;};
-	| on_add_blockstmt {$$ = $1;};
-	| on_delete_blockstmt {$$ = $1;};
+	|assignment ';'{printf ("found an assignment type statement" ); $$=$1;};
+	|proc_call ';' {printf ("found an proc call type statement" );$$=Util::createNodeForProcCallStmt($1);};
+	|control_flow {printf ("found an control flow type statement" );$$=$1;};
+	|reduction ';'{printf ("found an reduction type statement" );$$=$1;};
+	| bfs_abstraction {printf ("found bfs\n") ;$$=$1; };
+	| blockstatements {printf ("found block\n") ;$$=$1;};
+	| unary_expr ';' {printf ("found unary\n") ;$$=Util::createNodeForUnaryStatements($1);};
+	| return_stmt ';' {printf ("found return\n") ;$$ = $1 ;};
+	| batch_blockstmt  {printf ("found batch\n") ;$$ = $1;};
+	| on_add_blockstmt {printf ("found on add block\n") ;$$ = $1;};
+	| on_delete_blockstmt {printf ("found delete block\n") ;$$ = $1;};
 
 
 blockstatements : block_begin statements block_end { $$=Util::finishBlock();};
@@ -251,6 +249,7 @@ collections : T_LIST { $$=Util::createCollectionTypeNode(TYPE_LIST,NULL);};
 					                    $$=Util::createCollectionTypeNode(TYPE_SETE,$3);};
 		| T_UPDATES '<' id '>'   { $$=Util::createCollectionTypeNode(TYPE_UPDATES,$3);}
 	    | container {$$ = $1;}
+      | vector {$$ = $1;}
 		| nodemap   {$$ = $1;}
 
 container : T_CONTAINER '<' type '>' '(' arg_list ',' type ')' {$$ = Util::createContainerTypeNode(TYPE_CONTAINER, $3, $6->AList, $8);}
@@ -258,6 +257,10 @@ container : T_CONTAINER '<' type '>' '(' arg_list ',' type ')' {$$ = Util::creat
           | T_CONTAINER '<' type '>' { list<argument*> argList;
 			                          $$ = Util::createContainerTypeNode(TYPE_CONTAINER, $3, argList, NULL);}		
 
+vector: T_VECTOR'<' type '>' '(' arg_list ',' type ')' {$$ = Util::createContainerTypeNode(TYPE_VECTOR, $3, $6->AList, $8);}
+          | T_VECTOR'<' type '>' '(' arg_list ')' { $$ =  Util::createContainerTypeNode(TYPE_VECTOR, $3, $6->AList, NULL);}
+          | T_VECTOR'<' type '>' { list<argument*> argList;
+			                          $$ = Util::createContainerTypeNode(TYPE_VECTOR, $3, argList, NULL);}		
 nodemap : T_NODEMAP '(' type ')' {$$ = Util::createNodeMapTypeNode(TYPE_NODEMAP, $3);}
 
 type2 : T_NODE {$$=Util::createNodeEdgeTypeNode(TYPE_NODE) ;};
@@ -274,7 +277,8 @@ property : T_NP '<' primitive '>' { $$=Util::createPropertyTypeNode(TYPE_PROPNOD
 			                         $$=Util::createPropertyTypeNode(TYPE_PROPNODE, type); }	
 
 assignment :  leftSide '=' rhs  { printf("testassign\n");$$=Util::createAssignmentNode($1,$3);};
-              | indexExpr '=' rhs { $$=Util::createAssignmentNode($1 , $3);};        
+              | indexExpr '=' rhs {printf ("called assign for count\n") ; $$=Util::createAssignmentNode($1 , $3);};        
+
 
 rhs : expression { $$=$1;};
 
@@ -364,6 +368,7 @@ reduction : leftSide '=' reductionCall { $$=Util::createNodeForReductionStmt($1,
 		   |'<' leftList '>' '=' '<' reductionCall ',' rightList '>'  { reductionCall* reduc=(reductionCall*)$6;
 		                                                               $$=Util::createNodeForReductionStmtList($2->ASTNList,reduc,$8->ASTNList);};
 		   | leftSide reduce_op expression {$$=Util::createNodeForReductionOpStmt($1,$2,$3);}; 															   
+       | expression reduce_op expression {printf ("here calling creation for red op\n") ;$$=Util::createNodeForReductionOpStmt ($1,$2,$3);};
 
 
 reduce_op : T_ADD_ASSIGN {$$=OPERATOR_ADDASSIGN;};
@@ -374,7 +379,7 @@ reduce_op : T_ADD_ASSIGN {$$=OPERATOR_ADDASSIGN;};
 
 leftList :  leftSide ',' leftList { $$=Util::addToNList($3,$1);
                                          };
-		 | leftSide { $$=Util::createNList($1);};
+		 | leftSide{ $$=Util::createNList($1);;};
 
 rightList : val ',' rightList { $$=Util::addToNList($3,$1);};
           | leftSide ',' rightList { ASTNode* node = Util::createNodeForId($1);
@@ -400,6 +405,7 @@ reduction_calls : T_SUM { $$=REDUCE_SUM;};
 leftSide : id { $$=$1; };
          | oid { printf("Here hello \n"); $$=$1; };
          | tid {$$ = $1; };	
+         | indexExpr{$$=$1;};
 		  
 
 arg_list :    {
@@ -446,13 +452,10 @@ arg_list :    {
 bfs_abstraction	: T_BFS '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr blockstatements reverse_abstraction{$$=Util::createIterateInBFSNode($3,$5,$7,$9,$11,$12,$13) ;};
 			| T_BFS '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr blockstatements {$$=Util::createIterateInBFSNode($3,$5,$7,$9,$11,$12,NULL) ; };
 
-bfs_abstraction2	: T_BFS2 '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr blockstatements reverse_abstraction{$$=Util::createIterateInBFSNode2($3,$5,$7,$9,$11,$12,$13) ;};
-			| T_BFS2 '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr blockstatements {$$=Util::createIterateInBFSNode2($3,$5,$7,$9,$11,$12,NULL) ; };
+
 
 reverse_abstraction :  T_REVERSE blockstatements {$$=Util::createIterateInReverseBFSNode(NULL,$2);};
                      | T_REVERSE '(' boolean_expr ')'  blockstatements {$$=Util::createIterateInReverseBFSNode($3,$5);};
-
-bfs_reverse_abstraction :  T_BFSREVERSE '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr blockstatements {$$=Util::createIterateInBFSReverseNode($3,$5,$7,$9,$11,$12);};
 
 
 oid :  id '.' id { //Identifier* id1=(Identifier*)Util::createIdentifierNode($1);
@@ -551,19 +554,11 @@ int main(int argc,char **argv)
    else
     {
 
-		if(!(
-				(strcmp(backendTarget,"omp")==0) || 
-				(strcmp(backendTarget,"amd")==0) || 
-				(strcmp(backendTarget,"mpi")==0) || 
-				(strcmp(backendTarget,"cuda")==0) || 
-				(strcmp(backendTarget,"acc")==0) || 
-				(strcmp(backendTarget,"sycl")==0) || 
-				(strcmp(backendTarget,"hip")==0) || 
-				(strcmp(backendTarget,"multigpu")==0)
-			)) {
+		if(!((strcmp(backendTarget,"omp")==0)|| (strcmp(backendTarget,"amd")==0) || (strcmp(backendTarget,"mpi")==0)||(strcmp(backendTarget,"cuda")==0) || (strcmp(backendTarget,"acc")==0) || (strcmp(backendTarget,"sycl")==0)|| (strcmp(backendTarget,"multigpu")==0)))
 
-				fprintf(stderr, "Specified backend target is not implemented in the current version!\n");
-				exit(-1);
+		   {
+			  fprintf(stderr, "Specified backend target is not implemented in the current version!\n");
+			   exit(-1);
 		   }
 	}
 
@@ -639,10 +634,6 @@ int main(int argc,char **argv)
         spomp::dsl_cpp_generator cpp_backend;
 	std::cout<< "size:" << frontEndContext.getFuncList().size() << '\n';
         cpp_backend.setFileName(fileName);
-		if(optimize) {
-			liveVarsAnalyser liveness;
-			liveness.analyse(frontEndContext.getFuncList());
-		}
         cpp_backend.generate();
       } 
 	  else if (strcmp(backendTarget, "mpi") == 0) {
@@ -667,37 +658,24 @@ int main(int argc,char **argv)
 		pp.analyse(frontEndContext.getFuncList());
 		cpp_backend.setFileName(fileName);
 		cpp_backend.generate();
-
-		} else if (strcmp(backendTarget, "sycl") == 0) {
-
-			std::cout<<"GENERATING SYCL CODE"<<std::endl;
-			spsycl::dsl_cpp_generator cpp_backend;
-			cpp_backend.setFileName(fileName);
-			cpp_backend.generate();
-
-		} else if (strcmp(backendTarget, "amd") == 0) {
-
-			std::cout<<"GENERATING OPENCL CODE"<<std::endl;
-			spamd::dsl_cpp_generator cpp_backend;
-			cpp_backend.setFileName(fileName);
-			cpp_backend.generate();
-
-		} else if(strcmp(backendTarget, "hip") == 0) {
-			
-			std::cout << "Generating HIP Code\n";
-			
-			const unsigned blockSize = 512;
-			//TODO: This block size can be a command line parameter.
-			// Hence the assertion.
-			assert(blockSize > 0 && blockSize <= 1024);
-
-			sphip::DslCppGenerator hip_backend(fileName, blockSize);
-			hip_backend.Generate();
-
-		} else std::cout<< "invalid backend" << '\n';
-
-	} else {
-
+}
+	  else if (strcmp(backendTarget, "sycl") == 0) {
+		std::cout<<"GENERATING SYCL CODE"<<std::endl;
+        spsycl::dsl_cpp_generator cpp_backend;
+        cpp_backend.setFileName(fileName);
+        cpp_backend.generate();
+	  }
+	  else if (strcmp(backendTarget, "amd") == 0) {
+		std::cout<<"GENERATING OPENCL CODE"<<std::endl;
+        spamd::dsl_cpp_generator cpp_backend;
+        cpp_backend.setFileName(fileName);
+        cpp_backend.generate();
+	  }
+      else
+	    std::cout<< "invalid backend" << '\n';
+	  }
+	else 
+	 {
 		if(strcmp(backendTarget, "omp") == 0) {
 		   spdynomp::dsl_dyn_cpp_generator cpp_dyn_gen;
 		   cpp_dyn_gen.setFileName(fileName);

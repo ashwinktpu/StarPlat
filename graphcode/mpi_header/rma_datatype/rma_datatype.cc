@@ -52,6 +52,7 @@
     {   
         int mpi_lock = lock == SHARED_LOCK  ? MPI_LOCK_SHARED : MPI_LOCK_EXCLUSIVE;
         MPI_Win_lock(mpi_lock, proc_num, assert , win);
+        // MPI_Win_lock(mpi_lock, proc_num, 0, win);
     }
     else if(lock == SHARED_ALL_PROCESS_LOCK)
     {
@@ -61,6 +62,12 @@
         std::cerr <<"Invalid Lock Type\n";
         exit(-1);
     }
+  }
+
+  // Barenya : Need to flush and sync before get. 
+  template<typename T>
+  void Rma_Datatype<T>::flush (int32_t targetRank) {
+ 	  MPI_Win_flush (targetRank, win) ; 
   }
   
   template<typename T>
@@ -100,7 +107,9 @@
   template<typename T>
   void Rma_Datatype<T>::accumulate(int32_t proc_num,  T* data_array,int startIndex,int length, MPI_Op op,locktype lock)
   {
+    // Optimising via a sync_later construct.
     MPI_Accumulate(data_array , length, mpi_datatype, proc_num, startIndex, length, mpi_datatype, op, win);
+    // sync_later[proc_num].push_back ({proc_num, startIndex, data_array[0]}) ;
     return;
   }
 

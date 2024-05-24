@@ -454,6 +454,7 @@ namespace spmpi {
                     if(id->getSymbolInfo()->isGlobalVariable())
                     {   
 
+                        // Barenya : Commenting out some code generation that makes thigns incorrect.
                         sprintf(strBuffer,"%s_leader_rank",id->getIdentifier());
                         main.pushString(strBuffer);
                         main.pushString(" = world.rank()");
@@ -486,12 +487,12 @@ namespace spmpi {
             {
                 if(insideParallelConstruct.size()==0)
                 {   
-                    if(propId->getIdentifier2()->getSymbolInfo()->getType()->gettypeId()==TYPE_PROPNODE) 
-                        sprintf(strBuffer, "if(world.rank() == %s.%s(%s))", graphIds[0]->getIdentifier(),"get_node_owner", propId->getIdentifier1()->getIdentifier());
-                    else if(propId->getIdentifier2()->getSymbolInfo()->getType()->gettypeId()==TYPE_PROPEDGE)
-                        sprintf(strBuffer, "if(world.rank() == %s.%s(%s))", graphIds[0]->getIdentifier(),"get_edge_owner", propId->getIdentifier1()->getIdentifier());
-                    main.pushstr_newL(strBuffer);
-                    main.pushstr_newL("{");
+                    // if(propId->getIdentifier2()->getSymbolInfo()->getType()->gettypeId()==TYPE_PROPNODE) 
+                        // sprintf(strBuffer, "if(world.rank() == %s.%s(%s))", graphIds[0]->getIdentifier(),"get_node_owner", propId->getIdentifier1()->getIdentifier());
+                    // else if(propId->getIdentifier2()->getSymbolInfo()->getType()->gettypeId()==TYPE_PROPEDGE)
+                        // sprintf(strBuffer, "if(world.rank() == %s.%s(%s))", graphIds[0]->getIdentifier(),"get_edge_owner", propId->getIdentifier1()->getIdentifier());
+                    // main.pushstr_newL(strBuffer);
+                    // main.pushstr_newL("{");
                 }    
 
                 if(assignStmt->getExpr()->isArithmetic() && assignStmt->getExpr()->getLeft()->isPropIdExpr() )
@@ -533,8 +534,8 @@ namespace spmpi {
                     main.pushstr_newL(");");
                 }
 
-                if(insideParallelConstruct.size()==0)    
-                    main.pushstr_newL("}");
+                // if(insideParallelConstruct.size()==0)    
+                    // main.pushstr_newL("}");
 
                 Identifier* id2 = propId->getIdentifier2();
                 if (id2->getSymbolInfo() != NULL && id2->getSymbolInfo()->getId()->get_fp_association()) {
@@ -577,22 +578,47 @@ namespace spmpi {
         if (stmt->isLeftIdentifier()) {
             Identifier* id = stmt->getLeftId();
             main.pushString(id->getIdentifier());
-            main.pushString(" = ");
+            main.pushString(" = ( ");
             main.pushstr_space(id->getIdentifier());
             const char* operatorString = getOperatorString(stmt->reduction_op());
             main.pushstr_space(operatorString);
             generateExpr(stmt->getRightSide());
+            main.pushString (") ") ;
             main.pushstr_newL(";");
 
         } 
         // TODO : Yet to update this
+        else if (stmt->isContainerReduc() ) {
+          auto containerName = stmt->getMapExprReduc()->getId()->getIdentifier() ;
+          main.pushString (containerName) ;
+          main.pushString (".") ;
+          // TODO : Barenya : make this a little more operation agnostic
+          main.pushString ("atomicAdd (") ;
+          generateExpr (stmt->getIndexExprReduc ()) ;
+          main.pushString (", ") ;
+          generateExpr (stmt->getRightSide()) ;
+          main.pushString (")") ;
+          main.pushstr_newL(";") ;
+        }
         else {
-            generate_exprPropId(stmt->getPropAccess());
-            main.pushString(" = ");
-            generate_exprPropId(stmt->getPropAccess());
+            // generate_exprPropId(stmt->getPropAccess());
+            auto propId = stmt->getPropAccess () ;
+            auto index = propId->getIdentifier1 () -> getIdentifier ()  ;
+            auto propertyName = propId->getIdentifier2 () -> getIdentifier ();
+            main.pushString (propertyName) ;
+            // main.pushString(" = ");
+            // generate_exprPropId(stmt->getPropAccess());
+            // main.pushString (stmt->getLeftId()->getIdentifier()) ;
+            main.pushString (".") ;
             const char* operatorString = getOperatorString(stmt->reduction_op());
-            main.pushstr_space(operatorString);
+            if (!strcmp(operatorString ,(const char*) "+")) main.pushString ("atomicAdd (") ;
+            if (!strcmp(operatorString ,(const char*) "-")) main.pushString ("atomicAdd (") ;
+            main.pushString (index) ;
+            main.pushString (", ") ;
+            if (!strcmp(operatorString ,(const char*) "-")) main.pushString ("-") ;
+            // main.pushstr_space(operatorString);
             generateExpr(stmt->getRightSide());
+            main.pushString (")") ;
             main.pushstr_newL(";");
         }
     }
@@ -724,7 +750,7 @@ namespace spmpi {
                     TableEntry* tableEntry = filterId != NULL ? filterId->getSymbolInfo() : NULL;
                     if (tableEntry != NULL && tableEntry->getId()->get_fp_association()) 
                     {
-                        sprintf(strBuffer,"%s.rememberHistory();", filterId->getIdentifier());
+                        sprintf(strBuffer,"%s.remeberHistory()", filterId->getIdentifier());
                         if(!already_remebered)
                             main.pushstr_newL(strBuffer);
 
@@ -802,18 +828,33 @@ namespace spmpi {
 
         statement* body = forAll->getBody();
         
+        analysisForAll = new bAnalyzer () ;
 
-
+        analysisForAll->analyzeForAllStmt (forAll) ;  
+        
         generateForAllSignature(forAll);
 
-        if (forAll->hasFilterExpr()) {
-            blockStatement* changedBody = includeIfToBlock(forAll);
-            forAll->setBody(changedBody);
+        if (analysisForAll->getAnalysisStatus() > 0) {
+          blockStatement * newBody = analysisForAll->getNewBody () ; 
+          forAll->setBody (newBody) ;
         }
-    
+
+        if (forAll->hasFilterExpr()) {
+          analysisForAll->evaluateFilter (forAll, (blockStatement *)forAll->getBody (), forAll->getfilterExpr()) ;
+          if (analysisForAll->getFilterAnalysisStatus()) {
+            blockStatement * addToQueueBody = analysisForAll-> getStatementForLoop () ;
+            // Barenya : Could cause potential deletion of the loop body.
+            forAll->setBody (addToQueueBody) ;
+          }
+          blockStatement* changedBody = includeIfToBlock(forAll);
+          forAll->setBody (changedBody);
+        }
+
+         
 
         if (extractElemFunc != NULL) {
             forallStack.push_back(make_pair(forAll->getIterator(), forAll->getExtractElementFunc()));
+            callStackForAnalyzer.push (analysisForAll) ;
             if (neighbourIteration(iteratorMethodId->getIdentifier())) 
             {
                 generateStatement(forAll->getBody());
@@ -829,10 +870,9 @@ namespace spmpi {
             }
 
             forallStack.pop_back();
-
-        }
-
-        else {
+            analysisForAll = callStackForAnalyzer.top () ;
+            callStackForAnalyzer.pop () ;
+        } else {
             // If Forall is iterating through a set 
             if (collectionId->getSymbolInfo()->getType()->gettypeId() == TYPE_SETN) 
             {
@@ -871,7 +911,7 @@ namespace spmpi {
             sprintf(strBuffer,"%s.sync_reduction();",forAll->getSourceGraph()->getIdentifier());
             main.pushstr_newL(strBuffer);
         }
-        if(forAll->isForall())
+        if(forAll->isForall() && !ifStatementInForAll)
             main.pushstr_newL("world.barrier();");
         // Genereate code related to reduction at the end of for all
 
@@ -922,6 +962,17 @@ namespace spmpi {
 
         if(forAll->isForall())
             insideParallelConstruct.pop_back();
+        
+        // Barenya :
+        if (forAll->isForall() && ifStatementInForAll) {
+            main.pushstr_newL ("}") ;
+            ifStatementInForAll = true ;
+            main.pushstr_newL ("world.barrier () ;") ;
+        }
+        main.NewLine () ;
+        if (analysisForAll->getFilterAnalysisStatus() == true)
+          generateStatement ((statement*)analysisForAll->getStatementWithinWhileLoop () ) ;
+        analysisForAll->clearAllAnalysis () ;
     }
 
     void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll) {
@@ -938,9 +989,10 @@ namespace spmpi {
                 if (s.compare("nodes") == 0) {
                     cout << "INSIDE NODES VALUE"
                     << "\n";
-                    if(forAll->isForall())
+                    if(forAll->isForall()) {
                         sprintf(strBuffer, "for (%s %s = %s.%s(); %s <= %s.%s(); %s ++) ", "int", iterator->getIdentifier(),graphId,"start_node" ,iterator->getIdentifier(), graphId, "end_node", iterator->getIdentifier());
-                    else 
+                    // ifStatementInForAll = true ;
+                    } else 
                         sprintf(strBuffer, "for (%s %s = 0; %s < %s.%s(); %s ++) ", "int", iterator->getIdentifier() ,iterator->getIdentifier(), graphId, "num_nodes", iterator->getIdentifier());
                 } else
                     //TODO :(Atharva) start_edge and end_edge is not yet supported in header file
@@ -955,22 +1007,36 @@ namespace spmpi {
                 char* graphId = sourceGraph->getIdentifier();
                 char* methodId = iteratorMethodId->getIdentifier();
                 string s(methodId);
+                strBuffer[0]='\0';
+                
                 if (s.compare("neighbors") == 0) {
+                    // int analysisStatus = analysisForAll->analyzeForAllStmt (forAll) ;
+                    // printf ("analysis returned %d\n", analysisStatus) ;
                     list<argument*> argList = extractElemFunc->getArgList();
                     assert(argList.size() == 1);
                     Identifier* nodeNbr = argList.front()->getExpr()->getId();
-                    if(forAll->isForall())
-                        //TODO : Yet to add, add for loop and add another if condition so that proc will consider 
-                        // only those neighbors which the process owns.
-
-                        assert(false);
-
+                    int analysisStatus = analysisForAll->getAnalysisStatus () ;
+                    printf ("analysisStats = %d\n", analysisStatus) ;
+                    if (analysisStatus) {
+                      char * variableIter = analysisForAll->getIteratorVar () ;
+                      printf ("LOG : variableIter = %s\n", variableIter) ;
+                      sprintf (strBuffer, "int %s = 0 ;\n", variableIter) ;
+                      main.pushstr_newL (strBuffer) ;
+                    }
+                    if(forAll->isForall()){
+                        sprintf (strBuffer, "if ( %s != -1 && world.rank () == g.get_node_owner (%s) )\n { for (%s %s:%s.%s(%s))", nodeNbr->getIdentifier(), nodeNbr->getIdentifier(), "int", iterator->getIdentifier(), graphId, "getNeighbors", nodeNbr->getIdentifier()) ;
+                        ifStatementInForAll = true ;
+                        main.pushstr_newL (strBuffer) ;
+                    }
                     //This is hardcoded here, need to change     
-                    else if(forAll->getParent()->getParent()->getTypeofNode() == NODE_ITRBFS || forAll->getParent()->getParent()->getTypeofNode() == NODE_ITRRBFS)
-                        sprintf(strBuffer, "for (%s %s :%s.%s(%s))","int",iterator->getIdentifier(), graphId, "get_bfs_children", nodeNbr->getIdentifier());
-                    else 
+                    // Barenya : Hardcoding here is causing analysis to fail. TO -> Issue with nested forAlls only.
+                    // else if(forAll->getParent()->getParent()->getTypeofNode() == NODE_ITRBFS || forAll->getParent()->getParent()->getTypeofNode() == NODE_ITRRBFS){
+                        // sprintf(strBuffer, "for (%s %s :%s.%s(%s))","int",iterator->getIdentifier(), graphId, "get_bfs_children", nodeNbr->getIdentifier());
+                    // }
+                    else {
                         sprintf(strBuffer, "for (%s %s : %s.%s(%s)) ", "int", iterator->getIdentifier(), graphId, "getNeighbors", nodeNbr->getIdentifier());
-                    main.pushstr_newL(strBuffer);
+                        main.pushstr_newL(strBuffer);
+                    }
                 }
                 if (s.compare("nodes_to") == 0) {
                     list<argument*> argList = extractElemFunc->getArgList();
@@ -989,6 +1055,7 @@ namespace spmpi {
             }
         } else if (forAll->isSourceField()) {
             // TODO : Yet to add code for this case
+            
 
         } else {
             Identifier* sourceId = forAll->getSource();
@@ -1008,7 +1075,7 @@ namespace spmpi {
     }    
 
 
-    blockStatement* dsl_cpp_generator::includeIfToBlock(forallStmt* forAll) {
+        blockStatement* dsl_cpp_generator::includeIfToBlock(forallStmt* forAll) {
         Expression* filterExpr = forAll->getfilterExpr();
         statement* body = forAll->getBody();
         Expression* modifiedFilterExpr = filterExpr;
@@ -1061,8 +1128,11 @@ namespace spmpi {
         Type* type = decl->getType();
         char strBuffer[1024];
 
+        printf ("inside variable declation but outside propType") ;
+
         if (type->isPropType()) 
         {
+          printf ("inside variable declation\n") ;
             if (type->getInnerTargetType()->isPrimitiveType()) 
             {
                 Type* innerType = type->getInnerTargetType();
@@ -1087,6 +1157,7 @@ namespace spmpi {
         } 
         else if (type->isPrimitiveType()) 
         {
+            printf ("get_edge maps to primitive ?? Don't think so\n") ;
             main.pushstr_space(convertToCppType(type));
             main.pushString(decl->getdeclId()->getIdentifier());
             if (decl->isInitialized()) 
@@ -1113,6 +1184,7 @@ namespace spmpi {
         } 
         else if (type->isNodeEdgeType()) 
         {
+            printf ("get edge maps to isNodeEdgeType () \n") ;
             main.pushstr_space(convertToCppType(type));
             main.pushString(decl->getdeclId()->getIdentifier());
             if (decl->isInitialized()) 
@@ -1150,6 +1222,17 @@ namespace spmpi {
                 main.pushstr_newL(";");                
             }
             else if(type->gettypeId() == TYPE_CONTAINER)
+            {
+                main.pushstr_space(convertToCppType(type));
+                main.pushString(decl->getdeclId()->getIdentifier());
+                if (decl->isInitialized()) 
+                {
+                    main.pushString(" = ");
+                    generateExpr(decl->getExpressionAssigned());
+                }
+                main.pushstr_newL(";");
+            }
+            else if(type->gettypeId() == TYPE_VECTOR) 
             {
                 main.pushstr_space(convertToCppType(type));
                 main.pushString(decl->getdeclId()->getIdentifier());

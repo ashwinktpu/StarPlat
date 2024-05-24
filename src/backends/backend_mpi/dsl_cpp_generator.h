@@ -2,6 +2,7 @@
 #include "../dslCodePad.h"
 #include "../../ast/ASTNodeTypes.hpp"
 #include "../../parser/includeHeader.hpp"
+#include "bAnalyzer/bAnalyzer.h"
 
 #ifndef MPI_DSL_CPP_GENERATOR
 #define MPI_DSL_CPP_GENERATOR
@@ -23,11 +24,14 @@ class dsl_cpp_generator
     int decFuncCount;
     int dynFuncCount;
     int curFuncType;
+    bAnalyzer *  analysisForAll ;
+    stack<bAnalyzer*> callStackForAnalyzer ;
     vector<pair<Identifier*, proc_callExpr*>> forallStack;
     std::vector<statement*> insideParallelConstruct;
     fixedPointStmt* fixedPointEnv;
     //bool isOptimized;
   public:
+   bool ifStatementInForAll ;
   dsl_cpp_generator()
   {
     //std::cout << "***********************Inside construtor" << std::endl;
@@ -39,7 +43,7 @@ class dsl_cpp_generator
     inFuncCount = 0;
     decFuncCount = 0;
     dynFuncCount = 0;
-    
+    ifStatementInForAll = false ; 
     fixedPointEnv = NULL;
     printf("set to null\n");
     //isOptimized = false;
@@ -92,7 +96,8 @@ class dsl_cpp_generator
   void generateForAllSignature(forallStmt* forAll);
   void generatefixedpt_filter(Expression* filterExpr, bool & filter_generated);
   void generateParamList(list<formalParam*> paramList, dslCodePad& targetFile);
-  
+
+  bool startsWith (char * actual, char * prefix) ;
   bool neighbourIteration(char* methodId);
   bool allGraphIteration(char* methodId);
   bool elementsIteration(char* extractId);

@@ -22,6 +22,7 @@ class EdgeProperty : public Property
     private :
     int length;
     
+    std::unordered_map<int, std::vector<std::vector<int> > > sync_later ;
 
     bool diff_propList_present;
     
@@ -36,10 +37,14 @@ class EdgeProperty : public Property
 
     //TODO : Have to modify logic for reduction when diff_proplist is present
     std::vector<std::vector<std::pair<int32_t, T>>> reduction_queue;
+    std::vector<bool> already_locked_processors;
+    std::vector<bool> already_locked_processors_shared;
 
     public :
     Rma_Datatype<T> propList;
     Rma_Datatype<T> diff_propList;
+    void fatBarrier () ;
+    void leaveAllSharedLocks () ;
 
     EdgeProperty() : Property(true) 
     {
@@ -107,7 +112,7 @@ class EdgeProperty : public Property
     
     T compareAndSwap(Edge edge, T compare, T swap);
 
-    void atomicAdd(Edge edge, T value);
+    void atomicAdd(Edge &edge, T value);
     
 };
     

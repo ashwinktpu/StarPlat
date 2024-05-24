@@ -1,8 +1,63 @@
 #include"graph_mpi.h"
+#include "synchronize_p2p.hpp"
 #include"rma_datatype/rma_datatype.h"
 #include<iostream>
 #include <fstream>
 #include <sstream>
+  
+void freeAllUpdateMemory (std::vector<int*> updates) {
+	for (auto &freeUpdate:updates) {
+		int * freeThisUpdate = freeUpdate-1 ;
+		free (freeThisUpdate) ;
+		freeThisUpdate=NULL ;
+		freeUpdate=NULL ;
+	}
+}
+
+  bool Graph::frontier_empty (/*boost::mpi::communicator world*/) {
+    std::vector<int*> updates = synchronize(frontier_sync, 1) ;
+    for (auto &update:updates) {
+	  assert (get_node_owner (update[0]) == world.rank ()) ;
+      frontier.insert (update[0]) ;
+    } 
+	frontier_sync.clear () ;
+	freeAllUpdateMemory (updates) ;
+	updates.clear () ;
+    int x = frontier.empty () ;
+    x = boost::mpi::all_reduce (world, x, std::plus<int> ()) ;
+    return x==world.size () ?true:false;
+  }
+
+  int Graph::frontier_pop_local (/*boost::mpi::communicator world*/) {
+    std::vector<int*> updates = synchronize(frontier_sync, 1) ;
+    for (auto &update:updates) {
+	  assert (get_node_owner (update[0]) == world.rank ()) ;
+      frontier.insert (update[0]) ;
+    } 
+	frontier_sync.clear () ;
+	freeAllUpdateMemory (updates) ;
+	updates.clear () ;
+    if (frontier.empty()) return -1 ;
+    int popper = *frontier.begin () ;
+    // int popper = frontier.front () ;
+    assert (!frontier.empty ()) ;
+    frontier.erase (popper) ;
+		// frontier.pop () ;
+    return popper  ;
+  }
+
+  void Graph::frontier_push (int &u/*, boost::mpi::communicator world*/) {
+    if (u == -1 ) return ;
+    if (world.rank () == get_node_owner (u) ) {
+			frontier.insert (u) ;
+    } else {
+      frontier_sync.push_back ({world.rank(), get_node_owner(u), u}) ;
+    }
+  } 
+  
+  int Graph::frontier_size () {
+    return frontier.size () ;
+  }
 
   void Graph::print_csr()
   {
@@ -134,7 +189,7 @@
   }
 
   
-  Graph::Graph(char* file, boost::mpi::communicator world , bool undirected)
+  Graph::Graph(char* file, boost::mpi::communicator world , int32_t undirected, bool optimized)
   {
     this->undirected = undirected;
     filePath=file;
@@ -146,7 +201,7 @@
     std::vector<int32_t> src , dest, weight;
     if (world.rank() == 0)
     {
-      readFromFile(filePath, nodesTotal, edgesTotal, src , dest, weight);
+      readFromFile(filePath, nodesTotal, edgesTotal, src , dest, weight, undirected);
     }
 
     world.barrier();
@@ -179,6 +234,7 @@
     nodesPartitionSize = (nodesTotal + world.size() - 1) / world.size();
     startNode = world.rank() * nodesPartitionSize;
     endNode = std::min(startNode + nodesPartitionSize -1, nodesTotal -1 );
+
 
     /* We first build local adjacency list according to current edges that each proc has, and then redestribute this
      edges using all to all so that each proc gets the edges corresponding to nodes which the proc owns */
@@ -215,8 +271,6 @@
       }
 	  }
     adjacency_list_3d.clear();
-
-
 
     for (int i = 0; i < scatter_size; i++)
     {
@@ -316,9 +370,25 @@
     this->perNodeRevCSRSpace.create_window(temp.data(),nodesPartitionSize,sizeof(int32_t),world);
     this->perNodeDiffCSRSpace.create_window(temp.data(),nodesPartitionSize,sizeof(int32_t),world);
     this->perNodeDiffRevCSRSpace.create_window(temp.data(),nodesPartitionSize,sizeof(int32_t),world);
+
     
-    
+    speedUpForGetEdge = std::vector<std::unordered_map<int, int> > (endNode-startNode+1) ;
+    printf ("start node = %d and end node = %d\n", startNode, endNode) ;
+    if (optimized) {
+      for (int u = startNode; u < endNode+1; u++) {
+        int u_temp = u-startNode ;
+        std::unordered_map <int, int> temp3 ;
+        for (int vIdx = indexofNodes[u_temp]; vIdx < indexofNodes[u_temp+1]; vIdx++) {
+          int v = destList[vIdx] ;
+					if (temp3.find (v) == temp3.end ()) 
+          	temp3[v]=vIdx ;
+        }
+        speedUpForGetEdge[u_temp]=std::move(temp3) ;
+      }
+      // printf ("speedUpVector size = %d and expected size = %d\n", speedUpForGetEdge.size (), endNode-startNode+1) ;
+    }
   }
+
  
   void Graph::initialise_reduction(MPI_Op op, Property* reduction_property, std::vector<Property*> other_properties)
   {
@@ -472,13 +542,16 @@
 
   int Graph::get_node_owner(int node)
   {
+    if (node == -1) return -1 ;
     return node/nodesPartitionSize;
   }
 
   int  Graph::get_node_local_index(int node)
   {
+    if (node == -1) return -1 ;
     return node%nodesPartitionSize;
   }
+
 
   int Graph::get_edge_owner(Edge edge)
   {
@@ -515,18 +588,71 @@
       return edge.get_id() - diff_edgeProcMap[get_edge_owner(edge)];  
   }
 
+  Edge Graph::get_edge_i (int u, int v) {
+    int owner_proc = u/nodesPartitionSize ;
+    int index = u%nodesPartitionSize ;
+    if (world.rank () == owner_proc) {
+      int idx = indexofNodes.data[index]+v ;
+      assert (idx < indexofNodes.data[index+1]) ;
+      return Edge (true, edgeProcMap[owner_proc]+idx) ;
+    } else {
+      // printf ("locking for getting edge via index proc %d\n", owner_proc) ;
+      indexofNodes.get_lock (owner_proc, SHARED_LOCK, false) ;
+      int * destListIndices = indexofNodes.get_data (owner_proc, index, 2, SHARED_LOCK) ;
+      indexofNodes.unlock (owner_proc, SHARED_LOCK) ;
+      int start = destListIndices[0], end = destListIndices[1] ;
+      int idx = start+v ;
+      assert (idx < end) ;
+      return Edge(true,edgeProcMap[owner_proc]+idx);
+    }
+
+  }
+  int Graph::get_other_vertex(int u, int v_idx) {
+    int owner_proc = u/nodesPartitionSize;
+    int index = u%nodesPartitionSize ;     
+    if (world.rank () == owner_proc) {
+
+      int start = indexofNodes.data[index], end = indexofNodes.data[index+1];
+      return destList.data[start + v_idx] ;
+    } else {
+
+      // printf ("locking for getting indexes %d\n", owner_proc) ;
+      indexofNodes.get_lock(owner_proc, SHARED_LOCK, false);
+      int * destListIndices = indexofNodes.get_data(owner_proc, index, 2,SHARED_LOCK);
+      indexofNodes.unlock(owner_proc, SHARED_LOCK);
+      int start = destListIndices[0], end = destListIndices[1];
+      // printf ("retreival of start and end success and unlocked %d\n", owner_proc) ;
+
+      // printf ("locking for getting destList %d\n", owner_proc) ;
+      destList.get_lock(owner_proc, SHARED_LOCK, false);
+      int32_t * edges = destList.get_data(owner_proc, start, end - start,SHARED_LOCK); 
+      destList.unlock(owner_proc, SHARED_LOCK);
+      // printf ("retreival of destList success and unlocked %d\n", owner_proc) ;
+
+      return edges[v_idx] ; 
+    }
+  }
+
   Edge Graph::get_edge(int v, int nbr)
   {
-    int owner_proc = get_node_owner(v);
-    int index = get_node_local_index(v);
+    int owner_proc = v/nodesPartitionSize;
+    int index = v%nodesPartitionSize ;     
+    int vIdx ;
+
 
     if(world.rank()==owner_proc)
     {    
+      if (speedUpForGetEdge.size()) {
+        vIdx = speedUpForGetEdge[index][nbr] ;
+        return Edge (true, edgeProcMap[owner_proc] + vIdx) ;
+      }
      int start = indexofNodes.data[index], end = indexofNodes.data[index+1];
      for(int i=start ; i<end ; i++)
      {
         if(destList.data[i]==nbr)
         {
+          // printf ("i = %d , vIdx = %d, u = %d, v = %d, rank = %d, local_idx = %d\n", i, vIdx, v, nbr, world.rank (), index) ;
+          // assert (i == vIdx) ;
           return Edge(true,edgeProcMap[owner_proc] + i);
         }
      } 
@@ -548,6 +674,8 @@
     {
       Edge e(true, -1); 
 
+
+      // printf ("locking %d\n", owner_proc) ;
       indexofNodes.get_lock(owner_proc, SHARED_LOCK, false);
       int * destListIndices = indexofNodes.get_data(owner_proc, index, 2,SHARED_LOCK);
       indexofNodes.unlock(owner_proc, SHARED_LOCK);
@@ -783,7 +911,7 @@
     return in_edges;
   }
 
-  void Graph::readFromFile(std::string filePath, int32_t &num_nodes, int32_t &num_edges, std::vector<int32_t> & src, std::vector<int32_t> & dest , std::vector<int32_t> & weights)
+  void Graph::readFromFile(std::string filePath, int32_t &num_nodes, int32_t &num_edges, std::vector<int32_t> & src, std::vector<int32_t> & dest , std::vector<int32_t> & weights, int32_t &undirected)
   {
         num_nodes = 0;
         num_edges = 0;
@@ -823,6 +951,15 @@
             src.push_back(source);
             dest.push_back(destination);
             weights.push_back(weightVal);
+            
+            // Barenya
+            if (undirected) {
+              src.push_back(destination) ;
+              dest.push_back(source) ;
+              weights.push_back(0) ;
+              num_edges++ ;
+            }
+            // Barenya
         }
 
         num_nodes++;
