@@ -1,0 +1,92 @@
+function mst_boruvkas(Graph g) {
+
+    propNode<int> rank;
+    propNode<int> parent;
+    propNode<int> minedge;
+    propNode<int> minweight;
+    propEdge<int> isCovered;
+
+    g.attachNodeProperty(rank = 0);
+    g.attachNodeProperty(parent = -1);
+    g.attachNodeProperty(minEdge = -1);
+    g.attachNodeProperty(minweight = 1e9);
+    g.attachEdgeProperty(isCovered = false);
+
+    forall(u in g.nodes()){
+        u.rank = 0;
+        u.parent = u;
+    }
+
+    bool hasComponent = true;
+
+    do{
+        hasComponent = false;
+        g.attachNodeProperty(minedge = -1);
+        forall(src in g.nodes())
+        {
+            forall(dst in g.neighbors(src))
+            {
+                edge e = g.get_edge(src, dst);
+                if(e.isCovered == false) {
+
+                    int minweight = e.weight;
+                    int src_par = src.parent;
+                    g.getsrc_par.minweight = <Min(src_par.minweight, e.weight)>;
+
+                }
+
+            }
+        }
+
+        forall(src in g.nodes())
+        {
+            forall(dst in g.neighbors(src))
+            {
+                edge e = g.get_edge(src, dst);
+                if(e.isCovered == false) {
+
+                    int wt = e.weight;
+                    if(wt == src.parent.minweight) {
+                        src.parent.minEdge = e;
+                    }
+                        
+                }
+
+            }
+        }
+
+        forall(src in g.nodes())
+        {
+            if(src.minedge != -1) {
+                int cmp1 = minedge.source.parent;
+                int cmp2 = minedge.destination.parent;
+                if(cmp1 == cmp2) {
+                    minedge.isCovered = true;
+                } else {
+                    if(cmp1 < cmp2) {
+                        int temp = cmp1;
+                        cmp1 = cmp2;
+                        cmp2 = cmp1;
+                    }
+                    //atomically
+                    mst_weight += src.minedge.weight;
+                    Merge(cmp1, cmp2)
+                }
+            }
+        }
+
+        int firstNode = -1;
+        forall(src in g.nodes())
+        {
+            firstNode = src;
+        }
+
+        forall(src in g.nodes())
+        {
+            if(firstNode.parent != src.parent){
+                hasComponent = true;
+            }
+        }
+
+    }while(hasComponent);
+}
