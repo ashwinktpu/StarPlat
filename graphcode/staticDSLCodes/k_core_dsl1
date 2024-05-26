@@ -1,0 +1,55 @@
+function k_core(Graph g, int k)
+{
+    int kcore_count = 0;
+    bool update_flag = False;
+
+
+    propNode <int> indeg;
+	propNode <int> indeg_next;
+
+    g.attachNodeProperty(indeg=0,indeg_next=0) ;
+	
+	forall(v in g.nodes())
+    {
+        forall(nbr in g.neighbors(v)){
+            nbr.indeg++;
+        }
+        v.indeg = v.indeg;
+    }
+	
+
+	forall(v in g.nodes()){
+		v.indeg_next = v.indeg;
+	}
+		
+	do{
+        forall(v in g.nodes())
+        {
+            if(v.indeg < k && v.indeg != -1)
+            {
+				v.indeg_next = -1;
+				forall(nbr in g.neighbors(v))
+                {
+					if(nbr.indeg >= k)
+                    {
+						nbr.indeg_next--;
+                        update_flag = true;
+                    }
+                }
+					
+            }
+        }
+		
+		forall(v in g.nodes()){
+            v.indeg=v.indeg_next;
+        }
+
+    }while(update_flag);
+	
+	forall(v in g.nodes()){
+        if(v.indeg >= k){
+            kcore_count++;
+        }
+    }
+	
+}
