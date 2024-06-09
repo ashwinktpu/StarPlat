@@ -77,5 +77,143 @@ class Container {
       void printArr () ;
 };
 
+template<typename T1, typename T2>
+class HashMap {
+
+    private :
+        std::map<T1,T2> mapvar;
+        typename std::map<T1,T2>::iterator it;
+
+    public :
+        HashMap()
+		{
+			this->it=mapvar.begin();
+		}
+
+		void clear()
+		{
+			mapvar.clear();
+			this->it=mapvar.begin();
+		}
+
+        void reset()
+		{
+			this->it=mapvar.begin();
+		}
+        
+        void advance()
+		{
+			(this->it)++;
+		}
+        
+        bool atend()
+		{
+			return this->it==mapvar.end();
+		}
+
+        void put(T1 key , T2 value)
+		{
+			this->mapvar.insert({key,value});
+		}
+
+        T2& get(T1 key)
+		{
+			return this->mapvar[key];
+		}
+		
+		T1 getcurrentkey()
+		{
+			return this->it->first;
+		}
+		
+		T2& getcurrentval()
+		{
+			return this->it->second;
+		}
+		
+		std::map<T1,T2>& getmap()
+		{
+			return this->mapvar;
+		}
+		
+		void swap(HashMap<T1,T2>& tgt)
+		{
+			this->mapvar.swap(tgt.getmap());
+			this->reset();
+			tgt.reset();
+		}
+		
+		bool contains(T1 key)
+		{
+			return mapvar.count(key)==1;
+		}
+};
+
+template<typename T1>
+class HashSet {
+
+    private :
+        std::set<T1> setvar;
+        typename std::set<T1>::iterator it;
+
+    public :
+        HashSet()
+		{
+			this->it=setvar.begin();
+		}
+
+		void clear()
+		{
+			setvar.clear();
+			this->it=setvar.begin();
+		}
+
+        void reset()
+		{
+			this->it=setvar.begin();
+		}
+        
+        void advance()
+		{
+			(this->it)++;
+		}
+        
+        bool atend()
+		{
+			return this->it==setvar.end();
+		}
+
+        void insert(T1 val)
+		{
+			this->setvar.insert(val);
+		}
+		
+		T1 getcurrent()
+		{
+			return *(this->it);
+		}
+		
+		std::set<T1>& getset()
+		{
+			return this->setvar;
+		}
+		
+		void swap(HashSet<T1>& tgt)
+		{
+			this->setvar.swap(tgt.getset());
+			this->reset();
+			tgt.reset();
+		}
+		
+		void erase(T1 val)
+		{
+			this->setvar.erase(val);
+		}
+		
+		bool contains(T1 val)
+		{
+			return setvar.count(val)==1;
+		}
+};
 
 #endif

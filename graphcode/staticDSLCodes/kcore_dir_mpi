@@ -23,7 +23,7 @@ function Compute_KC(Graph g, int k)
 			if(v.state==1){
 				forall(nbr in g.neighbors(v)){
 					if(nbr.state==0){
-						nbr.degree = nbr.degree-1;						
+						nbr.degree = nbr.degree+(-1);						
 						if(nbr.degree < k){
 							nbr.state=1;
 							finished &= false;

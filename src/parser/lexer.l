@@ -26,6 +26,7 @@ NEGATE [-]
 "float"   {printf("Type: %s", yytext);  return T_FLOAT;}
 "double"  {printf("Type: %s", yytext);  return T_DOUBLE;}
 "bool"    {printf("Type: %s", yytext);  return T_BOOL;}
+"auto&"    {printf("Type: %s", yytext);  return T_AUTOREF;}
 
 "forall"  {printf("Keyword-forall: %s", yytext); return T_FORALL;}
 "for"     {printf("For: %s", yytext); return T_FOR;}
@@ -129,6 +130,8 @@ NEGATE [-]
 "container" {printf("container type"); return T_CONTAINER;}
 "std::vector" {printf ("vector type"); return T_VECTOR;}
 "nodeMap"  {printf("nodeMap type"); return T_NODEMAP;}
+"hashMap"  {printf("hashMap type"); return T_HASHMAP;}
+"hashSet"  {printf("hashSet type"); return T_HASHSET;}
 
 
  /* Numbers and Identifies */

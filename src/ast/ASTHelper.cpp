@@ -381,6 +381,22 @@ Type* nodeMapNode = Type::createForNodeMapType(typeId, (Type*) elemType);
 return nodeMapNode;
 }
 
+static ASTNode* createHashMapTypeNode(int typeId, ASTNode* keyType, list<argument*> argList, ASTNode* valType){
+
+Type* hashmapNode = Type::createForHashMapType(typeId, (Type*) keyType, argList, (Type*) valType);
+
+return hashmapNode;
+
+}
+
+static ASTNode* createHashSetTypeNode(int typeId, ASTNode* keyType, list<argument*> argList, ASTNode* innerTypeSize){
+
+Type* hashsetNode = Type::createForHashSetType(typeId, (Type*) keyType, argList, (Type*) innerTypeSize);
+
+return hashsetNode;
+
+}
+
 static ASTNode* createNodeForArithmeticExpr(ASTNode* expr1,ASTNode* expr2,int operatorType)
 {
     Expression* arithmeticExprNode=Expression::nodeForArithmeticExpr((Expression*)expr1,(Expression*)expr2,operatorType);

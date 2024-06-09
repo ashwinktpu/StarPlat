@@ -49,13 +49,13 @@
 	ASTNodeList* nodeList;
     tempNode* temporary;
      }
-%token T_INT T_FLOAT T_BOOL T_DOUBLE  T_LONG
+%token T_INT T_FLOAT T_BOOL T_DOUBLE  T_LONG  T_AUTOREF
 %token T_FORALL T_FOR  T_P_INF  T_INF T_N_INF
 %token T_FUNC T_IF T_ELSE T_WHILE T_RETURN T_DO T_IN T_FIXEDPOINT T_UNTIL T_FILTER
 %token T_ADD_ASSIGN T_SUB_ASSIGN T_MUL_ASSIGN T_DIV_ASSIGN T_MOD_ASSIGN T_AND_ASSIGN T_XOR_ASSIGN
 %token T_OR_ASSIGN T_INC_OP T_DEC_OP T_PTR_OP T_AND_OP T_OR_OP T_LE_OP T_GE_OP T_EQ_OP T_NE_OP
 %token T_AND T_OR T_SUM T_AVG T_COUNT T_PRODUCT T_MAX T_MIN
-%token T_GRAPH T_DIR_GRAPH  T_NODE T_EDGE T_UPDATES T_CONTAINER T_NODEMAP, T_VECTOR
+%token T_GRAPH T_DIR_GRAPH  T_NODE T_EDGE T_UPDATES T_CONTAINER T_NODEMAP T_VECTOR T_HASHMAP T_HASHSET
 %token T_NP  T_EP
 %token T_LIST T_SET_NODES T_SET_EDGES  T_FROM
 %token T_BFS T_REVERSE
@@ -72,8 +72,8 @@
 %type <node> function_def function_data  return_func function_body param
 %type <pList> paramList
 %type <node> statement blockstatements assignment declaration proc_call control_flow reduction return_stmt batch_blockstmt on_add_blockstmt on_delete_blockstmt
-%type <node> type type1 type2
-%type <node> primitive graph collections property container nodemap, vector
+%type <node> type type1 type2 type3
+%type <node> primitive graph collections property container nodemap vector hashmap hashset
 %type <node> id leftSide rhs expression oid val boolean_expr unary_expr indexExpr tid  
 %type <node> bfs_abstraction filterExpr reverse_abstraction
 %type <nodeList> leftList rightList
@@ -149,6 +149,7 @@ paramList: param {$$=Util::createPList($1);};
 
 type: type1 {$$ = $1;}
     | type2 {$$ = $1;}
+	| type3 {$$ = $1;}
 
 param : type1 id {  //Identifier* id=(Identifier*)Util::createIdentifierNode($2);
                         Type* type=(Type*)$1;
@@ -226,6 +227,9 @@ declaration : type1 id   {
 	| type2 id '=' rhs {//Identifier* id=(Identifier*)Util::createIdentifierNode($2);
 	                   
 	                    $$=Util::createAssignedDeclNode($1,$2,$4);};
+	| type3 id '=' rhs {//Identifier* id=(Identifier*)Util::createIdentifierNode($2);
+	                   
+	                    $$=Util::createAssignedDeclNode($1,$2,$4);};
 
 type1: primitive {$$=$1; };
 	| graph {$$=$1;};
@@ -237,7 +241,8 @@ primitive: T_INT { $$=Util::createPrimitiveTypeNode(TYPE_INT);};
 	| T_BOOL { $$=Util::createPrimitiveTypeNode(TYPE_BOOL);};
 	| T_DOUBLE { $$=Util::createPrimitiveTypeNode(TYPE_DOUBLE); };
     | T_LONG {$$=$$=Util::createPrimitiveTypeNode(TYPE_LONG);};
-	
+
+type3: T_AUTOREF { $$=Util::createPrimitiveTypeNode(TYPE_AUTOREF);};	
 
 graph : T_GRAPH { $$=Util::createGraphTypeNode(TYPE_GRAPH,NULL);};
 	|T_DIR_GRAPH {$$=Util::createGraphTypeNode(TYPE_DIRGRAPH,NULL);};
@@ -251,6 +256,8 @@ collections : T_LIST { $$=Util::createCollectionTypeNode(TYPE_LIST,NULL);};
 	    | container {$$ = $1;}
       | vector {$$ = $1;}
 		| nodemap   {$$ = $1;}
+		| hashmap {$$ = $1;}
+	    | hashset {$$ = $1;}
 
 container : T_CONTAINER '<' type '>' '(' arg_list ',' type ')' {$$ = Util::createContainerTypeNode(TYPE_CONTAINER, $3, $6->AList, $8);}
           | T_CONTAINER '<' type '>' '(' arg_list ')' { $$ =  Util::createContainerTypeNode(TYPE_CONTAINER, $3, $6->AList, NULL);}
@@ -262,6 +269,12 @@ vector: T_VECTOR'<' type '>' '(' arg_list ',' type ')' {$$ = Util::createContain
           | T_VECTOR'<' type '>' { list<argument*> argList;
 			                          $$ = Util::createContainerTypeNode(TYPE_VECTOR, $3, argList, NULL);}		
 nodemap : T_NODEMAP '(' type ')' {$$ = Util::createNodeMapTypeNode(TYPE_NODEMAP, $3);}
+
+hashmap : T_HASHMAP '<' type ',' type '>' { list<argument*> argList;
+			                          $$ = Util::createHashMapTypeNode(TYPE_HASHMAP, $3, argList, $5);}
+
+hashset : T_HASHSET '<' type '>' { list<argument*> argList;
+			                          $$ = Util::createHashSetTypeNode(TYPE_HASHSET, $3, argList, NULL);}
 
 type2 : T_NODE {$$=Util::createNodeEdgeTypeNode(TYPE_NODE) ;};
        | T_EDGE {$$=Util::createNodeEdgeTypeNode(TYPE_EDGE);};

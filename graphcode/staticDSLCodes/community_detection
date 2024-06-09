@@ -120,7 +120,7 @@ function Compute_CD(Graph g, propEdge<int> weight) {
 		
 		hashMap<int,hashMap<int,int>> tempweighadjlist;		
 		weighadjlist.swap(tempweighadjlist);		
-		container<int> diffproclist;
+		std::vector<int> diffproclist;
 		
 		workingset.reset();
 		while(! workingset.atend()){
