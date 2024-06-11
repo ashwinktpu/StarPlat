@@ -9,7 +9,7 @@
 
     using namespace std;
     //total size of the heap
-    #define maxSize 1000
+    #define maxSize 100000000
 
     int getRandom(int lower, int upper)
     {
@@ -17,7 +17,7 @@
         return num;  
     }
 
-    void printArray(vector <int> &arr,int size)
+    void printArray(int arr[],int size)
     {
         for(int i = 0;i<size;i++)
             printf("%d, ",arr[i]);
@@ -25,7 +25,7 @@
         cout << endl;
     }
 
-    void FillArray(vector <int> &elements,int size)
+    void FillArray(int elements[],int size)
     {
         for(int i = 0;i<size;i++)
         {
@@ -48,11 +48,51 @@
 
     class Heap{
         private:
-        vector <int> heap,heap_val;
-        int curSize;
-        bool isSorted;
-        //int *heap,*heap_val,curSize;
+        int *heap,*heap_val,curSize;
         ParallelSort ob;
+        public:
+        Heap(){
+            heap = (int*) malloc(maxSize * sizeof(int));
+            heap_val = (int*) malloc(maxSize * sizeof(int));
+            curSize = 0;
+        }
+
+        int getSize(){
+            return curSize;
+        }
+
+        void print()
+        {
+            for(int i = 0;i<curSize;i++)
+                printf("%d, ",heap[i]);
+
+            cout << endl;
+        }
+
+        //Insert If only key is there
+        void insert(int *elements,int size){
+
+            #pragma omp parallel for
+            for(int i = 0;i<size;i++)
+            {
+                heap[i + curSize] = elements[i];
+            }
+            curSize = curSize + size;
+	    heap[0] = -1; 
+        }
+
+        //Insert if both key and values are there
+        void insert(int *elements,int *val,int size){
+
+            #pragma omp parallel for
+            for(int i = 0;i<size;i++)
+            {
+                heap[i + curSize] = elements[i];
+                heap_val[i + curSize] = val[i];
+            }
+            curSize = curSize + size;
+        }
+
         void serFillHole(int index){
             for(int i = index+1;i<curSize-1;i++){
                 heap[i] = heap[i+1];
@@ -152,85 +192,14 @@
             cout << "minelem is " << finalmin << " at " << finalpos << " index." << endl;       
         }
 
-        public:
-        Heap(){
-            srand(time(0));
-            heap.resize(maxSize);
-            heap_val.resize(maxSize);
-            // heap = (int*) malloc(maxSize * sizeof(int));
-            // heap_val = (int*) malloc(maxSize * sizeof(int));
-            curSize = 0;
-            isSorted = true;
-        }
-
-        int getSize(){
-            return curSize;
-        }
-
-        void print()
-        {
-            for(int i = 0;i<curSize;i++)
-                printf("%d = %d, \n",heap[i],heap_val[i]);
-
-            cout << endl;
-        }
-
-        //Insert If only key is there
-        void insertE(vector <int> &elements,int size){
-            isSorted = false;
-            #pragma omp parallel for
-            for(int i = 0;i<size;i++)
-            {
-                heap[i + curSize] = elements[i];
-            }
-            curSize = curSize + size;
-        }
-
-        //Insert if both key and values are there
-        void insertE(vector <int> &elements,vector <int> &val,int size){
-            isSorted = false;
-            #pragma omp parallel for
-            for(int i = 0;i<size;i++)
-            {
-                heap[i + curSize] = elements[i];
-                heap_val[i + curSize] = val[i];
-            }
-            curSize = curSize + size;
-        }
-
-        int deleteElem(){
-            if(!isSorted)
-            {
-                cout << "Inside Sorting"<<endl;
-                ob.par_q_sort_tasks(0,curSize-1,heap,heap_val);
-            }
-            int saveElem = heap[curSize-1];
-            curSize --;
-            isSorted = true;
-            return saveElem;
-        }
-
-        vector<int> deleteElem(int n){
-            if(!isSorted)
-            {
-                cout << "Inside Sorting"<<endl;
-                ob.par_q_sort_tasks(0,curSize-1,heap,heap_val);
-            }
-            vector <int> ret_elements(n);
-
-            #pragma omp for 
-            for(int i = 0;i<n;i++){
-                ret_elements[i] = heap[curSize-i-1];
-            }
-
-            isSorted = true;
-            curSize -= n;
-            return ret_elements;
+        void deleteElem(){
+             ob.par_q_sort_tasks(0,curSize-1,heap);
         }
 
     };
 
     int main() {
+        srand(time(0));
         Heap hp;
 
         for(int lk = 0;lk<1;lk++)
@@ -240,28 +209,34 @@
             //     elemSize = getRandom(1,maxSize-hp.getSize());
             // }while(elemSize + hp.getSize() > maxSize);
             
-            vector <int> elements(elemSize);
+            int elements[elemSize];
             FillArray(elements,elemSize);
             // printArray(elements,elemSize);  
 
             printf("No of Inserted Elements are = %d\n",elemSize);
             double starttime = rtclock(); 
-            hp.insertE(elements,elements,elemSize);
+            hp.insert(elements,elemSize);
             double endtime = rtclock(); 
             printtime("Insertion time: ", starttime, endtime); 
             // hp.print();
 
             starttime = rtclock();
-            vector <int> elem = hp.deleteElem(10);
-            hp.print();
+            hp.serfindMin();
+            endtime = rtclock();
+            printtime("Serial Min: ", starttime, endtime);
+            // hp.print();
 
-            for(int i = 0;i<10;i++)
-                cout << elem[i] << ", ";
-            
-            cout << endl;
+            starttime = rtclock();
+            hp.findMin();
+            endtime = rtclock();
+            printtime("Parallel Min: ", starttime, endtime);
+            // hp.print();
 
+            starttime = rtclock();
+            hp.deleteElem();
             endtime = rtclock();
             printtime("Sorting: ", starttime, endtime);
+            // hp.print();
         }
 
         printf( "Over");

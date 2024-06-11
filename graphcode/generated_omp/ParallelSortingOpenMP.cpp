@@ -33,15 +33,15 @@ class ParallelSort
     }
 
     template <class T>
-    int partition(int p, int r, T* data){
+    int partition(int p, int r, vector <T> &data){
         T pivot = data[p];
         int left = p;
         int right = r;
         while (left < right){
             // increase until you get to a point where the element is greater that the pivot
-            while (left < r && data[left] <= pivot) ++left;
+            while (left < r && data[left] >= pivot) ++left;
             // increase until you get to a point where the element is less or equal to the pivot
-            while (right >= 0 && data[right] > pivot) --right;
+            while (right >= 0 && data[right] < pivot) --right;
             // swap if within bounds
             if (left < right && left <r && right >= 0){
                 std::swap(data[left], data[right]);
@@ -58,15 +58,16 @@ class ParallelSort
     }
 
     template <class T>
-    void seq_qsort(int p, int r, T* data) {
+    void seq_qsort(int p, int r, vector <T> &data) {
         if (p < r) {
             int q = partition<T>(p, r, data);
             seq_qsort(p, q - 1, data);
             seq_qsort(q + 1, r, data);
         }
     }
+
     template <class T>
-    void q_sort_tasks(int p, int r, T* data, int low_limit) {
+    void q_sort_tasks(int p, int r, vector <T> &data, int low_limit) {
         if (p < r) {
             if (r - p < low_limit) 
             {
@@ -85,12 +86,83 @@ class ParallelSort
     }
 
     template <class T>
-    void par_q_sort_tasks(int p, int r, T* data){
+    void par_q_sort_tasks(int p, int r, vector <T> &data){
         cout << "p = " << p << ", r = " << r << endl;
         #pragma omp parallel
             {
                 #pragma omp single
                 q_sort_tasks<T>(p, r, data, TASK_LIMIT - 1);
+                #pragma omp taskwait
+            }
+    }
+
+    template <class T>
+    int partition(int p, int r, vector <T> &data, vector <int> &val){
+        T pivot = data[p];
+        int pivotVal = val[p];
+
+        int left = p;
+        int right = r;
+        while (left < right){
+            // increase until you get to a point where the element is greater that the pivot
+            while (left < r && data[left] >= pivot) ++left;
+            // increase until you get to a point where the element is less or equal to the pivot
+            while (right >= 0 && data[right] < pivot) --right;
+            // swap if within bounds
+            if (left < right && left <r && right >= 0){
+                std::swap(data[left], data[right]);
+                std::swap(val[left], val[right]); //swap corresponding values also at the same time
+            }
+        }
+
+        // swap at the end
+        if (left < right && left <r && right >= 0){
+            std::swap(data[left], data[right]);
+            std::swap(val[left], val[right]);
+        }
+
+        data[p] = data[right];
+        val[p] = val[right];
+        data[right] = pivot;
+        val[right] = pivotVal;
+        return right;
+    }
+
+    template <class T>
+    void seq_qsort(int p, int r, vector <T> &data,vector <int> &val) {
+        if (p < r) {
+            int q = partition<T>(p, r, data,val);
+            seq_qsort(p, q - 1, data,val);
+            seq_qsort(q + 1, r, data,val);
+        }
+    }
+    
+    template <class T>
+    void q_sort_tasks(int p, int r, vector <T> &data, int low_limit,vector <int> &val) {
+        if (p < r) {
+            if (r - p < low_limit) 
+            {
+                // small list => sequential.
+                return seq_qsort<T>(p, r, data,val);
+            }else{
+
+                int q = partition<T>(p, r, data,val);
+                // create two tasks
+                #pragma omp task shared(data,val)
+                    q_sort_tasks<T>(p, q - 1, data, low_limit,val);
+                #pragma omp task shared(data,val)
+                    q_sort_tasks<T>(q + 1, r, data, low_limit,val);
+            }
+        } 
+    }
+
+    template <class T>
+    void par_q_sort_tasks(int p, int r, vector <T> &data,vector <int> &val){
+        cout << "p = " << p << ", r = " << r << endl;
+        #pragma omp parallel
+            {
+                #pragma omp single
+                q_sort_tasks<T>(p, r, data, TASK_LIMIT - 1,val);
                 #pragma omp taskwait
             }
     }
@@ -100,9 +172,10 @@ class ParallelSort
 // int main(){
     
 //     ParallelSort ob;
-//     int Ar[10] = {3,1,2,6,4,8,5,9,7,0};
+//     vector <int> Ar = {3,1,2,6,4,8,5,9,7,0};
 //     ob.par_q_sort_tasks(0,9,Ar);
 //     for(int i = 0;i<10;i++){
+//         cout << "Hello" << endl;
 //         cout << Ar[i] << " ";
 //     }
 //     return 0;
