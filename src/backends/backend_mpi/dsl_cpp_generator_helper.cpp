@@ -40,6 +40,9 @@ namespace spmpi {
                 case TYPE_EDGE:
                     cppString = "int";
                     break;
+				case TYPE_AUTOREF:
+                    cppString = "auto&";
+                    break;
                 default:
                     assert(false);
             }
@@ -135,6 +138,31 @@ namespace spmpi {
 
                     char* valType = (char*)convertToCppType(type->getInnerTargetType() , false);
                     string innerString = valType;
+                    vecString = vecString + innerString;
+                    vecString = vecString + ">";
+                    cppString = vecString;
+                    break;
+                }
+				case TYPE_HASHMAP:
+                {
+                    string vecString = "HashMap<";   
+
+                    char* keyType = (char*)convertToCppType(type->getInnerTargetType() , false);
+					char* valType = (char*)convertToCppType(type->getOuterTargetType() , false);
+                    string keyString = keyType;
+					string valString = valType;
+					string innerString = keyString+','+valString;
+                    vecString = vecString + innerString;
+                    vecString = vecString + ">";
+                    cppString = vecString;
+                    break;
+                }
+				case TYPE_HASHSET:
+                {
+                    string vecString = "HashSet<";   
+
+                    char* keyType = (char*)convertToCppType(type->getInnerTargetType() , false);
+                    string innerString = keyType;
                     vecString = vecString + innerString;
                     vecString = vecString + ">";
                     cppString = vecString;

@@ -1,0 +1,49 @@
+function Compute_KC(Graph g, int k)
+{
+
+	propNode <int> degree;
+	propNode <int> state;
+	g.attachNodeProperty(degree=0,state=0);
+	
+	forall(v in g.nodes()){
+		forall(nbr in g.nodes_to(v)){
+			v.degree=v.degree+1;
+		}		
+		if(v.degree < k){
+			v.state = 1 ;
+		}
+	}
+	
+	//int updatecount=0;
+	bool finished=false;
+	
+	do{
+		finished=true;		
+		forall(v in g.nodes()){
+			if(v.state==1){
+				forall(nbr in g.neighbors(v)){
+					if(nbr.state==0){
+						nbr.degree = nbr.degree+(-1);						
+						if(nbr.degree < k){
+							nbr.state=1;
+							finished &= false;
+						}
+					}
+				}
+				v.state=2;
+			}
+		}		
+	}while(! finished);
+	
+	int ans=0;
+	
+	forall(v in g.nodes())
+	{
+		if(v.state==0)
+		{
+			ans+=1;
+		}
+	}
+	
+	return ans;
+}

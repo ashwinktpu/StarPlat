@@ -1243,6 +1243,28 @@ namespace spmpi {
                 }
                 main.pushstr_newL(";");
             }
+			else if(type->gettypeId() == TYPE_HASHMAP)
+            {
+                main.pushstr_space(convertToCppType(type));
+                main.pushString(decl->getdeclId()->getIdentifier());
+                if (decl->isInitialized()) 
+                {
+                    main.pushString(" = ");
+                    generateExpr(decl->getExpressionAssigned());
+                }
+                main.pushstr_newL(";");
+            }
+			else if(type->gettypeId() == TYPE_HASHSET)
+            {
+                main.pushstr_space(convertToCppType(type));
+                main.pushString(decl->getdeclId()->getIdentifier());
+                if (decl->isInitialized()) 
+                {
+                    main.pushString(" = ");
+                    generateExpr(decl->getExpressionAssigned());
+                }
+                main.pushstr_newL(";");
+            }
         }
     }
 

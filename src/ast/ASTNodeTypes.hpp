@@ -685,6 +685,7 @@ class Type:public ASTNode
   list<char*> graphPropList;
   list<argument*> sizeExprList;
   Type* innerTypeSize;
+  Type* outerTargetType;
   
  public:
  Type()
@@ -693,6 +694,7 @@ class Type:public ASTNode
      TargetGraph=NULL;
      innerTargetType=NULL;
      sourceGraph=NULL;
+	 outerTargetType=NULL;
  }
 
   static Type* createForPrimitive(int typeIdSent,int rootTypeSent)
@@ -759,8 +761,30 @@ class Type:public ASTNode
    type->innerTargetType = innerType;
 
    return type;
-  } 
+  }  
 
+  static Type* createForHashMapType(int typeIdSent, Type* keyType, list<argument*> argList, Type* valType){
+  
+   Type* type=new Type();
+   type->typeId=typeIdSent;
+   type->innerTargetType = keyType;
+   type->sizeExprList = argList;
+   type->outerTargetType = valType;
+
+   return type;
+  }
+
+  static Type* createForHashSetType(int typeIdSent, Type* keyType, list<argument*> argList, Type* innerTypeSize){
+  
+   Type* type=new Type();
+   type->typeId=typeIdSent;
+   type->innerTargetType = keyType;
+   type->sizeExprList = argList;
+   type->innerTypeSize = innerTypeSize;
+
+   return type;
+  }
+  
   Type* copy()
   {  
      Type* copyType = new Type();
@@ -885,6 +909,11 @@ class Type:public ASTNode
 
       return sizeExprList;
 
+  }
+  
+  Type* getOuterTargetType()
+  {
+    return outerTargetType;
   }
 
 };

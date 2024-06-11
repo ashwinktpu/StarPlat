@@ -1,0 +1,211 @@
+function Compute_CD(Graph g, propEdge<int> weight) {
+	hashSet<int> workingset;
+	hashMap<int,hashMap<int,int>> weighadjlist;
+
+	propNode <int> community;
+	propNode <double> selfloops;
+	propNode <double> newselfloops;
+	propNode <double> neighweights;
+	propNode <double> sigin;
+	propNode <double> sigtot;
+	propNode <double> kin;
+	
+	g.attachNodeProperty(community=-1,selfloops=0,newselfloops=0,neighweights=0,sigin=0,sigtot=0,kin=0);
+
+	double totalweight=0;
+
+	forall(v in g.nodes())
+	{
+		workingset.insert(v);
+		v.community=v;
+		forall(nbr in g.neighbors(v))
+		{
+			edge e = g.get_edge(v, nbr);
+			v.sigtot=v.sigtot+e.weight;
+			v.neighweights=v.neighweights+e.weight;
+			totalweight+=e.weight;
+			
+			auto& vlist=weighadjlist.get(v);
+			vlist.put(nbr,e.weight);
+		}
+		
+	}
+
+	double threshold=0.0001;
+	double currmodularity=0;
+	double oldmodularity;
+
+	forall(v in g.nodes())
+	{
+		currmodularity+=((v.sigin/totalweight)-(v.sigtot*v.sigtot/(totalweight*totalweight)));
+	}
+
+	double newmodularity=currmodularity;
+  
+	do
+	{
+		currmodularity=newmodularity;
+		
+		do
+		{
+			oldmodularity=newmodularity;
+			
+			workingset.reset();
+			while(! workingset.atend())
+			{
+				int v=workingset.getcurrent();
+				int currcommunity=v.community;
+				int newcommunity=0;
+				
+				hashSet<int> neighcommset;
+				hashMap<int,int> neighcommkin;
+				
+				auto& vlist=weighadjlist.get(v);
+				vlist.reset();
+				while(! vlist.atend())
+				{
+					int nbr=vlist.getcurrentkey();
+					int temp = nbr.community;
+					if(neighcommset.contains(nbr.community)==0)
+					{
+						neighcommset.insert(nbr.community);
+						neighcommkin.put(temp,0);
+					}
+					auto& kinval=neighcommkin.get(temp);
+					kinval = kinval + vlist.getcurrentval();
+					vlist.advance();
+				}
+				
+				auto& currcommkin = neighcommkin.get(currcommunity);
+				currcommunity.sigin=currcommunity.sigin+(-1*((2*currcommkin)+v.selfloops));
+				currcommunity.sigtot=currcommunity.sigtot+(-1*(v.neighweights+v.selfloops));
+				
+				double maxmodularitychange=currcommunity.kin-(currcommunity.sigtot*(v.neighweights+v.selfloops)/totalweight);
+				newcommunity=currcommunity;
+					
+				double modularitychange;
+				
+				neighcommset.reset();
+				while(! neighcommset.atend())
+				{
+					int neighcomm=neighcommset.getcurrent();
+					auto& kincomm=neighcommkin.get(neighcomm);
+					modularitychange=kincomm-(neighcomm.sigtot*(v.neighweights+v.selfloops)/totalweight);
+						
+					if(modularitychange>maxmodularitychange)
+					{
+						maxmodularitychange=modularitychange;
+						newcommunity=neighcomm;
+					}
+					
+					neighcommset.advance();
+				}
+				
+				auto& newcommkin = neighcommkin.get(newcommunity);
+				v.community=newcommunity;
+				newcommunity.sigin=newcommunity.sigin+((2*newcommkin)+v.selfloops);
+				newcommunity.sigtot=newcommunity.sigtot+(v.neighweights+v.selfloops);
+				
+				workingset.advance();
+			}
+			
+			newmodularity=0;
+			
+			forall(v in g.nodes())
+			{
+				newmodularity+=((v.sigin/totalweight)-(v.sigtot*v.sigtot/(totalweight*totalweight)));
+			}
+			
+		}while((newmodularity-oldmodularity)>threshold);
+		
+		hashMap<int,hashMap<int,int>> tempweighadjlist;		
+		weighadjlist.swap(tempweighadjlist);		
+		std::vector<int> diffproclist;
+		
+		workingset.reset();
+		while(! workingset.atend()){
+			int v=workingset.getcurrent();
+			
+			int comm=v.community;
+			comm.newselfloops=comm.newselfloops+v.selfloops;
+			
+			auto& vlist=tempweighadjlist.get(v);
+			vlist.reset();
+			while(! vlist.atend()){
+				int nbr=vlist.getcurrentkey();
+				int nbrcomm=nbr.community;
+				
+				if(comm==nbrcomm){
+					comm.newselfloops=comm.newselfloops + vlist.getcurrentval();
+				}
+				else{
+					if(g.get_node_owner(comm)==world.rank()){
+						auto& newlist=weighadjlist.get(comm);
+						auto& edgeweight=newlist.get(nbrcomm);
+						edgeweight = edgeweight + vlist.getcurrentval();
+					}
+					else{
+						diffproclist.push_back(comm);
+						diffproclist.push_back(nbrcomm);
+						diffproclist.push_back(vlist.getcurrentval());
+					}
+
+				}				
+				vlist.advance();
+			}			
+			v.selfloops=0;			
+			workingset.advance();
+		}
+		
+		tempweighadjlist.clear();
+		
+		syncadjlist(g,weighadjlist,diffproclist);
+		
+		hashSet<int> tempworkingset;
+		workingset.swap(tempworkingset);
+		
+		tempworkingset.reset();
+		while(! tempworkingset.atend()){			
+			int v=tempworkingset.getcurrent();
+			
+			v.community=v;			
+			v.selfloops=v.newselfloops;
+			v.newselfloops=0;
+			v.sigin=v.selfloops;			
+			v.neighweights=0;
+			
+			auto& vlist=weighadjlist.get(v);
+			vlist.reset();
+			while(! vlist.atend())
+			{
+				int nbr= vlist.getcurrentkey();				
+				v.neighweights=v.neighweights + vlist.getcurrentval();				
+				vlist.advance();
+			}
+			
+			if((v.selfloops==0) && (v.neighweights==0)){
+				v.sigin=0;
+				v.sigtot=0;
+			}
+			else{
+				workingset.insert(v);
+			}
+			
+			v.sigtot=v.sigin + v.neighweights;			
+			tempworkingset.advance();
+		}
+		
+		tempworkingset.clear();
+		
+		newmodularity=0;
+			
+		forall(v in g.nodes())
+		{
+			newmodularity+=((v.sigin/totalweight)-(v.sigtot*v.sigtot/(totalweight*totalweight)));
+		}
+		
+	}while((newmodularity-currmodularity)>threshold);
+	
+	return newmodularity;
+  
+}
