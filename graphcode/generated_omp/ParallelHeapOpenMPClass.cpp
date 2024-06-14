@@ -49,7 +49,7 @@
     class Heap{
         private:
         vector <int> heap,heap_val;
-        int curSize;
+        int curSize,isType;
         bool isSorted;
         //int *heap,*heap_val,curSize;
         ParallelSort ob;
@@ -161,6 +161,7 @@
             // heap_val = (int*) malloc(maxSize * sizeof(int));
             curSize = 0;
             isSorted = true;
+            isType = 0;
         }
 
         int getSize(){
@@ -177,6 +178,7 @@
 
         //Insert If only key is there
         void insertE(vector <int> &elements,int size){
+            isType = 1;
             isSorted = false;
             #pragma omp parallel for
             for(int i = 0;i<size;i++)
@@ -188,6 +190,7 @@
 
         //Insert if both key and values are there
         void insertE(vector <int> &elements,vector <int> &val,int size){
+            isType = 2;
             isSorted = false;
             #pragma omp parallel for
             for(int i = 0;i<size;i++)
@@ -198,29 +201,38 @@
             curSize = curSize + size;
         }
 
-        int deleteElem(){
-            if(!isSorted)
-            {
-                cout << "Inside Sorting"<<endl;
-                ob.par_q_sort_tasks(0,curSize-1,heap,heap_val);
-            }
-            int saveElem = heap[curSize-1];
-            curSize --;
-            isSorted = true;
-            return saveElem;
+        vector<int> deleteE(){
+            return deleteE(1);
         }
 
-        vector<int> deleteElem(int n){
-            if(!isSorted)
+        vector<int> deleteE(int n){
+            if(isSorted == false)
             {
                 cout << "Inside Sorting"<<endl;
-                ob.par_q_sort_tasks(0,curSize-1,heap,heap_val);
+                if(isType == 2)
+                    ob.par_q_sort_tasks(0,curSize-1,heap,heap_val);
+                else if(isType == 1)
+                    ob.par_q_sort_tasks(0,curSize-1,heap);
             }
-            vector <int> ret_elements(n);
+
+            vector <int> ret_elements;
+
+            if(isType == 2)
+                ret_elements.resize(n*2);
+            else if(isType == 1)
+                ret_elements.resize(n);
 
             #pragma omp for 
             for(int i = 0;i<n;i++){
                 ret_elements[i] = heap[curSize-i-1];
+            }
+
+            if(isType == 2)
+            {
+                #pragma omp for 
+                for(int i = 0;i<n;i++){
+                    ret_elements[curSize+i] = heap_val[curSize-i-1];
+                }
             }
 
             isSorted = true;
@@ -230,40 +242,40 @@
 
     };
 
-    int main() {
-        Heap hp;
+    // int main() {
+    //     Heap hp;
 
-        for(int lk = 0;lk<1;lk++)
-        {
-            int elemSize = maxSize-2;
-            // do{
-            //     elemSize = getRandom(1,maxSize-hp.getSize());
-            // }while(elemSize + hp.getSize() > maxSize);
+    //     for(int lk = 0;lk<1;lk++)
+    //     {
+    //         int elemSize = maxSize-2;
+    //         // do{
+    //         //     elemSize = getRandom(1,maxSize-hp.getSize());
+    //         // }while(elemSize + hp.getSize() > maxSize);
             
-            vector <int> elements(elemSize);
-            FillArray(elements,elemSize);
-            // printArray(elements,elemSize);  
+    //         vector <int> elements(elemSize);
+    //         FillArray(elements,elemSize);
+    //         // printArray(elements,elemSize);  
 
-            printf("No of Inserted Elements are = %d\n",elemSize);
-            double starttime = rtclock(); 
-            hp.insertE(elements,elements,elemSize);
-            double endtime = rtclock(); 
-            printtime("Insertion time: ", starttime, endtime); 
-            // hp.print();
+    //         printf("No of Inserted Elements are = %d\n",elemSize);
+    //         double starttime = rtclock(); 
+    //         hp.insertE(elements,elements,elemSize);
+    //         double endtime = rtclock(); 
+    //         printtime("Insertion time: ", starttime, endtime); 
+    //         // hp.print();
 
-            starttime = rtclock();
-            vector <int> elem = hp.deleteElem(10);
-            hp.print();
+    //         starttime = rtclock();
+    //         vector <int> elem = hp.deleteE(10);
+    //         hp.print();
 
-            for(int i = 0;i<10;i++)
-                cout << elem[i] << ", ";
+    //         for(int i = 0;i<10;i++)
+    //             cout << elem[i] << ", ";
             
-            cout << endl;
+    //         cout << endl;
 
-            endtime = rtclock();
-            printtime("Sorting: ", starttime, endtime);
-        }
+    //         endtime = rtclock();
+    //         printtime("Sorting: ", starttime, endtime);
+    //     }
 
-        printf( "Over");
-        return 0;
-    }
+    //     printf( "Over");
+    //     return 0;
+    // }
