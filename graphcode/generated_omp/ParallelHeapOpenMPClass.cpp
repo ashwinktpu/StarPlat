@@ -9,7 +9,7 @@
 
     using namespace std;
     //total size of the heap
-    #define maxSize 1000
+    #define maxSize 100000000
 
     int getRandom(int lower, int upper)
     {
@@ -53,9 +53,12 @@
         bool isSorted;
         //int *heap,*heap_val,curSize;
         ParallelSort ob;
+
         void serFillHole(int index){
-            for(int i = index+1;i<curSize-1;i++){
+            for(int i = index;i<curSize-1;i++){
                 heap[i] = heap[i+1];
+                if(isType == 2)
+                    heap_val[i] = heap_val[i+1];
             }
             curSize--;
         }
@@ -73,9 +76,10 @@
             #pragma omp parallel
             {
                 nthreads = omp_get_num_threads();
+                cout << "The no of threads is "<<nthreads<<endl;
             }
         
-            if(nElements < 10*nthreads){
+            if(nElements <= 2*nthreads){
                 serFillHole(index);
                 return;
             }
@@ -87,26 +91,34 @@
             {
                 int threadId = omp_get_thread_num();
                 int startInd = (threadId * elementsPerThread) + index;
-                int endInd = min(((threadId+1)*elementsPerThread) + index - 1,curSize);
+                int endInd = min(((threadId+1)*elementsPerThread) + index - 1,curSize-1);
 
-                int saveFirstVal = heap[startInd];
+                int savefirstKey = heap[startInd];
+                int saveFirstVal = heap_val[startInd];
+                
 
                 #pragma omp barrier
 
-                for(int i = startInd;i<endInd-1;i++){
+                for(int i = startInd;i<endInd;i++){
                     heap[i] = heap[i+1];
+                    if(isType == 2)
+                        heap_val[i] = heap_val[i+1];
                 }
 
                 #pragma omp barrier
 
                 if(threadId > 0)
-                    heap[startInd-1] = saveFirstVal; 
+                {
+                    heap[startInd-1] = savefirstKey;
+                    if(isType == 2)
+                        heap_val[startInd-1] = saveFirstVal; 
+                }
             }
 
             curSize--;
         }
 
-        void serfindMin(){
+        int serfindMin(){
 
             int finalmin = INT_MAX,finalpos = -1;
            
@@ -119,11 +131,12 @@
                 }  
             }
 
-            serFillHole(finalpos);
-            cout << "minelem is " << finalmin << " at " << finalpos << " index." << endl;    
+            return finalpos;
+            // serFillHole(finalpos);
+            // cout << "minelem is " << finalmin << " at " << finalpos << " index." << endl;    
         }
 
-        void findMin(){
+        int findMin(){
 
             int minelem = INT_MAX, minpos = -1, finalmin = INT_MAX,finalpos = -1;
            
@@ -147,9 +160,8 @@
                     }
                 }
             }
-           
-            fillHole(finalpos);
-            cout << "minelem is " << finalmin << " at " << finalpos << " index." << endl;       
+
+            return finalpos;      
         }
 
         public:
@@ -171,7 +183,7 @@
         void print()
         {
             for(int i = 0;i<curSize;i++)
-                printf("%d = %d, \n",heap[i],heap_val[i]);
+                printf("%d. %d = %d, \n",i,heap[i],heap_val[i]);
 
             cout << endl;
         }
@@ -202,10 +214,32 @@
         }
 
         vector<int> deleteE(){
-            return deleteE(1);
+            return deleteSingle(1);
+        }
+
+        vector<int> deleteSingle(int n){
+            vector <int> ret_elements(n);
+
+            if(isType == 2)
+                ret_elements.resize(n*2);
+
+            for(int i = 0;i<n;i++){
+                int pos = findMin();
+                cout << "position in "<<i<<"th iteration is "<<pos<<endl;
+                ret_elements[i] = heap[pos];
+                if(isType == 2)
+                    ret_elements[i+n] = heap_val[pos];
+                fillHole(pos);
+            }
+            
+            return ret_elements;
         }
 
         vector<int> deleteE(int n){
+            if(n <= 10 && isSorted == false){
+                return deleteSingle(n);
+            }
+
             if(isSorted == false)
             {
                 cout << "Inside Sorting"<<endl;
@@ -215,12 +249,11 @@
                     ob.par_q_sort_tasks(0,curSize-1,heap);
             }
 
-            vector <int> ret_elements;
+            vector <int> ret_elements(n);
 
             if(isType == 2)
                 ret_elements.resize(n*2);
-            else if(isType == 1)
-                ret_elements.resize(n);
+        
 
             #pragma omp for 
             for(int i = 0;i<n;i++){
@@ -247,28 +280,31 @@
 
     //     for(int lk = 0;lk<1;lk++)
     //     {
-    //         int elemSize = maxSize-2;
+    //         int elemSize = maxSize-5;
     //         // do{
     //         //     elemSize = getRandom(1,maxSize-hp.getSize());
     //         // }while(elemSize + hp.getSize() > maxSize);
             
-    //         vector <int> elements(elemSize);
+    //         vector <int> elements(elemSize),values(elemSize);
     //         FillArray(elements,elemSize);
-    //         // printArray(elements,elemSize);  
+    //         FillArray(values,elemSize);
+    //         printArray(elements,elemSize);  
+    //         printArray(values,elemSize); 
 
     //         printf("No of Inserted Elements are = %d\n",elemSize);
     //         double starttime = rtclock(); 
-    //         hp.insertE(elements,elements,elemSize);
+    //         hp.insertE(elements,values,elemSize);
     //         double endtime = rtclock(); 
     //         printtime("Insertion time: ", starttime, endtime); 
-    //         // hp.print();
-
-    //         starttime = rtclock();
-    //         vector <int> elem = hp.deleteE(10);
     //         hp.print();
 
-    //         for(int i = 0;i<10;i++)
-    //             cout << elem[i] << ", ";
+    //         starttime = rtclock();
+    //         int de = 5;
+    //         vector <int> elem = hp.deleteE(de);
+    //         hp.print();
+
+    //         for(int i = 0;i<de;i++)
+    //             cout << elem[i] << "->"<<elem[i+de]<<endl;
             
     //         cout << endl;
 

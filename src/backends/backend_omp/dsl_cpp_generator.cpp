@@ -38,7 +38,7 @@ void dsl_cpp_generator::generation_begin() {
   header.pushString("#include");
   addIncludeToFile("atomic", header, true);
   header.pushString("#include");
-  addIncludeToFile("ParallelHeapOpenMPClass.cpp", header, true);
+  addIncludeToFile("ParallelHeapOpenMPClass.cpp", header, false);
   header.pushString("#include");
   addIncludeToFile("omp.h", header, true);
   header.pushString("#include");

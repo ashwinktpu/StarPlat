@@ -4,7 +4,7 @@
 #include<stdlib.h>
 #include<limits.h>
 #include<atomic>
-#include<ParallelHeapOpenMPClass.cpp>
+#include"ParallelHeapOpenMPClass.cpp"
 #include<omp.h>
 #include"../graph.hpp"
 #include"../atomicUtil.h"

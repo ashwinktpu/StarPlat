@@ -1,3 +1,14 @@
+//There are 2 types of Insert functionality supported
+//insertE(vectorOfKey,size); and insertE(vectorOfKey,vectorOfValue,size);
+
+//also according to the functionality used for insert, delete will work accordingly
+// if let's say you want to delete n elements and you have used insertE(vectorOfKey,size) then deleteE will return a vector of n elements which represents only key
+// if let's say you want to delete n elements and you have used insertE(vectorOfKey,vectorOfValue,size) then deleteE will return a vector of 2n elements which represents
+// both key and pair and indexex 0....n-1 contains the keys and indexes n....2n-1 contains the values corresponding to them (i.e value corresponding to index at ith key will
+// be given by index at i+n)
+
+//also if we are deleting n elements the returned vector is always sorted in ascending order.
+
 function Test(Graph g, node src)
 {
        int maxSize = 100; 
@@ -9,20 +20,9 @@ function Test(Graph g, node src)
        cn.push_back(9);
        cn.push_back(1);
        cn.push_back(0);
-       double starttime = rtclock(); 
+       // double starttime = rtclock(); 
        hp.insertE(cn,siz);
-       
-       double endtime = rtclock(); 
-       // printtime("Insertion time: ", starttime, endtime);
-
-       starttime = rtclock();
        container <int> cnn;
-       cnn = hp.deleteElem(2);
-       endtime = rtclock(); 
-       // printtime("Insertion time: ", starttime, endtime);
-
-       // cout << siz;
-       printf("%d",siz);
-
+       cnn = hp.deleteE(2);
 }
 

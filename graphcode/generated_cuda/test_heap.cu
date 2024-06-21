@@ -36,14 +36,26 @@ void Test(graph& g,int src)
   //DECLAR DEVICE AND HOST vars in params
 
   //BEGIN DSL PARSING 
+  int maxSize = 100; // asst in .cu
+
   int siz = 4; // asst in .cu
 
-  Heap hp1;
-  hp1.someFunc();
-
+  Heap hp;
   thrust::host_vector<int> cn;
+  cn.resize(4);
+
   cn.push_back(2);
 
+  cn.push_back(9);
+
+  cn.push_back(1);
+
+  cn.push_back(0);
+
+  hp.insertE(cn,siz);
+
+  thrust::host_vector<int> cnn;
+  cnn = hp.deleteElem(2);
 
   //TIMER STOP
   cudaEventRecord(stop,0);

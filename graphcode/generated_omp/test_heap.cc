@@ -16,13 +16,9 @@ void Test(graph& g , int src)
 
   cn.push_back(0);
 
-  double starttime = rtclock();
   hp.insertE(cn,siz);
 
-  double endtime = rtclock();
-  starttime = rtclock();
   std::vector<int> cnn;
-  cnn = hp1.deleteElem(2);
-  endtime = rtclock();
+  cnn = hp.deleteElem(2);
 
 }

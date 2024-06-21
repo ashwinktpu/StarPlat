@@ -11,11 +11,11 @@
 
     using namespace std;
     //total size of the heap
-    #define maxSize 10
+    #define maxSize 100000000
 
-    __global__ void delete_Elem(int *heap,int *d_elements,int *curSize,int *elemSize,int k){
+    // __global__ void delete_Elem(int *heap,int *d_elements,int *curSize,int *elemSize,int k){
        
-    }
+    // }
 
     int getRandom(int lower, int upper)
     {

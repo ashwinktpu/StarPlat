@@ -3,6 +3,7 @@
 #define GENCPP_TEST_HEAP_H
 #include <stdio.h>
 #include <stdlib.h>
+#include "ParallelHeapCudaClass.cu"
 #include <limits.h>
 #include <cuda.h>
 #include "../graph.hpp"
@@ -12,6 +13,8 @@
 void Test(graph& g,int src);
 
 
+
+__device__ int maxSize ; // DEVICE ASSTMENT in .h
 
 __device__ int siz ; // DEVICE ASSTMENT in .h
 

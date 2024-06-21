@@ -122,6 +122,8 @@ void dsl_cpp_generator::generation_begin() {
   header.pushString("#include ");
   addIncludeToFile("stdlib.h", header, true);
   header.pushString("#include ");
+  addIncludeToFile("ParallelHeapCudaClass.cu", header, false);
+  header.pushString("#include ");
   addIncludeToFile("limits.h", header, true);
   header.pushString("#include ");
   addIncludeToFile("cuda.h", header, true);
