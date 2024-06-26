@@ -1,4 +1,3 @@
-%define parse.trace
 %{
 	#include <stdio.h>
 	#include <string.h>
@@ -68,6 +67,7 @@
 %token <fval> FLOAT_NUM
 %token <bval> BOOL_VAL
 %token <cval> CHAR_VAL
+%token return_func
 
 %type <node> function_def function_data  return_func function_body param
 %type <pList> paramList
