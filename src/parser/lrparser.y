@@ -3,6 +3,8 @@
 	#include <string.h>
 	#include <stdlib.h>
 	#include <stdbool.h>
+    #include <sys/stat.h>
+    #include <sys/types.h>
     #include "includeHeader.hpp"
 	#include "../analyser/attachProp/attachPropAnalyser.h"
 	#include "../analyser/dataRace/dataRaceAnalyser.h"
@@ -496,6 +498,23 @@ id : ID   {
 
 %%
 
+void create_directory(const char *backendTarget) {
+    char directory_name[256];
+    snprintf(directory_name, sizeof(directory_name), "../graphcode/generated_%s", backendTarget);
+
+    // Check if directory already exists
+    struct stat st = {0};
+    if (stat(directory_name, &st) == -1) {
+        // Create the directory
+        if (mkdir(directory_name, 0700) == 0) {
+            printf("Directory created: %s\n", directory_name);
+        } else {
+            perror("mkdir failed");
+        }
+    } else {
+        printf("Directory already exists: %s\n", directory_name);
+    }
+}
 
 void yyerror(const char *s) {
     fprintf(stderr, "%s\n", s);
@@ -582,7 +601,8 @@ int main(int argc,char **argv)
 	  
      
 
-
+   // only create a directory if the passed option is a valid option
+   create_directory(backendTarget);
    yyin= fopen(fileName,"r");
    
    if(!yyin) {
