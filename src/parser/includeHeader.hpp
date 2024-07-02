@@ -41,9 +41,5 @@
 #include "../backends/backend_hip/dsl_cpp_generator.h"
 
 extern "C" int yyparse(void);
-// what would this do ?? 
-// Why call yyparse and pass void into it ?
-// Why return int.
-// What does "C" mean ?
 
 #endif
