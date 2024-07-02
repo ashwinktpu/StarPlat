@@ -23,6 +23,9 @@ enum TYPE
  TYPE_CONTAINER,
  TYPE_NODEMAP,
  TYPE_VECTOR,
+ TYPE_HASHMAP,
+ TYPE_HASHSET,
+ TYPE_AUTOREF,
 };
 
 inline bool check_isNodeEdgeType(int typeId)
@@ -35,7 +38,7 @@ inline bool check_isPropType(int typeId)
 }
 inline bool check_isCollectionType(int typeId)
 {
-  return ((typeId == TYPE_LIST)||(typeId==TYPE_SETE)||(typeId==TYPE_SETN)||(typeId == TYPE_UPDATES) || (typeId == TYPE_NODEMAP) || (typeId == TYPE_CONTAINER) || (typeId == TYPE_VECTOR));
+  return ((typeId == TYPE_LIST)||(typeId==TYPE_SETE)||(typeId==TYPE_SETN)||(typeId == TYPE_UPDATES) || (typeId == TYPE_NODEMAP) || (typeId == TYPE_CONTAINER) || (typeId == TYPE_VECTOR) || (typeId == TYPE_HASHMAP) || (typeId == TYPE_HASHSET));
 }
 inline bool check_isGraphType(int typeId)
 {
@@ -43,7 +46,7 @@ inline bool check_isGraphType(int typeId)
 }
 inline bool check_isPrimitiveType(int typeId)
   {
-    return ((typeId==TYPE_BOOL)||(typeId==TYPE_DOUBLE)||(typeId==TYPE_FLOAT)||(typeId==TYPE_LONG)||(typeId==TYPE_INT));
+    return ((typeId==TYPE_BOOL)||(typeId==TYPE_DOUBLE)||(typeId==TYPE_FLOAT)||(typeId==TYPE_LONG)||(typeId==TYPE_INT)||(typeId==TYPE_AUTOREF));
   }
 
  inline bool check_isPropNodeType(int typeId)
@@ -82,6 +85,18 @@ inline bool check_isNodeMapType(int typeId)
  
 return typeId == TYPE_NODEMAP;
 
+}
+inline bool check_isHashMapType(int typeId)
+{
+
+ return typeId == TYPE_HASHMAP;
+   
+}
+inline bool check_isHashSetType(int typeId)
+{
+
+ return typeId == TYPE_HASHSET;
+   
 }
 
 enum REDUCE
@@ -147,6 +162,7 @@ enum NODETYPE{
   NODE_FIXEDPTSTMT,
   NODE_IFSTMT,
   NODE_ITRBFS,
+  NODE_ITRBFS2,
   NODE_ITRRBFS,
   NODE_EXPR,
   NODE_PROCCALLEXPR,
@@ -160,6 +176,7 @@ enum NODETYPE{
   NODE_ONADDBLOCK,
   NODE_ONDELETEBLOCK,
   NODE_TRANSFERSTMT,
+  NODE_ITERBFSREV
 };
 
 

@@ -4,7 +4,7 @@
 #include <unordered_map>
 //#include "../../ast/ASTNodeTypes.hpp"
 //#include "../../maincontext/MainContext.hpp"
-#include "../analyserUtil.cpp"
+#include "../analyserUtil.h"
 #include "../../ast/ASTHelper.cpp"
 //#include "../../symbolutil/SymbolTable.h"
 
@@ -311,6 +311,8 @@ class deviceVarsAnalyser
   lattice analyseProcCall(proc_callStmt*, lattice&);
   lattice analyseReduction(reductionCallStmt*, lattice&);
   lattice analyseItrBFS(iterateBFS*, lattice&);
+  lattice analyseItrBFS2(iterateBFS2*, lattice&);
+  lattice analyseItrBFSRev(iterateBFSReverse*, lattice&);
 
   //Initializes ASTNodeWrap for each statment and collects GPU used variables
   bool initBlock(blockStatement* blockStmt, list<Identifier*> &);
@@ -327,6 +329,8 @@ class deviceVarsAnalyser
   bool initProcCall(proc_callStmt*, list<Identifier*> &);
   bool initReduction(reductionCallStmt*, list<Identifier*> &);
   bool initItrBFS(iterateBFS*, list<Identifier*> &);
+  bool initItrBFS2(iterateBFS2*, list<Identifier*> &);
+  bool initItrBFSRev(iterateBFSReverse*, list<Identifier*> &);
 
   void printStatement(statement* , int);
   void printBlock(blockStatement* , int);
@@ -368,6 +372,8 @@ class deviceVarsAnalyser
   statement* transferVarsProcCall(proc_callStmt* stmt, blockStatement* parBlock);
   statement* transferVarsReduction(reductionCallStmt* stmt, blockStatement* parBlock);
   statement* transferVarsItrBFS(iterateBFS* stmt, blockStatement* parBlock);
+  statement* transferVarsItrBFS2(iterateBFS2* stmt, blockStatement* parBlock);
+  statement* transferVarsItrBFSRev(iterateBFSReverse* stmt, blockStatement* parBlock);
 };
 
 #endif

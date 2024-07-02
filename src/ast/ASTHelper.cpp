@@ -381,6 +381,22 @@ Type* nodeMapNode = Type::createForNodeMapType(typeId, (Type*) elemType);
 return nodeMapNode;
 }
 
+static ASTNode* createHashMapTypeNode(int typeId, ASTNode* keyType, list<argument*> argList, ASTNode* valType){
+
+Type* hashmapNode = Type::createForHashMapType(typeId, (Type*) keyType, argList, (Type*) valType);
+
+return hashmapNode;
+
+}
+
+static ASTNode* createHashSetTypeNode(int typeId, ASTNode* keyType, list<argument*> argList, ASTNode* innerTypeSize){
+
+Type* hashsetNode = Type::createForHashSetType(typeId, (Type*) keyType, argList, (Type*) innerTypeSize);
+
+return hashsetNode;
+
+}
+
 static ASTNode* createNodeForArithmeticExpr(ASTNode* expr1,ASTNode* expr2,int operatorType)
 {
     Expression* arithmeticExprNode=Expression::nodeForArithmeticExpr((Expression*)expr1,(Expression*)expr2,operatorType);
@@ -632,6 +648,38 @@ static ASTNode* createIterateInBFSNode(ASTNode* iterator,ASTNode* graphId,ASTNod
     else
       iterateBFSNode=iterateBFS::nodeForIterateBFS(id1,id2,nodeCall,id3,(Expression*)filterExpr,(statement*)body, NULL); 
     return iterateBFSNode;
+}
+
+static ASTNode* createIterateInBFSNode2(ASTNode* iterator,ASTNode* graphId,ASTNode* procCall,ASTNode* rootNode,ASTNode* filterExpr,ASTNode* body,ASTNode* revBFS)
+{
+    iterateBFS2* iterateBFSNode;
+    Identifier* id1=(Identifier*)iterator;
+    Identifier* id2=(Identifier*)graphId;
+    Identifier* id3=(Identifier*)rootNode;
+    proc_callExpr* nodeCall = (proc_callExpr*)procCall;
+    char* methodName = nodeCall->getMethodId()->getIdentifier();
+    string methodString(methodName);
+    assert(methodString.compare("nodes")==0);
+    printf("Calling createIterateInBFSNode2\n");
+    if(revBFS != NULL)
+      iterateBFSNode=iterateBFS2::nodeForIterateBFS(id1,id2,nodeCall,id3,(Expression*)filterExpr,(statement*)body,(iterateReverseBFS*)revBFS);
+    else
+      iterateBFSNode=iterateBFS2::nodeForIterateBFS(id1,id2,nodeCall,id3,(Expression*)filterExpr,(statement*)body, NULL); 
+    return iterateBFSNode;
+}
+
+static ASTNode* createIterateInBFSReverseNode(ASTNode* iterator,ASTNode* graphId,ASTNode* procCall,ASTNode* rootNode,ASTNode* filterExpr,ASTNode* body)
+{
+    iterateBFSReverse* iterateBFSRevNode;
+    Identifier* id1=(Identifier*)iterator;
+    Identifier* id2=(Identifier*)graphId;
+    Identifier* id3=(Identifier*)rootNode;
+    proc_callExpr* nodeCall = (proc_callExpr*)procCall;
+    char* methodName = nodeCall->getMethodId()->getIdentifier();
+    string methodString(methodName);
+    assert(methodString.compare("nodes")==0);
+    iterateBFSRevNode=iterateBFSReverse::nodeForIterateBFS(id1,id2,nodeCall,id3,(Expression*)filterExpr,(statement*)body); 
+    return iterateBFSRevNode;
 }
 };
 
