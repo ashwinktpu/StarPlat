@@ -128,6 +128,12 @@ usedVariables_t blockVarsAnalyser::getVarsBFS(iterateBFS *stmt)
   return currVars;
 }
 
+usedVariables_t blockVarsAnalyser::getVarsBFS2(iterateBFS2 *stmt)
+{
+  usedVariables_t currVars = getVarsStatement(stmt->getBody());
+  return currVars;
+}
+
 usedVariables_t blockVarsAnalyser::getVarsRBFS(iterateReverseBFS *stmt)
 {
   usedVariables_t currVars = getVarsStatement(stmt->getBody());
@@ -136,6 +142,12 @@ usedVariables_t blockVarsAnalyser::getVarsRBFS(iterateReverseBFS *stmt)
     currVars.merge(getVarsExpr(stmt->getBFSFilter()));
   }
 
+  return currVars;
+}
+
+usedVariables_t blockVarsAnalyser::getVarsBFSRev(iterateBFSReverse *stmt)
+{
+  usedVariables_t currVars = getVarsStatement(stmt->getBody());
   return currVars;
 }
 
@@ -344,6 +356,9 @@ usedVariables_t blockVarsAnalyser::getVarsStatement(statement *stmt)
 
   case NODE_ITRBFS:
     return getVarsBFS((iterateBFS *)stmt);
+
+  case NODE_ITRBFS2:
+    return getVarsBFS2((iterateBFS2 *)stmt);
 
   case NODE_ITRRBFS:
     return getVarsRBFS((iterateReverseBFS *)stmt);

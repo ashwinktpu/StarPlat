@@ -23,6 +23,8 @@ statement: declaration ';'
 	|control_flow 
 	|reduction ';'
 	| bfs_abstraction 
+	| bfs_reverse_abstraction
+	| bfs_abstraction2
 	| blockstatements 
 	| unary_expr ';' 
 
@@ -152,8 +154,14 @@ arg_list :
 bfs_abstraction	: T_BFS '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr blockstatements reverse_abstraction
 			| T_BFS '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr blockstatements 
 
+bfs_abstraction2	: T_BFS2 '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr blockstatements reverse_abstraction
+			| T_BFS2 '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr blockstatements 
+
+
 reverse_abstraction :  T_REVERSE blockstatements 
                      | T_REVERSE '(' boolean_expr ')'  blockstatements 
+
+bfs_reverse_abstraction	: T_BFSREVERSE '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr blockstatements
 
 oid : id '.' id 
 

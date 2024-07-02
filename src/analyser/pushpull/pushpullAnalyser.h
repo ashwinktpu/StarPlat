@@ -1,7 +1,7 @@
 #ifndef PUSH_PULL_ANALYSER
 #define PUSH_PULL_ANALYSER
 
-// #include "../analyserUtil.cpp"
+// #include "../analyserUtil.h"
 #include "../../ast/ASTNodeTypes.hpp"
 
 class pushpullAnalyser{
