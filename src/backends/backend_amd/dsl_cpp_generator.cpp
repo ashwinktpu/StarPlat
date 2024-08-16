@@ -4,9 +4,6 @@
 #include "getUsedVarsAMD.cpp"
 #include "../../ast/ASTHelper.cpp"
 
-int kernel_counter=1;
-bool isNeighbourIter;
-
 namespace spamd{
 
 dslCodePad& dsl_cpp_generator::getTargetFile(int isMainFile)
@@ -51,7 +48,6 @@ const char* dsl_cpp_generator :: getAtomicFromType(Type* type, int atomicType)
 
   return "--";
 }
-
 void dsl_cpp_generator:: addMemObject(char *obj)
 {
   memObjects.push_back(obj);
@@ -85,32 +81,14 @@ void dsl_cpp_generator:: addKernelObject(char* obj)
     main.pushstr_newL("printf(\" Program building completed, status = %d \\n \",status);");
     main.NewLine();
 
-
-    main.pushstr_newL("if (status != CL_SUCCESS) {");
-    main.pushstr_newL(" // Get the build log size");
-    main.pushstr_newL(" size_t log_size;");
-    main.pushstr_newL(" clGetProgramBuildInfo(program, devices[0], CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);");
-    main.pushstr_newL(" // Allocate memory for the build log");
-    main.pushstr_newL(" char *log = (char *)malloc(log_size);");
-    main.pushstr_newL(" if (!log) {");
-    main.pushstr_newL("   printf(\"Failed to allocate memory for build log.\\n\");");
-    main.pushstr_newL("   return; // Or handle the error appropriately");
-    main.pushstr_newL(" }");
-    main.pushstr_newL(" // Get the build log");
-    main.pushstr_newL(" clGetProgramBuildInfo(program, devices[0], CL_PROGRAM_BUILD_LOG, log_size, log, NULL);");
-    main.pushstr_newL(" // Print the build log");
-    main.pushstr_newL(" printf(\"Build log is      : %s\\n\", log);");
-    main.pushstr_newL(" // Free the memory");
-    main.pushstr_newL(" free(log);");
-    main.pushstr_newL(" return;");
-    main.pushstr_newL(" }");
-
     // If we have kernel we are gonna use global size and local size
     main.pushstr_newL("//Variable for launch configuration");
     main.pushstr_newL("size_t global_size;");
     main.pushstr_newL("size_t local_size;");
 
-    // Add header to kernel.cl file 
+
+    // Add header to kernel.cl file
+   
   }
 
   kernelObjects.push_back(obj);
@@ -277,7 +255,7 @@ const char* dsl_cpp_generator::convertToCppType(Type* type) {
       }
     }
   } else if (type->isNodeEdgeType()) {
-    return "edge ";  // need to be modified.
+    return "int";  // need to be modified.
 
   } else if (type->isGraphType()) {
     return "graph&";
@@ -527,7 +505,6 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, int isMainFile) {
   //~ bool genCSR =
   //~ false;  // to generate csr or not in main.cpp file if graph is a parameter
   const char* gId;  // to generate csr or not in main.cpp file if graph is a parameter
-
   for (itr = paramList.begin(); itr != paramList.end(); itr++) {
     arg_currNo++;
     argumentTotal--;
@@ -540,7 +517,6 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, int isMainFile) {
     if (!isMainFile && type->isGraphType()) {
       genCSR = true;
       gId = parName;
-      //cout<<"*******GID*********"<<gId<<"********GID********\n";
     }
 
     // targetFile.pushString(/*createParamName(*/(*itr)->getIdentifier()->getIdentifier());
@@ -578,7 +554,6 @@ void dsl_cpp_generator::generateFuncBody(Function* proc, int isMainFile) {
     main.NewLine();
 
     main.pushstr_newL("// CSR END");
-    cout<<"//CSR END\n";
 
     //main.pushString("//LAUNCH CONFIG");
 
@@ -650,7 +625,6 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
   
 
   Type* type = declStmt->getType();
-  //cout<<"here i might be gettinf segmentation fault\n";
   //~ char strBuffer[1024];
   //~ if (type->isPrimitiveType()){
       //~ header.pushString("__device__ d_");
@@ -662,14 +636,12 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
   {
     if (type->getInnerTargetType()->isPrimitiveType())
     {
-      
 
       Type* innerType = type->getInnerTargetType();
       char strBuffer[1024];
       sprintf(strBuffer, "%s *h_%s = (%s *)malloc(%s*sizeof(%s));", convertToCppType(innerType), 
             declStmt->getdeclId()->getIdentifier(), convertToCppType(innerType) , type->isPropNodeType()?"V":"E",
             convertToCppType(innerType));
-
       main.pushString(strBuffer);
       main.NewLine();
       generateCudaMalloc(type, declStmt->getdeclId()->getIdentifier());
@@ -696,36 +668,6 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
       main.pushstr_newL(strBuffer);
     
     }
-    Expression* expr=declStmt->getExpressionAssigned();
-    if(expr->isPropIdExpr()){
-      PropAccess* propId=expr->getPropId();
-      Identifier* id1 = propId->getIdentifier1();
-      Identifier* id2 = propId->getIdentifier2();
-      if(id2->getSymbolInfo()->getType()->isPropEdgeType()){
-        if(isMainFile==1){
-          sprintf(strBuffer, "%s %s=", varType, varName);
-          targetFile.pushString(strBuffer);
-          sprintf(strBuffer,"h_%s[%s_ind];",id2->getIdentifier(),id1->getIdentifier());
-          //sprintf(strBuffer, "%s_weight;", id1->getIdentifier());
-          targetFile.pushString(strBuffer);
-          targetFile.NewLine();
-          return;
-        }
-        else if(isMainFile==2){
-          sprintf(strBuffer, "%s %s=", varType, varName);
-          targetFile.pushString(strBuffer);
-          sprintf(strBuffer,"d_%s[%s_ind];",id2->getIdentifier(),id1->getIdentifier());
-          //sprintf(strBuffer, "%s_weight;", id1->getIdentifier());
-          targetFile.pushString(strBuffer);
-          targetFile.NewLine();
-          return;
-        }
-
-
-      }
-       
-    }
-    
     
     main.NewLine();
     sprintf(strBuffer, "%s %s", varType, varName);
@@ -761,84 +703,21 @@ void dsl_cpp_generator::generateVariableDecl(declaration* declStmt,
         generateExpr(declStmt->getExpressionAssigned(), true);
       }*/
     }
-
     targetFile.pushString("; ");
     targetFile.NewLine();
   }
 
   else if (type->isNodeEdgeType())
   {
-    char strBuffer[1024];
-    Expression* expr=declStmt->getExpressionAssigned();
-    proc_callExpr* proc = (proc_callExpr*)expr;
-    list<argument*> argList = proc->getArgList();
-    Identifier* srcId = argList.front()->getExpr()->getId();
-    Identifier* destId = argList.back()->getExpr()->getId();
-    targetFile.NewLine();
-    targetFile.NewLine();
-    sprintf(strBuffer,"int %s_src=%s;",declStmt->getdeclId()->getIdentifier(),srcId->getIdentifier());
-    targetFile.pushString(strBuffer);
-    targetFile.NewLine();
-    sprintf(strBuffer,"int %s_des=%s;",declStmt->getdeclId()->getIdentifier(),destId->getIdentifier());
-    targetFile.pushString(strBuffer);
-    targetFile.NewLine();
-
-
-    sprintf(strBuffer,"int %s_ind=-1;",declStmt->getdeclId()->getIdentifier());
-    targetFile.pushString(strBuffer);
-    targetFile.NewLine();
-    sprintf(strBuffer,"int %s_weight=-1;",declStmt->getdeclId()->getIdentifier());
-    targetFile.pushString(strBuffer);
-    targetFile.NewLine();
-
-    if(isMainFile==1){
-      sprintf(strBuffer, "for(int i=h_meta[%s_src]; i< h_meta[%s_src+1]; i++) {",declStmt->getdeclId()->getIdentifier(),declStmt->getdeclId()->getIdentifier());
-      targetFile.pushString(strBuffer);
-      targetFile.NewLine();
-      sprintf(strBuffer, "int v = h_data[i];");
-      targetFile.pushString(strBuffer);
-      targetFile.NewLine();
-      sprintf(strBuffer, "if(v==%s_des){",declStmt->getdeclId()->getIdentifier());
-      targetFile.pushString(strBuffer);
-      targetFile.NewLine();
-      sprintf(strBuffer,"%s_ind=i;",declStmt->getdeclId()->getIdentifier());
-      targetFile.pushString(strBuffer);
-      targetFile.NewLine();
-      sprintf(strBuffer,"%s_weight=h_weight[i];",declStmt->getdeclId()->getIdentifier());
-      targetFile.pushString(strBuffer);
-      targetFile.NewLine();
-      targetFile.pushString("break;");
-      targetFile.NewLine();
-      targetFile.pushString("}");
-      targetFile.NewLine();
-      targetFile.pushString("}");
+    targetFile.pushstr_space(convertToCppType(type));
+    targetFile.pushString(declStmt->getdeclId()->getIdentifier());
+    if (declStmt->isInitialized()) 
+    {
+      targetFile.pushString(" = ");
+      generateExpr(declStmt->getExpressionAssigned(), isMainFile);
+      targetFile.pushString("; ");
     }
-    else if(isMainFile==2){
-      sprintf(strBuffer, "for(int i=d_meta[%s_src]; i< d_meta[%s_src+1]; i++) {",declStmt->getdeclId()->getIdentifier(),declStmt->getdeclId()->getIdentifier());
-      targetFile.pushString(strBuffer);
-      targetFile.NewLine();
-      sprintf(strBuffer, "int v = d_data[i];");
-      targetFile.pushString(strBuffer);
-      targetFile.NewLine();
-      sprintf(strBuffer, "if(v==%s_des){",declStmt->getdeclId()->getIdentifier());
-      targetFile.pushString(strBuffer);
-      targetFile.NewLine();
-      sprintf(strBuffer,"%s_ind=i;",declStmt->getdeclId()->getIdentifier());
-      targetFile.pushString(strBuffer);
-      targetFile.NewLine();
-      sprintf(strBuffer,"%s_weight=d_weight[i];",declStmt->getdeclId()->getIdentifier());
-      targetFile.pushString(strBuffer);
-      targetFile.NewLine();
-      targetFile.pushString("break;");
-      targetFile.NewLine();
-      targetFile.pushString("}");
-      targetFile.NewLine();
-      targetFile.pushString("}");
-    }
-    
-    targetFile.NewLine();
   }
-
 }
 
 
@@ -854,16 +733,13 @@ void dsl_cpp_generator::generate_exprLiteral(Expression* expr,
   switch (expr_valType) {
     case EXPR_INTCONSTANT:
       sprintf(valBuffer, "%ld", expr->getIntegerConstant());
-      //cout<<"value is an integer constant\n";
       break;
 
     case EXPR_FLOATCONSTANT:
       sprintf(valBuffer, "%lf", expr->getFloatConstant());
-      //cout<<"value is an float constant\n";
       break;
     case EXPR_BOOLCONSTANT:
       sprintf(valBuffer, "%s", expr->getBooleanConstant() ? "true" : "false");
-      //cout<<"value is an boolean constant\n";
       break;
     default:
       assert(false);
@@ -922,14 +798,12 @@ void dsl_cpp_generator::generate_exprRelational(Expression* expr,
   if (expr->hasEnclosedBrackets()) {
     targetFile.pushString("(");
   }
-
   generateExpr(expr->getLeft(), isMainFile);
 
   targetFile.space();
   const char* operatorString = getOperatorString(expr->getOperatorType());
   targetFile.pushstr_space(operatorString);
   generateExpr(expr->getRight(), isMainFile);
-
   if (expr->hasEnclosedBrackets()) {
     targetFile.pushString(")");
   }
@@ -943,15 +817,12 @@ void dsl_cpp_generator::generate_exprIdentifier(Identifier* id,
   {
     for(Identifier* iden:PremVarOfKernel)
     {
-      
-      //cout<<idName<<"=================="<<iden->getIdentifier()<<endl;
+
       if(!strcmp(idName, iden->getIdentifier()))
       {
-        
-        targetFile.pushString("(*d_");
+        targetFile.pushString("(*");
         targetFile.pushString(id->getIdentifier());
         targetFile.pushString(")");
-        //cout<<"(*"<<id->getIdentifier()<<")\n";
         return;
       }
     }
@@ -962,7 +833,6 @@ void dsl_cpp_generator::generate_exprIdentifier(Identifier* id,
 void dsl_cpp_generator::generate_exprPropId(
     PropAccess* propId, int isMainFile)  // This needs to be made more generic.
 {
-  //cout<<"true worrior has no true enimies\n";
   dslCodePad& targetFile = getTargetFile(isMainFile);
 
   char strBuffer[1024];
@@ -978,17 +848,14 @@ void dsl_cpp_generator::generate_exprPropId(
     sprintf(strBuffer, "d_%s_next[%s]", id2->getIdentifier(),
             id1->getIdentifier());
   }
-  else if(id2->getSymbolInfo()->getType()->isPropNodeType()) {
-    if (isMainFile==2){
+  else {
+    if (isMainFile==2)
       sprintf(strBuffer, "d_%s[%s]", id2->getIdentifier(), id1->getIdentifier());  // PREFIX D
-      targetFile.pushString(strBuffer);
-    }
-    else{
-      sprintf(strBuffer, "h_%s[%s]", id2->getIdentifier(), id1->getIdentifier());
-      targetFile.pushString(strBuffer);
-      }
+    else
+      sprintf(strBuffer, "%s[%s]", id2->getIdentifier(), id1->getIdentifier());
   }
-  
+  // std::cout<< id2->getIdentifier() << id1->getIdentifier() << '\n';
+  targetFile.pushString(strBuffer);
 }
 
 void dsl_cpp_generator::generate_exprArL(Expression* expr, int isMainFile, bool isAtomic) {  //isAtomic default to false
@@ -997,16 +864,13 @@ void dsl_cpp_generator::generate_exprArL(Expression* expr, int isMainFile, bool 
   if (expr->hasEnclosedBrackets()) {
     targetFile.pushString("(");
   }
-
   if (!isAtomic)
     generateExpr(expr->getLeft(), isMainFile);
   targetFile.space();
   const char* operatorString = getOperatorString(expr->getOperatorType());
   if (!isAtomic)
     targetFile.pushstr_space(operatorString);
-
   generateExpr(expr->getRight(), isMainFile);
-  
   if (expr->hasEnclosedBrackets()) {
     targetFile.pushString(")");
   }
@@ -1014,30 +878,17 @@ void dsl_cpp_generator::generate_exprArL(Expression* expr, int isMainFile, bool 
 
 void dsl_cpp_generator::generate_exprProcCall(Expression* expr,
                                               int isMainFile) {
+   cout << "inside the expr_proCall ggggggggggggggggggggggggg" << isMainFile<<endl;
 
   dslCodePad& targetFile = getTargetFile(isMainFile);
 
   proc_callExpr* proc = (proc_callExpr*)expr;
   string methodId(proc->getMethodId()->getIdentifier());
   if (methodId == "get_edge") {
-    targetFile.pushString(proc->getId1()->getIdentifier());
-    targetFile.pushString(".getEdge(");
-    list<argument*> argList = proc->getArgList();
-    assert(argList.size() == 2);
-    Identifier* srcId = argList.front()->getExpr()->getId();
-    Identifier* destId = argList.back()->getExpr()->getId();
-    targetFile.pushString(srcId->getIdentifier());
-    targetFile.pushString(",");
-    targetFile.pushString(destId->getIdentifier());
-    targetFile.pushString(")");
-    // if(srcId->getIdentifier())cout<<"source is "<<srcId->getIdentifier()<<endl;
-    // else cout<<"no source srcId->getIdentifier()\n";
-   // cout<<"destination iss"<<destId->getIdentifier()<<endl;
-
-    
-
-    // To be changed..need to check for a neighbour iteration  and then replace by the iterator.
- 
+    //~ cout << "heloooooooooooooooooooooooooooooooooooooooooooooooooooooooooo";
+    targetFile.pushString(
+        "edge");                           // To be changed..need to check for a neighbour iteration
+                                           // and then replace by the iterator.
   } else if (methodId == "count_outNbrs")  // pageRank
   {
     char strBuffer[1024];
@@ -1053,12 +904,12 @@ void dsl_cpp_generator::generate_exprProcCall(Expression* expr,
     assert(argList.size() == 2);
     Identifier* srcId = argList.front()->getExpr()->getId();
     Identifier* destId = argList.back()->getExpr()->getId();
-    
     //~ Identifier* objectId = proc->getId1();
     sprintf(strBuffer, "%s(%s, %s, %s, %s)", "isNeighbour", srcId->getIdentifier(), destId->getIdentifier(),"d_meta","d_data");
     targetFile.pushString(strBuffer);
 
   } else {
+    cout<<"else part"<<endl;
     char strBuffer[1024];
     list<argument*> argList = proc->getArgList();
     if (argList.size() == 0) {
@@ -1096,32 +947,33 @@ void dsl_cpp_generator::generate_exprUnary(Expression* expr, int isMainFile) {
 }
 void dsl_cpp_generator::generateExpr(Expression* expr, int isMainFile, bool isAtomic) {  //isAtomic default to false
   //~ dslCodePad& targetFile = isMainFile ? main : header;
+
   if (expr->isLiteral()) {
+    //~ cout << "INSIDE THIS FOR LITERAL"
     //~ << "\n";
     //~ std::cout<< "------>PROP LIT"  << '\n';
     generate_exprLiteral(expr, isMainFile);
   } else if (expr->isInfinity()) {
     generate_exprInfinity(expr, isMainFile);
   } else if (expr->isIdentifierExpr()) {
-    //std::cout<< "------>PROP ID"  << '\n';
+    // std::cout<< "------>PROP ID"  << '\n';
     generate_exprIdentifier(expr->getId(), isMainFile);
   } else if (expr->isPropIdExpr()) {
-     //std::cout<< "------>PROP EXP"  << '\n';
+    //  std::cout<< "------>PROP EXP"  << '\n';
     generate_exprPropId(expr->getPropId(), isMainFile);
   } else if (expr->isArithmetic() || expr->isLogical()) {
-     //std::cout<< "------>PROP AR/LG"  << '\n';
+    // std::cout<< "------>PROP AR/LG"  << '\n';
     generate_exprArL(expr, isMainFile, isAtomic);
   } else if (expr->isRelational()) {
-    //std::cout<< "------>PROP RL"  << '\n';
+    // std::cout<< "------>PROP RL"  << '\n';
     generate_exprRelational(expr, isMainFile);
   } else if (expr->isProcCallExpr()) {
-    //std::cout<< "------>PROP PRO CAL"  << '\n';
+    // std::cout<< "------>PROP PRO CAL"  << '\n';
     generate_exprProcCall(expr, isMainFile);
   } else if (expr->isUnary()) {
-   // std::cout<< "------>PROP UNARY"  << '\n';
+    // std::cout<< "------>PROP UNARY"  << '\n';
     generate_exprUnary(expr, isMainFile);
   } else {
-    //cout<<"something else my friend\n";
     assert(false);
   }
 }
@@ -1135,7 +987,7 @@ void dsl_cpp_generator::generateIfStmt(ifStmt* ifstmt, int isMainFile) {
 
 
 
-  targetFile.pushString("if ("); //std::cout<< "=======IF FILTER" << '\n';
+  targetFile.pushString("if ("); std::cout<< "=======IF FILTER" << '\n';
   generateExpr(condition, isMainFile);
   //~ targetFile.pushString(" )");
   targetFile.pushstr_newL("){ // if filter begin ");
@@ -1166,13 +1018,11 @@ void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt,
       assignment* assign = (*itr)->getAssignExpr();
 
       if (argList.size() == 1) {
-        cout<<"argList size is 1\n";
         generateInitkernel1(assign, isMainFile);
         //~ std::cout << "%%%%%%%%%%" << '\n';
 
         /// initKernel<double> <<<numBlocks,threadsPerBlock>>>(V,d_BC, 0);
       } else if (argList.size() == 2) {
-        cout<<"argList size is 2\n";
         //~ std::cout << "===============" << '\n';
         generateInitkernel1(assign, isMainFile);
         //~ std::cout<< "initType:" <<
@@ -1182,79 +1032,6 @@ void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt,
       }
     }
   }
-  x = methodID.compare("attachEdgeProperty");
-  if(x==0){
-    list<argument*> argList = procedure->getArgList();
-    list<argument*>::iterator itr;
-    for (itr = argList.begin(); itr != argList.end(); itr++) {
-      assignment* assign = (*itr)->getAssignExpr();
-      char strBuffer[1024];
-      Identifier* inId = assign->getId();
-      Expression* exprAssigned = assign->getExpr();
-      //type of datatype it is of
-      const char* inVarType =
-          convertToCppType(inId->getSymbolInfo()->getType()->getInnerTargetType());
-      const char* inVarName = inId->getIdentifier();
-      //cout<<inVarName<<"is of type "<<inVarType<<endl;
-      sprintf(strBuffer, "// Initialization for %s variable which is EdgeProperty", inVarName);
-      main.pushString(strBuffer);
-      main.NewLine();
-      if(exprAssigned->isLiteral()){
-        //here same value is assigned to property of all the edges
-        char valBuffer[1024];
-        int expr_valType = exprAssigned->getExpressionFamily();
-        switch (expr_valType) {
-          case EXPR_INTCONSTANT:
-            sprintf(valBuffer, "%s %s_value = %ld;",inVarType ,inVarName,exprAssigned->getIntegerConstant());
-            main.pushString(valBuffer);
-            main.NewLine();
-            break;
-
-          case EXPR_FLOATCONSTANT:
-            sprintf(valBuffer, "%s %s_value = %lf;",inVarType ,inVarName,exprAssigned->getFloatConstant());
-            main.pushString(valBuffer);
-            main.NewLine();
-            break;
-          case EXPR_BOOLCONSTANT:
-          sprintf(valBuffer, "%s %s_value = %s;",inVarType ,inVarName,exprAssigned->getBooleanConstant() ? "true" : "false");
-            break;
-            default:
-            assert(false);
-
-      // return valBuffer;
-        }
-        main.pushstr_newL("for(int i=0; i< E; i++) {");
-        sprintf(strBuffer, "h_%s[i]=%s_value;",inVarName,inVarName);
-        main.pushString("}");
-        main.pushstr_newL(strBuffer);
-        main.NewLine();
-      }
-      else if(exprAssigned->isProcCallExpr()){
-        char valBuffer[1024];
-        sprintf(valBuffer, "%s *  %s_array =",inVarType ,inVarName);
-        main.pushString(valBuffer);
-        proc_callExpr* proc = (proc_callExpr*)exprAssigned;
-        string methodId(proc->getMethodId()->getIdentifier());
-        list<argument*> argList = proc->getArgList();
-        if (argList.size() == 0) {
-          Identifier* objectId = proc->getId1();
-          sprintf(strBuffer, "%s.%s( );", objectId->getIdentifier(),
-              proc->getMethodId()->getIdentifier());
-          main.pushstr_newL(strBuffer);
-          main.pushstr_newL("for(int i=0; i< E; i++) {");
-          sprintf(strBuffer, "h_%s[i]=%s_array[i];",inVarName,inVarName);
-          printf("h_%s[i]=%s_array[i];",inVarName,inVarName);
-          main.pushString(strBuffer);
-          main.NewLine();
-          main.pushstr_newL("}");
-          main.NewLine();
-    }  //here i am assigning values from a different array
-      }
-
-    }
-    
-  }
-  
   /*
    if(x==0)
        {
@@ -1302,17 +1079,16 @@ void dsl_cpp_generator::generateProcCall(proc_callStmt* proc_callStmt,
 
 void dsl_cpp_generator::generateInitkernel1(assignment* assign, int isMainFile) {  
 
+//cout<<"I am inside generateInitkernel1"<<endl;
   char strBuffer[1024];
 
   Identifier* inId = assign->getId();
-
   Expression* exprAssigned = assign->getExpr();
 
   const char* inVarType =
       convertToCppType(inId->getSymbolInfo()->getType()->getInnerTargetType());
   const char* inVarName = inId->getIdentifier();
   //cout<<"set argument for init kernel in main"<<endl;
-
   cout<<"VarName: "<<inVarName<<endl;
 
   //cout<<"Generate init kernel in kernel file first"<<endl;
@@ -1324,8 +1100,6 @@ void dsl_cpp_generator::generateInitkernel1(assignment* assign, int isMainFile) 
   {
     addKernelObject(kernelName);
     sprintf(strBuffer, "__kernel void %s( __global %s *d_%s , %s value, int v",kernelName, inVarType, inVarName,inVarType);
-    //cout<<kernelName<<"++++++"<<inVarType<<"++++++++"<<inVarName<<"++++++++";
-    printf("__kernel void %s( __global %s *d_%s , %s value, int v",kernelName, inVarType, inVarName,inVarType);
     kernel.pushString(strBuffer);
     kernel.pushString("){");
     kernel.NewLine();
@@ -1348,17 +1122,12 @@ void dsl_cpp_generator::generateInitkernel1(assignment* assign, int isMainFile) 
 
   main.NewLine();
   sprintf(strBuffer, "// Initialization for %s variable", inVarName);
-  printf("// Initialization for %s variable", inVarName);
   main.pushString(strBuffer);
   main.NewLine();
 
   sprintf(strBuffer, "%s %sValue = (%s)",inVarType, inVarName, inVarType);
-  printf("%s %sValue = (%s)",inVarType, inVarName, inVarType);
   main.pushString(strBuffer);
-
   generateExpr(exprAssigned,1);
-
-
   main.pushString("; ");
   main.NewLine();
   sprintf(strBuffer, "status = clSetKernelArg(%s, 0 , sizeof(cl_mem), (void *)& d_%s);",kernelName , inVarName);
@@ -1379,9 +1148,6 @@ void dsl_cpp_generator::generateInitkernel1(assignment* assign, int isMainFile) 
  main.pushstr_newL(strBuffer);
  main.NewLine();
  addProfilling("event");
- sprintf(strBuffer ,"status = clEnqueueReadBuffer(command_queue, d_%s, CL_TRUE, 0, sizeof(%s) * V, h_%s, 0, NULL, NULL);",inVarName,inVarType,inVarName);
- main.pushstr_newL(strBuffer);
- main.NewLine();
  sprintf(strBuffer, "status = clReleaseKernel(%s);",kernelName);
  main.pushstr_newL(strBuffer);
  /*
@@ -1435,27 +1201,19 @@ void dsl_cpp_generator::generateCudaMallocParams(list<formalParam*> paramList)
     }
   }
 }
-
 void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment* asmt, int isMainFile) 
 {
   dslCodePad& targetFile = getTargetFile(isMainFile);
-  cout<<"Inside generateDeviceAssignmentStmt"<<endl;
+  //cout<<"Inside generateDeviceAssignmentStmt"<<endl;
   bool isDevice = false;
+  std::cout << "\tASSIGNMENT \n";
   char strBuffer[300];
   if (asmt->lhs_isIdentifier()) {
     Identifier* id = asmt->getId();
-    if(isMainFile==2)targetFile.pushString("d_");
     targetFile.pushString(id->getIdentifier());
-    targetFile.pushString(" = ");
-    generateExpr(asmt->getExpr(), isMainFile);
-    targetFile.pushstr_newL(";");
-    targetFile.NewLine();
   }
-  else if (asmt->lhs_isProp())  
+  else if (asmt->lhs_isProp())  // the check for node and edge property to be                             // carried out.
   {
-    // the check for node and edge property to be carried out.
-    
-
     PropAccess* propId = asmt->getPropId();
     if (asmt->isDeviceAssignment()) 
     {
@@ -1470,58 +1228,66 @@ void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment* asmt, int isMai
       //const char *varTypeA = convertToCppType(typeA);
       // Generate InitIndexVarName kernel in kernel file
 
-      
-      
-        // cout<<"yaha p possible segmentation fault\n";
-        // Identifier *inId= propId->getIdentifier2();
-        // if(propId->getIdentifier2()==NULL){
-        //   cout<<"oh my god\n";
-        // }
-        if(propId->getIdentifier2()->getSymbolInfo()->getType()->isPropNodeType()){
-          sprintf(strBuffer, "h_%s[%s] = ", propId->getIdentifier2()->getIdentifier(),
+      char *kernelName = (char*)malloc(100*sizeof(char));
+      strcpy(kernelName,"initIndex");
+      strcat(kernelName,propId->getIdentifier2()->getIdentifier());
+      strcat(kernelName,"_kernel");
+      if(!isKenelPresent(kernelName))
+      {
+        addKernelObject(kernelName);
+        kernel.NewLine();
+        sprintf(strBuffer, "__kernel void %s(__global %s *d_%s, int %s , %s val",
+                 kernelName, varTypeB , propId->getIdentifier2()->getIdentifier(),
+                 propId->getIdentifier1()->getIdentifier(), varTypeB  );
+        kernel.pushString(strBuffer);
+        kernel.pushString("){");
+        kernel.NewLine();
+        sprintf(strBuffer, "d_%s[%s] = val ; ", propId->getIdentifier2()->getIdentifier(),
               propId->getIdentifier1()->getIdentifier());
-          main.pushString(strBuffer);
-          generateExpr(asmt->getExpr(), isMainFile);
-          targetFile.pushstr_newL(";");
-          targetFile.NewLine();
+        kernel.pushString(strBuffer);
+        kernel.NewLine();
+        kernel.push('}');
+        kernel.NewLine();
+        // create kernel from progrem in main
+        sprintf(strBuffer,"//Creating %s kernel from program");
+        sprintf(strBuffer, "cl_kernel %s = clCreateKernel(program, \"%s\", &status);",
+                 kernelName, kernelName);
 
-        
-        }
-        else if(isMainFile==1){
-          
-          //sprintf(strBuffer, "for(int i=h_meta[%s_src]; i< h_meta[%s_src+1]; i++) {",propId->getIdentifier1()->getIdentifier(),propId->getIdentifier1()->getIdentifier());
-          //targetFile.pushString(strBuffer);
-          //targetFile.NewLine();
-          //sprintf(strBuffer, "int v = h_data[i]");
-          // targetFile.pushString(strBuffer);
-          // targetFile.NewLine();
-          // sprintf(strBuffer, "if(v==%s_des){",propId->getIdentifier1()->getIdentifier());
-          // targetFile.pushString(strBuffer);
-          // targetFile.NewLine();
-          sprintf(strBuffer,"h_%s[%s_ind]=",propId->getIdentifier2()->getIdentifier(),propId->getIdentifier1()->getIdentifier());
-          targetFile.pushString(strBuffer);
-          generateExpr(asmt->getExpr(), isMainFile);
-          targetFile.pushstr_newL(";");
-          targetFile.NewLine();
-          //targetFile.pushString("}");
-         // targetFile.NewLine();
-          //targetFile.pushString("}");
-          
-        }
-        else if(isMainFile==2){
-          sprintf(strBuffer,"d_%s[%s_ind]=",propId->getIdentifier2()->getIdentifier(),propId->getIdentifier1()->getIdentifier());
-          targetFile.pushString(strBuffer);
-          generateExpr(asmt->getExpr(), isMainFile);
-          targetFile.pushstr_newL(";");
-          targetFile.NewLine();
-          
-        }
-        
-        
-        
+        main.pushstr_newL(strBuffer);
+      }
+        //generate right side expression
+        sprintf(strBuffer,"//Index%s %s initialization", propId->getIdentifier2()->getIdentifier(), 
+              propId->getIdentifier1()->getIdentifier());
+        main.pushstr_newL(strBuffer);
+        sprintf(strBuffer, "%s init%sval%s = ", varTypeB, 
+              propId->getIdentifier2()->getIdentifier(),propId->getIdentifier1()->getIdentifier());
+        main.pushString(strBuffer);
+        generateExpr(asmt->getExpr(), 1);
+        main.push(';');
+        main.NewLine();
+        // genrate clSetKernelArg for theInitIndexvarName kernel
+        sprintf(strBuffer, "status = clSetKernelArg(%s , 0,sizeof(cl_mem) ,(void *)&d_%s);", 
+              kernelName,propId->getIdentifier2()->getIdentifier());
+        main.pushstr_newL(strBuffer);
+        sprintf(strBuffer, "status = clSetKernelArg(%s, 1,sizeof(int), (void*)&%s);",
+               kernelName, propId->getIdentifier1()->getIdentifier());
+        main.pushstr_newL(strBuffer);
+        sprintf(strBuffer, "status = clSetKernelArg(%s, 2, sizeof(%s),(void *)&init%sval%s);", 
+            kernelName,varTypeB ,propId->getIdentifier2()->getIdentifier(), propId->getIdentifier1()->getIdentifier());
+        main.pushstr_newL(strBuffer);
+        // Launch the kernel with (1,1)
+        main.pushstr_newL("global_size = local_size = 1;");
+        sprintf(strBuffer, "status  = clEnqueueNDRangeKernel(command_queue, %s,1,NULL, &global_size, &local_size, 0, NULL, &event);", 
+                      kernelName);
+        main.pushString(strBuffer);
+        main.NewLine();
+        addProfilling("event");
+        main.NewLine();
+        sprintf(strBuffer, "status = clReleaseKernel(%s);",kernelName);
+        main.pushstr_newL(strBuffer);
+        main.NewLine();
     }
     else {
-      //cout<<"inside the second else part of the assignment\n";
       targetFile.pushString("d_");  /// IMPORTANT
       targetFile.pushString(propId->getIdentifier2()->getIdentifier());
       targetFile.push('[');
@@ -1530,8 +1296,13 @@ void dsl_cpp_generator::generateDeviceAssignmentStmt(assignment* asmt, int isMai
     }
   }
 
-    
-  
+  if (!isDevice)
+  {
+    targetFile.pushString(" = ");
+    generateExpr(asmt->getExpr(), isMainFile);
+    targetFile.pushstr_newL(";");
+    targetFile.NewLine();
+  }
     
 }
 
@@ -1553,6 +1324,7 @@ void dsl_cpp_generator::checkForAllAndGenerate(blockStatement* blockStmt , int i
       {
         //Genearate the Create kernal and clSetKernelArg
         char *kernelName = getCurrentFunc()->getIdentifier()->getIdentifier();
+        //strcat(kernelName, "_kernel");
         char strBuffer[1024];
         targetFile.NewLine();
         targetFile.pushString("// Creating kaernel from program file");
@@ -1837,9 +1609,6 @@ void dsl_cpp_generator::generateFixedPoint(fixedPointStmt* fixedPointConstruct,i
 
   
 }
-
-
-
 void dsl_cpp_generator::generateCudaMemCpySymbol(char* var, const char* typeStr, bool direction)
 {
   cout<<"Inside genrateCudaMemCpySymbol"<<endl;
@@ -1971,14 +1740,12 @@ void dsl_cpp_generator::addCudaKernel(forallStmt* forAll)
     {
       sprintf(strBuffer, ",__global %s d_%s", convertToCppType(type), iden->getIdentifier());
       kernel.pushString(/*createParamName(*/strBuffer);
-      cout<<"`````````````````pushing parameter "<<iden->getIdentifier()<<endl;
     }
     else if( type->isPrimitiveType())
     {
-      sprintf(strBuffer, ",__global %s* d_%s", convertToCppType(type), iden->getIdentifier());
+      sprintf(strBuffer, ",__global %s* %s", convertToCppType(type), iden->getIdentifier());
       kernel.pushString(/*createParamName(*/strBuffer);
       PremVarOfKernel.push_back(iden);
-      cout<<"```````````````````````pushing parameter "<<iden->getIdentifier()<<endl;
     }
   }
   kernel.pushstr_newL("){ // BEGIN KER FUN via ADDKERNEL");
@@ -2073,7 +1840,6 @@ void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll, int isMainFi
         //~ targetFile.pushString("{");
         sprintf(strBuffer,"%s %s = %s[%s];","int",iterator->getIdentifier(),"d_data","edge"); //needs to move the addition of
         targetFile.pushstr_newL(strBuffer);
-        isNeighbourIter = true;
       }
       if(s.compare("nodes_to")==0) //for pageRank
       {
@@ -2085,7 +1851,6 @@ void dsl_cpp_generator::generateForAllSignature(forallStmt* forAll, int isMainFi
         targetFile.pushstr_newL("{");
         sprintf(strBuffer,"%s %s = %s[%s] ;","int",iterator->getIdentifier(),"d_src","edge"); //needs to move the addition of
          targetFile.pushstr_newL(strBuffer);
-         isNeighbourIter = false;
       } //statement to  a different method.
     }
   } else if (forAll->isSourceField()) {
@@ -2181,9 +1946,6 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, int isMainFile)
     main.NewLine();
     char strBuffer[1024];
      char *KernelName = getCurrentFunc()->getIdentifier()->getIdentifier();
-     string kstr= to_string(kernel_counter++);
-    const char *kstrr=kstr.c_str();
-    strcat(KernelName, kstrr);
      addKernelObject(KernelName);
      sprintf(strBuffer, "cl_kernel %s = clCreateKernel(program, \"%s_kernel\", &status);", KernelName, KernelName);
      main.pushstr_newL(strBuffer);
@@ -2196,85 +1958,6 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, int isMainFile)
      main.pushstr_newL("return ;");
      main.pushstr_newL("}");
     // set kernel Argument
-
-
-    //so before setting the kernel argument we have to make sure that the arguments are well updated that is before the kernel launch copy the required data from the
-    //host to device and after the kernel launch copy the data back to host from the device
-
-        if(forAll->getParent()->getParent()!=NULL)
-    {
-      cout<<"Parent is not null, parent node = ";
-      statement* parent = (statement*) forAll->getParent()->getParent();
-      cout<<parent->getTypeofNode()<<endl;
-      if(parent->getTypeofNode()== NODE_FIXEDPTSTMT)
-      {
-         cout<<"Parent is fixed point"<<endl;
-         fixedPointStmt* fixedPointConstruct = (fixedPointStmt*)parent;
-        Expression* convergeExpr = fixedPointConstruct->getDependentProp();
-        Identifier* fixedPointId = fixedPointConstruct->getFixedPointId();
-        if(fixedPointId->getSymbolInfo()->getType()->isPropNodeType()){
-          sprintf(strBuffer,"status = clEnqueueWriteBuffer(command_queue,   d_%s , CL_TRUE, 0, sizeof(int)*(V),   h_%s, 0, NULL, NULL );",fixedPointId->getIdentifier(),fixedPointId->getIdentifier());
-          main.pushstr_newL(strBuffer);
-        }
-        else if(fixedPointId->getSymbolInfo()->getType()->isPropEdgeType()){
-          sprintf(strBuffer,"status = clEnqueueWriteBuffer(command_queue,   d_%s , CL_TRUE, 0, sizeof(int)*(E),   h_%s, 0, NULL, NULL );",fixedPointId->getIdentifier(),fixedPointId->getIdentifier());
-          main.pushstr_newL(strBuffer);
-        }
-        else {
-          sprintf(strBuffer,"status = clEnqueueWriteBuffer(command_queue,   d_%s , CL_TRUE, 0, sizeof(int),   &%s, 0, NULL, NULL );",fixedPointId->getIdentifier(),fixedPointId->getIdentifier());
-          main.pushstr_newL(strBuffer);
-        }
-        
-        assert(convergeExpr->getExpressionFamily() == EXPR_UNARY ||
-          convergeExpr->getExpressionFamily() == EXPR_ID);
-
-
-        Identifier* dependentId = NULL;
-        //~ bool isNot = false;
-        assert(convergeExpr->getExpressionFamily() == EXPR_UNARY ||
-              convergeExpr->getExpressionFamily() == EXPR_ID);
-        if (convergeExpr->getExpressionFamily() == EXPR_UNARY) {
-          if (convergeExpr->getUnaryExpr()->getExpressionFamily() == EXPR_ID) {
-            dependentId = convergeExpr->getUnaryExpr()->getId();
-            //~ isNot = true;
-            if(dependentId->getSymbolInfo()->getType()->isPropNodeType()){
-            sprintf(strBuffer,"status = clEnqueueWriteBuffer(command_queue,   d_%s , CL_TRUE, 0, sizeof(int)*(V),   h_%s, 0, NULL, NULL );",fixedPointId->getIdentifier(),dependentId->getIdentifier());
-            main.pushstr_newL(strBuffer);
-          }
-          else if(dependentId->getSymbolInfo()->getType()->isPropEdgeType()){
-            sprintf(strBuffer,"status = clEnqueueWriteBuffer(command_queue,   d_%s , CL_TRUE, 0, sizeof(int)*(E),   h_%s, 0, NULL, NULL );",fixedPointId->getIdentifier(),dependentId->getIdentifier());
-            main.pushstr_newL(strBuffer);
-          }
-          else{
-            sprintf(strBuffer,"status = clEnqueueWriteBuffer(command_queue,   d_%s , CL_TRUE, 0, sizeof(int),   &%s, 0, NULL, NULL );",fixedPointId->getIdentifier(),dependentId->getIdentifier());
-            main.pushstr_newL(strBuffer); 
-          }
-          }
-        }
-      }
-    }
-
-  for(Identifier* iden: vars)
-  {
-    if(iden->getSymbolInfo()==NULL) continue; 
-    Type* type = iden->getSymbolInfo()->getType();
-    if(type->isPrimitiveType())
-    {
-      sprintf(strBuffer,"status = clEnqueueWriteBuffer(command_queue,   d_%s , CL_TRUE, 0, sizeof(int),   &%s, 0, NULL, NULL );",iden->getIdentifier(),iden->getIdentifier());
-      main.pushstr_newL(strBuffer);
-
-    }
-    else if(type->isPropNodeType()){
-      sprintf(strBuffer,"status = clEnqueueWriteBuffer(command_queue,   d_%s , CL_TRUE, 0, sizeof(int)*(V),   h_%s, 0, NULL, NULL );",iden->getIdentifier(),iden->getIdentifier());
-      main.pushstr_newL(strBuffer);
-
-    }
-    else if(type->isPropEdgeType()){
-      sprintf(strBuffer,"status = clEnqueueWriteBuffer(command_queue,   d_%s , CL_TRUE, 0, sizeof(int)*(E),   h_%s, 0, NULL, NULL );",iden->getIdentifier(),iden->getIdentifier());
-      main.pushstr_newL(strBuffer);
-    }
-    
-  }
    
     int argCount = 0;
     sprintf(strBuffer, "status = clSetKernelArg(%s,%d, sizeof(int),(void *)&V);", KernelName, argCount++);
@@ -2349,7 +2032,7 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, int isMainFile)
     main.pushstr_newL(strBuffer);
     addProfilling("event");
     main.NewLine();
-    sprintf(strBuffer, "status = clReleaseKernel(%s);", KernelName);
+    sprintf(strBuffer, "status = clReleaseKernel(%s);", getCurrentFunc()->getIdentifier()->getIdentifier());
         main.pushstr_newL(strBuffer);
 
     // Copy back ALL Premittive Variables
@@ -2366,82 +2049,7 @@ void dsl_cpp_generator::generateForAll(forallStmt* forAll, int isMainFile)
         // For proptype data need to Create clSetKernelArg
         
     }
-    //copy back all the parameters back to the cpu
 
-        if(forAll->getParent()->getParent()!=NULL)
-    {
-      cout<<"Parent is not null, parent node = ";
-      statement* parent = (statement*) forAll->getParent()->getParent();
-      cout<<parent->getTypeofNode()<<endl;
-      if(parent->getTypeofNode()== NODE_FIXEDPTSTMT)
-      {
-         cout<<"Parent is fixed point"<<endl;
-         fixedPointStmt* fixedPointConstruct = (fixedPointStmt*)parent;
-        Expression* convergeExpr = fixedPointConstruct->getDependentProp();
-        Identifier* fixedPointId = fixedPointConstruct->getFixedPointId();
-        if(fixedPointId->getSymbolInfo()->getType()->isPropNodeType()){
-          sprintf(strBuffer,"status = clEnqueueReadBuffer(command_queue,   d_%s , CL_TRUE, 0, sizeof(int)*(V),   h_%s, 0, NULL, NULL );",fixedPointId->getIdentifier(),fixedPointId->getIdentifier());
-          main.pushstr_newL(strBuffer);
-        }
-        else if(fixedPointId->getSymbolInfo()->getType()->isPropEdgeType()){
-          sprintf(strBuffer,"status = clEnqueueReadBuffer(command_queue,   d_%s , CL_TRUE, 0, sizeof(int)*(E),   h_%s, 0, NULL, NULL );",fixedPointId->getIdentifier(),fixedPointId->getIdentifier());
-          main.pushstr_newL(strBuffer);
-        }
-        else {
-          sprintf(strBuffer,"status = clEnqueueReadBuffer(command_queue,   d_%s , CL_TRUE, 0, sizeof(int),   &%s, 0, NULL, NULL );",fixedPointId->getIdentifier(),fixedPointId->getIdentifier());
-          main.pushstr_newL(strBuffer);
-        }
-        
-        assert(convergeExpr->getExpressionFamily() == EXPR_UNARY ||
-          convergeExpr->getExpressionFamily() == EXPR_ID);
-
-
-        Identifier* dependentId = NULL;
-        //~ bool isNot = false;
-        assert(convergeExpr->getExpressionFamily() == EXPR_UNARY ||
-              convergeExpr->getExpressionFamily() == EXPR_ID);
-        if (convergeExpr->getExpressionFamily() == EXPR_UNARY) {
-          if (convergeExpr->getUnaryExpr()->getExpressionFamily() == EXPR_ID) {
-            dependentId = convergeExpr->getUnaryExpr()->getId();
-            //~ isNot = true;
-            if(dependentId->getSymbolInfo()->getType()->isPropNodeType()){
-            sprintf(strBuffer,"status = clEnqueueReadBuffer(command_queue,   d_%s , CL_TRUE, 0, sizeof(int)*(V),   h_%s, 0, NULL, NULL );",fixedPointId->getIdentifier(),dependentId->getIdentifier());
-            main.pushstr_newL(strBuffer);
-          }
-          else if(dependentId->getSymbolInfo()->getType()->isPropEdgeType()){
-            sprintf(strBuffer,"status = clEnqueueReadBuffer(command_queue,   d_%s , CL_TRUE, 0, sizeof(int)*(E),   h_%s, 0, NULL, NULL );",fixedPointId->getIdentifier(),dependentId->getIdentifier());
-            main.pushstr_newL(strBuffer);
-          }
-          else{
-            sprintf(strBuffer,"status = clEnqueueReadBuffer(command_queue,   d_%s , CL_TRUE, 0, sizeof(int),   &%s, 0, NULL, NULL );",fixedPointId->getIdentifier(),dependentId->getIdentifier());
-            main.pushstr_newL(strBuffer); 
-          }
-          }
-        }
-      }
-    }
-
-  for(Identifier* iden: vars)
-  {
-    if(iden->getSymbolInfo()==NULL) continue; 
-    Type* type = iden->getSymbolInfo()->getType();
-    if(type->isPrimitiveType())
-    {
-      sprintf(strBuffer,"status = clEnqueueReadBuffer(command_queue,   d_%s , CL_TRUE, 0, sizeof(int),   &%s, 0, NULL, NULL );",iden->getIdentifier(),iden->getIdentifier());
-      main.pushstr_newL(strBuffer);
-
-    }
-    else if(type->isPropNodeType()){
-      sprintf(strBuffer,"status = clEnqueueReadBuffer(command_queue,   d_%s , CL_TRUE, 0, sizeof(int)*(V),   h_%s, 0, NULL, NULL );",iden->getIdentifier(),iden->getIdentifier());
-      main.pushstr_newL(strBuffer);
-
-    }
-    else if(type->isPropEdgeType()){
-      sprintf(strBuffer,"status = clEnqueueReadBuffer(command_queue,   d_%s , CL_TRUE, 0, sizeof(int)*(E),   h_%s, 0, NULL, NULL );",iden->getIdentifier(),iden->getIdentifier());
-      main.pushstr_newL(strBuffer);
-    }
-    
-  }
     // generate functionName_kernel in kernel.cl
 
     addCudaKernel(forAll);
@@ -2714,12 +2322,9 @@ void dsl_cpp_generator::generateReductionCallStmt(reductionCallStmt* stmt, int i
   }
 
 }
-
 void dsl_cpp_generator::generateReductionOpStmt(reductionCallStmt* stmt, int isMainFile)
 {
-  //stmt->getLeftId();
-  //cout<<"anup kumar singh your identifier is "<<stmt->getLeftId()->getIdentifier()<<endl;
-  //printf("%s\n",stmt->getLeftId()->getIdentifier());
+  cout<<"Inside generate Reduction operation Statement"<<endl;
   dslCodePad& targetFile = getTargetFile(isMainFile);
 
   char strBuffer[1024];
@@ -2728,119 +2333,28 @@ void dsl_cpp_generator::generateReductionOpStmt(reductionCallStmt* stmt, int isM
   {
     // Atomics required
       Identifier* id=stmt->getLeftId(); 
-
-      printf("\n\n\naks%s\n",stmt->getLeftId()->getIdentifier()); //ye variable ka name de reha h
-      
       Type *ty = id->getSymbolInfo()->getType();
-      cout<<"\n ty->gettypeId()   "<<ty->gettypeId()<<endl;
-      cout<<"\n ty->getRootType()   "<<ty->getRootType()<<endl;
-
-      const char *typVar = convertToCppType(ty);
-      cout<<"typVar   "<<typVar<<endl;
-
-      cout<<getAtomicFromType(ty, 0)<<"( "<<id->getIdentifier()<<", ("<<typVar<<")"<<endl;
-
-       sprintf(strBuffer, "%s( d_%s, (%s)",getAtomicFromType(ty, 0), id->getIdentifier(), typVar);
+       const char *typVar = convertToCppType(ty);
+       sprintf(strBuffer, "%s( %s, (%s)",getAtomicFromType(ty, 0), id->getIdentifier(), typVar);
        // 0 for atomic Add
        // to implement other tpe of atomics modify getAtomicFromType function and libOpenCL.h
        // we need to implement for min, max, sub etc..
 
        targetFile.pushString(strBuffer);
-      const char* operatorString = getOperatorString(stmt->reduction_op());
-      //targetFile.pushString(",");
-      if(*operatorString=='-')targetFile.pushString("-");
        generateExpr(stmt->getRightSide(), isMainFile);
        targetFile.pushstr_newL(");");
        targetFile.NewLine();
 
   } else {
-
-    //sprintf(strBuffer, "%s( %s, (%s)",getAtomicFromType(ty, 0), id->getIdentifier(), typVar);
-
-
-    
-    Identifier* id1=stmt->getPropAccess()->getIdentifier1();
-    Identifier* id2=stmt->getPropAccess()->getIdentifier2();
-
-    if(id2->getSymbolInfo()->getType()->isPropNodeType()){
-      Type *ty = id2->getSymbolInfo()->getType();
-      const char *typVar = convertToCppType(ty);
-
-      sprintf(strBuffer,     "%s(&"    ,getAtomicFromType(ty, 0));
-      targetFile.pushString(strBuffer);
-      generate_exprPropId(stmt->getPropAccess(), isMainFile);
-
-      const char* operatorString = getOperatorString(stmt->reduction_op());
-      targetFile.pushString(",");
-      if(*operatorString=='-')targetFile.pushString("-");
-      generateExpr(stmt->getRightSide(), isMainFile);
-      targetFile.pushString(")");
-      targetFile.pushstr_newL(";");
-      targetFile.NewLine();
-    }
-    else {
-      targetFile.NewLine();
-          // sprintf(strBuffer,"int %s_src=%s.source;",id1->getIdentifier(),id1->getIdentifier());
-          // targetFile.pushString(strBuffer);
-          // targetFile.NewLine();
-          // sprintf(strBuffer,"int %s_des=%s.destination;",id1->getIdentifier(),id1->getIdentifier());
-          // targetFile.pushString(strBuffer);
-          // targetFile.NewLine();
-          // sprintf(strBuffer,"int %s_weight=%s.weight;",id1->getIdentifier(),id1->getIdentifier());
-          // targetFile.pushString(strBuffer);
-          // targetFile.NewLine();
-
-          //sprintf(strBuffer, "for(int i=d_meta[%s_src]; i< d_meta[%s_src+1]; i++) {",id1->getIdentifier(),id1->getIdentifier());
-          //targetFile.pushString(strBuffer);
-          //targetFile.NewLine();
-          //sprintf(strBuffer, "int v = d_data[i]");
-          //targetFile.pushString(strBuffer);
-          //targetFile.NewLine();
-          //sprintf(strBuffer, "if(v==%s_des){",id1->getIdentifier());
-          //targetFile.pushString(strBuffer);
-          //targetFile.NewLine();
-          /************************************************************************************/
-          Type *ty = id2->getSymbolInfo()->getType();
-          const char *typVar = convertToCppType(ty);
-          sprintf(strBuffer,     "%s(&"    ,getAtomicFromType(ty, 0));
-          targetFile.pushString(strBuffer);
-          sprintf(strBuffer,"d_%s[%s_ind]",id2->getIdentifier(),id1->getIdentifier());
-          targetFile.pushString(strBuffer);
-          targetFile.pushString(",");
-          const char* operatorString = getOperatorString(stmt->reduction_op());
-          if(*operatorString=='-')targetFile.pushString("-");
-          generateExpr(stmt->getRightSide(), isMainFile);
-          targetFile.pushString(")");
-          targetFile.pushstr_newL(";");
-          /*************************************************************************************/
-          //targetFile.NewLine();
-          //targetFile.pushString("}");
-          //targetFile.NewLine();
-          //targetFile.pushString("}");
-    }
-    
-
-
-
-
-    // cout<<"typVar   "<<typVar<<endl;
-
-
-    //generate_exprPropId(stmt->getPropAccess(), isMainFile);
-    // if(id1!=NULL || id2!=NULL)cout<<"something is there for sure\n";    
-    // cout<<id1->getIdentifier()<<"                "<<id2->getIdentifier()<<" hello i am \n";
-    // targetFile.pushString(" = ");
-    // generate_exprPropId(stmt->getPropAccess(), isMainFile);
-    
-    // const char* operatorString = getOperatorString(stmt->reduction_op());
-    // cout<<"operatorString   ->>"<<operatorString<<endl;
-
-    // targetFile.pushstr_space(operatorString);
-    // generateExpr(stmt->getRightSide(), isMainFile);
-    // targetFile.pushstr_newL(";");
-    // targetFile.NewLine();
+    generate_exprPropId(stmt->getPropAccess(), isMainFile);
+    targetFile.pushString(" = ");
+    generate_exprPropId(stmt->getPropAccess(), isMainFile);
+    const char* operatorString = getOperatorString(stmt->reduction_op());
+    targetFile.pushstr_space(operatorString);
+    generateExpr(stmt->getRightSide(), isMainFile);
+    targetFile.pushstr_newL(";");
+    targetFile.NewLine();
   } 
-  
   cout<<"exiting Reduction operation Statement "<<endl;
 }
 
@@ -2852,7 +2366,6 @@ void dsl_cpp_generator::generateReductionStmt(reductionCallStmt* stmt,
   //~ char strBuffer[1024];
   //cout<<"Inside Generate Reduction Statement"<<endl;
   if (stmt->is_reducCall()) {
-    
     generateReductionCallStmt(stmt, isMainFile);
   } else {
     generateReductionOpStmt(stmt, isMainFile);
@@ -2897,7 +2410,7 @@ void dsl_cpp_generator::generatePropParams(list<formalParam*> paramList,char *ke
         char* temp2 = (char*)malloc(1+strlen(temp) + strlen(temp1));
         strcpy(temp2,temp);
         strcat(temp2,temp1);
-        printf("++++++++++++++++++++++++++++++++++++++++++++++++++++++++%s\n", temp2);
+        printf("%s\n", temp2);
         if(isNeedType) //if isNeedType = true we are generating for kernel else for main
           sprintf(strBuffer,",__global %s* %s", convertToCppType(type->getInnerTargetType()), temp2);
         else // in main we need argument number for clSetKernelArg
@@ -2914,7 +2427,6 @@ void dsl_cpp_generator::generatePropParams(list<formalParam*> paramList,char *ke
   cout<<"leaving generateProParams "<<endl;
 }
 
-
 void dsl_cpp_generator::addCudaBFSIterKernel(iterateBFS* bfsAbstraction)
 {
   char strBuffer[1024];
@@ -2929,7 +2441,7 @@ void dsl_cpp_generator::addCudaBFSIterKernel(iterateBFS* bfsAbstraction)
   blockStatement* block = (blockStatement*)body;
   list<statement*> statementList = block->returnStatements();
 
-  kernel.pushstr_newL("__kernel void fwd_pass_kernel(int V, __global int* d_meta, __global int* d_data, __global int* d_weight,__global int* d_rev_meta,__global int* d_src, __global int* d_level, __global int* d_hops_from_source, __global int* d_finished");
+  kernel.pushstr_newL("__kernel void fwd_pass_kernel(int V, __global int* d_meta, __global int* d_data, __global int* d_weight, __global int* d_level, __global int* d_hops_from_source, __global int* d_finished");
   // generate rest of prop Parameters
   //Kernel name not required
   Function* func =getCurrentFunc();
@@ -2937,130 +2449,6 @@ void dsl_cpp_generator::addCudaBFSIterKernel(iterateBFS* bfsAbstraction)
   list<statement*> listStmt = blockStmt->returnStatements();
   list<Identifier*> declaredProp;
   //printf("Print declare prop types\n");
-  for(auto stmt:listStmt)
-  {
-    if(stmt->getType().compare("declaration")==0)
-    {
-      declaration* decl = (declaration*)stmt;
-      Identifier* ident = decl->getdeclId();
-      if(ident->getSymbolInfo()->getType()->isPropType() )
-      {
-        //printf("%s\n", ident->getIdentifier());
-        //declaredProp.push_back(ident);
-        sprintf(strBuffer,",__global %s* d_%s ",convertToCppType(ident->getSymbolInfo()->getType()->getInnerTargetType()),
-    ident->getIdentifier());
-    kernel.pushString(strBuffer);
-      }
-      if(ident->getSymbolInfo()->getType()->isPrimitiveType() )
-      {
-        //printf("%s\n", ident->getIdentifier());
-        //declaredProp.push_back(ident);
-        printf(",__global %s* d_%s  aks\n",convertToCppType(ident->getSymbolInfo()->getType()),ident->getIdentifier());
-        sprintf(strBuffer,",__global %s* d_%s ",convertToCppType(ident->getSymbolInfo()->getType()),ident->getIdentifier());
-        kernel.pushString(strBuffer);
-        
-
-      }
-
-    }
-  }
-  // for(auto iden:declaredProp)
-  // {
-    
-  //   sprintf(strBuffer,",__global %s* d_%s ",convertToCppType(iden->getSymbolInfo()->getType()->getInnerTargetType()),
-  //   iden->getIdentifier());
-  //   kernel.pushString(strBuffer);
-  // }
-  
-  char kernelName[2] = ".";
-  generatePropParams(getCurrentFunc()->getParamList(), kernelName, true, 2, 9); // true: typeneed 2:kernel file(0:header file, 1: main file)
-  kernel.push(')');
-  kernel.NewLine();
-  kernel.pushstr_newL("{");
-  sprintf(strBuffer, "unsigned int %s = get_global_id(0);", loopVar);
-  kernel.pushstr_newL(strBuffer);
-  sprintf(strBuffer, "if(%s>= V) return ;", loopVar);
-  kernel.pushstr_newL(strBuffer);
-  // sprintf(strBuffer,"if(d_level[%s]== (*d_hops_from_source))", loopVar);
-  // kernel.pushstr_newL(strBuffer);
-  //kernel.pushstr_newL("{");
-
-
-
-  for (statement* stmt : statementList)
-  {
-    generateStatement(stmt, 2);  //2:kernel, All these stmts should be inside kernel
-  
-  }
-
-  //kernel.pushstr_newL("}// end of if block"); // end of if block
-
-  if(isNeighbourIter){
-    sprintf(strBuffer,"if(d_level[%s]== (*d_hops_from_source))", loopVar);
-  kernel.pushstr_newL(strBuffer);
-  kernel.pushstr_newL("{");
-  
-  sprintf(strBuffer,"for (int edge = d_meta[%s]; edge < d_meta[%s+1]; edge++){",loopVar,loopVar);
-  kernel.pushstr_newL(strBuffer);
-  kernel.pushstr_newL("int w = d_data[edge] ;");
-  kernel.pushstr_newL("if(d_level[w]==-1){");
-  kernel.pushstr_newL("*d_finished = 1;");
-  kernel.pushstr_newL("d_level[w]=(*d_hops_from_source)+1;");
-  kernel.pushstr_newL("}// end of if block");
-  kernel.pushstr_newL("}// end of for block");
-  kernel.pushstr_newL("}// end of if block"); // end of if block
-  kernel.pushstr_newL("} // end of kernel"); // end of kernel
-  }
-  else {
-    sprintf(strBuffer,"if(d_level[%s]== (*d_hops_from_source))", loopVar);
-  kernel.pushstr_newL(strBuffer);
-  kernel.pushstr_newL("{");
-  
-  sprintf(strBuffer,"for (int edge = d_rev_meta[%s]; edge < d_rev_meta[%s+1]; edge++){",loopVar,loopVar);
-  kernel.pushstr_newL(strBuffer);
-  kernel.pushstr_newL("int w = d_src[edge] ;");
-  kernel.pushstr_newL("if(d_level[w]==-1){");
-  kernel.pushstr_newL("*d_finished = 1;");
-  kernel.pushstr_newL("d_level[w]=(*d_hops_from_source)+1;");
-  kernel.pushstr_newL("}// end of if block");
-  kernel.pushstr_newL("}// end of for block");
-  kernel.pushstr_newL("}// end of if block"); // end of if block
-  kernel.pushstr_newL("} // end of kernel"); // end of kernel
-  }
-  
-  return;
-}
-
-void dsl_cpp_generator::addCudaRevBFSIterKernel(iterateBFS* bfsAbstraction)
-{
-
-  char strBuffer[1024];
-  
-  if(bfsAbstraction==NULL || (blockStatement*)bfsAbstraction->getRBFS()==NULL){
-    
-    return ;
-  }
-  
-  printf("Print declare prop types\n");
-  blockStatement* revBlock = (blockStatement*)bfsAbstraction->getRBFS()->getBody();
-  
-  if(revBlock ==NULL) {
-    //cout<<"gadbad h \n";
-    return ;
-  }
-  
-  list<statement*> revStmtList = revBlock->returnStatements();
-  const char* loopVar = bfsAbstraction->getIteratorNode()->getIdentifier();
-  //backward Pass kernel
-  kernel.pushString("__kernel void back_pass_kernel(int V, __global int* d_meta, __global int* d_data, __global int* d_weight, __global int* d_level, __global int* d_hops_from_source, __global int* d_finished");
-  
-  //add other prop params
-  Function* func =getCurrentFunc();
-  blockStatement* blockStmt = func->getBlockStatement();
-  list<statement*> listStmt = blockStmt->returnStatements();
-  list<Identifier*> declaredProp;
-  
-  
   for(auto stmt:listStmt)
   {
     if(stmt->getType().compare("declaration")==0)
@@ -3082,6 +2470,71 @@ void dsl_cpp_generator::addCudaRevBFSIterKernel(iterateBFS* bfsAbstraction)
     iden->getIdentifier());
     kernel.pushString(strBuffer);
   }
+  
+  char kernelName[2] = ".";
+  generatePropParams(getCurrentFunc()->getParamList(), kernelName, true, 2, 9); // true: typeneed 2:kernel file(0:header file, 1: main file)
+  kernel.push(')');
+  kernel.NewLine();
+  kernel.pushstr_newL("{");
+  sprintf(strBuffer, "unsigned int %s = get_global_id(0);", loopVar);
+  kernel.pushstr_newL(strBuffer);
+  sprintf(strBuffer, "if(%s>= V) return ;", loopVar);
+  kernel.pushstr_newL(strBuffer);
+
+  sprintf(strBuffer,"if(d_level[%s]== (*d_hops_from_source))", loopVar);
+  kernel.pushstr_newL(strBuffer);
+  kernel.pushstr_newL("{");
+
+  for (statement* stmt : statementList)
+  {
+    generateStatement(stmt, 2);  //2:kernel, All these stmts should be inside kernel
+  
+  }
+
+
+  kernel.pushstr_newL("}// end of if block"); // end of if block
+  kernel.pushstr_newL("} // end of kernel"); // end of kernel
+  return;
+}
+
+void dsl_cpp_generator::addCudaRevBFSIterKernel(iterateBFS* bfsAbstraction)
+{
+  char strBuffer[1024];
+
+  blockStatement* revBlock = (blockStatement*)bfsAbstraction->getRBFS()->getBody();
+  list<statement*> revStmtList = revBlock->returnStatements();
+  const char* loopVar = bfsAbstraction->getIteratorNode()->getIdentifier();
+  //backward Pass kernel
+  kernel.pushString("__kernel void back_pass_kernel(int V, __global int* d_meta, __global int* d_data, __global int* d_weight, __global int* d_level, __global int* d_hops_from_source, __global int* d_finished");
+
+  //add other prop params
+  Function* func =getCurrentFunc();
+  blockStatement* blockStmt = func->getBlockStatement();
+  list<statement*> listStmt = blockStmt->returnStatements();
+  list<Identifier*> declaredProp;
+  //printf("Print declare prop types\n");
+  for(auto stmt:listStmt)
+  {
+    if(stmt->getType().compare("declaration")==0)
+    {
+      declaration* decl = (declaration*)stmt;
+      Identifier* ident = decl->getdeclId();
+      if(ident->getSymbolInfo()->getType()->isPropType() )
+      {
+        //printf("%s\n", ident->getIdentifier());
+        declaredProp.push_back(ident);
+      }
+
+    }
+  }
+  for(auto iden:declaredProp)
+  {
+    
+    sprintf(strBuffer,",__global %s* d_%s ",convertToCppType(iden->getSymbolInfo()->getType()->getInnerTargetType()),
+    iden->getIdentifier());
+    kernel.pushString(strBuffer);
+  }
+
   char kernelName[2] = ".";
   generatePropParams(getCurrentFunc()->getParamList(), kernelName, true, 2, 9); // true: typeneed 2:kernel file(0:header file, 1: main file)
   kernel.push(')');
@@ -3130,13 +2583,9 @@ void dsl_cpp_generator::addCudaBFSIterationLoop(iterateBFS* bfsAbstraction)
   main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 2, sizeof(cl_mem), (void *)&d_data);");
   main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 3, sizeof(cl_mem), (void *)&d_weight);");
   // delta and sigma are hard coded. what if user uses a different name?
-  main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 4, sizeof(cl_mem), (void *)&d_rev_meta);");
-  main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 5, sizeof(cl_mem), (void *)&d_src);");
-
-  main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 6, sizeof(cl_mem), (void *)&d_level);");
-  main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 7, sizeof(cl_mem), (void *)&d_hops_from_source);");
-  main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 8, sizeof(cl_mem), (void *)&d_finished);");
-  
+  main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 4, sizeof(cl_mem), (void *)&d_level);");
+  main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 5, sizeof(cl_mem), (void *)&d_hops_from_source);");
+  main.pushstr_newL("status = clSetKernelArg(fwd_pass_kernel, 6, sizeof(cl_mem), (void *)&d_finished);");
  
  //other prop parameters
  Function* func =getCurrentFunc();
@@ -3150,19 +2599,15 @@ void dsl_cpp_generator::addCudaBFSIterationLoop(iterateBFS* bfsAbstraction)
     {
       declaration* decl = (declaration*)stmt;
       Identifier* ident = decl->getdeclId();
-      if(ident->getSymbolInfo()->getType()->isPropType() || ident->getSymbolInfo()->getType()->isPrimitiveType() )
+      if(ident->getSymbolInfo()->getType()->isPropType() )
       {
-        printf("(((((((((((((((((pushing)))))))))))))))))))))))))))))))))%s\n", ident->getIdentifier());
+        //printf("%s\n", ident->getIdentifier());
         declaredProp.push_back(ident);
       }
-      if(ident->getSymbolInfo()->getType()->isPrimitiveType()){
-        PremVarOfKernel.push_back(ident);
-      }
-      
 
     }
   }
-  int argNumber = 9;
+  int argNumber = 7;
   for(auto iden:declaredProp)
   {
     sprintf(strBuffer,"status = clSetKernelArg(fwd_pass_kernel, %d, sizeof(cl_mem), (void*)&d_%s);",argNumber, iden->getIdentifier());
@@ -3328,42 +2773,6 @@ void dsl_cpp_generator::generateBFSAbstraction(iterateBFS* bfsAbstraction,int is
   //  begin While loop of ITRBFS
   main.pushstr_newL("finished = 1;");
   main.pushstr_newL("hops_from_source = 0;");
-  /**********************************************************************************************************************/
-   //other prop parameters
- Function* func =getCurrentFunc();
-  blockStatement* blockStmt = func->getBlockStatement();
-  list<statement*> listStmt = blockStmt->returnStatements();
-  list<Identifier*> declaredProp;
-  //printf("Print declare prop types\n");
-  for(auto stmt:listStmt)
-  {
-    if(stmt->getType().compare("declaration")==0)
-    {
-      declaration* decl = (declaration*)stmt;
-      Identifier* iden = decl->getdeclId();
-      Type* type = iden->getSymbolInfo()->getType();
-      if(type->isPrimitiveType())
-    {
-      sprintf(strBuffer,"status = clEnqueueWriteBuffer(command_queue,   d_%s , CL_TRUE, 0, sizeof(int),   &%s, 0, NULL, NULL );",iden->getIdentifier(),iden->getIdentifier());
-      main.pushstr_newL(strBuffer);
-
-    }
-    else if(type->isPropNodeType()){
-      sprintf(strBuffer,"status = clEnqueueWriteBuffer(command_queue,   d_%s , CL_TRUE, 0, sizeof(int)*(V),   h_%s, 0, NULL, NULL );",iden->getIdentifier(),iden->getIdentifier());
-      main.pushstr_newL(strBuffer);
-
-    }
-    else if(type->isPropEdgeType()){
-      sprintf(strBuffer,"status = clEnqueueWriteBuffer(command_queue,   d_%s , CL_TRUE, 0, sizeof(int)*(E),   h_%s, 0, NULL, NULL );",iden->getIdentifier(),iden->getIdentifier());
-      main.pushstr_newL(strBuffer);
-    }
-      
-      
-
-    }
-  }
-  /**********************************************************************************************************************/
-
   main.pushstr_newL("while(finished)");
   main.pushstr_newL("{");
 
@@ -3372,38 +2781,7 @@ void dsl_cpp_generator::generateBFSAbstraction(iterateBFS* bfsAbstraction,int is
 
 
   main.pushstr_newL("}");
-  //printf("Print declare prop types\n");
-  for(auto stmt:listStmt)
-  {
-    if(stmt->getType().compare("declaration")==0)
-    {
-      declaration* decl = (declaration*)stmt;
-      Identifier* iden = decl->getdeclId();
-      Type* type = iden->getSymbolInfo()->getType();
-      if(type->isPrimitiveType())
-    {
-      sprintf(strBuffer,"status = clEnqueueReadBuffer(command_queue,   d_%s , CL_TRUE, 0, sizeof(int),   &%s, 0, NULL, NULL );",iden->getIdentifier(),iden->getIdentifier());
-      main.pushstr_newL(strBuffer);
-
-    }
-    else if(type->isPropNodeType()){
-      sprintf(strBuffer,"status = clEnqueueReadBuffer(command_queue,   d_%s , CL_TRUE, 0, sizeof(int)*(V),   h_%s, 0, NULL, NULL );",iden->getIdentifier(),iden->getIdentifier());
-      main.pushstr_newL(strBuffer);
-
-    }
-    else if(type->isPropEdgeType()){
-      sprintf(strBuffer,"status = clEnqueueReadBuffer(command_queue,   d_%s , CL_TRUE, 0, sizeof(int)*(E),   h_%s, 0, NULL, NULL );",iden->getIdentifier(),iden->getIdentifier());
-      main.pushstr_newL(strBuffer);
-    }
-      
-      
-
-    }
-  }
-  /**********************************************************************************************************************/
-  /**********************************************************************************************************************/
   main.NewLine();
-  return; 
   /**************Iterate in Reverse BFS**********/
   /*Here we are assuming that if there is iterate in forward BFS
    then there will be iterate in reverse BFS.
@@ -3436,16 +2814,15 @@ void dsl_cpp_generator::generateBFSAbstraction(iterateBFS* bfsAbstraction,int is
 // w.sigma=w.sigma+v.sigma; from bc_dsl_v2
 void dsl_cpp_generator::generateAtomicDeviceAssignmentStmt(assignment* asmt, int isMainFile)
 {
+  cout<<"Inside generate Atomic Device Assignment"<<endl;
   dslCodePad& targetFile = getTargetFile(isMainFile); 
   bool isAtomic = false;
   bool isResult = false;
   std::cout << "\tASST\n";
-
-
   if (asmt->lhs_isIdentifier()) {
+    cout<<"Left side identifier"<<endl;
     Identifier* id = asmt->getId();
     Expression* exprAssigned = asmt->getExpr();
-
     if(asmt->hasPropCopy()) // prop_copy is of the form (propId = propId)
        {
          char strBuffer[1024] ;
@@ -3460,10 +2837,9 @@ void dsl_cpp_generator::generateAtomicDeviceAssignmentStmt(assignment* asmt, int
        else
     targetFile.pushString(id->getIdentifier());
   }
-
-
   else if(asmt->lhs_isProp())
   {
+     cout<<"Left side is prop"<<endl;
     PropAccess* propId = asmt->getPropId();
     Identifier *IdentifierVar1 = propId->getIdentifier1();
     Identifier *IdentifierVar2 = propId->getIdentifier2();
@@ -3483,56 +2859,30 @@ void dsl_cpp_generator::generateAtomicDeviceAssignmentStmt(assignment* asmt, int
       isResult = true;
       std::cout << "\t  RESULT NO BC by 2 ASST" << '\n';
     }
-    if(isMainFile==2){
-      //cout<<"generating d_"<<IdentifierVar2->getIdentifier()<<"["<<IdentifierVar1->getIdentifier()<<
-      targetFile.pushString("d_");  /// IMPORTANT
-      targetFile.pushString(IdentifierVar2->getIdentifier());
-      targetFile.push('[');
-      targetFile.pushString(IdentifierVar1->getIdentifier());
-      targetFile.push(']');
-    }
-    else if(isMainFile==1){
-      targetFile.pushString("h_");  /// IMPORTANT
+    targetFile.pushString("d_");  /// IMPORTANT
     targetFile.pushString(IdentifierVar2->getIdentifier());
     targetFile.push('[');
     targetFile.pushString(IdentifierVar1->getIdentifier());
     targetFile.push(']');
-    }
   }
-  
-  if (isAtomic){
-    //cout<<"3rd if part\n";
+  if (isAtomic)
     targetFile.pushString(", ");
-  }
-  
-  else if(!asmt->hasPropCopy()){
-    //cout<<"4th if part\n";
+  else if(!asmt->hasPropCopy())
     targetFile.pushString(" = ");
-  }
 
   //~ std::cout<< "------>BEG EXP"  << '\n';
-  
-  
-  if(!asmt->hasPropCopy()){
-   // cout<<"5th if part\n";
+  if(!asmt->hasPropCopy())
     generateExpr(asmt->getExpr(), isMainFile, isAtomic);
-  }
   //~ std::cout<< "------>END EXP"  << '\n';
 
-  if (isAtomic){
-    //cout<<"6th if part\n";
+  if (isAtomic)
     targetFile.pushstr_newL(");");
-  }
-  else if (isResult){
-    //cout<<"7th if part\n";
+  else if (isResult)
     targetFile.pushstr_newL(";"); // No need "/2.0;" for directed graphs
-  }
-  else if(!asmt->hasPropCopy()){
-    //cout<<"8th if part\n";
+  else if(!asmt->hasPropCopy())
     targetFile.pushstr_newL(";");
-  }
 
-  //cout<<"exiting generate Atomic Device Assignment"<<endl;
+  cout<<"exiting generate Atomic Device Assignment"<<endl;
   return ;
 }
 
@@ -3623,10 +2973,6 @@ void dsl_cpp_generator::generateStatement(statement* stmt, int isMainFile) {
 
 void dsl_cpp_generator::generateBlock(blockStatement* blockStmt,bool includeBrace, int isMainFile)
 {
-
-
-
-
   //cout << "i am inside generateBlock for the first time and the value of isMainFile=" << isMainFile<<endl;
   dslCodePad& targetFile = getTargetFile(isMainFile);
 
@@ -3895,7 +3241,6 @@ bool dsl_cpp_generator::openFileforOutput() {
   return true;
 
 }
-
 
 
 void dsl_cpp_generator::closeOutputFile() {

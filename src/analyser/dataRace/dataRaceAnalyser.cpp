@@ -1,5 +1,5 @@
 #include "dataRaceAnalyser.h"
-#include "../analyserUtil.h"
+#include "../analyserUtil.cpp"
 #include "../../ast/ASTHelper.cpp"
 #include "../../symbolutil/SymbolTable.h"
 #include <unordered_map>
@@ -634,15 +634,6 @@ void dataRaceAnalyser::analyseStatement(statement *stmt)
         break;
     }
 
-    case NODE_ITRBFS2:
-    {
-        analyseStatement(((iterateBFS2 *)stmt)->getBody());
-        iterateReverseBFS *revBFS = ((iterateBFS2 *)stmt)->getRBFS();
-        if (revBFS != NULL)
-            analyseStatement(revBFS->getBody());
-        break;
-    }
-
     case NODE_FORALLSTMT:
     {
         forallStmt *currStmt = (forallStmt *)stmt;
@@ -650,12 +641,6 @@ void dataRaceAnalyser::analyseStatement(statement *stmt)
             forAllAnalysis(currStmt);
         else
             analyseStatement(currStmt->getBody());
-    }
-
-    case NODE_ITERBFSREV:
-    {
-        analyseStatement(((iterateBFSReverse *)stmt)->getBody());
-        break;
     }
     break;
     }

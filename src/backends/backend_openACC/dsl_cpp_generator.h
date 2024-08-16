@@ -6,7 +6,7 @@
 #include "../../ast/ASTNodeTypes.hpp"
 //~ #include "../../parser/includeHeader.hpp"
 #include "../dslCodePad.h"
-#include "../../analyser/analyserUtil.h"
+#include "../../analyser/analyserUtil.cpp"
 #include "../../analyser/blockVars/blockVarsAnalyser.h"
 #include <set>
 

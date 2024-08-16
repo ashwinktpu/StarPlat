@@ -1,0 +1,1852 @@
+fileName ../graphcode/staticDSLCodes/scc_V2
+Backend Target multigpu
+Type: function
+'('Graph Type
+
+')'currentFuncType check!!0
+tempID g funccount 0
+'{'Node Property'<'Type: int'>'
+';'Node Property'<'Type: int'>'
+';'
+Node Property'<'Type: int'>'
+';'Node Property'<'Type: bool'>'
+';'
+Node Property'<'Type: bool'>'
+';'Node Property'<'Type: bool'>'
+';'
+Node Property'<'Type: bool'>'
+';'Node Property'<'Type: bool'>'
+';'Node Property'<'Type: int'>'
+';'Node Property'<'Type: int'>'
+';'Node Property'<'Type: int'>'
+';'
+
+'.''('
+'='
+Type Bool: False')'';'TYPE OF NODE OF STATEMENT1'.''('
+'='
+','
+
+'='
+')'';'TYPE OF NODE OF STATEMENT1'.''('
+'='
+Type Bool: False','
+
+'='
+Type Bool: False')'';'TYPE OF NODE OF STATEMENT1'.''('
+'='
+Type Bool: False','
+
+'='
+Type Bool: False')'';'TYPE OF NODE OF STATEMENT1
+'.''('
+'='
+Type Bool: False')'';'TYPE OF NODE OF STATEMENT1'.''('
+'='
+')'';'TYPE OF NODE OF STATEMENT1'.''('
+'='
+')'';'TYPE OF NODE OF STATEMENT1'.''('
+'='
+')'';'TYPE OF NODE OF STATEMENT1Keyword-forall: forall'('
+Keyword in 
+'.''('')'')'
+'{'Type: int
+
+'='
+
+'+'
+';''.'
+ADD_ASSIGN 
+'.'
+'-'
+'.'';''.'
+ADD_ASSIGN 
+'.'
+'-'
+'.'';''}'Type: bool
+
+'='
+Type Bool: False';'Keyword fixedPoint
+Keyword until
+'('':'
+'!'')'
+'{'Keyword-forall: forall'('
+Keyword in 
+'.''('')''.'filter'('
+EQ_OP
+')'')'
+'{'Type: int
+
+'='
+';'
+Type: int
+
+'='
+';'For: for'('
+Keyword in 
+'.''('')''.'filter'('
+EQ_OP
+')'')'
+'{'Keyword if: if'(''.'
+EQ_OP
+'.'')'
+'{'
+'='
+';''}''}'CHECK FILTER TYPE1
+For: for'('
+Keyword in 
+'.''('')''.'filter'('
+EQ_OP
+')'')'
+'{'Keyword if: if'(''.'
+EQ_OP
+'.'')'
+'{'
+'='
+';''}''}'CHECK FILTER TYPE1
+Keyword if: if'(''('
+EQ_OP
+')'
+OR_OP
+'('
+EQ_OP
+')'')'
+'{''.'
+'='
+';''.'
+'='
+Type Bool: True';'
+'='
+Type Bool: False';''}''}'CHECK FILTER TYPE1
+'}'
+Keyword-forall: forall'('
+Keyword in 
+'.''('')''.'filter'('
+EQ_OP
+')'')'
+'{'Type: int
+
+'='
+'.'';'Type: int
+
+'='
+'('')'
+'-'
+'(''/'')''*'';'Type: int
+
+'='
+';'
+Type: int
+
+'='
+'.'';'Keyword if: if'('
+GE_OP
+')'
+'{'
+'='
+'.'
+'+'
+'.'';''}'Keyword if: if'('
+'<'
+'(''.'
+'+'
+'.'')'')'
+'{''.'
+'='
+';''}''}'CHECK FILTER TYPE1
+
+Keyword-forall: forall'('
+Keyword in 
+'.''('')''.'filter'('
+EQ_OP
+')'')'
+'{'Type: int
+
+'='
+'.'';'Type: int
+
+'='
+'('')'
+'-'
+'(''/'')''*'';'Keyword if: if'(''.'
+EQ_OP
+')'
+'{''.'
+'='
+Type Bool: True';''.'
+'='
+Type Bool: True';''.'
+'='
+Type Bool: True';''}''}'CHECK FILTER TYPE1
+
+Type: bool
+
+'='
+Type Bool: False';'Keyword fixedPoint
+Keyword until
+'('
+':'
+'!'')'
+'{'Keyword-forall: forall'('
+Keyword in 
+'.''('')''.'filter'('
+EQ_OP
+')'')'
+'{'Type: int
+
+'='
+'.'';'
+Keyword if: if'(''.'
+EQ_OP
+Type Bool: False
+AND_OP
+'.'
+EQ_OP
+Type Bool: True')'
+'{'For: for'('
+Keyword in 
+'.''('')''.'filter'('
+EQ_OP
+')'')'
+'{'Keyword if: if'(''.'
+EQ_OP
+Type Bool: False
+AND_OP
+'.'
+EQ_OP
+')'
+'{''.'
+'='
+Type Bool: True';'
+'='
+Type Bool: False';''}''}'CHECK FILTER TYPE1
+'.'
+'='
+Type Bool: True';''}'
+Keyword if: if'(''.'
+EQ_OP
+Type Bool: False
+AND_OP
+'.'
+EQ_OP
+Type Bool: True')'
+'{'For: for'('
+Keyword in 
+'.''('')''.'filter'('
+EQ_OP
+')'')'
+'{'Keyword if: if'(''.'
+EQ_OP
+Type Bool: False
+AND_OP
+'.'
+EQ_OP
+')'
+'{''.'
+'='
+Type Bool: True';'
+'='
+Type Bool: False';''}''}'CHECK FILTER TYPE1
+'.'
+'='
+Type Bool: True';''}''}'CHECK FILTER TYPE1
+'}'
+Keyword-forall: forall'('
+Keyword in 
+'.''('')''.'filter'('
+EQ_OP
+')'')'
+'{'Keyword if: if'(''.'
+EQ_OP
+Type Bool: False
+OR_OP
+'.'
+EQ_OP
+Type Bool: False')''{'Type: int
+
+'='
+';'Type: int
+
+'='
+';'Keyword if: if'(''.'
+EQ_OP
+Type Bool: False
+')'
+'{'
+'='
+';''}'Keyword if: if'(''.'
+EQ_OP
+Type Bool: False')'
+'{'
+'='
+';''}''.'
+'='
+
+'*'
+'.'
+'+'
+
+'+'
+';''.'
+'='
+Type Bool: False';''.'
+'='
+Type Bool: False';''.'
+'='
+Type Bool: False';''.'
+'='
+Type Bool: False';''}'Keyword if: if'(''.'
+EQ_OP
+Type Bool: True
+AND_OP
+'.'
+EQ_OP
+Type Bool: True')'
+'{''.'
+'='
+';''}''}'CHECK FILTER TYPE1
+
+
+'='
+Type Bool: False';'Keyword fixedPoint
+Keyword until
+'('':'
+'!'')'
+'{'Keyword-forall: forall'('
+Keyword in 
+'.''('')''.'filter'('
+EQ_OP
+')'')'
+'{'Type: int
+
+'='
+';'
+Type: int
+
+'='
+';'For: for'('
+Keyword in 
+'.''('')''.'filter'('
+EQ_OP
+')'')'
+'{'Keyword if: if'(''.'
+EQ_OP
+'.'')'
+'{'
+'='
+';''}''}'CHECK FILTER TYPE1
+For: for'('
+Keyword in 
+'.''('')''.'filter'('
+EQ_OP
+')'')'
+'{'Keyword if: if'(''.'
+EQ_OP
+'.'')'
+'{'
+'='
+';''}''}'CHECK FILTER TYPE1
+Keyword if: if'(''('
+EQ_OP
+')'
+OR_OP
+'('
+EQ_OP
+')'')'
+'{''.'
+'='
+';''.'
+'='
+Type Bool: True';'
+'='
+Type Bool: False';''}''}'CHECK FILTER TYPE1
+'}'
+'.''('
+'='
+')'';'TYPE OF NODE OF STATEMENT1Keyword-forall: forall'('
+Keyword in 
+'.''('')'')'
+'{''.'
+ADD_ASSIGN 
+';''}'
+Type: bool
+
+'='
+Type Bool: False';'Keyword fixedPoint
+Keyword until
+'('
+':'
+'!'')'
+'{'Keyword-forall: forall'('
+Keyword in 
+'.''('')''.'filter'('
+EQ_OP
+')'')'
+'{'For: for'('
+Keyword in 
+'.''('')''.'filter'('
+EQ_OP
+')'')'
+'{'Keyword if: if'(''.'
+'<'
+'.'')'
+'{''.'
+'='
+'.'';'
+'='
+Type Bool: False';''}''}'CHECK FILTER TYPE1
+'}'CHECK FILTER TYPE1
+Keyword-forall: forall'('
+Keyword in 
+'.''('')''.'filter'('EQ_OP')'')''{'Type: int
+
+'='
+'.'';'Keyword if: if'(''('NE_OP')'AND_OP'('NE_OP'.'')'')''{''.'
+'='
+'.'';'
+'='
+Type Bool: False';''}''}'CHECK FILTER TYPE1
+
+'}'
+Type: bool
+
+'='
+Type Bool: False';'Keyword fixedPoint
+Keyword until
+'('
+':'
+'!'')'
+'{'Keyword-forall: forall'('
+Keyword in 
+'.''('')''.'filter'('
+EQ_OP
+')'')'
+'{'Type: int
+
+'='
+'.'';'Type: int
+
+'='
+'('')'
+'-'
+'(''/'')''*'';'Type: int
+
+'='
+';'
+Type: int
+
+'='
+'.'';'Keyword if: if'('
+GE_OP
+')'
+'{'
+'='
+'.'
+'+'
+'.'';''}'Keyword if: if'('
+'<'
+'(''.'
+'+'
+'.'')'')'
+'{''.'
+'='
+';''}''}'CHECK FILTER TYPE1
+
+Keyword-forall: forall'('
+Keyword in 
+'.''('')''.'filter'('
+EQ_OP
+')'')'
+'{'Type: int
+
+'='
+'.'';'Type: int
+
+'='
+'('')'
+'-'
+'(''/'')''*'';'Keyword if: if'(''.'
+EQ_OP
+')'
+'{''.'
+'='
+Type Bool: True';''.'
+'='
+Type Bool: True';''.'
+'='
+Type Bool: True';''}''}'CHECK FILTER TYPE1
+
+
+'='
+Type Bool: False';'Keyword fixedPoint
+Keyword until
+'('
+':'
+'!'')'
+'{'Keyword-forall: forall'('
+Keyword in 
+'.''('')''.'filter'('
+EQ_OP
+')'')'
+'{'Type: int
+
+'='
+'.'';'
+Keyword if: if'(''.'
+EQ_OP
+Type Bool: False
+AND_OP
+'.'
+EQ_OP
+Type Bool: True')'
+'{'For: for'('
+Keyword in 
+'.''('')''.'filter'('
+EQ_OP
+')'')'
+'{'Keyword if: if'(''.'
+EQ_OP
+Type Bool: False
+AND_OP
+'.'
+EQ_OP
+')'
+'{''.'
+'='
+Type Bool: True';'
+'='
+Type Bool: False';''}''}'CHECK FILTER TYPE1
+'.'
+'='
+Type Bool: True';''}'
+Keyword if: if'(''.'
+EQ_OP
+Type Bool: False
+AND_OP
+'.'
+EQ_OP
+Type Bool: True')'
+'{'For: for'('
+Keyword in 
+'.''('')''.'filter'('
+EQ_OP
+')'')'
+'{'Keyword if: if'(''.'
+EQ_OP
+Type Bool: False
+AND_OP
+'.'
+EQ_OP
+')'
+'{''.'
+'='
+Type Bool: True';'
+'='
+Type Bool: False';''}''}'CHECK FILTER TYPE1
+'.'
+'='
+Type Bool: True';''}''}'CHECK FILTER TYPE1
+'}'
+Keyword-forall: forall'('
+Keyword in 
+'.''('')''.'filter'('
+EQ_OP
+')'')'
+'{'Keyword if: if'(''.'
+EQ_OP
+Type Bool: False
+OR_OP
+'.'
+EQ_OP
+Type Bool: False')'
+'{'
+'='
+Type Bool: False';'Type: int
+
+'='
+';'Type: int
+
+'='
+';'Keyword if: if'(''.'
+EQ_OP
+Type Bool: False')'
+'{'
+'='
+';''}'Keyword if: if'(''.'
+EQ_OP
+Type Bool: False')'
+'{'
+'='
+';''}'Type: int
+
+'='
+
+'*'
+'.'';'
+'='
+'('')'
+'-'
+'(''/'')''*'';''.'
+'='
+
+'+'
+
+'+'
+';''.'
+'='
+Type Bool: False';''.'
+'='
+Type Bool: False';''.'
+'='
+Type Bool: False';''.'
+'='
+Type Bool: False';''}'Keyword if: if'(''.'
+EQ_OP
+Type Bool: True
+AND_OP
+'.'
+EQ_OP
+Type Bool: True')'
+'{''.'
+'='
+';''}''}'CHECK FILTER TYPE1
+
+
+'}'
+'}'
+
+
+error val 0
+at 1
+FORALL par   NAME1:6
+FORALL ParPar NAME2:2
+		TO Set DEVICE BOOL
+FORALL par   NAME1:6
+FORALL ParPar NAME2:11
+FORALL ParParPar NAME3:6
+FORALL par   NAME1:6
+FORALL ParPar NAME2:18
+FORALL ParParPar NAME3:6
+FORALL par   NAME1:6
+FORALL ParPar NAME2:18
+FORALL ParParPar NAME3:6
+ANAME1:6
+ANAME2:12
+ANAME1:6
+ANAME2:12
+FORALL par   NAME1:6
+FORALL ParPar NAME2:2
+		TO Set DEVICE BOOL
+ANAME1:6
+ANAME2:12
+FORALL par   NAME1:6
+FORALL ParPar NAME2:2
+		TO Set DEVICE BOOL
+ANAME1:6
+ANAME2:12
+ANAME1:6
+ANAME2:12
+ANAME1:6
+ANAME2:12
+FORALL par   NAME1:6
+FORALL ParPar NAME2:11
+FORALL ParParPar NAME3:6
+FORALL par   NAME1:6
+FORALL ParPar NAME2:12
+FORALL ParParPar NAME3:6
+ANAME1:6
+ANAME2:12
+ANAME1:6
+ANAME2:12
+FORALL par   NAME1:6
+FORALL ParPar NAME2:12
+FORALL ParParPar NAME3:6
+ANAME1:6
+ANAME2:12
+ANAME1:6
+ANAME2:12
+FORALL par   NAME1:6
+FORALL ParPar NAME2:2
+		TO Set DEVICE BOOL
+ANAME1:6
+ANAME2:12
+ANAME1:6
+ANAME2:12
+ANAME1:6
+ANAME2:12
+ANAME1:6
+ANAME2:12
+ANAME1:6
+ANAME2:12
+ANAME1:6
+ANAME2:12
+FORALL par   NAME1:6
+FORALL ParPar NAME2:11
+FORALL ParParPar NAME3:6
+FORALL par   NAME1:6
+FORALL ParPar NAME2:18
+FORALL ParParPar NAME3:6
+FORALL par   NAME1:6
+FORALL ParPar NAME2:18
+FORALL ParParPar NAME3:6
+ANAME1:6
+ANAME2:12
+ANAME1:6
+ANAME2:12
+FORALL par   NAME1:6
+FORALL ParPar NAME2:2
+		TO Set DEVICE BOOL
+FORALL par   NAME1:6
+FORALL ParPar NAME2:11
+FORALL ParParPar NAME3:6
+FORALL par   NAME1:6
+FORALL ParPar NAME2:18
+FORALL ParParPar NAME3:6
+ANAME1:6
+ANAME2:12
+FORALL par   NAME1:6
+FORALL ParPar NAME2:11
+FORALL ParParPar NAME3:6
+ANAME1:6
+ANAME2:12
+FORALL par   NAME1:6
+FORALL ParPar NAME2:11
+FORALL ParParPar NAME3:6
+ANAME1:6
+ANAME2:12
+FORALL par   NAME1:6
+FORALL ParPar NAME2:11
+FORALL ParParPar NAME3:6
+ANAME1:6
+ANAME2:12
+ANAME1:6
+ANAME2:12
+ANAME1:6
+ANAME2:12
+FORALL par   NAME1:6
+FORALL ParPar NAME2:11
+FORALL ParParPar NAME3:6
+FORALL par   NAME1:6
+FORALL ParPar NAME2:12
+FORALL ParParPar NAME3:6
+ANAME1:6
+ANAME2:12
+ANAME1:6
+ANAME2:12
+FORALL par   NAME1:6
+FORALL ParPar NAME2:12
+FORALL ParParPar NAME3:6
+ANAME1:6
+ANAME2:12
+ANAME1:6
+ANAME2:12
+FORALL par   NAME1:6
+FORALL ParPar NAME2:11
+FORALL ParParPar NAME3:6
+ANAME1:6
+ANAME2:12
+ANAME1:6
+ANAME2:12
+ANAME1:6
+ANAME2:12
+ANAME1:6
+ANAME2:12
+ANAME1:6
+ANAME2:12
+ANAME1:6
+ANAME2:12
+at 2
+                               src scc src                                src isPivot src                                src pivotField index                                src visitFw src                                src visitBw src                                src isPivot src                                src visitFw dst                                src propFw src                                src visitBw par                                src propBw src                                src range src                                src visitFw src                                src visitBw src                                src propFw src                                src propBw src                                src scc src                                src scc src                                src isPivot src                                src range src                                src range src                                src pivotField index                                src visitFw src                                src visitBw src                                src isPivot src                                src visitFw dst                                src propFw src                                src visitBw par                                src propBw src                                src range src                                src visitFw src                                src visitBw src                                src propFw src                                src propBw src                                src scc src fileName scc_V2
+param :g
+paramD:d_g
+========== SET TRUE
+param :g
+paramD:d_g
+Hewwo g
+##### declaration
+##### declaration
+##### declaration
+##### declaration
+##### declaration
+##### declaration
+##### declaration
+##### declaration
+##### declaration
+##### declaration
+##### declaration
+##### ProcCallStatement
+varName:modified
+------>PROP LIT
+attachNodeProperty
+##### ProcCallStatement
+varName:outDeg
+------>PROP LIT
+varName:inDeg
+------>PROP LIT
+attachNodeProperty
+##### ProcCallStatement
+varName:visitFw
+------>PROP LIT
+varName:visitBw
+------>PROP LIT
+attachNodeProperty
+##### ProcCallStatement
+varName:propFw
+------>PROP LIT
+varName:propBw
+------>PROP LIT
+attachNodeProperty
+##### ProcCallStatement
+varName:isPivot
+------>PROP LIT
+attachNodeProperty
+##### ProcCallStatement
+varName:scc
+------>PROP LIT
+attachNodeProperty
+##### ProcCallStatement
+varName:range
+------>PROP LIT
+attachNodeProperty
+##### ProcCallStatement
+varName:pivotField
+------>PROP LIT
+attachNodeProperty
+##### ForAllStmt
+STMT: For
+isMainFile val 1
+Entered here for forall 
+CHECK IT HEREoutDeg
+_____outDeg
+CHECK IT HEREinDeg
+_____inDeg
+for all
+FIXEDPOINT
+##### declaration
+varT:int
+varN:nxtSrc
+------>PROP AR/LG
+------>PROP ID
+------>PROP LIT
+##### 
+iufhsidfdihf
+sdkfdwjhf
+------>PROP AR/LG
+------>PROP EXP
+------>PROP EXP
+##### 
+iufhsidfdihf
+sdkfdwjhf
+------>PROP AR/LG
+------>PROP EXP
+------>PROP EXP
+##### declaration
+varT:bool
+varN:fpoint1
+------>PROP LIT
+------>PROP LIT
+##### FixedPointStmt
+hdwhf
+IN FIX PT
+-----------------------FROM HERE CHECK TYPES
+##### ForAllStmt
+STMT: For
+isMainFile val 1
+Entered here for forall 
+CHECK IT HERErange
+___modified__range
+CHECK IT HEREscc
+___modified__scc
+CHECK IT HEREfpoint1
+___modified__fpoint1
+CHECK IT HEREisPivot
+___modified__isPivot
+for all
+FIXEDPOINT
+============CHANGED BODY  TYPE==============1##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### declaration
+varT:int
+varN:havePar
+------>PROP LIT
+##### declaration
+varT:int
+varN:haveChild
+------>PROP LIT
+##### ForAllStmt
+STMT: For
+isMainFile val 0
+GenerateForAllSignature = 0
+============CHANGED BODY  TYPE==============1	 ITERATE Neighbour 
+src:par
+##### BlockStatement
+##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP EXP
+##### BlockStatement
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+FOR BODY END
+##### ForAllStmt
+STMT: For
+isMainFile val 0
+GenerateForAllSignature = 0
+============CHANGED BODY  TYPE==============1	 ITERATE Neighbour 
+src:dst
+##### BlockStatement
+##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP EXP
+##### BlockStatement
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+FOR BODY END
+##### IfStmt
+=======IF FILTER
+------>PROP AR/LG
+------>PROP RL
+------>PROP ID
+------>PROP LIT
+------>PROP RL
+------>PROP ID
+------>PROP LIT
+##### BlockStatement
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP ID
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### ForAllStmt
+STMT: For
+isMainFile val 1
+Entered here for forall 
+CHECK IT HEREscc
+___modified__scc
+CHECK IT HEREoutDeg
+___modified__outDeg
+CHECK IT HEREinDeg
+___modified__inDeg
+CHECK IT HEREpivotField
+___modified__pivotField
+CHECK IT HERErange
+___modified__range
+for all
+FIXEDPOINT
+============CHANGED BODY  TYPE==============1##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### declaration
+varT:int
+varN:color
+------>PROP EXP
+##### declaration
+varT:int
+varN:index
+------>PROP AR/LG
+------>PROP ID
+------>PROP AR/LG
+------>PROP AR/LG
+------>PROP ID
+------>PROP ID
+------>PROP ID
+##### declaration
+varT:int
+varN:oldSrcValue
+------>PROP LIT
+##### declaration
+varT:int
+varN:oldSrc
+------>PROP EXP
+##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP ID
+------>PROP LIT
+##### BlockStatement
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP AR/LG
+------>PROP EXP
+------>PROP EXP
+##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP ID
+------>PROP AR/LG
+------>PROP EXP
+------>PROP EXP
+##### BlockStatement
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP ID
+##### ForAllStmt
+STMT: For
+isMainFile val 1
+Entered here for forall 
+CHECK IT HEREscc
+___modified__scc
+CHECK IT HEREpivotField
+___modified__pivotField
+CHECK IT HERErange
+___modified__range
+CHECK IT HEREisPivot
+___modified__isPivot
+CHECK IT HEREvisitBw
+___modified__visitBw
+CHECK IT HEREvisitFw
+___modified__visitFw
+for all
+FIXEDPOINT
+============CHANGED BODY  TYPE==============1##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### declaration
+varT:int
+varN:color
+------>PROP EXP
+##### declaration
+varT:int
+varN:index
+------>PROP AR/LG
+------>PROP ID
+------>PROP AR/LG
+------>PROP AR/LG
+------>PROP ID
+------>PROP ID
+------>PROP ID
+##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP ID
+##### BlockStatement
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### declaration
+varT:bool
+varN:fpoint2
+------>PROP LIT
+------>PROP LIT
+##### FixedPointStmt
+IN FIX PT
+-----------------------FROM HERE CHECK TYPES
+##### ForAllStmt
+STMT: For
+isMainFile val 1
+Entered here for forall 
+CHECK IT HEREpropBw
+___modified__propBw
+CHECK IT HEREvisitBw
+___modified__visitBw
+CHECK IT HEREpropFw
+___modified__propFw
+CHECK IT HEREvisitFw
+___modified__visitFw
+CHECK IT HEREscc
+___modified__scc
+CHECK IT HERErange
+___modified__range
+CHECK IT HEREfpoint2
+___modified__fpoint2
+for all
+FIXEDPOINT
+============CHANGED BODY  TYPE==============1##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### declaration
+varT:int
+varN:myrange
+------>PROP EXP
+##### IfStmt
+=======IF FILTER
+------>PROP AR/LG
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### ForAllStmt
+STMT: For
+isMainFile val 0
+GenerateForAllSignature = 0
+============CHANGED BODY  TYPE==============1	 ITERATE Neighbour 
+src:dst
+##### BlockStatement
+##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### IfStmt
+=======IF FILTER
+------>PROP AR/LG
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+------>PROP RL
+------>PROP EXP
+------>PROP ID
+##### BlockStatement
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+FOR BODY END
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### IfStmt
+=======IF FILTER
+------>PROP AR/LG
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### ForAllStmt
+STMT: For
+isMainFile val 0
+GenerateForAllSignature = 0
+============CHANGED BODY  TYPE==============1	 ITERATE Neighbour 
+src:par
+##### BlockStatement
+##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### IfStmt
+=======IF FILTER
+------>PROP AR/LG
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+------>PROP RL
+------>PROP EXP
+------>PROP ID
+##### BlockStatement
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+FOR BODY END
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### ForAllStmt
+STMT: For
+isMainFile val 1
+Entered here for forall 
+CHECK IT HEREscc
+___modified__scc
+CHECK IT HEREvisitFw
+___modified__visitFw
+CHECK IT HEREvisitBw
+___modified__visitBw
+CHECK IT HERErange
+___modified__range
+CHECK IT HEREpropBw
+___modified__propBw
+CHECK IT HEREpropFw
+___modified__propFw
+for all
+FIXEDPOINT
+============CHANGED BODY  TYPE==============1##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### IfStmt
+=======IF FILTER
+------>PROP AR/LG
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### declaration
+varT:int
+varN:ext1
+------>PROP LIT
+##### declaration
+varT:int
+varN:ext2
+------>PROP LIT
+##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP AR/LG
+------>PROP AR/LG
+------>PROP AR/LG
+------>PROP LIT
+------>PROP EXP
+------>PROP ID
+------>PROP ID
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### IfStmt
+=======IF FILTER
+------>PROP AR/LG
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP ID
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+TYPE : bool
+------>PROP LIT
+##### FixedPointStmt
+IN FIX PT
+-----------------------FROM HERE CHECK TYPES
+##### ForAllStmt
+STMT: For
+isMainFile val 1
+Entered here for forall 
+CHECK IT HERErange
+___modified__range
+CHECK IT HEREscc
+___modified__scc
+CHECK IT HEREfpoint1
+___modified__fpoint1
+CHECK IT HEREisPivot
+___modified__isPivot
+for all
+FIXEDPOINT
+============CHANGED BODY  TYPE==============1##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### declaration
+varT:int
+varN:havePar
+------>PROP LIT
+##### declaration
+varT:int
+varN:haveChild
+------>PROP LIT
+##### ForAllStmt
+STMT: For
+isMainFile val 0
+GenerateForAllSignature = 0
+============CHANGED BODY  TYPE==============1	 ITERATE Neighbour 
+src:par
+##### BlockStatement
+##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP EXP
+##### BlockStatement
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+FOR BODY END
+##### ForAllStmt
+STMT: For
+isMainFile val 0
+GenerateForAllSignature = 0
+============CHANGED BODY  TYPE==============1	 ITERATE Neighbour 
+src:dst
+##### BlockStatement
+##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP EXP
+##### BlockStatement
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+FOR BODY END
+##### IfStmt
+=======IF FILTER
+------>PROP AR/LG
+------>PROP RL
+------>PROP ID
+------>PROP LIT
+------>PROP RL
+------>PROP ID
+------>PROP LIT
+##### BlockStatement
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP ID
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### ProcCallStatement
+varName:range
+------>PROP LIT
+attachNodeProperty
+##### ForAllStmt
+STMT: For
+isMainFile val 1
+Entered here for forall 
+CHECK IT HERErange
+___modified__range
+for all
+FIXEDPOINT
+##### 
+iufhsidfdihf
+sdkfdwjhf
+------>PROP ID
+##### declaration
+varT:bool
+varN:fpoint4
+------>PROP LIT
+------>PROP LIT
+##### FixedPointStmt
+IN FIX PT
+-----------------------FROM HERE CHECK TYPES
+##### ForAllStmt
+STMT: For
+isMainFile val 1
+Entered here for forall 
+CHECK IT HERErange
+___modified__range
+CHECK IT HEREscc
+___modified__scc
+CHECK IT HEREfpoint4
+___modified__fpoint4
+for all
+FIXEDPOINT
+============CHANGED BODY  TYPE==============1##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### ForAllStmt
+STMT: For
+isMainFile val 0
+GenerateForAllSignature = 0
+============CHANGED BODY  TYPE==============1	 ITERATE Neighbour 
+src:dst
+##### BlockStatement
+##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP EXP
+##### BlockStatement
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP EXP
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+FOR BODY END
+##### ForAllStmt
+STMT: For
+isMainFile val 1
+Entered here for forall 
+CHECK IT HEREscc
+___modified__scc
+CHECK IT HERErange
+___modified__range
+CHECK IT HEREfpoint4
+___modified__fpoint4
+for all
+FIXEDPOINT
+============CHANGED BODY  TYPE==============1##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### declaration
+varT:int
+varN:myrange
+------>PROP EXP
+##### IfStmt
+=======IF FILTER
+------>PROP AR/LG
+------>PROP RL
+------>PROP ID
+------>PROP ID
+------>PROP RL
+------>PROP ID
+------>PROP EXP
+##### BlockStatement
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP EXP
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### declaration
+varT:bool
+varN:fpoint5
+------>PROP LIT
+------>PROP LIT
+##### FixedPointStmt
+IN FIX PT
+-----------------------FROM HERE CHECK TYPES
+##### ForAllStmt
+STMT: For
+isMainFile val 1
+Entered here for forall 
+CHECK IT HEREscc
+___modified__scc
+CHECK IT HEREoutDeg
+___modified__outDeg
+CHECK IT HEREinDeg
+___modified__inDeg
+CHECK IT HEREpivotField
+___modified__pivotField
+CHECK IT HERErange
+___modified__range
+for all
+FIXEDPOINT
+============CHANGED BODY  TYPE==============1##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### declaration
+varT:int
+varN:color
+------>PROP EXP
+##### declaration
+varT:int
+varN:index
+------>PROP AR/LG
+------>PROP ID
+------>PROP AR/LG
+------>PROP AR/LG
+------>PROP ID
+------>PROP ID
+------>PROP ID
+##### declaration
+varT:int
+varN:oldSrcValue
+------>PROP LIT
+##### declaration
+varT:int
+varN:oldSrc
+------>PROP EXP
+##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP ID
+------>PROP LIT
+##### BlockStatement
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP AR/LG
+------>PROP EXP
+------>PROP EXP
+##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP ID
+------>PROP AR/LG
+------>PROP EXP
+------>PROP EXP
+##### BlockStatement
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP ID
+##### ForAllStmt
+STMT: For
+isMainFile val 1
+Entered here for forall 
+CHECK IT HEREscc
+___modified__scc
+CHECK IT HEREpivotField
+___modified__pivotField
+CHECK IT HERErange
+___modified__range
+CHECK IT HEREisPivot
+___modified__isPivot
+CHECK IT HEREvisitBw
+___modified__visitBw
+CHECK IT HEREvisitFw
+___modified__visitFw
+for all
+FIXEDPOINT
+============CHANGED BODY  TYPE==============1##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### declaration
+varT:int
+varN:color
+------>PROP EXP
+##### declaration
+varT:int
+varN:index
+------>PROP AR/LG
+------>PROP ID
+------>PROP AR/LG
+------>PROP AR/LG
+------>PROP ID
+------>PROP ID
+------>PROP ID
+##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP ID
+##### BlockStatement
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+TYPE : bool
+------>PROP LIT
+##### FixedPointStmt
+IN FIX PT
+-----------------------FROM HERE CHECK TYPES
+##### ForAllStmt
+STMT: For
+isMainFile val 1
+Entered here for forall 
+CHECK IT HEREpropBw
+___modified__propBw
+CHECK IT HEREvisitBw
+___modified__visitBw
+CHECK IT HEREpropFw
+___modified__propFw
+CHECK IT HEREvisitFw
+___modified__visitFw
+CHECK IT HEREscc
+___modified__scc
+CHECK IT HERErange
+___modified__range
+CHECK IT HEREfpoint2
+___modified__fpoint2
+for all
+FIXEDPOINT
+============CHANGED BODY  TYPE==============1##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### declaration
+varT:int
+varN:myrange
+------>PROP EXP
+##### IfStmt
+=======IF FILTER
+------>PROP AR/LG
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### ForAllStmt
+STMT: For
+isMainFile val 0
+GenerateForAllSignature = 0
+============CHANGED BODY  TYPE==============1	 ITERATE Neighbour 
+src:dst
+##### BlockStatement
+##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### IfStmt
+=======IF FILTER
+------>PROP AR/LG
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+------>PROP RL
+------>PROP EXP
+------>PROP ID
+##### BlockStatement
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+FOR BODY END
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### IfStmt
+=======IF FILTER
+------>PROP AR/LG
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### ForAllStmt
+STMT: For
+isMainFile val 0
+GenerateForAllSignature = 0
+============CHANGED BODY  TYPE==============1	 ITERATE Neighbour 
+src:par
+##### BlockStatement
+##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### IfStmt
+=======IF FILTER
+------>PROP AR/LG
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+------>PROP RL
+------>PROP EXP
+------>PROP ID
+##### BlockStatement
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+FOR BODY END
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### ForAllStmt
+STMT: For
+isMainFile val 1
+Entered here for forall 
+CHECK IT HEREscc
+___modified__scc
+CHECK IT HEREvisitFw
+___modified__visitFw
+CHECK IT HEREvisitBw
+___modified__visitBw
+CHECK IT HERErange
+___modified__range
+CHECK IT HEREpropFw
+___modified__propFw
+CHECK IT HEREpropBw
+___modified__propBw
+CHECK IT HEREfpoint5
+___modified__fpoint5
+for all
+FIXEDPOINT
+============CHANGED BODY  TYPE==============1##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### IfStmt
+=======IF FILTER
+------>PROP AR/LG
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### declaration
+varT:int
+varN:ext1
+------>PROP LIT
+##### declaration
+varT:int
+varN:ext2
+------>PROP LIT
+##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### IfStmt
+=======IF FILTER
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### declaration
+varT:int
+varN:newRange
+------>PROP AR/LG
+------>PROP LIT
+------>PROP EXP
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP AR/LG
+------>PROP ID
+------>PROP AR/LG
+------>PROP AR/LG
+------>PROP ID
+------>PROP ID
+------>PROP ID
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP AR/LG
+------>PROP AR/LG
+------>PROP ID
+------>PROP ID
+------>PROP ID
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP LIT
+##### IfStmt
+=======IF FILTER
+------>PROP AR/LG
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+------>PROP RL
+------>PROP EXP
+------>PROP LIT
+##### BlockStatement
+##### assignment
+	ASST kjdskfs	------>BEG EXP
+------>PROP ID
+finished successfully

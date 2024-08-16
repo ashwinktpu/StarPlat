@@ -11,8 +11,6 @@ using namespace std;
 
 class NodeBlockData;
 
-class liveVarsNode;
-
 class ASTNode
 {
   protected:
@@ -22,7 +20,6 @@ class ASTNode
   SymbolTable* var_symbTab;
   SymbolTable* prop_symbTab;
   NodeBlockData* blockData;
-  liveVarsNode* liveVarData;
 
   public:
   ASTNode()
@@ -69,16 +66,6 @@ class ASTNode
   NodeBlockData* getBlockData()
   {
     return blockData;
-  }
-
-  void setLiveVarsNode(liveVarsNode* node)
-  {
-    this->liveVarData = node;
-  }
-
-  liveVarsNode* getLiveVarsNode()
-  {
-    return liveVarData;
   }
 
 };

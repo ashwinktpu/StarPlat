@@ -1,0 +1,11 @@
+lrparser.y : LINE 574 uncomment the line to activate the -o (optimize) option
+
+For fixing the segmentation fault in PageRank_DSL_V2 :-
+SymbolTableBuilder.cpp :   LINE 375 added a check to see if the forall statement is a for loop or a forall loop
+deviceVarsAnalyser.h   :   getTempVar() LINE 284 removed static cast and used strcpy since it previously generated random characters
+
+added fp_idnode to identifier
+analyser/deviceVars/getUsedVars.cpp: LINE 230 fixed fp for sssp
+src/symbolutil/SymbolTableBuilder.cpp: LINE 278 added fp node
+
+formal parameters generation:

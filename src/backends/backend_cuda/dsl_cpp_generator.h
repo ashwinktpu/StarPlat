@@ -6,7 +6,7 @@
 #include "../../ast/ASTNodeTypes.hpp"
 #include "../dslCodePad.h"
 //~ #include "../../parser/includeHeader.hpp"
-#include "../../analyser/analyserUtil.h"
+#include "../../analyser/analyserUtil.cpp"
 
 namespace spcuda {
 class dsl_cpp_generator {
@@ -52,6 +52,7 @@ class dsl_cpp_generator {
     decFuncCount = 0;
   }
 
+  void generateNestedContainer(Type* type,bool isMainFile);
   void generateParamList(list<formalParam*> paramList, dslCodePad& targetFile);
   void setCurrentFunc(Function* func);
   Function* getCurrentFunc();
@@ -93,6 +94,8 @@ class dsl_cpp_generator {
   void generate_exprLiteral(Expression* expr, bool isMainFile);
   void generate_exprIdentifier(Identifier* id, bool isMainFile);
   void generate_exprPropId(PropAccess* propId, bool isMainFile);
+  void generateArgList(list<argument*> argList, bool addBraces,bool isMainFile);
+  string getProcName(proc_callExpr* proc);
   void generate_exprProcCall(Expression* expr, bool isMainFile);
 
   void generateForAll_header();

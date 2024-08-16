@@ -14,52 +14,31 @@ void Compute_TC(graph& g)
 
   int *h_meta;
   int *h_data;
-  int *h_src;
-  int *h_weight;
-  int *h_rev_meta;
 
   h_meta = (int *)malloc( (V+1)*sizeof(int));
   h_data = (int *)malloc( (E)*sizeof(int));
-  h_src = (int *)malloc( (E)*sizeof(int));
-  h_weight = (int *)malloc( (E)*sizeof(int));
-  h_rev_meta = (int *)malloc( (V+1)*sizeof(int));
 
   for(int i=0; i<= V; i++) {
-    int temp = g.indexofNodes[i];
+    int temp;
+    temp = g.indexofNodes[i];
     h_meta[i] = temp;
-    temp = g.rev_indexofNodes[i];
-    h_rev_meta[i] = temp;
   }
 
   for(int i=0; i< E; i++) {
-    int temp = g.edgeList[i];
+    int temp;
+    temp = g.edgeList[i];
     h_data[i] = temp;
-    temp = g.srcList[i];
-    h_src[i] = temp;
-    temp = edgeLen[i];
-    h_weight[i] = temp;
   }
 
 
   int* d_meta;
   int* d_data;
-  int* d_src;
-  int* d_weight;
-  int* d_rev_meta;
-  bool* d_modified_next;
 
   cudaMalloc(&d_meta, sizeof(int)*(1+V));
   cudaMalloc(&d_data, sizeof(int)*(E));
-  cudaMalloc(&d_src, sizeof(int)*(E));
-  cudaMalloc(&d_weight, sizeof(int)*(E));
-  cudaMalloc(&d_rev_meta, sizeof(int)*(V+1));
-  cudaMalloc(&d_modified_next, sizeof(bool)*(V));
 
   cudaMemcpy(  d_meta,   h_meta, sizeof(int)*(V+1), cudaMemcpyHostToDevice);
   cudaMemcpy(  d_data,   h_data, sizeof(int)*(E), cudaMemcpyHostToDevice);
-  cudaMemcpy(   d_src,    h_src, sizeof(int)*(E), cudaMemcpyHostToDevice);
-  cudaMemcpy(d_weight, h_weight, sizeof(int)*(E), cudaMemcpyHostToDevice);
-  cudaMemcpy(d_rev_meta, h_rev_meta, sizeof(int)*((V+1)), cudaMemcpyHostToDevice);
 
   // CSR END
   //LAUNCH CONFIG
@@ -82,9 +61,8 @@ void Compute_TC(graph& g)
   long triangle_count = 0; // asst in .cu
 
   cudaMemcpyToSymbol(::triangle_count, &triangle_count, sizeof(long), 0, cudaMemcpyHostToDevice);
-  Compute_TC_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data,d_src,d_weight,d_rev_meta,d_modified_next);
+  Compute_TC_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data);
   cudaDeviceSynchronize();
-  cudaMemcpyFromSymbol(&triangle_count, ::triangle_count, sizeof(long), 0, cudaMemcpyDeviceToHost);
 
 
 

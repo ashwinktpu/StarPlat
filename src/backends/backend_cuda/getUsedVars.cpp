@@ -1,4 +1,4 @@
-#include "../../analyser/analyserUtil.h"
+#include "analyserUtil.cpp"
 
 usedVariables getVarsStatement(statement* stmt);
 usedVariables getVarsExpr(Expression *expr)
