@@ -44,9 +44,7 @@ NEGATE [-]
 "fixedPoint" {printf("Keyword fixedPoint"); return T_FIXEDPOINT;}
 "until"      {printf("Keyword until");  return T_UNTIL;}
 "iterateInBFS"  {printf("iterateInBFS");  return T_BFS;}
-"iterateInBFS2"  {printf("iterateInBFS2");  return T_BFS2;}
 "iterateInReverse" {printf("iterateInReverse");  return T_REVERSE;} 
-"iterateInBFSReverse" {printf("iterateInBFSReverse");  return T_BFSREVERSE;} 
 "from"          {printf("from"); return T_FROM;} 
 "filter"        {printf("filter");  return T_FILTER;} 
 "Incremental"   {printf("incremental"); return T_INCREMENTAL;}
@@ -113,6 +111,10 @@ NEGATE [-]
 "Product" { printf ( "Product"); return T_PRODUCT;}
 "Max"     { printf ( "Max");  return T_MAX;}
 "Min"     { printf ( "Min"); return T_MIN;}
+
+ /* Data Structure Types */
+"Heap" 	{printf("Heap Type"); return T_HEAP;}
+"Map" 	{printf("Map Type"); return T_MAP;}
 
 
  /* Graph Types */

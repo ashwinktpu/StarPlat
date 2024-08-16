@@ -1,5 +1,6 @@
 function Compute_SSSP (Graph g, node src)
 {
+		/*
         propNode <int> dist;
         g.attachNodeProperty(dist=INF);
         src.dist=0;
@@ -13,4 +14,7 @@ function Compute_SSSP (Graph g, node src)
                 }
                 accum += count;
         }
+        */
+        
+        /* Heap; */
 }

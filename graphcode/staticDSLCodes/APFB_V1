@@ -1,0 +1,116 @@
+function APFB (Graph g, int nc)
+{
+    propNode<bool> modified;
+    g.attachNodeProperty(modified = False);
+    
+    propNode<int> rmatch;
+    propNode<int> cmatch;
+    g.attachNodeProperty(rmatch = -1);
+    g.attachNodeProperty(cmatch = -1);
+    
+    bool noNewPaths = False;
+    propNode<int> bfsArray;
+    propNode<int> predeccesor;
+    
+    propNode<bool> compress;
+    propNode<bool> compress_next;
+    fixedPoint until (noNewPaths : !modified) {
+        int L0 = 0; 
+        int NOT_VISITED = L0 - 1;
+        g.attachNodeProperty(bfsArray = NOT_VISITED);
+        forall(c in g.nodes()){
+            if(c < nc){
+                if(c.cmatch == -1){
+                    c.bfsArray = L0;
+                }
+            }
+        }
+        g.attachNodeProperty(predeccesor = -1); 
+        
+        int bfsLevel = L0;
+        bool noNewVertices = False;
+        fixedPoint until (noNewVertices : !modified) {
+            forall(col_vertex in g.nodes()){
+                if(col_vertex < nc){
+                    if(col_vertex.bfsArray == bfsLevel){
+                        for(neigh_row in g.neighbors(col_vertex)){
+                            if(neigh_row >= nc){
+                                int col_match = neigh_row.rmatch;
+                                if(col_match > -1){
+                                    if(col_match.bfsArray == NOT_VISITED){
+                                        noNewVertices = False;
+                                        col_match.bfsArray = bfsLevel + 1;
+                                        neigh_row.predeccesor = col_vertex;
+                                    }
+                                }
+                                if(col_match == -1){
+                                    neigh_row.rmatch = -2;
+                                    neigh_row.predeccesor = col_vertex;
+                                    noNewPaths = False;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            bfsLevel = bfsLevel + 1;
+        }
+        
+        
+        g.attachNodeProperty(compress = False);
+        g.attachNodeProperty(compress_next = False);
+        
+        forall(r in g.nodes()){
+            if(r >= nc && r.rmatch == -2){
+                r.compress = True;
+            }
+        }
+     
+        bool compressed = False;
+        fixedPoint until(compressed : !modified) {
+            forall(row_vertex in g.nodes().filter(compress == True)){
+                if(row_vertex >= nc){
+                    int matched_col = row_vertex.predeccesor;
+                    int matched_row = matched_col.cmatch;
+                    
+                    bool isValid = True;
+                    if(matched_row != -1){
+                        if(matched_row.predeccesor == matched_col){
+                            isValid = False;
+                        }
+                    }
+                    
+                    if(isValid){
+                        matched_col.cmatch = row_vertex;
+                        row_vertex.rmatch = matched_col;
+                        if(matched_row != -1){
+                            matched_row.compress_next = True;
+                            compressed = False;
+                        }
+                    }
+                }
+            }
+            
+            forall(row_vertex in g.nodes()){
+                if(row_vertex >= nc){
+                    row_vertex.compress = row_vertex.compress_next;
+                    row_vertex.compress_next = False;
+                }
+            }
+        }
+   
+        forall(r in g.nodes()){
+            if(r >= nc){
+                int c = r.rmatch;
+                if(c >= 0){
+                    if(c.cmatch != r){
+                        r.rmatch = -1;
+                    }
+                }
+                if(c == -2){ 
+                    r.rmatch = -1;
+                }
+            }
+        }
+    }
+}

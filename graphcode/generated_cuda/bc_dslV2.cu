@@ -50,7 +50,7 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
   // CSR END
   //LAUNCH CONFIG
   const unsigned threadsPerBlock = 512;
-  unsigned numThreads   = (V > threadsPerBlock)? 512: V;
+  unsigned numThreads   = (V < threadsPerBlock)? 512: V;
   unsigned numBlocks    = (V+threadsPerBlock-1)/threadsPerBlock;
 
 
@@ -68,13 +68,13 @@ void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
 
 
   //BEGIN DSL PARSING 
-  initKernel<float> <<<numBlocks,threadsPerBlock>>>(V,d_BC,(float)0);
-
   float* d_sigma;
   cudaMalloc(&d_sigma, sizeof(float)*(V));
 
   float* d_delta;
   cudaMalloc(&d_delta, sizeof(float)*(V));
+
+  initKernel<float> <<<numBlocks,threadsPerBlock>>>(V,d_BC,(float)0);
 
   //FOR SIGNATURE of SET - Assumes set for on .cu only
   std::set<int>::iterator itr;

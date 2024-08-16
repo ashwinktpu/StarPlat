@@ -22,6 +22,8 @@ enum TYPE
  TYPE_UPDATES,
  TYPE_CONTAINER,
  TYPE_NODEMAP,
+ TYPE_HEAP,
+ TYPE_MAP,
 };
 
 inline bool check_isNodeEdgeType(int typeId)
@@ -40,6 +42,17 @@ inline bool check_isGraphType(int typeId)
 {
   return ((typeId==TYPE_GRAPH)||(typeId==TYPE_DIRGRAPH));
 }
+
+inline bool check_isHeapType(int typeId)
+{
+  return typeId==TYPE_HEAP;
+}
+
+inline bool check_isMapType(int typeId)
+{
+  return typeId==TYPE_MAP;
+}
+
 inline bool check_isPrimitiveType(int typeId)
   {
     return ((typeId==TYPE_BOOL)||(typeId==TYPE_DOUBLE)||(typeId==TYPE_FLOAT)||(typeId==TYPE_LONG)||(typeId==TYPE_INT));
@@ -146,7 +159,6 @@ enum NODETYPE{
   NODE_FIXEDPTSTMT,
   NODE_IFSTMT,
   NODE_ITRBFS,
-  NODE_ITRBFS2,
   NODE_ITRRBFS,
   NODE_EXPR,
   NODE_PROCCALLEXPR,
@@ -160,7 +172,6 @@ enum NODETYPE{
   NODE_ONADDBLOCK,
   NODE_ONDELETEBLOCK,
   NODE_TRANSFERSTMT,
-  NODE_ITERBFSREV,
 };
 
 

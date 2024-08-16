@@ -1,0 +1,106 @@
+// for openMP
+function Test(Graph g, node src)
+{
+       // int maxSize = 100; 
+       // int siz = 4;
+       Map mp;
+       container <container <int>> tn;
+       container <int> cn;
+       // thrust::host_vector<thrust::host_vector<int>> insertEl(3, thrust::tn<int>(2,0));
+       // thrust::host_vector<int> cn(2,0);
+
+       // cn[0] = 1;
+       // cn[1] = 2;
+
+
+       // insertEl[0] = cn;
+
+       // cn[0] = 3;
+       // cn[1] = 4;
+
+
+       // insertEl[1] = cn;
+
+       // cn[0] = 5;
+       // cn[1] = 6;
+
+
+       // insertEl[2] = cn;
+
+       // cn.push_back({2,3});
+       cn.resize(2);
+       cn.push_back(2);
+       cn.push_back(9);
+       // cn.push_back(1);
+       // cn.push_back(0);
+       tn.push_back(cn);
+       cn.resize(2);
+       cn.push_back(2);
+       cn.push_back(9);
+       // // double starttime = rtclock(); 
+       // hp.insert(cn,siz);
+       // container <int> cnn;
+       // // cnn = hp.deleteE(2);
+       mp.insertel(2, tn);
+       mp.searchPair(2, tn);
+       mp.searchKey(2, cn);
+       mp.deletePair(2, tn);
+       mp.deleteKey(4, cn);
+
+       // mp.show();
+}
+
+
+// // for cuda
+// function Test(Graph g, node src)
+// {
+//        // int maxSize = 100; 
+//        // int siz = 4;
+//        Map mp;
+//        container <container <int>> tn;
+//        container <int> cn;
+//        // thrust::host_vector<thrust::host_vector<int>> insertEl(3, thrust::tn<int>(2,0));
+//        // thrust::host_vector<int> cn(2,0);
+
+//        // cn[0] = 1;
+//        // cn[1] = 2;
+
+
+//        // insertEl[0] = cn;
+
+//        // cn[0] = 3;
+//        // cn[1] = 4;
+
+
+//        // insertEl[1] = cn;
+
+//        // cn[0] = 5;
+//        // cn[1] = 6;
+
+
+//        // insertEl[2] = cn;
+
+//        // cn.push_back({2,3});
+//        cn.resize(2);
+//        cn.push_back(2);
+//        cn.push_back(9);
+//        // cn.push_back(1);
+//        // cn.push_back(0);
+//        tn.push_back(cn);
+//        cn.resize(2);
+//        cn.push_back(2);
+//        cn.push_back(9);
+//        // // double starttime = rtclock(); 
+//        // hp.insert(cn,siz);
+//        // container <int> cnn;
+//        // // cnn = hp.deleteE(2);
+//        mp.insertel(2, tn);
+//        // mp.searchPair(1, tn);
+//        // mp.searchKey(4, cn);
+//        // mp.deletePair(1, tn);
+//        // mp.deleteKey(4, cn);
+
+//        // mp.show();
+// }
+
+

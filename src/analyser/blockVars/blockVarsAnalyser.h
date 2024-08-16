@@ -104,9 +104,7 @@ class blockVarsAnalyser
     ASTNodeBlock* initProcCall(proc_callStmt*, ASTNodeBlock*);
     ASTNodeBlock* initReduction(reductionCallStmt*, ASTNodeBlock*);
     ASTNodeBlock* initItrBFS(iterateBFS*, ASTNodeBlock*);
-    ASTNodeBlock* initItrBFS2(iterateBFS2*, ASTNodeBlock*);
     ASTNodeBlock* initItrRBFS(iterateReverseBFS*, ASTNodeBlock*);
-    ASTNodeBlock* initItrBFSRev(iterateBFSReverse*, ASTNodeBlock*);
     ASTNodeBlock* initReturn(returnStmt*, ASTNodeBlock*);
 
     //Returns the used variables in each statment
@@ -123,19 +121,15 @@ class blockVarsAnalyser
     usedVariables_t getVarsReduction(reductionCallStmt*);
     usedVariables_t getVarsFixedPoint(fixedPointStmt*);
     usedVariables_t getVarsBFS(iterateBFS*);
-    usedVariables_t getVarsBFS2(iterateBFS2*);
     usedVariables_t getVarsRBFS(iterateReverseBFS*);
     usedVariables_t getVarsProcCall(proc_callStmt*);
     usedVariables_t getVarsExprProcCall(proc_callExpr*);
-    usedVariables_t getVarsBFSRev(iterateBFSReverse*);
 
     // Sets the flag of tableentry of the variables in the parallel section of the statement
     void setVarsInParallelStatment(statement*);
     void setVarsInParallelBlock(blockStatement*);
     void setVarsInParallelForAll(forallStmt*);
     void setVarsInParallelBFS(iterateBFS*);
-    void setVarsInParallelBFS2(iterateBFS2*);
-    void setVarsInParallelBFSRev(iterateBFSReverse*);
     void setVarsInParallelAssign(assignment*);
     void setVarsInParallelDeclaration(declaration*);
     void setVarsInParallelProcCall(proc_callStmt*);

@@ -8,7 +8,7 @@ function Compute_BC(Graph g, propNode < float > BC, SetN < g > sourceSet) {
     src.sigma = 1;
     iterateInBFS(v in g.nodes() from src) {
       for (w in g.neighbors(v)) {
-        w.sigma = w.sigma + v.sigma;
+        v.sigma = v.sigma + w.sigma;
       }
     }
     iterateInReverse(v != src) {

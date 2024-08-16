@@ -2,7 +2,6 @@
 #include"PageRankDSLV2.h"
 #include"triangle_counting_dsl.h"
 #include"sssp_dslV3.h"
-#include"sssp_dslV2.h"
 #include"bc_dslV2.h"
 
 int main(int argc, char *argv[])
@@ -12,14 +11,14 @@ int main(int argc, char *argv[])
     boost::mpi::communicator world;
     
     //printf("program started\n"); 
-    Graph graph(argv[1], world);
+    Graph graph(argv[1],world);
     world.barrier();
 
     
     // Triangle Counting
     //need to add print statement in generated code to check the value of triangle count
     
-    // Compute_TC(graph, world );
+    Compute_TC(graph, world );
     
 
     
@@ -32,11 +31,9 @@ int main(int argc, char *argv[])
     {
         printf("%d %d\n", i, dist.getValue(i));
     }*/
+    
 
-    // TODO: sssp DSLV2
-    // int src = 0;
-    // NodeProperty<int> dist;
-    // Compute_SSSP(graph, dist, graph.weights, 0, world);
+
 
     //PageRank
     /*float beta = 0.01;
@@ -58,5 +55,7 @@ int main(int argc, char *argv[])
     {
         printf("%d %f\n", i, BC.getValue(i));
     }*/
+    
+    world.barrier();
     return 0;
 }

@@ -1,13 +1,13 @@
 #include"bc_dslV2.h"
 
-void Compute_BC(graph& g , float* BC , std::set<int>& sourceSet)
+void Compute_BC(graph& g,float* BC,std::set<int>& sourceSet)
 {
   #pragma omp parallel for
   for (int t = 0; t < g.num_nodes(); t ++) 
   {
     BC[t] = 0;
   }
-  float* sigma=new float[g.num_nodes()];
+  double* sigma=new double[g.num_nodes()];
   float* delta=new float[g.num_nodes()];
   std::set<int>::iterator itr;
   for(itr=sourceSet.begin();itr!=sourceSet.end();itr++)
@@ -25,7 +25,7 @@ void Compute_BC(graph& g , float* BC , std::set<int>& sourceSet)
       sigma[t] = 0;
     }
     sigma[src] = 1;
-    bfsDist[src] = 0;
+    bfsDist[src] = -1;
     std::vector<std::vector<int>> levelNodes(g.num_nodes()) ;
     std::vector<std::vector<int>>  levelNodes_later(omp_get_max_threads()) ;
     std::vector<int>  levelCount(g.num_nodes()) ;
@@ -67,12 +67,12 @@ void Compute_BC(graph& g , float* BC , std::set<int>& sourceSet)
       for(int i = 0;i < omp_get_max_threads();i++)
       {
          levelNodes[phase].insert(levelNodes[phase].end(),levelNodes_later[i].begin(),levelNodes_later[i].end());
-         bfsCount = bfsCount+levelNodes_later[i].size();
+         bfsCount=bfsCount+levelNodes_later[i].size();
          levelNodes_later[i].clear();
       }
        levelCount[phase] = bfsCount ;
     }
-    phase = phase - 1 ;
+    phase = phase -1 ;
     while (phase > 0)
     {
       #pragma omp parallel for
@@ -83,7 +83,6 @@ void Compute_BC(graph& g , float* BC , std::set<int>& sourceSet)
         {int w = g.edgeList[edge] ;
           if(bfsDist[w]==bfsDist[v]+1)
           {
-            #pragma omp atomic
             delta[v] = delta[v] + (sigma[v] / sigma[w]) * (1 + delta[w]);
           }
         }
