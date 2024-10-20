@@ -63,6 +63,7 @@ void Compute_TC(graph& g)
   cudaMemcpyToSymbol(::triangle_count, &triangle_count, sizeof(long), 0, cudaMemcpyHostToDevice);
   Compute_TC_kernel<<<numBlocks, threadsPerBlock>>>(V,E,d_meta,d_data);
   cudaDeviceSynchronize();
+  cudaMemcpyFromSymbol(&triangle_count, ::triangle_count, sizeof(long), 0, cudaMemcpyDeviceToHost);
 
 
 
