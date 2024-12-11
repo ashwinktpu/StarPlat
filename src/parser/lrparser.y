@@ -1,4 +1,3 @@
-%define parse.trace
 %{
 	#include <stdio.h>
 	#include <string.h>
@@ -9,7 +8,7 @@
 	#include "../analyser/dataRace/dataRaceAnalyser.h"
 	#include "../analyser/deviceVars/deviceVarsAnalyser.h"
 	#include "../analyser/pushpull/pushpullAnalyser.h"
-
+	#include "../analyser/liveVars/liveVarsAnalyser.h"
 	#include "../analyser/blockVars/blockVarsAnalyser.h"
 	#include<getopt.h>
 	//#include "../symbolutil/SymbolTableBuilder.cpp"
@@ -58,9 +57,10 @@
 %token T_GRAPH T_DIR_GRAPH  T_NODE T_EDGE T_UPDATES T_CONTAINER T_NODEMAP T_VECTOR T_HASHMAP T_HASHSET
 %token T_NP  T_EP
 %token T_LIST T_SET_NODES T_SET_EDGES  T_FROM
-%token T_BFS T_REVERSE
+%token T_BFS T_REVERSE T_BFSREVERSE T_BFS2
 %token T_INCREMENTAL T_DECREMENTAL T_STATIC T_DYNAMIC
 %token T_BATCH T_ONADD T_ONDELETE
+%token return_func
 
 
 %token <text> ID
@@ -75,7 +75,7 @@
 %type <node> type type1 type2 type3
 %type <node> primitive graph collections property container nodemap vector hashmap hashset
 %type <node> id leftSide rhs expression oid val boolean_expr unary_expr indexExpr tid  
-%type <node> bfs_abstraction filterExpr reverse_abstraction
+%type <node> bfs_abstraction filterExpr reverse_abstraction bfs_reverse_abstraction bfs_abstraction2
 %type <nodeList> leftList rightList
 %type <node> iteration_cf selection_cf
 %type <node> reductionCall 
@@ -177,22 +177,24 @@ param : type1 id {  //Identifier* id=(Identifier*)Util::createIdentifierNode($2)
 
 function_body : blockstatements {$$=$1;};
 
-
 statements :  {};
-	| statements statement {printf ("found one statement\n") ; Util::addToBlock($2); };
+	| statements statement { Util::addToBlock($2); };
 
 statement: declaration ';'{$$=$1;};
-	|assignment ';'{printf ("found an assignment type statement" ); $$=$1;};
-	|proc_call ';' {printf ("found an proc call type statement" );$$=Util::createNodeForProcCallStmt($1);};
-	|control_flow {printf ("found an control flow type statement" );$$=$1;};
-	|reduction ';'{printf ("found an reduction type statement" );$$=$1;};
-	| bfs_abstraction {printf ("found bfs\n") ;$$=$1; };
-	| blockstatements {printf ("found block\n") ;$$=$1;};
-	| unary_expr ';' {printf ("found unary\n") ;$$=Util::createNodeForUnaryStatements($1);};
-	| return_stmt ';' {printf ("found return\n") ;$$ = $1 ;};
-	| batch_blockstmt  {printf ("found batch\n") ;$$ = $1;};
-	| on_add_blockstmt {printf ("found on add block\n") ;$$ = $1;};
-	| on_delete_blockstmt {printf ("found delete block\n") ;$$ = $1;};
+	 	|assignment ';'{$$=$1;};
+	|proc_call ';' {$$=Util::createNodeForProcCallStmt($1);};
+	|control_flow {$$=$1;};
+	|reduction ';'{$$=$1;};
+	| bfs_abstraction {$$=$1; };
+	| bfs_abstraction2 {$$=$1; };
+	| bfs_reverse_abstraction {$$=$1;};
+	| blockstatements {$$=$1;};
+	| unary_expr ';' {$$=Util::createNodeForUnaryStatements($1);};
+	| return_stmt ';' {$$ = $1 ;};
+	| batch_blockstmt  {$$ = $1;};
+	| on_add_blockstmt {$$ = $1;};
+	| on_delete_blockstmt {$$ = $1;};
+
 
 
 blockstatements : block_begin statements block_end { $$=Util::finishBlock();};
@@ -466,9 +468,15 @@ bfs_abstraction	: T_BFS '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr bl
 			| T_BFS '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr blockstatements {$$=Util::createIterateInBFSNode($3,$5,$7,$9,$11,$12,NULL) ; };
 
 
+bfs_abstraction2	: T_BFS2 '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr blockstatements reverse_abstraction{$$=Util::createIterateInBFSNode2($3,$5,$7,$9,$11,$12,$13) ;};
+		 			| T_BFS2 '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr blockstatements {$$=Util::createIterateInBFSNode2($3,$5,$7,$9,$11,$12,NULL) ; };
+
 
 reverse_abstraction :  T_REVERSE blockstatements {$$=Util::createIterateInReverseBFSNode(NULL,$2);};
                      | T_REVERSE '(' boolean_expr ')'  blockstatements {$$=Util::createIterateInReverseBFSNode($3,$5);};
+
+
+bfs_reverse_abstraction :  T_BFSREVERSE '(' id T_IN id '.' proc_call T_FROM id ')' filterExpr blockstatements {$$=Util::createIterateInBFSReverseNode($3,$5,$7,$9,$11,$12);};
 
 
 oid :  id '.' id { //Identifier* id1=(Identifier*)Util::createIdentifierNode($1);
@@ -567,12 +575,21 @@ int main(int argc,char **argv)
    else
     {
 
-		if(!((strcmp(backendTarget,"omp")==0)|| (strcmp(backendTarget,"amd")==0) || (strcmp(backendTarget,"mpi")==0)||(strcmp(backendTarget,"cuda")==0) || (strcmp(backendTarget,"acc")==0) || (strcmp(backendTarget,"sycl")==0)|| (strcmp(backendTarget,"multigpu")==0)))
+		if(!(
+				(strcmp(backendTarget,"omp")==0) || 
+				(strcmp(backendTarget,"amd")==0) || 
+				(strcmp(backendTarget,"mpi")==0) || 
+				(strcmp(backendTarget,"cuda")==0) || 
+				(strcmp(backendTarget,"acc")==0) || 
+				(strcmp(backendTarget,"sycl")==0) || 
+				(strcmp(backendTarget,"hip")==0) || 
+				(strcmp(backendTarget,"multigpu")==0)
+			)) {
 
-		   {
-			  fprintf(stderr, "Specified backend target is not implemented in the current version!\n");
-			   exit(-1);
+				fprintf(stderr, "Specified backend target is not implemented in the current version!\n");
+				exit(-1);
 		   }
+
 	}
 
    if(!(staticGen || dynamicGen)) {
@@ -647,6 +664,10 @@ int main(int argc,char **argv)
         spomp::dsl_cpp_generator cpp_backend;
 	std::cout<< "size:" << frontEndContext.getFuncList().size() << '\n';
         cpp_backend.setFileName(fileName);
+	if(optimize) {
+			liveVarsAnalyser liveness;
+			liveness.analyse(frontEndContext.getFuncList());
+		}
         cpp_backend.generate();
       } 
 	  else if (strcmp(backendTarget, "mpi") == 0) {
@@ -684,7 +705,18 @@ int main(int argc,char **argv)
         cpp_backend.setFileName(fileName);
         cpp_backend.generate();
 	  }
-      else
+	else if(strcmp(backendTarget, "hip") == 0) {
+
+			std::cout << "Generating HIP Code\n";
+
+			const unsigned blockSize = 512;
+			//TODO: This block size can be a command line parameter.
+			// Hence the assertion.
+			assert(blockSize > 0 && blockSize <= 1024);
+
+			sphip::DslCppGenerator hip_backend(fileName, blockSize);
+			hip_backend.Generate();
+     	 } else
 	    std::cout<< "invalid backend" << '\n';
 	  }
 	else 
