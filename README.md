@@ -1,8 +1,5 @@
 
 # GraphDSL
-[![CUDA Branch](https://github.com/nibeditabh/GraphDSL/actions/workflows/cuda.yml/badge.svg?branch=cuda)](https://github.com/nibeditabh/GraphDSL/actions/workflows/cuda.yml)
-
-
 
 # StarPlat: A Versatile DSL for Graph Analytics
 # GraphDSL MPI Backend
